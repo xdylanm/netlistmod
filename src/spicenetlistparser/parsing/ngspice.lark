@@ -1,0 +1,57 @@
+
+start: line* end_line NEWLINE*
+
+line : (title | element | instruction)? COMMENT? NEWLINE
+
+end_line : END_KW COMMENT?
+END_KW : ".end"i
+
+title : TITLE_KW REST_OF_LINE
+TITLE_KW : ".title"i
+
+element :   resistor
+          | capacitor
+          | diode
+          | voltage
+
+resistor : R_DESIGNATOR NET_LABEL~2 value_field? model_name? param_kv*
+capacitor : C_DESIGNATOR NET_LABEL~2 value_field? model_name? param_kv*
+diode : D_DESIGNATOR NET_LABEL~2 model_name param_kv*
+voltage : V_DESIGNATOR NET_LABEL~2 value_field param_kv*
+
+R_DESIGNATOR : /R\w+/
+C_DESIGNATOR : /C\w+/
+D_DESIGNATOR : /D\w+/
+V_DESIGNATOR : /V\w+/
+
+instruction :   DOT_OP
+              | dot_param
+
+DOT_OP : ".op"i
+dot_param : DOT_PARAM_KW param_kv+
+DOT_PARAM_KW : /\.param[s]*/i
+
+param_kv : CNAME "=" value_field
+model_name : CNAME
+value_field : SPICE_VALUE
+        | BRACE_EXPR
+        | QUOTED_EXPR
+
+NET_LABEL : /[\w+\.\/-]/+
+SPICE_VALUE : SIGNED_NUMBER /(meg|[kmuµnpfgtr])?/i /\d*/
+BRACE_EXPR : /\{[^{}]*\}/
+QUOTED_EXPR : /"[^"]*"/ | /'[^']*'/
+
+COMMENT : /[\*;][^\n]*/
+
+REST_OF_LINE : /\S[^\n]*/
+
+NEWLINE : /\r?\n/
+
+# Lark
+%import common.CNAME
+%import common.SIGNED_NUMBER
+%import common.WS_INLINE
+
+%ignore WS_INLINE
+
