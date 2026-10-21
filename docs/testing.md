@@ -30,8 +30,7 @@ Use `python -m <tool>` (the signed interpreter) instead of the bare tool
 executables; on Windows with Smart App Control the unsigned shims can be blocked
 (see the note at the end of this document).
 
-`pytest` reports coverage, but the 90% target is informational until the
-library implementation is present. The M0 package is intentionally a skeleton.
+`pytest` enforces the project's 90% line-coverage target.
 
 ## Test tiers
 
@@ -53,6 +52,13 @@ Corpus fixtures live under `tests/corpus/<dialect>/<family>/`. Each family has a
 manifest with provenance and SHA-256 hashes; tests detect missing manifests or
 any byte changes. Golden outputs are also byte-sensitive. Do not normalize
 their whitespace or line endings.
+
+Source-layer tests are in `tests/test_source.py`, `tests/test_errors.py`,
+`tests/test_dialects.py`, and `tests/roundtrip/`. The byte-exact cases are
+defined inline in Python so editors and Git cannot normalize their BOMs, NULs,
+or line endings. They cover UTF-8/UTF-16 BOMs, CRLF and mixed endings, lone CR,
+Windows-1252 `µ`, undefined Windows-1252 bytes, and filesystem write/read
+round-trips. The corpus round-trip test covers every file under `tests/corpus/`.
 
 ## Solver tests
 
@@ -110,10 +116,21 @@ rewrite them.
   the process working directory was elsewhere.
 - Schematic export is headless with `LTspice.exe -netlist <file.asc>`. It
   returned 0 and wrote `<file>.net` beside the schematic.
-- The exported smoke netlist had no BOM and contained only ASCII. UTF-8 versus
-  cp1252 for non-ASCII output remains an open risk. The path comment in the
-  candidate export was normalized to a relative filename; see
+- The exported smoke netlist had no BOM and contained only ASCII. The path
+  comment in the candidate export was normalized to a relative filename; see
   [the candidate manifest](../tests/corpus/ltspice/m0_export_candidate/manifest.json).
+
+### M1 encoding samples
+
+- The repository-authored `encoding_cp1252.asc` uses actual CP1252 bytes for
+  `µ` and `°`. The companion `encoding_utf8.asc` is UTF-8 so it can include
+  `Ω` (not representable in CP1252). Both exports were produced with LTspice
+  26.1.1.0 and are UTF-8 without a BOM.
+- LTspice preserves `µ` and `°` from the CP1252 schematic in the UTF-8 `.net`.
+  It reads UTF-8 non-ASCII input as Windows-1252 instead: the companion export
+  contains mojibake (`Âµ`, `Î©`, `Â°`). The path comments were normalized to
+  relative filenames; the original generated netlist bytes otherwise remain
+  unchanged. See the [encoding-sample manifest](../tests/corpus/ltspice/encoding_samples/manifest.json).
 
 ### Host-specific test note
 

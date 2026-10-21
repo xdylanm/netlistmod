@@ -200,9 +200,10 @@ repo/
 
 ### 5.1 Source and spans
 
-- `SourceText` holds the decoded `str`, the detected encoding, and whether a BOM was present. Files MUST be read with newline translation disabled (`newline=""`) and written the same way.
+- `SourceText` holds the decoded `str`, the detected encoding, and whether a BOM was present. Files MUST be read and written as bytes so there is no newline translation.
 - `Span(start, end)` is **half-open, in characters of the decoded string** (not bytes). Zero-width spans (`start == end`) denote insertion points.
 - The encoding recorded at load is used at save. Encoding detection order: BOM, then UTF-8, then a configurable fallback list (default includes `cp1252`, since LTspice netlists may contain a Windows-1252 `µ`). This policy MUST be validated against LTspice-generated fixtures.
+- The confirmed fallback, BOM, and line-terminator policy is recorded in [decision 0001](decisions/0001-source-text-policy.md).
 
 ### 5.2 Node families
 
@@ -575,7 +576,8 @@ SpiceNetlistError
 ├── UnsupportedConstruct  (known to exist in the dialect, not yet supported)
 ├── EditError             (invalid edit: wrong value kind, unresolved model, ambiguous scope)
 ├── TopologyError         (operation not permitted)
-└── TopologyViolation     (write-time check failed; nothing written)
+├── TopologyViolation     (write-time check failed; nothing written)
+└── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
 Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `DUPLICATE_DEFINITION`, `DIALECT_GATED_SYNTAX`, `UNKNOWN_DIRECTIVE_PRESERVED`.

@@ -5,9 +5,32 @@ from shutil import copyfile
 
 import pytest
 
+from netlistmod import SourceText
 from tests.support.solvers import Solver, run_ltspice
 
 CORPUS = Path(__file__).parent / "corpus" / "ltspice" / "m0_export_candidate"
+ENCODING_CORPUS = Path(__file__).parent / "corpus" / "ltspice" / "encoding_samples"
+
+
+def test_ltspice_encoding_samples_record_observed_encodings() -> None:
+    cp1252_schematic = SourceText.read(ENCODING_CORPUS / "encoding_cp1252.asc")
+    utf8_schematic = SourceText.read(ENCODING_CORPUS / "encoding_utf8.asc")
+    cp1252_export = SourceText.read(ENCODING_CORPUS / "encoding_cp1252.net")
+    utf8_export = SourceText.read(ENCODING_CORPUS / "encoding_utf8.net")
+
+    assert cp1252_schematic.encoding == "cp1252"
+    assert "\u00b5" in cp1252_schematic.text
+    assert "\u00b0" in cp1252_schematic.text
+    assert utf8_schematic.encoding == "utf-8"
+    assert "\u03a9" in utf8_schematic.text
+    assert cp1252_export.encoding == "utf-8"
+    assert not cp1252_export.bom
+    assert "\u00b5" in cp1252_export.text
+    assert "\u00b0" in cp1252_export.text
+    assert utf8_export.encoding == "utf-8"
+    assert "\u00c2\u00b5" in utf8_export.text
+    assert "\u00ce\u00a9" in utf8_export.text
+    assert "\u00c2\u00b0" in utf8_export.text
 
 
 @pytest.mark.solver("ltspice")

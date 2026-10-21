@@ -11,15 +11,25 @@ in this repository; no schematic or code from another project is used.
 ```
 
 LTspice can export without opening the GUI. It returns exit code 0 for a valid
-schematic and writes `circuit.net` beside `circuit.asc`. The exported file has
-no BOM; the M0 smoke output was ASCII-only, so the encoding of non-ASCII output
-has not yet been established.
+schematic and writes `circuit.net` beside `circuit.asc`.
 
 The M0 candidate schematic and normalized netlist are in
 [`tests/corpus/ltspice/m0_export_candidate/`](../../tests/corpus/ltspice/m0_export_candidate/).
 The first comment emitted by LTspice contains the absolute source path; the
 candidate replaces that machine-specific path with the relative filename
 `export_smoke.asc`. No other exported netlist content was changed.
+
+## Encoding observations
+
+The M1 samples in
+[`tests/corpus/ltspice/encoding_samples/`](../../tests/corpus/ltspice/encoding_samples/)
+were exported with LTspice 26.1.1.0. A CP1252 schematic containing `µ` and `°`
+exports as UTF-8 without a BOM, preserving those characters. A separate UTF-8
+schematic is needed to supply `Ω`, which CP1252 cannot encode; LTspice reads
+its non-ASCII UTF-8 bytes as Windows-1252 and the resulting netlist contains
+mojibake. This supports CP1252 for LTspice schematic input and UTF-8 for its
+exported netlists. These are observations for the tested version, not a
+cross-version guarantee.
 
 ## Run a netlist in batch mode
 

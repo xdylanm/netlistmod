@@ -116,6 +116,23 @@ def test_import_linter_layer_contract_passes() -> None:
     assert code == 0, output
 
 
+def test_errors_module_is_below_all_other_package_layers() -> None:
+    source = ast.parse((SOURCE / "errors.py").read_text(encoding="utf-8"))
+    imports = [
+        alias.name
+        for node in ast.walk(source)
+        if isinstance(node, ast.Import)
+        for alias in node.names
+    ]
+    imports.extend(
+        node.module
+        for node in ast.walk(source)
+        if isinstance(node, ast.ImportFrom) and node.module is not None
+    )
+
+    assert not any(name.startswith("netlistmod.") for name in imports)
+
+
 def test_import_linter_rejects_deliberate_layer_violation(tmp_path: Path) -> None:
     package = tmp_path / "badpkg"
     package.mkdir()

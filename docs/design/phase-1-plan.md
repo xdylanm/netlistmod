@@ -54,8 +54,8 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - **Spikes:** (a) LTspice netlist export and batch switches; (b) confirm local ngspice batch run. Results recorded in docs.
 - **Exit:** empty-but-green toolchain; local solvers discovered or cleanly skipped.
 
-### M1 — Source layer
-- `SourceText`, `Span`, `errors.py`, `dialects.py`. Decoding (BOM, UTF-8, fallback list), `newline=""` read/write.
+### M1 — Source layer ([task record](./archive/m1-tasks.md))
+- `SourceText`, `Span`, `errors.py`, `dialects.py`. Decoding (BOM, UTF-8, fallback list), byte-oriented reads and writes.
 - T1 unit tests and the T3 round-trip baseline (CRLF, mixed endings, BOM, missing final newline, tabs, trailing whitespace, `µ`).
 - **Exit:** load/save of arbitrary text is byte-identical; encoding policy checked against LTspice-produced samples when available.
 
