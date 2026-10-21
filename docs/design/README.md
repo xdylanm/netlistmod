@@ -1,0 +1,22 @@
+# Design documents
+
+Active plans and design notes live in this folder. Completed work records move to
+[archive/](./archive/) so that this folder only shows what is current.
+
+## Conventions
+
+- Every document starts with a `Status:` line: `DRAFT`, `ACTIVE`, or `COMPLETE (date)`.
+- When a milestone or design finishes, `git mv` its task list or design note into
+  `archive/` (keep the file name), set the status to `COMPLETE`, and fix relative links.
+  The plan that owns it keeps a link to the archived record.
+- Archived files are history: do not edit them except to fix links. Changes to
+  normative behavior go through a decision record in `../decisions/`.
+- Stay flat until `archive/` grows past roughly a dozen files; then group by phase
+  (`archive/phase-1/`).
+
+## Index
+
+| Document | Status |
+|---|---|
+| [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
+| [archive/m0-tasks.md](./archive/m0-tasks.md) | COMPLETE (2026-10-20) |

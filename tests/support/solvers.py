@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ctypes
+import functools
 import os
 import re
 import shutil
@@ -153,42 +154,21 @@ def _windows_file_version(path: Path) -> str:
     return f"{major}.{minor}.{build}.{revision}"
 
 
+@functools.cache
 def _version_string(name: SolverName, path: Path) -> str:
     if name == "ltspice":
         return _windows_file_version(path)
 
-    if sys.platform == "win32":
-        environment = os.environ.copy()
-        environment["NETLISTMOD_SOLVER_PATH"] = str(path)
-        result = subprocess.run(
-            [
-                "powershell.exe",
-                "-NoProfile",
-                "-NonInteractive",
-                "-Command",
-                "& $env:NETLISTMOD_SOLVER_PATH -v",
-            ],
-            capture_output=True,
-            check=False,
-            env=environment,
-            text=True,
-            timeout=10,
-        )
-        output = f"{result.stdout}\n{result.stderr}"
-        match = re.search(r"ngspice[- ]([^\s,]+)", output, re.IGNORECASE)
-        if match is None:
-            raise RuntimeError(
-                f"Could not determine ngspice version from {path} "
-                f"(exit code {result.returncode}): {output.strip()}"
-            )
-        return match.group(1)
-
+    # The GUI build (ngspice.exe) does not exit on `-v`, so query the console build.
+    console = path.with_name("ngspice_con.exe")
+    executable = console if path.name.lower() == "ngspice.exe" and console.is_file() else path
     result = subprocess.run(
-        [str(path), "-v"],
+        [str(executable), "-v"],
         capture_output=True,
         check=False,
+        stdin=subprocess.DEVNULL,
         text=True,
-        timeout=5,
+        timeout=10,
     )
     output = f"{result.stdout}\n{result.stderr}"
     match = re.search(r"ngspice[- ]([^\s,]+)", output, re.IGNORECASE)

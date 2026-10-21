@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** M0 complete (2026-10-20); plan remains a draft for maintainer review
+> **Status:** ACTIVE — M0 complete (2026-10-20)
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -38,7 +38,15 @@ switches and output behavior are recorded in
 
 Each milestone ends with its tests passing, its spec entries and docs written (architecture §14), and `ruff` and `mypy --strict` clean. Milestones are sequential unless noted.
 
-### M0 — Scaffolding and environment (complete)
+**Milestone closing procedure (applies to M1–M9).** Each milestone has a task list in `docs/design/` (written before the milestone starts, with a `Status:` line). The milestone's final task is to close it out:
+1. Set the task list status to `COMPLETE (date)`.
+2. `git mv` it to `docs/design/archive/` and fix its relative links.
+3. Link the archived record from the milestone heading below and update the index in [README.md](./README.md).
+4. Record any decisions made along the way in `docs/decisions/` and any new risks in the architecture or this plan.
+
+The phase plan itself is archived at the end of the phase, after the review gate (section 6).
+
+### M0 — Scaffolding and environment (complete; [task record](./archive/m0-tasks.md))
 - `pyproject.toml`, `src/` layout, `py.typed`, ruff/mypy/pytest config, pre-commit (with the corpus exclusions from §13), `.gitattributes` (`tests/corpus/** -text`).
 - `AGENTS.md`, `CONTRIBUTING.md`, `docs/provenance.md`, `docs/testing.md` (environment setup, section 3 above), docs skeleton.
 - T7 architecture tests: no `subprocess`/`os.system` in `src/`, layering (import-linter), no GPL runtime dependency, every `.lark` builds under `strict=True`.
@@ -96,6 +104,7 @@ Each milestone ends with its tests passing, its spec entries and docs written (a
 - README quick start, executed usage examples, a short demo script covering load → edit → save → run solver, error reference, `CHANGELOG.md`.
 - Coverage report (target 90%) and spec-coverage report.
 - Review checklist for the gate (section 6).
+- Archive the M9 task list per the closing procedure; the phase plan is archived once the gate passes.
 - **Exit:** ready for hands-on review.
 
 ## 5. Corpus and provenance
@@ -113,6 +122,7 @@ You confirm phase 2 can start when:
 - [ ] You have used the library on at least one of your own netlists.
 - [ ] The §21 questions resolved in M6 are recorded as decision records, and any new findings are logged.
 - [ ] The phase 1 limitations (opaque statements, no stimulus specs, unsupported element letters) are acceptable, or the plan for phase 2 is adjusted.
+- [ ] All milestone task lists are archived, and this plan is archived with status `COMPLETE` once the gate passes.
 
 ## 7. Risks and mitigations
 

@@ -87,8 +87,8 @@ rewrite them.
   manages the existing `.venv` and creates `uv.lock`.
 - Lark is MIT-licensed. The selected floor is `lark>=1.2.2`; `strict=True` was
   verified against Lark 1.2.2 and the lock currently resolves Lark 1.3.1.
-- Strict grammar tests use the dev-only `interegular` package to detect
-  terminal collisions.
+- `interegular` is a runtime dependency: Lark's `strict=True` uses it to detect
+  terminal collisions (MIT-licensed, verified by the maintainer).
 
 ### ngspice 47
 

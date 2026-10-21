@@ -517,7 +517,7 @@ notes: accepted by ngspice only in LTspice-compatibility mode (per manual); veri
 ```
 docs/
   architecture.md          this file
-  design/                  deeper design notes (edit plans, topology signature, lexing)
+  design/                  deeper design notes (edit plans, topology signature, lexing); archive/ holds completed work records
   usage/                   quick start, editing recipes, LTspice export, error reference
   grammars/<dialect>/      devices.md, names.md, numbers.md, scoping.md, discrepancies.md, spec entries
   testing.md               tiers, running solver tests locally, writing golden tests

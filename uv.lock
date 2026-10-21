@@ -553,6 +553,7 @@ name = "netlistmod"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "interegular" },
     { name = "lark" },
 ]
 
@@ -560,7 +561,6 @@ dependencies = [
 dev = [
     { name = "hypothesis" },
     { name = "import-linter" },
-    { name = "interegular" },
     { name = "mypy" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -569,13 +569,15 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "lark", specifier = ">=1.2.2" }]
+requires-dist = [
+    { name = "interegular", specifier = ">=0.3.3" },
+    { name = "lark", specifier = ">=1.2.2" },
+]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "hypothesis", specifier = ">=6.100" },
     { name = "import-linter", specifier = ">=2.1" },
-    { name = "interegular", specifier = ">=0.3.3" },
     { name = "mypy", specifier = ">=1.13" },
     { name = "pre-commit", specifier = ">=4.0" },
     { name = "pytest", specifier = ">=8.3" },
