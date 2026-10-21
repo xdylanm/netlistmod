@@ -1,0 +1,79 @@
+[build-system]
+requires = ["hatchling>=1.26"]
+build-backend = "hatchling.build"
+
+[project]
+name = "netlistmod"
+version = "0.1.0"
+description = "A source-preserving SPICE netlist editing library"
+readme = "README.md"
+requires-python = ">=3.13"
+license = "MIT"
+dependencies = ["lark>=1.2.2"]
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.100",
+    "interegular>=0.3.3",
+    "import-linter>=2.1",
+    "mypy>=1.13",
+    "pre-commit>=4.0",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
+    "ruff>=0.8",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/netlistmod"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/netlistmod",
+    "README.md",
+    "LICENSE",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["prototype/**", "docs/architecture.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["src/netlistmod"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--strict-markers", "--cov=netlistmod", "--cov-report=term-missing"]
+norecursedirs = ["prototype"]
+markers = [
+    "solver(name): test requiring a local solver (ngspice or ltspice)",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["netlistmod"]
+
+[tool.coverage.report]
+fail_under = 0
+show_missing = true
+
+[tool.importlinter]
+root_package = "netlistmod"
+
+[[tool.importlinter.contracts]]
+name = "Package layers follow the architecture"
+type = "layers"
+layers = [
+    "netlistmod.edit",
+    "netlistmod.document",
+    "netlistmod.model",
+    "netlistmod.grammar",
+    "netlistmod.source",
+    "netlistmod.errors",
+    "netlistmod.dialects",
+]

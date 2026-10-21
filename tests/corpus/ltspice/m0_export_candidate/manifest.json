@@ -1,0 +1,12 @@
+{
+  "family": "m0_export_candidate",
+  "origin": "Authored locally as a trivial circuit for the M0 LTspice export spike",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-20",
+  "notes": "Exported by LTspice 26.1.1 with -netlist. The machine-specific source-path comment was replaced with a relative filename. Output had no BOM and was ASCII-only; UTF-8 versus cp1252 for non-ASCII output remains unverified.",
+  "fixtures": {
+    "export_smoke.asc": "60aec92100365fb6dbd8b41f7ac62856b7483f71f50f09177896261f17e556c0",
+    "export_smoke.net": "e6b0a58c3a520693bf03ed19eb2a24c0372490ca30b382e994945bf078cd4c81"
+  }
+}

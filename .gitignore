@@ -35,6 +35,7 @@ ENV/
 
 # Testing and Coverage
 .cache/
+.import_linter_cache/
 .pytest_cache/
 .coverage
 htmlcov/

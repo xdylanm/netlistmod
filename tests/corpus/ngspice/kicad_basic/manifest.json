@@ -1,0 +1,13 @@
+{
+  "family": "kicad_basic",
+  "origin": "Exported from a KiCad project authored by the maintainer",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-20",
+  "notes": "Fixtures use RKM values such as 1k0 and DC/AC source keywords.",
+  "fixtures": {
+    "ac_basic_rc_lpf.cir": "ec7ed93183f7e3aa7f7f4919ff5357809cfe4d966301a985e1508a843cd021ce",
+    "dc_basic_r_divider.cir": "ba3a61a2691f074639ae9e3b979a1a9f321688d111ea97be4ed704aaf2758146",
+    "dc_basic_r_divider_decimal_vals.cir": "11abf4401bfee5372a4817fcdee447346606c8830abc92d9dd80cf87016eefc2"
+  }
+}

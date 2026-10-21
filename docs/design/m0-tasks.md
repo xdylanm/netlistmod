@@ -1,6 +1,7 @@
 # M0 task list — scaffolding and environment
 
-> **Status:** APPROVED decisions applied; ready for implementation
+> **Status:** COMPLETE (2026-10-20)
+> **Progress:** T1–T16 complete.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M0). Governed by [architecture.md](../architecture.md).
 
 ## 1. Current state
@@ -26,11 +27,11 @@ Tasks are ordered by dependency. Every task ends with `ruff`, `mypy --strict` an
 
 ### Project definition
 
-**T1 — Verify tool availability.**
+- [x] **T1 — Verify tool availability.**
 Confirm `uv` can manage the existing `.venv` (`uv sync` / `uv pip` target `.venv`), and check `lark` license (MIT) and the version that supports `strict=True`.
 *Done when:* findings recorded in `docs/testing.md` (T14) and the minimum Lark version is chosen.
 
-**T2 — Create `pyproject.toml`; delete `requirements.txt`.**
+- [x] **T2 — Create `pyproject.toml`; delete `requirements.txt`.**
 - PEP 621 metadata, hatchling backend, `src/` layout, `requires-python = ">=3.13"`, MIT license, `.lark` files included as package data.
 - Runtime dependency: `lark` (version floor from T1).
 - Dev dependency group: `pytest`, `pytest-cov`, `hypothesis`, `ruff`, `mypy`, `pre-commit`, `import-linter`.
@@ -38,21 +39,21 @@ Confirm `uv` can manage the existing `.venv` (`uv sync` / `uv pip` target `.venv
 - Delete `requirements.txt`.
 - *Done when:* `uv sync` into `.venv` succeeds, `uv.lock` is created, and `python -c "import netlistmod"` works.
 
-**T3 — Package skeleton.**
+- [x] **T3 — Package skeleton.**
 Create `src/netlistmod/__init__.py` and `py.typed`; add empty layer modules matching architecture §4 only as needed to host M0 tests (`errors.py`, `source.py`, `dialects.py` stubs are filled in M1). Move `src/netlistmod/grammar/ngspice.lark` and `ngspice.py` to `prototype/` with `git mv` (decision 1); remove the then-empty `grammar/` directory from `src/` unless later tasks need it. Exclude `prototype/` from ruff, mypy and pytest collection.
 *Done when:* the package imports, `mypy --strict` passes, and nothing from the prototype is in `src/`.
 
 ### Repository hygiene
 
-**T4 — `.gitattributes` and `.editorconfig`.**
+- [x] **T4 — `.gitattributes` and `.editorconfig`.**
 `tests/corpus/** -text` (plus golden-output paths); default `* text=auto` for source. `.editorconfig` for source files only.
 *Done when:* `git check-attr text` reports `unset` for corpus files.
 
-**T5 — Pre-commit.**
+- [x] **T5 — Pre-commit.**
 Hooks: ruff, ruff-format, mypy, YAML/TOML checks, merge-conflict check. Whitespace/EOL hooks (`trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending`) exclude `tests/corpus/` and golden files (architecture §13).
 *Done when:* `pre-commit run --all-files` is green and leaves the corpus files byte-identical (verified by `git diff --exit-code`).
 
-**T6 — `AGENTS.md` (project constitution and patterns).**
+- [x] **T6 — `AGENTS.md` (project constitution and patterns).**
 A short file (about one page) at the repository root. It MUST point to [docs/architecture.md](../architecture.md) as the authority and MUST NOT duplicate it. Content:
 - *Constitution* (one line each, referencing the architecture sections): source text is the single source of truth (P1); typed view with edits as span replacements (P2); exact round-trip and minimal diff (P3); topology is read-only (P4); strict grammar, fail loudly (P5); grammar constructs have spec entries and tests (P6); dialects are separate grammars over a shared core and the caller selects the dialect (P7); no simulator launching in `src/` (P9); clean-room provenance, no GPL-derived code or tests, including spicelib (P10, §12).
 - *Working rules:* the agent working agreement in architecture §15; do not resolve items in architecture §21 silently; do not weaken an invariant to pass a test; architecture changes go through a decision record in `docs/decisions/`; detailed requirements live in `docs/design/`.
@@ -60,57 +61,57 @@ A short file (about one page) at the repository root. It MUST point to [docs/arc
 - *Commands:* run everything through `uv run --env-file .env …` (tests, `ruff check`, `ruff format`, `mypy`, `pre-commit`); solver tests are local-only and skip when a solver is absent.
 *Done when:* `AGENTS.md` exists, fits in about one page, links to the architecture, and states the GPL rule and the `uv run` convention.
 
-**T6b — Other contributor documents.**
+- [x] **T6b — Other contributor documents.**
 `CONTRIBUTING.md` (clean-room rules, how to declare fixture origin, how to run checks), `docs/provenance.md` (policy), `CHANGELOG.md` (empty "Unreleased"), `README.md` (purpose, status, link to docs).
 *Done when:* the files exist; `CONTRIBUTING.md` states the GPL rule.
 
-**T7 — Docs skeleton.**
+- [x] **T7 — Docs skeleton.**
 Create `docs/decisions/` (with a short template), `docs/usage/`, `docs/grammars/ngspice/`, `docs/grammars/ltspice/` placeholders. Only what is needed; no empty boilerplate beyond directory README stubs.
 *Done when:* the layout matches architecture §14 and links resolve.
 
 ### Solver environment
 
-**T8 — Environment template.**
+- [x] **T8 — Environment template.**
 Add `.env.example` (tracked, placeholder paths for `NGSPICE_EXE` and `LTSPICE_EXE`). No loader code: `uv run --env-file .env …` supplies the variables (decision 4). Document this convention in `docs/testing.md` (T14).
 *Done when:* a fresh clone can copy `.env.example` to `.env`, edit it, and `uv run --env-file .env pytest` sees the paths in the test environment.
 
-**T9 — Solver discovery: `tests/support/solvers.py`.**
+- [x] **T9 — Solver discovery: `tests/support/solvers.py`.**
 Discovery order: environment variable → `PATH` → default install locations (e.g. `…\Programs\ngspice\…`, `…\Programs\ADI\LTspice`). Return the path and version string, or `None`. Handle both `ngspice.exe` and `ngspice_con.exe`. Tests-only: no `subprocess` in `src/`.
 *Done when:* unit tests for discovery logic (using fake paths/monkeypatched env) pass without the solvers installed.
 
-**T10 — `solver` marker and `--require-solver`.**
+- [x] **T10 — `solver` marker and `--require-solver`.**
 `conftest.py` registers `@pytest.mark.solver("ngspice"|"ltspice")`, skips with a clear reason when absent, and `--require-solver <name>` turns a missing solver into a failure. Run solvers in a temp directory, batch mode, with a timeout (architecture §10.3).
 *Done when:* a smoke test runs ngspice in batch on a tiny netlist and passes locally; the same test skips with a reason when `NGSPICE_EXE` is unset.
 
 ### Corpus
 
-**T11 — Corpus manifest and fixture migration.**
+- [x] **T11 — Corpus manifest and fixture migration.**
 Per decision 2: create `tests/corpus/ngspice/kicad_basic/` with a manifest (origin: export from maintainer's own KiCad project, license, author, date, notes), `git mv` the three fixtures from `tests/fixtures/`, and preserve their bytes exactly (trailing whitespace, line endings). Note in the manifest that the fixtures use RKM values (`1k0`) and `DC`/`AC` source keywords. Remove the empty `tests/fixtures/`. Ask the maintainer for the origin/license/author/date if they cannot be inferred.
 *Done when:* a test checks that every corpus family has a manifest and that fixture hashes match the manifest (guards against accidental reformatting).
 
 ### Spikes
 
-**T12 — ngspice batch spike.**
+- [x] **T12 — ngspice batch spike.**
 Run the three fixtures through ngspice in batch mode (`-b -o`) via the T10 harness. Record: which executable to use for batch runs, the exact switches, exit code and output behavior, and whether a netlist with no analysis directive is accepted. Note: the fixtures have no analysis statements, so the spike will add a temporary copy with `.op`/`.ac` (not modifying the fixtures).
 *Done when:* findings are in `docs/testing.md`; one solver-backed smoke test is committed.
 
-**T13 — LTspice export/batch spike.**
+- [x] **T13 — LTspice export/batch spike.**
 Determine (and record in `docs/usage/ltspice-export.md`): the command-line switches for batch simulation and for netlist export from `.asc`, working-directory/output behavior, whether it is usable headlessly, and the encoding of the produced netlist (BOM, UTF-8 vs. UTF-16 vs. cp1252). Use a trivial circuit authored here and save any export as a corpus candidate (not committed until its manifest exists). If an `.asc` cannot be produced without the GUI, ask the maintainer for one.
 *Done when:* findings recorded with the LTspice version; open points listed as risks.
 
 ### Architecture tests (T7 tier)
 
-**T14 — `docs/testing.md`.**
+- [x] **T14 — `docs/testing.md`.**
 Document: environment setup (uv, `.venv`, `.env`), how to run each tier, solver configuration and markers, `--require-solver`, writing golden tests, and the T1/T12/T13 findings.
 *Done when:* a new contributor can follow it to a green local run.
 
-**T15 — Architecture tests.**
+- [x] **T15 — Architecture tests.**
 In `tests/architecture/`: no `subprocess`/`os.system`/`os.popen` imports in `src/`; layering contract via `import-linter` (layers per architecture §3, initially trivially satisfied); every `.lark` under `src/` compiles with `strict=True` (vacuously true until M2, and must fail on a deliberately conflicting grammar in a self-test); no GPL packages in runtime dependencies.
 *Done when:* the tests pass, and each rule is shown to fail on a deliberate violation (self-tests using temporary files).
 
 ### Wrap-up
 
-**T16 — M0 exit check.**
+- [x] **T16 — M0 exit check.**
 Run `ruff check`, `ruff format --check`, `mypy --strict`, `pytest` (with coverage), `pre-commit run --all-files`, and the local solver smoke test. Update `phase-1-plan.md` section 3 with the final environment instructions and mark M0 done. Remove any temporary files.
 *Done when:* all checks are green on this machine and the maintainer's exit criteria in the phase 1 plan (green toolchain; solvers discovered or cleanly skipped) hold.
 

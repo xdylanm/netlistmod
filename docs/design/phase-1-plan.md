@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** DRAFT for maintainer review
+> **Status:** M0 complete (2026-10-20); plan remains a draft for maintainer review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -18,22 +18,27 @@ Phase 1 ends at a **review gate**: the maintainer reviews the library hands-on a
 
 ## 3. Local environment
 
-Nothing is configured yet: `ngspice`, `LTspice` and `uv` were not found on this machine's `PATH`. The environment is documented in `docs/testing.md` (created in M0) and must cover:
+M0 established and verified the local development and solver setup. The detailed
+commands and findings are in [docs/testing.md](../testing.md). The current
+Windows environment is:
 
 | Need | Configuration |
 |---|---|
-| Python 3.13 and `uv` | `uv sync` creates the dev environment from the lockfile. |
-| ngspice (console build) | Install, then set `NGSPICE_EXE` to the executable, or add it to `PATH`. Batch use: `ngspice -b -o <log> <netlist>`. |
-| LTspice | Install, then set `LTSPICE_EXE` to the executable. Netlist export and batch switches are **unverified** and are established in the M0 spike, then recorded in `docs/usage/ltspice-export.md`. |
-| Solver tests | Discovery order: environment variable, `PATH`, default install locations. `--require-solver <name>` makes a missing solver a failure. |
+| Python and `uv` | Python 3.14.3 and uv 0.13.4; `uv sync` manages the repository `.venv` from `uv.lock`. |
+| ngspice | ngspice 47 is installed locally. Set `NGSPICE_EXE` or rely on discovery; the console sibling `ngspice_con.exe` is used for `-b -o <log> <netlist>`. |
+| LTspice | LTspice 26.1.1 (file/product version 26.1.1.0) is installed locally. Headless export uses `-netlist <file.asc>` and batch simulation uses `-b <netlist>`. |
+| Solver tests | Discovery order: environment variable, `PATH`, standard install locations. Missing solvers skip unless `--require-solver <name>` is supplied. |
 
-**Needed from the maintainer:** install locations (or confirmation of install) for ngspice and LTspice, and permission to use `uv` (or an alternative) for the environment.
+Copy `.env.example` to `.env` and set executable paths if desired. On Windows,
+quoted paths with forward slashes are supported by `uv --env-file`. Solver
+switches and output behavior are recorded in
+[docs/usage/ltspice-export.md](../usage/ltspice-export.md).
 
 ## 4. Milestones
 
 Each milestone ends with its tests passing, its spec entries and docs written (architecture §14), and `ruff` and `mypy --strict` clean. Milestones are sequential unless noted.
 
-### M0 — Scaffolding and environment
+### M0 — Scaffolding and environment (complete)
 - `pyproject.toml`, `src/` layout, `py.typed`, ruff/mypy/pytest config, pre-commit (with the corpus exclusions from §13), `.gitattributes` (`tests/corpus/** -text`).
 - `AGENTS.md`, `CONTRIBUTING.md`, `docs/provenance.md`, `docs/testing.md` (environment setup, section 3 above), docs skeleton.
 - T7 architecture tests: no `subprocess`/`os.system` in `src/`, layering (import-linter), no GPL runtime dependency, every `.lark` builds under `strict=True`.
