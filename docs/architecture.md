@@ -8,7 +8,9 @@
 - **Audience:** maintainers, contributors, and coding agents implementing the library.
 - **Normative language:** MUST / SHOULD / MAY are used in the RFC 2119 sense. Sections 2 (Principles), 7 (Editing model), 10 (Testing), 11 (Reference manuals) and 12 (Licensing and provenance) are normative. The rest is descriptive.
 - **Conflicts:** if code and this document disagree, one of them is wrong. Fix the code, or change this document through a decision record in `docs/decisions/`. Never diverge silently.
-- **Open items:** Section 19 lists decisions not yet taken, each with a proposed default. Agents MUST NOT silently resolve an open decision; they raise it.
+- **Level of detail:** this document states high-level principles and boundaries. Detailed functional requirements live in design documents under `docs/design/`, written as each part is implemented. Illustrative sketches (e.g. Section 16) are not requirements.
+- **Prototype code:** the existing `.lark`/`.py` files are exploratory. They are not expected to match this document and may be used as a starting point.
+- **Decisions and open items:** Section 19 lists confirmed decisions. Section 21 lists unresolved questions and items deferred to design and implementation. Agents MUST NOT silently resolve an item in Section 21; they raise it.
 
 ---
 
@@ -90,7 +92,7 @@ An element line the grammar does not recognise is an error with line, column and
 Each supported construct has a spec entry citing the reference manual and linking to its tests. CI fails if a supported construct lacks tests.
 
 **P7 — Dialects are separate grammars over a shared core.**
-There is no "accept any dialect" grammar, because the same device letter can mean different things in different dialects. The caller selects the dialect explicitly.
+There is no "accept any dialect" grammar, because the same device letter can mean different things in different dialects. The caller MUST select the dialect explicitly: there is no default and no auto-detection.
 
 **P8 — Documented behavior is validated, not assumed.**
 Manuals are the starting point, not the authority. Any behavior the library relies on has a test; where practical it is also validated against the real solver.
@@ -222,12 +224,12 @@ class NumericValue:      text: str; span: Span              # 1k, 2k7, 1e-6, 100
 class Formula:           text: str; delimiter: str; span: Span   # {Rx*2}, "…", '…'
 @dataclass(frozen=True)
 class ModelReference:    model_name: str; span: Span
-# later: SourceSpec (DC/AC/PULSE/SIN/...), BehavioralExpression
+# SourceSpec (DC/AC/PULSE/SIN/...), BehavioralExpression: required by the end of phase 2
 ```
 
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
-- `VoltageSource` / `CurrentSource`: `value: NumericValue | Formula` in v1; full stimulus specs are a planned typed node.
+- `VoltageSource` / `CurrentSource`: `value: NumericValue | Formula` initially; full stimulus specs are a typed node to be added before phase 2 completes.
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
 
 ### 5.4 Lines
@@ -250,7 +252,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 - `strict=True` turns shift/reduce, reduce/reduce and terminal-collision problems into build errors. A grammar that only works because Lark resolves a conflict silently is a bug.
 - Earley MAY be used for grammar exploration but MUST NOT ship. Lesson from the prototype: Earley parsed an input that LALR rejected because its dynamic lexer tolerates terminal overlap. That is not evidence the grammar is correct.
 
-### 6.3 Lexical rules (learned in the prototype; normative)
+### 6.3 Lexical rules (learned in the prototype)
 
 | # | Rule | Why |
 |---|------|-----|
@@ -269,12 +271,14 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 ### 6.4 Numeric literals
 
 - Standard form: number, optional scale suffix (`f p n u µ m k meg g t`), case-insensitive, `meg` for mega. `m`/`M` is milli, always.
-- **RKM notation** (`2k7` = 2.7k, `4n7`, `100R`): the grammar accepts digits after the suffix. The ngspice manual states RKM notation is accepted when LTspice-compatibility mode is set, i.e. it is dialect- and mode-gated. The grammar accepts it; a diagnostic notes that it requires compatibility mode. `M` in mid-value position is ambiguous (milli vs. mega); it is treated as milli and flagged as an open question until validated.
+- **RKM notation** (`2k7` = 2.7k, `4n7`, `100R`): the grammar accepts digits after the suffix. The ngspice manual states RKM notation is accepted when LTspice-compatibility mode is set, i.e. it is dialect- and mode-gated. The grammar accepts it; a diagnostic notes that it requires compatibility mode. `M` in mid-value position is ambiguous (milli vs. mega); it is treated as milli for C and mega for R following IEC60062.
+- By the end of phase 2 the grammar MUST cover the full range of value specifications in the ngspice manual (scale-factor table and numeric forms), each with a spec entry and tests.
 - Interpretation of the numeric value is out of scope (non-goal 6); the library stores the text.
 
 ### 6.5 Directives
 
-- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`/`.probe`, `.meas`, `.include`, `.lib`; `.step` for LTspice).
+- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`/`.probe`, `.meas`; `.step` for LTspice).
+- `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
 - An **unknown dot-command** is preserved as `UnknownDirective(raw)`: it is not topology, so preserving it is safe.
 - An **unknown element letter** is an error (P5): an unparsed element would be a blind spot in the topology guarantee.
 
@@ -282,9 +286,13 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 `.control` ... `.endc` is matched as a single opaque block and preserved verbatim. It is not editable and not interpreted. (Rationale: it is a second language with its own dialect drift, and parametric work is done by running separate single-shot netlists.)
 
+Conditional blocks (`.if` ... `.endif`) are likewise opaque: they are not parsed, and elements inside them are not indexed. Netlists whose topology depends on conditionals are out of scope (Section 7.8).
+
 ### 6.7 Device letters and dialects
 
-A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `Ö`; qspice's non-ASCII letters) live only in that dialect's overlay. Implementation phasing is an open decision (Section 19).
+A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `Ö`; qspice's non-ASCII letters) live only in that dialect's overlay.
+
+**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is accounted for and the full range of value specifications is covered (Section 6.4). Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5).
 
 ---
 
@@ -296,8 +304,8 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 |---|---|---|
 | **Topology** | Element line structure: designator, element type, ordered node list; `.subckt` name, ports and body structure; `K` coupling targets | Read-only |
 | **Properties** | Numeric values, formulas, instance parameters, model name (same model type), `.param` definitions, `.model` parameters, source stimulus specs | Editable (and `.param` addable) |
-| **Directives** | `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.step`, `.include`, `.lib`, unknown dot-commands | Addable, replaceable, removable |
-| **Opaque** | `.control` blocks | Untouchable |
+| **Directives** | `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.step`, unknown dot-commands | Addable, replaceable, removable |
+| **Opaque** | `.control` blocks, conditional blocks, `.include` / `.lib` statements | Untouchable (an `.include` may be added, Section 7.9) |
 
 ### 7.2 Allowed operations
 
@@ -339,7 +347,9 @@ The signature is a canonical, hashable value built from typed nodes: for every e
 ### 7.8 Known limits (documented, not solved)
 
 - **Expressions can hide connectivity.** A behavioral source formula such as `V(n1)*2` depends on nets not in the element's node list. The library guarantees node-list topology only.
-- **`.include` / `.lib` content is outside the parsed file.** Topology and model resolution cover the main file; the resolution policy for included files is defined in the semantic-layer spec (Section 8).
+- **`.include` / `.lib` content is outside the parsed file.** These statements are opaque and never resolved or read. Topology, symbol tables and reference resolution cover the main file only; references to models, subcircuits or params defined in included files are not visible to the library.
+- **Conditional blocks are opaque.** Netlists in which `.if`/`.else`/`.endif` changes topology are explicitly out of scope; the topology guarantee does not extend into conditional blocks.
+- **Replacement text is not validated.** In v1 the caller is responsible for the validity of the text it supplies. The library may take on more validation as the grammar matures.
 
 ### 7.9 Test harnesses
 
@@ -356,6 +366,7 @@ In scope:
 - **Reference resolution** (read-only): element → model; subcircuit instance → definition; formula → parameter names. Parameter-name extraction from a formula is a best-effort identifier scan, not an evaluator; function names are excluded using a per-dialect list; limits are documented.
 - **Topology queries:** `nets()`, `elements_on_net(net)`, `connections(designator)`, subcircuit ports. These let external tools (e.g. the harness tool, the controller's consistency checks) validate against the netlist without writing their own parser.
 - **Diagnostics:** unresolved model/subckt/param references, duplicate definitions, dialect-gated syntax. Diagnostics are data, not exceptions.
+- **Names and net identity:** case sensitivity of designators, models, params and subcircuits, and the identity of nets (including ground aliases), are defined per dialect in `docs/grammars/<dialect>/names.md`. The topology signature and all queries use these rules.
 - **Scoping:** parameter scoping rules are defined per dialect in `docs/grammars/<dialect>/scoping.md`. Simulators are reported to differ here; the behavior MUST be validated against the solver before being relied on. Until then v1 documents a simple scope model and its limitations.
 
 Out of scope: expression evaluation, unit arithmetic, hierarchy flattening, model-parameter validation.
@@ -381,7 +392,7 @@ LTspice can generate a netlist from the command line (spicelib's documentation d
 
 1. Add a `Dialect` enum member and registry entry.
 2. Create `grammar/<dialect>.lark` (overlay on `core.lark`); build under `strict=True`.
-3. Create `docs/grammars/<dialect>/` with `devices.md`, `scoping.md`, `numbers.md`, and one spec entry per construct.
+3. Create `docs/grammars/<dialect>/` with `devices.md`, `names.md`, `scoping.md`, `numbers.md`, and one spec entry per construct.
 4. Add dialect-specific nodes only where semantics differ; reuse common nodes otherwise.
 5. Add corpus fixtures with provenance, and tests for every spec entry.
 6. Add solver-backed tests if the solver is obtainable (optional).
@@ -508,7 +519,7 @@ docs/
   architecture.md          this file
   design/                  deeper design notes (edit plans, topology signature, lexing)
   usage/                   quick start, editing recipes, LTspice export, error reference
-  grammars/<dialect>/      devices.md, numbers.md, scoping.md, discrepancies.md, spec entries
+  grammars/<dialect>/      devices.md, names.md, numbers.md, scoping.md, discrepancies.md, spec entries
   testing.md               tiers, running solver tests locally, writing golden tests
   provenance.md            licensing policy, corpus origins
   decisions/               short decision records (NNNN-title.md)
@@ -526,7 +537,7 @@ Rules: documentation changes ship in the same change as the code; usage examples
 4. Every new construct needs a spec entry, tests, and a manual citation.
 5. Do not read or reproduce GPL-licensed sources (including spicelib tests); declare fixture origins.
 6. Do not add solver launching to `src/`.
-7. Do not resolve items in Section 19 silently.
+7. Do not resolve items in Section 21 silently.
 8. If the project uses OpenSpec, `openspec/config.yaml` should point to this document for project-level principles.
 
 ---
@@ -579,7 +590,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 
 ---
 
-## 19. Confimed decisions
+## 19. Confirmed decisions
 
 | # | Issue | Decision |
 |---|---|---|
@@ -588,16 +599,19 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 | 3 | Build backend / dev tooling | hatchling + uv |
 | 4 | Type checker | mypy `--strict` |
 | 5 | Grammar composition mechanism | implementer's choice (Lark `%import` vs. concatenation), subject to strict build per dialect |
-| 6 | Device-letter phasing | Phase 1: R, C, L, V, I, D, X, K plus common directives. Phase 2: Q, J, M, E, F, G, H, B, S, W, T |
+| 6 | Device-letter phasing | Phase 1: R, C, L, V, I, D, X, K plus common directives. Phase 2: Q, J, M, E, F, G, H, B, S, W, T. Both phases are v1; phase 2 starts after the maintainer's hands-on review of phase 1. |
 | 7 | Empty `.title` | Accept (title text optional) |
-| 8 | Handling of RKM `M` ambiguity | add option to interpret values for R and C per RKM (e.g. `1M0` is equivalent to `1meg`, ) with automatic fallback to standard SPICE notation.  |
+| 8 | Handling of RKM `M` ambiguity | add compatibility mode option to interpret values for R and C per RKM with automatic fallback to standard SPICE notation. |
 | 9 | `.control` blocks | Opaque, preserved verbatim |
 | 10 | Unknown dot-commands | Preserved as `UnknownDirective` |
 | 11 | Line-coverage target | 90% |
 | 12 | Scoping model for `.param` in subcircuits | Document a simple model; validate per dialect against the solver |
-| 13 | Handling of `.include`/`.lib` in resolution | Resolve model/subckt references through included files read-only; never edit them |
+| 13 | Handling of `.include`/`.lib` | Opaque statements in v1: not resolved, read or indexed. Conditional blocks are also opaque; topology-changing conditionals are out of scope |
 | 14 | ngspice job in CI | Optional, non-required |
 | 15 | Docs site generator | Plain Markdown in `docs/` |
+| 16 | Name case sensitivity and net identity | Defined per dialect in `docs/grammars/<dialect>/names.md` |
+| 17 | Dialect selection | Always explicit from the caller; no default, no auto-detection |
+| 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility) |
 
 ---
 
@@ -610,3 +624,27 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 - **LTspice CLI export** switch and behavior are unverified.
 - **Agent contamination:** training exposure to GPL code cannot be excluded; process controls and review are the mitigation.
 - **Grammar surface** grows with every dialect; the spec-entry checker and strict builds are the control.
+- **Implicit first-line title.** In SPICE the first line of a netlist is the title whether or not it is a `.title` statement. This is not yet modelled; it MUST be covered by tests and fixed in the grammar.
+
+---
+
+## 21. Unresolved questions and deferred items
+
+**Unresolved (need a decision before the edit layer is designed)**
+
+1. **Edit lifecycle.** Section 3 says the document is re-parsed "after every edit set" and Section 7.6 verifies on `save()`. Open points:
+   - Are edits staged (applied only at save or an explicit commit) or applied eagerly?
+   - Can the caller read back after an edit (e.g. `references_to_param` right after `params.add`)?
+   - What happens to element handles after a re-parse?
+   - What is the boundary of an "edit set"?
+   - How are two edits to the same span handled (error or last-wins), given that edits MUST NOT overlap?
+2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The same question applies to the `UNRESOLVED_*` diagnostics.
+
+**Deferred to design documents and implementation (resolve with tests)**
+
+- Text conventions for inserted lines (EOL style, EOF without newline, keyword case, `.param` form) and placement semantics.
+- Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).
+- The line model for continuation lines, interleaved comments and anchor-relative insertion.
+- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only).
+- Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.
+- The diagnostics API (delivery and severity).

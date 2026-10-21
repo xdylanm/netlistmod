@@ -1,0 +1,5 @@
+.title KiCad schematic
+V1 /vin 0 DC 2 
+R1 /vin /vout 1k
+R2 /vout 0 1k
+.end
