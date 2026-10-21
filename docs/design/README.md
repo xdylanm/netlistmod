@@ -5,7 +5,7 @@ Active plans and design notes live in this folder. Completed work records move t
 
 ## Conventions
 
-- Every document starts with a `Status:` line: `DRAFT`, `ACTIVE`, or `COMPLETE (date)`.
+- Every document starts with a `Status:` line: `DRAFT`, `READY` (approved, not started), `ACTIVE`, or `COMPLETE (date)`.
 - When a milestone or design finishes, `git mv` its task list or design note into
   `archive/` (keep the file name), set the status to `COMPLETE`, and fix relative links.
   The plan that owns it keeps a link to the archived record.
@@ -19,4 +19,5 @@ Active plans and design notes live in this folder. Completed work records move t
 | Document | Status |
 |---|---|
 | [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
+| [m1-tasks.md](./m1-tasks.md) | READY |
 | [archive/m0-tasks.md](./archive/m0-tasks.md) | COMPLETE (2026-10-20) |
