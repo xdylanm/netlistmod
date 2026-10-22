@@ -622,7 +622,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 - **Continuation lines** are not yet prototyped; the ignored-terminal approach must be validated, including span correctness.
 - **Scoping rules** differ between simulators and are not yet validated against solvers.
 - **Hidden connectivity** in behavioral expressions can defeat the topology guarantee (documented limit).
-- **Encoding:** LTspice netlist encodings and the round-trip guarantee must be verified on real exported fixtures.
+- **Encoding:** verified for LTspice 26.1.1 (exports are UTF-8 without a BOM; see `docs/usage/ltspice-export.md` and decision 0001). Re-verify on LTspice upgrades and on KiCad exports.
 - **LTspice CLI export** switch and behavior are unverified.
 - **Agent contamination:** training exposure to GPL code cannot be excluded; process controls and review are the mitigation.
 - **Grammar surface** grows with every dialect; the spec-entry checker and strict builds are the control.

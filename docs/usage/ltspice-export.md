@@ -28,8 +28,9 @@ exports as UTF-8 without a BOM, preserving those characters. A separate UTF-8
 schematic is needed to supply `Ω`, which CP1252 cannot encode; LTspice reads
 its non-ASCII UTF-8 bytes as Windows-1252 and the resulting netlist contains
 mojibake. This supports CP1252 for LTspice schematic input and UTF-8 for its
-exported netlists. These are observations for the tested version, not a
-cross-version guarantee.
+exported netlists: the decoder's UTF-8-first order handles LTspice exports, and
+the CP1252 fallback mainly serves hand-made or older netlists. These are
+observations for the tested version, not a cross-version guarantee.
 
 ## Run a netlist in batch mode
 
@@ -44,4 +45,5 @@ directory.
 
 These switches and output behaviors are local findings, not a promise that all
 LTspice versions behave identically. Re-run the smoke tests after upgrading
-LTspice; encoding for non-ASCII exported content remains an open risk.
+LTspice and re-check the encoding observations above, since they are specific
+to the tested version.

@@ -188,6 +188,32 @@ def test_source_position_rejects_out_of_range_values() -> None:
             source.offset(line, column)
 
 
+def test_offset_rejects_columns_beyond_the_line_terminator() -> None:
+    lf = SourceText("a\nb")
+    assert lf.offset(1, 2) == 1
+    with pytest.raises(ValueError):
+        lf.offset(1, 3)
+    assert lf.offset(2, 2) == 3
+
+    crlf = SourceText("one\r\ntwo")
+    assert crlf.offset(1, 4) == 3
+    with pytest.raises(ValueError):
+        crlf.offset(1, 5)
+
+
+@given(st.text(alphabet=st.sampled_from(["a", " ", "\n", "\r"])))
+def test_valid_offsets_round_trip_through_position(text: str) -> None:
+    source = SourceText(text)
+    for line in range(1, source.line_count + 1):
+        span = source.line_span(line)
+        for column in range(1, span.length + 3):
+            try:
+                offset = source.offset(line, column)
+            except ValueError:
+                continue
+            assert source.position(offset) == (line, column)
+
+
 @given(st.text())
 def test_utf8_round_trip_property(text: str) -> None:
     encoded = text.encode("utf-8")
@@ -202,10 +228,17 @@ def test_utf16_round_trip_property(text: str) -> None:
         ("utf-16-le", b"\xff\xfe"),
         ("utf-16-be", b"\xfe\xff"),
     ):
-        encoded = bom + text.encode(encoding)
+        # A UTF-16 LE BOM followed by U+0000 is byte-identical to a UTF-32 LE BOM
+        # and is rejected by design; see test_utf16_le_leading_nul_is_ambiguous.
+        encoded = bom + ("x" + text).encode(encoding)
         assert SourceText.from_bytes(encoded).to_bytes() == encoded
         without_bom = ("x" + text).encode(encoding)
         assert SourceText.from_bytes(without_bom).to_bytes() == without_bom
+
+
+def test_utf16_le_leading_nul_is_ambiguous_with_a_utf32_bom() -> None:
+    with pytest.raises(EncodingError, match="UTF-32"):
+        SourceText.from_bytes(b"\xff\xfe" + "\x00".encode("utf-16-le"))
 
 
 @given(st.text(alphabet=st.characters(min_codepoint=0, max_codepoint=255)))

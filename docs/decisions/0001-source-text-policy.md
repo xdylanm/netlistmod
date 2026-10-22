@@ -18,4 +18,6 @@
 - **Consequences:** The selected codec and BOM are retained for writes, and
   byte-oriented file I/O avoids newline translation. UTF-16 without a BOM is
   not detected; LTspice-produced fixtures validate the policy before it is
-  expanded.
+  expanded. A UTF-16 LE file whose first character is U+0000 starts with the
+  same four bytes as a UTF-32 LE BOM and is rejected as UTF-32; netlists do not
+  begin with NUL, so this is accepted.

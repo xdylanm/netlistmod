@@ -48,7 +48,6 @@ files = ["src/netlistmod"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = ["--strict-markers", "--cov=netlistmod", "--cov-report=term-missing"]
-norecursedirs = ["prototype"]
 markers = [
     "solver(name): test requiring a local solver (ngspice or ltspice)",
 ]

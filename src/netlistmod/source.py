@@ -228,12 +228,20 @@ class SourceText:
         return line_index + 1, offset - self._line_starts[line_index] + 1
 
     def offset(self, line: int, column: int) -> int:
-        """Convert a 1-based line and column to a character offset."""
+        """Convert a 1-based line and column to a character offset.
+
+        The last valid column is the position just before the line terminator
+        (or the end of an unterminated final line), so it round-trips through
+        ``position``.
+        """
         if column < 1:
             raise ValueError("Column must be at least 1")
         span = self.line_span(line)
-        if column > span.length + 1:
-            raise ValueError(f"Column must be between 1 and {span.length + 1}")
+        content = self.text[span.start : span.end]
+        terminator_length = 2 if content.endswith("\r\n") else 1 if content.endswith("\n") else 0
+        last_column = span.length - terminator_length + 1
+        if column > last_column:
+            raise ValueError(f"Column must be between 1 and {last_column}")
         return span.start + column - 1
 
     def excerpt(self, offset: int) -> str:
