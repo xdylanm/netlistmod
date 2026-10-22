@@ -88,6 +88,8 @@ Node connections, element types and designators, and subcircuit structure cannot
 **P5 — Strict by default; fail loudly.**
 An element line the grammar does not recognise is an error with line, column and context, never a silent pass-through. Ambiguity in a grammar is a build failure (`strict=True`), never a silent default. Edits that are not provably safe raise.
 
+The producer of a netlist is responsible for well-formed input: the library edits a netlist, it does not repair one. The grammar follows the language **as written in the reference manuals**. A construct a solver tolerates but the manual does not allow (for example a netlist without `.end`) is rejected, even though the solver would run it. Exceptions are explicit and recorded; v1 has one, the RKM mode option (Section 19, decision 8).
+
 **P6 — The grammar is a documented, checked artifact.**
 Each supported construct has a spec entry citing the reference manual and linking to its tests. CI fails if a supported construct lacks tests.
 
@@ -95,7 +97,7 @@ Each supported construct has a spec entry citing the reference manual and linkin
 There is no "accept any dialect" grammar, because the same device letter can mean different things in different dialects. The caller MUST select the dialect explicitly: there is no default and no auto-detection.
 
 **P8 — Documented behavior is validated, not assumed.**
-Manuals are the starting point, not the authority. Any behavior the library relies on has a test; where practical it is also validated against the real solver.
+The reference manuals define what the grammar accepts (P5); solvers validate what constructs mean. Any behavior the library relies on has a test; where practical it is also validated against the real solver. Where the manual and the solver disagree, the grammar follows the manual and the disagreement is recorded (Section 11.3).
 
 **P9 — No simulator launching in `src/`.**
 Enforced by an architecture test (Section 10.2, T7).
@@ -108,6 +110,9 @@ Editing an element inside a subcircuit definition affects every instance. The AP
 
 **P12 — Built for agents as well as humans.**
 Small modules, explicit invariants, layering rules that can be checked mechanically, and documentation kept next to the code it describes.
+
+**P13 — Syntax lives in the grammar.**
+Every syntactic rule (what a line, comment, continuation, keyword, statement or block is) MUST be expressed in the `.lark` files. Python code MAY (a) build parsers, (b) convert a parse tree into typed nodes with spans, one transformer method per rule, without re-scanning source text, and (c) enrich errors (positions, expected tokens, classifying an unsupported element letter from the failure position). Python code MUST NOT recognise, split, classify or validate syntax with regular expressions or string scanning. This is checked mechanically where possible (for example, no `re` import under `src/netlistmod/model/`) and in review.
 
 ---
 
@@ -165,12 +170,12 @@ repo/
     py.typed
     errors.py
     source.py                # SourceText, Span
-    dialects.py              # Dialect enum, registry
+    dialects.py              # Dialect enum
     grammar/
       core.lark
       ngspice.lark
       ltspice.lark
-      loader.py              # builds parsers; strict=True
+      loader.py              # dialect registry and strict parser builder
     model/
       values.py              # NumericValue, Formula, ModelReference, ...
       nodes.py               # Component subclasses, statements
@@ -245,7 +250,8 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 - `core.lark`: terminals and rules for constructs whose syntax is the same across supported dialects (comments, title, `.end`, R/C/L/V/I/D and other letters with common form, `.param`, `.model`, `.subckt`, common directives).
 - `<dialect>.lark`: dialect overlay adding or overriding constructs (device letters with dialect-specific meaning, dialect-only directives, numeric-notation differences).
-- Each dialect grammar is assembled from core + overlay (by `%import` or build-time concatenation; implementer's choice) and MUST compile independently under `strict=True`.
+- `grammar/loader.py` owns the dialect-to-grammar registry; `dialects.py` defines only the `Dialect` enum.
+- Each dialect grammar is composed from core + overlay with Lark relative `%import` and MUST compile independently under `strict=True`.
 
 ### 6.2 Parser configuration
 
@@ -258,16 +264,18 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 | # | Rule | Why |
 |---|------|-----|
 | 1 | `NEWLINE` is a real token; only *inline* whitespace is ignored (`%ignore WS_INLINE`). Statements are terminated by `NEWLINE`. | With all whitespace ignored, "end of statement" had to be guessed from token shape; LALR states merged and designator-like model names (e.g. `V0`, `D1N4148`) collided with statement starts. |
-| 2 | Top-level shape is `line* end_line NEWLINE*`; `end_line` does not itself consume a newline. | Putting an optional newline in two places produced a shift/reduce conflict. This shape also accepts a missing final newline. |
-| 3 | Continuation lines (`+` at the start of the next line) SHOULD be handled by an **ignored terminal** matching newline + optional whitespace + `+`. **Not yet prototyped; MUST be validated by tests before being relied on.** | Continuations are a physical-line concern; they must be invisible to statement rules but spans must stay correct. |
+| 2 | Top-level shape: the first physical line is always the title; then body lines; `.end` is **required** and is the last statement; after it only blank lines. A missing newline after `.end` is tolerated. | The ngspice manual: the first line must be the title, and the last line must be `.end`. Anything else is a syntax error (P5). A final-newline alternative is spelled out explicitly: an empty optional newline is a shift/reduce conflict under `strict=True`. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
+| 3 | Continuation (`+` as the first non-blank character of the line *immediately* following the continued line) is an **ignored terminal** matching newline, optional whitespace, `+`. Blank and comment lines may not intervene. A `+` line after a comment, blank, title or `.end` line is a syntax error. | The manual: continuation lines "must immediately follow the line being continued". The ignored terminal keeps statement rules free of continuation syntax while source spans stay correct. See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
 | 4 | Keywords are **named terminals**, case-insensitive (`"…"i`), written as quoted strings rather than regexes where possible. | Anonymous literals are filtered from the tree; unescaped `.` in a regex is a wildcard (a prototype bug made `.param` collide with `CPARAM`). |
 | 5 | In regex literals, `/` MUST be escaped and every literal closed. | An unclosed literal makes Lark report the error far from its cause. |
 | 6 | Terminals that can match the same string MUST NOT be candidates in the same parser state unless disambiguated structurally. | Enforced by `strict=True`. |
-| 7 | Free-text terminals (e.g. title text) MUST start with a non-whitespace character. | Otherwise they collide with the ignored-whitespace terminal. |
+| 7 | Free-text terminals (e.g. title text) MUST start with a non-whitespace character. | Otherwise they collide with the ignored-whitespace terminal. Spans recover the leading whitespace. |
 | 8 | Delimited-expression terminals exclude their own delimiters (`\{[^{}]*\}`, not `[^"]*`). | Otherwise they swallow across multiple groups and lines. |
 | 9 | Net names use a permissive class (word chars plus `/ . + -`). Identifiers are distinguished by grammar position, not by lexer class. | KiCad emits hierarchical names like `/Vout`. |
 | 10 | Bare unquoted formulas (`R1 a b 1.1*Rx+1000`) are **not** accepted until validated against the solver. | A catch-all terminal would silently accept typos such as `1kk`. |
 | 11 | Transformer methods for rules with adjacent optional slots MUST dispatch on node *type*, not position. | Positions shift when slots are absent. |
+| 12 | Terminal priorities are used deliberately and commented in the grammar. Keywords share the priority of the generic name terminal so Lark re-types an exact match; block-scoped name terminals keep block terminators out of the top-level name. | Lark only collision-checks terminals of equal priority, so an accidental priority gap hides a conflict. |
+| 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\r?\n)`); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md)). |
 
 ### 6.4 Numeric literals
 
@@ -280,6 +288,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 - Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`/`.probe`, `.meas`; `.step` for LTspice).
 - `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
+- The first physical line is always the `Title` (implicit unless it is a `.title` statement; the node records which). `.title` may also occur later and replaces the displayed title; both source nodes are retained. `.end` is required (Section 6.3, rule 2). See [decision 0002](decisions/0002-grammar-structure-policy.md).
 - An **unknown dot-command** is preserved as `UnknownDirective(raw)`: it is not topology, so preserving it is safe.
 - An **unknown element letter** is an error (P5): an unparsed element would be a blind spot in the topology guarantee.
 
@@ -288,6 +297,8 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 `.control` ... `.endc` is matched as a single opaque block and preserved verbatim. It is not editable and not interpreted. (Rationale: it is a second language with its own dialect drift, and parametric work is done by running separate single-shot netlists.)
 
 Conditional blocks (`.if` ... `.endif`) are likewise opaque: they are not parsed, and elements inside them are not indexed. Netlists whose topology depends on conditionals are out of scope (Section 7.8).
+
+Opaque blocks are matched by grammar rules (nesting by recursion for `.if`), not by scanning. A `.control` or `.if` block after `.end` is a syntax error: the netlist ends at `.end`, even though ngspice would run a trailing `.control` block.
 
 ### 6.7 Device letters and dialects
 
@@ -473,7 +484,7 @@ notes: accepted by ngspice only in LTspice-compatibility mode (per manual); veri
 ### 11.3 Rules
 
 1. A manual statement is a hypothesis. The library relies on a behavior only after a test exists for it.
-2. Where the manual and the solver disagree, record both in `docs/grammars/<dialect>/discrepancies.md`. Acceptance is decided by what the solver actually does; the manual's claim is kept for reference.
+2. Where the manual and the solver disagree, record both in `docs/grammars/<dialect>/discrepancies.md`. The grammar follows the manual (strict reading); solver leniency is not accepted, and is recorded so users can be told why a file the solver runs is rejected. Where the manual is silent, behavior observed from the solver may be encoded only as a spec entry marked `observed` (rule 3). The LTspice references are thinner than the ngspice manual, so more LTspice behavior will rest on `observed` entries.
 3. If the solver accepts something the manual does not mention, mark it `observed` and include it only with a test.
 4. Spec entries cite manual sections; they paraphrase and do not paste tables or long passages (copyright, and the repository is MIT).
 
@@ -614,19 +625,23 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 | 16 | Name case sensitivity and net identity | Defined per dialect in `docs/grammars/<dialect>/names.md` |
 | 17 | Dialect selection | Always explicit from the caller; no default, no auto-detection |
 | 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility) |
+| 19 | ngspice structural source policy | Strict, per the manual: the first line is always the title (flagged implicit or explicit); `.title` later replaces the displayed title; `.end` is required and last, with only blank lines after it; a missing final newline after `.end` is tolerated; `.control` after `.end` is rejected. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
+| 20 | Grammar composition and registry | Dialect overlays import `core.lark`; `grammar/loader.py` owns the registry; all syntax, including continuations and opaque blocks, is expressed in the grammar (P13). See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
+| 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The only exception in v1 is the RKM mode option (decision 8). Further exceptions need a decision record. |
+| 22 | Continuation and comments | A `+` line must immediately follow the continued line; comment and blank lines may not intervene (strict reading of the ngspice manual). |
 
 ---
 
 ## 20. Known risks
 
-- **Continuation lines** are not yet prototyped; the ignored-terminal approach must be validated, including span correctness.
+- **Continuation lines** join across intervening comments and blank lines in ngspice 47; this behavior and span tiling are covered by solver and property tests.
 - **Scoping rules** differ between simulators and are not yet validated against solvers.
 - **Hidden connectivity** in behavioral expressions can defeat the topology guarantee (documented limit).
 - **Encoding:** verified for LTspice 26.1.1 (exports are UTF-8 without a BOM; see `docs/usage/ltspice-export.md` and decision 0001). Re-verify on LTspice upgrades and on KiCad exports.
 - **LTspice CLI export** switch and behavior are unverified.
 - **Agent contamination:** training exposure to GPL code cannot be excluded; process controls and review are the mitigation.
 - **Grammar surface** grows with every dialect; the spec-entry checker and strict builds are the control.
-- **Implicit first-line title.** In SPICE the first line of a netlist is the title whether or not it is a `.title` statement. This is not yet modelled; it MUST be covered by tests and fixed in the grammar.
+- **Conditional blocks.** The M2 parser preserves nested `.if` blocks opaquely, but the probed `.if 1` form is rejected by ngspice 47; the accepted solver syntax remains to be established.
 
 ---
 

@@ -1,0 +1,80 @@
+// EXPLORATORY (not packaged, not imported by src/): strict structural grammar for ngspice,
+// Option A (netlist writer is responsible for well-formed input; the grammar follows the
+// ngspice manual, not solver leniency). Validated 2026-10-21 under
+// Lark(parser="lalr", lexer="contextual", strict=True, propagate_positions=True).
+//
+// Techniques shown (see docs/design/m2-tasks.md, "Rework"):
+//  * Continuation is an ignored terminal (CONT) matching only an *immediately* following "+" line.
+//  * Keywords are string terminals with the SAME priority as the generic DOT_NAME regex, so Lark
+//    re-types an exact (case-insensitive) match to the keyword; .ends/.endl stay DOT_NAME.
+//  * Lark only collision-checks terminals of equal priority: every priority below is deliberate.
+//  * Opaque blocks are rules over line-level terminals; .if nests by recursion.
+//  * BLOCK_DOT_NAME (inside blocks) vs DOT_NAME (top level, excluding block terminators) makes a
+//    stray .endc/.endif/.else/.elseif a syntax error at top level.
+//  * Free text uses \r(?!\r?\n) so a lone CR is ordinary text, while \r\n is the terminator.
+//  * No empty "optional final newline" alternative: strict mode reports it as a shift/reduce
+//    conflict. The missing newline after .end is tolerated by an explicit alternative.
+//
+// Known gaps (to be settled by spec entries with manual citations): ";"/"$" on an otherwise
+// empty line, "//" comments, quote handling in free text, "+" after the title line.
+//
+// Not covered: element lines (M3), typed directives (M4).
+
+%ignore WS
+%ignore CONT
+
+// Netlist = title line, body lines, a required .end, then only blank lines.
+start: first_line line* end_stmt
+
+first_line: TITLE_KW TITLE_ARG? NL    -> explicit_title
+          | TITLE_TEXT NL             -> implicit_title
+          | NL                        -> empty_title
+
+line: NL                              -> blank_line
+    | COMMENT_LINE NL                 -> comment_line
+    | statement NL
+
+?statement: title_stmt | include_stmt | lib_stmt | unknown_stmt | control_block | if_block
+
+title_stmt: TITLE_KW TITLE_ARG?
+include_stmt: INCLUDE_KW rest
+lib_stmt: LIB_KW rest
+unknown_stmt: DOT_NAME rest
+rest: (TEXT | QUOTED | BRACED)* TRAILING_COMMENT?
+
+control_block: CONTROL_KW BLOCK_TEXT? NL control_line* ENDC_KW BLOCK_TEXT?
+control_line: BLOCK_DOT_NAME BLOCK_TEXT? NL | BLOCK_TEXT NL | NL
+
+if_block: IF_KW BLOCK_TEXT? NL if_line* ENDIF_KW BLOCK_TEXT?
+if_line: BLOCK_DOT_NAME BLOCK_TEXT? NL | BLOCK_TEXT NL | NL | if_block NL
+
+// The newline after .end is tolerated if missing; nothing but blank lines may follow it.
+end_stmt: END_KW TRAILING_COMMENT?                      -> end
+        | END_KW TRAILING_COMMENT? NL trailer*          -> end
+trailer: NL
+
+WS.9: /[ \t]+/
+NL.5: /\r?\n/
+CONT.7: /\r?\n[ \t]*\+/
+
+TITLE_KW.6: /\.title(?![A-Za-z0-9_-])/i
+TITLE_ARG.3: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+TITLE_TEXT.2: /(?:[^\r\n]|\r(?!\r?\n))+/
+
+COMMENT_LINE.3: /\*(?:[^\r\n]|\r(?!\r?\n))*/
+TRAILING_COMMENT.3: /[;$](?:[^\r\n]|\r(?!\r?\n))*/
+
+END_KW.4: ".end"i
+CONTROL_KW.4: ".control"i
+ENDC_KW.4: ".endc"i
+IF_KW.4: ".if"i
+ENDIF_KW.4: ".endif"i
+INCLUDE_KW.4: ".include"i
+LIB_KW.4: ".lib"i
+DOT_NAME.4: /\.(?!(?:endc|endif|else|elseif)(?![a-z0-9_-]))[a-z][a-z0-9_-]*/i
+BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
+
+TEXT.2: /[^ \t\r\n;$'"{}](?:[^\r\n;$'"{}]|\r(?!\r?\n))*/
+QUOTED.3: /"[^"\r\n]*"|'[^'\r\n]*'/
+BRACED.3: /\{[^{}\r\n]*\}/
+BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/

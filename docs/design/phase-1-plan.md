@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0 complete (2026-10-20)
+> **Status:** ACTIVE — M0, M1 complete; M2 in rework after review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -38,11 +38,12 @@ switches and output behavior are recorded in
 
 Each milestone ends with its tests passing, its spec entries and docs written (architecture §14), and `ruff` and `mypy --strict` clean. Milestones are sequential unless noted.
 
-**Milestone closing procedure (applies to M1–M9).** Each milestone has a task list in `docs/design/` (written before the milestone starts, with a `Status:` line). The milestone's final task is to close it out:
-1. Set the task list status to `COMPLETE (date)`.
-2. `git mv` it to `docs/design/archive/` and fix its relative links.
-3. Link the archived record from the milestone heading below and update the index in [README.md](./README.md).
-4. Record any decisions made along the way in `docs/decisions/` and any new risks in the architecture or this plan.
+**Milestone closing procedure (applies to M1–M9).** Each milestone has a task list in `docs/design/` (written before the milestone starts, with a `Status:` line). The milestone's final task is to hand it over for review; the archive step happens **only after the maintainer approves the review**:
+1. When implementation is done, set the task list status to `READY FOR REVIEW`. Do not archive.
+2. After the maintainer approves the review (any rework is a new section in the same task list), set the status to `COMPLETE (date)`.
+3. `git mv` it to `docs/design/archive/` and fix its relative links.
+4. Link the archived record from the milestone heading below and update the index in [README.md](./README.md).
+5. Record any decisions made along the way in `docs/decisions/` (maintainer-accepted) and any new risks in the architecture or this plan.
 
 The phase plan itself is archived at the end of the phase, after the review gate (section 6).
 
@@ -59,7 +60,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - T1 unit tests and the T3 round-trip baseline (CRLF, mixed endings, BOM, missing final newline, tabs, trailing whitespace, `µ`).
 - **Exit:** load/save of arbitrary text is byte-identical; encoding policy checked against LTspice-produced samples when available.
 
-### M2 — Grammar core (ngspice)
+### M2 — Grammar core (ngspice; [task list](./m2-tasks.md), in rework: syntax must live in Lark, strict per the manual)
 - **Spike first: continuation lines** (ignored-terminal approach, span correctness), the highest-risk item (architecture §20).
 - Line structure, comments, title (including the implicit first-line title), `.end`, opaque blocks (`.control`/`.endc`, `.if`/`.endif`), unknown dot-commands, `.include`/`.lib` as opaque statements.
 - `grammar/loader.py`; LALR + contextual lexer + `strict=True`; `core.lark` plus ngspice overlay (composition mechanism chosen here and recorded).
