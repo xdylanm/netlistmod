@@ -293,7 +293,7 @@ Conditional blocks (`.if` ... `.endif`) are likewise opaque: they are not parsed
 
 A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `Ö`; qspice's non-ASCII letters) live only in that dialect's overlay.
 
-**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is accounted for and the full range of value specifications is covered (Section 6.4). Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5).
+**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5).
 
 ---
 
@@ -601,7 +601,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 | 3 | Build backend / dev tooling | hatchling + uv |
 | 4 | Type checker | mypy `--strict` |
 | 5 | Grammar composition mechanism | implementer's choice (Lark `%import` vs. concatenation), subject to strict build per dialect |
-| 6 | Device-letter phasing | Phase 1: R, C, L, V, I, D, X, K plus common directives. Phase 2: Q, J, M, E, F, G, H, B, S, W, T. Both phases are v1; phase 2 starts after the maintainer's hands-on review of phase 1. |
+| 6 | Device-letter phasing | Phase 1: R, C, L, V, I, D, X, K plus common directives. Phase 2: Q, J, M, E, F, G, H, B, S, W, T, plus the remaining ngspice letters A (XSPICE code models), N, O, P, U, Y, Z and every LTspice device letter not in phase 1 (the LTspice matrix is written in M8). By the end of phase 2 all ngspice and LTspice elements MUST be supported. Both phases are v1; phase 2 starts after the maintainer's hands-on review of phase 1. |
 | 7 | Empty `.title` | Accept (title text optional) |
 | 8 | Handling of RKM `M` ambiguity | add compatibility mode option to interpret values for R and C per RKM with automatic fallback to standard SPICE notation. |
 | 9 | `.control` blocks | Opaque, preserved verbatim |

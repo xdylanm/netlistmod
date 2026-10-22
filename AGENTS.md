@@ -31,5 +31,18 @@ This file summarizes working rules; it does not replace or duplicate that docume
 ## Commands
 
 Copy `.env.example` to `.env` and set local solver paths. Run tests, lint,
-formatting, type checks, and hooks through `uv run --env-file .env ...`.
+formatting, type checks, and hooks through `uv run --env-file .env python -m <tool>`
+(for example `python -m pytest`, `python -m mypy`, `python -m ruff check`).
 Solver tests are local-only and skip with a reason when a solver is unavailable.
+
+### Windows Smart App Control (read before debugging a tool failure)
+
+On the maintainer's Windows machine, Smart App Control can block unsigned
+executables and native extensions. A tool may then fail with `DLL load failed`,
+OS error 4551 ("An Application Control policy has blocked this file"), or a
+mypy/pytest internal error or crash that is not caused by the code. Always invoke
+tools as `python -m <tool>` (the signed interpreter), never through the
+`pytest.exe`/`mypy.exe` shims. If a tool still crashes with an unexplained
+internal error, rerun it once; if it passes, treat it as host noise and do not
+change code, configuration, or dependencies in response. If it fails repeatedly,
+report it instead of working around it. Details: [docs/testing.md](docs/testing.md).

@@ -7,7 +7,7 @@
 
 Deliver a usable, tested library for the phase 1 device set and common directives (architecture §19, decision 6): **R, C, L, V, I, D, X, K**, plus `.title`, `.end`, `.param`, `.model`, `.subckt`/`.ends`, `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, with `.control`, conditional blocks, `.include`/`.lib` and unknown dot-commands handled as opaque or preserved statements.
 
-Phase 1 ends at a **review gate**: the maintainer reviews the library hands-on and confirms before phase 2 (Q, J, M, E, F, G, H, B, S, W, T and full value specifications) begins.
+Phase 1 ends at a **review gate**: the maintainer reviews the library hands-on and confirms before phase 2 (Q, J, M, E, F, G, H, B, S, W, T, the remaining ngspice letters A, N, O, P, U, Y, Z, all other LTspice devices, and full value specifications) begins. By the end of phase 2 all ngspice and LTspice elements are supported.
 
 ## 2. Assumptions
 
