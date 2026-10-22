@@ -1,0 +1,12 @@
+id: NG-DIR-001
+dialect: ngspice
+construct: unknown dot-commands and stray block terminators
+manual_ref: ngspice manual, §5.1.1, "Input file structure"
+status: documented
+grammar:
+  - unknown_stmt
+  - DOT_NAME
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
+  - tests/grammar/ngspice/test_structure.py::test_stray_block_closers_are_rejected
+notes: Unknown dot-commands are retained as opaque text. A lone carriage return is accepted within directive text, not as a line ending.

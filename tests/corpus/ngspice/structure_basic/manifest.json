@@ -1,0 +1,11 @@
+{
+  "family": "structure_basic",
+  "origin": "Authored in this repository for the M2 ngspice structural grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-22",
+  "notes": "Structural statements only; includes the required final .end.",
+  "fixtures": {
+    "structure_basic.cir": "686f748bb5b742c090707c9a0e6d8e209a3b0788ddf1423580d093f88e991472"
+  }
+}

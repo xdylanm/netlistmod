@@ -8,7 +8,9 @@ from __future__ import annotations
 
 import codecs
 import os
-import tempfile
+import secrets
+import shutil
+import stat
 from bisect import bisect_right
 from dataclasses import dataclass
 from functools import cached_property
@@ -178,23 +180,52 @@ class SourceText:
         return cls.from_bytes(Path(path).read_bytes(), fallback_encodings=fallback_encodings)
 
     def write(self, path: str | os.PathLike[str]) -> None:
-        """Atomically write source bytes, leaving the target intact on encoding failure."""
+        """Atomically write source bytes while retaining target permissions.
+
+        Ownership, hard-link relationships, and extended attributes are not
+        preserved when the target is replaced.
+        """
         data = self.to_bytes()
         target = Path(path)
+        if target.is_symlink():
+            target = target.resolve(strict=True)
         temporary_path: Path | None = None
+        descriptor: int | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="wb",
-                dir=target.parent,
-                prefix=f".{target.name}.",
-                suffix=".tmp",
-                delete=False,
-            ) as temporary_file:
-                temporary_path = Path(temporary_file.name)
+            try:
+                existing_mode = target.stat().st_mode
+            except FileNotFoundError:
+                existing_mode = None
+
+            if os.name == "nt" and existing_mode is not None and not existing_mode & stat.S_IWRITE:
+                raise PermissionError(f"Target is read-only: {target}")
+
+            for _ in range(100):
+                candidate = target.parent / (f".{target.name}.{secrets.token_hex(8)}.tmp")
+                try:
+                    descriptor = os.open(
+                        candidate,
+                        os.O_WRONLY | os.O_CREAT | os.O_EXCL,
+                        0o666,
+                    )
+                except FileExistsError:
+                    continue
+                temporary_path = candidate
+                break
+            else:
+                raise FileExistsError(f"Could not create a temporary file for {target}")
+
+            with os.fdopen(descriptor, "wb") as temporary_file:
+                descriptor = None
                 temporary_file.write(data)
+
+            if existing_mode is not None:
+                shutil.copymode(target, temporary_path)
             os.replace(temporary_path, target)
             temporary_path = None
         finally:
+            if descriptor is not None:
+                os.close(descriptor)
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
 
@@ -252,4 +283,7 @@ class SourceText:
         if source_line.endswith("\r"):
             source_line = source_line[:-1]
         caret_column = min(column - 1, len(source_line))
-        return f"{source_line}\n{' ' * caret_column}^"
+        caret_padding = "".join(
+            "\t" if character == "\t" else " " for character in source_line[:caret_column]
+        )
+        return f"{source_line}\n{caret_padding}^"

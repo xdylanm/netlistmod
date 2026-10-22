@@ -265,7 +265,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 |---|------|-----|
 | 1 | `NEWLINE` is a real token; only *inline* whitespace is ignored (`%ignore WS_INLINE`). Statements are terminated by `NEWLINE`. | With all whitespace ignored, "end of statement" had to be guessed from token shape; LALR states merged and designator-like model names (e.g. `V0`, `D1N4148`) collided with statement starts. |
 | 2 | Top-level shape: the first physical line is always the title; then body lines; `.end` is **required** and is the last statement; after it only blank lines. A missing newline after `.end` is tolerated. | The ngspice manual: the first line must be the title, and the last line must be `.end`. Anything else is a syntax error (P5). A final-newline alternative is spelled out explicitly: an empty optional newline is a shift/reduce conflict under `strict=True`. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
-| 3 | Continuation (`+` as the first non-blank character of the line *immediately* following the continued line) is an **ignored terminal** matching newline, optional whitespace, `+`. Blank and comment lines may not intervene. A `+` line after a comment, blank, title or `.end` line is a syntax error. | The manual: continuation lines "must immediately follow the line being continued". The ignored terminal keeps statement rules free of continuation syntax while source spans stay correct. See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
+| 3 | Continuation is an **ignored terminal**: either `+` as the first non-blank character of the line *immediately* following the continued line, or two backslashes immediately before the line terminator. Blank and comment lines may not intervene. A `+` line after a comment, blank, title or `.end` line is a syntax error, and `.title`, `.lib` and `.include` cannot be continued. | The manual (§2.4.5): follow-up lines "have to follow immediately after each other", and `.title`, `.lib` and `.include` do not allow continuation. The ignored terminal keeps statement rules free of continuation syntax while source spans stay correct. See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
 | 4 | Keywords are **named terminals**, case-insensitive (`"…"i`), written as quoted strings rather than regexes where possible. | Anonymous literals are filtered from the tree; unescaped `.` in a regex is a wildcard (a prototype bug made `.param` collide with `CPARAM`). |
 | 5 | In regex literals, `/` MUST be escaped and every literal closed. | An unclosed literal makes Lark report the error far from its cause. |
 | 6 | Terminals that can match the same string MUST NOT be candidates in the same parser state unless disambiguated structurally. | Enforced by `strict=True`. |
@@ -462,7 +462,7 @@ Fixtures live in `tests/corpus/<dialect>/<family>/`, each family with a manifest
 
 | Dialect | Reference |
 |---|---|
-| ngspice | https://ngspice.sourceforge.io/docs/ngspice-manual.pdf |
+| ngspice | [ngspice manual (HTML)](https://ngspice.sourceforge.io/docs/ngspice-html-manual/manual.xhtml); [PDF](https://ngspice.sourceforge.io/docs/ngspice-manual.pdf). Cited as `[ngspice-manual] §<section> "<title>"`; edition and access date in `docs/references.md`. |
 | SPICE3 (background) | https://www.macspice.com/ug/sec1.html |
 | LTspice | https://github.com/analogdevicesinc/ltspice-reference |
 
@@ -628,7 +628,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 | 19 | ngspice structural source policy | Strict, per the manual: the first line is always the title (flagged implicit or explicit); `.title` later replaces the displayed title; `.end` is required and last, with only blank lines after it; a missing final newline after `.end` is tolerated; `.control` after `.end` is rejected. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
 | 20 | Grammar composition and registry | Dialect overlays import `core.lark`; `grammar/loader.py` owns the registry; all syntax, including continuations and opaque blocks, is expressed in the grammar (P13). See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
 | 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The only exception in v1 is the RKM mode option (decision 8). Further exceptions need a decision record. |
-| 22 | Continuation and comments | A `+` line must immediately follow the continued line; comment and blank lines may not intervene (strict reading of the ngspice manual). |
+| 22 | Continuation and comments | Continuation is `+` on the immediately following line or a trailing double backslash; comment and blank lines may not intervene; `.title`, `.lib` and `.include` cannot be continued. End-of-line comment delimiters are `;`, `$` and `//` (a standalone `;`, `$` or `//` line is rejected; `.end` takes no trailing comment). All per the ngspice manual §2.4.4 and §2.4.5 (strict reading). |
 
 ---
 
@@ -641,7 +641,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 - **LTspice CLI export** switch and behavior are unverified.
 - **Agent contamination:** training exposure to GPL code cannot be excluded; process controls and review are the mitigation.
 - **Grammar surface** grows with every dialect; the spec-entry checker and strict builds are the control.
-- **Conditional blocks.** The M2 parser preserves nested `.if` blocks opaquely, but the probed `.if 1` form is rejected by ngspice 47; the accepted solver syntax remains to be established.
+- **Conditional blocks.** The M2 parser preserves nested `.if` blocks opaquely. The valid `.if (1)` … `.endif` form is accepted by ngspice 47; the earlier `.if 1` probe was invalid and is superseded by decision 0002.
 
 ---
 

@@ -6,3 +6,12 @@
   decoding, configurable fallbacks, atomic file writes, and line/column
   diagnostics.
 - Added the public error hierarchy, `Dialect` enum, and package exports.
+- Added a strict, cached ngspice LALR parser for source structure, including
+  grammar-defined syntax, typed title/comment/directive/opaque nodes,
+  immediate continuation spans, required final `.end`, and positioned errors
+  for unsupported element lines. The M2 rework is awaiting review.
+- Added ngspice 47 discrepancy probes, grammar/spec traceability, positive and
+  negative structural corpora, property/performance tests, and wheel resource
+  checks.
+- Made `SourceText.write()` preserve existing permission bits and write through
+  symlinks; new files use normal umask-derived permissions.

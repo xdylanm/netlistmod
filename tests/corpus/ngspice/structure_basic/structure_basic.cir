@@ -1,0 +1,17 @@
+M2 structural sample
+* full-line comment
+
+.plot v(out)
+  + display options
+.include "models.lib"
+.lib models.lib typical
+.control
+Ropaque out 0 1k
+let trace = v(out)
+.endc
+.if {enabled}
+.if {nested}
+.endif
+.else
+.endif
+.end

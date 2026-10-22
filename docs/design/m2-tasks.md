@@ -1,6 +1,6 @@
 # M2 task list — grammar core (ngspice)
 
-> **Status:** ACTIVE — rework required after review (2026-10-21). Not complete; do not archive until the maintainer approves the re-review.
+> **Status:** ACTIVE — first rework delivered; second-round fixes in [m2-review2-tasks.md](./m2-review2-tasks.md). Not complete; do not archive until the maintainer approves the re-review.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M2). Governed by [architecture.md](../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([archive/m1-tasks.md](./archive/m1-tasks.md)).
 
 ## 0. Review outcome and rework (governs wherever it conflicts with sections 1–7)
@@ -32,10 +32,10 @@ These supersede decisions 2.1, 3.3 and the continuation handling in S1/decision 
 
 Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, and `pytest` (coverage gate) green, run as `uv run --env-file .env python -m <tool>` (see AGENTS.md on Smart App Control). Do not decide open points silently: where a task says "settle", state the choice and its manual citation in the spec entry and the report.
 
-**R1 — Decision records and docs.** Rewrite `docs/decisions/0002-grammar-structure-policy.md` and `0003-grammar-composition-and-opaque-regions.md` for the strict, grammar-only design (status `proposed`; the maintainer accepts them). Verify the architecture edits listed in 0.1 are consistent with the records. Rewrite `docs/grammars/ngspice/discrepancies.md` as the list of constructs ngspice 47 tolerates but the library rejects, with the probe evidence (missing `.end`; element ignored after `.end`; `.control` run after `.end`; unknown dot-command after `.end` rejected by ngspice; comment/blank lines between continuation lines still join).
+[x] **R1 — Decision records and docs.** Rewrite `docs/decisions/0002-grammar-structure-policy.md` and `0003-grammar-composition-and-opaque-regions.md` for the strict, grammar-only design (status `proposed`; the maintainer accepts them). Verify the architecture edits listed in 0.1 are consistent with the records. Rewrite `docs/grammars/ngspice/discrepancies.md` as the list of constructs ngspice 47 tolerates but the library rejects, with the probe evidence (missing `.end`; element ignored after `.end`; `.control` run after `.end`; unknown dot-command after `.end` rejected by ngspice; comment/blank lines between continuation lines still join).
 *Done when:* both records match the shipped grammar; no text mentions optional `.end` or tolerant continuation.
 
-**R2 — Grammar (`core.lark`, `ngspice.lark`).** Implement the structure in Lark, starting from the prototype. Put dialect-neutral structure in `core.lark` and ngspice-specific tokens in the overlay. Settle composition (`%import` vs build-time concatenation, decision 5): check whether `%ignore`, priorities and terminal imports survive `%import`; record the outcome in decision 0003. Place a `// spec: <ID>` marker on each rule or terminal group it implements (not stacked on one rule). Reject/accept table that must pass as tests, with the error position for each reject:
+[x] **R2 — Grammar (`core.lark`, `ngspice.lark`).** Implement the structure in Lark, starting from the prototype. Put dialect-neutral structure in `core.lark` and ngspice-specific tokens in the overlay. Settle composition (`%import` vs build-time concatenation, decision 5): check whether `%ignore`, priorities and terminal imports survive `%import`; record the outcome in decision 0003. Place a `// spec: <ID>` marker on each rule or terminal group it implements (not stacked on one rule). Reject/accept table that must pass as tests, with the error position for each reject:
 
 | Input | Result |
 |---|---|
@@ -54,24 +54,24 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, and `
 Settle, with manual citations and `observed` status where the manual is silent: `;`/`$` on an otherwise empty line, `//` comments, quote/brace handling in free text, and `.end` with a trailing comment. Default to the narrowest reading. Performance: a 20,000-line netlist with continuations parses in under 2 s (regression test).
 *Done when:* both files build under `strict=True` independently, the table passes, and no priority is unexplained.
 
-**R3 — Transformer.** Replace `transform.py` with a Lark `Transformer` (`v_args(meta=True)`): one method per grammar rule, building the existing node types. Item spans run from the previous item's end to the rule's end (ignored whitespace has no token, so this keeps the spans contiguous and tiling the source). Explicit vs. implicit title comes from the rule alias, not from inspecting text. **No `re` import and no string scanning of source lines** (P13); raw statement text is a source slice by span.
+[x] **R3 — Transformer.** Replace `transform.py` with a Lark `Transformer` (`v_args(meta=True)`): one method per grammar rule, building the existing node types. Item spans run from the previous item's end to the rule's end (ignored whitespace has no token, so this keeps the spans contiguous and tiling the source). Explicit vs. implicit title comes from the rule alias, not from inspecting text. **No `re` import and no string scanning of source lines** (P13); raw statement text is a source slice by span.
 *Done when:* the architecture test for R6 passes and the node/tiling tests pass.
 
-**R4 — Errors.** `loader.parse_tree`'s mapping from Lark exceptions to `ParseError` (positions only via `SourceText.position/excerpt`) becomes live code and is fully tested (it was unreachable with the line-splitting grammar). An unterminated block must report the opening line (find the opener from the parser state/stack carried by the exception; if that proves infeasible, report at the failure position and name the opener's line in the message, and tell the maintainer). A missing `.end` reports "expected `.end`" at end of input with a short explanation. `UnsupportedConstruct` for known-but-unsupported element letters is decided on the error path only: when the failure is at the first non-blank character of a line, look the letter up in the device matrix (data, not syntax).
+[x] **R4 — Errors.** `loader.parse_tree`'s mapping from Lark exceptions to `ParseError` (positions only via `SourceText.position/excerpt`) becomes live code and is fully tested (it was unreachable with the line-splitting grammar). An unterminated block must report the opening line (find the opener from the parser state/stack carried by the exception; if that proves infeasible, report at the failure position and name the opener's line in the message, and tell the maintainer). A missing `.end` reports "expected `.end`" at end of input with a short explanation. `UnsupportedConstruct` for known-but-unsupported element letters is decided on the error path only: when the failure is at the first non-blank character of a line, look the letter up in the device matrix (data, not syntax).
 *Done when:* every branch of the error mapping is covered and every reject in the R2 table asserts line, column and excerpt.
 
-**R5 — Defects from the review.**
+[x] **R5 — Defects from the review.**
 (a) Titles: no trailing-comment handling (by construction in R2); test `.title foo ; bar` and the `$` form. (b) Performance (R2). (c) The `.if` solver probe must use a valid form, `.if (1)` … `.endif` (ngspice accepts it): mark `NG-OPA-001` `validated` and delete the wrong claim from the docs. (d) Recast the solver probes as *discrepancy evidence*: each probe that shows ngspice accepting something the library rejects is paired with a test that `parse` raises. (e) Probe ngspice for `//` comments and for quote/brace handling in free text, to inform R2's settle list (observations only).
 *Done when:* each item has a test or a recorded probe result.
 
-**R6 — Tests and traceability.** (a) The R2 table as the T2 suite. (b) Replace the weak Hypothesis test with one that has an independent oracle: generate a list of items (kind plus parameters), render the text, and compare the parsed kinds and spans with the generator's expectations; use random seeds (no `derandomize`), at least 200 examples, and print failing seeds. (c) Temporary differential test against the old hand-written parser for inputs the new grammar accepts; delete the old parser and that test before closing. (d) Architecture test: no `re` import under `src/netlistmod/model/` (P13). (e) Make traceability real: each spec entry has a `grammar:` field listing the rule/terminal names that implement it; the checker verifies those names exist in the `.lark` files and carry that entry's `// spec:` marker, and that every rule carries a marker. (f) Spec checker: require `tests:` for every entry whose status is not `disputed` (it previously only checked entries with status `supported`, which no entry uses); keep and extend its self-tests.
+[x] **R6 — Tests and traceability.** (a) The R2 table as the T2 suite. (b) Replace the weak Hypothesis test with one that has an independent oracle: generate a list of items (kind plus parameters), render the text, and compare the parsed kinds and spans with the generator's expectations; use random seeds (no `derandomize`), at least 200 examples, and print failing seeds. (c) Temporary differential test against the old hand-written parser for inputs the new grammar accepts; delete the old parser and that test before closing. (d) Architecture test: no `re` import under `src/netlistmod/model/` (P13). (e) Make traceability real: each spec entry has a `grammar:` field listing the rule/terminal names that implement it; the checker verifies those names exist in the `.lark` files and carry that entry's `// spec:` marker, and that every rule carries a marker. (f) Spec checker: require `tests:` for every entry whose status is not `disputed` (it previously only checked entries with status `supported`, which no entry uses); keep and extend its self-tests.
 *Done when:* all pass and each check is shown to fail on a deliberate violation.
 
-**R7 — Corpus.** Update `tests/corpus/ngspice/structure_basic/` to be valid under the strict grammar (add `.end`; fix the manifest note). Add `tests/corpus/ngspice/structure_rejects/` with one small file per R2 reject and a manifest giving the expected line and column and the hashes. Confirm the author and license of both families with the maintainer (they were inferred).
+[x] **R7 — Corpus.** Update `tests/corpus/ngspice/structure_basic/` to be valid under the strict grammar (add `.end`; fix the manifest note). Add `tests/corpus/ngspice/structure_rejects/` with one small file per R2 reject and a manifest giving the expected line and column and the hashes. Confirm the author and license of both families with the maintainer (they were inferred).
 
-**R8 — Carry-overs.** The POSIX tests for `SourceText.write()` (T12) are skipped on this Windows machine and WSL is not installed: say whether they were run anywhere, and if not, say so in the report; do not claim they pass. Document that `parse("")` raises. Update `docs/usage/structural-parse.md`, `CHANGELOG.md`, `README.md`, `docs/testing.md`.
+[x] **R8 — Carry-overs.** The POSIX tests for `SourceText.write()` (T12) are skipped on this Windows machine and WSL is not installed: say whether they were run anywhere, and if not, say so in the report; do not claim they pass. Document that `parse("")` raises. Update `docs/usage/structural-parse.md`, `CHANGELOG.md`, `README.md`, `docs/testing.md`.
 
-**R9 — Exit.** Run the full check set, a fresh-clone test, and the solver tests. Report: what changed, every "settle" decision with its citation, any limitation. Set this document's status to `READY FOR REVIEW`. **Do not archive** and do not mark the milestone complete: the maintainer reviews first.
+[x] **R9 — Exit.** Run the full check set, a fresh-clone test, and the solver tests. Report: what changed, every "settle" decision with its citation, any limitation. Set this document's status to `READY FOR REVIEW`. **Do not archive** and do not mark the milestone complete: the maintainer reviews first.
 
 ### 0.5 Task status
 
@@ -94,7 +94,7 @@ Also in M2: the two fixes carried over from the M1 review (findings 3 and 4, tas
 
 **Exit (from the plan):** T2 grammar tests and T3 round-trip over the structural subset; the strict build is green.
 
-## 2. Confirmed decisions
+## 2. Original-pass decisions (superseded by section 0 for this rework)
 
 Made by the maintainer for this milestone:
 
@@ -112,11 +112,11 @@ Probe facts (ngspice 47, 2026-10-21) behind these decisions and the rest of the 
 | `*` comment or blank line between a statement and its `+` line | Accepted; the continuation joins the preceding statement (confirmed by equal 2-volt results). |
 | Line 1 starts with `+` | Taken verbatim as the title; a following `+` does not change the title. |
 | Indented `*`, trailing `;`/`$`, uppercase `.END`/`.Title`, tabs as separators | Accepted. Trailing comments work adjacent to the preceding text or after whitespace. |
-| `.control`/`.endc`; tested `.if 1`/`.endif` | `.control` block accepted; the tested `.if 1` form is rejected with a syntax error. |
+| `.control`/`.endc`; valid `.if (1)`/`.endif` | Both forms are accepted by ngspice 47. The earlier `.if 1` probe was invalid and is superseded. |
 | Missing `.include`/`.lib` file | Solver reports the respective missing file. |
 | Lone `\r` (no `\n`) | Not a line terminator: the whole file is one title line, giving "empty netlist". Consistent with M1 decision 3. |
 
-## 3. Design decisions (proposed defaults, accepted; 3.7 explicitly confirmed)
+## 3. Original-pass design decisions (superseded by section 0 for this rework)
 
 1. **Lone `\r`:** ordinary character data; accepted in free text and opaque regions, rejected elsewhere. Only LF and CRLF terminate physical lines.
 2. **Title lexing.** The first physical line is always a title, including empty text or statement-looking text. The node records explicit vs. implicit; later `.title` statements are also retained and replace the solver's displayed title.
@@ -207,9 +207,9 @@ Create the `docs/grammars/ngspice/` spec entries (format of architecture §11.2)
 
 **T11 — Grammar test suite.** [x]
 - *Accept/reject (T2):* one accept and one reject test per spec entry in `tests/grammar/ngspice/`.
-- *Corpus:* author `tests/corpus/ngspice/structure_basic/` (title only; comments; blank lines; unknown directives with continuations; `.control` block; nested `.if`; `.include`/`.lib`; missing `.end`) with a manifest (origin: authored in this repository; confirm author/license with the maintainer).
+- *Corpus:* authored `structure_basic/` and `structure_rejects/` fixtures with manifests (origin: authored in this repository; author `xdylanm` and MIT license confirmed by the maintainer on 2026-10-22). Positive fixtures include `.end`; negative fixtures record expected line and column.
 - *Round trip (T3):* for each corpus file and for inline byte cases (CRLF, mixed endings, no final newline, tabs, trailing whitespace, lone `\r` in free text, non-ASCII `µ`): the parse succeeds, item spans tile the source, and `SourceText.from_bytes(data).to_bytes() == data`.
-- *Property (T5, Hypothesis):* generate structural netlists from a strategy (random mixes of the item kinds, random line endings, random continuation placement) and assert: parse succeeds, spans tile the source, concatenated item text equals the source, the parse result is stable under re-parse. Include shrinking-friendly strategies and a fixed seed example.
+- *Property (T5, Hypothesis):* generate item kinds and parameters independently, render input, and compare parsed kinds and spans against the generated oracle. Use at least 200 randomized examples without `derandomize`; include a failing seed in assertion output.
 - *Negative (T6):* the T7 cases above.
 *Done when:* all pass, including the 90% coverage gate on `grammar/` and `model/`.
 
@@ -227,9 +227,8 @@ Confirm the T7-tier contracts still pass (no `subprocess` in `src/`, layering, n
 Update `docs/testing.md` (new test locations, the solver probes, how to add a spec entry and its `// spec:` marker), `README.md` status, `CHANGELOG.md` (Unreleased), and `docs/usage/` only if user-visible behavior exists. Public names get docstrings.
 *Done when:* docs match the code and links resolve.
 
-**T15 — M2 exit check and archive.** [x]
-Run the full check set (`ruff check`, `ruff format --check`, `mypy --strict`, `pytest` with the coverage gate, `pre-commit run --all-files`, the solver tests). Verify a fresh clone passes the corpus hash tests and the packaging test. Then close the milestone per the plan: set this document's status to `COMPLETE (date)`, `git mv` it to `docs/design/archive/`, fix its links, link it from the M2 heading in the plan, and update the index in the design README. Report open items for M3.
-*Done when:* all checks are green and the archive step is done.
+**T15 — Original M2 exit/archive task.** Superseded by R9; do not archive or mark M2 complete until the maintainer approves the re-review.
+The rework exit is a `READY FOR REVIEW` status in this file, with the full check set and review notes reported. The archive step is intentionally deferred.
 
 ## 5. Dependencies between tasks
 
@@ -246,7 +245,7 @@ T11, T12 → T13 → T14 → T15
 
 ## 6. Out of scope for M2
 
-Elements, values, `.param`/`.model`/`.subckt`, typed directives, `Document`/`Lines`/indexes, the diagnostics API (the missing-`.end` and implicit-title *facts* are recorded in the parse result only), LTspice grammar and dialect specifics (M8), and edit planning.
+Elements, values, `.param`/`.model`/`.subckt`, typed directives, `Document`/`Lines`/indexes, the diagnostics API, LTspice grammar and dialect specifics (M8), and edit planning. M2 requires `.end`; an implicit first-line title is represented by `Title(explicit=False)`.
 
 ## 7. Deferred minor items from the M1 review (not in M2)
 

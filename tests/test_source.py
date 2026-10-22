@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import os
+import stat
+import sys
 from pathlib import Path
 
 import pytest
@@ -147,6 +150,51 @@ def test_write_cleans_temporary_file_when_replace_fails(
     assert list(tmp_path.iterdir()) == [target]
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permission and symlink semantics")
+def test_write_preserves_mode_and_writes_through_symlink(tmp_path: Path) -> None:
+    target = tmp_path / "target.cir"
+    target.write_bytes(b"original")
+    target.chmod(0o640)
+    alias = tmp_path / "alias.cir"
+    try:
+        alias.symlink_to(target)
+    except OSError as error:
+        pytest.skip(f"cannot create symlink on this host: {error}")
+
+    SourceText("updated").write(alias)
+
+    assert alias.is_symlink()
+    assert alias.read_bytes() == b"updated"
+    assert stat.S_IMODE(target.stat().st_mode) == 0o640
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["alias.cir", "target.cir"]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="POSIX permission semantics")
+def test_write_new_file_uses_umask_derived_mode(tmp_path: Path) -> None:
+    target = tmp_path / "new.cir"
+    current_umask = os.umask(0)
+    os.umask(current_umask)
+
+    SourceText("new").write(target)
+
+    assert stat.S_IMODE(target.stat().st_mode) == 0o666 & ~current_umask
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows read-only file semantics")
+def test_write_rejects_read_only_target_on_windows(tmp_path: Path) -> None:
+    target = tmp_path / "readonly.cir"
+    target.write_bytes(b"original")
+    target.chmod(stat.S_IREAD)
+
+    try:
+        with pytest.raises(PermissionError):
+            SourceText("updated").write(target)
+        assert target.read_bytes() == b"original"
+        assert list(tmp_path.iterdir()) == [target]
+    finally:
+        target.chmod(stat.S_IREAD | stat.S_IWRITE)
+
+
 def test_source_positions_mixed_endings_and_lone_cr() -> None:
     source = SourceText("one\r\n two\nthree\rfour")
     assert source.line_count == 3
@@ -160,6 +208,7 @@ def test_source_positions_mixed_endings_and_lone_cr() -> None:
     assert source.offset(2, 1) == 5
     assert source.excerpt(1) == "one\n ^"
     assert source.excerpt(11) == "three\rfour\n ^"
+    assert SourceText("\tR1\tin out 1k").excerpt(3) == "\tR1\tin out 1k\n\t  ^"
 
 
 def test_source_position_empty_no_final_newline_and_trailing_newline() -> None:

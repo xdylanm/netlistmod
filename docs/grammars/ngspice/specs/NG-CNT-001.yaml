@@ -1,0 +1,18 @@
+id: NG-CNT-001
+dialect: ngspice
+construct: immediately adjacent continuation lines
+manual_ref: ngspice manual, §5.1.1, "Input file structure"
+status: validated
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+grammar:
+  - LINE_END
+  - CONT
+  - NL
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_continuations_require_immediate_previous_statement
+  - tests/grammar/ngspice/test_structure.py::test_continuations_after_non_statements_or_intervening_lines_fail
+  - tests/solver/test_ngspice_solver_structure.py::test_continuation_across_comment_and_blank_is_solver_leniency
+notes: A continuation must immediately follow a statement; a blank or comment line interrupts it even though ngspice 47 joins such lines.

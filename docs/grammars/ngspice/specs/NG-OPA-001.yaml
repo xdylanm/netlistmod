@@ -1,0 +1,26 @@
+id: NG-OPA-001
+dialect: ngspice
+construct: opaque .control and nested .if blocks
+manual_ref: ngspice manual, §5.12, ".IF Condition-Controlled Netlist"; form validated with ngspice 47
+status: validated
+grammar:
+  - statement
+  - control_block
+  - control_line
+  - if_block
+  - if_line
+  - CONTROL_KW
+  - ENDC_KW
+  - IF_KW
+  - ENDIF_KW
+  - BLOCK_DOT_NAME
+  - BLOCK_TEXT
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
+  - tests/grammar/ngspice/test_structure.py::test_unterminated_opaque_blocks_point_to_opening_line
+  - tests/solver/test_ngspice_solver_structure.py::test_valid_if_form_is_accepted_by_solver_and_parser
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+notes: The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded.

@@ -14,8 +14,16 @@ import pytest
 from lark import Lark
 from lark.exceptions import LexError
 
+from netlistmod.dialects import Dialect
+from netlistmod.grammar.loader import pending_dialects, registered_dialects
+
 ROOT = Path(__file__).parents[2]
 SOURCE = ROOT / "src" / "netlistmod"
+GRAMMAR_DECLARATION = re.compile(
+    r"^\s*(?:(%extend|%override)\s+)?(\??[a-z_][a-z_0-9]*|[A-Z][A-Z_0-9]*)"
+    r"(?:\.\d+)?\s*:"
+)
+RULE_ALIAS = re.compile(r"->\s*([a-z_][a-z_0-9]*)")
 
 
 def _forbidden_source_operations(root: Path) -> list[str]:
@@ -47,6 +55,56 @@ def _forbidden_source_operations(root: Path) -> list[str]:
                 ):
                     violations.append(f"{path}: calls os.{node.func.attr}")
     return violations
+
+
+def _regex_imports(root: Path) -> list[str]:
+    violations: list[str] = []
+    for path in root.rglob("*.py"):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import) and any(alias.name == "re" for alias in node.names):
+                violations.append(str(path))
+            if isinstance(node, ast.ImportFrom) and node.module == "re":
+                violations.append(str(path))
+    return violations
+
+
+def _missing_transformer_methods(grammar_files: list[Path], transformer: type) -> set[str]:
+    expected: set[str] = set()
+    for path in grammar_files:
+        current_name: str | None = None
+        current_inline = False
+        current_extended = False
+        aliases: list[str] = []
+
+        def finish() -> None:
+            if current_name is None or current_name[0].isupper() or current_extended:
+                return
+            if aliases:
+                prefix = "core__" if path.name == "core.lark" else ""
+                expected.update(f"{prefix}{alias}" for alias in aliases)
+            elif not current_inline:
+                expected.add(current_name)
+
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                finish()
+                current_name = None
+                aliases = []
+                continue
+            match = GRAMMAR_DECLARATION.match(line)
+            if match:
+                finish()
+                directive, declared_name = match.groups()
+                current_name = declared_name.lstrip("?")
+                current_inline = declared_name.startswith("?")
+                current_extended = directive == "%extend"
+                aliases = RULE_ALIAS.findall(line)
+                continue
+            if current_name is not None:
+                aliases.extend(RULE_ALIAS.findall(line))
+        finish()
+    return {method for method in expected if not callable(getattr(transformer, method, None))}
 
 
 def _run_import_linter(root: Path) -> tuple[int, str]:
@@ -110,6 +168,22 @@ def test_source_boundary_guard_detects_deliberate_violations(tmp_path: Path) -> 
     assert any("calls os.system" in violation for violation in violations)
 
 
+def test_model_does_not_import_regular_expressions() -> None:
+    assert _regex_imports(SOURCE / "model") == []
+
+
+def test_regex_import_guard_detects_deliberate_violation(tmp_path: Path) -> None:
+    (tmp_path / "bad.py").write_text("from re import compile\n", encoding="utf-8")
+    assert _regex_imports(tmp_path) == [str(tmp_path / "bad.py")]
+
+
+def test_every_lark_rule_has_a_transformer_method() -> None:
+    from netlistmod.model.transform import _NodeBuilder
+
+    grammar_files = sorted((SOURCE / "grammar").glob("*.lark"))
+    assert _missing_transformer_methods(grammar_files, _NodeBuilder) == set()
+
+
 def test_import_linter_layer_contract_passes() -> None:
     code, output = _run_import_linter(ROOT)
 
@@ -155,6 +229,11 @@ def test_import_linter_rejects_deliberate_layer_violation(tmp_path: Path) -> Non
 def test_every_package_grammar_builds_in_strict_mode() -> None:
     for grammar in SOURCE.rglob("*.lark"):
         Lark.open(grammar, parser="lalr", strict=True)
+
+
+def test_parser_registry_accounts_for_each_dialect() -> None:
+    assert registered_dialects().isdisjoint(pending_dialects())
+    assert registered_dialects() | pending_dialects() == frozenset(Dialect)
 
 
 def test_strict_mode_rejects_a_deliberate_terminal_collision() -> None:

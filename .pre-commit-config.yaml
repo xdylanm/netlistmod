@@ -11,6 +11,7 @@ repos:
       - id: mypy
         args: [--strict]
         files: ^src/netlistmod/
+        additional_dependencies: ["lark>=1.2.2"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

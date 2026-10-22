@@ -1,0 +1,19 @@
+id: NG-OPA-002
+dialect: ngspice
+construct: opaque .include and .lib statements
+manual_ref: ngspice manual, §§5.6, ".INCLUDE", and 5.7, ".LIB"
+status: validated
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+grammar:
+  - statement
+  - include_stmt
+  - lib_stmt
+  - INCLUDE_KW
+  - LIB_KW
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
+  - tests/grammar/ngspice/test_structure.py::test_continuations_require_immediate_previous_statement
+notes: M2 treats each .lib line as one opaque statement; a .lib name … .endl definition block is a documented limitation.

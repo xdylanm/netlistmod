@@ -1,0 +1,80 @@
+// Dialect-neutral structure of a SPICE netlist (M2). Syntax lives here, not in Python (P13).
+//
+// Layout:  title line, body lines, a required .end, then blank lines only.
+// Each marker `// spec: <ID>` covers the definitions that follow it up to the next blank line.
+//
+// Lexer techniques (see decision 0003; every priority is deliberate because Lark only
+// collision-checks terminals of EQUAL priority):
+//  * LINE_END (8) ends the title, comment, blank and .end lines. It outranks CONT (7), so a
+//    "+" line after any of those lines is never swallowed as a continuation: it is a syntax error.
+//  * NL (5) ends only continuable statements. CONT (7) outranks it, so a "+" line that
+//    immediately follows such a statement is ignored (it continues the statement).
+//  * WS (9) is ignored everywhere; text terminals never start with whitespace.
+//  * Keywords are string terminals at the SAME priority (4) as the generic DOT_NAME regex, so
+//    Lark re-types an exact, case-insensitive match to the keyword.
+//  * Free text is written with \r(?!\r?\n): a lone CR is ordinary text, CRLF is the terminator.
+
+%ignore WS
+%ignore CONT
+
+// spec: NG-STR-001
+start: first_line line* end_stmt
+
+// spec: NG-TTL-001
+first_line: TITLE_KW TITLE_ARG? LINE_END    -> explicit_title
+          | TITLE_TEXT LINE_END             -> implicit_title
+          | LINE_END                        -> empty_title
+
+// spec: NG-STR-001
+?line: LINE_END                             -> blank_line
+    | COMMENT_LINE LINE_END                 -> comment_line
+    | statement
+
+// spec: NG-STR-001
+?statement: title_stmt
+          | unknown_stmt
+
+// spec: NG-TTL-001
+title_stmt: TITLE_KW TITLE_ARG? LINE_END
+
+// spec: NG-DIR-001
+unknown_stmt: DOT_NAME rest NL
+
+// spec: NG-TXT-001
+rest: (TEXT | QUOTED)* TRAILING_COMMENT?
+
+// The newline after .end may be missing at end of input. An empty optional newline would be a
+// shift/reduce conflict under strict=True, so the alternatives are spelled out.
+// spec: NG-END-001
+end_stmt: END_KW LINE_END trailer*          -> end
+        | END_KW                            -> end
+
+// spec: NG-END-001
+trailer: LINE_END                           -> blank_line
+
+// spec: NG-STR-001
+WS.9: /[ \t]+/
+
+// spec: NG-CNT-001
+LINE_END.8: /\r?\n/
+CONT.7: /\r?\n[ \t]*\+/
+NL.5: /\r?\n/
+
+// spec: NG-TTL-001
+TITLE_KW.6: /\.title(?![A-Za-z0-9_-])/i
+TITLE_ARG.3: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+TITLE_TEXT.2: /(?:[^\r\n]|\r(?!\r?\n))+/
+
+// spec: NG-COM-001
+COMMENT_LINE.3: /\*(?:[^\r\n]|\r(?!\r?\n))*/
+
+// spec: NG-TXT-001
+TRAILING_COMMENT.3: /[;$](?:[^\r\n]|\r(?!\r?\n))*/
+TEXT.2: /[^ \t\r\n;$'"](?:[^\r\n;$'"]|\r(?!\r?\n))*/
+QUOTED.3: /"[^"\r\n]*"|'[^'\r\n]*'/
+
+// spec: NG-END-001
+END_KW.4: ".end"i
+
+// spec: NG-DIR-001
+DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i

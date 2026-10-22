@@ -4,7 +4,9 @@
 to make permitted value and directive edits while preserving the original text
 and circuit topology.
 
-**Status:** The M1 source layer is implemented; the remaining Phase 1 milestones
-are in progress. See [the architecture](docs/architecture.md) for design
-invariants and [the Phase 1 plan](docs/design/phase-1-plan.md) for scope and
-milestones. Local setup and checks are documented in [testing](docs/testing.md).
+**Status:** The strict M2 ngspice structural parser is under review and is not
+yet accepted; element parsing and the document/edit layers remain in progress.
+It preserves titles, comments, unknown dot-commands, immediate continuations,
+and opaque blocks/statements with exact source spans. See the [structural parse guide](docs/usage/structural-parse.md),
+[architecture](docs/architecture.md), and [Phase 1 plan](docs/design/phase-1-plan.md).
+Local setup and checks are documented in [testing](docs/testing.md).

@@ -1,0 +1,16 @@
+id: NG-COM-001
+dialect: ngspice
+construct: full-line star comments
+manual_ref: ngspice manual, §§5.2.3, "Comments", and 5.2.4, "End-of-line comments"
+status: observed
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+grammar:
+  - COMMENT_LINE
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
+  - tests/grammar/ngspice/test_structure.py::test_empty_comment_markers_and_double_slash_are_not_comment_lines
+  - tests/solver/test_ngspice_solver_structure.py::test_double_slash_comment_probe
+notes: Star comments are accepted at the start of a line after optional indentation. The manual does not define // comments; ngspice 47 accepts a // line, but this strict grammar does not.

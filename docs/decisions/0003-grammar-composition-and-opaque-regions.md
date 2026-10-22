@@ -1,41 +1,57 @@
 # 0003 — Grammar composition and opaque regions
 
-- **Status:** rejected — hand-written structure conflicts with architecture P13; to be rewritten in the M2 rework
-- **Date:** 2026-10-21
-- **Context:** M2 requires a strict, cached LALR grammar with useful source
-  spans, continuation handling, nested opaque conditionals, and a mechanical
-  path to future dialect overlays.
+- **Status:** proposed
+- **Date:** 2026-10-22
+- **Context:** M2 needs independent strict LALR grammars, positioned parse
+  trees, immediate continuations, nested opaque conditionals, and separate
+  dialect grammars. Syntax belongs in Lark (architecture P13); Python maps
+  rules to typed nodes and adds error detail.
 - **Decision:**
-  - Compose each dialect overlay with `core.lark` using Lark relative `%import`
-    (`ngspice.lark` imports `core.start`). The parser is loaded with
-    `Lark.open_from_package`, `parser="lalr"`, `lexer="contextual"`,
-    `propagate_positions=True`, and `strict=True`. The core grammar and the
-    overlay both build independently in strict mode; the package registry is
-    owned by `grammar/loader.py`, not `dialects.py`.
-  - The core grammar tokenizes physical lines, retaining LF as a separate
-    token. The dialect transformer performs explicit line classification and
-    block matching. It records spans from Lark's token positions and checks
-    that the resulting item spans tile the entire source. A catch-all physical
-    line is not a pass-through: any ordinary non-directive line outside an
-    opaque region is rejected as a parse error or a positioned
-    `UnsupportedConstruct`.
-  - Continuations are grouped during the dialect transform rather than by an
-    ignored terminal. Eligible dot-statements absorb following `+` lines and
-    any intervening blank/comment lines. Tests confirm the resulting source
-    span includes every joined physical line. This also supports unknown
-    directives and `.include`/`.lib` statements without losing exact text.
-  - `.control` blocks are scanned to the first `.endc`; `.if` blocks are
-    scanned with a nesting depth until the matching `.endif`. Unterminated
-    blocks raise at the opening line. This scanner runs over explicit physical
-    lines, not regexes over an unsegmented multiline source.
-  - The physical-line terminal excludes LF but retains CR. A CR immediately
-    before LF is the CRLF terminator; a lone CR remains ordinary content. The
-    transform allows it only in free-text or opaque regions.
-- **Validation:** strict builds pass for both grammar files. The S1 solver
-  comparison confirms comment/blank-separated continuations join; the nested
-  conditional and unterminated-block tests check matching and error offsets.
-- **Consequences:** The grammar loader can register a dialect as a core grammar
-  plus overlay. The line-oriented transformer is responsible for enforcing
-  ngspice statement semantics; the Lark grammar remains deliberately small to
-  avoid a catch-all terminal collision with dialect-specific device and
-  directive terminals added in later milestones.
+  - `grammar/loader.py` owns the dialect-to-grammar registry and builds cached
+    LALR parsers with the contextual lexer, propagated positions, and
+    `strict=True`. Each dialect overlay imports its core grammar with
+    `%import`. Both `core.lark` and `ngspice.lark` also build independently in
+    strict mode.
+  - Lark `%import` does not carry `%ignore` declarations into the importing
+    grammar; overlays redeclare the ignores they need. Importing each rule and
+    terminal by name keeps its tree/token name unprefixed. Names omitted from
+    an explicit import receive a `core__` prefix, including aliases, so the
+    transformer handles those core aliases explicitly.
+  - `%extend statement` adds ngspice-specific opaque commands and blocks.
+    `%override DOT_NAME.4` excludes block delimiters at the same priority as
+    the generic dot-command terminal. The explicit priority is required for
+    strict mode to classify `.endc` and `.endif` correctly.
+  - The ignored `CONT.7` terminal matches only a newline followed immediately
+    by optional horizontal whitespace and `+`. `LINE_END.8` terminates titles,
+    comments, blank lines, and `.end`, and outranks `CONT`; consequently a
+    continuation after any of those lines fails. `NL.5` terminates
+    continuable statements, so `CONT` wins only when a `+` immediately follows
+    such a statement. Interleaved blank/comment lines are not skipped.
+  - Priorities are deliberate: ignored `WS.9`; `LINE_END.8`; `CONT.7`;
+    `TITLE_KW.6`; `NL.5`; keywords and dot names at 4; comment, quoted,
+    title-argument, and trailing-comment terminals at 3; free-text terminals
+    at 2. Equal-priority collisions are checked by Lark strict mode.
+  - Opaque `.control` blocks are matched with grammar rules and do not nest.
+    `.if` blocks use recursive grammar rules and may nest; `.else` and
+    `.elseif` remain block content. End delimiters are recognized by
+    block-scoped terminals. Unterminated blocks are reported at their opener
+    using the parser state, with the missing closing directive in the error.
+  - The text terminals exclude CRLF's carriage return but allow a lone CR
+    within title, comment, and directive text using `\r(?!\r?\n)`. LF and CRLF
+    are the only physical-line endings. The grammar, rather than a Python
+    scanner or multiline regex, enforces these rules.
+  - A Lark `Transformer` has one method per grammar rule/alias and converts the
+    positioned tree to immutable nodes. It does not parse syntax or scan
+    source lines. Each top-level item receives a span from the previous
+    item's end to the rule end; raw statement text is sliced from source
+    positions. The final item includes trailing ignored whitespace so spans
+    tile the source.
+  - `.lib` is a single opaque statement in M2. The `.lib name` … `.endl`
+    definition-block form remains a documented limitation.
+- **Validation:** strict-mode builds pass independently for the core and
+  ngspice grammar. Tests cover the accept/reject table, nested `.if`, block
+  errors, source positions, spans, and a 20,000-line continuation performance
+  bound.
+- **Consequences:** future dialects remain independent grammar overlays and
+  must explicitly import/redeclare needed grammar items and ignores. Python
+  must not grow handwritten syntax recognition outside Lark.

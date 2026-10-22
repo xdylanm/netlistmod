@@ -1,0 +1,46 @@
+// ngspice overlay on core.lark (M2): opaque statements and blocks, and the ngspice dot-name set.
+// %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
+// used by this dialect is imported by name, which keeps tree and token names unprefixed.
+
+%import .core (start, first_line, line, statement, title_stmt, unknown_stmt, rest, end_stmt, trailer)
+%import .core (WS, LINE_END, CONT, NL, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
+%import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
+
+%ignore WS
+%ignore CONT
+
+// spec: NG-OPA-002
+%extend statement: include_stmt
+                 | lib_stmt
+include_stmt: INCLUDE_KW rest NL
+lib_stmt: LIB_KW rest NL
+
+// spec: NG-OPA-001
+%extend statement: control_block
+                 | if_block
+control_block: CONTROL_KW BLOCK_TEXT? NL control_line* ENDC_KW BLOCK_TEXT? NL
+control_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
+            | BLOCK_TEXT NL
+            | LINE_END
+if_block: IF_KW BLOCK_TEXT? NL if_line* ENDIF_KW BLOCK_TEXT? NL
+if_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
+       | BLOCK_TEXT NL
+       | LINE_END
+       | if_block
+
+// spec: NG-OPA-002
+INCLUDE_KW.4: ".include"i
+LIB_KW.4: ".lib"i
+
+// spec: NG-OPA-001
+CONTROL_KW.4: ".control"i
+ENDC_KW.4: ".endc"i
+IF_KW.4: ".if"i
+ENDIF_KW.4: ".endif"i
+BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
+BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+
+// Outside a block, a block delimiter name is not a directive: a stray .endc, .endif, .else or
+// .elseif at the top level must be a syntax error.
+// spec: NG-DIR-001
+%override DOT_NAME.4: /\.(?!(?:endc|endif|else|elseif)(?![a-z0-9_-]))[a-z][a-z0-9_-]*/i

@@ -1,0 +1,140 @@
+{
+  "family": "structure_rejects",
+  "origin": "Authored in this repository for the M2 ngspice structural grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-22",
+  "notes": "Each fixture is a minimal strict-grammar rejection; line and column are 1-based.",
+  "fixtures": {
+    "blank_between_continuation.cir": {
+      "sha256": "edbf184319dd8ae38f6dda42d1ad6a419fa597b68eed66f38f33f875d653a0af",
+      "line": 4,
+      "column": 1
+    },
+    "block_after_end.cir": {
+      "sha256": "04bb466e235696ba1e4612b54e90abb1305c66fabb1e0f9336f7dd3fc4aa5f78",
+      "line": 3,
+      "column": 1
+    },
+    "comment_after_end.cir": {
+      "sha256": "3b018a7aa8a831a15d847304bdf33520e10c8b2d723294b9cfb2d40e99efccba",
+      "line": 3,
+      "column": 1
+    },
+    "comment_between_continuation.cir": {
+      "sha256": "c6b7b2254c9751218ac2730d499333d423c74ff21e937107656f00886378a474",
+      "line": 4,
+      "column": 1
+    },
+    "continuation_after_blank.cir": {
+      "sha256": "f688f5eda5361bcb5b8a01d57e42858dd071c4490c08468e9e4a6b2672a0215a",
+      "line": 3,
+      "column": 1
+    },
+    "continuation_after_comment.cir": {
+      "sha256": "8453fddc22802a93decfa487963e087d1b3967011fbfe930b9254fe2a42d8bc7",
+      "line": 3,
+      "column": 1
+    },
+    "continuation_after_end.cir": {
+      "sha256": "dc63bdaeb831cd9202a3bea882db0f25267ecca80c2e1f63cec30beebac5ba0e",
+      "line": 3,
+      "column": 1
+    },
+    "continuation_after_title.cir": {
+      "sha256": "764f3332ead547a2beb364de48444a65b82659ef04ba0d947599ded877f43201",
+      "line": 2,
+      "column": 1
+    },
+    "directive_after_end.cir": {
+      "sha256": "b844fbe5541eb53d77b2a8676160945935b2935863b30596ce829bbade61346e",
+      "line": 3,
+      "column": 1
+    },
+    "double_slash_line.cir": {
+      "sha256": "e1975fb600d685697c4e342afc7055ad64915a120a1425f2afe7f636f23e3189",
+      "line": 2,
+      "column": 1
+    },
+    "element_line.cir": {
+      "sha256": "832cbc3074e2d0652d32f4fecf4e149b77cde4e24c9f1784b0afed8edc2fa5c9",
+      "line": 2,
+      "column": 1
+    },
+    "empty.cir": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "line": 1,
+      "column": 1
+    },
+    "empty_dollar.cir": {
+      "sha256": "f9c75714e589b01bd53bd36cd4623a1095f0ea7a391c6d0952a90356ecc6a47f",
+      "line": 2,
+      "column": 1
+    },
+    "empty_semicolon.cir": {
+      "sha256": "c1444e2da68161acb067db990f2d6095c8eacb1728c336c96e3571df5dd24a76",
+      "line": 2,
+      "column": 1
+    },
+    "end_trailing_comment.cir": {
+      "sha256": "fab5a28639596e444e6f006ed7427ae2810d2c992c01a33d98978f6cda05657d",
+      "line": 2,
+      "column": 6
+    },
+    "lone_cr_after_end.cir": {
+      "sha256": "379f963b80d412aefd5abc75b37ae833daf0f9015decb20d69b4ca05dbdfd243",
+      "line": 2,
+      "column": 5
+    },
+    "missing_end.cir": {
+      "sha256": "a40f2032c9d9c9908b629452e0fc0833e07cc50421aec7fd32f80cb74b3a5967",
+      "line": 2,
+      "column": 16
+    },
+    "second_end.cir": {
+      "sha256": "f40d623ee7e8f24df19320d08eb35e06112587799c0c9c1e0912369ad60c99c5",
+      "line": 3,
+      "column": 1
+    },
+    "stray_else.cir": {
+      "sha256": "d91f62ebcc9d8e444c10e7e44cd02197b6283a77b378363d4ed39e1548f1d781",
+      "line": 2,
+      "column": 1
+    },
+    "stray_elseif.cir": {
+      "sha256": "9e7c5afd69589d527762d2dd1601a4c5805480ddaf399dd0f87d8d41d3ab6b10",
+      "line": 2,
+      "column": 1
+    },
+    "stray_endc.cir": {
+      "sha256": "021ebea45ee3c7f1efbf44c00bfceb3a0a5dc8c436319a2d371f0701ea417b58",
+      "line": 2,
+      "column": 1
+    },
+    "stray_endif.cir": {
+      "sha256": "99312a199da7a3ca08546019f67094874c10f186238a39b6911d02729197a261",
+      "line": 2,
+      "column": 1
+    },
+    "text_after_end.cir": {
+      "sha256": "97f89a21d0ac76b47f18751bdb1eb01ff9c720d8c7d6b6098d1499802222b024",
+      "line": 3,
+      "column": 1
+    },
+    "title_only.cir": {
+      "sha256": "09bd3939f49156a8b7f4f6e42d0ddeebf93d8681e0a88992ca658531e9b6256f",
+      "line": 1,
+      "column": 8
+    },
+    "unterminated_control.cir": {
+      "sha256": "e9728d5d8e89881bf964942d842e450d27c036233a538f090a4a8d2dfbd16012",
+      "line": 2,
+      "column": 1
+    },
+    "unterminated_if.cir": {
+      "sha256": "0459dcda994eaa066407c35e4df7b97a3479802518e710c9b4008ce0b7f93be7",
+      "line": 2,
+      "column": 1
+    }
+  }
+}

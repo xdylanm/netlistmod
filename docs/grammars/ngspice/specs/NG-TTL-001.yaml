@@ -1,0 +1,19 @@
+id: NG-TTL-001
+dialect: ngspice
+construct: implicit first-line title and explicit .title
+manual_ref: ngspice manual, §§5.1.1, "Input file structure", and 5.2.1, ".TITLE line"
+status: validated
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+grammar:
+  - first_line
+  - title_stmt
+  - TITLE_KW
+  - TITLE_ARG
+  - TITLE_TEXT
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_title_forms_are_single_tokens
+  - tests/solver/test_ngspice_solver_structure.py::test_title_is_first_line_and_later_title_replaces_it
+notes: The first line is one title token; later .title statements are retained as TitleDirective.

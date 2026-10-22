@@ -60,6 +60,23 @@ or line endings. They cover UTF-8/UTF-16 BOMs, CRLF and mixed endings, lone CR,
 Windows-1252 `µ`, undefined Windows-1252 bytes, and filesystem write/read
 round-trips. The corpus round-trip test covers every file under `tests/corpus/`.
 
+The ngspice structural parser is tested in
+`tests/grammar/ngspice/test_structure.py`; exact-byte, item-span, and negative
+position checks are in `tests/roundtrip/test_ngspice_structure.py`. Positive
+and negative source fixtures are in
+`tests/corpus/ngspice/structure_basic/` and
+`tests/corpus/ngspice/structure_rejects/`, each with provenance and SHA-256
+hashes in `manifest.json`. The negative manifest also records expected error
+lines and columns. Each construct has a YAML spec entry under
+`docs/grammars/ngspice/specs/`. Add an entry with a unique `id`, exact manual
+section in `manual_ref`, validation status, `grammar` names, `tests` selectors,
+and solver version/date when applicable. Add a `// spec: <ID>` marker before
+the corresponding grammar rule or terminal group in a `.lark` file. The
+architecture test checks that every grammar definition is marked and listed,
+spec references resolve to marked definitions, non-disputed entries have
+tests, and the human-readable device matrix matches its packaged JSON source.
+PyYAML is a MIT-licensed development dependency used only by this checker.
+
 ## Solver tests
 
 Solver tests are local-only. Mark a test with
@@ -75,6 +92,16 @@ uv run --env-file .env python -m pytest --require-solver ngspice -m solver
 The test helpers run in temporary directories, use batch mode, and set a
 timeout. No simulator is launched from `src/`. Run only solver tests with
 `uv run --env-file .env python -m pytest -m solver`.
+
+The ngspice structural probes are in
+`tests/solver/test_ngspice_solver_structure.py`. They record strict-policy
+discrepancies, title handling, `//` lines, quoted/braced include-path behavior,
+valid `.if (1)` syntax, and continuation behavior. The ngspice 47 probes were
+run locally; details and paired parser-rejection tests are documented in
+`docs/grammars/ngspice/discrepancies.md`. POSIX-only `SourceText.write()`
+mode/symlink tests skip on Windows and were not run anywhere during this
+rework. Ownership, hard-link relationships, and extended attributes are not
+preserved when an atomic write replaces a file.
 
 ## Writing golden tests
 

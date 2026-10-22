@@ -1,4 +1,7 @@
 # Usage guides
 
-Usage examples and workflows will be added as the public API is implemented.
+Usage examples and workflows are added as the public API is implemented:
+
+- [Parsing structural ngspice source](./structural-parse.md)
+
 See [the architecture](../architecture.md) for the intended API and constraints.

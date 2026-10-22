@@ -25,11 +25,16 @@ def test_every_corpus_family_has_a_manifest_and_matching_hashes() -> None:
         assert manifest["author"]
         assert manifest["date"]
 
-        fixtures: dict[str, str] = manifest["fixtures"]
+        fixtures: dict[str, str | dict[str, Any]] = manifest["fixtures"]
         actual_names = {
             path.name for path in family.iterdir() if path.is_file() and path != manifest_path
         }
         assert set(fixtures) == actual_names
-        for filename, expected_hash in fixtures.items():
+        for filename, fixture_metadata in fixtures.items():
             actual_hash = hashlib.sha256((family / filename).read_bytes()).hexdigest()
+            expected_hash = (
+                fixture_metadata
+                if isinstance(fixture_metadata, str)
+                else fixture_metadata["sha256"]
+            )
             assert actual_hash == expected_hash, f"Fixture hash changed: {family / filename}"

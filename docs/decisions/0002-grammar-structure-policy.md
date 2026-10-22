@@ -1,64 +1,64 @@
-# 0002 — Grammar structure policy
+# 0002 — Strict grammar structure policy
 
-- **Status:** proposed — superseded by the M2 rework (strict, grammar-only); to be rewritten, not accepted
-- **Date:** 2026-10-21
-- **Context:** The ngspice grammar needs explicit policies for source structure
-  that affect round-tripping, title interpretation, and content at the end of a
-  netlist. The policy is based on probes run against ngspice 47.
+- **Status:** proposed
+- **Date:** 2026-10-22
+- **Context:** M2 requires the netlist structure to be expressed in Lark, with
+  source-preserving nodes produced by a transformer. The grammar follows the
+  ngspice manual strictly, not every behavior accepted by ngspice 47.
 - **Decision:**
-  - The first physical line is always a `Title`, including an empty line or a
-    line that resembles a statement. The node records whether its content is
-    an explicit `.title` statement or an implicit title. A later `.title`
-    creates another `Title`; ngspice replaces the displayed title with the
-    later value, while the parser retains both source nodes.
-  - `.end` is optional. `ParseResult.end_present` records its presence. A
-    missing `.end` is accepted without a diagnostic until the diagnostics API
-    exists.
-  - After `.end`, the parser accepts blank and comment lines only. ngspice 47
-    accepts trailing comments and silently ignores an element line, but
-    rejects a following unknown dot-command. The parser rejects all following
-    statements rather than silently discarding potentially meaningful source.
-  - LF and CRLF are physical-line terminators. A lone CR is ordinary
-    character data: it is accepted in free text (titles, comments, opaque
-    regions and opaque statements) and rejected elsewhere.
-  - A `*` comment line is accepted with optional leading spaces or tabs.
-    Semicolon (`;`) and dollar (`$`) markers start trailing comments, with or
-    without whitespace before the marker, outside quoted and braced text.
-  - A continuation line joins the preceding eligible statement. ngspice 47
-    joins a continuation across intervening `*` comment and blank lines; those
-    physical lines are included in the statement span. A `+` on the first
-    line is part of the implicit title. A `+` after the title is preserved
-    within its title span but does not change the title reported by ngspice.
-  - `.control` blocks are opaque and non-nesting. `.if` blocks are opaque and
-    nested. ngspice 47 accepts the probed `.control` block but rejects the
-    probe form `.if 1`; the parser still recognizes conditionals as opaque
-    structure, and that solver discrepancy is recorded in the relevant spec.
-  - `.include` and `.lib` remain opaque single statements. A `.lib ... .endl`
-    definition block is not recognized in the main file in M2.
-- **Probe record (ngspice 47, 2026-10-21):**
-  - `R1 in 0 1k` in line 1 is reported as `Circuit: r1 in 0 1k`; that resistor
-    is treated as the title, not an element.
-  - A later `.title replacement` changes the `Circuit:` title. `.TITLE`,
-    `.END`, and tab-separated element fields are accepted case-insensitively
-    and as separators, respectively. `.title` with no text yields an empty
-    displayed title.
-  - A complete circuit without `.end` exits successfully. An unknown dot
-    command after `.end` fails; a comment after `.end` succeeds; a following
-    element is ignored by the solver.
-  - A leading `+` is reported verbatim as the first-line title. A continuation
-    line after the title does not change that title. A `+` after `.end` is
-    ignored by the solver.
-  - Comment and blank lines between `V1 in 0` and `+ DC 2` still produce a
-    2-volt node, matching the unbroken `V1 in 0 DC 2` statement.
-  - Indented `*` comments and trailing `;`/`$` comments, both separated and
-    adjacent to the preceding text, are accepted.
-  - `.control`/`.endc` with `op` is accepted. The tested `.if 1` block is
-    rejected with a netlist syntax error. Missing `.include` and `.lib` files
-    produce solver errors naming the missing file.
-  - A file containing only a lone CR is not split into physical lines and is
-    reported as an empty netlist.
-- **Consequences:** The parser's post-`.end` policy is intentionally stricter
-  than ngspice's handling of ignored element and continuation lines. The
-  source-level structural parser does not treat solver-side silent omission as
-  permission to discard source content. The behavior and the remaining
-  `.if` probe uncertainty are covered by solver-backed tests.
+  - The first physical line is always one title token. It is implicit unless it
+    is an explicit `.title` line. A later `.title` is represented by a
+    `TitleDirective`; neither title form splits on `;` or `$`.
+  - `.end` is required and is the final statement. Its final newline is
+    optional. Only blank lines may follow it. A comment, directive, block,
+    second `.end`, continuation, or other text after `.end` is rejected.
+  - A continuation is accepted only when its `+` line immediately follows a
+    continuable statement. A blank line or comment line in between interrupts
+    the continuation. A `+` after a title, comment, blank line, or `.end` is
+    rejected. The first physical line beginning with `+` remains a title.
+  - A `*` line is a full-line comment. `;` and `$` introduce trailing comments
+    only after the start of a statement; an otherwise empty `;` or `$` line is
+    rejected. A `//` line is rejected even though ngspice 47 accepts it.
+  - Matched single- or double-quoted segments protect `;` and `$` in generic
+    text. Braces are ordinary text and do not protect comment markers. The
+    manual is silent on this generic-text case; this is the narrow observed
+    interpretation recorded in `NG-TXT-001`.
+  - A trailing comment on `.end` is rejected. The grammar interprets `.end` as
+    its own final statement, with no trailing-comment form.
+  - LF and CRLF terminate physical lines. A lone CR is accepted inside title,
+    comment, and directive free text; it is not a physical-line terminator and
+    is rejected where the grammar expects a line terminator, including after
+    `.end`.
+  - `.control` is an opaque non-nesting block and `.if` is an opaque nested
+    block. The accepted conditional form is `.if (1)` … `.endif`; this rule is
+    validated by ngspice 47 and the earlier `.if 1` probe is discarded.
+  - `.include` and each `.lib` command line are opaque statements. A `.lib
+    name` … `.endl` definition block in the main file is not implemented in
+    M2.
+- **Manual basis and settled points:**
+  - The structure and continuation decisions use ngspice manual §5.1.1,
+    “Input file structure”; title behavior uses §5.2.1, “.TITLE line”; and
+    the final directive uses §5.2.2, “.END Line.” In particular, the grammar does not accept
+    post-`.end` material or line-separated continuations merely because the
+    solver happens to tolerate them.
+  - Manual §§5.2.3 “Comments” and 5.2.4 “End-of-line comments” define the
+    documented comment forms but do not specify `//` lines, standalone
+    `;`/`$` lines, or comment markers in arbitrary quoted/braced directive
+    text. Those points are explicitly settled to reject `//` and standalone
+    `;`/`$`, honor matched quotes, and treat braces as ordinary text;
+    `NG-COM-001` and `NG-TXT-001` identify these as observed policy, not
+    manual guarantees. ngspice 47 accepts `//` lines and recognizes quoted
+    include paths, but its tested `.include {braced;$.inc}` path is truncated
+    at the semicolon.
+  - The manual's `.END` directive (§5.2.2) does not specify an inline comment
+    after `.end`; the grammar rejects it under the narrow reading of §§5.2.2
+    and 5.2.4.
+- **Solver evidence (ngspice 47, 2026-10-21):** missing `.end` is accepted;
+  an element and a `.control` block after `.end` are ignored/run; a `+` after
+  `.end` is ignored; comments or blank lines between a statement and its `+`
+  line still join. These behaviors are recorded as discrepancies, not adopted
+  parser rules. An unknown dot-command after `.end` errors. The valid `.if
+  (1)` form is accepted; `.if 1` was an invalid probe.
+- **Consequences:** `parse("")` and a missing `.end` raise `ParseError`. The
+  grammar is intentionally stricter than ngspice where accepting input could
+  hide or discard source. No solver behavior relaxes the manual policy.

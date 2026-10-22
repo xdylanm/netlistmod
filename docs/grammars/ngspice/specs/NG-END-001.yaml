@@ -1,0 +1,18 @@
+id: NG-END-001
+dialect: ngspice
+construct: required final .end statement
+manual_ref: ngspice manual, §§5.1.1, "Input file structure", and 5.2.2, ".END Line"
+status: validated
+validated_on:
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-22"
+grammar:
+  - end_stmt
+  - trailer
+  - END_KW
+tests:
+  - tests/grammar/ngspice/test_structure.py::test_end_is_required_last_and_allows_no_final_newline_or_blank_trailers
+  - tests/grammar/ngspice/test_structure.py::test_missing_end_reports_reason_at_source_end
+  - tests/grammar/ngspice/test_structure.py::test_r2_rejects_report_source_position_and_excerpt
+notes: The manual specifies .END as the final netlist statement. Only blank lines may follow; a trailing comment on .END is rejected by the narrow reading of §§5.2.2 and 5.2.4.

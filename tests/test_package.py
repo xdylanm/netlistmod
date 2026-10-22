@@ -19,17 +19,27 @@ def test_package_and_subpackages_import() -> None:
 
 def test_public_exports_and_version() -> None:
     expected = {
+        "BlankLine",
+        "CommentLine",
         "Dialect",
         "EditError",
         "EncodingError",
+        "End",
+        "OpaqueBlock",
+        "OpaqueStatement",
         "ParseError",
+        "ParseResult",
         "SourceText",
         "Span",
         "SpiceNetlistError",
         "TopologyError",
         "TopologyViolation",
+        "Title",
+        "TitleDirective",
         "UnsupportedConstruct",
+        "UnknownDirective",
         "__version__",
+        "parse",
     }
     assert set(netlistmod.__all__) == expected
     assert netlistmod.__version__ == version("netlistmod")
