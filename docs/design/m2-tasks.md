@@ -1,6 +1,6 @@
 # M2 task list — grammar core (ngspice)
 
-> **Status:** ACTIVE — first rework delivered; second-round fixes in [m2-review2-tasks.md](./m2-review2-tasks.md). Not complete; do not archive until the maintainer approves the re-review.
+> **Status:** READY FOR REVIEW — first rework and second-round fixes ([m2-review2-tasks.md](./m2-review2-tasks.md)) delivered. Not complete; do not archive until the maintainer approves the re-review.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M2). Governed by [architecture.md](../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([archive/m1-tasks.md](./archive/m1-tasks.md)).
 
 ## 0. Review outcome and rework (governs wherever it conflicts with sections 1–7)

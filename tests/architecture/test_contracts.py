@@ -10,12 +10,13 @@ from contextlib import redirect_stderr, redirect_stdout
 from importlib.metadata import distribution, entry_points
 from pathlib import Path
 
+import interegular
 import pytest
 from lark import Lark
 from lark.exceptions import LexError
 
 from netlistmod.dialects import Dialect
-from netlistmod.grammar.loader import pending_dialects, registered_dialects
+from netlistmod.grammar.loader import build_parser, pending_dialects, registered_dialects
 
 ROOT = Path(__file__).parents[2]
 SOURCE = ROOT / "src" / "netlistmod"
@@ -241,6 +242,48 @@ def test_strict_mode_rejects_a_deliberate_terminal_collision() -> None:
 
     with pytest.raises(LexError, match="collision|Collision"):
         Lark(conflicting_grammar, parser="lalr", strict=True)
+
+
+# Terminals whose lookarounds interegular cannot model. Lark's strict mode skips them in the
+# collision check without an error, so each one must be reviewed by hand (decision 0003). Adding a
+# terminal here is a deliberate act; this list must not grow silently.
+UNCHECKED_TERMINALS = {
+    Dialect.NGSPICE: frozenset(
+        {
+            "BLOCK_TEXT",
+            "BS_CONT",
+            "COMMENT_LINE",
+            "DOT_NAME",
+            "TEXT",
+            "TITLE_ARG",
+            "TITLE_TEXT",
+            "TRAILING_COMMENT",
+        }
+    ),
+}
+
+
+def _collision_unchecked(regexp: str) -> bool:
+    try:
+        interegular.parse_pattern(regexp).to_fsm()
+    except interegular.patterns.Unsupported:
+        return True
+    return False
+
+
+@pytest.mark.parametrize("dialect", sorted(registered_dialects(), key=lambda item: item.value))
+def test_terminals_outside_strict_collision_checking_are_known(dialect: Dialect) -> None:
+    terminals = build_parser(dialect).terminals
+    unchecked = {item.name for item in terminals if _collision_unchecked(item.pattern.to_regexp())}
+    assert unchecked == UNCHECKED_TERMINALS[dialect]
+
+
+def test_strict_mode_does_not_check_a_lookahead_terminal_for_collisions() -> None:
+    # Documents the gap the list above tracks: these two terminals overlap on "a", yet strict mode
+    # builds the grammar because the lookahead puts FIRST outside the collision check.
+    overlapping = "start: (FIRST | SECOND)+\nFIRST: /(?:[a-z]|x(?!y))+/\nSECOND: /[a-c]+/"
+    assert _collision_unchecked("(?:[a-z]|x(?!y))+")
+    Lark(overlapping, parser="lalr", lexer="contextual", strict=True)
 
 
 def test_runtime_dependencies_have_no_gpl_license() -> None:

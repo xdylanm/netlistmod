@@ -45,7 +45,10 @@
     `BS_CONT.7` (they cannot match at the same position);
     `TITLE_KW.6`; `NL.5`; keywords and dot names at 4; comment, quoted,
     title-argument, and trailing-comment terminals at 3; free-text terminals
-    at 2. Equal-priority collisions are checked by Lark strict mode.
+    at 2. Lark strict mode checks equal-priority collisions only for
+    terminals interegular can model; terminals with lookarounds (listed in
+    `tests/architecture/test_contracts.py`) are skipped without an error and
+    were reviewed by hand. The test pins that list.
   - Opaque `.control` blocks are matched with grammar rules and do not nest.
     `.if` blocks use recursive grammar rules and may nest; `.else` and
     `.elseif` remain block content. End delimiters are recognized by

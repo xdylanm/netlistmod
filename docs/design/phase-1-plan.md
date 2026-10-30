@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0, M1 complete; M2 in rework after review
+> **Status:** ACTIVE — M0, M1 complete; M2 second-round fixes ready for re-review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
