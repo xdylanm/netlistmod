@@ -42,9 +42,11 @@ title_stmt: TITLE_KW TITLE_ARG? LINE_END
 unknown_stmt: DOT_NAME rest NL
 
 // A comment runs to the end of its physical line, so a TEXT or QUOTED after it can only come from
-// a continuation line (the ignored CONT): each line of a continued statement may end in a comment.
+// a continuation line (the ignored CONT, or BS_CONT): each line of a continued statement may end
+// in a comment. BS_CONT is a token here, not an ignored terminal, so it is recognised only inside
+// a continuable statement; a line holding only "\\" is a syntax error, not silently dropped.
 // spec: NG-TXT-001
-rest: (TEXT | QUOTED | TRAILING_COMMENT)*
+rest: (TEXT | QUOTED | TRAILING_COMMENT | BS_CONT)*
 
 // The text of a statement that cannot be continued (.include, .lib; manual §2.4.5). The statement
 // ends with LINE_END, which outranks CONT, so a following "+" line is a syntax error.
@@ -68,6 +70,12 @@ LINE_END.8: /\r?\n/
 CONT.7: /\r?\n[ \t]*\+/
 NL.5: /\r?\n/
 
+// Backslash continuation (manual §2.4.5): "\\" immediately before LF or CRLF. The lookahead
+// requires the next line to start with statement text, so a blank line, a comment line, a "+"
+// line or an end-of-line comment after "\\" is an error. TEXT never consumes these backslashes.
+// spec: NG-CNT-001
+BS_CONT.7: /\\\\\r?\n(?=[ \t]*(?![*+;$]|\/\/)[^ \t\r\n])/
+
 // spec: NG-TTL-001
 TITLE_KW.6: /\.title(?![A-Za-z0-9_-])/i
 TITLE_ARG.3: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
@@ -78,10 +86,11 @@ COMMENT_LINE.3: /\*(?:[^\r\n]|\r(?!\r?\n))*/
 
 // End-of-line comments start at ";", "$" or "//", with or without whitespace before them, and
 // run to the end of the line, so quotes inside a comment are plain text. TEXT stops before any
-// of the three markers; a single "/" (as in a path) is ordinary text.
+// of the three markers; a single "/" (as in a path) is ordinary text. TEXT also stops before a
+// "\\" that ends the line (BS_CONT); other backslashes, and "\\" followed by spaces, are text.
 // spec: NG-TXT-001
 TRAILING_COMMENT.3: /(?:[;$]|\/\/)(?:[^\r\n]|\r(?!\r?\n))*/
-TEXT.2: /(?:[^ \t\r\n;$'"\/]|\/(?!\/))(?:[^\r\n;$'"\/]|\/(?!\/)|\r(?!\r?\n))*/
+TEXT.2: /(?:[^ \t\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n))(?:[^\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n)|\r(?!\r?\n))*/
 QUOTED.3: /"[^"\r\n]*"|'[^'\r\n]*'/
 
 // spec: NG-END-001

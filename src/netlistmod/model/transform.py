@@ -98,7 +98,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return _Item(meta.end_pos, lambda span: TitleDirective(text, span))
 
     def rest(self, meta: Meta, children: list[Token]) -> _Rest:
-        parts = [token for token in children if token.type != "TRAILING_COMMENT"]
+        parts = [token for token in children if token.type in {"TEXT", "QUOTED"}]
         text_end = parts[-1].end_pos if parts else None
         comments: list[Span] = []
         for token in children:

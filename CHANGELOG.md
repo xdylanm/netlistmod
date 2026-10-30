@@ -24,5 +24,7 @@
   spans) instead of `trailing_comment`.
 - `.include` and `.lib` can no longer be continued (manual §2.4.5); a `+`
   line after them is a positioned syntax error.
+- A line ending in `\\` continues a statement (manual §2.4.5); the next line
+  must start with statement text.
 - Made `SourceText.write()` preserve existing permission bits and write through
   symlinks; new files use normal umask-derived permissions.

@@ -17,6 +17,8 @@ strict parser rejects the same input.
 | Ignores a `+` line after `.end`. | Rejects a continuation after `.end`. | `test_plus_after_end_is_ignored_by_solver_rejected_by_parser` |
 | Accepts a standalone `//` line. | Rejects it: `//` is an end-of-line comment after a command (§2.4.4), not a comment line. | `test_double_slash_comment_probe` |
 | Rejects an unknown dot-command after `.end`. | Rejects it as well. | `test_unknown_dot_command_after_end_fails_in_both` |
+| Continues a line ending in `\\` followed by spaces (2026-10-30). | `\\` must end the line; with trailing spaces it is text, so the next line is a separate statement. | `test_backslash_after_trailing_space_or_in_comment_is_solver_leniency` |
+| Continues a line whose end-of-line comment ends in `\\` (2026-10-30). | The comment runs to the end of the line; its `\\` is comment text. | `test_backslash_after_trailing_space_or_in_comment_is_solver_leniency` |
 
 The `.if (1)` … `.endif` form is accepted and is covered by
 `test_valid_if_form_is_accepted_by_solver_and_parser`. The earlier `.if 1`
@@ -38,6 +40,13 @@ The remaining manual-quiet cases are probed separately:
 - `.include` and `.lib` continuation (2026-10-30) agrees with the grammar:
   `test_include_and_lib_continuation_fails_in_both` shows that ngspice 47
   does not join a `+` line to either statement and reports an error.
+- Backslash continuation (2026-10-30) otherwise agrees with the grammar:
+  `test_backslash_continuation_agrees_with_solver` (with or without a space
+  before `\\`, indented next line, CRLF, mixed with `+`) and
+  `test_backslash_before_a_line_that_cannot_continue_fails_in_both` (blank,
+  comment or `+` line after `\\`, a line holding only `\\`).
+  `test_backslash_after_include_path_fails_in_both`: ngspice 47 reads a
+  trailing `\\` as part of an `.include` path; the parser rejects it.
 - Titles are parsed as a single token, including `;` and `$`, under the narrow
   reading of `[ngspice-manual] §2.4.1 ".TITLE line"` (edition in
   [docs/references.md](../../references.md)).

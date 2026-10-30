@@ -1,6 +1,6 @@
 id: NG-CNT-001
 dialect: ngspice
-construct: immediately adjacent continuation lines
+construct: immediately adjacent continuation lines (+ and trailing \\)
 manual_ref:
   - '[ngspice-manual] §2.4.5 "Continuation lines"'
   - '[ngspice-manual] §2.1.1 "Input file structure"'
@@ -8,15 +8,23 @@ status: validated
 validated_on:
   - solver: ngspice
     version: "47"
-    date: "2026-10-22"
+    date: "2026-10-30"
 grammar:
   - LINE_END
   - CONT
   - NL
+  - BS_CONT
 tests:
   - tests/grammar/ngspice/test_structure.py::test_continuations_require_immediate_previous_statement
   - tests/grammar/ngspice/test_structure.py::test_continuations_after_non_statements_or_intervening_lines_fail
   - tests/grammar/ngspice/test_structure.py::test_each_line_of_a_continued_statement_may_end_in_a_comment
+  - tests/grammar/ngspice/test_structure.py::test_backslash_continuation_joins_the_next_line
+  - tests/grammar/ngspice/test_structure.py::test_backslash_continuation_rejects_lines_that_cannot_continue
+  - tests/grammar/ngspice/test_structure.py::test_backslashes_that_do_not_end_a_statement_line_are_text
+  - tests/grammar/ngspice/test_structure.py::test_continued_element_line_is_reported_at_its_first_line
   - tests/solver/test_ngspice_solver_structure.py::test_continuation_across_comment_and_blank_is_solver_leniency
   - tests/solver/test_ngspice_solver_structure.py::test_comments_on_continued_lines_agree_with_solver
-notes: A continuation must immediately follow a statement; a blank or comment line interrupts it even though ngspice 47 joins such lines. Each physical line of a continued statement may end in an end-of-line comment (the §2.4.5 general form); the next + line still continues the statement, as ngspice 47 also does.
+  - tests/solver/test_ngspice_solver_structure.py::test_backslash_continuation_agrees_with_solver
+  - tests/solver/test_ngspice_solver_structure.py::test_backslash_after_trailing_space_or_in_comment_is_solver_leniency
+  - tests/solver/test_ngspice_solver_structure.py::test_backslash_before_a_line_that_cannot_continue_fails_in_both
+notes: A continuation must immediately follow a statement; a blank or comment line interrupts it even though ngspice 47 joins such lines. Each physical line of a continued statement may end in an end-of-line comment (the §2.4.5 general form); the next + line still continues the statement, as ngspice 47 also does. Backslash form (§2.4.5, "ending the line with two backslashes") - \\ immediately before LF or CRLF continues the statement onto the next line, whose leading whitespace is ignored; the next line must start with statement text, so a blank line, a comment line, a + line or a line holding only an end-of-line comment after \\ is an error at the backslashes. Settled under the narrow reading, with ngspice 47 agreeing unless noted - + and \\ may be mixed on different lines of one statement; \\ followed by spaces is text, not a continuation (ngspice 47 continues; discrepancy); \\ at the end of an end-of-line comment, a * comment line, a title or .end is not a continuation (ngspice 47 continues after an end-of-line comment; discrepancy); a single backslash or \\ inside a line is text; three backslashes are one literal backslash plus a continuation; a line holding only \\ is an error. .include and .lib cannot be continued, so \\ at the end of their line is a syntax error (ngspice 47 reads it as part of the path and then fails).

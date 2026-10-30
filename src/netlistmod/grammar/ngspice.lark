@@ -4,7 +4,7 @@
 
 %import .core (start, first_line, line, statement, title_stmt, unknown_stmt, rest, line_rest)
 %import .core (end_stmt, trailer)
-%import .core (WS, LINE_END, CONT, NL, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
+%import .core (WS, LINE_END, CONT, NL, BS_CONT, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
 %import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
 
 %ignore WS

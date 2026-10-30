@@ -1,6 +1,6 @@
 # M2 second review — required fixes
 
-> **Status:** ACTIVE — F1–F3 done; F4–F6 open
+> **Status:** ACTIVE — F1–F4 done; F5–F6 open
 > **Part of:** [m2-tasks.md](./m2-tasks.md) (milestone M2, second review round). Governed by [architecture.md](../architecture.md) (P5, P8, P13, §6.3, §11). The M2 task list stays open until this round passes the maintainer's re-review; archive both together then.
 
 ## 1. Context
@@ -37,8 +37,9 @@ Add `//` as a trailing-comment delimiter alongside `;` and `$` in the grammar (m
 In the grammar, end `.include` and `.lib` statements with a terminator that outranks the continuation terminals, as titles, comments and `.end` already do, so a `+` line after them is a syntax error. Reject the backslash form for them as well (F4). Update `NG-OPA-002` and the discrepancies note.
 *Done when:* `.include a` / `+ b` and `.lib a b` / `+ c` are rejected with positions, and a backslash at the end of an `.include`/`.lib` line does not continue it.
 
-[ ] **F4 — Backslash continuation.**
+[x] **F4 — Backslash continuation.**
 Support a line ending in two backslashes immediately before the line terminator (`\\` then LF or CRLF) as a continuation, for the same continuable statements as `+`, in the grammar (an ignored terminal, with free-text terminals written so they do not swallow the trailing backslashes). The continued line's leading whitespace is ignored. Settle, cite or mark `observed`, and test: trailing whitespace after the backslashes (default: not a continuation); mixing `+` and `\\` in one statement; a blank or comment line after `\\`; a single backslash or backslashes elsewhere in a line (ordinary text); CRLF. Spans of a continued statement cover every physical line. Probe ngspice 47 for the backslash form and for `.include` continuation, and record the results as discrepancy evidence (observations only). Update `NG-CNT-001`, decision 0002/0003, `architecture.md` §6.3 rule 3 if the terminal changes.
+*Implementation choices (2026-10-30, maintainer delegated):* (1) `BS_CONT` is a token inside the statement's text rule, not an ignored terminal: an ignored terminal is active in every lexer state and would silently drop a line holding only `\\`, against P5. (2) The next line must start with statement text; a blank, `*` comment, `+` or comment-only line after `\\` is an error at the backslashes (ngspice 47 also fails). (3) `\\` followed by spaces is text (default kept; ngspice 47 continues; discrepancy). (4) `\\` at the end of an end-of-line comment is comment text (narrow reading; ngspice 47 continues; discrepancy). (5) `\\` at the end of `.include`/`.lib` is a syntax error (ngspice 47 treats it as part of the path and then fails). (6) Three backslashes are one literal backslash plus a continuation (ngspice 47 agrees). (7) `.foo a \\` at end of input fails at end of input. Probes: `tests/solver/` backslash tests; findings in `discrepancies.md`.
 *Done when:* tests cover both forms, the error for a continuation after an unsupported line is positioned correctly, and a line using `\\` no longer produces a misleading "unsupported element" error.
 
 [ ] **F5 — Keep `.end` strict.**

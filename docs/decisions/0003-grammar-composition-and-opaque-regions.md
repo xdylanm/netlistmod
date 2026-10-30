@@ -32,7 +32,17 @@
     sequence: a comment runs to the end of its line, so text after it can only
     come from a continuation line. `.include` and `.lib` use `line_rest`
     instead, ended by `LINE_END`, because they cannot be continued.
-  - Priorities are deliberate: ignored `WS.9`; `LINE_END.8`; `CONT.7`;
+  - Backslash continuation is a token, `BS_CONT.7`, inside `rest`, not an
+    ignored terminal (the M2 review-2 task asked for an ignored terminal;
+    this deviation is recorded there). Ignored terminals are active in every
+    lexer state, so an ignored `\\` terminal would silently drop a line
+    holding only `\\`; as a `rest` token it is recognised only inside a
+    continuable statement, and `line_rest` (`.include`, `.lib`) does not
+    accept it. Its lookahead requires the next line to start with statement
+    text. `TEXT` excludes a `\\` that ends the line, so it never swallows
+    the continuation.
+  - Priorities are deliberate: ignored `WS.9`; `LINE_END.8`; `CONT.7` and
+    `BS_CONT.7` (they cannot match at the same position);
     `TITLE_KW.6`; `NL.5`; keywords and dot names at 4; comment, quoted,
     title-argument, and trailing-comment terminals at 3; free-text terminals
     at 2. Equal-priority collisions are checked by Lark strict mode.

@@ -33,6 +33,7 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "$END": "end of input",
     "LINE_END": "end of line",
     "NL": "end of line",
+    "BS_CONT": "`\\\\` continuation onto a line of statement text",
     "END_KW": "`.end`",
     "ENDC_KW": "`.endc`",
     "ENDIF_KW": "`.endif`",

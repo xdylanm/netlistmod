@@ -97,6 +97,71 @@ def test_include_and_lib_continuation_fails_in_both(
     _assert_parser_rejects(f"probe circuit\n{statement}\n.end\n")
 
 
+@pytest.mark.parametrize(
+    "continued",
+    [
+        "in 0 \\\\\nDC 2",
+        "in 0 DC\\\\\n 2",
+        "in 0 \\\\\n    DC 2",
+        "in 0 \\\\\r\nDC 2",
+        "in 0\n+ DC \\\\\n2",
+    ],
+)
+def test_backslash_continuation_agrees_with_solver(
+    solver: Solver, tmp_path: Path, continued: str
+) -> None:
+    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
+    assert getattr(result.items[1], "raw", None) == f".foo {continued}"
+
+
+@pytest.mark.parametrize(
+    "continued",
+    [
+        "in 0 \\\\  \nDC 2",
+        "in 0 ; comment \\\\\nDC 2",
+    ],
+)
+def test_backslash_after_trailing_space_or_in_comment_is_solver_leniency(
+    solver: Solver, tmp_path: Path, continued: str
+) -> None:
+    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    with pytest.raises(UnsupportedConstruct) as captured:
+        parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
+    assert (captured.value.line, captured.value.column) == (3, 1)
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        "V1 in 0 DC 2 \\\\\n\n",
+        "V1 in 0 DC 2 \\\\\n* comment\n",
+        "V1 in 0 \\\\\n+ DC 2\n",
+        "V1 in 0 DC 2\n\\\\\n",
+    ],
+)
+def test_backslash_before_a_line_that_cannot_continue_fails_in_both(
+    solver: Solver, tmp_path: Path, lines: str
+) -> None:
+    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2\n", lines))
+    assert code != 0, log
+    _assert_parser_rejects(f"probe circuit\n{lines.replace('V1', '.foo')}.end\n")
+
+
+def test_backslash_after_include_path_fails_in_both(solver: Solver, tmp_path: Path) -> None:
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "v.inc").write_text("V1 in 0 DC 2\n", encoding="utf-8")
+    body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
+    code, log = _run(solver, tmp_path, "probe circuit\n.include sub/v.inc\\\\\n" + body)
+    assert code != 0
+    assert "Could not find include file sub/v.inc\\\\" in log
+    _assert_parser_rejects("probe circuit\n.include sub/v.inc\\\\\n.end\n")
+
+
 def test_comments_on_continued_lines_agree_with_solver(solver: Solver, tmp_path: Path) -> None:
     continued = "in 0 ; one\n+ DC // two\n+ 2 $ three"
     code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))

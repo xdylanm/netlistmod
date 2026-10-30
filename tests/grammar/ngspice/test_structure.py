@@ -168,6 +168,8 @@ def test_continuations_require_immediate_previous_statement() -> None:
         ("title\n.lib a b\n+ c\n.end\n", 3, 1, "+ c\n^"),
         ("title\n.INCLUDE a ; note\n+ b\n.end\n", 3, 1, "+ b\n^"),
         ("title\r\n.include a\r\n  + b\r\n.end\r\n", 3, 3, "  + b\n  ^"),
+        ("title\n.include a \\\\\nb\n.end\n", 2, 12, ".include a \\\\\n           ^"),
+        ("title\n.lib a b\\\\\nc\n.end\n", 2, 9, ".lib a b\\\\\n        ^"),
     ],
 )
 def test_include_and_lib_cannot_be_continued(
@@ -177,6 +179,84 @@ def test_include_and_lib_cannot_be_continued(
         _parse(text)
     assert (captured.value.line, captured.value.column) == (line, column)
     assert captured.value.excerpt == excerpt
+
+
+@pytest.mark.parametrize(
+    ("statement", "raw"),
+    [
+        (".options a \\\\\nb", ".options a \\\\\nb"),
+        (".options a\\\\\nb", ".options a\\\\\nb"),
+        (".options a \\\\\n    b", ".options a \\\\\n    b"),
+        (".options a \\\\\r\nb", ".options a \\\\\r\nb"),
+        (".foo a \\\\\nb \\\\\nc", ".foo a \\\\\nb \\\\\nc"),
+        (".foo a \\\\\nb\n+ c", ".foo a \\\\\nb\n+ c"),
+        (".foo a\n+ b \\\\\nc", ".foo a\n+ b \\\\\nc"),
+        (".foo 'q' \\\\\nb", ".foo 'q' \\\\\nb"),
+        (".foo\\\\\nb", ".foo\\\\\nb"),
+        (".foo a\\\\\\\nb", ".foo a\\\\\\\nb"),
+        (".foo a \\\\\nb ; note", ".foo a \\\\\nb "),
+    ],
+)
+def test_backslash_continuation_joins_the_next_line(statement: str, raw: str) -> None:
+    text = f"title\n{statement}\n.end\n"
+    result = _parse(text)
+    directive = result.items[1]
+    assert isinstance(directive, UnknownDirective)
+    assert directive.raw == raw
+    assert directive.span == Span(len("title\n"), len("title\n") + len(statement) + 1)
+    _assert_spans_tile(text, result.items)
+
+
+@pytest.mark.parametrize(
+    ("text", "line", "column"),
+    [
+        ("title\n.foo a \\\\\n\n.end\n", 2, 8),
+        ("title\n.foo a \\\\\n  \n.end\n", 2, 8),
+        ("title\n.foo a \\\\\n* c\n.end\n", 2, 8),
+        ("title\n.foo a \\\\\n+ b\n.end\n", 2, 8),
+        ("title\n.foo a \\\\\n; c\n.end\n", 2, 8),
+        ("title\n.foo a \\\\\n// c\n.end\n", 2, 8),
+        ("title\n.foo a \\\\", 2, 10),
+        ("title\n.foo a\n\\\\\n.bar\n.end\n", 3, 1),
+        ("title\n.foo a\n  \\\\\n.bar\n.end\n", 3, 3),
+        ("title\n.end \\\\\n", 2, 6),
+    ],
+)
+def test_backslash_continuation_rejects_lines_that_cannot_continue(
+    text: str, line: int, column: int
+) -> None:
+    with pytest.raises(ParseError) as captured:
+        _parse(text)
+    assert (captured.value.line, captured.value.column) == (line, column)
+
+
+@pytest.mark.parametrize(
+    ("text", "kind", "value"),
+    [
+        ("title\n.foo a \\\n.end\n", UnknownDirective, ".foo a \\"),
+        ("title\n.foo a \\\\ b\n.end\n", UnknownDirective, ".foo a \\\\ b"),
+        ("title\n.foo a \\\\  \n.end\n", UnknownDirective, ".foo a \\\\  "),
+        ("title\n.foo a ; c \\\\\n.end\n", UnknownDirective, ".foo a "),
+        ("title\n* c \\\\\n.end\n", CommentLine, "* c \\\\"),
+        ("title\n.title x \\\\\n.end\n", TitleDirective, "x \\\\"),
+    ],
+)
+def test_backslashes_that_do_not_end_a_statement_line_are_text(
+    text: str, kind: type, value: str
+) -> None:
+    result = _parse(text)
+    item = result.items[1]
+    assert isinstance(item, kind)
+    assert getattr(item, "raw", getattr(item, "text", None)) == value
+    assert isinstance(result.items[2], End)
+
+
+@pytest.mark.parametrize("continued", ["R1 a b \\\\\n1k", "R1 a b\n+ 1k"])
+def test_continued_element_line_is_reported_at_its_first_line(continued: str) -> None:
+    with pytest.raises(UnsupportedConstruct) as captured:
+        _parse(f"title\n{continued}\n.end\n")
+    assert captured.value.construct == "ngspice R device"
+    assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 def test_repeated_continuations_and_line_ending_variants_are_accepted() -> None:

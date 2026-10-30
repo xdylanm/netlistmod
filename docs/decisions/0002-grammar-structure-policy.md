@@ -16,6 +16,14 @@
     continuable statement. A blank line or comment line in between interrupts
     the continuation. A `+` after a title, comment, blank line, or `.end` is
     rejected. The first physical line beginning with `+` remains a title.
+  - A line ending in `\\` immediately before LF or CRLF also continues a
+    continuable statement (§2.4.5). The next line must start with statement
+    text: a blank, comment, `+` or comment-only line after `\\` is an error,
+    as is a line holding only `\\`. `\\` followed by spaces, or at the end of
+    a comment, title, `.end`, is text or an error, never a continuation;
+    ngspice 47 continues after trailing spaces and after an end-of-line
+    comment, which is recorded as a discrepancy. `+` and `\\` may be mixed on
+    different lines of one statement.
   - A `*` line is a full-line comment. `;`, `$` and `//` introduce
     end-of-line comments only after the start of a statement, with or without
     whitespace before the marker; a comment runs to the end of the line. A line
