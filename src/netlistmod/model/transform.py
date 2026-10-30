@@ -109,6 +109,8 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
             comments.append(Span(token.start_pos, token.end_pos))
         return _Rest(text_end, tuple(comments))
 
+    line_rest = rest
+
     def unknown_stmt(self, meta: Meta, children: list[Any]) -> _Item:
         name, raw, comments = self._statement(children)
         return _Item(meta.end_pos, lambda span: UnknownDirective(name, raw, span, comments))

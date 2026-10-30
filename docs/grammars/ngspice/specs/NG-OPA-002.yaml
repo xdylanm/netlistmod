@@ -4,11 +4,12 @@ construct: opaque .include and .lib statements
 manual_ref:
   - '[ngspice-manual] §2.8 ".INCLUDE"'
   - '[ngspice-manual] §2.10 ".LIB"'
+  - '[ngspice-manual] §2.4.5 "Continuation lines"'
 status: validated
 validated_on:
   - solver: ngspice
     version: "47"
-    date: "2026-10-22"
+    date: "2026-10-30"
 grammar:
   - statement
   - include_stmt
@@ -18,4 +19,6 @@ grammar:
 tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
   - tests/grammar/ngspice/test_structure.py::test_continuations_require_immediate_previous_statement
-notes: M2 treats each .lib line as one opaque statement; a .lib name … .endl definition block is a documented limitation.
+  - tests/grammar/ngspice/test_structure.py::test_include_and_lib_cannot_be_continued
+  - tests/solver/test_ngspice_solver_structure.py::test_include_and_lib_continuation_fails_in_both
+notes: .include and .lib cannot be continued (§2.4.5); they end at the line terminator, so a following + line is a syntax error at its position. ngspice 47 also rejects such netlists (the + line is not joined). M2 treats each .lib line as one opaque statement; a .lib name … .endl definition block is a documented limitation.

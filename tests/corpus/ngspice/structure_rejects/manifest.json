@@ -81,6 +81,16 @@
       "line": 2,
       "column": 6
     },
+    "include_continuation.cir": {
+      "sha256": "85c93b74a33b7d9bfbebb6a51681dde26b83d2d815dfd558143fb9ed7dc29787",
+      "line": 3,
+      "column": 1
+    },
+    "lib_continuation.cir": {
+      "sha256": "21f7e5f6074d7995e0cc20e2fb496ca4e6bf015bd0e8076f7862fae6cc0f6146",
+      "line": 3,
+      "column": 1
+    },
     "lone_cr_after_end.cir": {
       "sha256": "379f963b80d412aefd5abc75b37ae833daf0f9015decb20d69b4ca05dbdfd243",
       "line": 2,

@@ -25,7 +25,7 @@ The netlist must be non-empty and end with `.end`. A final newline after
 `.end` raise `ParseError`. A comment or directive after `.end` is rejected.
 Continuations must immediately follow their statement: a comment or blank line
 between them is an error, as is a `+` line after a title, comment, blank line,
-or `.end`.
+`.end`, `.include` or `.lib` (the last two cannot be continued).
 
 Unknown dot-commands are preserved without interpretation. `.control`,
 conditional blocks, `.include`, and `.lib` are opaque; the parser does not

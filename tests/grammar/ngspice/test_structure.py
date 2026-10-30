@@ -150,15 +150,33 @@ def test_structural_nodes_are_typed_and_spans_tile_source() -> None:
 
 
 def test_continuations_require_immediate_previous_statement() -> None:
-    text = "title\n.plot v(out)\n  + trace\n.include first.lib\n+ second.lib\n.end"
+    text = "title\n.plot v(out)\n  + trace\n.include first.lib\n.end"
     result = _parse(text)
     directive, include = result.items[1:3]
     assert isinstance(directive, UnknownDirective)
     assert directive.raw == ".plot v(out)\n  + trace"
     assert isinstance(include, OpaqueStatement)
-    assert include.raw == ".include first.lib\n+ second.lib"
+    assert include.raw == ".include first.lib"
     assert isinstance(result.items[3], End)
     _assert_spans_tile(text, result.items)
+
+
+@pytest.mark.parametrize(
+    ("text", "line", "column", "excerpt"),
+    [
+        ("title\n.include a\n+ b\n.end\n", 3, 1, "+ b\n^"),
+        ("title\n.lib a b\n+ c\n.end\n", 3, 1, "+ c\n^"),
+        ("title\n.INCLUDE a ; note\n+ b\n.end\n", 3, 1, "+ b\n^"),
+        ("title\r\n.include a\r\n  + b\r\n.end\r\n", 3, 3, "  + b\n  ^"),
+    ],
+)
+def test_include_and_lib_cannot_be_continued(
+    text: str, line: int, column: int, excerpt: str
+) -> None:
+    with pytest.raises(ParseError) as captured:
+        _parse(text)
+    assert (captured.value.line, captured.value.column) == (line, column)
+    assert captured.value.excerpt == excerpt
 
 
 def test_repeated_continuations_and_line_ending_variants_are_accepted() -> None:

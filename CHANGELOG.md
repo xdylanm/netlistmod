@@ -22,5 +22,7 @@
 - Each line of a continued statement may end in an end-of-line comment
   (manual §2.4.5). Statement nodes now have `trailing_comments` (a tuple of
   spans) instead of `trailing_comment`.
+- `.include` and `.lib` can no longer be continued (manual §2.4.5); a `+`
+  line after them is a positioned syntax error.
 - Made `SourceText.write()` preserve existing permission bits and write through
   symlinks; new files use normal umask-derived permissions.

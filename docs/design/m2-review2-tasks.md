@@ -1,6 +1,6 @@
 # M2 second review — required fixes
 
-> **Status:** ACTIVE — F1, F2 done; F3–F6 open
+> **Status:** ACTIVE — F1–F3 done; F4–F6 open
 > **Part of:** [m2-tasks.md](./m2-tasks.md) (milestone M2, second review round). Governed by [architecture.md](../architecture.md) (P5, P8, P13, §6.3, §11). The M2 task list stays open until this round passes the maintainer's re-review; archive both together then.
 
 ## 1. Context
@@ -33,7 +33,7 @@ Add `//` as a trailing-comment delimiter alongside `;` and `$` in the grammar (m
 *Also fixed (maintainer, 2026-10-30):* a comment on a continued line no longer ends the statement (§2.4.5 general form); `trailing_comment` became `trailing_comments`.
 *Done when:* tests cover `.param n1=1 // new value`, `.options a // don't`, `.options a='x//y'` (quoted, accepted), a standalone `// c` line (rejected at its position), and the trailing-comment spans.
 
-[ ] **F3 — `.include` and `.lib` are not continuable.**
+[x] **F3 — `.include` and `.lib` are not continuable.**
 In the grammar, end `.include` and `.lib` statements with a terminator that outranks the continuation terminals, as titles, comments and `.end` already do, so a `+` line after them is a syntax error. Reject the backslash form for them as well (F4). Update `NG-OPA-002` and the discrepancies note.
 *Done when:* `.include a` / `+ b` and `.lib a b` / `+ c` are rejected with positions, and a backslash at the end of an `.include`/`.lib` line does not continue it.
 

@@ -2,18 +2,20 @@
 // %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
 // used by this dialect is imported by name, which keeps tree and token names unprefixed.
 
-%import .core (start, first_line, line, statement, title_stmt, unknown_stmt, rest, end_stmt, trailer)
+%import .core (start, first_line, line, statement, title_stmt, unknown_stmt, rest, line_rest)
+%import .core (end_stmt, trailer)
 %import .core (WS, LINE_END, CONT, NL, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
 %import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
 
 %ignore WS
 %ignore CONT
 
+// .include and .lib cannot be continued (manual §2.4.5): they end with LINE_END, not NL.
 // spec: NG-OPA-002
 %extend statement: include_stmt
                  | lib_stmt
-include_stmt: INCLUDE_KW rest NL
-lib_stmt: LIB_KW rest NL
+include_stmt: INCLUDE_KW line_rest LINE_END
+lib_stmt: LIB_KW line_rest LINE_END
 
 // spec: NG-OPA-001
 %extend statement: control_block

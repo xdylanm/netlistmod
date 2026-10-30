@@ -35,6 +35,9 @@ The remaining manual-quiet cases are probed separately:
   treats `2//3`, `2// 3` and `2 // 3` alike, and
   `test_include_path_is_cut_at_double_slash_unless_quoted` shows that
   `.include sub//v.inc` is cut at `//` while `"sub//v.inc"` is included.
+- `.include` and `.lib` continuation (2026-10-30) agrees with the grammar:
+  `test_include_and_lib_continuation_fails_in_both` shows that ngspice 47
+  does not join a `+` line to either statement and reports an error.
 - Titles are parsed as a single token, including `;` and `$`, under the narrow
   reading of `[ngspice-manual] §2.4.1 ".TITLE line"` (edition in
   [docs/references.md](../../references.md)).

@@ -10,6 +10,7 @@ validated_on:
     date: "2026-10-30"
 grammar:
   - rest
+  - line_rest
   - TRAILING_COMMENT
   - TEXT
   - QUOTED

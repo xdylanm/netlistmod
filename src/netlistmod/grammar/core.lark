@@ -5,8 +5,9 @@
 //
 // Lexer techniques (see decision 0003; every priority is deliberate because Lark only
 // collision-checks terminals of EQUAL priority):
-//  * LINE_END (8) ends the title, comment, blank and .end lines. It outranks CONT (7), so a
-//    "+" line after any of those lines is never swallowed as a continuation: it is a syntax error.
+//  * LINE_END (8) ends the title, comment, blank and .end lines and the lines that cannot be
+//    continued (.include, .lib). It outranks CONT (7), so a "+" line after any of those lines is
+//    never swallowed as a continuation: it is a syntax error.
 //  * NL (5) ends only continuable statements. CONT (7) outranks it, so a "+" line that
 //    immediately follows such a statement is ignored (it continues the statement).
 //  * WS (9) is ignored everywhere; text terminals never start with whitespace.
@@ -44,6 +45,11 @@ unknown_stmt: DOT_NAME rest NL
 // a continuation line (the ignored CONT): each line of a continued statement may end in a comment.
 // spec: NG-TXT-001
 rest: (TEXT | QUOTED | TRAILING_COMMENT)*
+
+// The text of a statement that cannot be continued (.include, .lib; manual §2.4.5). The statement
+// ends with LINE_END, which outranks CONT, so a following "+" line is a syntax error.
+// spec: NG-TXT-001
+line_rest: (TEXT | QUOTED)* TRAILING_COMMENT?
 
 // The newline after .end may be missing at end of input. An empty optional newline would be a
 // shift/reduce conflict under strict=True, so the alternatives are spelled out.

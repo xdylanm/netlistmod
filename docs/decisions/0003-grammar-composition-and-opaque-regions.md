@@ -23,13 +23,15 @@
     strict mode to classify `.endc` and `.endif` correctly.
   - The ignored `CONT.7` terminal matches only a newline followed immediately
     by optional horizontal whitespace and `+`. `LINE_END.8` terminates titles,
-    comments, blank lines, and `.end`, and outranks `CONT`; consequently a
+    comments, blank lines, `.end`, `.include` and `.lib`, and outranks
+    `CONT`; consequently a
     continuation after any of those lines fails. `NL.5` terminates
     continuable statements, so `CONT` wins only when a `+` immediately follows
     such a statement. Interleaved blank/comment lines are not skipped. A
     statement's `rest` accepts an end-of-line comment anywhere in its token
     sequence: a comment runs to the end of its line, so text after it can only
-    come from a continuation line.
+    come from a continuation line. `.include` and `.lib` use `line_rest`
+    instead, ended by `LINE_END`, because they cannot be continued.
   - Priorities are deliberate: ignored `WS.9`; `LINE_END.8`; `CONT.7`;
     `TITLE_KW.6`; `NL.5`; keywords and dot names at 4; comment, quoted,
     title-argument, and trailing-comment terminals at 3; free-text terminals

@@ -72,6 +72,31 @@ def test_continuation_across_comment_and_blank_is_solver_leniency(
     _assert_parser_rejects(split)
 
 
+@pytest.mark.parametrize(
+    ("statement", "files"),
+    [
+        (".include sub/v.inc\n+ sub/w.inc", ("v.inc", "w.inc")),
+        (".lib sub/l.lib\n+ sec", ("l.lib",)),
+    ],
+)
+def test_include_and_lib_continuation_fails_in_both(
+    solver: Solver, tmp_path: Path, statement: str, files: tuple[str, ...]
+) -> None:
+    contents = {
+        "v.inc": "V1 in 0 DC 2\n",
+        "w.inc": "R7 in 0 1k\n",
+        "l.lib": ".lib sec\nV1 in 0 DC 2\n.endl\n",
+    }
+    (tmp_path / "sub").mkdir()
+    for name in files:
+        (tmp_path / "sub" / name).write_text(contents[name], encoding="utf-8")
+    body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
+    code, log = _run(solver, tmp_path, f"probe circuit\n{statement}\n{body}")
+    assert code != 0, log
+    assert "Error on line" in log
+    _assert_parser_rejects(f"probe circuit\n{statement}\n.end\n")
+
+
 def test_comments_on_continued_lines_agree_with_solver(solver: Solver, tmp_path: Path) -> None:
     continued = "in 0 ; one\n+ DC // two\n+ 2 $ three"
     code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))

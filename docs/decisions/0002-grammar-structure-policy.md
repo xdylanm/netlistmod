@@ -39,7 +39,8 @@
   - `.control` is an opaque non-nesting block and `.if` is an opaque nested
     block. The accepted conditional form is `.if (1)` … `.endif`; this rule is
     validated by ngspice 47 and the earlier `.if 1` probe is discarded.
-  - `.include` and each `.lib` command line are opaque statements. A `.lib
+  - `.include` and each `.lib` command line are opaque statements. They cannot
+    be continued (§2.4.5): a `+` line after them is a syntax error. A `.lib
     name` … `.endl` definition block in the main file is not implemented in
     M2.
 - **Manual basis and settled points:**
