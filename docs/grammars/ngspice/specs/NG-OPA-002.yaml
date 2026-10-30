@@ -1,7 +1,9 @@
 id: NG-OPA-002
 dialect: ngspice
 construct: opaque .include and .lib statements
-manual_ref: ngspice manual, §§5.6, ".INCLUDE", and 5.7, ".LIB"
+manual_ref:
+  - '[ngspice-manual] §2.8 ".INCLUDE"'
+  - '[ngspice-manual] §2.10 ".LIB"'
 status: validated
 validated_on:
   - solver: ngspice

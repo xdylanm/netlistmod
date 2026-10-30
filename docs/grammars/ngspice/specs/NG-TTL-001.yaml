@@ -1,7 +1,9 @@
 id: NG-TTL-001
 dialect: ngspice
 construct: implicit first-line title and explicit .title
-manual_ref: ngspice manual, §§5.1.1, "Input file structure", and 5.2.1, ".TITLE line"
+manual_ref:
+  - '[ngspice-manual] §2.1.1 "Input file structure"'
+  - '[ngspice-manual] §2.4.1 ".TITLE line"'
 status: validated
 validated_on:
   - solver: ngspice

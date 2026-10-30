@@ -1,7 +1,8 @@
 id: NG-STR-001
 dialect: ngspice
 construct: top-level source structure
-manual_ref: ngspice manual, §5.1.1, "Input file structure"
+manual_ref:
+  - '[ngspice-manual] §2.1.1 "Input file structure"'
 status: validated
 grammar:
   - start

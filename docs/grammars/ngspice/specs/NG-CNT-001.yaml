@@ -1,7 +1,9 @@
 id: NG-CNT-001
 dialect: ngspice
 construct: immediately adjacent continuation lines
-manual_ref: ngspice manual, §5.1.1, "Input file structure"
+manual_ref:
+  - '[ngspice-manual] §2.4.5 "Continuation lines"'
+  - '[ngspice-manual] §2.1.1 "Input file structure"'
 status: validated
 validated_on:
   - solver: ngspice

@@ -10,6 +10,7 @@ import yaml
 
 ROOT = Path(__file__).parents[2]
 SPEC_DIRECTORY = ROOT / "docs" / "grammars" / "ngspice" / "specs"
+REFERENCES_FILE = ROOT / "docs" / "references.md"
 GRAMMAR_FILES = [
     ROOT / "src" / "netlistmod" / "grammar" / "core.lark",
     ROOT / "src" / "netlistmod" / "grammar" / "ngspice.lark",
@@ -19,6 +20,12 @@ GRAMMAR_DECLARATION = re.compile(
     r"^\s*(?:(?:%extend|%override)\s+)?"
     r"(\??[a-z_][a-z_0-9]*|[A-Z][A-Z_0-9]*)(?:\.\d+)?\s*:"
 )
+# `[<key>] §<number> "<title>"`, for example `[ngspice-manual] §2.4.4 "End-of-line comments"`.
+MANUAL_REF = re.compile(r'\[([a-z0-9][a-z0-9-]*)\] §(\d+(?:\.\d+)*) "([^"\r\n]+)"')
+REFERENCE_KEY = re.compile(r"^## \[([a-z0-9][a-z0-9-]*)\]\s*$", re.MULTILINE)
+# Section numbers cited before F1 that do not exist in the manual edition in references.md.
+STALE_CITATION = re.compile(r"§§|manual, §|§5\.1\.1|§5\.2\.[1-4]")
+CITATION_SCAN = [ROOT / "docs" / "decisions", ROOT / "docs" / "grammars", ROOT / "src"]
 
 
 def _load_specs(spec_directory: Path) -> dict[str, dict[str, Any]]:
@@ -112,6 +119,36 @@ def check_spec_coverage(root: Path, spec_directory: Path, grammar_files: list[Pa
                 raise ValueError(f"Grammar rule is missing from spec {identifier}: {grammar_name}")
 
 
+def check_manual_references(spec_directory: Path, references_file: Path) -> None:
+    """Require every spec citation to use the reference form and a key from references.md."""
+    if not references_file.is_file():
+        raise ValueError(f"References file not found: {references_file}")
+    keys = set(REFERENCE_KEY.findall(references_file.read_text(encoding="utf-8")))
+    for identifier, entry in _load_specs(spec_directory).items():
+        citations = entry.get("manual_ref")
+        if isinstance(citations, str):
+            citations = [citations]
+        if not isinstance(citations, list) or not citations:
+            raise ValueError(f"Spec entry has no manual_ref: {identifier}")
+        for citation in citations:
+            found = MANUAL_REF.fullmatch(citation) if isinstance(citation, str) else None
+            if found is None:
+                raise ValueError(f"Malformed manual_ref in {identifier}: {citation!r}")
+            if found.group(1) not in keys:
+                raise ValueError(f"Unknown reference key in {identifier}: {found.group(1)}")
+
+
+def check_no_stale_citations(paths: list[Path]) -> None:
+    """Reject the citation forms and section numbers that F1 replaced."""
+    for directory in paths:
+        for path in sorted(directory.rglob("*")):
+            if path.suffix not in {".md", ".yaml", ".lark", ".py"}:
+                continue
+            for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+                if STALE_CITATION.search(line):
+                    raise ValueError(f"Stale manual citation: {path}:{line_number}")
+
+
 def check_device_matrix(device_json: Path, device_document: Path) -> None:
     """Ensure the documented device matrix matches its packaged JSON source."""
     matrix = json.loads(device_json.read_text(encoding="utf-8"))
@@ -134,6 +171,8 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
 
 def test_ngspice_specs_reference_tests_and_grammar_rules() -> None:
     check_spec_coverage(ROOT, SPEC_DIRECTORY, GRAMMAR_FILES)
+    check_manual_references(SPEC_DIRECTORY, REFERENCES_FILE)
+    check_no_stale_citations(CITATION_SCAN)
     check_device_matrix(
         ROOT / "src" / "netlistmod" / "grammar" / "ngspice-devices.json",
         ROOT / "docs" / "grammars" / "ngspice" / "devices.md",
@@ -250,3 +289,73 @@ def test_spec_checker_requires_grammar_field(tmp_path: Path) -> None:
     grammar.write_text("// spec: NG-TEST-001\nstart: WORD\n", encoding="utf-8")
     with pytest.raises(ValueError, match="no grammar field"):
         check_spec_coverage(tmp_path, specs, [grammar])
+
+
+def _reference_project(tmp_path: Path, manual_ref: str | None) -> tuple[Path, Path]:
+    specs = tmp_path / "specs"
+    specs.mkdir()
+    entry = "id: NG-TEST-001\nstatus: observed\n"
+    if manual_ref is not None:
+        entry += f"manual_ref: {manual_ref}\n"
+    (specs / "NG-TEST-001.yaml").write_text(entry, encoding="utf-8")
+    references = tmp_path / "references.md"
+    references.write_text("# References\n\n## [test-manual]\n\n- **Title:** Test\n", "utf-8")
+    return specs, references
+
+
+@pytest.mark.parametrize(
+    "manual_ref",
+    [
+        "'[test-manual] §2.4.4 \"End-of-line comments\"'",
+        "['[test-manual] §2.1.1 \"Input file structure\"', '[test-manual] §2.8 \".INCLUDE\"']",
+    ],
+)
+def test_manual_reference_check_accepts_single_and_listed_citations(
+    tmp_path: Path, manual_ref: str
+) -> None:
+    specs, references = _reference_project(tmp_path, manual_ref)
+    check_manual_references(specs, references)
+
+
+@pytest.mark.parametrize(
+    ("manual_ref", "message"),
+    [
+        (None, "no manual_ref"),
+        ("[]", "no manual_ref"),
+        ("'ngspice manual, §2.4.4, \"End-of-line comments\"'", "Malformed manual_ref"),
+        ("'[test-manual] §2.4.4 End-of-line comments'", "Malformed manual_ref"),
+        ("'[test-manual] 2.4.4 \"End-of-line comments\"'", "Malformed manual_ref"),
+        ("'[test-manual] §2.4.4 \"End-of-line comments\"; extra'", "Malformed manual_ref"),
+        ("'[other-manual] §2.4.4 \"End-of-line comments\"'", "Unknown reference key"),
+    ],
+)
+def test_manual_reference_check_rejects_malformed_or_unknown_citations(
+    tmp_path: Path, manual_ref: str | None, message: str
+) -> None:
+    specs, references = _reference_project(tmp_path, manual_ref)
+    with pytest.raises(ValueError, match=message):
+        check_manual_references(specs, references)
+
+
+def test_manual_reference_check_requires_references_file(tmp_path: Path) -> None:
+    specs, references = _reference_project(tmp_path, "'[test-manual] §1 \"Intro\"'")
+    references.unlink()
+    with pytest.raises(ValueError, match="References file not found"):
+        check_manual_references(specs, references)
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["ngspice manual §5.2.4", "§§2.4.3 and 2.4.4", "ngspice manual, §2.4.4", "§5.1.1"],
+)
+def test_stale_citation_check_rejects_replaced_forms(tmp_path: Path, text: str) -> None:
+    (tmp_path / "note.md").write_text(f"ok line\nSee {text}.\n", encoding="utf-8")
+    with pytest.raises(ValueError, match=r"note\.md:2"):
+        check_no_stale_citations([tmp_path])
+
+
+def test_stale_citation_check_accepts_reference_form(tmp_path: Path) -> None:
+    (tmp_path / "note.md").write_text(
+        'See `[ngspice-manual] §2.4.4 "End-of-line comments"`.\n', encoding="utf-8"
+    )
+    check_no_stale_citations([tmp_path])

@@ -1,7 +1,9 @@
 id: NG-DIR-001
 dialect: ngspice
 construct: unknown dot-commands and stray block terminators
-manual_ref: ngspice manual, §5.1.1, "Input file structure"
+manual_ref:
+  - '[ngspice-manual] §2.1.1 "Input file structure"'
+  - '[ngspice-manual] §2.1.2.3 "Dot command couple completion"'
 status: documented
 grammar:
   - unknown_stmt

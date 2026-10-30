@@ -68,9 +68,11 @@ and negative source fixtures are in
 `tests/corpus/ngspice/structure_rejects/`, each with provenance and SHA-256
 hashes in `manifest.json`. The negative manifest also records expected error
 lines and columns. Each construct has a YAML spec entry under
-`docs/grammars/ngspice/specs/`. Add an entry with a unique `id`, exact manual
-section in `manual_ref`, validation status, `grammar` names, `tests` selectors,
-and solver version/date when applicable. Add a `// spec: <ID>` marker before
+`docs/grammars/ngspice/specs/`. Add an entry with a unique `id`, a
+`manual_ref` (one citation or a list, each of the form
+`[ngspice-manual] §2.4.4 "End-of-line comments"`, whose key is listed in
+[references.md](references.md)), validation status, `grammar` names, `tests`
+selectors, and solver version/date when applicable. Add a `// spec: <ID>` marker before
 the corresponding grammar rule or terminal group in a `.lark` file. The
 architecture test checks that every grammar definition is marked and listed,
 spec references resolve to marked definitions, non-disputed entries have

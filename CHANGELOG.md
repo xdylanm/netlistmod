@@ -13,5 +13,8 @@
 - Added ngspice 47 discrepancy probes, grammar/spec traceability, positive and
   negative structural corpora, property/performance tests, and wheel resource
   checks.
+- Spec entries now cite the ngspice manual as `[ngspice-manual] §<section>
+  "<title>"` against the edition recorded in `docs/references.md`; the spec
+  checker enforces the form and rejects the previous, incorrect section numbers.
 - Made `SourceText.write()` preserve existing permission bits and write through
   symlinks; new files use normal umask-derived permissions.

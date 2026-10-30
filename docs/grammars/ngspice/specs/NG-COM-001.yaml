@@ -1,7 +1,9 @@
 id: NG-COM-001
 dialect: ngspice
 construct: full-line star comments
-manual_ref: ngspice manual, §§5.2.3, "Comments", and 5.2.4, "End-of-line comments"
+manual_ref:
+  - '[ngspice-manual] §2.4.3 "Comments"'
+  - '[ngspice-manual] §2.4.4 "End-of-line comments"'
 status: observed
 validated_on:
   - solver: ngspice

@@ -31,6 +31,7 @@ The remaining manual-quiet cases are probed separately:
   text handling, not a general claim that the manual specifies quoting or
   braces for arbitrary directive text.
 - Titles are parsed as a single token, including `;` and `$`, under the narrow
-  reading of ngspice manual §5.2.1, “.TITLE line.”
+  reading of `[ngspice-manual] §2.4.1 ".TITLE line"` (edition in
+  [docs/references.md](../../references.md)).
   `test_title_is_first_line_and_later_title_replaces_it` records the ngspice
   47 behavior.

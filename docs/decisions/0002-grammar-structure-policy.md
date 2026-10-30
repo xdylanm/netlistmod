@@ -36,12 +36,16 @@
     name` … `.endl` definition block in the main file is not implemented in
     M2.
 - **Manual basis and settled points:**
-  - The structure and continuation decisions use ngspice manual §5.1.1,
-    “Input file structure”; title behavior uses §5.2.1, “.TITLE line”; and
-    the final directive uses §5.2.2, “.END Line.” In particular, the grammar does not accept
-    post-`.end` material or line-separated continuations merely because the
-    solver happens to tolerate them.
-  - Manual §§5.2.3 “Comments” and 5.2.4 “End-of-line comments” define the
+  - Citations refer to the manual edition recorded in
+    [docs/references.md](../references.md). The structure decisions use
+    `[ngspice-manual] §2.1.1 "Input file structure"`; continuation uses
+    `[ngspice-manual] §2.4.5 "Continuation lines"`; title behavior uses
+    `[ngspice-manual] §2.4.1 ".TITLE line"`; and the final directive uses
+    `[ngspice-manual] §2.4.2 ".END Line"`. In particular, the grammar does not
+    accept post-`.end` material or line-separated continuations merely because
+    the solver happens to tolerate them.
+  - `[ngspice-manual] §2.4.3 "Comments"` and
+    `[ngspice-manual] §2.4.4 "End-of-line comments"` define the
     documented comment forms but do not specify `//` lines, standalone
     `;`/`$` lines, or comment markers in arbitrary quoted/braced directive
     text. Those points are explicitly settled to reject `//` and standalone
@@ -50,9 +54,9 @@
     manual guarantees. ngspice 47 accepts `//` lines and recognizes quoted
     include paths, but its tested `.include {braced;$.inc}` path is truncated
     at the semicolon.
-  - The manual's `.END` directive (§5.2.2) does not specify an inline comment
-    after `.end`; the grammar rejects it under the narrow reading of §§5.2.2
-    and 5.2.4.
+  - The manual's `.END` line (§2.4.2) does not specify an inline comment
+    after `.end`; the grammar rejects it under the narrow reading of §2.4.2
+    and §2.4.4.
 - **Solver evidence (ngspice 47, 2026-10-21):** missing `.end` is accepted;
   an element and a `.control` block after `.end` are ignored/run; a `+` after
   `.end` is ignored; comments or blank lines between a statement and its `+`

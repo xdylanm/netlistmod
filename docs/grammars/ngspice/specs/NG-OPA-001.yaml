@@ -1,7 +1,9 @@
 id: NG-OPA-001
 dialect: ngspice
 construct: opaque .control and nested .if blocks
-manual_ref: ngspice manual, §5.12, ".IF Condition-Controlled Netlist"; form validated with ngspice 47
+manual_ref:
+  - '[ngspice-manual] §2.15 ".IF Condition-Controlled Netlist"'
+  - '[ngspice-manual] §2.16.3 "Control commands, Command scripts"'
 status: validated
 grammar:
   - statement
@@ -23,4 +25,4 @@ validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-22"
-notes: The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded.
+notes: The form was validated with ngspice 47. The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded.
