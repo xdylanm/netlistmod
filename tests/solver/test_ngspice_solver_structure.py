@@ -181,6 +181,17 @@ def test_plus_after_end_is_ignored_by_solver_rejected_by_parser(
     _assert_parser_rejects(text)
 
 
+@pytest.mark.parametrize("comment", ["; c", "$ c", "// c"])
+def test_trailing_comment_on_end_is_solver_leniency_rejected_by_parser(
+    solver: Solver, tmp_path: Path, comment: str
+) -> None:
+    text = _CIRCUIT.replace(".end\n", f".end {comment}\n")
+    code, log = _run(solver, tmp_path, text)
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    _assert_parser_rejects(text)
+
+
 def test_unknown_dot_command_after_end_fails_in_both(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT + ".unknown after end\n"
     code, log = _run(solver, tmp_path, text)

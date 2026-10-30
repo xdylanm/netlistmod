@@ -38,8 +38,9 @@
     text. Braces are ordinary text and do not protect comment markers. The
     manual is silent on this generic-text case; this is the narrow observed
     interpretation recorded in `NG-TXT-001`.
-  - A trailing comment on `.end` is rejected. The grammar interprets `.end` as
-    its own final statement, with no trailing-comment form.
+  - A trailing comment on `.end` (`;`, `$` or `//`) is rejected. The grammar
+    interprets `.end` as its own final statement, with no trailing-comment
+    form.
   - LF and CRLF terminate physical lines. A lone CR is accepted inside title,
     comment, and directive free text; it is not a physical-line terminator and
     is rejected where the grammar expects a line terminator, including after
@@ -72,9 +73,12 @@
     manual guarantees. ngspice 47 accepts a standalone `//` line, cuts
     `.include sub//v.inc` at the `//`, and recognizes quoted include paths;
     its tested `.include {braced;$.inc}` path is truncated at the semicolon.
-  - The manual's `.END` line (§2.4.2) does not specify an inline comment
-    after `.end`; the grammar rejects it under the narrow reading of §2.4.2
-    and §2.4.4.
+  - The manual's `.END` line (§2.4.2) defines `.end` as the last line of the
+    input and gives it no comment form. The general form
+    `<any command> ; <any comment>` of §2.4.4 is read as applying to commands
+    that take arguments, which `.end` does not. A trailing comment on `.end`
+    is therefore rejected, although ngspice 47 accepts it (recorded in
+    `discrepancies.md`).
 - **Solver evidence (ngspice 47, 2026-10-21):** missing `.end` is accepted;
   an element and a `.control` block after `.end` are ignored/run; a `+` after
   `.end` is ignored; comments or blank lines between a statement and its `+`

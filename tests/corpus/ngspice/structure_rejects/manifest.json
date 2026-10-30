@@ -76,6 +76,11 @@
       "line": 2,
       "column": 1
     },
+    "end_double_slash_comment.cir": {
+      "sha256": "04ee7091f6394a523e0ed07002e9fc098748669db3176e32e2e6df73ddb85a2a",
+      "line": 2,
+      "column": 6
+    },
     "end_trailing_comment.cir": {
       "sha256": "fab5a28639596e444e6f006ed7427ae2810d2c992c01a33d98978f6cda05657d",
       "line": 2,

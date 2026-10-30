@@ -8,7 +8,7 @@ status: validated
 validated_on:
   - solver: ngspice
     version: "47"
-    date: "2026-10-22"
+    date: "2026-10-30"
 grammar:
   - end_stmt
   - trailer
@@ -17,4 +17,5 @@ tests:
   - tests/grammar/ngspice/test_structure.py::test_end_is_required_last_and_allows_no_final_newline_or_blank_trailers
   - tests/grammar/ngspice/test_structure.py::test_missing_end_reports_reason_at_source_end
   - tests/grammar/ngspice/test_structure.py::test_r2_rejects_report_source_position_and_excerpt
-notes: The manual specifies .END as the final netlist statement. Only blank lines may follow; a trailing comment on .END is rejected by the narrow reading of §2.4.2 and §2.4.4.
+  - tests/solver/test_ngspice_solver_structure.py::test_trailing_comment_on_end_is_solver_leniency_rejected_by_parser
+notes: The manual specifies .END as the final netlist statement. Only blank lines may follow; a trailing comment on .END (with ;, $ or //) is rejected. Reading - §2.4.2 defines .end as the last line of the input and gives it no comment form; the general form "<any command> ; <any comment>" of §2.4.4 is read as applying to commands that take arguments, which .end does not. ngspice 47 accepts .end with a trailing comment; that is recorded in discrepancies.md, not adopted.

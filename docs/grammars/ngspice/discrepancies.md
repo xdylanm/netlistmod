@@ -17,6 +17,7 @@ strict parser rejects the same input.
 | Ignores a `+` line after `.end`. | Rejects a continuation after `.end`. | `test_plus_after_end_is_ignored_by_solver_rejected_by_parser` |
 | Accepts a standalone `//` line. | Rejects it: `//` is an end-of-line comment after a command (§2.4.4), not a comment line. | `test_double_slash_comment_probe` |
 | Rejects an unknown dot-command after `.end`. | Rejects it as well. | `test_unknown_dot_command_after_end_fails_in_both` |
+| Accepts `.end ; c`, `.end $ c` and `.end // c` (2026-10-30). | Rejects a trailing comment on `.end` (§2.4.2 reading). | `test_trailing_comment_on_end_is_solver_leniency_rejected_by_parser` |
 | Continues a line ending in `\\` followed by spaces (2026-10-30). | `\\` must end the line; with trailing spaces it is text, so the next line is a separate statement. | `test_backslash_after_trailing_space_or_in_comment_is_solver_leniency` |
 | Continues a line whose end-of-line comment ends in `\\` (2026-10-30). | The comment runs to the end of the line; its `\\` is comment text. | `test_backslash_after_trailing_space_or_in_comment_is_solver_leniency` |
 
