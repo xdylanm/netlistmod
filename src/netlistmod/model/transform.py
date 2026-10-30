@@ -45,10 +45,10 @@ class _Item:
 
 @dataclass(frozen=True, slots=True)
 class _Rest:
-    """The text parts and optional trailing comment of a statement."""
+    """Where a statement's text ends, and its end-of-line comments in source order."""
 
     text_end: int | None
-    comment: Span | None
+    comments: tuple[Span, ...]
 
 
 @v_args(meta=True)
@@ -99,27 +99,27 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def rest(self, meta: Meta, children: list[Token]) -> _Rest:
         parts = [token for token in children if token.type != "TRAILING_COMMENT"]
-        comments = [token for token in children if token.type == "TRAILING_COMMENT"]
         text_end = parts[-1].end_pos if parts else None
-        comment = None
-        if comments:
-            start, end = comments[0].start_pos, comments[0].end_pos
-            if start is None or end is None:
+        comments: list[Span] = []
+        for token in children:
+            if token.type != "TRAILING_COMMENT":
+                continue
+            if token.start_pos is None or token.end_pos is None:
                 raise ValueError("Lark did not propagate trailing-comment positions")
-            comment = Span(start, end)
-        return _Rest(text_end, comment)
+            comments.append(Span(token.start_pos, token.end_pos))
+        return _Rest(text_end, tuple(comments))
 
     def unknown_stmt(self, meta: Meta, children: list[Any]) -> _Item:
-        name, raw, comment = self._statement(children)
-        return _Item(meta.end_pos, lambda span: UnknownDirective(name, raw, span, comment))
+        name, raw, comments = self._statement(children)
+        return _Item(meta.end_pos, lambda span: UnknownDirective(name, raw, span, comments))
 
     def include_stmt(self, meta: Meta, children: list[Any]) -> _Item:
-        _, raw, comment = self._statement(children)
-        return _Item(meta.end_pos, lambda span: OpaqueStatement("include", raw, span, comment))
+        _, raw, comments = self._statement(children)
+        return _Item(meta.end_pos, lambda span: OpaqueStatement("include", raw, span, comments))
 
     def lib_stmt(self, meta: Meta, children: list[Any]) -> _Item:
-        _, raw, comment = self._statement(children)
-        return _Item(meta.end_pos, lambda span: OpaqueStatement("lib", raw, span, comment))
+        _, raw, comments = self._statement(children)
+        return _Item(meta.end_pos, lambda span: OpaqueStatement("lib", raw, span, comments))
 
     def control_block(self, meta: Meta, children: list[Any]) -> _Item:
         return _Item(meta.end_pos, lambda span: OpaqueBlock("control", span))
@@ -153,10 +153,10 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     core__comment_line = comment_line
     core__end = end
 
-    def _statement(self, children: list[Any]) -> tuple[str, str, Span | None]:
+    def _statement(self, children: list[Any]) -> tuple[str, str, tuple[Span, ...]]:
         name, rest = children[0], children[1]
         raw = self._text[name.start_pos : rest.text_end or name.end_pos]
-        return str(name), raw, rest.comment
+        return str(name), raw, rest.comments
 
 
 def parse(source: SourceText, dialect: Dialect) -> ParseResult:

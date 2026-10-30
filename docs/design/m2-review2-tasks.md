@@ -1,6 +1,6 @@
 # M2 second review — required fixes
 
-> **Status:** ACTIVE — F1 done; F2–F6 open
+> **Status:** ACTIVE — F1, F2 done; F3–F6 open
 > **Part of:** [m2-tasks.md](./m2-tasks.md) (milestone M2, second review round). Governed by [architecture.md](../architecture.md) (P5, P8, P13, §6.3, §11). The M2 task list stays open until this round passes the maintainer's re-review; archive both together then.
 
 ## 1. Context
@@ -28,8 +28,9 @@ The specs, decisions 0002/0003, `discrepancies.md`, test docstrings and code com
 - Extend the spec checker: `manual_ref` must match `[<key>] §<number> "<title>"` and `<key>` must exist in `docs/references.md`. Add a self-test for a malformed or unknown reference.
 *Done when:* no `§5.` citation remains (a test or grep check), every spec entry passes the new check, and the references file records the manual edition.
 
-[ ] **F2 — `//` end-of-line comments.**
+[x] **F2 — `//` end-of-line comments.**
 Add `//` as a trailing-comment delimiter alongside `;` and `$` in the grammar (manual §2.4.4). A `//` comment runs to the end of the line, so quotes inside it cannot cause an error. A standalone `//` line (no command before it) is rejected, as are standalone `;` and `$` lines. Settle, cite and test whether `//` needs preceding whitespace (the manual only recommends a space; default: no requirement, as for `;` and `$`) and what happens in `.include a//b`, a path containing `//`; record the behaviour in the spec. Update `NG-COM-001`/`NG-TXT-001` and decision 0002 (remove the claim that the manual is silent on `//`).
+*Also fixed (maintainer, 2026-10-30):* a comment on a continued line no longer ends the statement (§2.4.5 general form); `trailing_comment` became `trailing_comments`.
 *Done when:* tests cover `.param n1=1 // new value`, `.options a // don't`, `.options a='x//y'` (quoted, accepted), a standalone `// c` line (rejected at its position), and the trailing-comment spans.
 
 [ ] **F3 — `.include` and `.lib` are not continuable.**

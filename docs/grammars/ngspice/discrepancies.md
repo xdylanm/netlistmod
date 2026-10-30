@@ -15,7 +15,7 @@ strict parser rejects the same input.
 | Runs a `.control` block placed after `.end`. | Rejects a block after `.end`. | `test_control_block_after_end_runs_but_parser_rejects` |
 | Joins a `+` continuation across intervening `*` comments and blank lines. | Requires the `+` line to immediately follow its statement. | `test_continuation_across_comment_and_blank_is_solver_leniency` |
 | Ignores a `+` line after `.end`. | Rejects a continuation after `.end`. | `test_plus_after_end_is_ignored_by_solver_rejected_by_parser` |
-| Accepts a `//` line in the tested netlist. | Rejects it as a non-comment line. | `test_double_slash_comment_probe` |
+| Accepts a standalone `//` line. | Rejects it: `//` is an end-of-line comment after a command (§2.4.4), not a comment line. | `test_double_slash_comment_probe` |
 | Rejects an unknown dot-command after `.end`. | Rejects it as well. | `test_unknown_dot_command_after_end_fails_in_both` |
 
 The `.if (1)` … `.endif` form is accepted and is covered by
@@ -30,6 +30,11 @@ The remaining manual-quiet cases are probed separately:
   treats braces as ordinary free text. These are observations about solver
   text handling, not a general claim that the manual specifies quoting or
   braces for arbitrary directive text.
+- `//` end-of-line comments (2026-10-30) agree with the grammar:
+  `test_double_slash_comment_needs_no_preceding_space` shows that ngspice 47
+  treats `2//3`, `2// 3` and `2 // 3` alike, and
+  `test_include_path_is_cut_at_double_slash_unless_quoted` shows that
+  `.include sub//v.inc` is cut at `//` while `"sub//v.inc"` is included.
 - Titles are parsed as a single token, including `;` and `$`, under the narrow
   reading of `[ngspice-manual] §2.4.1 ".TITLE line"` (edition in
   [docs/references.md](../../references.md)).

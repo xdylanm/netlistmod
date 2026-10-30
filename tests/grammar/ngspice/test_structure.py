@@ -205,6 +205,8 @@ def test_continuations_after_non_statements_or_intervening_lines_fail(
         ("title\n.foo a $ note\n.end\n", "$"),
         ("title\n.foo a;note\n.end\n", ";"),
         ("title\n.foo a$note\n.end\n", "$"),
+        ("title\n.foo a // note\n.end\n", "//"),
+        ("title\n.foo a//note\n.end\n", "//"),
     ],
 )
 def test_trailing_comment_spans_preserve_marker_and_offset(text: str, comment: str) -> None:
@@ -212,13 +214,102 @@ def test_trailing_comment_spans_preserve_marker_and_offset(text: str, comment: s
     directive = result.items[1]
     assert isinstance(directive, UnknownDirective)
     marker = text.index(comment)
-    assert directive.trailing_comment == Span(marker, text.index("\n", marker))
+    assert directive.trailing_comments == (Span(marker, text.index("\n", marker)),)
 
 
-def test_empty_comment_markers_and_double_slash_are_not_comment_lines() -> None:
-    for line in (";", "$", "// comment"):
-        with pytest.raises(ParseError):
+@pytest.mark.parametrize(
+    ("statement", "raw", "comment"),
+    [
+        (".param n1=1 // new value", ".param n1=1 ", "// new value"),
+        (".options a // don't", ".options a ", "// don't"),
+        (".options a='x//y'", ".options a='x//y'", None),
+        (".param n1=2//3", ".param n1=2", "//3"),
+        (".foo a/ /b", ".foo a/ /b", None),
+    ],
+)
+def test_double_slash_is_an_end_of_line_comment_delimiter(
+    statement: str, raw: str, comment: str | None
+) -> None:
+    text = f"title\n{statement}\n.end\n"
+    result = _parse(text)
+    directive = result.items[1]
+    assert isinstance(directive, UnknownDirective)
+    assert directive.raw == raw
+    if comment is None:
+        assert directive.trailing_comments == ()
+    else:
+        marker = text.index(comment)
+        assert directive.trailing_comments == (Span(marker, marker + len(comment)),)
+    _assert_spans_tile(text, result.items)
+
+
+@pytest.mark.parametrize(
+    ("statement", "raw", "comment"),
+    [
+        (".include a//b", ".include a", "//b"),
+        ('.include "a//b"', '.include "a//b"', None),
+        (".include /users/spice/common/bsim3-param.mod", None, None),
+        (".lib lib//x.lib section", ".lib lib", "//x.lib section"),
+    ],
+)
+def test_double_slash_in_opaque_statement_paths(
+    statement: str, raw: str | None, comment: str | None
+) -> None:
+    text = f"title\n{statement}\n.end\n"
+    item = _parse(text).items[1]
+    assert isinstance(item, OpaqueStatement)
+    assert item.raw == (statement if raw is None else raw)
+    if comment is None:
+        assert item.trailing_comments == ()
+    else:
+        assert item.trailing_comments == (Span(text.index(comment), text.index("\n", 6)),)
+
+
+def test_double_slash_does_not_split_titles() -> None:
+    result = _parse("first // title\n.title second // title\n.end\n")
+    assert isinstance(result.items[0], Title)
+    assert result.items[0].text == "first // title"
+    assert isinstance(result.items[1], TitleDirective)
+    assert result.items[1].text == "second // title"
+
+
+@pytest.mark.parametrize(
+    ("statement", "raw", "comments"),
+    [
+        (".foo a\n+ b // c\n+ d", ".foo a\n+ b // c\n+ d", ("// c",)),
+        (
+            ".foo a ; one\n+ b $ two\n+ c // three",
+            ".foo a ; one\n+ b $ two\n+ c ",
+            ("; one", "$ two", "// three"),
+        ),
+        (".foo a\n+ b ; last", ".foo a\n+ b ", ("; last",)),
+        (
+            ".foo a\n+ ; only a comment\n+ b",
+            ".foo a\n+ ; only a comment\n+ b",
+            ("; only a comment",),
+        ),
+        (".foo ; c\r\n+ a\r\n+ b", ".foo ; c\r\n+ a\r\n+ b", ("; c",)),
+    ],
+)
+def test_each_line_of_a_continued_statement_may_end_in_a_comment(
+    statement: str, raw: str, comments: tuple[str, ...]
+) -> None:
+    text = f"title\n{statement}\n.end\n"
+    result = _parse(text)
+    directive = result.items[1]
+    assert isinstance(directive, UnknownDirective)
+    assert directive.raw == raw
+    assert tuple(text[span.start : span.end] for span in directive.trailing_comments) == comments
+    assert directive.span == Span(len("title\n"), len("title\n") + len(statement) + 1)
+    _assert_spans_tile(text, result.items)
+
+
+def test_standalone_end_of_line_comment_markers_are_rejected() -> None:
+    for line in (";", "$", "// comment", "  // indented", "//"):
+        with pytest.raises(ParseError) as captured:
             _parse(f"title\n{line}\n.end\n")
+        assert captured.value.line == 2
+        assert captured.value.column == len(line) - len(line.lstrip()) + 1
 
 
 def test_quotes_are_grouped_but_braces_do_not_protect_comment_markers() -> None:
@@ -230,10 +321,10 @@ def test_quotes_are_grouped_but_braces_do_not_protect_comment_markers() -> None:
         ".bar {b ",
         ".baz 'c ; $ //'",
     ]
-    assert directives[0].trailing_comment is None
-    assert directives[2].trailing_comment is None
+    assert directives[0].trailing_comments == ()
+    assert directives[2].trailing_comments == ()
     marker = text.index(";", text.index(".bar"))
-    assert directives[1].trailing_comment == Span(marker, text.index("\n", marker))
+    assert directives[1].trailing_comments == (Span(marker, text.index("\n", marker)),)
 
 
 def test_end_is_required_last_and_allows_no_final_newline_or_blank_trailers() -> None:

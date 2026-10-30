@@ -37,6 +37,13 @@ source position and excerpt. LTspice grammar support is a later milestone.
 
 The parser intentionally follows the manual's strict structure rather than
 ngspice's lenient behavior. For example, it rejects missing `.end`, content
-after `.end`, `//` comment lines, and continuations separated by comments or
+after `.end`, standalone `//` lines, and continuations separated by comments or
 blank lines. Solver observations are documented in
 [`discrepancies.md`](../grammars/ngspice/discrepancies.md).
+
+End-of-line comments start at `;`, `$` or `//` after a command, with or without
+a space before the marker, and run to the end of the line. Every line of a
+continued statement may end in one. Statement nodes list the comment spans in
+`trailing_comments`; `raw` ends at the last non-comment text. Quote a path
+that contains `//`: `.include a//b` includes `a`, while `.include "a//b"` keeps
+the whole path.

@@ -72,6 +72,15 @@ def test_continuation_across_comment_and_blank_is_solver_leniency(
     _assert_parser_rejects(split)
 
 
+def test_comments_on_continued_lines_agree_with_solver(solver: Solver, tmp_path: Path) -> None:
+    continued = "in 0 ; one\n+ DC // two\n+ 2 $ three"
+    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
+    assert len(getattr(result.items[1], "trailing_comments", ())) == 3
+
+
 def test_plus_after_end_is_ignored_by_solver_rejected_by_parser(
     solver: Solver, tmp_path: Path
 ) -> None:
@@ -107,6 +116,40 @@ def test_double_slash_comment_probe(solver: Solver, tmp_path: Path) -> None:
     code, _ = _run(solver, tmp_path, text)
     assert code == 0
     _assert_parser_rejects(text)
+
+
+@pytest.mark.parametrize(
+    "source_line", ["V1 in 0 DC 2 // 3", "V1 in 0 DC 2// 3", "V1 in 0 DC 2//3"]
+)
+def test_double_slash_comment_needs_no_preceding_space(
+    solver: Solver, tmp_path: Path, source_line: str
+) -> None:
+    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", source_line))
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    directive = source_line.replace("V1 in 0 DC", ".param v=")
+    result = parse(SourceText(f"probe circuit\n{directive}\n.end\n"), Dialect.NGSPICE)
+    assert getattr(result.items[1], "raw", None) == directive[: directive.index("//")]
+
+
+def test_include_path_is_cut_at_double_slash_unless_quoted(solver: Solver, tmp_path: Path) -> None:
+    (tmp_path / "sub").mkdir()
+    (tmp_path / "sub" / "v.inc").write_text("V1 in 0 DC 2\n", encoding="utf-8")
+    body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
+    code, log = _run(solver, tmp_path, "probe circuit\n.include sub//v.inc\n" + body)
+    assert code != 0
+    assert "Could not open file" in log
+    code, log = _run(solver, tmp_path, 'probe circuit\n.include "sub//v.inc"\n' + body)
+    assert code == 0, log
+    assert float(_voltage(log)) == pytest.approx(2.0)
+    parsed = parse(
+        SourceText('probe circuit\n.include sub//v.inc\n.include "sub//v.inc"\n.end\n'),
+        Dialect.NGSPICE,
+    )
+    assert [getattr(item, "raw", None) for item in parsed.items[1:3]] == [
+        ".include sub",
+        '.include "sub//v.inc"',
+    ]
 
 
 def test_quoted_and_braced_include_paths_probe_free_text(solver: Solver, tmp_path: Path) -> None:

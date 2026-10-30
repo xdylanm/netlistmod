@@ -7,7 +7,7 @@ status: observed
 validated_on:
   - solver: ngspice
     version: "47"
-    date: "2026-10-22"
+    date: "2026-10-30"
 grammar:
   - rest
   - TRAILING_COMMENT
@@ -16,6 +16,11 @@ grammar:
 tests:
   - tests/grammar/ngspice/test_structure.py::test_trailing_comment_spans_preserve_marker_and_offset
   - tests/grammar/ngspice/test_structure.py::test_quotes_are_grouped_but_braces_do_not_protect_comment_markers
+  - tests/grammar/ngspice/test_structure.py::test_double_slash_is_an_end_of_line_comment_delimiter
+  - tests/grammar/ngspice/test_structure.py::test_double_slash_in_opaque_statement_paths
+  - tests/grammar/ngspice/test_structure.py::test_double_slash_does_not_split_titles
   - tests/grammar/ngspice/test_structure.py::test_r2_rejects_report_source_position_and_excerpt
   - tests/solver/test_ngspice_solver_structure.py::test_quoted_and_braced_include_paths_probe_free_text
-notes: Matched quote pairs protect comment markers in generic text; braces are ordinary text and do not protect them. The manual is silent on quoting in generic directive text; this narrow reading is consistent with the ngspice 47 include-path probe. A trailing comment on .end is rejected under §2.4.2 and §2.4.4; an otherwise empty ; or $ line is rejected under §2.4.4.
+  - tests/solver/test_ngspice_solver_structure.py::test_double_slash_comment_needs_no_preceding_space
+  - tests/solver/test_ngspice_solver_structure.py::test_include_path_is_cut_at_double_slash_unless_quoted
+notes: End-of-line comments start at ;, $ or // (§2.4.4) and run to the end of the line, so quotes inside a comment are text. Every line of a continued statement may carry one; nodes list them in trailing_comments, and raw ends at the last non-comment text. No whitespace is required before a marker; §2.4.4 only recommends a space, and ngspice 47 treats 2//3, 2// 3 and 2 // 3 alike. A single / is ordinary text. In .include a//b the path is a and //b is a comment, which matches ngspice 47 (it reports the file a as missing); a path containing // must be quoted. Titles are single tokens and are not split at //. Matched quote pairs protect comment markers in generic text; braces are ordinary text and do not protect them. The manual is silent on quoting in generic directive text; this narrow reading is consistent with the ngspice 47 include-path probe. A trailing comment on .end is rejected under §2.4.2 and §2.4.4; an otherwise empty ;, $ or // line is rejected under §2.4.4.

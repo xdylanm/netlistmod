@@ -12,7 +12,7 @@ from netlistmod.source import Span
 class Title:
     """The first line of the netlist: an implicit title or an explicit ``.title`` statement.
 
-    The whole title text is a single token; ``;`` and ``$`` do not start a comment in it.
+    The whole title text is a single token; ``;``, ``$`` and ``//`` do not start a comment in it.
     """
 
     text: str
@@ -45,12 +45,17 @@ class CommentLine:
 
 @dataclass(frozen=True, slots=True)
 class UnknownDirective:
-    """An untyped dot-command whose exact statement text is preserved."""
+    """An untyped dot-command whose exact statement text is preserved.
+
+    ``raw`` runs from the name to the end of the last non-comment text, so it excludes comments
+    after that text but includes those on earlier lines of a continued statement.
+    ``trailing_comments`` holds every end-of-line comment of the statement in source order.
+    """
 
     name: str
     raw: str
     span: Span
-    trailing_comment: Span | None = None
+    trailing_comments: tuple[Span, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,12 +68,12 @@ class OpaqueBlock:
 
 @dataclass(frozen=True, slots=True)
 class OpaqueStatement:
-    """An opaque ``.include`` or ``.lib`` statement."""
+    """An opaque ``.include`` or ``.lib`` statement; ``raw`` and comments as in UnknownDirective."""
 
     kind: Literal["include", "lib"]
     raw: str
     span: Span
-    trailing_comment: Span | None = None
+    trailing_comments: tuple[Span, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

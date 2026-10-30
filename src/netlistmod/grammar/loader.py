@@ -49,7 +49,7 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "BLOCK_TEXT": "text",
     "TEXT": "text",
     "QUOTED": "quoted text",
-    "TRAILING_COMMENT": "trailing comment (`;` or `$`)",
+    "TRAILING_COMMENT": "trailing comment (`;`, `$` or `//`)",
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 

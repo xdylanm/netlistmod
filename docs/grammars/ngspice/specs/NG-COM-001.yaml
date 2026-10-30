@@ -8,11 +8,11 @@ status: observed
 validated_on:
   - solver: ngspice
     version: "47"
-    date: "2026-10-22"
+    date: "2026-10-30"
 grammar:
   - COMMENT_LINE
 tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
-  - tests/grammar/ngspice/test_structure.py::test_empty_comment_markers_and_double_slash_are_not_comment_lines
+  - tests/grammar/ngspice/test_structure.py::test_standalone_end_of_line_comment_markers_are_rejected
   - tests/solver/test_ngspice_solver_structure.py::test_double_slash_comment_probe
-notes: Star comments are accepted at the start of a line after optional indentation. The manual does not define // comments; ngspice 47 accepts a // line, but this strict grammar does not.
+notes: Star comments are accepted at the start of a line after optional indentation (§2.4.3). §2.4.4 defines ;, $ and // only as end-of-line comments after a command, so a line holding only an end-of-line comment (;, $ or //) is rejected at its marker. ngspice 47 accepts a standalone // line; that is recorded in discrepancies.md, not adopted.

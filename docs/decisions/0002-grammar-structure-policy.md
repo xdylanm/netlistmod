@@ -16,10 +16,17 @@
     continuable statement. A blank line or comment line in between interrupts
     the continuation. A `+` after a title, comment, blank line, or `.end` is
     rejected. The first physical line beginning with `+` remains a title.
-  - A `*` line is a full-line comment. `;` and `$` introduce trailing comments
-    only after the start of a statement; an otherwise empty `;` or `$` line is
-    rejected. A `//` line is rejected even though ngspice 47 accepts it.
-  - Matched single- or double-quoted segments protect `;` and `$` in generic
+  - A `*` line is a full-line comment. `;`, `$` and `//` introduce
+    end-of-line comments only after the start of a statement, with or without
+    whitespace before the marker; a comment runs to the end of the line. A line
+    holding only `;`, `$` or `//` is rejected, even though ngspice 47 accepts a
+    standalone `//` line. A path containing `//` must be quoted: in
+    `.include a//b` the path is `a`.
+  - Each physical line of a continued statement may end in an end-of-line
+    comment, and a `+` line after it still continues the statement, as in the
+    general form of §2.4.5. Statement nodes keep every comment span in
+    `trailing_comments`.
+  - Matched single- or double-quoted segments protect `;`, `$` and `//` in generic
     text. Braces are ordinary text and do not protect comment markers. The
     manual is silent on this generic-text case; this is the narrow observed
     interpretation recorded in `NG-TXT-001`.
@@ -46,14 +53,16 @@
     the solver happens to tolerate them.
   - `[ngspice-manual] §2.4.3 "Comments"` and
     `[ngspice-manual] §2.4.4 "End-of-line comments"` define the
-    documented comment forms but do not specify `//` lines, standalone
-    `;`/`$` lines, or comment markers in arbitrary quoted/braced directive
-    text. Those points are explicitly settled to reject `//` and standalone
-    `;`/`$`, honor matched quotes, and treat braces as ordinary text;
+    documented comment forms: `*` in the first column, and `;`, `$` and `//`
+    after a command. §2.4.4 recommends, but does not require, a space before
+    the marker; ngspice 47 treats `2//3` and `2 // 3` alike. The manual does
+    not describe standalone `;`/`$`/`//` lines or comment markers in quoted or
+    braced directive text. Those points are settled to reject standalone
+    markers, honor matched quotes, and treat braces as ordinary text;
     `NG-COM-001` and `NG-TXT-001` identify these as observed policy, not
-    manual guarantees. ngspice 47 accepts `//` lines and recognizes quoted
-    include paths, but its tested `.include {braced;$.inc}` path is truncated
-    at the semicolon.
+    manual guarantees. ngspice 47 accepts a standalone `//` line, cuts
+    `.include sub//v.inc` at the `//`, and recognizes quoted include paths;
+    its tested `.include {braced;$.inc}` path is truncated at the semicolon.
   - The manual's `.END` line (§2.4.2) does not specify an inline comment
     after `.end`; the grammar rejects it under the narrow reading of §2.4.2
     and §2.4.4.
