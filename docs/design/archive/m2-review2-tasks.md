@@ -1,7 +1,7 @@
 # M2 second review — required fixes
 
-> **Status:** READY FOR REVIEW — F1–F6 done (2026-10-30); exit report in section 6. Do not archive until the maintainer approves the re-review.
-> **Part of:** [m2-tasks.md](./m2-tasks.md) (milestone M2, second review round). Governed by [architecture.md](../architecture.md) (P5, P8, P13, §6.3, §11). The M2 task list stays open until this round passes the maintainer's re-review; archive both together then.
+> **Status:** COMPLETE (2026-10-30) — F1–F6 approved by the maintainer; exit report in section 6.
+> **Part of:** [m2-tasks.md](./m2-tasks.md) (milestone M2, second review round). Governed by [architecture.md](../../architecture.md) (P5, P8, P13, §6.3, §11). The M2 task list stays open until this round passes the maintainer's re-review; archive both together then.
 
 ## 1. Context
 
@@ -59,7 +59,7 @@ Broader testing, scheduled in the M9 review package: extend the independent Hypo
 
 ## 6. Exit report (F6, 2026-10-30)
 
-Work is on branch `m2-review2`, one commit per task: F1 `ab37d5f`, F2 `3727821`, F3 `5661296`, F4 `c730c9d`, F5 `f466627`, F6 (this commit). Citations use the edition in [references.md](../references.md).
+Work is on branch `m2-review2`, one commit per task: F1 `ab37d5f`, F2 `3727821`, F3 `5661296`, F4 `c730c9d`, F5 `f466627`, F6 (this commit). Citations use the edition in [references.md](../../references.md).
 
 ### 6.1 What changed
 

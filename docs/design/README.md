@@ -23,5 +23,5 @@ Active plans and design notes live in this folder. Completed work records move t
 | [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
 | [archive/m0-tasks.md](./archive/m0-tasks.md) | COMPLETE (2026-10-20) |
 | [archive/m1-tasks.md](./archive/m1-tasks.md) | COMPLETE (2026-10-21) |
-| [m2-tasks.md](./m2-tasks.md) | READY FOR REVIEW |
-| [m2-review2-tasks.md](./m2-review2-tasks.md) | READY FOR REVIEW |
+| [archive/m2-tasks.md](./archive/m2-tasks.md) | COMPLETE (2026-10-30) |
+| [archive/m2-review2-tasks.md](./archive/m2-review2-tasks.md) | COMPLETE (2026-10-30) |

@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0, M1 complete; M2 second-round fixes ready for re-review
+> **Status:** ACTIVE — M0, M1, M2 complete; M3 next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -60,7 +60,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - T1 unit tests and the T3 round-trip baseline (CRLF, mixed endings, BOM, missing final newline, tabs, trailing whitespace, `µ`).
 - **Exit:** load/save of arbitrary text is byte-identical; encoding policy checked against LTspice-produced samples when available.
 
-### M2 — Grammar core (ngspice; [task list](./m2-tasks.md), second-round fixes in [m2-review2-tasks.md](./m2-review2-tasks.md); syntax must live in Lark, strict per the manual)
+### M2 — Grammar core (ngspice; complete; [task record](./archive/m2-tasks.md), second-round fixes in [m2-review2-tasks.md](./archive/m2-review2-tasks.md); syntax must live in Lark, strict per the manual)
 - **Spike first: continuation lines** (ignored-terminal approach, span correctness), the highest-risk item (architecture §20).
 - Line structure, comments, title (including the implicit first-line title), `.end`, opaque blocks (`.control`/`.endc`, `.if`/`.endif`), unknown dot-commands, `.include`/`.lib` as opaque statements.
 - `grammar/loader.py`; LALR + contextual lexer + `strict=True`; `core.lark` plus ngspice overlay (composition mechanism chosen here and recorded).
@@ -135,6 +135,8 @@ You confirm phase 2 can start when:
 | Phase 1 rejects many real netlists (Q/M/stimulus specs) | Documented limitation; confirmed at the review gate; the phase 2 order can be adjusted. |
 | LTspice export/encoding behavior differs from assumptions | M0 spike, then validated on real exports in M8. |
 | Solver behavior differs from manuals | M7/M8 record discrepancies; the solver is authoritative (§11.3). |
+| Strict mode does not collision-check terminals with lookarounds (eight ngspice terminals, found in M2) | Manual review found no overlap; an architecture test pins the list so it cannot grow silently. Rewriting them without lookarounds is an open design question (decision 0003). |
+| Deeply nested `.if` (about 300 levels) raises `RecursionError` (M2) | Accepted for now; revisit if real netlists approach the limit. |
 
 ## 8. Open points for this plan
 

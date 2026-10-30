@@ -9,8 +9,7 @@
 - Added a strict, cached ngspice LALR parser for source structure, including
   grammar-defined syntax, typed title/comment/directive/opaque nodes,
   immediate continuation spans, required final `.end`, and positioned errors
-  for unsupported element lines. The M2 second-round fixes are awaiting
-  review.
+  for unsupported element lines.
 - Added ngspice 47 discrepancy probes, grammar/spec traceability, positive and
   negative structural corpora, property/performance tests, and wheel resource
   checks.
