@@ -67,7 +67,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - ParseError with line/column/excerpt.
 - **Exit:** T2 grammar tests and T3 round-trip over the corpus for this subset; strict build is green.
 
-### M3 — Elements and values (ngspice)
+### M3 — Elements and values (ngspice; [task list](./m3-tasks.md))
 - R, C, L, V, I, D, X, K with typed nodes (`Resistor`, … `MutualCoupling`), value slots (`NumericValue`, `Formula`, `ModelReference`), instance parameters. Standard scale factors; RKM per decision 8.
 - Transformer (dispatch by node type, §6.3 rule 11), spans on every node.
 - V/I sources: plain values and the `DC` and `AC` keywords are in phase 1 (maintainer decision). Stimulus functions (PULSE/SIN/…) as typed specs are phase 2 and fail with `UnsupportedConstruct` (P5) in phase 1.
