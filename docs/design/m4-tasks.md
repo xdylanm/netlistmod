@@ -184,7 +184,7 @@ Update `NG-DIR-001` (unknown dot-commands: list what is now typed; `.ends` added
 [x] **T11 — Docs.**
 `CHANGELOG.md`, `README.md` status, `docs/testing.md` (new corpora), the usage doc with an executed example, and the phase plan's M4 heading. Public names get docstrings.
 
-[ ] **T12 — Exit.**
+[x] **T12 — Exit.**
 Full check set, a fresh-clone test, and the solver tests. Report what changed, every "settle" decision with its citation, deviations from this list, and limitations. Set this document's status to `READY FOR REVIEW`. **Do not archive.**
 
 ## 5. Dependencies between tasks
@@ -312,7 +312,7 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
 | `v( node )` (T5) | blanks inside the parentheses accepted (ignored like other inline blanks); `v (` rejected | `observed` ngspice 47 reads it the same |
 | Node name in `v(…)` (T5) | the M3 name class | §6.3 rule 9 |
 | `.save` with no vectors (T6) | rejected | §11.6.1 general form |
-| `.meas` analysis outside `dc|ac|tran|sp` (T6) | rejected | §11.4.3 |
+| `.meas` analysis other than `dc`, `ac`, `tran`, `sp` (T6) | rejected | §11.4.3 |
 | `.meas` with only analysis and result (T6) | rejected | §11.4 (a measurement follows the result) |
 | `.nodeset` mixing `v()` items and `all=` | rejected | §11.2.1 gives them as separate forms |
 
@@ -328,7 +328,8 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
   on `SubcktDefinition` were added; `Identifier` is new.
 - **Bare-expression detection** also covers a value glued to a number (`1k+a`) and a field
   after a value (`123 * 3`), so all three section 6 rows are positioned at the value.
-- The fresh-clone run is recorded in the commit that checks off T12.
+- Fresh clone (2026-10-30): `git clone`, `uv sync`, then pytest with
+  `--require-solver ngspice`: 823 passed, 2 POSIX-only skips, coverage 98%.
 
 ### Limitations
 
