@@ -100,6 +100,24 @@ _CASES: list[tuple[str, str, Operation, str]] = [
         lambda n: n.set_model_param("dm", "rs", "2", scope=("amp",), in_definition=True),
         "t\n.subckt amp a b\nD1 a b dm\n.model dm d is=1 rs=2\n.ends\n.end\n",
     ),
+    (
+        "model param in empty parentheses",
+        "t\n.model dm D()\n.end\n",
+        lambda n: n.set_model_param("dm", "n", "1.5"),
+        "t\n.model dm D(n=1.5)\n.end\n",
+    ),
+    (
+        "model param in spaced empty parentheses",
+        "t\n.model dm d ( ) ; c\n.end\n",
+        lambda n: n.set_model_param("dm", "n", "1.5"),
+        "t\n.model dm d (n=1.5 ) ; c\n.end\n",
+    ),
+    (
+        "model param after the last parameter, before the close",
+        "t\n.model dm d(is=1\n+ rs=2 )\n.end\n",
+        lambda n: n.set_model_param("dm", "n", "1.5"),
+        "t\n.model dm d(is=1\n+ rs=2 n=1.5 )\n.end\n",
+    ),
 ]
 
 
@@ -154,11 +172,6 @@ def test_earlier_repeats_are_left_as_they_are() -> None:
             "does not apply inside subcircuit `amp`",
         ),
         ("t\n.end\n", lambda n: n.set_model_param("dm", "n", "1"), "no model `dm` in top level"),
-        (
-            "t\n.model dm d()\n.end\n",
-            lambda n: n.set_model_param("dm", "n", "1"),
-            "empty parentheses",
-        ),
         (
             "t\n.model dm d is=1 is=2\n.end\n",
             lambda n: n.set_model_param("dm", "is", "3"),

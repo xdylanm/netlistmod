@@ -13,6 +13,13 @@
   opaque items, text outside the edits, slot checks); `TopologyError` and
   `TopologyViolation` guard topology. Low-level `Edit`, `EditPlan`, `SlotCheck`
   and `apply_edits` are public. Element scopes need `in_definition=True`.
+- M6 review round 1 (decision 0007 amendment 1): whole `.control`/`.if` blocks and
+  `.include`/`.lib` statements may be added, removed or replaced through `directives`
+  (an edit that cuts into one is a `TopologyViolation`); directive text may be a list
+  of physical lines (continued statements, blocks); `set_model` adds a model to an R,
+  C or L line without one, and the new `remove_value` drops its value; `set_model_param`
+  fills empty parentheses. `ModelStatement` gains `open_paren_span` and
+  `close_paren_span`.
 - New diagnostic `MODEL_TYPE_MISMATCH` (warning): an element's resolved model has
   a type not allowed for its letter (R → `R`, C → `C`, L → `L`, D → `D`;
   `document/model-types.json`).

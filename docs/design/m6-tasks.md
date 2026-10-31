@@ -357,3 +357,50 @@ lowercase `dc`).
 and `pytest` (1430 passed, 2 POSIX-only skips, coverage 98.7%) with `--require-solver ngspice`
 (ngspice 47) on Windows. Fresh clone of the commit, `uv sync`, full suite with
 `--require-solver ngspice`: 1430 passed, 2 skipped. Not archived (awaiting review).
+
+## 10. Review round 1 (2026-10-31)
+
+### 10.1 Outcome
+
+The maintainer accepted the deviations of section 9 (other changes, formatting), the keyword
+case, the treatment of ambiguous targets and duplicate includes, and asked for the changes
+below, recorded as [decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
+amendment 1. Principle: allow an operation that *may* leave topology unaffected, and keep
+opaque contents a black box.
+
+### 10.2 Required changes
+
+[x] **R1 — Whole opaque items.** `directives.remove`/`replace` accept a top-level `.control`
+or `.if` block or `.include`/`.lib` statement; `add`/`replace` accept a whole block or a
+`.lib` statement (`.include` stays with `add_include`). The opaque check of verification now
+rejects only an edit that cuts into an opaque item of the original text, and runs right after
+the splice. Architecture §7.1–§7.3, §7.6, §7.8, §7.9 amended.
+
+[x] **R2 — Model switch for R, C, L.** `set_model` adds a model name after the value when
+there is none (not for `r=1k`, which takes no model); new `remove_value` removes the value of a
+line that names a model (ngspice 47: a value overrides the geometry; solver test).
+
+[x] **R3 — Empty `.model` parentheses.** `ModelStatement.open_paren_span`/`close_paren_span`
+(the transformer records the tokens; no grammar change); `set_model_param` writes into `d()`.
+
+[x] **R4 — Directive text over several lines.** `add`, `replace` and `set` take a sequence of
+physical lines, joined with the terminator of the insertion point; a `str` with a line break is
+an `EditError` that says to pass a list.
+
+[x] **R5 — Docs and tests.** Decision 0007 amendment 1, architecture, m6-edits.md, m4-statements.md
+(the new fields), editing.md recipes, CHANGELOG; unit, golden (input `review1_lf.cir`, five
+cases: `model_switch`, `empty_parentheses`, `swap_include`, `control_block`, `continued_tran`),
+negative (crafted cuts into a block or include; whole adds and removes allowed) and solver
+tests (model switch 1.5 V → 2.0 V; a continued `.tran` with an added `.control` block runs).
+
+### 10.3 Report (2026-10-31)
+
+- The opaque check moved from step 3 to right after the splice (step 1), so a plan that cuts a
+  block in half is reported as a cut, not as a parse error of the remains.
+- `remove_value` keeps the separator before the value (`R2 out 0  rmod …`): deciding whether
+  the gap is only blanks would mean scanning source text (P13); it stays a minimal diff.
+- `directives.set` rejects opaque items like repeatable directives (they are not singletons).
+- Limitations added: what a removed `.include`/`.lib` defined, and what an added `.if` block
+  contains, is not verified (§7.8).
+- Checks: ruff, ruff format, mypy --strict, lint-imports and pytest with `--require-solver
+  ngspice` (1495 passed, 2 POSIX-only skips, coverage 98.8%). Status stays `READY FOR REVIEW`.

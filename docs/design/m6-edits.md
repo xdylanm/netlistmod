@@ -44,7 +44,8 @@ unknown scope, an unknown designator and a repeated designator are `EditError`s.
 | | V, I | `dc.span` | — (replace only; never adds `DC`) | no DC value: use `set_dc` |
 | `set_formula(d, expr)` | as `set_value` | as `set_value`, text `{expr}` | as `set_value` | as `set_value` |
 | `set_param(d, name, value)` | R, C, L, D | `params[i].value.span`; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value` | X: use `set_instance_param`; V, I, K: no parameters; value keyword on a positional value: use `set_value`; repeated name |
-| `set_model(d, model, allow_external=False)` | R, C, L, D with a model | `model.span` | — | model type not allowed for the letter (table in `document/model-types.json`); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; no model to replace |
+| `set_model(d, model, allow_external=False)` | R, C, L, D | `model.span` | R, C, L without a model: after the value: ` model` | model type not allowed for the letter (table in `document/model-types.json`); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; a value written `r=1k` (that form takes no model) |
+| `remove_value(d)` | R, C, L with a model | deletes `value.span` (the separator before it stays) | — | no value; no model (the line would have neither); not R, C or L |
 | `set_dc(d, value)` | V, I | `dc.span` | after the last node: ` DC value` | not a source |
 | `set_ac(d, mag, phase=None)` | V, I | `ac.magnitude.span`, and `ac.phase.span` when `phase` is given | after the DC part (or nodes): ` AC mag [phase]`; a missing phase after the magnitude: ` phase` | not a source |
 | `set_coupling(d, value)` | K | `value.span` | — | not a K line |
@@ -59,7 +60,7 @@ goes right after it, so a trailing comment or a continuation stays after the new
 | Method | Edit | Insertion | Errors |
 |---|---|---|---|
 | `params.set(name, value, scope=(), in_definition=False, placement=None)` | the value of the **last** assignment of `name` in `scope` (defaults count) | `.param name=value` + terminator at `placement` (default `AFTER_LAST_PARAM`) | scope rules; a bare expression does not parse (the `ParseError` suggests braces) |
-| `set_model_param(model, name, value, scope=(), in_definition=False)` | the value of parameter `name` of the first `.model model` in `scope` | after the last parameter (inside `( … )`), or after the type: ` name=value` | no such model in `scope`; repeated parameter; empty parentheses |
+| `set_model_param(model, name, value, scope=(), in_definition=False)` | the value of parameter `name` of the first `.model model` in `scope` | after the last parameter (inside `( … )`); in empty parentheses right after `open_paren_span`: `name=value`; without parentheses after the type: ` name=value` | no such model in `scope`; repeated parameter |
 
 `params` is still the read-only mapping of top-level parameters (a `ParamTable`, which is a
 `Mapping`); `set` is its only addition.
@@ -69,20 +70,27 @@ goes right after it, so a trailing comment or a continuation stays after the new
 | Method | Edit | Errors |
 |---|---|---|
 | `add(text, placement=BEFORE_END)` | insert `text` + terminator | text classification below; placement errors |
-| `replace(line, text)` | replace the whole `line.span` with `text` + the line's terminator | `line` must be a top-level typed or unknown directive |
+| `replace(line, text)` | replace the whole `line.span` with `text` + the line's terminator | line targets below |
 | `remove(line)` | delete `line.span` | as `replace` |
 | `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end` | two or more lines of the kind; a repeatable kind |
 | `add_include(path, placement=AFTER_TITLE)` (on the netlist) | insert `.include "path"` + terminator | an include with the same statement text; a path that does not parse (a `"` or a line break) |
 
-**Text classification.** The text is parsed as the only line of a probe netlist
-(`probe` / text / `.end`) with the netlist's dialect and `rkm`. It must be exactly one physical
-line holding a `Directive` or an `UnknownDirective`. An element, `.subckt`, `.global`,
-`.include`/`.lib` or opaque block is a `TopologyError`; a `.param`, `.model`, `.title`, comment,
-blank, several lines or a syntax error is an `EditError`.
+**Text.** `text` is one physical line (a `str`) or a sequence of physical lines (a continued
+statement or a block, `[".tran 1u 10m", "+ 0 1u"]`); written, the lines are joined with the
+terminator of the insertion point (or of the replaced line). It is parsed as the body of a probe
+netlist (`probe` / lines / `.end`) with the netlist's dialect and `rkm`, and must be exactly one
+item on exactly those lines: a `Directive`, an `UnknownDirective`, a whole `.control` or `.if`
+block (`OpaqueBlock`) or a `.lib` statement. An element, `.subckt` or `.global` is a
+`TopologyError`; an `.include` is an `EditError` pointing to `add_include`; a `.param`,
+`.model`, `.title`, comment, blank, several items, a syntax error, or a `str` holding a line
+break (the message says to pass a list) is an `EditError`. `set` accepts only the singleton
+kinds.
 
-**Line targets** (`replace`, `remove`): an element, definition, `.global`, `.include`/`.lib` or
-opaque block is a `TopologyError`; a `.param`, `.model`, title, `.end`, blank or comment line,
-or a line inside a definition, is an `EditError`.
+**Line targets** (`replace`, `remove`): a top-level directive, unknown dot-command, `.control`
+or `.if` block, or `.include`/`.lib` statement, taken whole. An element, definition or `.global`
+is a `TopologyError`; a `.param`, `.model`, title, `.end`, blank or comment line, or a line
+inside a definition, is an `EditError`. Removing an include removes whatever it defined from
+the solver's view; that is not verified (§7.8).
 
 ### Placement
 
@@ -121,17 +129,18 @@ strictly inside a replacement). `apply_edits(text, plan) -> str` splices; it nev
 
 `verify.apply_plan` runs, in order (decision 0007 item 8):
 
-1. the splice (`apply_edits`; overlap and out-of-range spans are `EditError`s);
+1. the splice (`apply_edits`; overlap and out-of-range spans are `EditError`s), then the
+   opaque check: no edit may cut into an opaque item (`.control`/`.if` block,
+   `.include`/`.lib` statement) of the original text. An edit leaves it alone or covers it
+   whole; otherwise `TopologyViolation`. The signature excludes opaque content, so without this
+   check a plan passed to `apply` could edit inside a block (found while writing T10; narrowed
+   to partial edits in review round 1). It runs before the re-parse, so a cut block is reported
+   as such even when the remains do not parse;
 2. the re-parse with the same dialect and `rkm`; a `ParseError` or `UnsupportedConstruct` is
    wrapped in an `EditError` (its message names the operations and includes the parse error,
    which for RKM text names `rkm=True`);
 3. the signature against the baseline: `TopologyViolation` naming the first differing entry,
-   or the first added or removed one; then the opaque items (`.control` and `.if` blocks,
-   `.include` and `.lib` statements, with their text) against those of the text the plan was
-   applied to: the same, in order, apart from added `.include` statements
-   (`TopologyViolation`). The signature excludes opaque content, so without this check a plan
-   passed to `apply` could edit a `.control` block, drop an `.include` or add an `.if` block
-   that hides an element (found while writing T10);
+   or the first added or removed one;
 4. the outside-text check: each stretch between edits, at its shifted position, equals the
    original (`TopologyViolation` otherwise); always on;
 5. the slot checks: a node of the expected kind with exactly the slot's span must exist in the
@@ -153,9 +162,9 @@ change the topology is reported as the `TopologyError` of the misused API rather
 | String values | written as given; the caller writes the quotes | decision 18 (no validation or rewriting of values) |
 | `DC`/`AC` keyword case | uppercase, as the manual writes them; dot-commands lowercase | decision 0007 item 4; behaviour table |
 | Repeated designator, instance or model parameter | `EditError` (no single target) | P5: an edit that is not provably the intended one raises |
-| `set_model` without a current model | `EditError` (adding a model is not offered) | §7.2 sets "an element's model name"; the type rule compares with the current one |
-| `.model` with empty parentheses | `EditError` for an added parameter | the node has no span for `(`; P13 forbids finding it in the text |
-| Directive text over several physical lines | `EditError` | decision 0007 item 7 ("exactly one line"); keeps inserted line endings consistent |
+| `set_model` without a current model | adds the name after the value (R, C, L); `remove_value` drops the value | review round 1: switching to the semiconductor form, where a value overrides the geometry (ngspice 47) |
+| `.model` with empty parentheses | the parameter goes right after `(`, from the new `open_paren_span` | review round 1; the span comes from the parse (P13) |
+| Directive text over several physical lines | a sequence of lines, joined with the file's terminator; a `str` with a line break is an `EditError` | review round 1; the library never splits the caller's text, so line endings stay consistent |
 | Duplicate `.include` | identical statement text (`raw`) | the path is not parsed out of an opaque statement |
 
 ## 5. Coverage
@@ -182,8 +191,8 @@ change the topology is reported as the `TopologyError` of the misused API rather
 | change an element type or designator | no API; crafted plan → `TopologyViolation` | crafted plans |
 | rename a net | no API; crafted plan → `TopologyViolation` | crafted plans |
 | add or remove `.subckt` definitions, change their ports | no API; crafted plan → `TopologyViolation`; `directives.remove` of a definition → `TopologyError` | crafted plans, `test_directive_api_rejects_topology` |
-| edit opaque blocks | no API; crafted plan → `TopologyViolation` (opaque check); `directives.remove/replace` → `TopologyError` | crafted plans, `test_directive_api_rejects_topology` |
-| remove an `.include` or `.global` | `directives.remove` → `TopologyError`; crafted plan → `TopologyViolation` | crafted plans, `test_directive_api_rejects_topology` |
+| edit the contents of an opaque item | no API; a crafted plan that cuts into one → `TopologyViolation` (opaque check). Whole items may be added, removed or replaced (review round 1) | crafted plans, `test_whole_opaque_items_may_be_added_or_removed` |
+| remove `.global` | `directives.remove` → `TopologyError`; crafted plan → `TopologyViolation` | crafted plans, `test_directive_api_rejects_topology` |
 
 Other tests: `test_edit_plan.py` (T1, with a Hypothesis reference splice), `test_edit_verify.py`
 (T2), `test_edit_lifecycle.py` (T6), `test_edit_golden.py` (T8; corpus

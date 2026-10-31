@@ -186,14 +186,16 @@ class _Bare:
 
 @dataclass(frozen=True, slots=True)
 class _ModelParams:
-    """The parenthesized parameter list of a ``.model`` line."""
+    """The parenthesized parameter list of a ``.model`` line and its parenthesis tokens."""
 
     params: tuple[ParamAssignment, ...]
+    open_span: Span
+    close_span: Span
 
 
 @dataclass(frozen=True, slots=True)
 class _RParen:
-    pass
+    span: Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -580,6 +582,8 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 model_type_span=_span(model_type),
                 params=params,
                 parenthesized=paren is not None,
+                open_paren_span=paren.open_span if paren is not None else None,
+                close_paren_span=paren.close_span if paren is not None else None,
             ),
         )
 
@@ -591,12 +595,14 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
             # A gap before the parenthesis: the list is the nested field.
             return _Field(inner, comments)
         params = tuple(f.node for f in fields if isinstance(f.node, ParamAssignment))
-        return _Field(_ModelParams(params), comments)
+        assert isinstance(inner, _RParen)  # the grammar ends the list with rparen
+        open_paren = next(c for c in children if isinstance(c, Token) and c.type == "LPAR")
+        return _Field(_ModelParams(params, _span(open_paren), inner.span), comments)
 
     model_param_first = param
 
     def rparen(self, children: list[Any]) -> _Field:
-        return self._field(children, lambda token: _RParen())
+        return self._field(children, lambda token: _RParen(_span(token)))
 
     def subckt_def(self, children: list[Any]) -> _Item:
         header: _Header = children[0]

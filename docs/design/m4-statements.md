@@ -14,7 +14,7 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | Node | Fields |
 |---|---|
 | `ParamStatement` | `assignments: tuple[ParamAssignment, ...]` |
-| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized` |
+| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized`, `open_paren_span`, `close_paren_span` (the `(` and `)` tokens, `None` without parentheses; added in M6 review round 1) |
 | `SubcktDefinition` | `name`, `name_span`, `ports: tuple[Node, ...]`, `params` (defaults), `body: tuple[BodyItem, ...]`, `ends: EndsLine`, `header_span` |
 | `EndsLine` | `name: str \| None`, `name_span: Span \| None`, `span`, `trailing_comments` |
 | `Directive` | base of the directives below (top level only) |

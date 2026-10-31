@@ -141,6 +141,56 @@ _CASES: list[tuple[str, str, Operation, str]] = [
         lambda n: n.add_include("my dir//h.inc", Placement.BEFORE_END),
         't\r\n.include "my dir//h.inc"\r\n.end\r\n',
     ),
+    # Review round 1: continued text as a list of lines, and whole opaque items.
+    (
+        "continued tran as lines",
+        "t\r\n.tran 1u 5u\r\n.end\r\n",
+        lambda n: n.directives.set([".tran 1u 10m", "+ 0 1u"]),
+        "t\r\n.tran 1u 10m\r\n+ 0 1u\r\n.end\r\n",
+    ),
+    (
+        "backslash continuation as lines",
+        "t\n.end\n",
+        lambda n: n.directives.add([".save v(a) \\\\", "v(b)"]),
+        "t\n.save v(a) \\\\\nv(b)\n.end\n",
+    ),
+    (
+        "add a control block",
+        "t\r\nR1 a 0 1k\r\n.end\r\n",
+        lambda n: n.directives.add([".control", "op", "print v(a)", ".endc"]),
+        "t\r\nR1 a 0 1k\r\n.control\r\nop\r\nprint v(a)\r\n.endc\r\n.end\r\n",
+    ),
+    (
+        "remove a control block",
+        "t\n.control\nrun\n.endc\n.end\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "t\n.end\n",
+    ),
+    (
+        "add an if block",
+        "t\n.end\n",
+        lambda n: n.directives.add([".if (1)", ".endif"], Placement.AFTER_TITLE),
+        "t\n.if (1)\n.endif\n.end\n",
+    ),
+    (
+        "replace an if block",
+        "t\n.if (1)\n.endif\n.end\n",
+        lambda n: n.directives.replace(n.lines[1], ".op"),
+        "t\n.op\n.end\n",
+    ),
+    (
+        "remove an include",
+        "t\n.include x.lib\nR1 a 0 1k\n.end\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "t\nR1 a 0 1k\n.end\n",
+    ),
+    (
+        "swap an include for a lib",
+        "t\n.include x.lib\n.end\n",
+        lambda n: n.directives.replace(n.lines[1], ".lib models.lib tt"),
+        "t\n.lib models.lib tt\n.end\n",
+    ),
+    ("add a lib", "t\n.end\n", lambda n: n.directives.add(".lib m.lib"), "t\n.lib m.lib\n.end\n"),
 ]
 
 
@@ -179,8 +229,15 @@ def test_set_is_idempotent() -> None:
         ("t\n.end\n", lambda n: n.directives.set(".options reltol=1e-4"), "repeatable"),
         ("t\n.end\n", lambda n: n.directives.set(".save all"), "repeatable"),
         ("t\n.end\n", lambda n: n.directives.set(".probe v(a)"), "repeatable"),
-        ("t\n.end\n", lambda n: n.directives.add(".op\n.save all"), "exactly one line"),
-        ("t\n.end\n", lambda n: n.directives.add(".save v(a)\n+ v(b)"), "exactly one line"),
+        ("t\n.end\n", lambda n: n.directives.add(".op\n.save all"), "pass a list"),
+        ("t\n.end\n", lambda n: n.directives.add(".save v(a)\n+ v(b)"), "pass a list"),
+        ("t\n.end\n", lambda n: n.directives.add([".op", ".save all"]), "exactly one statement"),
+        ("t\n.end\n", lambda n: n.directives.add([".save v(a)\n+ v(b)"]), "exactly one"),
+        ("t\n.end\n", lambda n: n.directives.add([]), "no text"),
+        ("t\n.end\n", lambda n: n.directives.add(".include x.lib"), "add_include"),
+        ("t\n.op\n.end\n", lambda n: n.directives.replace(n.lines[1], ".include x"), "add_include"),
+        ("t\n.end\n", lambda n: n.directives.set(".lib m.lib"), "opaque item"),
+        ("t\n.end\n", lambda n: n.directives.add([".control", "run"]), "does not parse"),
         ("t\n.end\n", lambda n: n.directives.add(".tran 1u"), "does not parse"),
         ("t\n.end\n", lambda n: n.directives.add(".param a=1"), "use params.set"),
         (
@@ -229,34 +286,18 @@ def test_directive_operation_errors(text: str, operation: Operation, message: st
         ("t\n.end\n", lambda n: n.directives.add("R9 a 0 1k"), "resistor line"),
         ("t\n.end\n", lambda n: n.directives.set("V9 a 0 1"), "voltage source line"),
         ("t\n.end\n", lambda n: n.directives.add(".global vcc"), "`.global` line"),
-        ("t\n.end\n", lambda n: n.directives.add(".include x.lib"), "add_include"),
-        ("t\n.op\n.end\n", lambda n: n.directives.replace(n.lines[1], ".lib x.lib"), "add_include"),
+        ("t\n.end\n", lambda n: n.directives.add([".subckt s a", ".ends"]), "subcircuit"),
         ("t\nR1 a 0 1k\n.end\n", lambda n: n.directives.remove(n.lines[1]), "resistor line"),
         (
             "t\nR1 a 0 1k\n.end\n",
             lambda n: n.directives.replace(n.lines[1], ".op"),
             "resistor line",
         ),
-        (
-            "t\n.include x.lib\n.end\n",
-            lambda n: n.directives.remove(n.lines[1]),
-            "`.include` statement",
-        ),
         ("t\n.global vcc\n.end\n", lambda n: n.directives.remove(n.lines[1]), "`.global` line"),
         (
             "t\n.subckt s a\n.ends\n.end\n",
             lambda n: n.directives.remove(n.lines[1]),
             "subcircuit definition",
-        ),
-        (
-            "t\n.control\nrun\n.endc\n.end\n",
-            lambda n: n.directives.remove(n.lines[1]),
-            "`.control` block",
-        ),
-        (
-            "t\n.if (1)\n.endif\n.end\n",
-            lambda n: n.directives.replace(n.lines[1], ".op"),
-            "`.if` block",
         ),
     ],
 )

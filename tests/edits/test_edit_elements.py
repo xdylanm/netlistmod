@@ -110,7 +110,47 @@ _CASES: list[tuple[str, str, Operation, str]] = [
         lambda n: n.set_value("R1", "5k", scope=("AMP",), in_definition=True),
         ".subckt amp a b\nR1 a b 5k\n.ends",
     ),
+    (
+        "add a model after the value",
+        "R1 a b 1k ; c\n.model rm r rsh=100",
+        lambda n: n.set_model("R1", "rm"),
+        "R1 a b 1k rm ; c\n.model rm r rsh=100",
+    ),
+    (
+        "add a model before parameters",
+        "C1 a 0 1p m=2\n.model cm c",
+        lambda n: n.set_model("C1", "cm"),
+        "C1 a 0 1p cm m=2\n.model cm c",
+    ),
 ]
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        ("R1 a b 1k rm l=20u w=1u", "R1 a b  rm l=20u w=1u"),
+        ("R1 a b\n+ 1k rm", "R1 a b\n+  rm"),
+        ("C1 a b {c0} cm\n.param c0=1p", "C1 a b  cm\n.param c0=1p"),
+    ],
+)
+def test_remove_value(body: str, expected: str) -> None:
+    models = "\n.model rm r rsh=100\n.model cm c"
+    edited = _netlist(body + models).remove_value(body[:2])
+    assert _body(edited) == expected + models
+    with pytest.raises(EditError, match="no value to remove"):
+        edited.remove_value(body[:2])
+
+
+def test_switch_a_resistor_to_its_semiconductor_model() -> None:
+    netlist = _netlist("R2 out 0 1k\n.model rmod r rsh=100")
+    with netlist.batch() as batch:
+        batch.set_model("R2", "rmod")
+        batch.set_param("R2", "l", "20u")
+        batch.set_param("R2", "w", "1u")
+    edited = batch.result.remove_value("R2")
+    assert _body(edited) == "R2 out 0  rmod l=20u w=1u\n.model rmod r rsh=100"
+    back = edited.set_value("R2", "1k")
+    assert _body(back) == "R2 out 0 1k  rmod l=20u w=1u\n.model rmod r rsh=100"
 
 
 @pytest.mark.parametrize(
@@ -167,7 +207,10 @@ def test_set_model_resolves_through_enclosing_scopes() -> None:
             lambda n: n.set_model("D1", "dm2"),
             "type `npn`",
         ),
-        ("R1 a b 1k", lambda n: n.set_model("R1", "rm"), "no model name to replace"),
+        ("R1 a b r=1k\n.model rm r", lambda n: n.set_model("R1", "rm"), "takes no model"),
+        ("R1 a b 1k\n.model rm c", lambda n: n.set_model("R1", "rm"), "type `c`"),
+        ("R1 a b 1k", lambda n: n.remove_value("R1"), "has no model, so it needs its value"),
+        ("D1 a k dm\n.model dm d", lambda n: n.remove_value("D1"), "only R, C and L"),
         ("V1 a 0 1", lambda n: n.set_model("V1", "x"), "voltage source line and has no model"),
         ("D1 a k dm\n.model dm d", lambda n: n.set_value("D1", "1"), "diode line and has no value"),
         ("X1 a b s\n.subckt s p q\n.ends", lambda n: n.set_value("X1", "1"), "subcircuit call"),

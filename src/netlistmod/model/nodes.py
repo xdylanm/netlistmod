@@ -220,6 +220,8 @@ class ModelStatement(_DotCommand):
     """A ``.model`` line; ``parenthesized`` records whether the parameters are in ``( … )``.
 
     ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
+    ``open_paren_span`` and ``close_paren_span`` cover the ``(`` and ``)`` tokens of a
+    parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (M6).
     """
 
     name: str
@@ -228,6 +230,8 @@ class ModelStatement(_DotCommand):
     model_type_span: Span
     params: tuple[ParamAssignment, ...]
     parenthesized: bool
+    open_paren_span: Span | None = None
+    close_paren_span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)

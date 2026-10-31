@@ -123,3 +123,29 @@
     stimulus specs and `.meas` bodies, and string path addressing are out of scope; duplicate
     `.include` detection compares statement text, so the same path spelled differently is not
     caught; what an included harness adds is not verified.
+- **Amendment 1 (2026-10-31, M6 review round 1, maintainer).** Principle: allow an operation
+  that *may* leave topology unaffected; keep opaque contents a black box.
+  1. **Whole opaque items** (amends items 7 and 8, architecture §7.1–§7.3, §7.6, §7.8, §7.9).
+     A `.control` or `.if` block or an `.include`/`.lib` statement may be added, removed or
+     replaced whole: `directives.remove` and `directives.replace` accept such a top-level line,
+     and `directives.add`/`replace` accept a whole block or a `.lib` statement (an `.include`
+     still goes through `add_include`). Verification step 3's comparison of opaque items is
+     replaced by a check, run right after the splice, that no edit cuts into an opaque item of
+     the original text (`TopologyViolation`): an edit either leaves it alone or covers it
+     whole. What a removed include defined, or what an added `.if` block contains, is not
+     verified (§7.8); for example, swapping the `.include` that defines a behavioural
+     subcircuit is now possible.
+  2. **Directive text over several lines** (amends item 7). `add`, `replace` and `set` take one
+     physical line or a sequence of physical lines (`[".tran 1u 10m", "+ 0 1u"]`), joined with
+     the line ending of the insertion point (item 4). The lines must hold exactly one item; a
+     single string with a line break is an `EditError` that says to pass a list.
+  3. **Model name and value of R, C, L** (amends items 3 and 5). `set_model` adds a model name
+     right after the value of an R, C or L line that has none (same resolution and type rules;
+     a value written `r=1k` takes no model). `remove_value` removes the value of an R, C or L
+     line that names a model, so the model's geometry applies: ngspice 47 uses a given value
+     over the geometry (`R2 out 0 1k rmod l=20u w=1u` reads 1k, without `1k` it reads
+     rsh·l/w). Only the value text is removed; the separator before it stays.
+  4. **Empty `.model` parentheses** (amends item 5). `ModelStatement` records
+     `open_paren_span` and `close_paren_span` (the `(` and `)` tokens; `None` without
+     parentheses), so `set_model_param` adds `name=value` right after `(` of `d()`. A model-layer
+     field, not a grammar change.

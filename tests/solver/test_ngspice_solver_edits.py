@@ -79,6 +79,34 @@ def test_an_unedited_save_gives_identical_results(solver: Solver, tmp_path: Path
     assert _voltage(saved, "out") == _voltage(original, "out") == pytest.approx(1.5)
 
 
+def test_switching_a_resistor_to_its_model_uses_the_geometry(
+    solver: Solver, tmp_path: Path
+) -> None:
+    # Review round 1: a value overrides the model's geometry, so the switch removes it.
+    text = _DIVIDER.replace(".op\n", ".model rmod r rsh=100\n.op\n")
+    netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    with netlist.batch() as batch:
+        batch.set_model("R2", "rmod")
+        batch.set_param("R2", "l", "20u")
+        batch.set_param("R2", "w", "1u")
+    with_value = batch.result
+    assert _voltage(_run(solver, tmp_path / "value", with_value), "out") == pytest.approx(1.5)
+    geometry = with_value.remove_value("R2")  # 100 * 20u / 1u = 2k
+    assert _voltage(_run(solver, tmp_path / "model", geometry), "out") == pytest.approx(2.0)
+
+
+def test_a_continued_tran_and_an_added_control_block_run(solver: Solver, tmp_path: Path) -> None:
+    netlist = _divider()
+    with netlist.batch() as batch:
+        batch.directives.remove(netlist.lines[-2])  # the .op
+        batch.directives.set([".tran 1u 20u", "+ 0 1u"])
+        batch.directives.add([".control", "run", "print v(out)", ".endc"])
+    log = _run(solver, tmp_path, batch.result)
+    assert len(_rows(log)) == 1, log  # one transient run (the .op line was removed)
+    assert re.search(r"(?m)^\d+\s+2\.000000e-05\s", log), log  # it reaches tstop = 20u
+    assert re.search(r"(?m)^Index\s+time\s+v\(out\)", log), log
+
+
 # Probes of m6-tasks.md section 7 (decision 0007 items 7 and 9).
 
 # In batch mode ngspice 47 runs no .tran without a .print, .plot or .fourier line (exit 1).

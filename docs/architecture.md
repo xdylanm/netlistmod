@@ -325,22 +325,23 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 | **Topology** | Element line structure: designator, element type, ordered node list; `.subckt` name, ports and body structure; `K` coupling targets; `.global` node declarations ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)) | Read-only |
 | **Properties** | Numeric values, formulas, instance parameters, model name (same model type), `.param` definitions, `.model` parameters, source stimulus specs | Editable (and `.param` addable) |
 | **Directives** | `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.step`, unknown dot-commands | Addable, replaceable, removable |
-| **Opaque** | `.control` blocks, conditional blocks, `.include` / `.lib` statements | Untouchable (an `.include` may be added, Section 7.9) |
+| **Opaque** | `.control` blocks, conditional blocks, `.include` / `.lib` statements | Contents untouchable; a whole item may be added, removed or replaced ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md), amendment 1). An `.include` is added with `add_include` (Section 7.9) |
 
 ### 7.2 Allowed operations
 
 - Set a numeric value, or replace it with a formula or parameter reference (`R1 a b 10k` → `R1 a b {Rx}`).
 - Set or add an instance parameter on an existing element.
-- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`), which is the type of the current one. A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
+- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`), which is the type of the current one. An R, C or L line without a model may gain one after its value, and its value may be removed when a model is present (the semiconductor form, where a value overrides the geometry). A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
 - Add or set a `.param` (upsert: the effective assignment of the name in the scope is replaced, otherwise a line is added); edit `.model` parameters.
 - Edit source stimulus specifications of existing sources (phase 1: the DC value and the AC magnitude and phase).
-- Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed.
+- Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed. Directive text may span several physical lines (a list of lines), joined with the file's line ending.
+- Add, replace or remove a whole opaque item (`.control` or `.if` block, `.include` or `.lib` statement); its contents are never edited.
 - Add an `.include` of a harness file as a directive.
 - Inserted text follows the conventions of decision 0007 (line ending of the preceding line, lowercase dot-command keywords, `name=value`, nothing after `.end`). The API and the slots each operation edits: [docs/design/m6-edits.md](design/m6-edits.md).
 
 ### 7.3 Forbidden operations (raise `TopologyError` or have no API)
 
-Adding, removing or reordering elements; changing any node of an element; changing an element's type or designator; renaming a net; adding or removing `.subckt` definitions or changing their ports; editing opaque blocks.
+Adding, removing or reordering elements; changing any node of an element; changing an element's type or designator; renaming a net; adding or removing `.subckt` definitions or changing their ports; editing the contents of an opaque item (a change that cuts into one; whole items may be added or removed, Section 7.2).
 
 ### 7.4 Edit scope inside subcircuits
 
@@ -359,7 +360,7 @@ On every applied plan, and again on `save()` (and on request via `verify()`):
 
 1. Apply the plan to the original text.
 2. Re-parse the result with the same dialect and `rkm` option. A parse failure is an `EditError` carrying the `ParseError`, and nothing is written.
-3. Compute the topology signature of the result and compare with the signature taken when the original file was loaded. Any difference raises `TopologyViolation`. The opaque items (`.control`/`.if` blocks, `.include`/`.lib` statements) must also be unchanged and in order, apart from added `.include` statements (Section 7.9), since the signature does not cover them.
+3. Compute the topology signature of the result and compare with the signature taken when the original file was loaded. Any difference raises `TopologyViolation`. No edit may cut into an opaque item (`.control`/`.if` block, `.include`/`.lib` statement) of the original text: an edit leaves it alone or covers it whole (`TopologyViolation`; checked right after the splice, since the signature does not cover opaque content).
 4. Check that all text outside edited spans is identical to the original. This check is always on.
 5. Slot check: each edited slot re-parses as a node of the expected kind whose text is exactly the replacement. This verifies where an edit landed (`1k 2k` as a value would add a model); it does not validate the caller's value ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
 
@@ -372,13 +373,13 @@ The signature is a canonical, hashable, ordered value built from typed nodes, us
 ### 7.8 Known limits (documented, not solved)
 
 - **Expressions can hide connectivity.** A behavioral source formula such as `V(n1)*2` depends on nets not in the element's node list. The library guarantees node-list topology only.
-- **`.include` / `.lib` content is outside the parsed file.** These statements are opaque and never resolved or read. Topology, symbol tables and reference resolution cover the main file only; references to models, subcircuits or params defined in included files are not visible to the library.
+- **`.include` / `.lib` content is outside the parsed file.** These statements are opaque and never resolved or read. Topology, symbol tables and reference resolution cover the main file only; references to models, subcircuits or params defined in included files are not visible to the library. What an added or removed `.include`/`.lib` changes, and what an added or removed `.if` block contains, is not verified.
 - **Conditional blocks are opaque.** Netlists in which `.if`/`.else`/`.endif` changes topology are explicitly out of scope; the topology guarantee does not extend into conditional blocks.
 - **Replacement text is not validated.** In v1 the caller is responsible for the validity of the text it supplies. The library may take on more validation as the grammar matures.
 
 ### 7.9 Test harnesses
 
-Adding sources, loads or probes changes the circuit and is out of scope. A separate tool prepares a harness (a file referring to existing net names); this library permits adding **only** an `.include` directive that pulls it in. The strict equality check in 7.6 therefore needs no exclusions.
+Adding sources, loads or probes changes the circuit and is out of scope. A separate tool prepares a harness (a file referring to existing net names); this library permits adding an `.include` directive that pulls it in (and adding, removing or replacing whole opaque items, Section 7.2). What such an item brings in is outside the check of 7.6.
 
 ---
 

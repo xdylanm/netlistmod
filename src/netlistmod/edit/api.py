@@ -19,6 +19,7 @@ from netlistmod.dialects import Dialect
 from netlistmod.document import Line, ScopePath, TopologySignature
 from netlistmod.document import Netlist as ReadOnlyNetlist
 from netlistmod.edit import conventions, operations
+from netlistmod.edit.operations import DirectiveText
 from netlistmod.edit.placement import Placement
 from netlistmod.edit.plan import Edit, EditPlan
 from netlistmod.edit.verify import apply_plan
@@ -114,12 +115,15 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
         allow_external: bool = False,
     ) -> _R:
-        """Replace the model name of an R, C, L or D line.
+        """Replace the model name of an R, C, L or D line, or add one after the value of an
+        R, C or L line that has none (``R1 a b 1k`` → ``R1 a b 1k rmod``).
 
         The model must resolve from the element's scope with a type allowed for the element
         (R → ``R``, C → ``C``, L → ``L``, D → ``D``), otherwise ``EditError``. An unresolved
         model is accepted only with ``allow_external=True`` when an ``.include`` or ``.lib``
-        is in a searched scope (decision 0007 item 3).
+        is in a searched scope (decision 0007 item 3). A value written ``r=1k`` takes no
+        model. ngspice uses a given value over the model's geometry; see
+        :meth:`remove_value`.
         """
         return self._submit(
             operations.set_model(
@@ -129,6 +133,21 @@ class _Operations(Generic[_R]):
                 scope=scope,
                 in_definition=in_definition,
                 allow_external=allow_external,
+            )
+        )
+
+    def remove_value(
+        self, designator: str, *, scope: ScopePath = (), in_definition: bool = False
+    ) -> _R:
+        """Remove the value of an R, C or L line that names a model, so the model's geometry
+        applies (``R1 a b 1k rmod l=20u w=1u`` → ``R1 a b  rmod l=20u w=1u``).
+
+        Only the value's text is removed; the blank before it stays. ``EditError`` if the line
+        has no value or no model (it would have neither, which the grammar forbids).
+        """
+        return self._submit(
+            operations.remove_value(
+                self._target(), designator, scope=scope, in_definition=in_definition
             )
         )
 
@@ -276,11 +295,16 @@ class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
 
 
 class DirectiveEditor(Generic[_R]):
-    """Add, replace, remove and upsert top-level directives (decision 0007 items 6 and 7).
+    """Add, replace, remove and upsert top-level directives and whole opaque items
+    (decision 0007 items 6 and 7, review round 1).
 
-    Directive text must parse as exactly one line holding a typed directive or an unknown
-    dot-command. An element, ``.subckt``, ``.global``, ``.include``/``.lib`` or opaque block
-    is a ``TopologyError``; anything else that is not a directive is an ``EditError``.
+    ``text`` is one physical line, or a sequence of physical lines for a continued statement
+    or a block (``[".tran 1u 10m", "+ 0 1u"]``); the lines are joined with the line ending of
+    the insertion point. It must parse as exactly one typed directive, unknown dot-command,
+    whole ``.control`` or ``.if`` block, or ``.lib`` statement. An element, ``.subckt`` or
+    ``.global`` is a ``TopologyError``; an ``.include`` is added with ``add_include``; anything
+    else is an ``EditError``. The contents of an opaque item are never edited: it is added,
+    replaced or removed whole.
     """
 
     __slots__ = ("_operations",)
@@ -289,25 +313,28 @@ class DirectiveEditor(Generic[_R]):
         """Bind the editor to the operations that submit edits."""
         self._operations = operations_
 
-    def add(self, text: str, placement: Placement = Placement.BEFORE_END) -> _R:
-        """Insert one directive line (before ``.end`` by default)."""
+    def add(self, text: DirectiveText, placement: Placement = Placement.BEFORE_END) -> _R:
+        """Insert one directive or opaque item (before ``.end`` by default)."""
         return self._operations._submit(
             operations.add_directive(self._operations._target(), text, placement)
         )
 
-    def replace(self, line: Line | object, text: str) -> _R:
-        """Replace a whole directive line (a ``Line`` or its item) with one directive line."""
+    def replace(self, line: Line | object, text: DirectiveText) -> _R:
+        """Replace a whole directive line or opaque item (a ``Line`` or its item) with one
+        directive or opaque item."""
         return self._operations._submit(
             operations.replace_directive(self._operations._target(), line, text)
         )
 
     def remove(self, line: Line | object) -> _R:
-        """Remove a whole directive line (a ``Line`` or its item)."""
+        """Remove a whole directive line, ``.control``/``.if`` block or ``.include``/``.lib``
+        statement (a ``Line`` or its item). What a removed include defined is not checked
+        (architecture §7.8)."""
         return self._operations._submit(
             operations.remove_directive(self._operations._target(), line)
         )
 
-    def set(self, text: str) -> _R:
+    def set(self, text: DirectiveText) -> _R:
         """Upsert a singleton directive (``.tran``, ``.ac``, ``.dc``, ``.op``, ``.temp``):
         replace the one line of its kind or add one before ``.end``.
 

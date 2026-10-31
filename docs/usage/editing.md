@@ -159,6 +159,57 @@ X2 out o2 amp g=3
 
 ```
 
+## Switch a resistor to its semiconductor model
+
+ngspice uses a given value over the model's geometry, so the switch adds the model and its
+`l`/`w`, then removes the value (only the value text goes; the blank before it stays).
+
+```python
+>>> div = Netlist.from_text(
+...     "t\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 1k\n.model rmod r rsh=100\n.op\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> with div.batch() as batch:
+...     batch.set_model("R2", "rmod")
+...     batch.set_param("R2", "l", "20u")
+...     batch.set_param("R2", "w", "1u")
+>>> print(batch.result.text.splitlines()[3])
+R2 out 0 1k rmod l=20u w=1u
+>>> print(batch.result.remove_value("R2").text.splitlines()[3])
+R2 out 0  rmod l=20u w=1u
+
+```
+
+`set_model_param` also fills empty parentheses: `.model dz d()` becomes `.model dz d(n=1.5)`.
+
+## Continued lines, blocks and includes
+
+Text over several physical lines is passed as a list; the lines are joined with the file's
+line ending. A `.control` or `.if` block, or an `.include`/`.lib` statement, is added, replaced
+or removed whole; its contents are never edited, and what it brings in is not verified.
+
+```python
+>>> lib = Netlist.from_text(
+...     "t\n.include old.lib\nX1 in out amp\n.tran 1u 5u\n.end\n", dialect=Dialect.NGSPICE
+... )
+>>> from netlistmod import OpaqueStatement
+>>> swapped = lib.directives.remove(lib.lines.find(OpaqueStatement)).add_include("new.lib")
+>>> with swapped.batch() as batch:
+...     batch.directives.set([".tran 1u 10m", "+ 0 1u"])
+...     batch.directives.add([".control", "run", ".endc"])
+>>> print(batch.result.text, end="")
+t
+.include "new.lib"
+X1 in out amp
+.tran 1u 10m
++ 0 1u
+.control
+run
+.endc
+.end
+
+```
+
 ## What cannot be edited
 
 Topology has no setter. Where an API could be misused it raises `TopologyError`, and a plan
@@ -168,7 +219,7 @@ that changes the topology anyway raises `TopologyViolation`; nothing is returned
 >>> netlist.directives.add("R9 out 0 1k")
 Traceback (most recent call last):
 ...
-netlistmod.errors.TopologyError: directives.add: `R9 out 0 1k` is a resistor line (an element), which is topology or opaque; only directives can be added or replaced (architecture §7.3)
+netlistmod.errors.TopologyError: directives.add: `R9 out 0 1k` is a resistor line (an element), which is topology; only directives and whole opaque items can be added or replaced (architecture §7.3)
 >>> from netlistmod import Edit
 >>> node = netlist.element("R22").nodes[0]
 >>> netlist.apply([Edit(node.span, "mid")])

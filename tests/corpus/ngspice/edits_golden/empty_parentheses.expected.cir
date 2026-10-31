@@ -1,0 +1,14 @@
+Golden review round 1 (LF)
+.include old_models.lib
+.lib vendor.lib tt
+V1 in 0 DC 3
+R1 in out 1k
+R2 out 0 1k ; load
+D1 out 0 dz
+.model dz d(n=1.5)
+.model rmod r rsh=100
+.tran 1u 5u
+.control
+run
+.endc
+.end

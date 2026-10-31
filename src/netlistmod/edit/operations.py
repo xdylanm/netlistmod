@@ -8,7 +8,7 @@ text for syntax (P13). :mod:`netlistmod.edit.api` exposes these as methods.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from dataclasses import fields, is_dataclass
 
 from netlistmod.document import Line, Netlist, Scope, ScopePath, fold
@@ -74,9 +74,12 @@ SINGLETON_DIRECTIVES: tuple[type[Directive], ...] = (
     TempDirective,
 )
 
-# Items that are topology or opaque (§7.1): directive operations never add, replace or remove
-# them.
-_TOPOLOGY_ITEMS = (Component, SubcktDefinition, GlobalDirective, OpaqueStatement, OpaqueBlock)
+# Topology items (§7.1): directive operations never add, replace or remove them.
+_TOPOLOGY_ITEMS = (Component, SubcktDefinition, GlobalDirective)
+
+# What directive operations write and remove: directives, and whole opaque items, whose
+# contents are never edited (review round 1). `.include` is added with add_include.
+_DIRECTIVE_LINES = (Directive, UnknownDirective, OpaqueBlock, OpaqueStatement)
 
 
 # Addressing.
@@ -227,14 +230,16 @@ def _assign(
     name: str,
     value: str,
     reason: str,
+    after: int | None = None,
 ) -> list[Edit]:
-    """Replace the value of parameter ``name`` or add ``name=value`` after the last field."""
+    """Replace the value of parameter ``name`` or add ``name=value`` after the last field
+    (or after offset ``after``)."""
     matches = [param for param in params if fold(param.name) == fold(name)]
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
     if matches:
         return [Edit(matches[0].value.span, value, reason, (_VALUE,))]
-    point = _last_field_end(owner)
+    point = _last_field_end(owner) if after is None else after
     text = conventions.field(conventions.assignment(name, value))
     return [_insert(point, text, reason, SlotCheck((ParamAssignment,), "a parameter"), 1)]
 
@@ -248,13 +253,15 @@ def set_model(
     in_definition: bool = False,
     allow_external: bool = False,
 ) -> list[Edit]:
-    """Replace the model name of an R, C, L or D line (decision 0007 item 3)."""
+    """Replace the model name of an R, C, L or D line, or add one after the value of an R, C
+    or L line that has none (decision 0007 item 3; review round 1)."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, (*_TWO_TERMINAL, Diode)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
-    if element.model is None:
+    if element.model is None and element.value_keyword is not None:
         raise EditError(
-            f"`{designator}` has no model name to replace; adding a model is not supported"
+            f"`{designator}` writes its value as `{element.value_keyword}=…`, a form that takes "
+            "no model; use set_value to write a positional value first"
         )
     chain = tuple(netlist.scope(scope).chain())
     definition = next(
@@ -280,7 +287,33 @@ def set_model(
                 "an `.include` or `.lib` file, which is not read: pass allow_external=True to "
                 "set it without a type check"
             )
-    return [Edit(element.model.span, model, f"set_model {designator}", (_MODEL,))]
+    reason = f"set_model {designator}"
+    if element.model is not None:
+        return [Edit(element.model.span, model, reason, (_MODEL,))]
+    # Without a model the grammar requires a value; the model goes right after it.
+    assert isinstance(element, _TWO_TERMINAL) and element.value is not None
+    return [_insert(element.value.span.end, conventions.field(model), reason, _MODEL, 1)]
+
+
+def remove_value(
+    netlist: Netlist,
+    designator: str,
+    *,
+    scope: ScopePath = (),
+    in_definition: bool = False,
+) -> list[Edit]:
+    """Remove the value of an R, C or L line that also names a model, so the model's geometry
+    applies (review round 1). The separator before the value stays."""
+    element = _element(netlist, designator, scope, in_definition)
+    if not isinstance(element, _TWO_TERMINAL):
+        raise EditError(f"`{designator}` is a {_kind(element)} line; only R, C and L have a value")
+    if element.value is None:
+        raise EditError(f"`{designator}` has no value to remove")
+    if element.model is None:
+        raise EditError(
+            f"`{designator}` has no model, so it needs its value; add a model with set_model first"
+        )
+    return [Edit(element.value.span, "", f"remove_value {designator}")]
 
 
 def set_dc(
@@ -402,53 +435,82 @@ def set_model_param(
         raise EditError(f"no model `{model}` in {found.describe()}")
     statement = definitions[0]  # ngspice uses the first definition (decision 0006)
     reason = f"set_model_param {model} {name}"
-    if not statement.params and statement.parenthesized:
-        raise EditError(
-            f"{reason}: `.model {statement.name}` has empty parentheses, so there is no "
-            "parameter to add after; write one parameter in the file first"
-        )
-    # Without parameters the last field is the model type: `.model dm d` -> `.model dm d n=1`.
-    return _assign(statement.params, statement, name, value, reason)
+    if statement.params:
+        after = statement.params[-1].span.end  # inside the parentheses, if any
+        return _assign(statement.params, statement, name, value, reason, after)
+    if statement.open_paren_span is not None:
+        # Empty parentheses: `d()` -> `d(n=1.5)`, right after the `(` token.
+        text = conventions.assignment(name, value)
+        check = SlotCheck((ParamAssignment,), "a parameter")
+        return [_insert(statement.open_paren_span.end, text, reason, check, 0)]
+    # `.model dm d` -> `.model dm d n=1.5`.
+    return _assign((), statement, name, value, reason, statement.model_type_span.end)
 
 
 # Directive operations.
 
+DirectiveText = str | Sequence[str]
+"""One physical line, or a sequence of physical lines (a continued statement or a block)."""
 
-def classify_line(netlist: Netlist, text: str, what: str) -> TopLevelItem:
-    """Parse ``text`` as one line of a probe netlist and return its item.
 
-    ``EditError`` if it does not parse or is not exactly one physical line; a single
-    topology or opaque item is returned whatever its length, for the caller to reject.
+def _physical_lines(text: DirectiveText, what: str) -> tuple[str, ...]:
+    lines = (text,) if isinstance(text, str) else tuple(text)
+    if not lines:
+        raise EditError(f"{what}: no text")
+    return lines
+
+
+def _show(lines: tuple[str, ...]) -> str:
+    return f"`{lines[0]}`" + (f" (+{len(lines) - 1} lines)" if len(lines) > 1 else "")
+
+
+def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelItem:
+    """Parse ``lines`` as the body of a probe netlist and return the one item they hold.
+
+    ``EditError`` if they do not parse, or are not exactly one item on exactly these physical
+    lines (an element of ``lines`` may not hold a line break); a single topology item is
+    returned whatever its length, for the caller to reject.
     """
     newline = conventions.DEFAULT_TERMINATOR
-    probe = SourceText(f"probe{newline}{text}{newline}.end{newline}")
+    probe = SourceText(f"probe{newline}{newline.join(lines)}{newline}.end{newline}")
     try:
         items = parse(probe, netlist.dialect, rkm=netlist.rkm).items
     except (ParseError, UnsupportedConstruct) as error:
-        raise EditError(f"{what}: `{text}` does not parse as a netlist line: {error}") from error
+        raise EditError(
+            f"{what}: {_show(lines)} does not parse as a netlist line: {error}"
+        ) from error
     body = [item for item in items[1:] if not isinstance(item, End)]
     if len(body) == 1 and isinstance(body[0], _TOPOLOGY_ITEMS):
         return body[0]  # rejected by the caller as topology, whatever its length
-    if len(body) != 1 or probe.position(body[0].span.end - 1)[0] != 2:
-        raise EditError(f"{what}: `{text}` must be exactly one line")
+    last = len(lines) + 1  # the probe's title is line 1
+    if (
+        len(body) != 1
+        or probe.line_count != last + 1
+        or probe.position(body[0].span.end - 1)[0] != last
+    ):
+        hint = (
+            "; pass a list of physical lines for a continued statement or a block"
+            if len(lines) == 1
+            else ""
+        )
+        raise EditError(f"{what}: {_show(lines)} must be exactly one statement or block{hint}")
     return body[0]
 
 
-def _directive(netlist: Netlist, text: str, what: str) -> Directive | UnknownDirective:
-    item = classify_line(netlist, text, what)
-    if isinstance(item, OpaqueStatement):
-        raise TopologyError(
-            f"{what}: `{text}` is an `.{item.kind}` statement; add a harness include with "
-            "add_include (architecture §7.9)"
-        )
+def _addable(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelItem:
+    """The item ``lines`` hold, if directive operations may write it: a directive, an unknown
+    dot-command, a whole ``.control`` or ``.if`` block or a ``.lib`` statement."""
+    item = classify_text(netlist, lines, what)
     if isinstance(item, _TOPOLOGY_ITEMS):
         raise TopologyError(
-            f"{what}: `{text}` is a {_describe_item(item)}, which is topology or opaque; only "
-            "directives can be added or replaced (architecture §7.3)"
+            f"{what}: {_show(lines)} is a {_describe_item(item)}, which is topology; only "
+            "directives and whole opaque items can be added or replaced (architecture §7.3)"
         )
-    if not isinstance(item, (Directive, UnknownDirective)):
+    if isinstance(item, OpaqueStatement) and item.kind == "include":
+        raise EditError(f"{what}: add an `.include` with add_include (architecture §7.9)")
+    if not isinstance(item, _DIRECTIVE_LINES):
         raise EditError(
-            f"{what}: `{text}` is a {_describe_item(item)}, not a directive"
+            f"{what}: {_show(lines)} is a {_describe_item(item)}, not a directive"
             + ("; use params.set or set_model_param" if _is_property(item) else "")
         )
     return item
@@ -469,36 +531,40 @@ def _describe_item(item: object) -> str:
 
 
 def add_directive(
-    netlist: Netlist, text: str, placement: Placement = Placement.BEFORE_END
+    netlist: Netlist, text: DirectiveText, placement: Placement = Placement.BEFORE_END
 ) -> list[Edit]:
-    """Insert one directive line at ``placement`` (top level)."""
-    item = _directive(netlist, text, "directives.add")
-    return [_line_insertion(netlist, text, type(item), placement, "directives.add")]
+    """Insert one directive, a whole ``.control``/``.if`` block or a ``.lib`` statement at
+    ``placement`` (top level)."""
+    lines = _physical_lines(text, "directives.add")
+    item = _addable(netlist, lines, "directives.add")
+    return [_line_insertion(netlist, lines, type(item), placement, "directives.add")]
 
 
-def replace_directive(netlist: Netlist, target: Line | object, text: str) -> list[Edit]:
-    """Replace a whole directive line with one directive line."""
+def replace_directive(netlist: Netlist, target: Line | object, text: DirectiveText) -> list[Edit]:
+    """Replace a whole directive or opaque line with one directive, block or ``.lib``."""
     line = _directive_line(netlist, target, "directives.replace")
-    item = _directive(netlist, text, "directives.replace")
+    lines = _physical_lines(text, "directives.replace")
+    item = _addable(netlist, lines, "directives.replace")
     terminator = conventions.terminator_before(netlist.source, line.span.end)
-    check = SlotCheck((type(item),), f"one `{type(item).__name__}` line")
-    return [Edit(line.span, text + terminator, "directives.replace", (check,))]
+    check = SlotCheck((type(item),), f"one `{type(item).__name__}` item")
+    return [Edit(line.span, _joined(lines, terminator), "directives.replace", (check,))]
 
 
 def remove_directive(netlist: Netlist, target: Line | object) -> list[Edit]:
-    """Remove a whole directive line."""
+    """Remove a whole directive line, opaque block or ``.include``/``.lib`` statement."""
     line = _directive_line(netlist, target, "directives.remove")
     return [Edit(line.span, "", "directives.remove")]
 
 
-def set_directive(netlist: Netlist, text: str) -> list[Edit]:
+def set_directive(netlist: Netlist, text: DirectiveText) -> list[Edit]:
     """Upsert a singleton directive (decision 0007 item 7)."""
-    item = _directive(netlist, text, "directives.set")
+    lines = _physical_lines(text, "directives.set")
+    item = _addable(netlist, lines, "directives.set")
     kind = type(item)
     if not issubclass(kind, SINGLETON_DIRECTIVES):
         raise EditError(
-            f"directives.set: `{text}` is a repeatable directive ({kind.__name__}); use "
-            "directives.add, replace or remove"
+            f"directives.set: {_show(lines)} is a repeatable directive or an opaque item "
+            f"({kind.__name__}); use directives.add, replace or remove"
         )
     existing = netlist.lines.find_all(kind)
     if len(existing) > 1:
@@ -507,8 +573,8 @@ def set_directive(netlist: Netlist, text: str) -> list[Edit]:
             "line to replace is ambiguous; use directives.replace(line, …)"
         )
     if existing:
-        return replace_directive(netlist, existing[0], text)
-    return [_line_insertion(netlist, text, kind, Placement.BEFORE_END, "directives.set")]
+        return replace_directive(netlist, existing[0], lines)
+    return [_line_insertion(netlist, lines, kind, Placement.BEFORE_END, "directives.set")]
 
 
 def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
@@ -516,10 +582,10 @@ def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
     item = line.item
     if isinstance(item, _TOPOLOGY_ITEMS):
         raise TopologyError(
-            f"{what}: line {line.first_line} is a {_describe_item(item)}, which is topology or "
-            "opaque and cannot be replaced or removed (architecture §7.3)"
+            f"{what}: line {line.first_line} is a {_describe_item(item)}, which is topology and "
+            "cannot be replaced or removed (architecture §7.3)"
         )
-    if not isinstance(item, (Directive, UnknownDirective)):
+    if not isinstance(item, _DIRECTIVE_LINES):
         raise EditError(
             f"{what}: line {line.first_line} is a {_describe_item(item)}, not a directive"
             + ("; parameters and models are edited, not removed" if _is_property(item) else "")
@@ -533,22 +599,27 @@ def add_include(
     netlist: Netlist, path: str, placement: Placement = Placement.AFTER_TITLE
 ) -> list[Edit]:
     """Insert ``.include "path"`` (architecture §7.9); the path is never read."""
-    text = conventions.include_statement(path)
-    item = classify_line(netlist, text, "add_include")
+    lines = (conventions.include_statement(path),)
+    item = classify_text(netlist, lines, "add_include")
     assert isinstance(item, OpaqueStatement)  # one line starting `.include` or a parse error
     for line in netlist.lines.walk():
         if isinstance(line.item, OpaqueStatement) and line.item.raw == item.raw:
             raise EditError(f"add_include: line {line.first_line} already includes `{path}`")
-    return [_line_insertion(netlist, text, OpaqueStatement, placement, "add_include")]
+    return [_line_insertion(netlist, lines, OpaqueStatement, placement, "add_include")]
 
 
 def _line_insertion(
-    netlist: Netlist, text: str, kind: type, placement: Placement, reason: str
+    netlist: Netlist, lines: tuple[str, ...], kind: type, placement: Placement, reason: str
 ) -> Edit:
     point = insertion_point(placement, netlist)
     terminator = conventions.terminator_before(netlist.source, point)
-    check = SlotCheck((kind,), f"one `{kind.__name__}` line")
-    return Edit(Span(point, point), text + terminator, reason, (check,))
+    check = SlotCheck((kind,), f"one `{kind.__name__}` item")
+    return Edit(Span(point, point), _joined(lines, terminator), reason, (check,))
+
+
+def _joined(lines: tuple[str, ...], terminator: str) -> str:
+    """The physical lines, each ended by ``terminator`` (decision 0007 item 4)."""
+    return "".join(line + terminator for line in lines)
 
 
 # Helpers.
@@ -560,8 +631,8 @@ def _insert(point: int, text: str, reason: str, check: SlotCheck, start: int) ->
 
 
 def _last_field_end(node: object) -> int:
-    """The end of the last field of an element or ``.model`` line (its span and comments
-    excluded): where an added parameter goes (decision 0007 item 5)."""
+    """The end of the last field of an element line (its span and comments excluded): where an
+    added parameter goes (decision 0007 item 5)."""
     assert is_dataclass(node) and not isinstance(node, type)
     end = 0
     for field in fields(node):

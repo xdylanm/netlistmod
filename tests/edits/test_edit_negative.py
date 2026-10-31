@@ -45,6 +45,9 @@ _TEXT = (
     ".control\n"
     "run\n"
     ".endc\n"
+    ".if (1)\n"
+    "Rc out 0 1k\n"
+    ".endif\n"
     ".op\n"
     ".end\n"
 )
@@ -104,12 +107,31 @@ _CRAFTED: list[tuple[str, Crafted]] = [
     ),
     ("remove .global", lambda n: [Edit(_span(n, ".global vcc\n"), "")]),
     ("edit a .control block", lambda n: [Edit(_span(n, "run"), "tran 1u 1m")]),
-    ("remove a .control block", lambda n: [Edit(_line(n, OpaqueBlock), "")]),
-    ("remove an .include", lambda n: [Edit(_line(n, OpaqueStatement), "")]),
+    ("insert into a .control block", lambda n: [Edit(_point(n, "run"), "op\n")]),
+    ("cut a .control block in half", lambda n: [Edit(_span(n, ".control\nrun\n"), "")]),
     ("change an .include", lambda n: [Edit(_span(n, "models.lib"), "other.lib")]),
+    ("edit inside an .if block", lambda n: [Edit(_span(n, "Rc out 0 1k"), "Rc out 0 2k")]),
+]
+
+# Whole opaque items may be added, removed or replaced (review round 1): what they contain is
+# not verified (architecture §7.8), so these are allowed even though they may change the circuit.
+_WHOLE_OPAQUE: list[tuple[str, Crafted]] = [
+    ("remove a .control block", lambda n: [Edit(_line(n, OpaqueBlock), "")]),
+    ("remove an .if block", lambda n: [Edit(_line(n, OpaqueBlock, 1), "")]),
+    ("remove an .include", lambda n: [Edit(_line(n, OpaqueStatement), "")]),
+    ("add an .include", lambda n: [Edit(_point(n, ".op\n"), ".include harness.cir\n")]),
+    ("add a .lib", lambda n: [Edit(_point(n, ".op\n"), ".lib models.lib tt\n")]),
     (
         "add a conditional block",
         lambda n: [Edit(_point(n, ".op\n"), ".if (1)\nR9 out 0 1k\n.endif\n")],
+    ),
+    (
+        "replace a .control block",
+        lambda n: [Edit(_line(n, OpaqueBlock), ".control\ntran 1u 1m\n.endc\n")],
+    ),
+    (
+        "remove a directive and the block after it",
+        lambda n: [Edit(_line(n, OpaqueStatement).hull(_line(n, OpaqueBlock)), "")],
     ),
 ]
 
@@ -129,10 +151,14 @@ def test_crafted_plans_that_change_topology_raise(craft: Crafted, tmp_path: Path
     assert list(tmp_path.iterdir()) == []
 
 
-def test_an_added_include_is_the_one_opaque_change_allowed() -> None:
+@pytest.mark.parametrize(
+    "craft", [case[1] for case in _WHOLE_OPAQUE], ids=[case[0] for case in _WHOLE_OPAQUE]
+)
+def test_whole_opaque_items_may_be_added_or_removed(craft: Crafted) -> None:
     netlist = _netlist()
-    edited = netlist.apply([Edit(_point(netlist, ".op\n"), ".include harness.cir\n")])
+    edited = netlist.apply(craft(netlist))
     assert edited.signature() == netlist.signature()
+    assert edited.text != netlist.text
 
 
 Misuse = Callable[[Netlist], object]
@@ -140,9 +166,8 @@ Misuse = Callable[[Netlist], object]
 _TOPOLOGY_ERRORS: list[tuple[str, Misuse]] = [
     ("replace an element line", lambda n: n.directives.replace(n.lines.find(Resistor), ".op")),
     ("remove an element line", lambda n: n.directives.remove(n.lines.find(Resistor))),
-    ("remove an .include", lambda n: n.directives.remove(n.lines.find(OpaqueStatement))),
-    ("edit an opaque block", lambda n: n.directives.replace(n.lines.find(OpaqueBlock), ".op")),
     ("add an element as a directive", lambda n: n.directives.add("R9 a 0 1k")),
+    ("add an element as a list", lambda n: n.directives.add(["R9 a 0", "+ 1k"])),
     ("add a .subckt as a directive", lambda n: n.directives.add(".subckt s a\n.ends")),
     ("remove .global", lambda n: n.directives.remove(n.lines[1])),
     ("remove a subcircuit", lambda n: n.directives.remove(n.lines.find(SubcktDefinition))),

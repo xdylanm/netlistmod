@@ -3,15 +3,16 @@
 Every plan is applied and verified in five steps, and a failure raises before anything is
 returned or written:
 
-1. the splice (§7.5 rules, :func:`~netlistmod.edit.plan.apply_edits`);
+1. the splice (§7.5 rules, :func:`~netlistmod.edit.plan.apply_edits`), and a check that no
+   edit cuts into an opaque item of the original (``.control`` and ``.if`` blocks,
+   ``.include`` and ``.lib`` statements): such an item is added, removed or replaced whole,
+   never edited (§7.3; ``TopologyViolation``). The signature does not cover opaque content, so
+   without this a plan could edit inside a block unnoticed. It runs before the re-parse, so a
+   cut block is reported as such even when the remains do not parse;
 2. a re-parse with the same dialect and ``rkm`` (a failure is an ``EditError`` carrying the
    ``ParseError``);
 3. the topology signature compared with the one taken when the original file was loaded
-   (``TopologyViolation``, naming the first differing entry), and the opaque items
-   (``.control`` and ``.if`` blocks, ``.include`` and ``.lib`` statements) compared with those
-   of the text the plan was applied to: unchanged and in order, except for added ``.include``
-   statements (§7.9). The signature does not cover opaque content, so without this a plan could
-   edit a block or drop an include unnoticed (§7.3);
+   (``TopologyViolation``, naming the first differing entry);
 4. a check that every character outside the edited spans is unchanged (always on);
 5. the slot check: each :class:`~netlistmod.edit.plan.SlotCheck` of an edit names a part of
    its text that must re-parse as a node of the expected kind with exactly that span.
@@ -49,6 +50,7 @@ def apply_plan(
     """Apply ``plan`` to ``source`` (whose parse is ``original``), verify the result and return
     it built by ``build``."""
     text = apply_edits(source.text, plan)
+    check_opaque(source.text, original, plan)
     edited = source.with_text(text)
     try:
         result = parse(edited, dialect, rkm=rkm)
@@ -58,7 +60,6 @@ def apply_plan(
         raise EditError(f"the edited netlist does not parse{context}: {error}") from error
     netlist = build(edited, result)
     check_signature(baseline, netlist.signature())
-    check_opaque(source.text, original, text, result)
     check_outside(source.text, text, plan)
     check_slots(text, result, plan)
     return netlist
@@ -83,35 +84,25 @@ def check_signature(baseline: TopologySignature, signature: TopologySignature) -
     )
 
 
-def check_opaque(original_text: str, original: ParseResult, text: str, result: ParseResult) -> None:
-    """``TopologyViolation`` unless the opaque items are unchanged, apart from added
-    ``.include`` statements."""
-    before = _opaque(original_text, original)
-    after = _opaque(text, result)
-    remaining = iter(before)
-    expected = next(remaining, None)
-    for item in after:
-        if item == expected:
-            expected = next(remaining, None)
-        elif item[0] != "include":
-            raise TopologyViolation(
-                f"the edit adds or changes an opaque `.{item[0]}` item ({item[1].strip()!r}); "
-                "opaque blocks and statements are not edited (architecture §7.3); nothing was "
-                "written"
-            )
-    if expected is not None:
-        raise TopologyViolation(
-            f"the edit removes or changes the opaque `.{expected[0]}` item "
-            f"({expected[1].strip()!r}) (architecture §7.3); nothing was written"
-        )
+def check_opaque(original_text: str, original: ParseResult, plan: EditPlan) -> None:
+    """``TopologyViolation`` if an edit cuts into an opaque item of the original text.
 
-
-def _opaque(text: str, result: ParseResult) -> list[tuple[str, str]]:
-    return [
-        (node.kind, text[span.start : span.end])
-        for node, span in _spanned(result.items)
-        if isinstance(node, OpaqueBlock | OpaqueStatement)
-    ]
+    A ``.control`` or ``.if`` block or an ``.include``/``.lib`` statement is a black box
+    (architecture §6.6, §7.3): an edit may leave it alone, remove or replace it whole, or insert
+    next to it, but may not touch part of it (review round 1).
+    """
+    for node, span in _spanned(original.items):
+        if not isinstance(node, OpaqueBlock | OpaqueStatement):
+            continue
+        for edit in plan:
+            whole = edit.span.start <= span.start and span.end <= edit.span.end
+            if edit.span.overlaps(span) and not whole:
+                text = original_text[span.start : span.end].strip().splitlines()[0]
+                raise TopologyViolation(
+                    f"{edit.reason or 'an edit'} changes part of the opaque `.{node.kind}` item "
+                    f"{text!r}; opaque items are added or removed whole, never edited "
+                    "(architecture §7.3); nothing was written"
+                )
 
 
 def check_outside(original: str, text: str, plan: EditPlan) -> None:
