@@ -142,12 +142,22 @@ preserved when an atomic write replaces a file.
 
 ## Writing golden tests
 
-Keep the input fixture immutable. Copy it to a temporary directory, apply the
-operation to the copy, and compare the complete expected output (or a unified
-diff) so unrelated formatting changes are caught. Preserve byte-level cases
-such as CRLF, mixed endings, missing final newlines, BOMs, tabs, and trailing
-whitespace; put golden files in `tests/golden/` so Git and pre-commit do not
-rewrite them.
+Golden edit cases (T4 tier) live in `tests/corpus/ngspice/edits_golden/`
+(`.gitattributes` keeps them byte-exact; pre-commit excludes `tests/corpus/`).
+Each case in that family's `manifest.json` names an input fixture, a list of
+steps and an expected fixture; `tests/edits/golden.py` documents the step format
+and `tests/edits/test_edit_golden.py` compares the result byte for byte, with a
+unified diff in the failure message. To add a case:
+
+1. Add (or reuse) an input `.cir`; never edit an existing input in place.
+2. Add the case to `cases` in the manifest, with `"expected": "<case>.expected.cir"`.
+3. Produce the expected file by running the case (`tests.edits.golden.run_case`)
+   and **review the diff against the input by hand**: only the intended slots
+   or lines may change, with the line endings of their neighbours.
+4. Record the SHA-256 of every new file under `fixtures`.
+
+Preserve byte-level cases such as CRLF, mixed endings, missing final newlines,
+BOMs, tabs, and trailing whitespace.
 
 ## M0 verification findings (2026-10-20)
 

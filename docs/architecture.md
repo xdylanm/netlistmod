@@ -194,6 +194,7 @@ repo/
       api.py                 # restricted public editing operations
       placement.py           # directive placement strategies
       verify.py              # write-time verification
+      conventions.py         # text conventions of inserted lines (decision 0007)
   tests/
     unit/  grammar/  roundtrip/  edits/  property/  negative/  architecture/  solver/
     corpus/<dialect>/<family>/        # provenance-tracked fixtures
@@ -330,11 +331,12 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 
 - Set a numeric value, or replace it with a formula or parameter reference (`R1 a b 10k` → `R1 a b {Rx}`).
 - Set or add an instance parameter on an existing element.
-- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the same model type as the current one.
-- Add or set a `.param`; edit `.model` parameters.
-- Edit source stimulus specifications of existing sources.
-- Add, replace or remove directives, with a placement strategy (after title, after the last `.param`, before `.end`, relative to an anchor `Line`).
+- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`), which is the type of the current one. A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
+- Add or set a `.param` (upsert: the effective assignment of the name in the scope is replaced, otherwise a line is added); edit `.model` parameters.
+- Edit source stimulus specifications of existing sources (phase 1: the DC value and the AC magnitude and phase).
+- Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed.
 - Add an `.include` of a harness file as a directive.
+- Inserted text follows the conventions of decision 0007 (line ending of the preceding line, lowercase dot-command keywords, `name=value`, nothing after `.end`). The API and the slots each operation edits: [docs/design/m6-edits.md](design/m6-edits.md).
 
 ### 7.3 Forbidden operations (raise `TopologyError` or have no API)
 
@@ -342,22 +344,26 @@ Adding, removing or reordering elements; changing any node of an element; changi
 
 ### 7.4 Edit scope inside subcircuits
 
-Elements inside `.subckt` are addressed by hierarchical path. An edit to the definition affects **every instance** and requires an explicit `scope=Definition` argument. The topology-safe per-instance alternative is an instance-parameter override on the `X` line (`X1 a b amp Rx=5k` where `.subckt amp` is defined elsewhere).
+Elements inside `.subckt` are addressed by designator and definition scope (`scope=("amp",)`, a tuple of subcircuit names as in Section 8). An edit to the definition affects **every instance** and requires the explicit argument `in_definition=True`; a non-empty `scope` without it is an `EditError` ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)). The topology-safe per-instance alternative is an instance-parameter override on the `X` line (`X1 a b amp Rx=5k` where `.subckt amp` is defined elsewhere).
 
 ### 7.5 Edit plans
 
 - An `Edit` is `(Span, replacement_text)` plus a reason string for diagnostics. An `EditPlan` is a list of edits.
 - Application rules: edits are sorted by position; they MUST NOT overlap; zero-width insertions are allowed; multiple insertions at the same position keep their submission order; offsets always refer to the **original** text; the original `SourceText` is never mutated.
 - Typical uses: value replacement (non-zero-width span), directive insertion (zero-width span at an anchor line boundary).
+- Editing is immutable and eager ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)): each operation builds a plan against the current text, applies and verifies it, and returns a new `Netlist`. `Netlist.batch()` collects several operations into **one** plan with one re-parse and verification, all or nothing. Two edits to the same span in one plan are an `EditError`. `Netlist.apply(plan)` applies a caller's plan with the same verification.
 
 ### 7.6 Write-time verification
 
-On `save()` (and on request via `verify()`):
+On every applied plan, and again on `save()` (and on request via `verify()`):
 
 1. Apply the plan to the original text.
-2. Re-parse the result with the same dialect. A parse failure is an error and nothing is written.
-3. Compute the topology signature of the result and compare with the signature taken at load. Any difference raises `TopologyViolation`.
-4. (Debug/test mode) assert that all text outside edited spans is identical to the original.
+2. Re-parse the result with the same dialect and `rkm` option. A parse failure is an `EditError` carrying the `ParseError`, and nothing is written.
+3. Compute the topology signature of the result and compare with the signature taken when the original file was loaded. Any difference raises `TopologyViolation`. The opaque items (`.control`/`.if` blocks, `.include`/`.lib` statements) must also be unchanged and in order, apart from added `.include` statements (Section 7.9), since the signature does not cover them.
+4. Check that all text outside edited spans is identical to the original. This check is always on.
+5. Slot check: each edited slot re-parses as a node of the expected kind whose text is exactly the replacement. This verifies where an edit landed (`1k 2k` as a value would add a model); it does not validate the caller's value ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
+
+`save()` encodes in the original encoding (`EncodingError` before anything is written) and writes atomically.
 
 ### 7.7 Topology signature
 
@@ -563,6 +569,8 @@ Rules: documentation changes ship in the same change as the code; usage examples
 
 ## 16. Public API sketch (illustrative, not frozen)
 
+The implemented API is specified in [docs/design/m6-edits.md](design/m6-edits.md) ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)); edit methods return a new `Netlist`. The sketch below is the original illustration.
+
 ```python
 from netlistmod import Netlist, Dialect, Placement
 
@@ -598,7 +606,7 @@ SpiceNetlistError
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`.
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`.
 
 A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNKNOWN_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
 
@@ -633,7 +641,7 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 | 15 | Docs site generator | Plain Markdown in `docs/` |
 | 16 | Name case sensitivity and net identity | Defined per dialect in `docs/grammars/<dialect>/names.md` |
 | 17 | Dialect selection | Always explicit from the caller; no default, no auto-detection |
-| 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility) |
+| 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility). The write-time slot check (Section 7.6, step 5) verifies only that the text lands as a slot of the intended kind ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)) |
 | 19 | ngspice structural source policy | Strict, per the manual: the first line is always the title (flagged implicit or explicit); `.title` later replaces the displayed title; `.end` is required and last, with only blank lines after it; a missing final newline after `.end` is tolerated; `.control` after `.end` is rejected. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
 | 20 | Grammar composition and registry | Dialect overlays import `core.lark`; `grammar/loader.py` owns the registry; all syntax, including continuations and opaque blocks, is expressed in the grammar (P13). See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
 | 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The only exception in v1 is the RKM mode option (decision 8). Further exceptions need a decision record. |
@@ -658,19 +666,21 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 
 **Unresolved (need a decision before the edit layer is designed)**
 
-1. **Edit lifecycle.** Section 3 says the document is re-parsed "after every edit set" and Section 7.6 verifies on `save()`. Open points:
+Both questions below are resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (M6); they are kept for the record.
+
+1. ~~**Edit lifecycle.**~~ Resolved: immutable and eager, with batches. Section 3 says the document is re-parsed "after every edit set" and Section 7.6 verifies on `save()`. Open points:
    - Are edits staged (applied only at save or an explicit commit) or applied eagerly?
    - Can the caller read back after an edit (e.g. `references_to_param` right after `params.add`)?
    - What happens to element handles after a re-parse?
    - What is the boundary of an "edit set"?
    - How are two edits to the same span handled (error or last-wins), given that edits MUST NOT overlap?
-2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is open for M6.
+2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`EditError`, or `allow_external=True` when an `.include`/`.lib` is in scope).
 
 **Deferred to design documents and implementation (resolve with tests)**
 
-- Text conventions for inserted lines (EOL style, EOF without newline, keyword case, `.param` form) and placement semantics.
-- Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).
+- ~~Text conventions for inserted lines (EOL style, EOF without newline, keyword case, `.param` form) and placement semantics.~~ Resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md).
+- ~~Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).~~ Resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md).
 - ~~The line model for continuation lines, interleaved comments and anchor-relative insertion.~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 5.4).
-- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only). The read-only part (definition-scope tuples) is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); the edit argument (`scope=Definition`, Section 7.4) and any string path form remain for M6.
+- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only). The read-only part (definition-scope tuples) is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); the edit argument is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`scope=` plus `in_definition=True`, Section 7.4); there is no string path form.
 - ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md).
 - ~~The diagnostics API (delivery and severity).~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 17).

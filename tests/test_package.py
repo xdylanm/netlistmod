@@ -89,9 +89,19 @@ def test_public_exports_and_version() -> None:
         "SubcktDefinition",
         "TempDirective",
         "TranDirective",
+        "Batch",
+        "DirectiveEditor",
+        "Edit",
+        "EditPlan",
+        "ParamTable",
+        "Placement",
+        "SlotCheck",
+        "apply_edits",
         "__version__",
         "parse",
     }
     assert set(netlistmod.__all__) == expected
     assert netlistmod.__version__ == version("netlistmod")
     assert all(hasattr(netlistmod, name) for name in expected)
+    assert netlistmod.Netlist is netlistmod.edit.Netlist
+    assert issubclass(netlistmod.Netlist, netlistmod.document.Netlist)

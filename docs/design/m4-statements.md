@@ -2,7 +2,8 @@
 
 > **Status:** ACTIVE — reviewed with M4 (2026-10-31); the shapes that shipped with M4 (D2 of
 > [m4-tasks.md](./archive/m4-tasks.md)); [decision 0005](../decisions/0005-statement-and-directive-grammar.md)
-> records why. The reference for directive and statement edits in M6.
+> records why. Kept ACTIVE after M6 as the reference for statement shapes; the
+> statement and directive operations are specified in [m6-edits.md](./m6-edits.md).
 
 ## 1. Node shapes
 

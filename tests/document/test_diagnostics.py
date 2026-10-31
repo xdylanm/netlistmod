@@ -24,6 +24,13 @@ def _codes(body: str, **options: bool) -> list[tuple[DiagnosticCode, str, str]]:
         ("V1 IN 0 DC 3\nR1 in OUT 1k\nR2 out 0 1k", []),
         ("R1 a b 1\nr1 a b 2", [(C.DUPLICATE_ELEMENT, "warning", "r1")]),
         ("D1 a 0 DMOD\n.model dmod d", []),
+        ("D1 a 0 qm\n.model qm npn", [(C.MODEL_TYPE_MISMATCH, "warning", "qm")]),
+        ("R1 a 0 1k rm\n.model rm C", [(C.MODEL_TYPE_MISMATCH, "warning", "rm")]),
+        ("C1 a 0 cm\n.model cm c\nL1 a 0 lm\n.model lm L\nR1 a 0 rm\n.model rm R", []),
+        (
+            "D1 a 0 dm\n.subckt s p\nD1 p 0 dm\n.model dm npn\n.ends\n.model dm d",
+            [(C.MODEL_TYPE_MISMATCH, "warning", "dm")],
+        ),
         ("D1 a 0 dm", [(C.UNRESOLVED_MODEL, "warning", "dm")]),
         ("D1 a 0 dm\n.include models.lib", [(C.UNRESOLVED_MODEL, "info", "dm")]),
         ("X1 in out DIV\n.subckt div a b\nR1 a b 1\n.ends", []),

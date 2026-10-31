@@ -2,7 +2,7 @@
 
 `Netlist` is the read-only document layer (M5). It parses a netlist with an explicit dialect
 and answers queries about its lines, symbol tables, references, topology and diagnostics.
-Editing and `save()` arrive in M6. The rules behind the answers are in
+Editing and `save()` are described in [editing.md](./editing.md) (M6). The rules behind the answers are in
 [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md);
 the API is listed in [m5-document.md](../design/m5-document.md). The examples below are
 executed by the test suite.

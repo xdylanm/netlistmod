@@ -3,6 +3,8 @@
 > **Status:** ACTIVE — reviewed with M3 (2026-10-30); the reference for element shapes and spans
 > until M6 edits build on them (D2 of [m3-tasks.md](./archive/m3-tasks.md)). Records the shapes
 > that shipped; [decision 0004](../decisions/0004-element-and-value-grammar.md) records why.
+> Kept ACTIVE after M6: the element operations of [m6-edits.md](./m6-edits.md)
+> edit the sub-spans of section 4, and m6-edits.md §2 adds where new fields go.
 
 ## 1. Node and value shapes
 

@@ -1,0 +1,7 @@
+Golden divider (CRLF)
+.param rtop=2k
+V1 in 0 DC 3
+R1 in out {rtop} tc1=1m ; top
+R2 out 0 1k
+.op
+.end

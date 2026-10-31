@@ -3,7 +3,8 @@
 > **Status:** ACTIVE — accepted by the maintainer (2026-10-31); implemented with M5; D2 of [m5-tasks.md](./archive/m5-tasks.md).
 > [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md) records why.
 > The reference M6 builds its edit API on. Rules: [names.md](../grammars/ngspice/names.md),
-> [scoping.md](../grammars/ngspice/scoping.md).
+> [scoping.md](../grammars/ngspice/scoping.md). Kept ACTIVE after M6: the edit layer
+> ([m6-edits.md](./m6-edits.md)) extends this `Netlist` and adds `MODEL_TYPE_MISMATCH`.
 
 ## 1. Public API
 
@@ -129,7 +130,8 @@ separators=(",", ":"))` encoded as UTF-8.
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNKNOWN_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 
-Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` is **deferred** to
+Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
+the model name) was added by M6 ([m6-edits.md](./m6-edits.md) §6). It was **deferred** to
 M6 (T7): the element-to-model-type table belongs with §7.2's same-type rule for `set_model`, and
 M5 has no edit that needs it.
 

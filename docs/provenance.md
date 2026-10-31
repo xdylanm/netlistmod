@@ -21,4 +21,5 @@ do not normalize line endings or whitespace.
 | `ngspice/elements_basic`, `ngspice/elements_rejects` | Authored in this repository (M3); manual examples paraphrased | xdylanm | MIT |
 | `ngspice/statements_basic`, `ngspice/statements_rejects` | Authored in this repository (M4); manual examples paraphrased | xdylanm | MIT |
 | `ngspice/document_basic` | Authored in this repository (M5); expected query results in the manifest | xdylanm | MIT |
+| `ngspice/edits_golden` | Authored in this repository (M6); golden edit inputs and expected outputs, reviewed by hand | xdylanm | MIT |
 | `ltspice/encoding_samples`, `ltspice/m0_export_candidate` | LTspice exports of circuits authored here | xdylanm | MIT |

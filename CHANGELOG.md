@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Add the edit layer (M6, decision 0007). `netlistmod.Netlist` (a subclass of the
+  read-only `netlistmod.document.Netlist`) gains `set_value`, `set_formula`,
+  `set_param`, `set_model` (type-checked, `allow_external=True` for models an
+  `.include` may define), `set_dc`, `set_ac`, `set_coupling`,
+  `set_instance_param`, `set_model_param`, `params.set` (upsert),
+  `directives.add/replace/remove/set` with `Placement`, `add_include`, `batch()`,
+  `apply(plan)`, `verify()` and `save(path=None)`. Edits are immutable and eager:
+  each returns a new netlist, re-parsed and verified (signature against the load,
+  opaque items, text outside the edits, slot checks); `TopologyError` and
+  `TopologyViolation` guard topology. Low-level `Edit`, `EditPlan`, `SlotCheck`
+  and `apply_edits` are public. Element scopes need `in_definition=True`.
+- New diagnostic `MODEL_TYPE_MISMATCH` (warning): an element's resolved model has
+  a type not allowed for its letter (R → `R`, C → `C`, L → `L`, D → `D`;
+  `document/model-types.json`).
+- `Netlist.load`, `from_text` and `from_source` return `Self`.
 - Add the read-only document layer (M5, decision 0006): `Netlist.load`,
   `Netlist.from_text` and `Netlist.from_source` (explicit dialect), logical
   `Line`/`Lines` with search and insertion points, definition `Scope`s with

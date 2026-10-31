@@ -12,8 +12,15 @@ from enum import StrEnum
 from typing import Literal
 
 from netlistmod.document.index import Index, Reference, Scope, walk_nodes
+from netlistmod.document.models import allowed_model_types, model_type_allowed
 from netlistmod.document.names import fold
-from netlistmod.model.nodes import SubcktDefinition, SubcktInstance, UnknownDirective
+from netlistmod.model.nodes import (
+    Component,
+    ModelStatement,
+    SubcktDefinition,
+    SubcktInstance,
+    UnknownDirective,
+)
 from netlistmod.model.values import NumericValue
 from netlistmod.source import SourceText, Span
 
@@ -31,6 +38,7 @@ class DiagnosticCode(StrEnum):
     DUPLICATE_ELEMENT = "DUPLICATE_ELEMENT"
     SUBCKT_PORT_MISMATCH = "SUBCKT_PORT_MISMATCH"
     PARAM_USED_BEFORE_DEFINITION = "PARAM_USED_BEFORE_DEFINITION"
+    MODEL_TYPE_MISMATCH = "MODEL_TYPE_MISMATCH"
     ENDS_NAME_MISMATCH = "ENDS_NAME_MISMATCH"
     DIALECT_GATED_SYNTAX = "DIALECT_GATED_SYNTAX"
     RKM_SOLVER_MISMATCH = "RKM_SOLVER_MISMATCH"
@@ -126,6 +134,24 @@ def _reference_findings(
             )
         )
     owner = reference.owner
+    target = reference.target
+    if (
+        reference.kind == "model"
+        and isinstance(target, ModelStatement)
+        and isinstance(owner, Component)
+        and not model_type_allowed(owner, target.model_type)
+    ):
+        allowed = ", ".join(f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner)))
+        findings.append(
+            (
+                DiagnosticCode.MODEL_TYPE_MISMATCH,
+                "warning",
+                f"`{owner.designator}` refers to model `{target.name}` of type "
+                f"`{target.model_type}`, but a {type(owner).__name__.lower()} takes a model of "
+                f"type {allowed} (§2.5)",
+                reference.span,
+            )
+        )
     if (
         reference.kind == "subckt"
         and isinstance(reference.target, SubcktDefinition)

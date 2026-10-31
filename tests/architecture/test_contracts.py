@@ -185,6 +185,11 @@ def test_document_does_not_import_regular_expressions() -> None:
     assert _regex_imports(SOURCE / "document") == []
 
 
+def test_edit_does_not_import_regular_expressions() -> None:
+    # P13 (M6): edits take spans from the nodes and compose text; they never scan for syntax.
+    assert _regex_imports(SOURCE / "edit") == []
+
+
 def test_regex_import_guard_detects_deliberate_violation(tmp_path: Path) -> None:
     (tmp_path / "bad.py").write_text("from re import compile\n", encoding="utf-8")
     assert _regex_imports(tmp_path) == [str(tmp_path / "bad.py")]

@@ -23,4 +23,6 @@ L1 a 0 1u
 K1 L1 L9 0.5
 .dc VSWEEP 0 1 0.1
 .print dc v(a)
+D2 c 0 qm
+.model qm npn
 .end

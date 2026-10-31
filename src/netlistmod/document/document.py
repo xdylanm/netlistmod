@@ -2,13 +2,15 @@
 
 A :class:`Netlist` holds the source text and its parse (P1). Its lines, scopes, symbol tables,
 references, topology and diagnostics are views over that parse; nothing is copied or edited.
-Editing and ``save()`` arrive in M6 together with write-time verification (§7.6).
+Editing and ``save()`` are added by :class:`netlistmod.edit.Netlist`, which extends this class
+(decision 0007); ``document/`` does not import ``edit/``.
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import Mapping, Sequence
+from typing import Self
 
 from netlistmod.dialects import Dialect
 from netlistmod.document.diagnostics import Diagnostic, collect_diagnostics
@@ -68,18 +70,18 @@ class Netlist:
         dialect: Dialect,
         rkm: bool = False,
         fallback_encodings: Sequence[str] = DEFAULT_FALLBACKS,
-    ) -> Netlist:
+    ) -> Self:
         """Read and parse a file (bytes, no newline translation; decision 0001)."""
         source = SourceText.read(path, fallback_encodings=fallback_encodings)
         return cls.from_source(source, dialect=dialect, rkm=rkm)
 
     @classmethod
-    def from_text(cls, text: str, *, dialect: Dialect, rkm: bool = False) -> Netlist:
+    def from_text(cls, text: str, *, dialect: Dialect, rkm: bool = False) -> Self:
         """Parse decoded text; it is saved as UTF-8 without a BOM."""
         return cls.from_source(SourceText(text), dialect=dialect, rkm=rkm)
 
     @classmethod
-    def from_source(cls, source: SourceText, *, dialect: Dialect, rkm: bool = False) -> Netlist:
+    def from_source(cls, source: SourceText, *, dialect: Dialect, rkm: bool = False) -> Self:
         """Parse a :class:`SourceText`."""
         return cls(source, parse(source, dialect, rkm=rkm), dialect=dialect, rkm=rkm)
 

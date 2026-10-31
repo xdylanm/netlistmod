@@ -1,0 +1,34 @@
+Golden amplifier (LF)
+* parameters
+.param gain=20
+.param rload=10k ; load
+.param rsrc=50
+V1 in 0 DC 1 AC 1
+Vbias vb 0 5
+R1 in mid 1k
+R2	mid out	r=2k	$ tabbed
+R3 out 0 rmod
++ w=2u l=10u
+R4 out 0 \\
+4.7k ; continued with backslashes
+C1 out 0 1p
+L1 a 0 1u
+L2 b 0 1u
+K1 L1 L2 0.9
+D1 out 0 dmod off
+X1 in out amp gain=5
+.subckt amp p q gain=1
+Ra p q {gain*1k}
+.param rint=1k
+Rb q 0 {rint}
+.ends amp
+.model rmod r rsh=1
+.model dmod d(is=1e-14 n=1)
+.model dmod2 d
+.tran 1u 1m
+.options reltol=1e-3
+.save v(out)
+.control
+run
+.endc
+.end

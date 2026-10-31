@@ -1,0 +1,5 @@
+Golden divider (CRLF)
+V1 in 0 DC 3
+R1 in out 1k ; top
+R2 out 0 1k
+.end

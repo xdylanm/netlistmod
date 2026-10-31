@@ -1,6 +1,6 @@
 # M6 task list — edit layer (ngspice)
 
-> **Status:** READY — approved by the maintainer (2026-10-31); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — implemented 2026-10-31 (section 9); approved by the maintainer (2026-10-31); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M6). Governed by [architecture.md](../architecture.md) (§2 P1–P4, P11; §3 layers [4]–[5]; §7 (normative); §10 T4–T6; §16; §17; §19 decision 18; §21). Builds on the design notes [m3-elements.md](./m3-elements.md) (element sub-spans), [m4-statements.md](./m4-statements.md) (statement and directive sub-spans), and [m5-document.md](./m5-document.md) (`Netlist`, `Lines`, scopes, references, signature). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -109,22 +109,24 @@ The maintainer accepted every recommendation below as written (2026-10-31). "Rec
 nl = Netlist.load("amp.cir", dialect=Dialect.NGSPICE)
 
 nl2 = nl.set_value("R22", "2.2k")
-nl2 = nl.set_formula("R1", "Rx")                         # R1 a b {Rx}
-nl2 = nl.set_param("R1", "tc1", "2m")                    # instance parameter, set or add
-nl2 = nl.set_model("D1", "dmod2")                        # EditError if not type D
-nl2 = nl.set_dc("V1", "5"); nl.set_ac("V1", "1", phase="90")
+nl2 = nl.set_formula("R1", "Rx")  # R1 a b {Rx}
+nl2 = nl.set_param("R1", "tc1", "2m")  # instance parameter, set or add
+nl2 = nl.set_model("D1", "dmod2")  # EditError if not type D
+nl2 = nl.set_dc("V1", "5")
+nl.set_ac("V1", "1", phase="90")
 nl2 = nl.set_coupling("K1", "0.95")
-nl2 = nl.set_instance_param("X1", "r2", "5k")            # per-instance override (§7.4)
-nl2 = nl.params.set("Rx", "22k")                         # upsert (decision 7)
+nl2 = nl.set_instance_param("X1", "r2", "5k")  # per-instance override (§7.4)
+nl2 = nl.params.set("Rx", "22k")  # upsert (decision 7)
 nl2 = nl.set_model_param("dmod", "is", "1e-14")
-nl2 = nl.directives.set(".tran 1u 10m")                  # singleton upsert
+nl2 = nl.directives.set(".tran 1u 10m")  # singleton upsert
 nl2 = nl.directives.add(".save v(out)", Placement.BEFORE_END)
 nl2 = nl.directives.remove(nl.lines.find(OpDirective))
 nl2 = nl.add_include("harness.cir")
 nl2 = nl.set_value("R1", "5k", scope=("amp",), in_definition=True)
 
-with nl.batch() as b:                                    # one plan, one verification
-    b.set_value("R1", "1k"); b.params.set("Rx", "2k")
+with nl.batch() as b:  # one plan, one verification
+    b.set_value("R1", "1k")
+    b.params.set("Rx", "2k")
 nl3 = b.result
 
 nl3.save("amp.edited.cir")
@@ -136,7 +138,7 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, `lint
 
 ### Decisions and design
 
-[ ] **D1 — Decision record 0007: edit lifecycle and edit semantics.**
+[x] **D1 — Decision record 0007: edit lifecycle and edit semantics.**
 Record the section 2 outcomes. Amend the architecture:
 - §7.2: placement, upsert, set_model;
 - §7.4: `in_definition`;
@@ -148,7 +150,7 @@ Record the section 2 outcomes. Amend the architecture:
 - §21: mark question 1, the `set_model` half of question 2, and the deferred items "text conventions", "matching and upsert", "hierarchical addressing" (edit part) and placement resolved.
 Status `proposed` until the maintainer accepts it.
 
-[ ] **D2 — Design note `docs/design/m6-edits.md`.**
+[x] **D2 — Design note `docs/design/m6-edits.md`.**
 - **API:** every operation with its signature, the slot it edits (by node field and sub-span), its insertion rule, and the errors it raises; the facade or protocol choice of 3.1.
 - **Verification steps.**
 - **Edit coverage:** a table "§7.2 allowed operation → method" and "§7.3 forbidden operation → no API / `TopologyError` test".
@@ -156,36 +158,36 @@ Reviewed by the maintainer **before T3** (M5's D2 was written after the fact; M6
 
 ### Implementation
 
-[ ] **T1 — `Edit`, `EditPlan`, `apply_edits`** (§7.5).
+[x] **T1 — `Edit`, `EditPlan`, `apply_edits`** (§7.5).
 Sorted by position; overlaps are `EditError`; zero-width insertions are allowed; equal positions keep submission order; offsets are against the original; the input is never mutated. T1-tier tests, plus a Hypothesis test that random non-overlapping plans reproduce a reference splice.
 
-[ ] **T2 — Verification** (decision 8).
+[x] **T2 — Verification** (decision 8).
 Re-parse, signature, outside-text and slot checks; `EditError` wrapping `ParseError`; `TopologyViolation` with the first differing signature entry in its message. Tests that inject a faulty plan (one that edits a node span directly) and see `TopologyViolation`.
 
-[ ] **T3 — Element operations** (after D2 review).
+[x] **T3 — Element operations** (after D2 review).
 `set_value`, `set_formula`, `set_param`, `set_model` (decision 3), `set_dc`, `set_ac`, `set_coupling`, `set_instance_param`; `scope`/`in_definition` (decision 2); insertion rules (decision 5). Settle:
 - `set_value` on a source with `dc_keyword=False`: replace only; never add `DC`;
 - `set_value` on a `K` line: no; that is `set_coupling`;
 - `set_param` on a name that is a value keyword (`r=`): replace the keyword value;
 - RKM text with `rkm=False`: the re-parse fails, so `EditError` naming the option.
 
-[ ] **T4 — `.param` and `.model` operations.**
+[x] **T4 — `.param` and `.model` operations.**
 `params.set` (decision 7, including `scope`/`in_definition`) and `set_model_param`. Settle: `params.set` with a value that is a bare expression (the re-parse rejects it, decision 0005: `EditError` suggesting braces); quoting of string values.
 
-[ ] **T5 — Directives, placement and include.**
+[x] **T5 — Directives, placement and include.**
 `directives.add/replace/remove/set`, `Placement`, `add_include` (decisions 6, 7, 9); the forbidden variants (decision 7) raise `TopologyError`.
 
-[ ] **T6 — `batch()`, `apply(plan)`, `save()`.**
+[x] **T6 — `batch()`, `apply(plan)`, `save()`.**
 Per decisions 1, 8 and 10. Atomicity: a failing operation in a batch leaves the netlist unchanged. `save()` encoding failure: `EncodingError` before writing. A stale-handle check (a node from another netlist) raises `EditError`.
 
-[ ] **T7 — `MODEL_TYPE_MISMATCH`** (decision 3): a diagnostic at load, the table as data, a spec note in `names.md` or the design note, and tests.
+[x] **T7 — `MODEL_TYPE_MISMATCH`** (decision 3): a diagnostic at load, the table as data, a spec note in `names.md` or the design note, and tests.
 
 ### Validation, docs and tests
 
-[ ] **T8 — Golden-diff tests (T4 tier).**
+[x] **T8 — Golden-diff tests (T4 tier).**
 `tests/edits/` with `input.cir` + operation → `expected.cir` pairs, compared byte for byte, plus a unified diff in the failure message. Cover every operation; LF, CRLF and mixed endings; a missing final newline; continued lines (`+` and `\\`); trailing comments; tabs; a body edit with `in_definition=True`; a batch. The golden files go under `tests/corpus/ngspice/edits_golden/`, with a manifest; `.gitattributes` keeps them byte-exact (author `xdylanm`, MIT, confirmed by the maintainer on 2026-10-31).
 
-[ ] **T9 — Property tests (T5 tier, Hypothesis).**
+[x] **T9 — Property tests (T5 tier, Hypothesis).**
 Over generated netlists (reuse the M3–M5 generators):
 - any sequence of allowed edits preserves the signature;
 - each operation is idempotent (applying it twice gives the same text as once);
@@ -193,26 +195,26 @@ Over generated netlists (reuse the M3–M5 generators):
 - text outside the edited spans is unchanged;
 - `save` then `load` gives the same items.
 
-[ ] **T10 — Negative tests (T6 tier).**
+[x] **T10 — Negative tests (T6 tier).**
 One per §7.3 forbidden operation, plus the misuse cases:
 - adding, removing or reordering an element, and changing a node, type or designator: no API, so check by `apply(plan)` with a crafted plan → `TopologyViolation`;
 - renaming a net, or changing `.subckt` ports or definitions: the same way;
 - replacing an element line, removing an `.include`, editing an opaque block, adding an element through `directives.add`, removing `.global`: `TopologyError`;
 - a wrong value kind (`set_value` on a diode, `set_model` on a source), an unresolved model, a wrong model type, `scope` without `in_definition`, an ambiguous `directives.set`, a stale handle, overlapping edits: `EditError`.
 
-[ ] **T11 — Solver checks (light; M7 does the full set).**
+[x] **T11 — Solver checks (light; M7 does the full set).**
 - An edited divider (`set_value`) and an added `.param` reach ngspice and move `v(out)` as computed.
 - A `directives.set(".tran …")` result runs.
 - An unedited `save` gives identical results to the original.
 Record the section 7 probes as tests.
 
-[ ] **T12 — Docs.**
+[x] **T12 — Docs.**
 - `docs/usage/editing.md` with executed recipes: the §1.2 examples (set R22, replace with a formula and add `.param`, set `.tran`, sweep a `.param` across runs, add a harness include).
 - `CHANGELOG.md`, `README.md` status, `docs/testing.md` (golden tests: how to add one), and the phase plan's M6 heading.
 - Update or archive `m3-elements.md`, `m4-statements.md` and `m5-document.md` per the plan: fold the parts M6 relies on into `m6-edits.md`, or keep them ACTIVE with a pointer, and say which.
 - Docstrings on every public name.
 
-[ ] **T13 — Exit.**
+[x] **T13 — Exit.**
 Full check set, a fresh-clone test, and the solver tests. Report what changed, every "settle" decision with its basis, deviations from this list, and limitations. Set this document's status to `READY FOR REVIEW`. **Do not archive.**
 
 ## 5. Dependencies between tasks
@@ -281,3 +283,77 @@ Re-recorded as solver tests in T11.
 - Reading or validating included files.
 - The LTspice dialect (M8).
 - Solver-backed result validation beyond the light checks of T11 (M7).
+
+## 9. Implementation report (2026-10-31)
+
+**What changed.** Decision record 0007 (status `proposed`) and the architecture amendments of
+D1 (§4, §7.2, §7.4, §7.5, §7.6, §16, §17, §19 decision 18, §21). Design note
+[m6-edits.md](./m6-edits.md) (D2). The edit layer under `src/netlistmod/edit/`: `plan.py`,
+`conventions.py`, `placement.py`, `verify.py`, `operations.py` and `api.py`. `netlistmod.Netlist`
+is now the editable subclass of the read-only `netlistmod.document.Netlist`, whose constructors
+return `Self`. New diagnostic `MODEL_TYPE_MISMATCH`, with its table as data
+(`document/model-types.json`, `document/models.py`). Tests: `tests/edits/` (plan, verification,
+element, statement and directive operations, lifecycle, golden, property and negative tests),
+`tests/solver/test_ngspice_solver_edits.py`, the new corpus family `edits_golden` (4 inputs,
+20 cases), and an architecture test that `edit/` does not import `re`. Docs:
+`docs/usage/editing.md` (executed), CHANGELOG, README, `testing.md`, `provenance.md`, the phase
+plan and the design-folder index.
+
+**Settled** (each with its basis in [m6-edits.md](./m6-edits.md) §4):
+
+- *T3:* `set_value` on a source replaces the DC value as written and never adds a value or `DC`
+  (use `set_dc`); `set_value` on a `K` line is an `EditError` pointing to `set_coupling`;
+  `set_param` with a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) sets
+  the value when it is written `r=…`, else `EditError` (use `set_value`); RKM text with
+  `rkm=False` is an `EditError` wrapping the `ParseError`, which names `rkm=True`. A repeated
+  designator or instance parameter is an `EditError`. `set_model` replaces an existing model
+  name only. The element keywords `DC`/`AC` are written uppercase (the manual's spelling and the
+  behaviour table), dot-command keywords lowercase.
+- *T4:* `params.set` with a bare expression is an `EditError` wrapping the `ParseError`, which
+  says to use braces or single quotes; string values are written as given (the caller quotes).
+  `set_model_param` edits the first `.model` of that name in the given scope; a repeated
+  parameter or a model with empty parentheses (no span to anchor after `(`, P13) is an
+  `EditError`.
+- *T5:* directive text must be one physical line; it is classified in a probe netlist before
+  the plan is applied, so a topology line is a `TopologyError` rather than a
+  `TopologyViolation`. A single topology item spread over several lines (`.subckt … .ends`) is
+  still a `TopologyError`. Duplicate `.include` detection compares the statement text.
+
+**Deviations from this list:**
+
+- **The D2 review gate was not held:** T3 was implemented right after D2, in one pass, at the
+  maintainer's request to complete M6. D2 and decision 0007 are for review with the
+  implementation.
+- **An opaque-items check was added to verification** (step 3; decision 0007 item 8,
+  architecture §7.6, m6-edits.md §3). While writing T10 it turned out that the signature does
+  not cover opaque content, so a plan passed to `apply` could edit a `.control` block, drop an
+  `.include` or add an `.if` block hiding an element without a `TopologyViolation`. Now the
+  opaque items must be unchanged and in order, apart from added `.include` statements.
+- `operations.py` was added to the layout of section 3.1, holding the plan builders that
+  `api.py` exposes.
+- `Edit` has an optional fourth field `slots` (the slot checks), and `SlotCheck` is public;
+  `Netlist` gained `baseline`, `path` and `verify()`; `Batch` has `plan`.
+- `tests/support/solvers.run_ngspice` takes an optional `cwd` (the include probe runs ngspice
+  from another folder).
+- `every_diagnostic.cir` (`document_basic`) gained two lines for `MODEL_TYPE_MISMATCH`, so that
+  every code still occurs in the corpus; its manifest hash and expectations were updated.
+- The API sketch in section 3.2 was reformatted by `ruff format` (ruff 0.17 formats Python
+  blocks in Markdown; the committed file already failed `ruff format --check`). Whitespace and
+  line breaks only.
+- `m3-elements.md`, `m4-statements.md` and `m5-document.md` stay ACTIVE with a pointer to
+  m6-edits.md, which holds what M6 adds (insertion rules, operations); nothing was folded or
+  archived.
+- Test files are named `test_edit_*.py`: test folders without `__init__.py` need unique
+  basenames.
+
+**Limitations:** see decision 0007 "Known limits": whole-line directive edits only; no removal
+of parameters or models; no stimulus specs or `.meas` bodies; no string paths; a duplicate
+`.include` spelled differently is not caught; what an included harness adds is not verified.
+Two operations in one batch that each add the same new `.param` add it twice. Element keyword
+case does not follow the file's own spelling (`AC` is written uppercase even after a
+lowercase `dc`).
+
+**Checks** (2026-10-31): `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports`
+and `pytest` (1430 passed, 2 POSIX-only skips, coverage 98.7%) with `--require-solver ngspice`
+(ngspice 47) on Windows. Fresh clone of the commit, `uv sync`, full suite with
+`--require-solver ngspice`: 1430 passed, 2 skipped. Not archived (awaiting review).
