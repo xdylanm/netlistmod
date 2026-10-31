@@ -666,5 +666,5 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 - Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).
 - The line model for continuation lines, interleaved comments and anchor-relative insertion.
 - Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only).
-- ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md) (proposed).
+- ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md).
 - The diagnostics API (delivery and severity).

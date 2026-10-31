@@ -1,6 +1,7 @@
 # M3 design note — element nodes, grammar and spans
 
-> **Status:** for maintainer review (D2 of [m3-tasks.md](./m3-tasks.md)). Records the shapes
+> **Status:** ACTIVE — reviewed with M3 (2026-10-30); the reference for element shapes and spans
+> until M6 edits build on them (D2 of [m3-tasks.md](./archive/m3-tasks.md)). Records the shapes
 > that shipped; [decision 0004](../decisions/0004-element-and-value-grammar.md) records why.
 
 ## 1. Node and value shapes
