@@ -1,0 +1,30 @@
+id: NG-SRC-001
+dialect: ngspice
+construct: 'independent sources (V, I): DC value and AC magnitude and phase'
+manual_ref: '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- voltage_source
+- current_source
+- dc_spec
+- dc_keyword
+- ac_spec
+- V_NAME
+- I_NAME
+- DC_KW
+- AC_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_sources_have_dc_and_ac_slots
+- tests/grammar/ngspice/test_elements.py::test_malformed_sources_are_rejected
+- tests/roundtrip/test_ngspice_elements.py::test_kicad_fixtures_parse_into_typed_elements
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+- tests/solver/test_ngspice_solver_elements.py::test_rc_filter_is_at_minus_3_db_at_its_corner
+notes: 'Phase 1: an optional DC value, with or without the DC keyword, then an optional AC magnitude and
+  optional phase, in the order of the general form (DC before AC). A source with no value (VMEAS 12 9)
+  is valid (§4.1: a zero value may be omitted). DC needs a value and AC needs its magnitude (the manual
+  says ACMAG is required with the keyword), so DC and AC alone are rejected, as are a second DC and DC
+  after AC. Values are numbers or formulas; RKM is not accepted.'

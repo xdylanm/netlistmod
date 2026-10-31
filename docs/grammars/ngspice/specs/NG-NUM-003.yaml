@@ -1,0 +1,39 @@
+id: NG-NUM-003
+dialect: ngspice
+construct: RKM notation for R and C values (parser option rkm)
+manual_ref:
+- '[ngspice-manual] §2.1.3.3 "Letters following a number"'
+- '[ngspice-manual] §12.11.6 "LTSPICE Compatibility mode"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- RKM_R
+- RKM_R_MEGA
+- RKM_R_MILLI
+- RKM_C
+- RKM_C_FARAD
+- r_value
+- c_value
+tests:
+- tests/grammar/ngspice/test_numbers.py::test_rkm_values_need_the_option
+- tests/grammar/ngspice/test_numbers.py::test_rkm_values_ngspice_reads_differently_are_marked
+- tests/grammar/ngspice/test_numbers.py::test_lowercase_m_in_a_resistor_rkm_value_is_rejected_with_a_hint
+- tests/grammar/ngspice/test_numbers.py::test_digits_after_letters_outside_rkm_are_rejected_in_both_modes
+- tests/roundtrip/test_ngspice_elements.py::test_kicad_fixtures_with_rkm_values_need_the_rkm_option
+- tests/solver/test_ngspice_solver_elements.py::test_rkm_digits_are_dropped_without_lt_mode
+- tests/solver/test_ngspice_solver_elements.py::test_leading_r_rkm_is_an_error_without_lt_mode
+- tests/solver/test_ngspice_solver_elements.py::test_lt_mode_reads_rkm_per_iec_60062
+- tests/solver/test_ngspice_solver_elements.py::test_rkm_mismatches_with_iec_60062_are_marked
+notes: 'RKM values follow IEC 60062 (decision 0004): digits, a code letter in place of the decimal point,
+  digits; R also takes a leading R or L (R47). R codes: L R K G T (case-insensitive) and uppercase M (mega);
+  lowercase m on R is always a ParseError with a hint to use L. C codes: p n u µ m M F (case-insensitive).
+  E is not a code, so 4E7 is an exponent; a letter with no digit after it (47K, 1M, 470R) is standard
+  notation. RKM is accepted only for R and C values, and only with parse(..., rkm=True); without it the
+  value is a ParseError naming the option. ngspice 47 reads RKM per IEC 60062 only with set ngbehavior=lt,
+  and silently drops the digits otherwise (2k7 is 2k). Discrepancy: ngspice reads R 1M0/4M7 as milli and
+  C 4F7 as femto in both modes; those values get solver_mismatch=True (diagnostic RKM_SOLVER_MISMATCH,
+  M5). A field such as R2D2 in an R value position is RKM-shaped and rejected, so a model named R<digits>...
+  cannot follow the nodes directly.'

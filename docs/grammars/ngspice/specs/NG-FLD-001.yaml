@@ -1,0 +1,31 @@
+id: NG-FLD-001
+dialect: ngspice
+construct: 'element field separators: blanks, one comma, = with blanks, continuation'
+manual_ref:
+- '[ngspice-manual] §2.1.3.1 "Lines"'
+- '[ngspice-manual] §2.4.5 "Continuation lines"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- SEP
+- CSEP
+- EQ
+- eol
+tests:
+- tests/grammar/ngspice/test_elements.py::test_a_single_comma_separates_fields
+- tests/grammar/ngspice/test_elements.py::test_continued_elements_are_one_item_with_exact_spans
+- tests/grammar/ngspice/test_elements.py::test_continuations_that_do_not_continue_are_rejected
+- tests/grammar/ngspice/test_elements.py::test_trailing_comments_are_recorded_in_source_order
+- tests/grammar/ngspice/test_elements.py::test_malformed_resistor_lines_are_rejected_with_positions
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_element_lines_match_the_generator
+- tests/solver/test_ngspice_solver_elements.py::test_separators_and_keyword_value_agree_with_solver
+notes: 'Fields are separated by blanks, a single comma (optionally with blanks) or a + continuation line;
+  blanks may surround =. Separators are tokens, so two fields written without a separator (1k5x) are an
+  error rather than two values. A comma may only be the last separator before a field: a,,b, a trailing
+  comma and a comma before a continuation are rejected (narrow reading of ''a comma''). Parentheses are
+  field separators in the manual but occur only in phase 2 forms outside formulas, so a parenthesis outside
+  a formula is a ParseError (decision 0004, item 5). Each physical line of a continued element may end
+  in a comment, as for directives (NG-CNT-001, NG-TXT-001).'

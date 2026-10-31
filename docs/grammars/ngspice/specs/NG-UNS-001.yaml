@@ -1,0 +1,27 @@
+id: NG-UNS-001
+dialect: ngspice
+construct: recognised but unsupported element forms
+manual_ref:
+- '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
+- '[ngspice-manual] §3.3.9 "Capacitors, dependent on expressions (behavioral capacitor)"'
+- '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
+status: documented
+grammar:
+- stimulus
+- charge
+- params_keyword
+- STIMULUS_KW
+- Q_KW
+- PARAMS_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_stimulus_functions_and_distof_are_unsupported_at_the_keyword
+- tests/grammar/ngspice/test_elements.py::test_continued_stimulus_is_unsupported_at_the_keyword
+- tests/grammar/ngspice/test_elements.py::test_unsupported_source_does_not_swallow_the_next_statement
+- tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_is_unsupported_at_q
+- tests/grammar/ngspice/test_elements.py::test_malformed_subcircuit_calls_are_rejected
+- tests/roundtrip/test_ngspice_elements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+notes: 'The source functions PULSE, EXP, SIN, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL and PORT, and
+  DISTOF1/DISTOF2, raise UnsupportedConstruct at the keyword; the charge form q= of a capacitor raises
+  it at q; params: on an X line is a ParseError. Each is a grammar rule whose arguments are statement
+  text up to the end of the (possibly continued) line, so the next line is still its own statement. The
+  error is raised during the parse, so it is reported before a later syntax error.'

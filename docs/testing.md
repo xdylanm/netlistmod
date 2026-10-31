@@ -67,7 +67,20 @@ and negative source fixtures are in
 `tests/corpus/ngspice/structure_basic/` and
 `tests/corpus/ngspice/structure_rejects/`, each with provenance and SHA-256
 hashes in `manifest.json`. The negative manifest also records expected error
-lines and columns. Each construct has a YAML spec entry under
+lines and columns.
+
+Element lines (M3) are tested in `tests/grammar/ngspice/test_elements.py`,
+`test_numbers.py` and the generator oracle `test_element_oracle.py`. The
+`elements_basic` (accept) and `elements_rejects` (one malformed or unsupported
+line per file; the manifest records line, column and error class) corpora are
+checked in `tests/roundtrip/test_ngspice_elements.py`. The parser option `rkm`
+defaults to `False`: tests of RKM values pass `rkm=True`, including the
+`kicad_basic` fixtures, which use `1k0`. `tests/solver/test_ngspice_solver_elements.py`
+records the ngspice 47 value probes. It reads values from the device tables
+ngspice prints after `.op`, writes a temporary `.spiceinit` with
+`set ngbehavior=lt` for LT-mode probes, and loads each accept fixture with added
+model and subcircuit definitions. `tests/test_usage_docs.py` runs the doctest
+examples in `docs/usage/elements.md`. Each construct has a YAML spec entry under
 `docs/grammars/ngspice/specs/`. Add an entry with a unique `id`, a
 `manual_ref` (one citation or a list, each of the form
 `[ngspice-manual] §2.4.4 "End-of-line comments"`, whose key is listed in

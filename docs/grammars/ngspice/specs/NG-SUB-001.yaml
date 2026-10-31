@@ -1,0 +1,28 @@
+id: NG-SUB-001
+dialect: ngspice
+construct: subcircuit calls (X)
+manual_ref:
+- '[ngspice-manual] §2.6.3 "Subcircuit Calls"'
+- '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- subckt_instance
+- x_node
+- x_last
+- x_name
+- x_param
+- X_NAME
+tests:
+- tests/grammar/ngspice/test_elements.py::test_subcircuit_call_nodes_name_and_parameters
+- tests/grammar/ngspice/test_elements.py::test_string_parameter_is_a_double_quoted_formula
+- tests/grammar/ngspice/test_elements.py::test_malformed_subcircuit_calls_are_rejected
+- tests/roundtrip/test_ngspice_elements.py::test_continued_subcircuit_call_in_the_corpus_keeps_comments_and_nodes
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+notes: 'X, one or more nodes (§2.6.3: N1 is required), the subcircuit name, then name=value parameters
+  with a number, formula or double-quoted string (m= included). The name list is right-recursive, so the
+  last name before the parameters is the subcircuit; this needs no lookahead terminal. The HSPICE/LTspice
+  params: keyword is recognised and rejected with a ParseError at params:.'

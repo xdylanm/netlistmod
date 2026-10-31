@@ -1,0 +1,164 @@
+{
+  "family": "elements_rejects",
+  "origin": "Authored in this repository for the M3 ngspice element grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-30",
+  "notes": "Each fixture is one malformed or unsupported element line (rkm=False); line and column are 1-based. 'error' is ParseError or UnsupportedConstruct.",
+  "fixtures": {
+    "no_value_or_model.cir": {
+      "sha256": "6370c459b73ea1b12686407891392587be921cbfe873bb7a3abd4dec42a1fac5",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "R needs a value or a model"
+    },
+    "missing_node.cir": {
+      "sha256": "1e612f4c7b5ecec4dff904c6c48f2a3a10185a1ac989347e545df09724bb05aa",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "R needs two nodes"
+    },
+    "bare_formula.cir": {
+      "sha256": "fbd749806f0750f0889530cf7993feed42927152552dee58f7a10154b9855322",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "unbraced expression"
+    },
+    "stray_parenthesis.cir": {
+      "sha256": "165ac1fee97f1506409f1196b3609f4d5b2c43b16d8697f5100f935da7215b70",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "parenthesis outside formula"
+    },
+    "parameter_without_value.cir": {
+      "sha256": "1c4c18306c73774710353ce48973ea9c3705cc853b801b2029e971e4e68b8812",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "name= needs a value"
+    },
+    "rkm_without_option.cir": {
+      "sha256": "5d7f7427aef87240666e72fd8b229038316cad7e380f867c37db7ae19273f50c",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "RKM needs rkm=True"
+    },
+    "rkm_lowercase_m.cir": {
+      "sha256": "ebe6a2520b1c5d32910b48d195bd0dd6edfda09ce78b5c4faba20babef2630f5",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "lowercase m on R"
+    },
+    "rkm_on_inductor.cir": {
+      "sha256": "f3cb94d71eb2ebfde2eaf0e275c359a3bf6b04f58fb878006b4701219cff021a",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "RKM is for R and C only"
+    },
+    "double_comma.cir": {
+      "sha256": "111bd841841ddf523a1b7891e664ffe898974e993fba6781fae972415496a664",
+      "line": 2,
+      "column": 6,
+      "error": "ParseError",
+      "note": "one comma per separator"
+    },
+    "coupling_one_inductor.cir": {
+      "sha256": "17823a7684d877cfbb25dab8396d7046856121f773c6705c6c33c2701d8bae8a",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "K needs two inductors"
+    },
+    "coupling_non_inductor.cir": {
+      "sha256": "606c11dac08c1ccd856f1d6ec2299d9d4bba7620d24b0c958da4784a48f06bc4",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "K couples L elements"
+    },
+    "diode_without_model.cir": {
+      "sha256": "1143d2351ac55b5f258ac3ff3e8267e4310222b04c8d284c26aa03ee064d7607",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "D needs a model"
+    },
+    "source_dc_without_value.cir": {
+      "sha256": "3c28fc6c8465ce05a9ddcc332be08fee810741b93a7ee36332e2da08728dbf12",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "DC needs a value"
+    },
+    "source_ac_without_magnitude.cir": {
+      "sha256": "1aa724c0ffa26b18d6d4d299f7d642ba3162e126d37cadd97566b630cd5e0877",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "AC needs ACMAG"
+    },
+    "subckt_params_keyword.cir": {
+      "sha256": "44a20c4d3234f9f35237cf0d30c631f2b1f5109f1f0d22fc7e6d1e7610ae9e1f",
+      "line": 2,
+      "column": 12,
+      "error": "ParseError",
+      "note": "params:"
+    },
+    "subckt_no_nodes.cir": {
+      "sha256": "2f2079111037069210d2ab0060999fada948a54e310c450445c4a020ebfefb33",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "X needs a node"
+    },
+    "nested_braces.cir": {
+      "sha256": "a48b6034cd9e65f507180fba9033337f2980b229f07cb40f6554bd37d6450a68",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "braces do not nest"
+    },
+    "stimulus_function.cir": {
+      "sha256": "a0916bc4adab7358c5e956eb1d6d01ee945cacc296b1109d21ff2b779084acc3",
+      "line": 2,
+      "column": 9,
+      "error": "UnsupportedConstruct",
+      "note": "unsupported"
+    },
+    "distortion_input.cir": {
+      "sha256": "1d6e2a6d9a1c823fd35e323ad6412ffca25e92ac69156d39a747b3713e9d7333",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "unsupported"
+    },
+    "charge_capacitor.cir": {
+      "sha256": "59528c01b265d8d8fadaadf4dc299ccd10efb9c8a612204b874d695990c3da7a",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "unsupported"
+    },
+    "continued_stimulus.cir": {
+      "sha256": "64d101b21a923c9640ca363ad46d0b74dc87ee9373ad44f0744b55b58ca2b8f6",
+      "line": 3,
+      "column": 3,
+      "error": "UnsupportedConstruct",
+      "note": "unsupported"
+    },
+    "phase_2_letter.cir": {
+      "sha256": "154828b0723862073cceefdab3824466459dcd42db8531f6f8afc4684b875e1f",
+      "line": 2,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "unsupported letter"
+    }
+  }
+}

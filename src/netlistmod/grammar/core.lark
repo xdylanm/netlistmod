@@ -98,3 +98,188 @@ END_KW.4: ".end"i
 
 // spec: NG-DIR-001
 DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
+
+// ---------------------------------------------------------------------------------------------
+// Element lines (M3; decision 0004). Each element is a continuable statement ended by NL.
+//
+// Separators are tokens, not ignored whitespace. That makes adjacency visible to the parser (a
+// value can never be split into two fields), and it keeps lexing context-specific: each field
+// rule starts with its own separator, so the field's token is lexed in the state reached by
+// shifting that separator, where the contextual lexer offers only the terminals valid at that
+// place. If a separate gap rule ended right before a field, its LALR lookaheads would merge
+// across all elements, and a node named "1" would then be lexed as a NUMBER.
+//
+// A field rule is "gap, then field": blanks, "+" continuation lines, the end-of-line comment of
+// a continued line and "\\" continuations, of which the last one (or a single comma) is
+// directly before the field. The gap is right-recursive (`SEP field`), so the parser shifts
+// every separator and decides at the field itself. A field with one separator is one reduction.
+// Only gap tokens and NL follow a field rule, and those are lexically uniform.
+//
+// Priorities (decision 0004): EQ.11 and CSEP.11 > SEP.10 > WS.9, so blanks before "=" or ","
+// belong to that separator, and a "+" line after an element field is a separator rather than
+// the ignored CONT. RKM terminals (4) > NUMBER (3) > WORD (2): a digit-leading field in a value
+// position is a value, never a name, and an RKM form is tried before the standard number that
+// would match only its prefix. Keywords are strings at WORD's priority (2), so Lark re-types an
+// exact WORD match only in states where the keyword is valid.
+
+// A field separator: blanks, or a "+" continuation line with the blanks around it. A comma
+// separator (CSEP) is a single comma with optional blanks; it may only be the last separator
+// before a field, so a gap holds at most one comma. EQ is "=" with optional blanks. An element
+// line ends with NL, or with eol: gap material and then NL.
+// spec: NG-FLD-001
+SEP.10: /[ \t]*\r?\n[ \t]*\+[ \t]*|[ \t]+/
+CSEP.11: /[ \t]*,[ \t]*/
+EQ.11: /[ \t]*=[ \t]*/
+eol: (SEP | TRAILING_COMMENT | BS_CONT) (NL | eol)
+
+// A node, model, subcircuit or parameter name: any characters except blanks, line ends, the
+// characters the manual excludes from node names (= % ( ) , [ ] < > ~ { } '), the comment
+// starters ; $ and //, a double quote and a backslash. A "/" is allowed when another name
+// character follows it, so "//" always starts a comment and a name cannot end in "/".
+// spec: NG-NOD-001
+_WCHAR: /[^ \t\r\n=%(),\[\]<>~{}'";$\\\/]/
+_WUNIT: _WCHAR | "/" _WCHAR
+WORD.2: _WUNIT+
+node: (SEP | CSEP | BS_CONT) WORD
+    | (SEP | TRAILING_COMMENT | BS_CONT) node
+
+// Numbers: an integer or decimal mantissa with optional sign and exponent, then optional
+// letters (scale factors, and the letters the manual says are ignored), all one token. Lark
+// inlines a sub-terminal without a group, so an alternation inside one is grouped explicitly.
+// spec: NG-NUM-001
+_SIGN: /[+-]/
+_MANTISSA: /(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)/
+_EXPONENT: /[eE][+-]?[0-9]+/
+NUMBER.3: _SIGN? _MANTISSA _EXPONENT? _LETTERS?
+
+// spec: NG-NUM-002
+_LETTERS: (/[A-Za-z]/ | _MICRO)+
+
+// The micro sign (U+00B5) as a scale factor: not in the manual's table, read as micro by
+// ngspice 47 and written by LTspice.
+// spec: NG-NUM-004
+_MICRO: "µ"
+
+// RKM notation (IEC 60062): digits, a code letter in place of the decimal point, digits; for R
+// also a leading R or L (R47). E is not a code letter, so 4E7 stays an exponent. RKM_R_MEGA
+// (uppercase M on R) and RKM_C_FARAD (F on C) are the forms ngspice reads differently from the
+// standard. RKM_R_MILLI (lowercase m on R) is always rejected, with a hint to use L. Whether RKM
+// is accepted is the parser option rkm, applied by the transformer; the grammar does not change.
+// spec: NG-NUM-003
+RKM_R.4: /[0-9]+[RrKkGgTtLl][0-9]+|[RrLl][0-9]+/
+RKM_R_MEGA.4: /[0-9]+M[0-9]+/
+RKM_R_MILLI.4: /[0-9]+m[0-9]+/
+RKM_C.4: /[0-9]+/ (/[pPnNuUmM]/ | _MICRO) /[0-9]+/
+RKM_C_FARAD.4: /[0-9]+[fF][0-9]+/
+r_value: (SEP | CSEP | BS_CONT) (NUMBER | RKM_R | RKM_R_MEGA | RKM_R_MILLI | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | BS_CONT) r_value
+c_value: (SEP | CSEP | BS_CONT) (NUMBER | RKM_C | RKM_C_FARAD | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | BS_CONT) c_value
+
+// Brace and single-quoted expressions, and a double-quoted string as a subcircuit parameter
+// value. Contents are not parsed; braces do not nest. As in statement text (NG-TXT-001),
+// quotes protect the comment markers ; $ // and braces do not: a brace expression containing
+// one is unterminated. A "/" inside braces must be followed by another expression character.
+// `value` is a field holding a number or a formula.
+// spec: NG-VAL-001
+BRACE_FORMULA.3: /\{(?:[^{}\r\n;$\/]|\/[^{}\r\n;$\/])+\}/
+QUOTE_FORMULA.3: /'[^'\r\n]+'/
+STRING_VALUE.3: /"[^"\r\n]*"/
+value: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT | BS_CONT) value
+
+// Instance parameters name=value, model references and flags (each a field).
+// spec: NG-PAR-001
+param: (SEP | CSEP | BS_CONT) WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT | BS_CONT) param
+model: (SEP | CSEP | BS_CONT) WORD
+     | (SEP | TRAILING_COMMENT | BS_CONT) model
+flag: (SEP | CSEP | BS_CONT) OFF_KW
+    | (SEP | TRAILING_COMMENT | BS_CONT) flag
+OFF_KW.2: "off"i
+
+// spec: NG-RES-001
+resistor: R_NAME node node r_value model? param* (NL | eol)
+        | R_NAME node node model param* (NL | eol)
+        | R_NAME node node r_keyword_value param* (NL | eol)
+r_keyword_value: (SEP | CSEP | BS_CONT) (R_KW | RESISTANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+               | (SEP | TRAILING_COMMENT | BS_CONT) r_keyword_value
+R_NAME.4: /[Rr]/ _WUNIT*
+R_KW.2: "r"i
+RESISTANCE_KW.2: "resistance"i
+
+// spec: NG-CAP-001
+capacitor: C_NAME node node c_value model? param* (NL | eol)
+         | C_NAME node node model param* (NL | eol)
+         | C_NAME node node c_keyword_value param* (NL | eol)
+         | C_NAME node node charge
+c_keyword_value: (SEP | CSEP | BS_CONT) (C_KW | CAPACITANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+               | (SEP | TRAILING_COMMENT | BS_CONT) c_keyword_value
+C_NAME.4: /[Cc]/ _WUNIT*
+C_KW.2: "c"i
+CAPACITANCE_KW.2: "capacitance"i
+
+// spec: NG-IND-001
+inductor: L_NAME node node value model? param* (NL | eol)
+        | L_NAME node node model param* (NL | eol)
+        | L_NAME node node l_keyword_value param* (NL | eol)
+l_keyword_value: (SEP | CSEP | BS_CONT) (L_KW | INDUCTANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+               | (SEP | TRAILING_COMMENT | BS_CONT) l_keyword_value
+L_NAME.4: /[Ll]/ _WUNIT*
+L_KW.2: "l"i
+INDUCTANCE_KW.2: "inductance"i
+
+// spec: NG-MUT-001
+mutual_coupling: K_NAME inductor_ref inductor_ref+ value (NL | eol)
+inductor_ref: (SEP | CSEP | BS_CONT) L_REF
+            | (SEP | TRAILING_COMMENT | BS_CONT) inductor_ref
+K_NAME.4: /[Kk]/ _WUNIT*
+L_REF.4: /[Ll]/ _WUNIT*
+
+// Independent sources (phase 1): an optional DC value, with or without the DC keyword, then an
+// optional AC magnitude and phase (a value after the magnitude). A stimulus function or DISTOF
+// ends the line (NG-UNS-001).
+// spec: NG-SRC-001
+voltage_source: V_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus)
+current_source: I_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus)
+dc_spec: dc_keyword value
+       | value
+dc_keyword: (SEP | CSEP | BS_CONT) DC_KW
+          | (SEP | TRAILING_COMMENT | BS_CONT) dc_keyword
+ac_spec: (SEP | CSEP | BS_CONT) AC_KW value
+       | (SEP | TRAILING_COMMENT | BS_CONT) ac_spec
+V_NAME.4: /[Vv]/ _WUNIT*
+I_NAME.4: /[Ii]/ _WUNIT*
+DC_KW.2: "dc"i
+AC_KW.2: "ac"i
+
+// spec: NG-DIO-001
+diode: D_NAME node node model (param | flag)* (NL | eol)
+D_NAME.4: /[Dd]/ _WUNIT*
+
+// A subcircuit call: one or more nodes, the subcircuit name, then parameters. The name list is
+// right-recursive (x_node, x_last), so a name is classified only once the parser has seen what
+// follows it; x_name is the gap and name both share.
+// spec: NG-SUB-001
+subckt_instance: X_NAME node (x_node | x_last)
+x_node: x_name (x_node | x_last)
+x_last: x_name x_param* (NL | eol | params_keyword)
+x_name: (SEP | CSEP | BS_CONT) WORD
+      | (SEP | TRAILING_COMMENT | BS_CONT) x_name
+x_param: (SEP | CSEP | BS_CONT) WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
+       | (SEP | TRAILING_COMMENT | BS_CONT) x_param
+X_NAME.4: /[Xx]/ _WUNIT*
+
+// Forms recognised only to be rejected: stimulus functions and DISTOF on a source and the charge
+// form of a behavioral capacitor (UnsupportedConstruct), and the HSPICE "params:" keyword on a
+// subcircuit call (ParseError). Their arguments are statement text up to the line end.
+// spec: NG-UNS-001
+stimulus: (SEP | CSEP | BS_CONT) STIMULUS_KW rest NL
+        | (SEP | TRAILING_COMMENT | BS_CONT) stimulus
+charge: (SEP | CSEP | BS_CONT) Q_KW EQ rest NL
+      | (SEP | TRAILING_COMMENT | BS_CONT) charge
+params_keyword: (SEP | CSEP | BS_CONT) PARAMS_KW rest NL
+              | (SEP | TRAILING_COMMENT | BS_CONT) params_keyword
+STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm|am|trnoise|trrandom|external|port|distof1|distof2/i
+Q_KW.2: "q"i
+PARAMS_KW.2: "params:"i

@@ -1,0 +1,20 @@
+id: NG-PAR-001
+dialect: ngspice
+construct: instance parameters, model references and the off flag
+manual_ref:
+- '[ngspice-manual] §3.2.2 "Instance and model parameters"'
+- '[ngspice-manual] §7.1 "Instance lines and .model lines"'
+status: documented
+grammar:
+- param
+- model
+- flag
+- OFF_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_resistor_value_model_and_parameters
+- tests/grammar/ngspice/test_elements.py::test_diode_model_parameters_and_off_flag
+- tests/grammar/ngspice/test_elements.py::test_malformed_resistor_lines_are_rejected_with_positions
+- tests/grammar/ngspice/test_elements.py::test_every_sub_span_slices_back_to_its_text
+notes: Any name=value is accepted with a number or formula value; parameter names are not checked against
+  the manual's lists (non-goal 8), for R, C, L, D and X alike. A bare word as a parameter value (m=x)
+  is rejected; use braces. ParamAssignment has a name span and a value span. off is the diode flag.

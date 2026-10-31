@@ -6,9 +6,29 @@
 %import .core (end_stmt, trailer)
 %import .core (WS, LINE_END, CONT, NL, BS_CONT, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
 %import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
+%import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
+%import .core (diode, subckt_instance, x_node, x_last, x_name, x_param, eol, node, value, param)
+%import .core (r_value, c_value, model, flag, r_keyword_value, c_keyword_value, l_keyword_value)
+%import .core (inductor_ref, dc_spec, dc_keyword, ac_spec, stimulus, charge, params_keyword)
+%import .core (SEP, CSEP, EQ, WORD, NUMBER, RKM_R, RKM_R_MEGA, RKM_R_MILLI, RKM_C, RKM_C_FARAD)
+%import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME, R_KW, RESISTANCE_KW)
+%import .core (C_NAME, C_KW, CAPACITANCE_KW, L_NAME, L_KW, INDUCTANCE_KW, K_NAME, L_REF, V_NAME)
+%import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, STIMULUS_KW, Q_KW, PARAMS_KW)
 
 %ignore WS
 %ignore CONT
+
+// Element lines of the phase 1 letters (M3, decision 0004); other letters stay errors. They
+// extend `line` directly rather than `statement`, which saves a unit reduction per line.
+// spec: NG-STR-001
+%extend line: resistor
+            | capacitor
+            | inductor
+            | mutual_coupling
+            | voltage_source
+            | current_source
+            | diode
+            | subckt_instance
 
 // .include and .lib cannot be continued (manual §2.4.5): they end with LINE_END, not NL.
 // spec: NG-OPA-002

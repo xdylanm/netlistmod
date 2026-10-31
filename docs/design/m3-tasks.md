@@ -1,6 +1,6 @@
 # M3 task list — elements and values (ngspice)
 
-> **Status:** READY — approved by the maintainer (2026-10-30); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — implemented 2026-10-30; section 9 is the report. (Planned as READY — approved by the maintainer on 2026-10-30; section 2 records the decisions.)
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M3). Governed by [architecture.md](../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2–5.3; §6.3–6.5, §6.7; §10; §11). Builds on the M2 grammar core ([archive/m2-tasks.md](./archive/m2-tasks.md), [archive/m2-review2-tasks.md](./archive/m2-review2-tasks.md)). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -86,61 +86,61 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, and `
 
 ### Decisions and design
 
-[ ] **D1 — Decision record 0004: element and value grammar.**
+[x] **D1 — Decision record 0004: element and value grammar.**
 Record the section 2 outcomes: the RKM option (interface, default, R/C only, `notation` field), the IEC 60062 letter sets and the ngspice mismatches with the `RKM_SOLVER_MISMATCH` diagnostic, the scale-factor set and `µ`, trailing letters, separators, expression forms, the source `dc`/`ac` slots, and how unsupported forms are recognised. Amend architecture §5.3, §6.4 (scale-factor set; cite IEC 60062 and the ngspice difference), §17 (new diagnostic code) and §21 (mark the RKM item resolved, linking 0004). Add IEC 60062 to `docs/references.md` (cite the standard by number and edition; the Wikipedia page is a secondary source). Status `proposed` until the maintainer accepts it.
 *Done when:* the record and architecture agree with the shipped grammar.
 
-[ ] **D2 — Design note `docs/design/m3-elements.md`.**
+[x] **D2 — Design note `docs/design/m3-elements.md`.**
 Final node and value shapes (3.1), the spec-ID scheme (T7), the field-by-field grammar of each element in a table (manual form → rule → node field), and what each element's span and sub-spans cover (designator, each node, each value, each parameter name and value). Keep it short. Sub-spans are what M6 edits will replace, so each must slice back to exactly the editable text.
 *Done when:* the maintainer has reviewed it (this may run in parallel with S1).
 
 ### Spikes (throw-away grammars under `strict=True`, results into decision 0004)
 
-[ ] **S1 — Lexing of names, numbers, values and parameters.**
+[x] **S1 — Lexing of names, numbers, values and parameters.**
 Questions: (a) can node names (including numeric ones and KiCad `/net` names), numbers with scale factors and trailing letters, RKM forms, model names starting with a digit, and `name=value` parameters be lexed without collisions in the contextual lexer, preferably without new lookaround terminals? (b) Does LALR(1) handle `R n+ n- [value] [model] params*`, `X nodes... subckt params*` and `K L.. L.. [L..]* value` without conflicts? (c) Spans of each sub-token, including across `+` and `\\` continuations.
 Acceptance: one design that builds under `strict=True`, accepts and rejects the section 6 table, and adds no unchecked terminal without the justification described in 3.2. If no design meets this, stop and report with evidence.
 
-[ ] **S2 — Recognising unsupported forms in the grammar.**
+[x] **S2 — Recognising unsupported forms in the grammar.**
 Question: a grammar shape that recognises `PULSE(`...`)` and the other stimulus functions, `DISTOF1/2` and `q=` well enough to raise `UnsupportedConstruct` at the keyword's position, without parsing their arguments in full and without swallowing the rest of the line wrongly.
 Acceptance: positioned `UnsupportedConstruct` for each listed form, including when it is continued.
 
 ### Implementation
 
-[ ] **T1 — Values (`model/values.py`) and number grammar.**
+[x] **T1 — Values (`model/values.py`) and number grammar.**
 Terminals and rules for numbers (integer, float, exponent, scale factor, trailing letters), RKM forms (decision 2: R and C letter sets, `E` excluded, standard notation when no digit follows the letter), brace and quoted formulas, and `name=value` parameters. The node records which values fall in the ngspice-mismatch cases (R `M` mid-value, C `F` mid-value) so that M5 can emit `RKM_SOLVER_MISMATCH` without re-reading the text: the grammar gives them their own terminal or rule. Settle: the RKM case rules of decision 2; sign handling (`-44`, `+1k`); `.5` and `5.`; exponent with a scale factor (`1e3k`); upper/lower case of `meg`/`mil`; whether a formula may contain a nested `{` (default: no, per §6.3 rule 8); the delimiters a `Formula` may use (`{}` and `'`; `"` for string parameters only, per §2.11.3); whether `1kk` produces an error (default per decision 4: accepted).
 *Done when:* T1-tier tests cover each form, the stored text, and the spans.
 
-[ ] **T2 — R, C, L.**
+[x] **T2 — R, C, L.**
 Grammar and nodes for value, keyword value (`r=`), model reference, instance parameters, and the expression forms of decision 6. Settle: `R1 a b` with no value and no model (ngspice requires one; the manual says "If value is not specified, then mname and length must be specified": reject, or accept as syntax and leave it to the solver? Default: accept as syntax only if the manual's general form allows it, and say which); value `0`; negative values.
 *Done when:* every manual example in §3.3.1, §3.3.2, §3.3.6, §3.3.7 and §3.3.10 parses (paraphrased into authored fixtures, not copied), and the T6 cases in section 6 reject with positions.
 
-[ ] **T3 — V and I.**
+[x] **T3 — V and I.**
 Plain value, `DC` value, `AC` magnitude and optional phase, in either order as §4.1 allows. Settle: a source with no value (`VMEAS 12 9`, valid per §4.1); `DC` without a value; a second `DC`; `AC` without a magnitude. Stimulus functions and `DISTOF` raise `UnsupportedConstruct` (S2).
 *Done when:* the `kicad_basic` sources (`V1 /vin 0 DC 0 AC 1  `) and the manual's phase 1 examples parse; each unsupported form raises at its keyword.
 
-[ ] **T4 — D.**
+[x] **T4 — D.**
 Mandatory model, instance parameters (`area`, `m`, `pj`, `ic`, `temp`, `dtemp`, `lm`, `wm`, `lp`, `wp`), the `off` flag. Settle: whether instance parameter names are checked against the manual's list (default: no; any `name=value` is accepted, because the library does not validate parameters, non-goal 8). Apply the same rule to R, C, L and X.
 *Done when:* accept and reject tests pass with positions.
 
-[ ] **T5 — X and K.**
+[x] **T5 — X and K.**
 `X` with one or more nodes, a subcircuit name and optional `name=value` parameters (including `m=`). Settle: whether `params:` (an HSPICE/LTspice form, not in the ngspice manual) is rejected (default: reject); an `X` line with no nodes. `K` with two or more inductor names and a coupling value (number or formula). Settle: a `K` naming a non-`L` element (syntax error or M5 diagnostic? default: grammar requires the `L` letter, §3.3.12).
 *Done when:* accept and reject tests pass; `K` inductor references and `X` nodes have spans.
 
-[ ] **T6 — Transformer, RKM option and errors.**
+[x] **T6 — Transformer, RKM option and errors.**
 Transformer methods per new rule, dispatching on node type (§6.3 rule 11). `parse(source, dialect, *, rkm=False)`, with `rkm` passed through to the transformer (one cached parser per dialect; the option must not change the grammar). Error names for the new terminals; RKM-off message; `UnsupportedConstruct` stays for phase 2 letters. Update `ngspice-devices.json` and `devices.md` (R, C, L, V, I, D, X, K `supported`) and the `structure_rejects/element_line.cir` fixture (use a phase 2 letter; update its manifest).
 *Done when:* every error branch is covered, and the device-matrix consistency test passes.
 
 ### Validation, specs and tests
 
-[ ] **T7 — Spec entries.**
+[x] **T7 — Spec entries.**
 New entries under `docs/grammars/ngspice/specs/`, in the M2 format (`manual_ref` as `[ngspice-manual] §<n> "<title>"`, `grammar:`, `tests:`, `status`), for example: `NG-FLD-001` fields and separators; `NG-NOD-001` node names; `NG-NUM-001` numbers and scale factors; `NG-NUM-002` trailing letters; `NG-NUM-003` RKM (option); `NG-NUM-004` `µ` (`observed`); `NG-VAL-001` formulas; `NG-PAR-001` instance parameters and flags; `NG-RES-001`, `NG-CAP-001`, `NG-IND-001`, `NG-MUT-001`, `NG-SRC-001`, `NG-DIO-001`, `NG-SUB-001`; `NG-UNS-001` unsupported forms. Add `docs/grammars/ngspice/numbers.md` (architecture §9.3) summarising the number rules with citations (paraphrase only).
 *Done when:* the spec checker passes, and every new rule and terminal carries a marker.
 
-[ ] **T8 — Solver probes (T8 tier, discrepancy evidence and acceptance).**
+[x] **T8 — Solver probes (T8 tier, discrepancy evidence and acceptance).**
 In `tests/solver/`: (a) record the section 7 probes as tests (`2k7` read as `2k` without LT mode; `µ` as micro; comma separators; `r=`; digit-leading model name), each paired with what the library does; (b) every file in the new accept corpus runs in ngspice 47 without error; (c) a divider and an RC filter give the closed-form result, as a first M7-style check; (d) with `set ngbehavior=lt` in a temporary `.spiceinit`, `2k7`, `4R7`, `R47`, `4L7`, `4G7` and `4u7` are read per IEC 60062 (validates `NG-NUM-003`), while R `1M0` is read as milli and C `4F7` as femto in both modes (discrepancy evidence for decision 2); `4E7` is an exponent in both modes. Update `discrepancies.md`. LTspice's reading of `1M0` is checked in M8.
 *Done when:* the tests pass locally and skip cleanly without the solver; spec entries carry `validated_on`.
 
-[ ] **T9 — Tests and corpus.**
+[x] **T9 — Tests and corpus.**
 - *Corpus:* new authored families `elements_basic/` (one small netlist per element and value form, LF and CRLF, continuations, trailing comments) and `elements_rejects/` (one file per T6 case, manifest with expected line and column), with manifests (origin: authored in this repository; author `xdylanm`, MIT, confirmed by the maintainer on 2026-10-30). `kicad_basic` now parses with `rkm=True` and fails with the RKM message without it.
 - *T2:* one accept and one reject test per spec entry.
 - *T3:* round-trip and span tiling over all corpora.
@@ -149,11 +149,11 @@ In `tests/solver/`: (a) record the section 7 probes as tests (`2k7` read as `2k`
 - *Performance:* 20,000 element lines (mixed letters, 10% continued) parse in under 2 s.
 *Done when:* all pass with the 90% coverage gate.
 
-[ ] **T10 — Docs.**
+[x] **T10 — Docs.**
 Update `docs/usage/structural-parse.md` (or add `docs/usage/elements.md`) with an executed example, `CHANGELOG.md`, `README.md` status, `docs/testing.md` (new corpora, the `rkm` option in tests), and the phase plan's M3 heading (link this task list). Public names get docstrings.
 *Done when:* docs match the code and links resolve.
 
-[ ] **T11 — Exit.**
+[x] **T11 — Exit.**
 Full check set, a fresh-clone test, and the solver tests. Report what changed, every "settle" decision with its citation, deviations from this list, and limitations. Set this document's status to `READY FOR REVIEW`. **Do not archive.**
 
 ## 5. Dependencies between tasks
@@ -226,3 +226,84 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
 ## 8. Out of scope for M3
 
 `.param`, `.model`, `.subckt`/`.ends` and typed directives (M4); `Document`, `Lines`, indexes, topology signature, ground aliases, diagnostics API (M5); edits (M6); stimulus specs, behavioral expressions and every phase 2 letter (phase 2); the LTspice grammar (M8); expression evaluation (non-goal 6) and parameter validation (non-goal 8).
+
+## 9. Report (2026-10-30)
+
+### What changed
+
+- **Grammar** (`core.lark`, composed into `ngspice.lark` with `%extend line`): R, C, L, K, V, I,
+  D and X element rules. Field separators are tokens (`SEP`, `CSEP`, `EQ`). Every field rule
+  starts with its own separator, and a longer gap nests right-recursively. Numbers, RKM
+  terminals, formulas and keywords are separate terminals, and unsupported forms are grammar
+  rules. Strict build is green; **no new lookaround terminal**, so the pinned list is unchanged.
+- **Model:** `model/values.py` (`NumericValue`, `Formula`, `ModelReference`,
+  `SubcktReference`, `ElementReference`, `ParamAssignment`, `Flag`, `AcSpec`) and the
+  `Component` subclasses in `model/nodes.py`, all exported. Shapes:
+  [m3-elements.md](./m3-elements.md).
+- **Parser:** `parse(source, dialect, *, rkm=False)`. The transformer runs inside the LALR parser
+  (tree-less mode), with per-parse state in a `ContextVar`; `grammar.parse_source()` is new.
+  The loader classifies only `planned` letters as `UnsupportedConstruct`.
+- **Records:** decision [0004](../decisions/0004-element-and-value-grammar.md) (proposed);
+  architecture §5.3, §6.2, §6.4, §17 (`RKM_SOLVER_MISMATCH`) and §21 amended; IEC 60062 in
+  `references.md`; 16 spec entries; `numbers.md`; discrepancies; device matrix.
+- **Tests:** `test_elements.py`, `test_numbers.py`, `test_element_oracle.py` (Hypothesis),
+  `roundtrip/test_ngspice_elements.py`, `solver/test_ngspice_solver_elements.py` (42 probes),
+  `test_usage_docs.py`. New corpora `elements_basic` (5) and `elements_rejects` (22).
+  580 tests pass, 2 skip (POSIX-only), coverage 97%.
+
+### Settle decisions (each also in its spec entry)
+
+| Item | Choice | Basis |
+|---|---|---|
+| RKM case rules (T1) | R codes case-insensitive except `M` (mega, uppercase); lowercase `m` on R is a `ParseError` with a hint; C codes case-insensitive | decision 2 default |
+| Sign, `.5`, `5.`, `1e3k` (T1) | accepted | §2.1.3.2; `validated` (ngspice 47 reads `1e3k` as 1e6) |
+| `meg`/`mil` case (T1) | case-insensitive | §2.1.3.2 |
+| Nested `{` (T1) | rejected; braces may not be empty or span lines | §6.3 rule 8 |
+| Formula delimiters (T1) | `{}` and `'`; `"` only as a subcircuit parameter value | §2.11.3 |
+| `1kk` (T1) | accepted | decision 4, §2.1.3.3 |
+| Comment markers in braces | braces do not protect `;` `$` `//` (a brace containing one is unterminated); quotes do | NG-TXT-001, ngspice truncates a braced path at `;` |
+| `R1 a b` (T2) | rejected: a value or a model is required (also for C and L) | §3.3.2 "If value is not specified, then mname … must be specified", §3.3.7 |
+| Value `0`, negative values (T2) | accepted as syntax | §3.3.1 |
+| Source without value (T3) | accepted | §4.1 |
+| `DC` without a value, a second `DC` (T3) | rejected | §4.1 general form `<<DC> VALUE>` |
+| `AC` without a magnitude (T3) | rejected | §4.1 "the keyword AC together with its value ACMAG … are required" |
+| DC/AC order (T3) | DC part before AC part only | §4.1 general form |
+| Parameter names (T4) | not checked, for R, C, L, D and X | non-goal 8 |
+| Positional diode area (T4) | rejected; named parameters only | §7.2 general form |
+| `params:` (T5) | rejected (`ParseError` at `params:`) | not in the ngspice manual |
+| X with no nodes (T5) | rejected | §2.6.3 `XYYYYYYY N1 <N2 …> SUBNAM` |
+| K naming a non-L element (T5) | syntax error at that name | §3.3.12 |
+| Commas | one comma per gap, only as the last separator before a field | §2.1.3.1 "a comma" (narrow) |
+
+### Deviations from this task list
+
+- **Field structure.** The gap is part of each field rule (`node: SEP WORD | SEP node`), not a
+  separate template. A shared gap rule merges LALR lookaheads, and a separate gap reduction per
+  field cost too much time (S1 findings, decision 0004).
+- **Tree-less transformer** (decision 0004, item 10). This was needed to approach the 2 s
+  budget. Errors from the transformer are now raised during the parse, so the leftmost problem
+  is reported first; an earlier M2 test was adjusted accordingly. The tree-less parser does not
+  set `propagate_positions` (§6.2 amended).
+- **`AcSpec.magnitude` is required**, not optional (manual §4.1).
+- **Elements extend `line`, not `statement`**, which saves a reduction per line.
+- **Performance test.** It runs in a fresh interpreter and takes the best of three runs. On the
+  maintainer's machine a parse takes about 1.6 s fresh and drifts to 2.0–2.3 s within a long
+  process under sustained load, with or without coverage. The 2 s bound is unchanged.
+- The architecture checkers now recognise `_UPPER` sub-terminals (they need spec markers) and
+  skip inlined `_rules` when requiring transformer methods.
+- `NG-PAR-001` covers model references; there is no separate model-reference spec ID.
+- `provenance.md` now lists every corpus family (it listed none).
+
+### Limitations
+
+- A letter-leading expression without blanks (`Rx+1000`) is a valid name and reads as a model
+  name; M5 will report it as an unresolved model. The same applies to a digit-leading word
+  after a value (`R1 a b 1k 2k`, model `2k`).
+- A model named like the value keyword (`r`, `resistance`, `c`, `q`, `l`, …) cannot stand
+  directly after the nodes; an RKM-shaped field such as `R2D2` in an R value position is
+  rejected; a name cannot end in `/`.
+- A keyword value (`r=`) is recognised only directly after the nodes; later on the line it is
+  an ordinary parameter.
+- Diagnostics (`DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH`) are recorded in the nodes but not
+  emitted until the M5 diagnostics API.
+- D2 (the design note) and decision 0004 have not been reviewed by the maintainer yet.

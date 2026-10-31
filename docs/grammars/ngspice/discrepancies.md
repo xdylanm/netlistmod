@@ -53,3 +53,25 @@ The remaining manual-quiet cases are probed separately:
   [docs/references.md](../../references.md)).
   `test_title_is_first_line_and_later_title_replaces_it` records the ngspice
   47 behavior.
+
+## Element and value observations (ngspice 47, 2026-10-30; M3)
+
+Probes are in `tests/solver/test_ngspice_solver_elements.py`. Values are read from the device
+tables ngspice prints after `.op`.
+
+| Solver behavior | Parser behavior | Evidence |
+|---|---|---|
+| Without LT mode, drops the digits after a scale letter without a warning: R `2k7` is 2k, `4R7` and `4L7` are 4, `4G7` is 4G, `1M0` is 1m; C `4u7` is 4u, `4F7` is 4f. | An RKM value is a `ParseError` naming the `rkm` option. | `test_rkm_digits_are_dropped_without_lt_mode` |
+| Without LT mode, R `R47` is an error. | `ParseError` (RKM without the option). | `test_leading_r_rkm_is_an_error_without_lt_mode` |
+| With `set ngbehavior=lt`, reads `2k7`, `4R7`, `R47`, `4L7`, `4G7`, `4u7`, `4p7` per IEC 60062. | Accepted with `rkm=True`, `notation="rkm"`. | `test_lt_mode_reads_rkm_per_iec_60062` |
+| In both modes, reads R `1M0`/`4M7` as milli and C `4F7` as femto; IEC 60062 reads mega and farad. | Accepted with `rkm=True` per IEC 60062 and marked `solver_mismatch=True` (`RKM_SOLVER_MISMATCH`, M5). | `test_rkm_mismatches_with_iec_60062_are_marked` |
+| Reads `1µ` as `1u` (the manual's table has no `µ`). | Accepted (`observed`). | `test_standard_numbers_agree_with_solver` |
+
+These agree with the parser: `4E7` is an exponent in both modes
+(`test_exponent_is_not_an_rkm_code_in_either_mode`); trailing letters, `.5k`, `5.`, `+1k`,
+`1e3k`, `mil` and `a` (`test_standard_numbers_agree_with_solver`); a comma between nodes,
+`r=` and `r = ` and a `+` continuation (`test_separators_and_keyword_value_agree_with_solver`);
+a model name starting with a digit (`test_digit_leading_model_name_agrees_with_solver`).
+Every file of the `elements_basic` corpus loads and solves with model and subcircuit
+definitions added (`test_accept_corpus_runs_in_ngspice`). The LTspice reading of `1M0` is
+checked in M8.

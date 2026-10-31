@@ -1,0 +1,24 @@
+id: NG-NOD-001
+dialect: ngspice
+construct: node, model, subcircuit and parameter names
+manual_ref:
+- '[ngspice-manual] §2.1.3.4 "Node names"'
+- '[ngspice-manual] §2.1.3.1 "Lines"'
+status: documented
+grammar:
+- _WCHAR
+- _WUNIT
+- WORD
+- node
+tests:
+- tests/grammar/ngspice/test_elements.py::test_resistor_value_model_and_parameters
+- tests/grammar/ngspice/test_elements.py::test_every_sub_span_slices_back_to_its_text
+- tests/grammar/ngspice/test_elements.py::test_leading_whitespace_and_case_of_designators
+- tests/grammar/ngspice/test_elements.py::test_malformed_resistor_lines_are_rejected_with_positions
+- tests/roundtrip/test_ngspice_elements.py::test_element_corpus_round_trips_and_spans_tile
+notes: 'A name excludes blanks and the characters the manual lists (= % ( ) , [ ] < > ~ { } ''), plus
+  the comment starters ; $ //, a double quote and a backslash. A / must be followed by another name character,
+  so // starts a comment and a name cannot end in / (a/ is rejected). Numeric node names (1, 12) are names:
+  in a node position no number terminal is offered. Ground aliases and case rules are M5 (names.md). In
+  a value position a digit-leading field is a value; where no value can stand (diode model, after a value)
+  a digit-leading field is a model name, as ngspice 47 accepts 1n4148.'

@@ -1,0 +1,31 @@
+id: NG-RES-001
+dialect: ngspice
+construct: resistor (R) lines
+manual_ref:
+- '[ngspice-manual] §3.3.1 "Resistors"'
+- '[ngspice-manual] §3.3.2 "Semiconductor Resistors"'
+- '[ngspice-manual] §3.3.4 "Resistors, dependent on expressions (behavioral resistor)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- resistor
+- r_keyword_value
+- R_NAME
+- R_KW
+- RESISTANCE_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_resistor_value_model_and_parameters
+- tests/grammar/ngspice/test_elements.py::test_keyword_value_forms_fill_the_value_slot
+- tests/grammar/ngspice/test_elements.py::test_malformed_resistor_lines_are_rejected_with_positions
+- tests/grammar/ngspice/test_elements.py::test_a_digit_leading_name_is_a_model_where_no_value_can_stand
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+- tests/solver/test_ngspice_solver_elements.py::test_divider_matches_its_closed_form
+notes: 'R n+ n- then a value, a model, or both, then parameters; or a keyword value r= / resistance= (number
+  or formula) then parameters. §3.3.2: if the value is not specified, mname must be, so R1 a b and R1
+  a b l=10u are rejected. Value 0 and negative values are accepted as syntax (§3.3.1 describes both).
+  The keyword value is recognised only directly after the nodes; r= later on the line is an ordinary parameter,
+  and no model may follow a keyword value. A model named r or resistance cannot stand directly after the
+  nodes (the keyword wins).'

@@ -1,0 +1,15 @@
+M3 resistors
+* value, model, parameters and expression forms (manual §3.3.1, §3.3.2, §3.3.4)
+R1 1 2 100
+RC1 12 17 1K
+R2 5 7 1K ac=2K
+RL 1 4 2K m=2
+RLOAD 2 10 10K
+RMOD 3 7 RMODEL L=10u W=1u
+RE1 1 2 800 newres dtemp=5
+Rmd 134 57 1.5k noisy=0
+R3 a b r = 1k
+R4 a b {2*rval}
+R5 rr 0 r = 'V(rr) > 1 ? 2k : 1k' tc1=2e-03
+R6 /vin,/vout 10kOhm
+.end

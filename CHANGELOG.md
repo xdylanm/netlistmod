@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+- Parse the phase 1 ngspice element lines (R, C, L, K, V, I, D, X) into typed,
+  immutable nodes (`Resistor`, …, `SubcktInstance`, base `Component`) with
+  value slots (`NumericValue`, `Formula`, `ModelReference`, `ParamAssignment`,
+  `AcSpec`, …) and a span for every field (decision 0004).
+- `parse()` takes a keyword-only `rkm` option (default `False`). RKM values
+  (`2k7`, `4R7`, `4p7`) are a `ParseError` without it. With it they are read per
+  IEC 60062 for R and C, and values ngspice reads differently (`1M0`, `4F7`) are
+  marked `solver_mismatch`.
+- Grammar changes that alter what parses: R, C, L, K, V, I, D and X lines are now
+  parsed instead of raising `UnsupportedConstruct`. Source stimulus functions,
+  `DISTOF`, the capacitor `q=` form and other element letters still raise it,
+  and `params:` on an `X` line is a `ParseError`. A supported letter where no
+  element may stand (after `.end`) is a `ParseError`.
+- `parse()` applies the transformer during the parse (tree-less LALR), so it
+  reports the leftmost error first. `grammar.parse_source()` is new, and
+  `build_parser()` takes an optional transformer.
 - Implemented byte-preserving source text and spans, including BOM-aware
   decoding, configurable fallbacks, atomic file writes, and line/column
   diagnostics.

@@ -1,0 +1,18 @@
+id: NG-NUM-004
+dialect: ngspice
+construct: micro sign as a scale factor
+manual_ref: '[ngspice-manual] §2.1.3.2 "Numbers"'
+status: observed
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- _MICRO
+tests:
+- tests/grammar/ngspice/test_numbers.py::test_micro_sign_is_a_scale_factor
+- tests/grammar/ngspice/test_numbers.py::test_rkm_values_need_the_option
+- tests/solver/test_ngspice_solver_elements.py::test_standard_numbers_agree_with_solver
+notes: The micro sign U+00B5 is not in the manual's scale-factor table; ngspice 47 reads 1µ as 1u, and
+  LTspice exports contain it (architecture §11.3 rule 3). It is accepted wherever a letter after a number
+  is, and as a C RKM code.

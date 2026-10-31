@@ -1,0 +1,17 @@
+id: NG-NUM-002
+dialect: ngspice
+construct: letters following a number
+manual_ref: '[ngspice-manual] §2.1.3.3 "Letters following a number"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- _LETTERS
+tests:
+- tests/grammar/ngspice/test_numbers.py::test_letters_after_a_number_are_part_of_the_value
+- tests/solver/test_ngspice_solver_elements.py::test_standard_numbers_agree_with_solver
+notes: 'Letters after a number (10V, 1kOhm, 1UF, even 1kk) are part of the value token, as the manual
+  states; ngspice 47 ignores them. This is the manual''s rule, not a bare-formula catch-all (architecture
+  §6.3 rule 10): 1.1*Rx stays rejected.'

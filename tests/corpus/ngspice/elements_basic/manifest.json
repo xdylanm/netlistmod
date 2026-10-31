@@ -1,0 +1,15 @@
+{
+  "family": "elements_basic",
+  "origin": "Authored in this repository for the M3 ngspice element grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-30",
+  "notes": "One small netlist per group of element and value forms; manual examples are paraphrased. LF, CRLF and mixed line endings, a missing final newline, + and \\\\ continuations and trailing comments. Standard notation only (rkm=False).",
+  "fixtures": {
+    "resistors.cir": "7748564ba20f0617755b5e7423397714676a5bff2f4cd7ed4cb92d2c09f01b06",
+    "capacitors_inductors.cir": "6a2c368ecec0fb817b19f47e085fab2af713aeb55eb79cae6acab39048637156",
+    "sources_diodes.cir": "fad44414d74da42c2fdfb4acbb4ac2e58b387843369784195203830fcde7edb7",
+    "subcircuit_calls.cir": "aafa63a976e82bd3ac789c5f9eb40a2a4f160fd440f78e77b6424f1d647d4c1a",
+    "continuations_comments.cir": "5cef1d84e3b9c60a9eb0262fb6afff179c5a2b1ee6f14561a570231555a48663"
+  }
+}

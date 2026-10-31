@@ -1,0 +1,24 @@
+id: NG-IND-001
+dialect: ngspice
+construct: inductor (L) lines
+manual_ref:
+- '[ngspice-manual] §3.3.10 "Inductors"'
+- '[ngspice-manual] §3.3.13 "Inductors, dependent on expressions (behavioral inductor)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- inductor
+- l_keyword_value
+- L_NAME
+- L_KW
+- INDUCTANCE_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_inductor_forms
+- tests/grammar/ngspice/test_elements.py::test_keyword_value_forms_fill_the_value_slot
+- tests/grammar/ngspice/test_elements.py::test_malformed_capacitor_and_inductor_lines_are_rejected
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+notes: Same shape as R with l= / inductance=; nt= is an ordinary parameter. RKM is not accepted for L
+  (4u7 is a ParseError in both modes).

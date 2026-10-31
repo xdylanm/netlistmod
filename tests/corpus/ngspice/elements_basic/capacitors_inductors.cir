@@ -1,0 +1,14 @@
+M3 capacitors, inductors and coupling
+CBYP 13 0 1UF
+COSC 17 23 10U IC=3V
+C1 15 5 cstd
+CMOD 3 7 CMODEL L=10u W=1u
+C2 cc 0 c = {cval}
+C3 a 0 4.7µ
+LLINK 42 69 1UH
+LSHUNT 23 51 10U IC=15.7MA
+L1 15 5 indmod1
+L2 a b l={lval} tc1=1m
+K43 LLINK LSHUNT 0.999
+K123 L1 L2 LLINK 0.97
+.end

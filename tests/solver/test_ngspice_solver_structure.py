@@ -130,9 +130,10 @@ def test_backslash_after_trailing_space_or_in_comment_is_solver_leniency(
     code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
     assert code == 0, log
     assert float(_voltage(log)) == pytest.approx(2.0)
-    with pytest.raises(UnsupportedConstruct) as captured:
+    # The parser ends the statement on line 2, so line 3 is a new D line missing its second node.
+    with pytest.raises(ParseError) as captured:
         parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
-    assert (captured.value.line, captured.value.column) == (3, 1)
+    assert (captured.value.line, captured.value.column) == (3, 5)
 
 
 @pytest.mark.parametrize(

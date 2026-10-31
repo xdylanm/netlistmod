@@ -225,7 +225,8 @@ A value slot is one of a **small closed family**; its kind determines which edit
 
 ```python
 @dataclass(frozen=True)
-class NumericValue:      text: str; span: Span              # 1k, 2k7, 1e-6, 100R
+class NumericValue:      text: str; span: Span; notation: "standard" | "rkm"; solver_mismatch: bool
+                                                            # 1k, 2k7, 1e-6, 100R
 @dataclass(frozen=True)
 class Formula:           text: str; delimiter: str; span: Span   # {Rx*2}, "…", '…'
 @dataclass(frozen=True)
@@ -234,8 +235,10 @@ class ModelReference:    model_name: str; span: Span
 ```
 
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
+- `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
-- `VoltageSource` / `CurrentSource`: `value: NumericValue | Formula` initially; full stimulus specs are a typed node to be added before phase 2 completes.
+- `VoltageSource` / `CurrentSource` (phase 1): `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`); full stimulus specs are a typed node to be added before phase 2 completes ([decision 0004](decisions/0004-element-and-value-grammar.md)).
+- Node and value shapes are detailed in [docs/design/m3-elements.md](design/m3-elements.md).
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
 
 ### 5.4 Lines
@@ -255,7 +258,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 ### 6.2 Parser configuration
 
-- **Lark, LALR, contextual lexer, `propagate_positions=True`, `strict=True`.**
+- **Lark, LALR, contextual lexer, `propagate_positions=True`, `strict=True`.** The typed parse runs the transformer inside the parser (tree-less mode); that parser builds no tree, so it does not propagate tree positions, and token positions are used instead ([decision 0004](decisions/0004-element-and-value-grammar.md)).
 - `strict=True` turns shift/reduce, reduce/reduce and terminal-collision problems into build errors. A grammar that only works because Lark resolves a conflict silently is a bug.
 - Earley MAY be used for grammar exploration but MUST NOT ship. Lesson from the prototype: Earley parsed an input that LALR rejected because its dynamic lexer tolerates terminal overlap. That is not evidence the grammar is correct.
 
@@ -279,8 +282,8 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 ### 6.4 Numeric literals
 
-- Standard form: number, optional scale suffix (`f p n u µ m k meg g t`), case-insensitive, `meg` for mega. `m`/`M` is milli, always.
-- **RKM notation** (`2k7` = 2.7k, `4n7`, `100R`): the grammar accepts digits after the suffix. The ngspice manual states RKM notation is accepted when LTspice-compatibility mode is set, i.e. it is dialect- and mode-gated. The grammar accepts it; a diagnostic notes that it requires compatibility mode. `M` in mid-value position is ambiguous (milli vs. mega); it is treated as milli for C and mega for R following IEC60062.
+- Standard form: number, optional scale suffix (`t g meg k mil m u n p f a`, plus the observed `µ`), case-insensitive, `meg` for mega. `m`/`M` is milli, always. Letters after a number are part of the value text (ngspice ignores them).
+- **RKM notation** (`2k7` = 2.7k, `4n7`, `R47`): the ngspice manual accepts it only in LTspice-compatibility mode. The grammar has dedicated RKM terminals; the parser option `rkm` (default off) decides whether they are accepted, for R and C values only, and the node records `notation="rkm"`. Letters follow IEC 60062 (IEC 60062:2016): `M` in mid-value position is mega for R and milli for C. ngspice reads R `1M0` as milli and C `4F7` as femto even in compatibility mode; such values are marked (`RKM_SOLVER_MISMATCH`). See [decision 0004](decisions/0004-element-and-value-grammar.md) and `docs/grammars/ngspice/numbers.md`.
 - By the end of phase 2 the grammar MUST cover the full range of value specifications in the ngspice manual (scale-factor table and numeric forms), each with a spec entry and tests.
 - Interpretation of the numeric value is out of scope (non-goal 6); the library stores the text.
 
@@ -591,7 +594,7 @@ SpiceNetlistError
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `DUPLICATE_DEFINITION`, `DIALECT_GATED_SYNTAX`, `UNKNOWN_DIRECTIVE_PRESERVED`.
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `DUPLICATE_DEFINITION`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`.
 
 ---
 
@@ -663,5 +666,5 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 - Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).
 - The line model for continuation lines, interleaved comments and anchor-relative insertion.
 - Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only).
-- Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.
+- ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md) (proposed).
 - The diagnostics API (delivery and severity).

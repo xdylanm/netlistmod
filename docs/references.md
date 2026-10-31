@@ -17,3 +17,11 @@ adopted, update the edition and access date and re-check every citation.
 - **URL (PDF):** https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
 - **Edition:** Version 47+ (ngspice development version); preface "as of Mar 2026"
 - **Accessed:** 2026-10-30 (HTML edition; section numbers verified against it)
+
+## [iec-60062]
+
+- **Title:** IEC 60062:2016, *Marking codes for resistors and capacitors*
+- **Publisher:** International Electrotechnical Commission
+- **Edition:** 2016 (later amendments not checked)
+- **Used for:** RKM letter codes (decision 0004, `docs/grammars/ngspice/numbers.md`).
+  Secondary source: https://en.wikipedia.org/wiki/RKM_code (accessed 2026-10-30).

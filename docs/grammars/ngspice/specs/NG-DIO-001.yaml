@@ -1,0 +1,22 @@
+id: NG-DIO-001
+dialect: ngspice
+construct: junction diode (D) lines
+manual_ref:
+- '[ngspice-manual] §7.2 "Junction Diodes"'
+- '[ngspice-manual] §7.1 "Instance lines and .model lines"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- diode
+- D_NAME
+tests:
+- tests/grammar/ngspice/test_elements.py::test_diode_model_parameters_and_off_flag
+- tests/grammar/ngspice/test_elements.py::test_malformed_diode_lines_are_rejected
+- tests/solver/test_ngspice_solver_elements.py::test_digit_leading_model_name_agrees_with_solver
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+notes: D n+ n- mname, then parameters and the off flag in any order. The model is mandatory; the area
+  is a named parameter only (a positional area is rejected). A model name may start with a digit (1n4148),
+  as ngspice 47 accepts.

@@ -21,7 +21,7 @@ from netlistmod.grammar.loader import build_parser, pending_dialects, registered
 ROOT = Path(__file__).parents[2]
 SOURCE = ROOT / "src" / "netlistmod"
 GRAMMAR_DECLARATION = re.compile(
-    r"^\s*(?:(%extend|%override)\s+)?(\??[a-z_][a-z_0-9]*|[A-Z][A-Z_0-9]*)"
+    r"^\s*(?:(%extend|%override)\s+)?(\??[a-z_][a-z_0-9]*|_?[A-Z][A-Z_0-9]*)"
     r"(?:\.\d+)?\s*:"
 )
 RULE_ALIAS = re.compile(r"->\s*([a-z_][a-z_0-9]*)")
@@ -79,7 +79,14 @@ def _missing_transformer_methods(grammar_files: list[Path], transformer: type) -
         aliases: list[str] = []
 
         def finish() -> None:
-            if current_name is None or current_name[0].isupper() or current_extended:
+            # Terminals (also "_" sub-terminals), extensions and inlined rules ("_name") have
+            # no transformer method: Lark splices an inlined rule's children into its parent.
+            if (
+                current_name is None
+                or current_name[0].isupper()
+                or current_name.startswith("_")
+                or current_extended
+            ):
                 return
             if aliases:
                 prefix = "core__" if path.name == "core.lark" else ""

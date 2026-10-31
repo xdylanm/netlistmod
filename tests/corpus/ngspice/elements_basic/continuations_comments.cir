@@ -1,0 +1,12 @@
+M3 continuations and trailing comments
+R1 a b ; first line
++ 1k $ second line
+C1 a 0 \\
+  10n // backslash continuation
+X1 a
++ b ; node b
++ sub r=1k
+V1 a 0
++ DC 1
+	R2 a 0 2k	
+.end

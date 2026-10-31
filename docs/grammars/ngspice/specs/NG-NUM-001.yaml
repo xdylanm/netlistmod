@@ -1,0 +1,26 @@
+id: NG-NUM-001
+dialect: ngspice
+construct: 'numbers: sign, mantissa, exponent and scale factor'
+manual_ref: '[ngspice-manual] §2.1.3.2 "Numbers"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- _SIGN
+- _MANTISSA
+- _EXPONENT
+- NUMBER
+tests:
+- tests/grammar/ngspice/test_numbers.py::test_number_forms_are_stored_verbatim
+- tests/grammar/ngspice/test_numbers.py::test_scale_factors_are_case_insensitive_and_kept_as_text
+- tests/grammar/ngspice/test_numbers.py::test_standard_notation_is_the_same_in_both_rkm_modes
+- tests/grammar/ngspice/test_numbers.py::test_digits_after_letters_outside_rkm_are_rejected_in_both_modes
+- tests/solver/test_ngspice_solver_elements.py::test_standard_numbers_agree_with_solver
+- tests/solver/test_ngspice_solver_elements.py::test_exponent_is_not_an_rkm_code_in_either_mode
+notes: Integer and decimal mantissas (.5 and 5. included), optional + or - sign, optional e/E exponent,
+  then optional letters, as one token stored verbatim; the library does not compute values. Scale factors
+  t g meg k mil m u n p f a are case-insensitive and are covered by the letters rule (NG-NUM-002); m and
+  M are milli and meg is mega. An exponent followed by a scale factor (1e3k) is accepted; ngspice 47 reads
+  it as 1e6. Digits after the letters are an error unless the value is RKM (NG-NUM-003).

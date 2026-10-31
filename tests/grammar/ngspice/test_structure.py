@@ -251,11 +251,11 @@ def test_backslashes_that_do_not_end_a_statement_line_are_text(
     assert isinstance(result.items[2], End)
 
 
-@pytest.mark.parametrize("continued", ["R1 a b \\\\\n1k", "R1 a b\n+ 1k"])
+@pytest.mark.parametrize("continued", ["Q1 c b \\\\\ne npn", "Q1 c b\n+ e npn"])
 def test_continued_element_line_is_reported_at_its_first_line(continued: str) -> None:
     with pytest.raises(UnsupportedConstruct) as captured:
         _parse(f"title\n{continued}\n.end\n")
-    assert captured.value.construct == "ngspice R device"
+    assert captured.value.construct == "ngspice Q device"
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
@@ -534,7 +534,10 @@ def test_stray_block_closers_are_rejected(closer: str) -> None:
     assert captured.value.excerpt == closer + "\n^"
 
 
-@pytest.mark.parametrize("letter", string.ascii_uppercase)
+PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDX"))
+
+
+@pytest.mark.parametrize("letter", PHASE_2_LETTERS)
 def test_element_lines_are_positioned_unsupported_constructs(letter: str) -> None:
     with pytest.raises(UnsupportedConstruct) as captured:
         _parse(f"title\n{letter}1 a b 1k\n.end\n")
@@ -555,10 +558,10 @@ def test_unknown_letter_is_parse_error_and_device_matrix_is_complete() -> None:
 def test_device_letter_with_error_status_remains_parse_error() -> None:
     with patch(
         "netlistmod.grammar.loader.device_matrix",
-        return_value={"R": {"status": "error"}},
+        return_value={"Q": {"status": "error"}},
     ):
         with pytest.raises(ParseError) as captured:
-            _parse("title\nR1 a b 1k\n.end\n")
+            _parse("title\nQ1 a b 1k\n.end\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
@@ -569,7 +572,8 @@ def test_lone_cr_is_free_text_but_not_accepted_after_end() -> None:
         _parse("title\n.end\r")
 
 
-@settings(max_examples=200, print_blob=True)
+# No deadline: the first example may build and cache the parser.
+@settings(max_examples=200, print_blob=True, deadline=None)
 @given(seed=st.integers())
 def test_generated_independent_oracle_for_node_kinds_and_spans(seed: int) -> None:
     rng = random.Random(seed)

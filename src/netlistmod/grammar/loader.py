@@ -6,9 +6,9 @@ import json
 from collections.abc import Iterable
 from functools import lru_cache
 from importlib.resources import files
-from typing import Final
+from typing import Any, Final
 
-from lark import Lark, Token, Tree
+from lark import Lark, Token, Transformer, Tree
 from lark.exceptions import UnexpectedCharacters, UnexpectedToken
 
 from netlistmod.dialects import Dialect
@@ -51,13 +51,51 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "TEXT": "text",
     "QUOTED": "quoted text",
     "TRAILING_COMMENT": "trailing comment (`;`, `$` or `//`)",
+    "SEP": "field separator",
+    "CSEP": "`,` field separator",
+    "EQ": "`=`",
+    "WORD": "name",
+    "NUMBER": "number",
+    "RKM_R": "RKM value",
+    "RKM_R_MEGA": "RKM value",
+    "RKM_R_MILLI": "RKM value",
+    "RKM_C": "RKM value",
+    "RKM_C_FARAD": "RKM value",
+    "BRACE_FORMULA": "`{expression}`",
+    "QUOTE_FORMULA": "`'expression'`",
+    "STRING_VALUE": '`"string"`',
+    "OFF_KW": "`off`",
+    "R_NAME": "resistor (`R`)",
+    "C_NAME": "capacitor (`C`)",
+    "L_NAME": "inductor (`L`)",
+    "K_NAME": "coupling (`K`)",
+    "V_NAME": "voltage source (`V`)",
+    "I_NAME": "current source (`I`)",
+    "D_NAME": "diode (`D`)",
+    "X_NAME": "subcircuit call (`X`)",
+    "L_REF": "inductor name (`L...`)",
+    "R_KW": "`r=`",
+    "RESISTANCE_KW": "`resistance=`",
+    "C_KW": "`c=`",
+    "CAPACITANCE_KW": "`capacitance=`",
+    "L_KW": "`l=`",
+    "INDUCTANCE_KW": "`inductance=`",
+    "Q_KW": "`q=`",
+    "DC_KW": "`DC`",
+    "AC_KW": "`AC`",
+    "STIMULUS_KW": "source function",
+    "PARAMS_KW": "`params:`",
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 
 
 @lru_cache(maxsize=None)
-def build_parser(dialect: Dialect) -> Lark:
-    """Build or retrieve the strict LALR parser for ``dialect``."""
+def build_parser(dialect: Dialect, transformer: Transformer[Token, Any] | None = None) -> Lark:
+    """Build or retrieve the strict LALR parser for ``dialect``.
+
+    With ``transformer``, the parser applies it while parsing (Lark's tree-less LALR mode) and
+    returns its result instead of a tree. One parser is cached per dialect and transformer.
+    """
     if not isinstance(dialect, Dialect):
         raise ValueError(f"Unknown dialect {dialect!r}")
     try:
@@ -69,8 +107,12 @@ def build_parser(dialect: Dialect) -> Lark:
         grammar_files[-1],
         parser="lalr",
         lexer="contextual",
-        propagate_positions=True,
+        # Without a transformer the tree carries positions (architecture §6.2). A tree-less
+        # parser builds no tree, and token positions are always kept, so it skips the wrapper
+        # that would propagate them (decision 0004).
+        propagate_positions=transformer is None,
         strict=True,
+        transformer=transformer,
     )
 
 
@@ -80,7 +122,21 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
     Raises ``ParseError`` (or ``UnsupportedConstruct`` for a known but unsupported element
     letter). Positions come only from ``SourceText``.
     """
-    parser = build_parser(dialect)
+    tree = parse_source(source, dialect)
+    if not isinstance(tree, Tree):
+        raise TypeError("The parser without a transformer did not return a tree")
+    return tree
+
+
+def parse_source(
+    source: SourceText, dialect: Dialect, transformer: Transformer[Token, Any] | None = None
+) -> Any:
+    """Parse source with ``transformer`` applied during the parse (a tree without one).
+
+    Syntax errors are mapped as in :func:`parse_tree`; errors the transformer raises pass
+    through unchanged.
+    """
+    parser = build_parser(dialect, transformer)
     try:
         return parser.parse(source.text)
     except UnexpectedToken as error:
@@ -140,8 +196,9 @@ def _map_error(
     line_start = source.line_span(line).start
     letter = source.text[offset : offset + 1].upper()
     if letter.isalpha() and not source.text[line_start:offset].strip(" \t"):
-        status = device_matrix().get(letter, {}).get("status")
-        if status in {"planned", "supported"}:
+        # A supported letter fails inside its line, or where no element may stand (after
+        # .end): both are syntax errors. Only a planned letter is an unsupported construct.
+        if device_matrix().get(letter, {}).get("status") == "planned":
             return UnsupportedConstruct(
                 f"{dialect.value} {letter} device", line, column, source.excerpt(offset)
             )

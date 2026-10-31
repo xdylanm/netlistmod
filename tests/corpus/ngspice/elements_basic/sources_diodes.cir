@@ -1,0 +1,10 @@
+M3 sources and diodes
+VCC 10 0 DC 6
+VIN 13 2 0.001 AC 1
+ISRC 23 21 AC 0.333 45.0
+VMEAS 12 9
+V1 /vin 0 DC 0 AC 1  
+DBRIDGE 2 10 DIODE1
+DCLMP aa cc DMOD AREA=3.0 IC=0.2
+D1 a k 1n4148 off
+.end

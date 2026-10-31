@@ -18,7 +18,7 @@ GRAMMAR_FILES = [
 SPEC_MARKER = re.compile(r"^\s*//\s*spec:\s*([A-Z0-9-]+)\s*$", re.MULTILINE)
 GRAMMAR_DECLARATION = re.compile(
     r"^\s*(?:(?:%extend|%override)\s+)?"
-    r"(\??[a-z_][a-z_0-9]*|[A-Z][A-Z_0-9]*)(?:\.\d+)?\s*:"
+    r"(\??[a-z_][a-z_0-9]*|_?[A-Z][A-Z_0-9]*)(?:\.\d+)?\s*:"
 )
 # `[<key>] §<number> "<title>"`, for example `[ngspice-manual] §2.4.4 "End-of-line comments"`.
 MANUAL_REF = re.compile(r'\[([a-z0-9][a-z0-9-]*)\] §(\d+(?:\.\d+)*) "([^"\r\n]+)"')

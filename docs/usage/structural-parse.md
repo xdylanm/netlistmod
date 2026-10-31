@@ -32,9 +32,9 @@ the next line must start with statement text.
 Unknown dot-commands are preserved without interpretation. `.control`,
 conditional blocks, `.include`, and `.lib` are opaque; the parser does not
 read referenced files. A `.lib name` … `.endl` definition block is not
-recognized in M2. Element lines are not parsed in M2. A device letter known
-to ngspice but not implemented in this milestone raises
-`UnsupportedConstruct`; malformed structural input raises `ParseError` with a
+recognized in M2. Element lines of the phase 1 letters are parsed since M3
+(see [the element guide](./elements.md)). A device letter known to ngspice but
+not implemented yet raises `UnsupportedConstruct`; malformed structural input raises `ParseError` with a
 source position and excerpt. LTspice grammar support is a later milestone.
 
 The parser intentionally follows the manual's strict structure rather than

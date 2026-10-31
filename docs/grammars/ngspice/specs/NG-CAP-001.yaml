@@ -1,0 +1,28 @@
+id: NG-CAP-001
+dialect: ngspice
+construct: capacitor (C) lines
+manual_ref:
+- '[ngspice-manual] §3.3.6 "Capacitors"'
+- '[ngspice-manual] §3.3.7 "Semiconductor Capacitors"'
+- '[ngspice-manual] §3.3.9 "Capacitors, dependent on expressions (behavioral capacitor)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- capacitor
+- c_keyword_value
+- C_NAME
+- C_KW
+- CAPACITANCE_KW
+tests:
+- tests/grammar/ngspice/test_elements.py::test_capacitor_forms
+- tests/grammar/ngspice/test_elements.py::test_keyword_value_forms_fill_the_value_slot
+- tests/grammar/ngspice/test_elements.py::test_malformed_capacitor_and_inductor_lines_are_rejected
+- tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_is_unsupported_at_q
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+- tests/solver/test_ngspice_solver_elements.py::test_rc_filter_is_at_minus_3_db_at_its_corner
+notes: 'Same shape as R with c= / capacitance=; a value or a model is required (§3.3.7: without a value,
+  the capacitance comes from mname). The charge form q=''expr'' is recognised and raises UnsupportedConstruct
+  at q (phase 2 BehavioralExpression).'

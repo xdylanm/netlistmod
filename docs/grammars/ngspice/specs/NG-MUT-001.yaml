@@ -1,0 +1,21 @@
+id: NG-MUT-001
+dialect: ngspice
+construct: mutual coupling (K) lines
+manual_ref: '[ngspice-manual] §3.3.12 "Coupled (Mutual) Inductors"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- mutual_coupling
+- inductor_ref
+- K_NAME
+- L_REF
+tests:
+- tests/grammar/ngspice/test_elements.py::test_mutual_coupling_references_inductors
+- tests/grammar/ngspice/test_elements.py::test_malformed_mutual_coupling_is_rejected
+- tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+notes: 'K, two or more inductor names, then a coupling value (number or formula). The grammar requires
+  the L letter on each reference (§3.3.12), so K1 L1 R2 0.9 is a ParseError at R2. The references are
+  topology, not nets: nodes is empty.'
