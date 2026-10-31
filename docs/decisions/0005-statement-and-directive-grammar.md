@@ -1,6 +1,6 @@
 # 0005 — Statement and directive grammar
 
-- **Status:** proposed
+- **Status:** accepted (2026-10-30, maintainer, after the M4 review)
 - **Date:** 2026-10-30
 - **Context:** M4 types the dot-statements and directives that phase 1 needs: `.param`,
   `.model`, `.subckt` … `.ends`, `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`,

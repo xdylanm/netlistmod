@@ -273,7 +273,7 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
   or a reduced `subckt_header`) and reported at its innermost open line; an unclosed `(` or
   `v(` is reported at the opener when the line ends; terminal names for every new terminal.
 - **Records:** decision [0005](../decisions/0005-statement-and-directive-grammar.md)
-  (proposed); architecture §5.2 and §6.5 amended; 12 new spec entries, `NG-STR-001`,
+  (accepted 2026-10-30); architecture §5.2 and §6.5 amended; 12 new spec entries, `NG-STR-001`,
   `NG-OPA-001` and `NG-DIR-001` updated; `discrepancies.md`; `provenance.md`.
 - **Tests:** `test_statements.py` (173 cases), a second Hypothesis generator in
   `test_element_oracle.py` (statements, directives, nested subcircuits with element bodies),
@@ -320,7 +320,7 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
 
 - **`.options` values may be names** (`method=gear`, §11.1.4), stored as the new
   `Identifier`; decision 6 named numbers and formulas only, which would reject a documented
-  form. Recorded in decision 0005 item 6 for the maintainer to confirm.
+  form. Recorded in decision 0005 item 6; confirmed by the maintainer (2026-10-30).
 - **`.param` names use their own terminal** (`PARAM_NAME`), narrower than the M3 name class
   (letter first, §2.11.1); `.subckt` defaults keep `WORD`, as on X lines, because ports and
   default names share one lexer state.
