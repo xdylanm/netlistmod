@@ -1,6 +1,6 @@
 # M5 task list — document and semantic layer (ngspice)
 
-> **Status:** READY FOR REVIEW — implemented 2026-10-31 (section 9); approved by the maintainer (2026-10-31); section 2 records the decisions.
+> **Status:** ACTIVE — review round 1 (section 10) requires one change before M5 can close. Implemented 2026-10-31 (section 9); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M5). Governed by [architecture.md](../architecture.md) (§2 P1–P4, P8, P13; §3 layer [3]; §5.4; §7.1, §7.7, §7.8; §8; §17; §21). Builds on M2–M4: the parser returns typed nodes with spans that tile the source ([m3-elements.md](./m3-elements.md), [m4-statements.md](./m4-statements.md), decisions 0002–0005). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -291,3 +291,56 @@ Edits, `save()`, edit plans and verification (M6, including the `set_model` half
 **Limitations:** see decision 0006 "Known limits" (`.if` blocks and includes not seen; an `.if`
 block does not soften an unresolved diagnostic; plain `.save` names, `@dev[param]` and
 `.ic` nodes are not references; formulas with verbose operators give no references).
+
+## 10. Review round 1 (2026-10-31)
+
+### 10.1 Outcome
+
+Accepted except for one finding. The rest of M5 holds up on review:
+- **Checks:** 1061 passed, 2 POSIX-only skips, 98.65% coverage. ruff, mypy `--strict` and the import-linter layer contract are clean, and ngspice was required and found.
+- **Code:** no regular expressions or text scanning in `document/` (P13). Formula references come from `formula.lark`, so `V(a)` and `i(vm)` are calls, not parameters.
+- **Behaviour table:** every row checked holds:
+  - ground merges `GND` and `gnd` into net `0`;
+  - `.global` nets are shared across scopes, and a subcircuit's internal nets are local;
+  - a case-insensitive duplicate `R1`/`r1` gives `DUPLICATE_ELEMENT`;
+  - `UNRESOLVED_MODEL` is info when an `.include` is in the scope chain and a warning otherwise; an `.include` inside a definition does not soften a top-level reference;
+  - `SUBCKT_PORT_MISMATCH`, `UNRESOLVED_ELEMENT` (for K, and for `.dc VIN` but not `.dc TEMP`), `ENDS_NAME_MISMATCH`, the RKM notes and `UNKNOWN_DIRECTIVE_PRESERVED` all appear where expected;
+  - the signature is unchanged by reformatting and continuations, and a `GND` → `gnd` change alters it.
+- **Hands-on corpus:** the maintainer's KiCad export (`kicad_extended/shiftscaleinvert.cir`, two `.include` libraries, TL072 and potentiometer subcircuits) loads, and each X line is `UNRESOLVED_SUBCKT` with severity info (decision 8).
+- **Records:** decision 0006, `names.md`, `scoping.md`, the architecture amendments (§4, §5.2, §5.4, §7.1, §7.7, §8, §17, §20, §21), `m5-document.md` and the spec entries `NG-GLB-001` and `NG-FML-001` agree with the code.
+
+### 10.2 Required change
+
+[ ] **R1 — `PARAM_USED_BEFORE_DEFINITION` must not fire for a reference from a subcircuit body to a parameter of an enclosing scope.**
+`_formula_references` (`document/index.py`) marks a reference "late" whenever the parameter's first definition comes later **in the file** than the reference, wherever the two are. A definition placed at the top of a file, before the global `.param` it uses, therefore gets a false warning. This is a common layout (library subcircuits first):
+
+```
+.subckt div a b
+R1 a b {rx}          <- PARAM_USED_BEFORE_DEFINITION today
+.ends
+.param rx=1k
+X1 in out div
+```
+
+§2.11.1, the basis of the warning (scoping.md S5), describes the **expanded** circuit: ".param lines inside subcircuits are copied per call … All assignments are executed sequentially through the expanded circuit". A body is expanded where it is called, not where it is defined, so the file position of the body says nothing about order against an outer parameter. In this example `X1` comes after `.param rx`.
+
+Change:
+1. Warn only when the reference and the parameter definition it resolves to are in the **same scope**, and the reference comes before that scope's first definition of the name. Examples: a top-level `{rx}` before the top-level `.param rx`, or a body `{k}` before the body's own `.param k`.
+2. A reference that resolves to an enclosing scope's parameter gets no warning. Do not try to order it against the X lines that call the definition. One definition can be called from several places, and that would be an instance-expanded view, which §8 keeps out of scope.
+3. Update scoping.md S5 and decision 0006 item 4 (a dated amendment) to state the same-scope rule and why.
+4. Tests:
+   - the example above (no diagnostic);
+   - a body `.param k` used earlier in the same body (warning);
+   - the top-level case (warning, unchanged);
+   - a reference inside a nested definition to a parameter of its parent definition (no warning).
+   Add the example to `document_basic` (or a test file) with its manifest entry.
+
+*Done when:* the cases above hold and the full check set is green.
+
+### 10.3 Noted, no change required
+
+- **`elements_on_net("vcc")`** at the top level lists only top-level elements, even for a `.global` net that elements inside a definition also use. Queries are per definition scope by design (decision 5). The usage page should say this in one line, next to the `.global` example.
+
+### 10.4 Exit for this round
+
+Run the full check set and the solver tests, append a short report under this section, and set the status to `READY FOR REVIEW`. **Do not archive.**
