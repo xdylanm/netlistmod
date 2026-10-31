@@ -24,4 +24,4 @@ notes: 'The source functions PULSE, EXP, SIN, PWL, SFFM, AM, TRNOISE, TRRANDOM, 
   DISTOF1/DISTOF2, raise UnsupportedConstruct at the keyword; the charge form q= of a capacitor raises
   it at q; params: on an X line is a ParseError. Each is a grammar rule whose arguments are statement
   text up to the end of the (possibly continued) line, so the next line is still its own statement. The
-  error is raised during the parse, so it is reported before a later syntax error.'
+  error is raised by the transformer after the whole source has parsed, so a syntax error anywhere is reported first.'

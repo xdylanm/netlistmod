@@ -146,7 +146,7 @@ In `tests/solver/`: (a) record the section 7 probes as tests (`2k7` read as `2k`
 - *T3:* round-trip and span tiling over all corpora.
 - *T5:* extend the independent Hypothesis oracle from M2 to generate element lines of every phase 1 letter (random nodes, values, parameters, comments, `+` continuation), comparing kinds and designators/nodes/value texts against the generator. The broader generator work stays in M9 (plan section 4).
 - *T1:* each sub-span slices back to its text (designator, nodes, value, model, parameter name and value).
-- *Performance:* 20,000 element lines (mixed letters, 10% continued) parse in under 2 s.
+- ~~*Performance:* 20,000 element lines (mixed letters, 10% continued) parse in under 2 s.~~ Removed by the maintainer on review (2026-10-30): no performance bound at this stage; clear errors take priority.
 *Done when:* all pass with the 90% coverage gate.
 
 [x] **T10 — Docs.**
@@ -240,16 +240,16 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
   `SubcktReference`, `ElementReference`, `ParamAssignment`, `Flag`, `AcSpec`) and the
   `Component` subclasses in `model/nodes.py`, all exported. Shapes:
   [m3-elements.md](./m3-elements.md).
-- **Parser:** `parse(source, dialect, *, rkm=False)`. The transformer runs inside the LALR parser
-  (tree-less mode), with per-parse state in a `ContextVar`; `grammar.parse_source()` is new.
-  The loader classifies only `planned` letters as `UnsupportedConstruct`.
+- **Parser:** `parse(source, dialect, *, rkm=False)` parses the whole source, then transforms
+  the tree, so syntax errors come before rejected forms. The loader classifies only `planned`
+  letters as `UnsupportedConstruct`.
 - **Records:** decision [0004](../decisions/0004-element-and-value-grammar.md) (proposed);
-  architecture §5.3, §6.2, §6.4, §17 (`RKM_SOLVER_MISMATCH`) and §21 amended; IEC 60062 in
+  architecture §5.3, §6.4, §17 (`RKM_SOLVER_MISMATCH`) and §21 amended; IEC 60062 in
   `references.md`; 16 spec entries; `numbers.md`; discrepancies; device matrix.
 - **Tests:** `test_elements.py`, `test_numbers.py`, `test_element_oracle.py` (Hypothesis),
   `roundtrip/test_ngspice_elements.py`, `solver/test_ngspice_solver_elements.py` (42 probes),
   `test_usage_docs.py`. New corpora `elements_basic` (5) and `elements_rejects` (22).
-  580 tests pass, 2 skip (POSIX-only), coverage 97%.
+  All tests pass except 2 POSIX-only skips; coverage 97%.
 
 ### Settle decisions (each also in its spec entry)
 
@@ -280,15 +280,11 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
 - **Field structure.** The gap is part of each field rule (`node: SEP WORD | SEP node`), not a
   separate template. A shared gap rule merges LALR lookaheads, and a separate gap reduction per
   field cost too much time (S1 findings, decision 0004).
-- **Tree-less transformer** (decision 0004, item 10). This was needed to approach the 2 s
-  budget. Errors from the transformer are now raised during the parse, so the leftmost problem
-  is reported first; an earlier M2 test was adjusted accordingly. The tree-less parser does not
-  set `propagate_positions` (§6.2 amended).
+- **No performance bound** (decision 0004, item 10; maintainer, on review). The M3 timing
+  requirement and the M2 20,000-line timing test are removed. A tree-less transformer, tried
+  for speed during M3, was reverted in favour of the two-pass parse.
 - **`AcSpec.magnitude` is required**, not optional (manual §4.1).
 - **Elements extend `line`, not `statement`**, which saves a reduction per line.
-- **Performance test.** It runs in a fresh interpreter and takes the best of three runs. On the
-  maintainer's machine a parse takes about 1.6 s fresh and drifts to 2.0–2.3 s within a long
-  process under sustained load, with or without coverage. The 2 s bound is unchanged.
 - The architecture checkers now recognise `_UPPER` sub-terminals (they need spec markers) and
   skip inlined `_rules` when requiring transformer methods.
 - `NG-PAR-001` covers model references; there is no separate model-reference spec ID.
@@ -310,9 +306,9 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
 
 ### Review decisions (maintainer, 2026-10-30)
 
-- **Tree-less parser** (decision 0004, item 10): no preference stated; kept, because the
-  two-pass parse misses the 2 s requirement. `parse_tree()` still returns a positioned tree.
-- **Performance test:** keep the fresh-interpreter, best-of-three measurement with the 2 s bound.
+- **Parsing approach and performance** (decision 0004, item 10): clear errors take priority
+  over speed. The 20,000-line timing tests (M2 and M3) and the performance constraint are
+  removed, and `parse()` is two-pass again, so §6.2 is unchanged.
 - **Loose model-name readings** (`Rx+1000`, `R1 a b 1k 2k`): accepted as limitations; M5
   reports them through `UNRESOLVED_MODEL`.
 - **Sources:** keep DC before AC only, and `AcSpec.magnitude` required.

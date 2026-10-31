@@ -68,19 +68,18 @@
      is recognised the same way and raises `ParseError`. Phase 2 letters still fail in the
      lexer and are classified by the loader (only `planned` letters are
      `UnsupportedConstruct`; a `supported` letter in a bad place is a `ParseError`).
-  10. **Tree-less transformer** (amends §6.2 for the typed parse). `parse()` runs the
-      transformer inside the LALR parser (`Lark(..., transformer=...)`). No tree is built and
-      no second pass is needed, which keeps 20,000 element lines under 2 s. That mode passes
-      no `meta`, so each item ends at its last token; every top-level rule ends with one. The
-      per-parse source and options are kept in a `ContextVar`. This parser skips
-      `propagate_positions`, because it builds no tree and token positions are always kept.
-      `parse_tree()` still returns a positioned tree from the parser without a transformer.
-      Because transformer errors are raised during the parse, the leftmost problem is reported
-      first.
+  10. **Two-pass parse, no performance bound.** `parse()` builds the positioned tree (§6.2,
+      unchanged) and then transforms it, so every syntax error is found before the transformer
+      rejects a recognised form (RKM without the option, unsupported forms, `params:`). Clear
+      errors take priority over parse speed at this stage, so M3 sets no performance bound, and
+      the 20,000-line timing tests of M2 and M3 are removed (maintainer, 2026-10-30). A tree-less
+      transformer was tried during M3 and dropped: it reported errors in file order, but needed
+      per-parse state in a context variable, passed no rule positions, and amended §6.2, only
+      for speed.
   11. **Corpus provenance:** `elements_basic` and `elements_rejects` are authored in this
       repository by `xdylanm`, MIT.
 - **Consequences:**
-  - Architecture §5.3, §6.2, §6.4, §17 and §21 are amended to match. The new diagnostic code
+  - Architecture §5.3, §6.4, §17 and §21 are amended to match. The new diagnostic code
     `RKM_SOLVER_MISMATCH` is listed in §17.
   - Known limits:
     - a letter-leading expression written without blanks (`Rx+1000`) is a valid name and so
@@ -89,9 +88,11 @@
       nodes;
     - an RKM-shaped field such as `R2D2` in an R value position is rejected;
     - a name cannot end in `/`.
-  - The element grammar is about 10 tokens per line. Lark's per-token cost sets a floor of
-    roughly 1.5–1.9 s per 20,000 lines on the maintainer's machine, so the performance test
-    has little margin there.
+  - With a file that has both a syntax error and a rejected form, the syntax error is
+    reported first, even when it comes later in the file.
+  - No performance requirement applies to M3, and the M2 20,000-line bound (decision 0003,
+    validation) is withdrawn. For reference, on the maintainer's machine 20,000 element lines
+    parse in about 2.3–3.1 s, and 200 lines in about 30 ms.
   - M6 edits replace the sub-spans recorded here (designator, nodes, values, model, parameter
     names and values); each slices back to exactly its text
     ([m3-elements.md](../design/m3-elements.md)).

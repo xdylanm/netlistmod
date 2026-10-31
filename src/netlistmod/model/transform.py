@@ -4,10 +4,9 @@ Syntax is defined by the Lark grammar (architecture P13). This module only maps 
 rule to a node: one transformer method per rule, no regular expressions and no re-scanning of
 source lines. Raw statement text is a slice of the source by span.
 
-The builder runs inside the LALR parser (Lark's tree-less mode, decision 0004): each method is
-called when its rule is reduced, so no parse tree is built. That mode passes no ``meta``, so an
-item's end is the end of its last token; every top-level rule ends with a token. The source and
-the parser options of the current parse are held in a context variable.
+The builder transforms the positioned tree after the whole source has parsed, so a syntax error
+anywhere is reported before a form this module rejects. An item's end is the end of its last
+token; every top-level rule ends with one.
 
 Element fields are rules that start with their separator (a "gap"). A field method returns a
 :class:`_Field` holding the field's node and the end-of-line comments of its gap; each element
@@ -18,17 +17,16 @@ recognises only to reject them (RKM without the option, stimulus functions, ``q=
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
+from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any, Literal, NoReturn, TypeVar
 
-from lark import Token, Transformer, Tree
+from lark import Token, Transformer
+from lark.exceptions import VisitError
 
 from netlistmod.dialects import Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
-from netlistmod.grammar.loader import parse_source
+from netlistmod.grammar.loader import parse_tree
 from netlistmod.model.nodes import (
     BlankLine,
     Capacitor,
@@ -75,15 +73,6 @@ _RKM_TERMINALS = frozenset({"RKM_R", "RKM_R_MEGA", "RKM_R_MILLI", "RKM_C", "RKM_
 _RKM_SOLVER_MISMATCH = frozenset({"RKM_R_MEGA", "RKM_C_FARAD"})
 # Field tokens: the token of a field rule that is neither a separator nor a comment.
 _GAP_TERMINALS = frozenset({"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT", "EQ"})
-
-
-@dataclass(frozen=True, slots=True)
-class _Options:
-    source: SourceText
-    rkm: bool
-
-
-_OPTIONS: ContextVar[_Options] = ContextVar("netlistmod_parse_options")
 
 
 @dataclass(frozen=True, slots=True)
@@ -216,17 +205,14 @@ class _Element:
 
 
 class _NodeBuilder(Transformer[Token, ParseResult]):
-    """Build nodes during the parse; every grammar rule has exactly one method."""
+    """Build nodes for one parse; every grammar rule has exactly one method."""
 
-    @property
-    def _options(self) -> _Options:
-        return _OPTIONS.get()
+    def __init__(self, source: SourceText, *, rkm: bool = False) -> None:
+        super().__init__()
+        self._source = source
+        self._rkm = rkm
 
-    def __default__(self, data: Any, children: Any, meta: Any) -> Any:
-        # Lark splices the children of an inlined rule ("_name") into its parent; in tree-less
-        # mode it expects a Tree from the rule's callback to do so.
-        if str(data).startswith("_"):
-            return Tree(data, children)
+    def __default__(self, data: Any, children: Any, meta: Any) -> NoReturn:
         raise TypeError(f"Unhandled grammar rule {data!r}")
 
     def start(self, children: list[Any]) -> ParseResult:
@@ -238,7 +224,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 cursor = item.end
         # Ignored whitespace after the last token (for example ``.end`` plus spaces and no
         # newline) belongs to the last item.
-        text = self._options.source.text
+        text = self._source.text
         if cursor < len(text):
             items[-1] = replace(items[-1], span=Span(items[-1].span.start, len(text)))
         return ParseResult(tuple(items))
@@ -483,7 +469,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         if token.type in _FORMULA_DELIMITERS:
             span = _span(token)
             # The grammar guarantees exactly one delimiter character at each end of the token.
-            text = self._options.source.text[span.start + 1 : span.end - 1]
+            text = self._source.text[span.start + 1 : span.end - 1]
             return Formula(text, _FORMULA_DELIMITERS[token.type], span)
         if token.type in _RKM_TERMINALS:
             return self._rkm_value(token)
@@ -496,7 +482,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 f"`{token}`: lowercase `m` is not an RKM code for a resistor; write `L` for "
                 "milli (for example `4L7`) or use standard notation",
             )
-        if not self._options.rkm:
+        if not self._rkm:
             raise self._parse_error(
                 token,
                 f"`{token}` is RKM notation, which is accepted only with parse(..., rkm=True); "
@@ -546,20 +532,20 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         )
 
     def _parse_error(self, token: Token, reason: str) -> ParseError:
-        source = self._options.source
+        source = self._source
         offset = _span(token).start
         line, column = source.position(offset)
         return ParseError(line, column, source.excerpt(offset), (), reason)
 
     def _unsupported(self, token: Token, construct: str) -> UnsupportedConstruct:
-        source = self._options.source
+        source = self._source
         offset = _span(token).start
         line, column = source.position(offset)
         return UnsupportedConstruct(construct, line, column, source.excerpt(offset))
 
     def _statement(self, children: list[Any]) -> tuple[str, str, tuple[Span, ...]]:
         name, rest = children[0], children[1]
-        raw = self._options.source.text[name.start_pos : rest.text_end or name.end_pos]
+        raw = self._source.text[name.start_pos : rest.text_end or name.end_pos]
         return str(name), raw, rest.comments
 
 
@@ -580,18 +566,6 @@ def _common(
     }
 
 
-_BUILDER = _NodeBuilder()
-
-
-@contextmanager
-def _parse_options(source: SourceText, rkm: bool) -> Iterator[None]:
-    token = _OPTIONS.set(_Options(source, rkm))
-    try:
-        yield
-    finally:
-        _OPTIONS.reset(token)
-
-
 def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseResult:
     """Parse ``source`` with the strict grammar of ``dialect``.
 
@@ -603,9 +577,14 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
     ``rkm=True`` accepts RKM values (``2k7``, ``4R7``, ``4p7``) for resistors and capacitors,
     read per IEC 60062; without it they raise ``ParseError``. The option does not change the
     grammar, and standard notation parses the same either way (decision 0004).
+
+    The whole source is parsed first, so a syntax error anywhere is reported before an RKM
+    value, an unsupported form or ``params:`` that the transformer rejects.
     """
-    with _parse_options(source, rkm):
-        result = parse_source(source, dialect, _BUILDER)
-    if not isinstance(result, ParseResult):
-        raise TypeError("The grammar's start rule did not produce a ParseResult")
-    return result
+    tree = parse_tree(source, dialect)
+    try:
+        return _NodeBuilder(source, rkm=rkm).transform(tree)
+    except VisitError as error:
+        if isinstance(error.orig_exc, ParseError | UnsupportedConstruct):
+            raise error.orig_exc from None
+        raise

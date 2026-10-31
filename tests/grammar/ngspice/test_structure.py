@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import random
 import string
-import time
 from collections.abc import Iterable
 from unittest.mock import patch
 
@@ -437,18 +436,6 @@ def test_crlf_mixed_endings_case_and_indented_block_closers() -> None:
     text = "+ first title\r\n.CONTROL\nop\r\n  .ENDC\n.if (1)\r\n  .ELSE\n  .ENDIF\r\n.END"
     result = _parse(text)
     assert [type(item) for item in result.items] == [Title, OpaqueBlock, OpaqueBlock, End]
-    _assert_spans_tile(text, result.items)
-
-
-def test_twenty_thousand_physical_lines_with_continuations_parse_under_two_seconds() -> None:
-    text = "title\n" + (".unknown x\n+ y\n" * 9_999) + ".end"
-    assert len(text.splitlines()) == 20_000
-    build_parser(Dialect.NGSPICE)
-    start = time.perf_counter()
-    result = _parse(text)
-    elapsed = time.perf_counter() - start
-    assert elapsed < 2.0
-    assert len(result.items) == 10_001
     _assert_spans_tile(text, result.items)
 
 

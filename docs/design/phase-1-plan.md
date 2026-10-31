@@ -104,7 +104,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 ### M9 — Phase 1 review package
 - README quick start, executed usage examples, a short demo script covering load → edit → save → run solver, error reference, `CHANGELOG.md`.
 - Coverage report (target 90%) and spec-coverage report.
-- Broader testing carried from M2: extend the independent Hypothesis oracle (CRLF/mixed endings, `+` and `\\` continuations, trailing comments, indentation, whitespace-only lines, block variants) and rerun the performance test.
+- Broader testing carried from M2: extend the independent Hypothesis oracle (CRLF/mixed endings, `+` and `\\` continuations, trailing comments, indentation, whitespace-only lines, block variants).
 - Review checklist for the gate (section 6).
 - Archive the M9 task list per the closing procedure; the phase plan is archived once the gate passes.
 - **Exit:** ready for hands-on review.

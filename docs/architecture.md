@@ -258,7 +258,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 ### 6.2 Parser configuration
 
-- **Lark, LALR, contextual lexer, `propagate_positions=True`, `strict=True`.** The typed parse runs the transformer inside the parser (tree-less mode); that parser builds no tree, so it does not propagate tree positions, and token positions are used instead ([decision 0004](decisions/0004-element-and-value-grammar.md)).
+- **Lark, LALR, contextual lexer, `propagate_positions=True`, `strict=True`.**
 - `strict=True` turns shift/reduce, reduce/reduce and terminal-collision problems into build errors. A grammar that only works because Lark resolves a conflict silently is a bug.
 - Earley MAY be used for grammar exploration but MUST NOT ship. Lesson from the prototype: Earley parsed an input that LALR rejected because its dynamic lexer tolerates terminal overlap. That is not evidence the grammar is correct.
 

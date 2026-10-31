@@ -12,5 +12,4 @@ grammar:
 tests:
   - tests/grammar/ngspice/test_structure.py::test_end_is_required_last_and_allows_no_final_newline_or_blank_trailers
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
-  - tests/grammar/ngspice/test_structure.py::test_twenty_thousand_physical_lines_with_continuations_parse_under_two_seconds
 notes: A non-empty first physical line is required, and the source must end with .end.

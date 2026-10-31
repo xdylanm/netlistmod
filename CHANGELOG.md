@@ -15,9 +15,10 @@
   `DISTOF`, the capacitor `q=` form and other element letters still raise it,
   and `params:` on an `X` line is a `ParseError`. A supported letter where no
   element may stand (after `.end`) is a `ParseError`.
-- `parse()` applies the transformer during the parse (tree-less LALR), so it
-  reports the leftmost error first. `grammar.parse_source()` is new, and
-  `build_parser()` takes an optional transformer.
+- `parse()` reports every syntax error before an RKM value, unsupported form or
+  `params:` that it rejects.
+- Removed the 20,000-line timing test of the structural parser: no performance
+  bound applies at this stage.
 - Implemented byte-preserving source text and spans, including BOM-aware
   decoding, configurable fallbacks, atomic file writes, and line/column
   diagnostics.

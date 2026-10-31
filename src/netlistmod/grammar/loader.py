@@ -6,9 +6,9 @@ import json
 from collections.abc import Iterable
 from functools import lru_cache
 from importlib.resources import files
-from typing import Any, Final
+from typing import Final
 
-from lark import Lark, Token, Transformer, Tree
+from lark import Lark, Token, Tree
 from lark.exceptions import UnexpectedCharacters, UnexpectedToken
 
 from netlistmod.dialects import Dialect
@@ -90,12 +90,8 @@ _MISSING_END = "the netlist must end with `.end`, which is missing"
 
 
 @lru_cache(maxsize=None)
-def build_parser(dialect: Dialect, transformer: Transformer[Token, Any] | None = None) -> Lark:
-    """Build or retrieve the strict LALR parser for ``dialect``.
-
-    With ``transformer``, the parser applies it while parsing (Lark's tree-less LALR mode) and
-    returns its result instead of a tree. One parser is cached per dialect and transformer.
-    """
+def build_parser(dialect: Dialect) -> Lark:
+    """Build or retrieve the strict LALR parser for ``dialect``."""
     if not isinstance(dialect, Dialect):
         raise ValueError(f"Unknown dialect {dialect!r}")
     try:
@@ -107,12 +103,8 @@ def build_parser(dialect: Dialect, transformer: Transformer[Token, Any] | None =
         grammar_files[-1],
         parser="lalr",
         lexer="contextual",
-        # Without a transformer the tree carries positions (architecture §6.2). A tree-less
-        # parser builds no tree, and token positions are always kept, so it skips the wrapper
-        # that would propagate them (decision 0004).
-        propagate_positions=transformer is None,
+        propagate_positions=True,
         strict=True,
-        transformer=transformer,
     )
 
 
@@ -122,21 +114,7 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
     Raises ``ParseError`` (or ``UnsupportedConstruct`` for a known but unsupported element
     letter). Positions come only from ``SourceText``.
     """
-    tree = parse_source(source, dialect)
-    if not isinstance(tree, Tree):
-        raise TypeError("The parser without a transformer did not return a tree")
-    return tree
-
-
-def parse_source(
-    source: SourceText, dialect: Dialect, transformer: Transformer[Token, Any] | None = None
-) -> Any:
-    """Parse source with ``transformer`` applied during the parse (a tree without one).
-
-    Syntax errors are mapped as in :func:`parse_tree`; errors the transformer raises pass
-    through unchanged.
-    """
-    parser = build_parser(dialect, transformer)
+    parser = build_parser(dialect)
     try:
         return parser.parse(source.text)
     except UnexpectedToken as error:
