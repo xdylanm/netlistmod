@@ -9,6 +9,9 @@ validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-22"
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-31"
 grammar:
   - first_line
   - title_stmt

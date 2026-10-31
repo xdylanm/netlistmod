@@ -406,7 +406,10 @@
           26,
           8
         ]
-      ]
+      ],
+      "solver": {
+        "skip": "deliberately broken: one of every diagnostic, including a missing include"
+      }
     },
     "hierarchy.cir": {
       "sha256": "a83c483ded308e6c2dfe3a58ac87b2afb4f799fbd1c0ef95686a6197a97a50e9",

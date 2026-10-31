@@ -1,6 +1,6 @@
 # M7 task list — local solver validation (ngspice)
 
-> **Status:** READY — approved by the maintainer (2026-10-31); section 2 records the decisions.
+> **Status:** READY FOR REVIEW (2026-10-31) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md), [discrepancies.md](../grammars/ngspice/discrepancies.md), and the edit API of [m6-edits.md](./m6-edits.md). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -96,7 +96,7 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, `lint
 
 ### Decisions
 
-[ ] **D1 — Decision record 0008: validation status and solver harnesses.**
+[x] **D1 — Decision record 0008: validation status and solver harnesses.**
 Record section 2. Amend the architecture:
 - §11.2: the meaning of each status, `validation_note`;
 - §10.3: manifest `solver` field, stubs, the raw-file comparison for (c), the report header;
@@ -105,38 +105,38 @@ Status `proposed` until the maintainer accepts it.
 
 ### Test support
 
-[ ] **T1 — `tests/support/ngspice.py`** (decision 6, 3.2).
+[x] **T1 — `tests/support/ngspice.py`** (decision 6, 3.2).
 Raw reader with unit tests on raw files produced by ngspice 47 and committed under `tests/corpus/ngspice/solver_stubs/raw/` (op, ac with complex values, tran, two plots in one file). `ensure_runs` uses the edit API. Settle the ASCII question.
 
-[ ] **T2 — Move the existing solver tests to the helper.**
+[x] **T2 — Move the existing solver tests to the helper.**
 Mechanical. Same test names and parametrisation ids. The per-file `_run`/`_voltage` helpers are deleted. Values read from the log become raw-file reads where the tolerance tightens.
 
-[ ] **T3 — Report header and version records** (decision 7).
+[x] **T3 — Report header and version records** (decision 7).
 
 ### Validation
 
-[ ] **T4 — Status checker** (decision 2).
+[x] **T4 — Status checker** (decision 2).
 Extend `test_spec_coverage.py` for spec entries and the two rule tables, with negative tests on crafted entries (as the existing checker tests do). Fix what it finds: `NG-STR-001` (no `validated_on`), S5's status word, S9.
 
-[ ] **T5 — Corpus sweep** (decision 3).
+[x] **T5 — Corpus sweep** (decision 3).
 Manifest `solver` fields, stub family and manifest, `test_ngspice_corpus.py` for (a) and (c). Covers `structure_basic`, `kicad_basic`, `kicad_extended`, `elements_basic`, `statements_basic`, `document_basic`, the `edits_golden` inputs and expected files. The `*_rejects` families are already probed by the discrepancy tests.
 
-[ ] **T6 — Edit results** (decision 4, section 6).
+[x] **T6 — Edit results** (decision 4, section 6).
 
-[ ] **T7 — Solver property test** (decision 5).
+[x] **T7 — Solver property test** (decision 5).
 
-[ ] **T8 — Entry and rule validation** (section 5).
+[x] **T8 — Entry and rule validation** (section 5).
 Probe tests for each row, with assertions both on ngspice and on the library, as the M5 tests do. Update each entry's `status`, `validated_on`, `tests` and `notes`, and each rule row. New discrepancies (decision 8) go into `discrepancies.md` with their evidence tests.
 
 ### Docs and exit
 
-[ ] **T9 — Docs.**
+[x] **T9 — Docs.**
 - `docs/testing.md`: the helper, manifests with `solver` fields, how to add a stub, the re-validation procedure, the expected solver-suite runtime;
 - `docs/grammars/ngspice/README.md`: a status summary table (entry → status → versions);
 - CHANGELOG (test-only and doc changes; say so);
 - the phase plan's M7 heading.
 
-[ ] **T10 — Exit.**
+[x] **T10 — Exit.**
 Full check set, a fresh-clone run with `--require-solver ngspice`, and the runtime of the solver suite. Report what changed, every "settle" with its basis, deviations, and any finding where ngspice and the library disagree on an *accepted* form (decision 1: a candidate `disputed`). Set this document's status to `READY FOR REVIEW`. **Do not archive.**
 
 ## 5. Validation work per entry and rule
@@ -202,3 +202,72 @@ Full check set, a fresh-clone run with `--require-solver ngspice`, and the runti
 - CI, and committed solver observation files (decisions 7, 9).
 - Validating what included third-party files define. The stubs stand in for them.
 - Performance bounds on the solver suite (record its runtime only).
+
+## 9. Implementation report (2026-10-31)
+
+**What changed.** Test and documentation changes only; `src/` is untouched. Decision record
+[0008](../decisions/0008-validation-status-and-solver-harnesses.md) (status `proposed`) and the
+architecture amendments of D1 (§10.3, §10.5, §11.2). The shared harness
+`tests/support/ngspice.py` (T1) with its solver-free tests `tests/test_ngspice_raw_reader.py`
+and raw samples in `tests/corpus/ngspice/solver_stubs/raw/`; `run_ngspice` gained an `env`
+argument. The five solver files of M2–M6 use the harness (T2; same test names and ids, the
+per-file helpers deleted; values from the raw file). A `pytest_report_header` (T3). The status
+checker and a README status-table check in `tests/architecture/test_spec_coverage.py` with
+negative tests (T4). The stub family `solver_stubs/`, `solver` fields in five corpus manifests,
+`tests/solver/test_ngspice_corpus.py` and a manifest check in `tests/test_corpus_manifests.py`
+(T5). `tests/solver/test_ngspice_edit_results.py`, 20 tests (T6; the M6 geometry-switch test
+moved here). `tests/solver/test_ngspice_edit_properties.py` (T7).
+`tests/solver/test_ngspice_validation.py`, 46 probes, and the spec, rule-table and
+discrepancy updates (T8). Docs (T9): `testing.md`, the ngspice README status table, CHANGELOG,
+the phase plan, `names.md`, `scoping.md`, `discrepancies.md`.
+
+**Results.** Full suite with `--require-solver ngspice`: 1703 passed, 2 skipped (POSIX-only),
+coverage 98.77%, 110 s. The solver suite: 334 tests (168 before M7) in about 75 s, of which the
+corpus sweep is about 26 s. `ruff check`, `ruff format --check`, `mypy --strict` and
+`lint-imports` are clean; the new test-support and test files also pass `mypy --strict`
+(outside the configured `src/` scope). Every spec entry now has a 2026-10-31 ngspice 47 record
+(appended; FML, GLB and SAV already had one). Statuses: 36 `validated`, 3 `observed`
+(`NG-COM-001`, `NG-NUM-004`, `NG-TXT-001`), none `documented` or `disputed`.
+
+**Settled:**
+
+- *ASCII raw files (T1):* ngspice 47's `spinit` sets `filetype=ascii`, which wins over
+  `SPICE_ASCIIRAWFILE` (probed with the variable at 0 and 1: ASCII both times; only a
+  `.spiceinit` with `set filetype=binary` gives `Binary:`). The harness sets
+  `SPICE_ASCIIRAWFILE=1` for other builds, and the reader raises on `Binary:`. Raw files are
+  CRLF.
+- *`ensure_runs` adds an `.op` line, not a control block (T1):* with `-r`, `.control` / `op` /
+  `.endc` produced no raw file at all, while an `.op` line writes the operating point, also when
+  the file has a control block (probes p1–p9).
+- *Device values (T2):* with `-r`, ngspice prints no device tables to the log, so the M3 value
+  probes save `@r1[resistance]` / `@c1[capacitance]` and read them from the raw file (ngspice
+  names the resistor vector `v(@r1[resistance])`).
+- *`.include` stubs (T5):* `directives.replace` refuses `.include` text by design (decision 0007
+  amendment 1), so an `.include` line is removed and `add_include` adds the stub after the line
+  before it, in one batch; a `.lib` line uses `directives.replace`. Include paths are matched as
+  the whole path token.
+
+**Deviations from this list:**
+
+- **`harness` manifest form** (decision 3 lists `skip` and `stubs`): the `elements_basic`
+  fixtures need the M3 definitions, now `solver_stubs/elements_harness.inc`, included before
+  `.end`.
+- **`structure_basic.cir` is skipped**, not run with stubs (section 5 expected it to run). It
+  has `.if {enabled}`, which ngspice 47 stops at, and it includes one `models.lib` both whole
+  and as the section `typical`, which no single file can serve (a `.lib` section in a file
+  included whole is "unimplemented"). `NG-STR-001` is validated by
+  `test_structure_sample_runs_with_a_valid_condition`, the same structure with `.if (enabled)`
+  and two stubs.
+- **More excluded name characters** (decision 8 named `o[1]`): ngspice 47 also accepts `%`,
+  `<`, `~` and `(` in a node name; one discrepancy row covers them; the grammar is unchanged.
+- The run of every fixture has the library prepare it (stubs, `.op`) for both runs of (c), so
+  (c) compares the original against its unedited save under the same preparation.
+
+**Finding for the maintainer (decision 1, candidate `disputed`):** the library accepts
+`.if {expr}` (an opaque block; the condition is not checked), and ngspice 47 stops at it ("Bad
+syntax") and reads `.if (expr)`. That is a form the library accepts and ngspice reads
+differently, without a diagnostic. `NG-OPA-001` is left `validated` with a note, and
+`discrepancies.md` has an "open finding" section; evidence:
+`test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it`. Options: mark
+`NG-OPA-001` `disputed`; or check the condition form (a grammar change, out of M7 scope).
+No other accepted form disagreed.

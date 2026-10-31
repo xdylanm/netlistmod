@@ -454,7 +454,9 @@ LTspice can generate a netlist from the command line (spicelib's documentation d
 - **Discovery:** environment variable (`NGSPICE_EXE`, `LTSPICE_EXE`), then `PATH`, then platform default install locations.
 - **Markers:** `@pytest.mark.solver("ngspice")` / `("ltspice")`. If the solver is absent the test skips with a clear reason. `--require-solver <name>` turns a missing solver into a failure for jobs that are supposed to have it.
 - **What they check:** (a) solver accepts the netlist; (b) results move as expected after an edit (e.g. a divider ratio against its closed form); (c) an unedited round-trip yields identical results; (d) each documented behavior that is marked solver-validated.
-- **Hygiene:** temporary directory per run, batch mode only, timeout, no GUI. Record solver name and version with every result; spec entries record which versions a behavior was validated on.
+- **Hygiene:** temporary directory per run, batch mode only, timeout, no GUI. Record solver name and version with every result; spec entries record which versions a behavior was validated on. The test session header names each discovered solver with its version and path.
+- **Harness** (decision 0008): ngspice tests run through `tests/support/ngspice.py`, which always writes a raw file (`-r`) and reads results from it; a file without an analysis line gets an `.op` line, added with the edit API.
+- **Fixtures** (decision 0008): (a) and (c) run every accept fixture of the corpus. A fixture's manifest entry may carry a `solver` field: `{"skip": "<reason>"}`, or `{"stubs": {"<include path>": "<stub>"}}` and/or `{"harness": "<stub>"}`; stub files stand in for includes kept outside the repository and are wired in with the edit API. For (c), a fixture and its unedited `load(...).save(...)` copy must give identical raw files except the `Date:` line.
 - **Environment:** LTspice-backed tests run locally on a Windows machine with LTspice installed. **No solver is required in CI for v1.** An ngspice job on a Linux runner is encouraged but not a required check. LTspice-generated netlist fixtures are committed so the LTspice grammar is fully testable offline.
 - **Optional:** version-stamped observation files committed from solver runs, so offline CI can compare against recordings, refreshed by a scheduled job.
 
@@ -466,7 +468,7 @@ LTspice can generate a netlist from the command line (spicelib's documentation d
 
 ### 10.5 Corpus and provenance
 
-Fixtures live in `tests/corpus/<dialect>/<family>/`, each family with a manifest recording origin (authored here, export of an own KiCad project, LTspice export of an own circuit, derived from a manual), license, author and date. See Section 12.
+Fixtures live in `tests/corpus/<dialect>/<family>/`, each family with a manifest recording origin (authored here, export of an own KiCad project, LTspice export of an own circuit, derived from a manual), license, author and date. See Section 12. The family `solver_stubs` holds stand-ins for include files kept outside the repository and solver output samples (`raw/`); stubs are only included by a solver, never parsed by the library (decision 0008).
 
 ---
 
@@ -494,6 +496,15 @@ validated_on: []          # [{solver: ngspice, version: ..., date: ...}]
 tests: [tests/grammar/ngspice/test_numbers.py::test_rkm_*]
 notes: accepted by ngspice only in LTspice-compatibility mode (per manual); verify
 ```
+
+Status meanings (decision 0008), checked by `tests/architecture/test_spec_coverage.py`:
+
+- `validated`: the manual describes the construct, and the solver reads every form the library **accepts** the way the library models it. Forms the library rejects but the solver tolerates are rows in `discrepancies.md`; they do not change the status. Needs `validated_on` and a `tests/solver/` test.
+- `observed`: the manual is silent, and the library's behavior rests on the solver (§11.3 rule 3). Needs `validated_on` and a `tests/solver/` test.
+- `disputed`: the solver reads a form the library accepts differently from the library's model, and the library does not flag it. Needs a `discrepancies.md` row naming the id.
+- `documented`: no solver evidence. Needs a `validation_note:` saying why the solver cannot decide.
+
+`validated_on` items are appended when an entry is re-validated, never replaced. Rule tables (`names.md`, `scoping.md`) follow the same rules, with one `Validated on:` line per document.
 
 ### 11.3 Rules
 

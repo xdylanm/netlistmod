@@ -6,6 +6,14 @@
   "date": "2026-10-31",
   "notes": "CRLF line endings. shiftscaleinvert.cir uses X subcircuit calls (TL072 op-amps, pot potentiometers) defined in two .include files kept outside the repository (the maintainer's spice-models library), so the library reports each X line as UNRESOLVED_SUBCKT with severity info (decision 0006 item 8). Checked 2026-10-31: with the include paths pointed at the models, ngspice 47 runs it without errors and its top-level node list equals the library's nets.",
   "fixtures": {
-    "shiftscaleinvert.cir": "bd41558e85d1ea32ce620204b9f16edee8b9a6e43a5a967e3417ae6666949dd1"
+    "shiftscaleinvert.cir": {
+      "sha256": "bd41558e85d1ea32ce620204b9f16edee8b9a6e43a5a967e3417ae6666949dd1",
+      "solver": {
+        "stubs": {
+          "~/spice-models/opa/TL07X.cir": "tl072.lib",
+          "~/spice-models/passive/potentiometer.sub": "potentiometer.sub"
+        }
+      }
+    }
   }
 }

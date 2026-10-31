@@ -4,7 +4,11 @@ construct: instance parameters, model references and the off flag
 manual_ref:
 - '[ngspice-manual] §3.2.2 "Instance and model parameters"'
 - '[ngspice-manual] §7.1 "Instance lines and .model lines"'
-status: documented
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-31'
 grammar:
 - param
 - model
@@ -15,6 +19,12 @@ tests:
 - tests/grammar/ngspice/test_elements.py::test_diode_model_parameters_and_off_flag
 - tests/grammar/ngspice/test_elements.py::test_malformed_resistor_lines_are_rejected_with_positions
 - tests/grammar/ngspice/test_elements.py::test_every_sub_span_slices_back_to_its_text
+- tests/solver/test_ngspice_validation.py::test_instance_parameters_move_the_result
+- tests/solver/test_ngspice_validation.py::test_the_off_flag_on_a_diode_runs
+- tests/solver/test_ngspice_edit_results.py::test_set_param_multiplier_on_a_resistor
+- tests/solver/test_ngspice_edit_results.py::test_set_model_on_a_diode
 notes: Any name=value is accepted with a number or formula value; parameter names are not checked against
   the manual's lists (non-goal 8), for R, C, L, D and X alike. A bare word as a parameter value (m=x)
   is rejected; use braces. ParamAssignment has a name span and a value span. off is the diode flag.
+  ngspice 47 (M7) applies m=2 (2.0 V in the divider) and tc1=0.01 with .temp 127 (1.0 V), runs a diode
+  with off, and switches a diode's model by its model reference.

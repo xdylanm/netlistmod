@@ -7,6 +7,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-30'
+- solver: ngspice
+  version: '47'
+  date: '2026-10-31'
 grammar:
 - _SIGN
 - _MANTISSA

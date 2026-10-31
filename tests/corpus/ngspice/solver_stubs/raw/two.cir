@@ -1,0 +1,7 @@
+two probe
+V1 in 0 DC 3 AC 1
+R1 in out 1k
+R2 out 0 2k
+.op
+.ac lin 2 1 2
+.end

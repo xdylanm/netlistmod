@@ -209,11 +209,13 @@ def run_ngspice(
     timeout: float = 30,
     raw: Path | None = None,
     cwd: Path | None = None,
+    env: Mapping[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a netlist in ngspice batch mode, with output isolated in its directory.
 
     With ``raw``, ngspice also writes the simulation results to that raw file (``-r``). ``cwd``
     is the working directory (default: the netlist's folder); the log stays next to the netlist.
+    ``env`` adds variables to the inherited environment.
     """
     if solver.name != "ngspice":
         raise ValueError(f"Expected ngspice, got {solver.name}")
@@ -224,6 +226,7 @@ def run_ngspice(
         capture_output=True,
         check=False,
         cwd=netlist.parent if cwd is None else cwd,
+        env=None if env is None else {**os.environ, **env},
         text=True,
         timeout=timeout,
     )

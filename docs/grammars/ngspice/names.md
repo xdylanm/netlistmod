@@ -3,9 +3,14 @@
 How the document layer compares names and decides which node names are the same net
 (architecture §8, decision 16; [decision 0006](../../decisions/0006-document-layer-names-scope-and-diagnostics.md)).
 The functions are in `src/netlistmod/document/names.py`. Status follows the spec entries
-(§11.2): `documented` (manual only), `observed` (solver only), `validated` (both, with a test).
-Probes ran on ngspice 47 (2026-10-31) in batch mode; they are in
+(§11.2, with the meanings of
+[decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md)): `validated`
+(the manual describes it and ngspice reads every accepted form as modelled), `observed` (the
+manual is silent; the rule rests on ngspice), `disputed`, or `documented` (no solver evidence,
+with a validation note). Probes ran on ngspice 47 (2026-10-31) in batch mode; they are in
 `tests/solver/test_ngspice_solver_document.py`.
+
+Validated on: ngspice 47 (2026-10-31)
 
 | ID | Rule | Manual | Status | Tests |
 |---|---|---|---|---|

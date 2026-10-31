@@ -76,10 +76,10 @@ line per file; the manifest records line, column and error class) corpora are
 checked in `tests/roundtrip/test_ngspice_elements.py`. The parser option `rkm`
 defaults to `False`: tests of RKM values pass `rkm=True`, including the
 `kicad_basic` fixtures, which use `1k0`. `tests/solver/test_ngspice_solver_elements.py`
-records the ngspice 47 value probes. It reads values from the device tables
-ngspice prints after `.op`, writes a temporary `.spiceinit` with
-`set ngbehavior=lt` for LT-mode probes, and loads each accept fixture with added
-model and subcircuit definitions. `tests/test_usage_docs.py` runs the doctest
+records the ngspice 47 value probes. It saves device values (`.save @r1[resistance]`) and
+reads them from the raw file, runs LT-mode probes with `run(..., lt=True)` (a temporary
+`.spiceinit` with `set ngbehavior=lt`), and runs each accept fixture with the model and
+subcircuit definitions of `solver_stubs/elements_harness.inc` included. `tests/test_usage_docs.py` runs the doctest
 examples in `docs/usage/elements.md`.
 
 Statements and directives (M4) are tested in
@@ -119,7 +119,93 @@ uv run --env-file .env python -m pytest --require-solver ngspice -m solver
 
 The test helpers run in temporary directories, use batch mode, and set a
 timeout. No simulator is launched from `src/`. Run only solver tests with
-`uv run --env-file .env python -m pytest -m solver`.
+`uv run --env-file .env python -m pytest -m solver --no-cov` (the coverage gate is for the
+full suite). The session header names each solver the tests found, with its version and
+path:
+
+```text
+solver ngspice: 47 at C:\...\Spice64\bin\ngspice_con.exe
+solver ltspice: 26.1.1.0 at C:\...\LTspice\LTspice.exe
+```
+
+### The ngspice harness (M7)
+
+Every ngspice test goes through `tests/support/ngspice.py`
+([decision 0008](decisions/0008-validation-status-and-solver-harnesses.md)):
+
+- `run(solver, folder, source, *, harness=None, stubs=None, lt=False, cwd=None)` writes
+  `source` (a `Netlist`, text, bytes or a path) to `folder/probe.cir`, runs
+  `ngspice_con -b -r probe.raw -o ngspice.log probe.cir` and returns a `Run`:
+  `returncode`, `log`, `raw_bytes`, `plots`, `ok` (exit code 0 and no log line with
+  "error"), `plot(name)`, `voltage(node)` and `device(designator, parameter)`.
+- `op`, `ac` and `tran_rows` run a netlist that must succeed and return its results
+  (`{"v(out)": 1.5, …}`, complex values per frequency, one mapping per time point).
+- A `Netlist` source is prepared with the edit API before it is saved: `with_stubs` points
+  includes at stub files, `harness` (text) is written to `run_harness.inc` and included
+  before `.end`, and `ensure_runs` adds an `.op` line when there is no analysis line.
+- The raw-file reader (`read_raw`) is clean-room and reads ASCII raw files only. ngspice 47's
+  `spinit` sets `filetype=ascii`; the helper also sets `SPICE_ASCIIRAWFILE=1`. A `.spiceinit`
+  with `set filetype=binary` makes the reader fail loudly. Its unit tests
+  (`tests/test_ngspice_raw_reader.py`) need no solver and use the samples in
+  `tests/corpus/ngspice/solver_stubs/raw/`.
+
+Read results from the raw file (15 significant digits), not from `.print` tables in the log
+(7 digits): with `-r`, ngspice does not print device tables to the log.
+
+### Running the corpus in ngspice
+
+`tests/solver/test_ngspice_corpus.py` runs every accept fixture (a) and checks that an
+unedited `load(...).save(...)` gives the same raw file except its `Date:` line (c). A
+fixture's manifest entry may carry a `solver` field:
+
+```json
+"shiftscaleinvert.cir": {
+  "sha256": "…",
+  "solver": {"stubs": {"~/spice-models/opa/TL07X.cir": "tl072.lib"}}
+}
+```
+
+- absent: the fixture runs as is (with an `.op` added when it has no analysis);
+- `{"skip": "<reason>"}`: it cannot run in ngspice, for the reason given;
+- `{"stubs": {"<include path as written>": "<stub file>"}}`: each `.include`/`.lib` line of
+  that path is pointed at a copy of the stub;
+- `{"harness": "<stub file>"}`: the stub is included before `.end`.
+
+`tests/test_corpus_manifests.py::test_every_accept_fixture_runs_in_ngspice_or_has_a_reason`
+checks that every accept fixture has a valid field. To add a stub:
+
+1. Write a small stand-in in `tests/corpus/ngspice/solver_stubs/` with a header comment saying
+   what it replaces. Use `.lib`, `.inc` or `.sub` (not `.cir`: accept families are globbed
+   for `*.cir`). A stub is only included by ngspice, never parsed by the library, so it may
+   use phase 2 elements. Give it a name different from the include it replaces.
+2. Add its SHA-256 to `solver_stubs/manifest.json`.
+3. Name it in the fixture's `solver` field and run the corpus test with
+   `--require-solver ngspice`.
+
+### Validation status and re-validation
+
+Spec entries and the rule tables of `names.md` and `scoping.md` carry a status
+(`validated`, `observed`, `disputed`, `documented`; decision 0008). The architecture test
+`test_ngspice_statuses_are_backed_by_solver_evidence` requires a `validated_on` record and a
+`tests/solver/` test for `validated` and `observed`, a `discrepancies.md` row for
+`disputed`, and a `validation_note` for `documented`; the status table in
+`docs/grammars/ngspice/README.md` must match the entries. New probes go in
+`tests/solver/test_ngspice_validation.py` and assert what ngspice does and what the library
+does.
+
+To re-validate on a new ngspice version:
+
+1. Install it, point `NGSPICE_EXE` at it and check the session header.
+2. Run `uv run --env-file .env python -m pytest -m solver --no-cov --require-solver ngspice`.
+3. For each failure, decide whether ngspice changed or the probe was wrong; a change in what
+   ngspice accepts goes into `discrepancies.md` and may change a status (never weaken a test
+   to make it pass, AGENTS.md).
+4. When the suite passes, append a `validated_on` item (`solver`, `version`, `date`) to every
+   entry the run covered (never replace one), update the `Validated on:` line of `names.md`
+   and `scoping.md`, and regenerate the status table in the ngspice README.
+
+The ngspice solver suite (334 tests) runs in about 75 seconds on the maintainer's
+machine (M7, ngspice 47); the corpus sweep is about a third of it.
 
 The document layer (M5) is tested in `tests/document/`: lines and insertion
 points, resolution, topology (with Hypothesis properties of the signature and an

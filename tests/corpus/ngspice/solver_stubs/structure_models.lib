@@ -1,0 +1,5 @@
+* Stand-in for the models.lib of structure_basic, as a library with the section `typical`
+* (M7 solver stub, authored here). ngspice 47 cannot also include such a file whole.
+.lib typical
+.model dtypical d
+.endl typical

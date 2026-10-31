@@ -170,6 +170,91 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
         raise ValueError("devices.md does not match ngspice-devices.json")
 
 
+STATUSES = ("documented", "observed", "validated", "disputed")
+SOLVER_TESTS = "tests/solver/"
+RULE_DOCUMENTS = [
+    ROOT / "docs" / "grammars" / "ngspice" / "names.md",
+    ROOT / "docs" / "grammars" / "ngspice" / "scoping.md",
+]
+DISCREPANCIES = ROOT / "docs" / "grammars" / "ngspice" / "discrepancies.md"
+# A rule row: | ID | Rule | Manual | Status | Tests |
+RULE_ROW = re.compile(r"^\| ([A-Z]\d+) \|(.*)\| ([^|]*) \| ([^|]*) \|$", re.MULTILINE)
+VALIDATED_ON_LINE = re.compile(r"^Validated on: \w+ [\w.]+ \(\d{4}-\d{2}-\d{2}\)(?:, .+)?$", re.M)
+TEST_CITATION = re.compile(r"`(?:(tests/[\w/]+\.py)::)?(test_\w+)`")
+
+
+def _solver_test_names(root: Path) -> set[str]:
+    names: set[str] = set()
+    for path in sorted((root / SOLVER_TESTS).glob("*.py")):
+        names.update(re.findall(r"^def (test_\w+)\(", path.read_text("utf-8"), re.MULTILINE))
+    return names
+
+
+def check_validation_status(root: Path, spec_directory: Path, discrepancies: Path) -> None:
+    """Tie each spec entry's status to its solver evidence (decision 0008, architecture §11.2).
+
+    ``validated`` and ``observed`` need a ``validated_on`` list (``solver``, ``version`` and
+    ``date`` in each item) and a ``tests/solver/`` test; ``disputed`` needs a row in
+    ``discrepancies.md`` that names the id; ``documented`` needs a ``validation_note``.
+    """
+    discrepancy_text = discrepancies.read_text(encoding="utf-8")
+    for identifier, entry in _load_specs(spec_directory).items():
+        status = entry.get("status")
+        if status not in STATUSES:
+            raise ValueError(f"Unknown status in {identifier}: {status!r}")
+        if status in ("validated", "observed"):
+            records = entry.get("validated_on")
+            if not isinstance(records, list) or not records:
+                raise ValueError(f"{status} entry has no validated_on: {identifier}")
+            for record in records:
+                if not isinstance(record, dict) or not all(
+                    isinstance(record.get(key), str) and record[key]
+                    for key in ("solver", "version", "date")
+                ):
+                    raise ValueError(f"Malformed validated_on item in {identifier}: {record!r}")
+            if not any(str(test).startswith(SOLVER_TESTS) for test in entry.get("tests", [])):
+                raise ValueError(f"{status} entry cites no solver test: {identifier}")
+        elif status == "disputed":
+            if not re.search(rf"^\|.*\b{re.escape(identifier)}\b.*\|$", discrepancy_text, re.M):
+                raise ValueError(f"disputed entry has no discrepancies.md row: {identifier}")
+        elif not isinstance(entry.get("validation_note"), str) or not entry["validation_note"]:
+            raise ValueError(f"documented entry has no validation_note: {identifier}")
+
+
+def check_rule_tables(root: Path, documents: list[Path], discrepancies: Path) -> None:
+    """Apply the status rules of ``check_validation_status`` to the rule tables of
+    ``names.md`` and ``scoping.md``: a ``validated``/``observed`` row cites a solver test (a
+    ``same`` cell repeats the row above) and the document has a ``Validated on:`` line."""
+    solver_tests = _solver_test_names(root)
+    discrepancy_text = discrepancies.read_text(encoding="utf-8")
+    for document in documents:
+        text = document.read_text(encoding="utf-8")
+        rows = RULE_ROW.findall(text)
+        if not rows:
+            raise ValueError(f"No rule table in {document.name}")
+        previous: set[str] = set()
+        for identifier, _, status, tests in rows:
+            cited = {name for _, name in TEST_CITATION.findall(tests)}
+            if tests.strip().startswith("same"):
+                cited |= previous
+            previous = cited
+            for file, _ in TEST_CITATION.findall(tests):
+                if file and not (root / file).is_file():
+                    raise ValueError(f"{document.name} {identifier} cites a missing file: {file}")
+            if status not in STATUSES:
+                raise ValueError(f"Unknown status in {document.name} {identifier}: {status!r}")
+            if status in ("validated", "observed"):
+                if not cited & solver_tests:
+                    raise ValueError(f"{document.name} {identifier} cites no solver test")
+                if not VALIDATED_ON_LINE.search(text):
+                    raise ValueError(f"{document.name} has no `Validated on:` line")
+            elif status == "disputed":
+                if not re.search(rf"^\|.*\b{identifier}\b.*\|$", discrepancy_text, re.M):
+                    raise ValueError(f"{document.name} {identifier} has no discrepancies.md row")
+            elif "validation_note:" not in tests:
+                raise ValueError(f"{document.name} {identifier} is documented without a note")
+
+
 def test_ngspice_specs_reference_tests_and_grammar_rules() -> None:
     check_spec_coverage(ROOT, SPEC_DIRECTORY, GRAMMAR_FILES)
     check_manual_references(SPEC_DIRECTORY, REFERENCES_FILE)
@@ -178,6 +263,138 @@ def test_ngspice_specs_reference_tests_and_grammar_rules() -> None:
         ROOT / "src" / "netlistmod" / "grammar" / "ngspice-devices.json",
         ROOT / "docs" / "grammars" / "ngspice" / "devices.md",
     )
+
+
+STATUS_ROW = re.compile(r"^\| \[([A-Z0-9-]+)\]\([^)]*\) \| .* \| (\w+) \| ([^|]*) \|$", re.M)
+
+
+def check_status_summary(readme: Path, spec_directory: Path) -> None:
+    """The README's status table lists every entry with its status and validation dates."""
+    found = {
+        identifier: (status, versions.strip())
+        for identifier, status, versions in STATUS_ROW.findall(readme.read_text("utf-8"))
+    }
+    expected: dict[str, tuple[str, str]] = {}
+    for identifier, entry in _load_specs(spec_directory).items():
+        dates: dict[str, list[str]] = {}
+        for record in entry.get("validated_on") or []:
+            dates.setdefault(f"{record['solver']} {record['version']}", []).append(record["date"])
+        versions = "; ".join(f"{key} ({', '.join(values)})" for key, values in dates.items())
+        expected[identifier] = (entry["status"], versions)
+    if found != expected:
+        changed = sorted(set(found.items()) ^ set(expected.items()))
+        raise ValueError(f"{readme.name} status table differs from the spec entries: {changed}")
+
+
+def test_ngspice_statuses_are_backed_by_solver_evidence() -> None:
+    check_validation_status(ROOT, SPEC_DIRECTORY, DISCREPANCIES)
+    check_rule_tables(ROOT, RULE_DOCUMENTS, DISCREPANCIES)
+    check_status_summary(ROOT / "docs" / "grammars" / "ngspice" / "README.md", SPEC_DIRECTORY)
+
+
+def test_status_summary_check_rejects_a_stale_row(tmp_path: Path) -> None:
+    specs, _ = _status_project(tmp_path, "status: validated\n" + _RECORD + _SOLVER_TEST)
+    readme = tmp_path / "README.md"
+    row = "| [NG-TEST-001](./specs/NG-TEST-001.yaml) | thing | {} | ngspice 47 (2026-10-31) |\n"
+    readme.write_text(row.format("validated"), encoding="utf-8")
+    check_status_summary(readme, specs)
+    readme.write_text(row.format("documented"), encoding="utf-8")
+    with pytest.raises(ValueError, match="status table differs"):
+        check_status_summary(readme, specs)
+
+
+def _status_project(tmp_path: Path, entry: str, discrepancy: str = "") -> tuple[Path, Path]:
+    specs = tmp_path / "specs"
+    specs.mkdir()
+    (specs / "NG-TEST-001.yaml").write_text("id: NG-TEST-001\n" + entry, encoding="utf-8")
+    solver = tmp_path / "tests" / "solver"
+    solver.mkdir(parents=True)
+    (solver / "test_probe.py").write_text("def test_probe():\n    pass\n", encoding="utf-8")
+    discrepancies = tmp_path / "discrepancies.md"
+    discrepancies.write_text(f"| Solver | Library | Evidence |\n{discrepancy}", encoding="utf-8")
+    return specs, discrepancies
+
+
+_RECORD = "validated_on:\n- solver: ngspice\n  version: '47'\n  date: '2026-10-31'\n"
+_SOLVER_TEST = "tests: [tests/solver/test_probe.py::test_probe]\n"
+
+
+@pytest.mark.parametrize(
+    ("entry", "discrepancy"),
+    [
+        ("status: validated\n" + _RECORD + _SOLVER_TEST, ""),
+        ("status: observed\n" + _RECORD + _SOLVER_TEST, ""),
+        ("status: disputed\n", "| reads it differently (NG-TEST-001) | x | y |\n"),
+        ("status: documented\nvalidation_note: the solver cannot tell\n", ""),
+    ],
+)
+def test_status_check_accepts_backed_statuses(tmp_path: Path, entry: str, discrepancy: str) -> None:
+    specs, discrepancies = _status_project(tmp_path, entry, discrepancy)
+    check_validation_status(tmp_path, specs, discrepancies)
+
+
+@pytest.mark.parametrize(
+    ("entry", "message"),
+    [
+        ("status: supported\n", "Unknown status"),
+        ("status: validated\n" + _SOLVER_TEST, "no validated_on"),
+        ("status: observed\nvalidated_on: []\n" + _SOLVER_TEST, "no validated_on"),
+        (
+            "status: validated\nvalidated_on:\n- solver: ngspice\n  date: '2026-10-31'\n"
+            + _SOLVER_TEST,
+            "Malformed validated_on",
+        ),
+        ("status: validated\n" + _RECORD + "tests: [tests/grammar/x.py::test_x]\n", "no solver"),
+        ("status: disputed\n", "no discrepancies.md row"),
+        ("status: documented\n", "no validation_note"),
+    ],
+)
+def test_status_check_rejects_unbacked_statuses(tmp_path: Path, entry: str, message: str) -> None:
+    specs, discrepancies = _status_project(tmp_path, entry)
+    with pytest.raises(ValueError, match=message):
+        check_validation_status(tmp_path, specs, discrepancies)
+
+
+_TABLE = "| ID | Rule | Manual | Status | Tests |\n|---|---|---|---|---|\n"
+
+
+@pytest.mark.parametrize(
+    "rows",
+    [
+        "| N1 | rule | — | validated | `test_probe` |\n| N2 | rule | — | observed | same |\n",
+        "| N1 | rule | — | disputed | — |\n",
+        "| N1 | rule | — | documented | validation_note: no solver can tell |\n",
+    ],
+)
+def test_rule_table_check_accepts_backed_rows(tmp_path: Path, rows: str) -> None:
+    _, discrepancies = _status_project(tmp_path, "status: observed\n", "| N1 differs | x | y |\n")
+    document = tmp_path / "rules.md"
+    document.write_text(f"Validated on: ngspice 47 (2026-10-31)\n\n{_TABLE}{rows}", "utf-8")
+    check_rule_tables(tmp_path, [document], discrepancies)
+
+
+@pytest.mark.parametrize(
+    ("header", "rows", "message"),
+    [
+        ("", "| N1 | rule | — | validated | `test_probe` |\n", "no `Validated on:` line"),
+        ("V", "| N1 | rule | — | validated (discrepancy) | `test_probe` |\n", "Unknown status"),
+        ("V", "| N1 | rule | — | validated | `test_other` |\n", "cites no solver test"),
+        ("V", "| N1 | rule | — | observed | `tests/x/missing.py::test_probe` |\n", "missing"),
+        ("V", "| N1 | rule | — | disputed | — |\n", "no discrepancies.md row"),
+        ("V", "| N1 | rule | — | documented | `test_probe` |\n", "without a note"),
+        ("V", "no table\n", "No rule table"),
+    ],
+)
+def test_rule_table_check_rejects_unbacked_rows(
+    tmp_path: Path, header: str, rows: str, message: str
+) -> None:
+    _, discrepancies = _status_project(tmp_path, "status: observed\n")
+    document = tmp_path / "rules.md"
+    line = "Validated on: ngspice 47 (2026-10-31)\n\n" if header else ""
+    table = "" if rows == "no table\n" else _TABLE
+    document.write_text(f"{line}{table}{rows}", "utf-8")
+    with pytest.raises(ValueError, match=message):
+        check_rule_tables(tmp_path, [document], discrepancies)
 
 
 def test_spec_checker_rejects_missing_test_reference(tmp_path: Path) -> None:

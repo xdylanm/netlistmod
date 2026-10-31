@@ -1,0 +1,20 @@
+{
+  "family": "solver_stubs",
+  "origin": "Authored in this repository for the M7 solver tests",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-31",
+  "notes": "Stand-ins for include files kept outside the repository, and the definitions the elements_basic fixtures refer to. A corpus manifest names them in a fixture's `solver` field ({\"stubs\": {include path: stub}} or {\"harness\": stub}); tests/support/ngspice.py copies them next to the netlist and points the include at them with the edit API. They are only ever included by ngspice, never parsed by the library, so they may use phase 2 elements (E sources in tl072.lib). tl072.lib is an ideal two-op-amp stand-in with the TL072 pin order, not a vendor model. Raw-file samples are in raw/ with their own manifest. Author and MIT license confirmed by the maintainer on 2026-10-31.",
+  "fixtures": {
+    "elements_harness.inc": "108c16062824d930f5f968d53f4fd9f72bcc861bc36ebb60813c50ae297c152b",
+    "h.inc": "8b69b18ef0d14c1f7530ac0b0626ef4c049684c1dca354d5811572fc908aa54e",
+    "harness.inc": "09d1079d9d762c5bdf8f0de06ca42ace352202b82c33fe39989a7408c4b87fe7",
+    "new_models.inc": "60b7a88fd3be5a60e60aca44e3f69f6c55defe61fa32611060aa37275622fa0f",
+    "old_models.inc": "ea5942174da462a0f1c3151f566ded185d06f3eaef065e1a93a530cbfbeb4e2b",
+    "potentiometer.sub": "26d385371a9d138d8a1e1031d1ea8767d4f78cf51855534f460618675135149c",
+    "structure_models.inc": "e14d785c72c1666d283600880f52adc27a7feac2f6f6733058c49ccc6883b499",
+    "structure_models.lib": "04579909ad6b5d46b28fbe7b529e8864a8413702d82b9c67b82d54c3a9591f8e",
+    "tl072.lib": "a2a83e49b0d7f95eff029cd853e80c30b8e9f66176e1237b554d8a398893f34a",
+    "vendor.lib": "c1ec0e5e185a72a92636ba4bed88c39adef70ee0ac70382d4eb0913ab867368f"
+  }
+}

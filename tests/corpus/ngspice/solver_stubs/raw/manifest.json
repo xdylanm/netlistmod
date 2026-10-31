@@ -1,0 +1,18 @@
+{
+  "family": "solver_stubs/raw",
+  "origin": "Raw files written by ngspice 47 (Windows build) for netlists authored in this repository (M7 T1)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-31",
+  "notes": "Samples for the clean-room raw-file reader in tests/support/ngspice.py. Each X.raw is `ngspice_con -b -r X.raw -o X.log X.cir` for the X.cir beside it: op (one real point), ac (complex values, three frequencies), tran (61 real points) and two (.op and .ac in one file: two plots, the AC plot written first). ngspice 47 writes CRLF line endings in raw files, with or without SPICE_ASCIIRAWFILE.",
+  "fixtures": {
+    "ac.cir": "955e621af47b3017186c9e8d76c7cdb51b4c6ae2d512673c7655c32a1a29e620",
+    "ac.raw": "21ccaa03a8f02e002dd417df53004e3c7c511610b8bcc1689a4acc0aa1856cd2",
+    "op.cir": "2b98205fd4c68f49052d9dc9b3e694274d03508458b179ad798470ab8bedc15b",
+    "op.raw": "65b7abed4ee3eaeeeae0fbe40e3e2ed2ab8433f124c64e7000e3672b56962346",
+    "tran.cir": "6471d87d06f6d27bc948b17ba322c6b62c549721ecf7f580f445b68264d42f79",
+    "tran.raw": "7e4765644fe32292449441924857662e9c5237bf4a644f9883dc365ec45274de",
+    "two.cir": "506246f8670e2c98f54e9deaaef93590183ffe351d92d5449cea9e4a6e9b9223",
+    "two.raw": "fe26dcdfee94270710a51d3ef5b1e1011fa6d48910ffac65192d1ba17844e374"
+  }
+}

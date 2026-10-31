@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Local solver validation (M7, decision 0008). Test and documentation changes only; no
+  library code changed. A shared ngspice harness (`tests/support/ngspice.py`: `run`, a
+  clean-room ASCII raw-file reader, `op`/`ac`/`tran_rows`, stub wiring through the edit API)
+  replaces the per-file helpers; every accept fixture runs in ngspice (stubs for includes kept
+  outside the repository, a `solver` field in corpus manifests) and gives identical results
+  after an unedited save; every M6 edit operation is checked against a closed form, plus a
+  solver-backed Hypothesis test. Spec-entry and rule statuses are now checked against their
+  solver evidence; `NG-DIR-001`, `NG-NOD-001`, `NG-PAR-001`, `NG-UNS-001`, `NG-VAL-001` and
+  scoping rule S9 are `validated`. New discrepancies: a stray `.endc`, node names with
+  `[ ] % < ~ (`, and `params:` on an X line run in ngspice 47 and stay rejected. The pytest
+  header names each solver and its version.
 - Add the edit layer (M6, decision 0007). `netlistmod.Netlist` (a subclass of the
   read-only `netlistmod.document.Netlist`) gains `set_value`, `set_formula`,
   `set_param`, `set_model` (type-checked, `allow_external=True` for models an

@@ -10,3 +10,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0005 — Statement and directive grammar](0005-statement-and-directive-grammar.md)
 - [0006 — Document layer: names, scope and diagnostics](0006-document-layer-names-scope-and-diagnostics.md)
 - [0007 — Edit lifecycle and edit semantics](0007-edit-lifecycle-and-edit-semantics.md)
+- [0008 — Validation status and solver harnesses](0008-validation-status-and-solver-harnesses.md)

@@ -23,8 +23,12 @@ tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
   - tests/grammar/ngspice/test_structure.py::test_unterminated_opaque_blocks_point_to_opening_line
   - tests/solver/test_ngspice_solver_structure.py::test_valid_if_form_is_accepted_by_solver_and_parser
+  - tests/solver/test_ngspice_validation.py::test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it
 validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-22"
-notes: A .control block is top-level only; inside a subcircuit it is rejected at .control (NG-SBD-001), while an .if block may stand in a subcircuit body. The form was validated with ngspice 47. The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded.
+  - solver: ngspice
+    version: "47"
+    date: "2026-10-31"
+notes: A .control block is top-level only; inside a subcircuit it is rejected at .control (NG-SBD-001), while an .if block may stand in a subcircuit body. The form was validated with ngspice 47. The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded. M7 finding (candidate disputed, for the maintainer to decide; m7-tasks.md T10) - the library keeps an .if block opaque and does not check its condition, so it accepts .if {enabled} (structure_basic.cir), which ngspice 47 stops at ("Bad syntax"); it reads .if (enabled).

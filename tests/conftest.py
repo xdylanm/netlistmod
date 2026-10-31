@@ -17,6 +17,22 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     )
 
 
+def pytest_report_header(config: pytest.Config) -> list[str]:
+    """Name each solver the solver tests will use, with its version (architecture §10.3)."""
+    lines = []
+    for name in ("ngspice", "ltspice"):
+        try:
+            found = discover_solver(name)
+        except (OSError, RuntimeError) as error:
+            lines.append(f"solver {name}: discovery failed: {error}")
+            continue
+        if found is None:
+            lines.append(f"solver {name}: not found")
+        else:
+            lines.append(f"solver {name}: {found.version} at {found.path}")
+    return lines
+
+
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",

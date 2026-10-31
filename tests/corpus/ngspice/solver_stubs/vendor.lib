@@ -1,0 +1,4 @@
+* Stand-in for vendor.lib of the edits_golden fixtures (M7 solver stub, authored here).
+.lib tt
+.model dtt d
+.endl tt

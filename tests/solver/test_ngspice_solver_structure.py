@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 from pathlib import Path
 
 import pytest
@@ -15,18 +14,12 @@ from netlistmod import (
     UnsupportedConstruct,
     parse,
 )
-from tests.support.solvers import Solver, run_ngspice
+from tests.support.ngspice import run
+from tests.support.solvers import Solver
 
 pytestmark = pytest.mark.solver("ngspice")
 
 _CIRCUIT = "probe circuit\nV1 in 0 DC 2\nR1 in 0 1k\n.op\n.print op v(in)\n.end\n"
-
-
-def _run(solver: Solver, tmp_path: Path, text: str) -> tuple[int, str]:
-    netlist = tmp_path / "probe.cir"
-    netlist.write_bytes(text.encode("utf-8"))
-    result = run_ngspice(solver, netlist)
-    return result.returncode, (tmp_path / "ngspice.log").read_text(encoding="utf-8")
 
 
 def _assert_parser_rejects(text: str) -> None:
@@ -34,16 +27,10 @@ def _assert_parser_rejects(text: str) -> None:
         parse(SourceText(text), Dialect.NGSPICE)
 
 
-def _voltage(log: str) -> str:
-    match = re.search(r"(?m)^\s*in\s+([-+0-9.eE]+)\s*$", log)
-    assert match is not None, log
-    return match.group(1)
-
-
 def test_missing_end_is_solver_leniency_rejected_by_parser(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT.removesuffix(".end\n")
-    code, _ = _run(solver, tmp_path, text)
-    assert code == 0
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
     _assert_parser_rejects(text)
 
 
@@ -51,17 +38,17 @@ def test_element_after_end_is_ignored_by_solver_rejected_by_parser(
     solver: Solver, tmp_path: Path
 ) -> None:
     text = _CIRCUIT + "R2 in 0 2k\n"
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0
-    assert "Circuit: probe circuit" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
+    assert "Circuit: probe circuit" in result.log
     _assert_parser_rejects(text)
 
 
 def test_control_block_after_end_runs_but_parser_rejects(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT + ".control\nop\n.endc\n"
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0
-    assert "Circuit: probe circuit" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
+    assert "Circuit: probe circuit" in result.log
     _assert_parser_rejects(text)
 
 
@@ -73,11 +60,11 @@ def test_continuation_across_comment_and_blank_is_solver_leniency(
         "V1 in 0 DC 2",
         "V1 in 0\n* continuation comment\n\n+ DC 2",
     )
-    ordinary_code, ordinary_log = _run(solver, tmp_path, ordinary)
-    split_code, split_log = _run(solver, tmp_path, split)
-    assert ordinary_code == split_code == 0
-    assert float(_voltage(ordinary_log)) == pytest.approx(2.0)
-    assert float(_voltage(split_log)) == pytest.approx(2.0)
+    ordinary_result = run(solver, tmp_path, ordinary)
+    split_result = run(solver, tmp_path, split)
+    assert ordinary_result.returncode == split_result.returncode == 0
+    assert ordinary_result.voltage("in") == pytest.approx(2.0)
+    assert split_result.voltage("in") == pytest.approx(2.0)
     _assert_parser_rejects(split)
 
 
@@ -100,9 +87,9 @@ def test_include_and_lib_continuation_fails_in_both(
     for name in files:
         (tmp_path / "sub" / name).write_text(contents[name], encoding="utf-8")
     body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
-    code, log = _run(solver, tmp_path, f"probe circuit\n{statement}\n{body}")
-    assert code != 0, log
-    assert "Error on line" in log
+    result = run(solver, tmp_path, f"probe circuit\n{statement}\n{body}")
+    assert result.returncode != 0, result.log
+    assert "Error on line" in result.log
     _assert_parser_rejects(f"probe circuit\n{statement}\n.end\n")
 
 
@@ -119,9 +106,9 @@ def test_include_and_lib_continuation_fails_in_both(
 def test_backslash_continuation_agrees_with_solver(
     solver: Solver, tmp_path: Path, continued: str
 ) -> None:
-    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
     assert getattr(result.items[1], "raw", None) == f".foo {continued}"
 
@@ -136,9 +123,9 @@ def test_backslash_continuation_agrees_with_solver(
 def test_backslash_after_trailing_space_or_in_comment_is_solver_leniency(
     solver: Solver, tmp_path: Path, continued: str
 ) -> None:
-    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     # The parser ends the statement on line 2, so line 3 is a new D line missing its second node.
     with pytest.raises(ParseError) as captured:
         parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
@@ -157,8 +144,8 @@ def test_backslash_after_trailing_space_or_in_comment_is_solver_leniency(
 def test_backslash_before_a_line_that_cannot_continue_fails_in_both(
     solver: Solver, tmp_path: Path, lines: str
 ) -> None:
-    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2\n", lines))
-    assert code != 0, log
+    result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2\n", lines))
+    assert result.returncode != 0, result.log
     _assert_parser_rejects(f"probe circuit\n{lines.replace('V1', '.foo')}.end\n")
 
 
@@ -166,17 +153,17 @@ def test_backslash_after_include_path_fails_in_both(solver: Solver, tmp_path: Pa
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "v.inc").write_text("V1 in 0 DC 2\n", encoding="utf-8")
     body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
-    code, log = _run(solver, tmp_path, "probe circuit\n.include sub/v.inc\\\\\n" + body)
-    assert code != 0
-    assert "Could not find include file sub/v.inc\\\\" in log
+    result = run(solver, tmp_path, "probe circuit\n.include sub/v.inc\\\\\n" + body)
+    assert result.returncode != 0
+    assert "Could not find include file sub/v.inc\\\\" in result.log
     _assert_parser_rejects("probe circuit\n.include sub/v.inc\\\\\n.end\n")
 
 
 def test_comments_on_continued_lines_agree_with_solver(solver: Solver, tmp_path: Path) -> None:
     continued = "in 0 ; one\n+ DC // two\n+ 2 $ three"
-    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
     assert len(getattr(result.items[1], "trailing_comments", ())) == 3
 
@@ -185,9 +172,9 @@ def test_plus_after_end_is_ignored_by_solver_rejected_by_parser(
     solver: Solver, tmp_path: Path
 ) -> None:
     text = _CIRCUIT + "+ ignored after end\n"
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0
-    assert "Circuit: probe circuit" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
+    assert "Circuit: probe circuit" in result.log
     _assert_parser_rejects(text)
 
 
@@ -196,25 +183,25 @@ def test_trailing_comment_on_end_is_solver_leniency_rejected_by_parser(
     solver: Solver, tmp_path: Path, comment: str
 ) -> None:
     text = _CIRCUIT.replace(".end\n", f".end {comment}\n")
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     _assert_parser_rejects(text)
 
 
 def test_unknown_dot_command_after_end_fails_in_both(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT + ".unknown after end\n"
-    code, log = _run(solver, tmp_path, text)
-    assert code != 0
-    assert "Error on line" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode != 0
+    assert "Error on line" in result.log
     _assert_parser_rejects(text)
 
 
 def test_valid_if_form_is_accepted_by_solver_and_parser(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT.replace(".op\n", ".if (1)\nR2 x 0 1k\n.endif\n.op\n")
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0, log
-    assert "Circuit: probe circuit" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0, result.log
+    assert "Circuit: probe circuit" in result.log
     result = parse(
         SourceText("probe circuit\n.if (1)\nR2 x 0 1k\n.endif\n.end\n"),
         Dialect.NGSPICE,
@@ -224,8 +211,8 @@ def test_valid_if_form_is_accepted_by_solver_and_parser(solver: Solver, tmp_path
 
 def test_double_slash_comment_probe(solver: Solver, tmp_path: Path) -> None:
     text = _CIRCUIT.replace("R1 in 0 1k\n", "// slash comment\nR1 in 0 1k\n")
-    code, _ = _run(solver, tmp_path, text)
-    assert code == 0
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
     _assert_parser_rejects(text)
 
 
@@ -235,9 +222,9 @@ def test_double_slash_comment_probe(solver: Solver, tmp_path: Path) -> None:
 def test_double_slash_comment_needs_no_preceding_space(
     solver: Solver, tmp_path: Path, source_line: str
 ) -> None:
-    code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", source_line))
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", source_line))
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     directive = source_line.replace("V1 in 0 DC ", ".param v=")
     text = f"probe circuit\n{directive}\n.end\n"
     statement = parse(SourceText(text), Dialect.NGSPICE).items[1]
@@ -251,12 +238,12 @@ def test_include_path_is_cut_at_double_slash_unless_quoted(solver: Solver, tmp_p
     (tmp_path / "sub").mkdir()
     (tmp_path / "sub" / "v.inc").write_text("V1 in 0 DC 2\n", encoding="utf-8")
     body = _CIRCUIT.split("\n", 1)[1].replace("V1 in 0 DC 2\n", "")
-    code, log = _run(solver, tmp_path, "probe circuit\n.include sub//v.inc\n" + body)
-    assert code != 0
-    assert "Could not open file" in log
-    code, log = _run(solver, tmp_path, 'probe circuit\n.include "sub//v.inc"\n' + body)
-    assert code == 0, log
-    assert float(_voltage(log)) == pytest.approx(2.0)
+    result = run(solver, tmp_path, "probe circuit\n.include sub//v.inc\n" + body)
+    assert result.returncode != 0
+    assert "Could not open file" in result.log
+    result = run(solver, tmp_path, 'probe circuit\n.include "sub//v.inc"\n' + body)
+    assert result.returncode == 0, result.log
+    assert result.voltage("in") == pytest.approx(2.0)
     parsed = parse(
         SourceText('probe circuit\n.include sub//v.inc\n.include "sub//v.inc"\n.end\n'),
         Dialect.NGSPICE,
@@ -271,12 +258,12 @@ def test_quoted_and_braced_include_paths_probe_free_text(solver: Solver, tmp_pat
     (tmp_path / "quoted;$.inc").write_text("* quoted\n", encoding="utf-8")
     (tmp_path / "{braced;$.inc}").write_text("* braced\n", encoding="utf-8")
     quoted_text = 'probe circuit\n.include "quoted;$.inc"\n' + _CIRCUIT.split("\n", 1)[1]
-    code, log = _run(solver, tmp_path, quoted_text)
-    assert code == 0, log
+    result = run(solver, tmp_path, quoted_text)
+    assert result.returncode == 0, result.log
     braced_text = "probe circuit\n.include {braced;$.inc}\n" + _CIRCUIT.split("\n", 1)[1]
-    code, log = _run(solver, tmp_path, braced_text)
-    assert code != 0
-    assert "Could not find include file {braced" in log
+    result = run(solver, tmp_path, braced_text)
+    assert result.returncode != 0
+    assert "Could not find include file {braced" in result.log
     parsed = parse(
         SourceText('probe circuit\n.include "quoted;$.inc"\n.include {braced;$.inc}\n.end\n'),
         Dialect.NGSPICE,
@@ -292,9 +279,9 @@ def test_title_is_first_line_and_later_title_replaces_it(solver: Solver, tmp_pat
         "initial title ; still title\n"
         ".title replacement ; still title\n" + _CIRCUIT.split("\n", 1)[1]
     )
-    code, log = _run(solver, tmp_path, text)
-    assert code == 0
-    assert "Circuit: replacement ; still title" in log
+    result = run(solver, tmp_path, text)
+    assert result.returncode == 0
+    assert "Circuit: replacement ; still title" in result.log
     result = parse(
         SourceText("initial title ; still title\n.title replacement ; still title\n.end\n"),
         Dialect.NGSPICE,

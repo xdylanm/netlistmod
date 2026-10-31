@@ -1,0 +1,12 @@
+* Stand-in for a TL072 dual op-amp (M7 solver stub, authored here; not a vendor model).
+* Pins: 1 out A, 2 in- A, 3 in+ A, 4 V-, 5 in+ B, 6 in- B, 7 out B, 8 V+.
+* Each half is an ideal voltage-controlled source (gain 100k) behind 100 ohms.
+.subckt TL072 outa inna inpa vneg inpb innb outb vpos
+Ria inpa inna 1e12
+Eoa xa 0 inpa inna 1e5
+Roa xa outa 100
+Rib inpb innb 1e12
+Eob xb 0 inpb innb 1e5
+Rob xb outb 100
+Rsupply vpos vneg 1meg
+.ends TL072

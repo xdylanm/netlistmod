@@ -1,0 +1,7 @@
+* Stand-in for a three-terminal potentiometer (M7 solver stub, authored here).
+* Ports: 1 and 2 are the ends, 3 is the wiper; R is the total resistance and wiper the
+* fraction of it between end 1 and the wiper. 1 milliohm keeps each leg above zero.
+.subckt pot 1 2 3 R=10k wiper=0.5
+R1 1 3 {R*wiper+1m}
+R2 3 2 {R*(1-wiper)+1m}
+.ends pot

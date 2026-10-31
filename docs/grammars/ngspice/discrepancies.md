@@ -111,6 +111,39 @@ the raw data, §11.6.1); `v( out )` stores `v(out)` and `i(V1)` stores `i(v1)`. 
 accepts the same forms and records each vector as written (`text`, `function`, nodes or
 source); it does not model what ngspice stores.
 
+## M7 validation observations (ngspice 47, 2026-10-31)
+
+Probes are in `tests/solver/test_ngspice_validation.py` (decision 0008). Each lenient form is
+rejected by the library under P5; none appears in the maintainer's exports.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| A stray `.endc` runs with "Warning: Missing .control statement!" (`NG-DIR-001`). | `ParseError` at `.endc`: a stray block terminator (§2.1.2.3). | `test_a_stray_endc_runs_with_a_warning_but_the_library_rejects_it` |
+| Node names with `[ ]`, `%`, `<`, `~` or `(` run (`o[1]`, `a%b`, `a<b`, `a~b`, `a(b`: 1.5 V) (`NG-NOD-001`). | `ParseError` at the name: §2.1.3.4 lists these characters as not allowed in a name. | `test_excluded_name_characters_run_but_the_library_rejects_them` |
+| `X1 in out div params: r=2k` runs (2.0 V) (`NG-UNS-001`). | `ParseError` at `params:`: not ngspice syntax per §2.11.3. | `test_params_keyword_on_an_x_line_runs_but_the_library_rejects_it` |
+
+These agree: unknown dot-commands `.print`, `.width` and `.func` run (`.func` takes effect in a
+value) and stay `UnknownDirective`; a stray `.endif`, `.else` or `.elseif` fails in both; `a/b`,
+`n+1`, `n-1`, `a#b`, `1n` and `N_OUT.2` are node names in both, and a `'` or `=` in a name fails
+in both; `m=2`, `tc1` with `.temp` and `off` take effect; every source function the library
+reports as unsupported runs, as do `DISTOF1`/`DISTOF2` and `q=`; `{…}` and `'…'` evaluate alike,
+`{a;b}` fails in both and string defaults and overrides run; a top-level `K`, `.dc` or
+`.save i()` cannot name an element inside an instance (S9, `UNRESOLVED_ELEMENT` in the library).
+
+### Open finding: an `.if` condition in braces (candidate `disputed`, `NG-OPA-001`)
+
+The library keeps an `.if` block opaque and does not check its condition, so it accepts
+`.if {enabled}` (as in `structure_basic.cir`). ngspice 47 stops at that line ("Bad syntax") and
+reads `.if (enabled)`. Under decision 0008 this is a form the library accepts and ngspice reads
+differently, without a diagnostic: a candidate `disputed` for `NG-OPA-001`, left `validated` for
+the maintainer to decide (m7-tasks.md T10). Evidence:
+`test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it`.
+
+ngspice 47 also cannot include one file both whole (`.include`) and as a library section
+(`.lib file section`): a `.lib` section in a file included whole is an "unimplemented dot
+command". `structure_basic.cir` does both with `models.lib`, so it is skipped by the corpus
+sweep; the solver-free tests are unaffected.
+
 ## Names, scoping and formula observations (ngspice 47, 2026-10-31; M5)
 
 Probes are in `tests/solver/test_ngspice_solver_document.py`; the rules they validate are in

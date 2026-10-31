@@ -6,15 +6,19 @@ from pathlib import Path
 from typing import Any
 
 CORPUS = Path(__file__).parent / "corpus"
+NGSPICE = CORPUS / "ngspice"
+STUBS = NGSPICE / "solver_stubs"
 
 
 def test_every_corpus_family_has_a_manifest_and_matching_hashes() -> None:
+    # A family is a folder holding netlists, or one holding a manifest (the solver stubs).
     families = {
         path.parent
         for path in CORPUS.rglob("*")
-        if path.is_file() and path.suffix.lower() in {".cir", ".net", ".sp"}
+        if path.is_file()
+        and (path.suffix.lower() in {".cir", ".net", ".sp"} or path.name == "manifest.json")
     }
-    assert families
+    assert STUBS in families and STUBS / "raw" in families
 
     for family in families:
         manifest_path = family / "manifest.json"
@@ -38,3 +42,25 @@ def test_every_corpus_family_has_a_manifest_and_matching_hashes() -> None:
                 else fixture_metadata["sha256"]
             )
             assert actual_hash == expected_hash, f"Fixture hash changed: {family / filename}"
+
+
+def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
+    """Decision 0008: a fixture's optional ``solver`` field is ``{"skip": reason}``, or names
+    stub files for its includes (``stubs``) and an included harness (``harness``)."""
+    families = sorted(
+        family.name
+        for family in NGSPICE.iterdir()
+        if family.is_dir() and not family.name.endswith("_rejects") and family != STUBS
+    )
+    from tests.solver.test_ngspice_corpus import FAMILIES, solver_fields
+
+    assert sorted(FAMILIES) == families
+    fields = solver_fields()
+    assert {path.parent.name for path in fields} == set(families)
+    for path, field in fields.items():
+        assert set(field) <= {"skip", "stubs", "harness"}, path
+        if "skip" in field:
+            assert set(field) == {"skip"} and isinstance(field["skip"], str), path
+            assert len(field["skip"]) > 20, f"give the reason: {path}"
+        for stub in [*field.get("stubs", {}).values(), *filter(None, [field.get("harness")])]:
+            assert (STUBS / stub).is_file(), f"{path}: missing stub {stub}"

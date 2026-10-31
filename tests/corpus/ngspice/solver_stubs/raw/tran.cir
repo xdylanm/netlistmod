@@ -1,0 +1,7 @@
+tran probe
+V1 in 0 DC 1
+R1 in out 1k
+C1 out 0 1u
+.ic v(out)=0
+.tran 0.5m 2m uic
+.end

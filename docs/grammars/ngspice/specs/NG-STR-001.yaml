@@ -4,6 +4,10 @@ construct: top-level source structure
 manual_ref:
   - '[ngspice-manual] §2.1.1 "Input file structure"'
 status: validated
+validated_on:
+  - solver: ngspice
+    version: '47'
+    date: '2026-10-31'
 grammar:
   - start
   - line
@@ -16,4 +20,6 @@ tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
   - tests/grammar/ngspice/test_statements.py::test_nested_subcircuits_and_allowed_body_items
   - tests/grammar/ngspice/test_statements.py::test_statements_not_allowed_in_a_subcircuit_are_rejected_at_the_keyword
-notes: A non-empty first physical line is required, and the source must end with .end. A line is a body line (allowed at the top level and inside a subcircuit definition, NG-SBD-001) or a top-level-only statement (.title, the analysis, option and output directives, .control).
+  - tests/solver/test_ngspice_validation.py::test_structure_sample_runs_with_a_valid_condition
+  - tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: A non-empty first physical line is required, and the source must end with .end. A line is a body line (allowed at the top level and inside a subcircuit definition, NG-SBD-001) or a top-level-only statement (.title, the analysis, option and output directives, .control). M7 runs the structure_basic sample in ngspice 47 with an .if condition it can read and two include stubs (the fixture itself is skipped, see its manifest); every other accept fixture runs as is or with stubs.

@@ -5,7 +5,11 @@ manual_ref:
 - '[ngspice-manual] §2.11.2 "Brace expressions in circuit elements"'
 - '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
 - '[ngspice-manual] §3.3.4 "Resistors, dependent on expressions (behavioral resistor)"'
-status: documented
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-31'
 grammar:
 - BRACE_FORMULA
 - QUOTE_FORMULA
@@ -18,10 +22,15 @@ tests:
 - tests/grammar/ngspice/test_elements.py::test_expression_values_are_formulas
 - tests/grammar/ngspice/test_elements.py::test_string_parameter_is_a_double_quoted_formula
 - tests/roundtrip/test_ngspice_elements.py::test_every_value_text_is_the_slice_of_its_span
+- tests/solver/test_ngspice_validation.py::test_brace_and_quote_formulas_evaluate_alike
+- tests/solver/test_ngspice_validation.py::test_a_semicolon_inside_braces_fails_in_both
+- tests/solver/test_ngspice_validation.py::test_string_defaults_and_overrides_run
+- tests/solver/test_ngspice_solver_statements.py::test_param_values_reach_the_element
 notes: A Formula is {expr} or 'expr' (text without delimiters, span with them); a double-quoted string
   is a Formula only as a subcircuit parameter value (§2.11.3). Contents are not parsed or evaluated (non-goal
   6), so a formula referring to V(n) is accepted and is hidden connectivity (architecture §7.8). Braces
   do not nest (§6.3 rule 8) and may not be empty or span lines. As in statement text (NG-TXT-001), quotes
   protect ; $ // and braces do not, so {a;b} is unterminated. Bare expressions are rejected, but a letter-leading
   one written without blanks (Rx+1000) is a valid name and so reads as a model name (limitation; M5 reports
-  it as an unresolved model).
+  it as an unresolved model). ngspice 47 (M7) evaluates {a*2} and 'a*2' alike (2.0 V with a=1k), fails
+  on {a;b} as the library does, and runs a string default (f="x") and its override (f="y").
