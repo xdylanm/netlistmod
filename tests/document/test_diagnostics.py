@@ -63,6 +63,32 @@ def test_behaviour_table(body: str, expected: list[tuple[DiagnosticCode, str, st
     assert _codes(body) == expected
 
 
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        # A body is expanded where it is called, so an outer .param later in the file is fine.
+        (".subckt div a b\nR1 a b {rx}\n.ends\n.param rx=1k\nX1 in out div", []),
+        # Within one scope, order still counts: the body's own .param after its use.
+        (
+            ".subckt div a b\nR1 a b {k}\n.param k=1k\n.ends\nX1 in out div",
+            [(C.PARAM_USED_BEFORE_DEFINITION, "warning", "k")],
+        ),
+        # The top-level case is unchanged.
+        ("R1 in out {rx}\n.param rx=3k", [(C.PARAM_USED_BEFORE_DEFINITION, "warning", "rx")]),
+        # A nested definition using its parent's .param, defined after the nested one.
+        (
+            ".subckt outer a b\n.subckt inner p q\nR1 p q {k}\n.ends\n.param k=1k\n"
+            "X1 a b inner\n.ends\nX2 in out outer",
+            [],
+        ),
+    ],
+)
+def test_used_before_definition_is_judged_within_one_scope(
+    body: str, expected: list[tuple[DiagnosticCode, str, str]]
+) -> None:
+    assert _codes(body) == expected
+
+
 def test_rkm_values_are_gated_syntax_and_some_are_read_differently() -> None:
     assert _codes("R1 a b 1M0\nR2 a b 2k7\nC1 a 0 4F7", rkm=True) == [
         (C.DIALECT_GATED_SYNTAX, "info", "1M0"),

@@ -123,7 +123,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `DUPLICATE_DEFINITION` | info (`.param`), warning (`.model`, `.subckt`) | the repeated name | a name defined again in one scope (defaults count as parameters) |
 | `DUPLICATE_ELEMENT` | warning | the repeated designator | case-insensitive |
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
-| `PARAM_USED_BEFORE_DEFINITION` | warning | the name in the formula | the first definition of the resolving scope starts after it |
+| `PARAM_USED_BEFORE_DEFINITION` | warning | the name in the formula | the definition is in the reference's own scope and that scope's first definition starts after it (an enclosing scope's parameter is never "late": review R1) |
 | `ENDS_NAME_MISMATCH` | info | the `.ends` name | names differ (case-insensitive) |
 | `DIALECT_GATED_SYNTAX` | info | the value | `notation == "rkm"` |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |

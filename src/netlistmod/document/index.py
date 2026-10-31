@@ -323,7 +323,9 @@ def _formula_references(
             target = found[1][-1] if found else None
             reference = Reference("param", token.text, span, scope.path, owner, target)
             references.append(reference)
-            if found:
+            # Order is only meaningful within one scope: a body is expanded where it is
+            # called, not where it is defined (§2.11.1; M5 review R1).
+            if found and found[0] is scope:
                 first = found[1][0]
                 assert isinstance(first, ParamAssignment)
                 if first.name_span.start > span.start:

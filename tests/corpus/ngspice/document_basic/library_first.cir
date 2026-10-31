@@ -1,0 +1,16 @@
+subcircuits defined before the parameters they use
+.subckt div a b
+R1 a b {rx}
+R2 b 0 {k}
+.param k=1k
+.subckt leg p q
+R3 p q {k}
+.ends leg
+X1 b 0 leg
+.ends div
+.param rx=1k
+V1 in 0 DC 3
+X1 in out div
+R9 out 0 1k
+.op
+.end

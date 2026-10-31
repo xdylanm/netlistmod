@@ -91,6 +91,17 @@ a port or a `.global` node.
 ('0', 'GND')
 >>> [element.designator for element in netlist.elements_on_net("in")]
 ['VIN', 'XA']
+
+```
+
+Queries are per definition scope: even for a `.global` net, `elements_on_net` lists only the
+elements of the scope asked for.
+
+```python
+>>> [e.designator for e in netlist.elements_on_net("vcc")]
+['VCC']
+>>> [e.designator for e in netlist.elements_on_net("vcc", ("amp",))]
+['R3']
 >>> [(c.terminal, c.node.name, c.net.name) for c in netlist.connections("XA")]
 [(0, 'in', 'in'), (1, 'out', 'out')]
 >>> [net.name for net in netlist.ports("amp")]

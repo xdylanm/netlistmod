@@ -79,3 +79,12 @@
     plain `.save` names (`in`, `vin#branch`), `@dev[param]` and `.ic`/`.nodeset` nodes are not
     references; a formula with `!`, `#` or `%` in a name, or with the verbose operators, gives
     no references.
+- **Amendment (2026-10-31, M5 review round 1, R1):** item 4's `PARAM_USED_BEFORE_DEFINITION` is
+  judged within one scope. It fires only when the reference and the definition it resolves to
+  are in the same scope and the reference comes before that scope's first definition of the
+  name (a top-level `{rx}` before the top-level `.param rx`, or a body `{k}` before the body's
+  own `.param k`). A reference that resolves to an enclosing scope's parameter gets no warning:
+  §2.11.1 orders assignments through the expanded circuit, and a body is expanded where it is
+  called, not where it is defined, so a definition placed before the global `.param` it uses is
+  not late. Ordering such a reference against the `X` lines that call the definition would need
+  an instance-expanded view, which §8 keeps out of scope.

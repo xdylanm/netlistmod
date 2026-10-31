@@ -582,6 +582,103 @@
       ],
       "diagnostics": []
     },
+    "library_first.cir": {
+      "sha256": "d83adcb7c0ef6e21203d7ced4079b0f1d0f1d35f9f303ed1ad80ba4a2c772070",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "out",
+            ""
+          ]
+        ],
+        "div": [
+          [
+            "a",
+            "div"
+          ],
+          [
+            "b",
+            "div"
+          ],
+          [
+            "0",
+            ""
+          ]
+        ],
+        "div/leg": [
+          [
+            "p",
+            "div/leg"
+          ],
+          [
+            "q",
+            "div/leg"
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "X1": [
+          "in",
+          "out"
+        ],
+        "R9": [
+          "out",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "param",
+          "rx",
+          "div",
+          true
+        ],
+        [
+          "param",
+          "k",
+          "div",
+          true
+        ],
+        [
+          "param",
+          "k",
+          "div/leg",
+          true
+        ],
+        [
+          "subckt",
+          "leg",
+          "div",
+          true
+        ],
+        [
+          "subckt",
+          "div",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": [
+        [
+          "PARAM_USED_BEFORE_DEFINITION",
+          "warning",
+          4,
+          9
+        ]
+      ]
+    },
     "rc_filter.cir": {
       "sha256": "38780b7b2e66e5c7d825c99357fc163cde59bbd12c3bf0f65e422b7f6bd76b4b",
       "nets": {

@@ -1,6 +1,6 @@
 # M5 task list — document and semantic layer (ngspice)
 
-> **Status:** ACTIVE — review round 1 (section 10) requires one change before M5 can close. Implemented 2026-10-31 (section 9); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — review round 1 change R1 made 2026-10-31 (section 10.5). Implemented 2026-10-31 (section 9); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M5). Governed by [architecture.md](../architecture.md) (§2 P1–P4, P8, P13; §3 layer [3]; §5.4; §7.1, §7.7, §7.8; §8; §17; §21). Builds on M2–M4: the parser returns typed nodes with spans that tile the source ([m3-elements.md](./m3-elements.md), [m4-statements.md](./m4-statements.md), decisions 0002–0005). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -311,7 +311,7 @@ Accepted except for one finding. The rest of M5 holds up on review:
 
 ### 10.2 Required change
 
-[ ] **R1 — `PARAM_USED_BEFORE_DEFINITION` must not fire for a reference from a subcircuit body to a parameter of an enclosing scope.**
+[x] **R1 — `PARAM_USED_BEFORE_DEFINITION` must not fire for a reference from a subcircuit body to a parameter of an enclosing scope.**
 `_formula_references` (`document/index.py`) marks a reference "late" whenever the parameter's first definition comes later **in the file** than the reference, wherever the two are. A definition placed at the top of a file, before the global `.param` it uses, therefore gets a false warning. This is a common layout (library subcircuits first):
 
 ```
@@ -344,3 +344,22 @@ Change:
 ### 10.4 Exit for this round
 
 Run the full check set and the solver tests, append a short report under this section, and set the status to `READY FOR REVIEW`. **Do not archive.**
+
+### 10.5 Report (2026-10-31)
+
+- **R1 done.** `_formula_references` (`document/index.py`) marks a reference late only when the
+  scope that defines the parameter is the reference's own scope and that scope's first
+  definition starts after the reference. No other code changed.
+- **Tests:** `tests/document/test_diagnostics.py::test_used_before_definition_is_judged_within_one_scope`
+  covers the four cases (the review's example: none; a body `.param k` used earlier in the same
+  body: warning; the top-level case: warning; a nested definition using its parent's `.param`:
+  none). The new `document_basic/library_first.cir` combines them, with its manifest entry; it
+  runs in ngspice 47 (0.75 V, which confirms `rx` and both `k` resolve as the library says) and
+  its only diagnostic is the body-local `{k}`. The existing `document_basic` expectations were
+  unchanged.
+- **Docs:** scoping.md S5, decision 0006 (dated amendment), `m5-document.md` section 4. For
+  10.3, the usage page now says that queries are per definition scope, with a doctested
+  `elements_on_net("vcc")` example at the top level and in `amp`.
+- **Checks:** ruff, ruff format, mypy `--strict`, the import-linter contract and the pre-commit
+  hooks are clean; `pytest --require-solver ngspice`: 1070 passed, 2 POSIX-only skips, 98.65%
+  coverage.
