@@ -4,7 +4,7 @@
 to make permitted value and directive edits while preserving the original text
 and circuit topology.
 
-**Status:** M0–M5 are complete; M6 (the edit layer) is ready for review. The strict
+**Status:** M0–M6 are complete, including the edit layer. The strict
 ngspice parser preserves titles, comments, unknown dot-commands, immediate
 continuations and opaque blocks/statements, and parses the phase 1 element lines
 (R, C, L, K, V, I, D, X) into typed nodes with exact source spans. RKM values

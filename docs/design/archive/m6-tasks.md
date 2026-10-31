@@ -1,7 +1,7 @@
 # M6 task list — edit layer (ngspice)
 
-> **Status:** READY FOR REVIEW — implemented 2026-10-31 (section 9); approved by the maintainer (2026-10-31); section 2 records the decisions.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M6). Governed by [architecture.md](../architecture.md) (§2 P1–P4, P11; §3 layers [4]–[5]; §7 (normative); §10 T4–T6; §16; §17; §19 decision 18; §21). Builds on the design notes [m3-elements.md](./m3-elements.md) (element sub-spans), [m4-statements.md](./m4-statements.md) (statement and directive sub-spans), and [m5-document.md](./m5-document.md) (`Netlist`, `Lines`, scopes, references, signature). Citations use the manual edition in [references.md](../references.md).
+> **Status:** COMPLETE (2026-10-31) — implemented 2026-10-31 (sections 9 and 10), review approved (section 11); plan approved by the maintainer (2026-10-31); section 2 records the decisions.
+> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M6). Governed by [architecture.md](../../architecture.md) (§2 P1–P4, P11; §3 layers [4]–[5]; §7 (normative); §10 T4–T6; §16; §17; §19 decision 18; §21). Builds on the design notes [m3-elements.md](../m3-elements.md) (element sub-spans), [m4-statements.md](../m4-statements.md) (statement and directive sub-spans), and [m5-document.md](../m5-document.md) (`Netlist`, `Lines`, scopes, references, signature). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 
@@ -288,7 +288,7 @@ Re-recorded as solver tests in T11.
 
 **What changed.** Decision record 0007 (status `proposed`) and the architecture amendments of
 D1 (§4, §7.2, §7.4, §7.5, §7.6, §16, §17, §19 decision 18, §21). Design note
-[m6-edits.md](./m6-edits.md) (D2). The edit layer under `src/netlistmod/edit/`: `plan.py`,
+[m6-edits.md](../m6-edits.md) (D2). The edit layer under `src/netlistmod/edit/`: `plan.py`,
 `conventions.py`, `placement.py`, `verify.py`, `operations.py` and `api.py`. `netlistmod.Netlist`
 is now the editable subclass of the read-only `netlistmod.document.Netlist`, whose constructors
 return `Self`. New diagnostic `MODEL_TYPE_MISMATCH`, with its table as data
@@ -299,7 +299,7 @@ element, statement and directive operations, lifecycle, golden, property and neg
 `docs/usage/editing.md` (executed), CHANGELOG, README, `testing.md`, `provenance.md`, the phase
 plan and the design-folder index.
 
-**Settled** (each with its basis in [m6-edits.md](./m6-edits.md) §4):
+**Settled** (each with its basis in [m6-edits.md](../m6-edits.md) §4):
 
 - *T3:* `set_value` on a source replaces the DC value as written and never adds a value or `DC`
   (use `set_dc`); `set_value` on a `K` line is an `EditError` pointing to `set_coupling`;
@@ -364,7 +364,7 @@ and `pytest` (1430 passed, 2 POSIX-only skips, coverage 98.7%) with `--require-s
 
 The maintainer accepted the deviations of section 9 (other changes, formatting), the keyword
 case, the treatment of ambiguous targets and duplicate includes, and asked for the changes
-below, recorded as [decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
+below, recorded as [decision 0007](../../decisions/0007-edit-lifecycle-and-edit-semantics.md)
 amendment 1. Principle: allow an operation that *may* leave topology unaffected, and keep
 opaque contents a black box.
 
@@ -404,3 +404,27 @@ tests (model switch 1.5 V → 2.0 V; a continued `.tran` with an added `.control
   contains, is not verified (§7.8).
 - Checks: ruff, ruff format, mypy --strict, lint-imports and pytest with `--require-solver
   ngspice` (1495 passed, 2 POSIX-only skips, coverage 98.8%). Status stays `READY FOR REVIEW`.
+
+## 11. Review round 2 (2026-10-31) — approved
+
+The maintainer's reviewer re-ran the full check set (ruff, ruff format, mypy --strict,
+lint-imports, pytest with `--require-solver ngspice`: 1495 passed, 2 POSIX-only skips, coverage
+98.8%) and probed the API outside the test suite: values and parameters carrying a line break,
+a continuation or a comment; a formula that closes its brace; scopes with and without
+`in_definition`; `.subckt` defaults through `params.set`; model type checks and
+`allow_external`; `remove_value`; whole `.control`, `.if`, `.lib` and `.include` items; cuts into
+a `.control` block through a hand-built plan; stale lines; overlapping batch edits; and `save()`
+of a cp1252 CRLF file (an unencodable value raises `EncodingError` and leaves the file as it
+was). Every result matched decision 0007 and its amendment. No changes are required.
+
+Observations, not required (left for a later milestone if wanted):
+
+- `directives.add(".model …")` suggests "use params.set or set_model_param"; adding a `.model`
+  has no API (architecture §7.1), so the hint fits `.param` only.
+- `Placement.after(line)` with a line of a subcircuit body says the line "is not a line of the
+  top level … look the line up again"; the line is valid, only the placement is top-level.
+- Accepted limits that the phase 1 gate should weigh: an added `.if` block may contain element
+  lines (opaque contents are not verified, §7.8), and two `params.set` of one new name in a
+  batch add two lines.
+
+Decision 0007 is accepted; this list is archived.

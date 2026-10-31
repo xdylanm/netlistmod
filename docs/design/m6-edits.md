@@ -1,8 +1,8 @@
 # M6 design note — the edit layer
 
-> **Status:** ACTIVE — written with M6 (D2 of [m6-tasks.md](./m6-tasks.md)); awaiting the
-> maintainer's review together with the M6 implementation (the review before T3 that the task
-> list asks for did not happen: see the M6 report). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
+> **Status:** ACTIVE — accepted by the maintainer (2026-10-31) with the M6 implementation;
+> D2 of [m6-tasks.md](./archive/m6-tasks.md) (reviewed with the implementation rather than
+> before T3: see its section 9). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
 > records why. Builds on [m3-elements.md](./m3-elements.md) (element sub-spans),
 > [m4-statements.md](./m4-statements.md) (statement sub-spans) and [m5-document.md](./m5-document.md)
 > (`Netlist`, `Lines`, scopes, signature), which stay ACTIVE as the references for node shapes.
