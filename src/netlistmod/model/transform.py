@@ -775,7 +775,40 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         )
 
     def output_vector(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        if isinstance(inner, OutputVector):
+            # [gap] voltage_vector or current_vector: one separator, no comments.
+            return _Field(inner, ())
         return self._field(children, lambda token: OutputVector(str(token), _span(token)))
+
+    def voltage_vector(self, children: list[Token]) -> OutputVector:
+        opener, *names = _field_tokens(children)[:-1]
+        span = Span(_span(opener).start, _span(children[-1]).end)
+        return OutputVector(
+            self._source.text[span.start : span.end],
+            span,
+            function=str(opener)[:-1],
+            nodes=tuple(Node(str(name), _span(name)) for name in names),
+        )
+
+    def current_vector(self, children: list[Token]) -> OutputVector:
+        opener, *names = _field_tokens(children)[:-1]
+        function = str(opener)[:-1]
+        if opener.type == "CURRENT_VARIANT_OPEN":
+            raise self._parse_error(
+                opener,
+                f"`{function}(...)` is not implemented in ngspice (manual §11.6.2); "
+                "save `i(...)` instead",
+            )
+        if len(names) > 1:
+            raise self._parse_error(names[1], "`i(...)` takes one source name")
+        span = Span(_span(opener).start, _span(children[-1]).end)
+        return OutputVector(
+            self._source.text[span.start : span.end],
+            span,
+            function=function,
+            source=ElementReference(str(names[0]), _span(names[0])),
+        )
 
     def meas_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)

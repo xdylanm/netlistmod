@@ -562,6 +562,9 @@ def test_malformed_option_and_condition_directives_are_rejected(
         (".save @m1[id] vsource#branch", ["@m1[id]", "vsource#branch"]),
         (".save all @m2[vdsat]", ["all", "@m2[vdsat]"]),
         (".SAVE V(a,b) I(v1)\n+ out", ["V(a,b)", "I(v1)", "out"]),
+        (".save vm(out) vdb(out) VP(out)", ["vm(out)", "vdb(out)", "VP(out)"]),
+        (".save v(a, b) v(a ,b) v( a )", ["v(a, b)", "v(a ,b)", "v( a )"]),
+        (".save vm /vin vmx", ["vm", "/vin", "vmx"]),
     ],
 )
 def test_save_directive_vectors(statement: str, vectors: list[str]) -> None:
@@ -572,12 +575,60 @@ def test_save_directive_vectors(statement: str, vectors: list[str]) -> None:
 
 
 @pytest.mark.parametrize(
-    ("statement", "column"),
-    [(".save", 6), (".save vdb(out)", 10), (".save v(a, b)", 8)],
+    ("vector", "function", "nodes", "source"),
+    [
+        ("v(out)", "v", ["out"], None),
+        ("V(a,b)", "V", ["a", "b"], None),
+        ("v( a , b )", "v", ["a", "b"], None),
+        ("vr(x)", "vr", ["x"], None),
+        ("vi(x)", "vi", ["x"], None),
+        ("vm(x, y)", "vm", ["x", "y"], None),
+        ("vp(x)", "vp", ["x"], None),
+        ("VDB(/vout)", "VDB", ["/vout"], None),
+        ("i(vin)", "i", [], "vin"),
+        ("I( V1 )", "I", [], "V1"),
+        ("vsource#branch", None, [], None),
+        ("@m1[id]", None, [], None),
+        ("all", None, [], None),
+    ],
 )
-def test_malformed_save_directives_are_rejected(statement: str, column: int) -> None:
+def test_save_vector_parts_and_spans(
+    vector: str, function: str | None, nodes: list[str], source: str | None
+) -> None:
+    statement = f".save {vector}"
+    item = _item(statement)
+    assert isinstance(item, SaveDirective)
+    parsed = item.vectors[0]
+    assert (parsed.text, parsed.function) == (vector, function)
+    assert _slice(statement, parsed.span) == vector
+    assert [node.name for node in parsed.nodes] == nodes
+    assert [_slice(statement, node.span) for node in parsed.nodes] == nodes
+    assert (parsed.source.designator if parsed.source else None) == source
+    if parsed.source is not None:
+        assert _slice(statement, parsed.source.span) == source
+
+
+@pytest.mark.parametrize(
+    ("statement", "column", "reason"),
+    [
+        (".save", 6, ""),
+        (".save vx(out)", 9, ""),
+        (".save v(a,b,c)", 12, ""),
+        (".save v()", 9, ""),
+        (".save v(a", 7, "unbalanced `(`"),
+        (".save v (a)", 9, ""),
+        (".save i(a, b)", 12, "takes one source name"),
+        (".save ir(v1)", 7, "not implemented"),
+        (".save ii(v1)", 7, "not implemented"),
+        (".save im(v1)", 7, "not implemented"),
+        (".save ip(v1)", 7, "not implemented"),
+        (".save IDB(v1)", 7, "not implemented"),
+    ],
+)
+def test_malformed_save_directives_are_rejected(statement: str, column: int, reason: str) -> None:
     error = _reject(statement)
     assert (error.line, error.column) == (2, column)
+    assert reason in error.reason
 
 
 @pytest.mark.parametrize(

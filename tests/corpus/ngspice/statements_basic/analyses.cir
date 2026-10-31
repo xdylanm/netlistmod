@@ -12,6 +12,7 @@ C1 out 0 1u
 .ic v(out)=0
 .nodeset v(out)=0.5
 .save v(out) i(v1) in v1#branch @r1[i]
+.save vm(out) vdb(out) v(in, out) v( in )
 .meas tran tout FIND v(out)
 + AT=0.5m
 .measure ac vmax MAX vdb(out)

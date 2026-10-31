@@ -20,6 +20,9 @@
   unterminated `.subckt` and an unclosed `(` are reported at their opener.
   `.opt`, `.probe`, `.print` and other dot-commands stay `UnknownDirective`.
 - The `params:` error message now covers `.subckt` lines as well as `X` lines.
+- `.save` accepts the standard output-vector forms of the manual (`v(a, b)` with
+  blanks, `vr`, `vi`, `vm`, `vp`, `vdb`, `i(src)`) and records their function and
+  node or source names; `ir(…)` … `idb(…)` are rejected (M4 review round 1).
 - Parse the phase 1 ngspice element lines (R, C, L, K, V, I, D, X) into typed,
   immutable nodes (`Resistor`, …, `SubcktInstance`, base `Component`) with
   value slots (`NumericValue`, `Formula`, `ModelReference`, `ParamAssignment`,

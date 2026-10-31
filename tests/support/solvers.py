@@ -207,13 +207,18 @@ def run_ngspice(
     netlist: Path,
     *,
     timeout: float = 30,
+    raw: Path | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a netlist in ngspice batch mode, with output isolated in its directory."""
+    """Run a netlist in ngspice batch mode, with output isolated in its directory.
+
+    With ``raw``, ngspice also writes the simulation results to that raw file (``-r``).
+    """
     if solver.name != "ngspice":
         raise ValueError(f"Expected ngspice, got {solver.name}")
     log_path = netlist.parent / "ngspice.log"
+    raw_args = ["-r", str(raw)] if raw is not None else []
     return subprocess.run(
-        [str(solver.path), "-b", "-o", str(log_path), str(netlist)],
+        [str(solver.path), "-b", *raw_args, "-o", str(log_path), str(netlist)],
         capture_output=True,
         check=False,
         cwd=netlist.parent,

@@ -100,3 +100,13 @@ parameter layouts, a `.model` local to a subcircuit (an error in ngspice when us
 accepted as syntax here and scoped in M5), `.option` (typed) and `.opt` (unknown), and blanks
 inside `.ic v( out )` (`test_initial_condition_with_blanks_inside_v`). Every file of the
 `statements_basic` corpus runs in ngspice 47 without an error (`test_accept_corpus_runs_in_ngspice`).
+
+### `.save` vector forms (ngspice 47, 2026-10-31; M4 review round 1)
+
+`test_save_vector_forms_and_the_stored_variables` runs an AC analysis with one `.save` line
+and reads the variables from the raw file. ngspice accepts every form, but stores only plain
+voltages and currents: `.save v(in, out)` stores the two vectors `v(in)` and `v(out)`, not
+their difference; `vm(out)` and `vdb(out)` store `v(out)` (the magnitude can be derived from
+the raw data, §11.6.1); `v( out )` stores `v(out)` and `i(V1)` stores `i(v1)`. The parser
+accepts the same forms and records each vector as written (`text`, `function`, nodes or
+source); it does not model what ngspice stores.

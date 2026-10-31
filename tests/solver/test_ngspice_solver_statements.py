@@ -18,6 +18,7 @@ from netlistmod import (
     ModelStatement,
     OptionsDirective,
     ParseError,
+    SaveDirective,
     SourceText,
     SubcktDefinition,
     UnknownDirective,
@@ -245,6 +246,51 @@ def test_initial_condition_with_blanks_inside_v(solver: Solver, tmp_path: Path) 
     assert isinstance(directive, IcDirective)
     assert directive.conditions[0].node is not None
     assert directive.conditions[0].node.name == "out"
+
+
+def _raw_variables(raw: Path) -> list[str]:
+    """The variable names listed in a raw file's header (before its ASCII or binary data)."""
+    text = raw.read_bytes().decode("latin-1")
+    header = re.split(r"\n(?:Values|Binary):", text, maxsplit=1)[0]
+    lines = header.split("\nVariables:", 1)[1].strip().splitlines()
+    return [line.split()[1] for line in lines]
+
+
+@pytest.mark.parametrize(
+    ("argument", "variables", "function", "nodes"),
+    [
+        ("vm(out)", ["v(out)"], "vm", ["out"]),
+        ("vdb(out)", ["v(out)"], "vdb", ["out"]),
+        ("v(in, out)", ["v(in)", "v(out)"], "v", ["in", "out"]),
+        ("v( out )", ["v(out)"], "v", ["out"]),
+        ("i(V1)", ["i(v1)"], "i", []),
+    ],
+)
+def test_save_vector_forms_and_the_stored_variables(
+    solver: Solver,
+    tmp_path: Path,
+    argument: str,
+    variables: list[str],
+    function: str,
+    nodes: list[str],
+) -> None:
+    # ngspice stores the plain voltages: v(a, b) as v(a) and v(b), vm and vdb as v. The library
+    # records the vector as written (decision 0005; discrepancies.md).
+    text = (
+        "probe\nV1 in 0 DC 1 AC 1\nR1 in out 1k\nC1 out 0 1u\n"
+        f".ac dec 2 1 1k\n.save {argument}\n.end\n"
+    )
+    netlist = tmp_path / "probe.cir"
+    netlist.write_bytes(text.encode("utf-8"))
+    raw = tmp_path / "probe.raw"
+    result = run_ngspice(solver, netlist, raw=raw)
+    assert result.returncode == 0, (tmp_path / "ngspice.log").read_text(encoding="utf-8")
+    assert [v for v in _raw_variables(raw) if v != "frequency"] == variables
+    directive = parse(SourceText(text), Dialect.NGSPICE).items[5]
+    assert isinstance(directive, SaveDirective)
+    vector = directive.vectors[0]
+    assert (vector.text, vector.function) == (argument, function)
+    assert [node.name for node in vector.nodes] == nodes
 
 
 @pytest.mark.parametrize("path", sorted(CORPUS.glob("*.cir")), ids=lambda path: path.name)

@@ -100,6 +100,10 @@ def _named_spans(item: Any) -> list[tuple[Any, str | None]]:
                 pairs.append((condition.node.span, condition.node.name))
     if isinstance(item, SaveDirective):
         pairs += [(vector.span, vector.text) for vector in item.vectors]
+        for vector in item.vectors:
+            pairs += [(node.span, node.name) for node in vector.nodes]
+            if vector.source is not None:
+                pairs.append((vector.source.span, vector.source.designator))
     if isinstance(item, MeasureDirective):
         pairs += [
             (item.analysis_span, item.analysis),
@@ -181,6 +185,14 @@ def test_nested_definition_and_multi_line_model_in_the_corpus() -> None:
         ("rs", "10"),
     ]
     assert source.text[model.span.start : model.span.end].count("\n") == 3
+    analyses = SourceText.from_bytes((folder / "analyses.cir").read_bytes())
+    saves = [i for i in parse(analyses, Dialect.NGSPICE).items if isinstance(i, SaveDirective)]
+    assert [(v.function, [n.name for n in v.nodes]) for v in saves[1].vectors] == [
+        ("vm", ["out"]),
+        ("vdb", ["out"]),
+        ("v", ["in", "out"]),
+        ("v", ["in"]),
+    ]
     params = [i for i in parse(source, Dialect.NGSPICE).items if isinstance(i, ParamStatement)]
     assert any(
         isinstance(a.value, Formula) and a.value.delimiter == '"'

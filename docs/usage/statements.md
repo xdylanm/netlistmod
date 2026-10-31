@@ -93,7 +93,8 @@ and [m4-statements.md](../design/m4-statements.md)):
   **`.dc src start stop incr [src2 …]`**, **`.op`**, **`.temp value`**.
 - **`.options`/`.option`**: `name` or `name=value`; a value may be a name (`method=gear`).
 - **`.ic`/`.nodeset`**: `v(node)=value` items; `.nodeset all=value`.
-- **`.save`**: vectors kept as text: `name`, `v(n)`, `v(n1,n2)`, `i(src)`, `src#branch`,
-  `@dev[param]`, `all`.
+- **`.save`**: vectors kept as text with a span: `name`, `v(n)`, `v(n1, n2)`, the AC forms
+  `vr`, `vi`, `vm`, `vp`, `vdb`, `i(src)`, `src#branch`, `@dev[param]`, `all`. The standard
+  forms also record `function`, `nodes` or `source`. `ir(…)` … `idb(…)` are rejected.
 - **`.meas`/`.measure`**: the analysis (`dc`, `ac`, `tran`, `sp`) and the result name are
   fields; the rest of the statement is kept as `body_text`.

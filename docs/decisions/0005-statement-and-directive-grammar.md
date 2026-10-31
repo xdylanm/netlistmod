@@ -47,12 +47,16 @@
   6. **Directive typing depth** is that of the task list (decision 6), with one extension:
      an `.options` value may also be a name (`METHOD=name`, §11.1.4), stored as the new value
      type `Identifier`. `.meas`/`.measure` is shallow: analysis and result are fields, the rest
-     is statement text with a span. `.save` vectors are one token each (`OUTPUT_VECTOR`), kept
-     as text.
+     is statement text with a span. `.save` vectors keep their text and span; the standard
+     forms of §11.6.2 (`v`, `vr`, `vi`, `vm`, `vp`, `vdb` with one or two nodes, and `i(src)`)
+     also record the function and the node or source names with spans (amended after review
+     round 1; see below).
   7. **New tokens and where they are valid.** `LPAR`/`RPAR` (`(`, `)`) only in `.model` and,
      with `V_OPEN` (`v(` as one token), in `.ic`/`.nodeset`; a parenthesis on an element line
-     is still a syntax error. `@dev[param]`, `name#branch`, `v(n1,n2)` and `i(src)` exist only
-     inside `OUTPUT_VECTOR`, in `.save`. Statement keywords are strings at `DOT_NAME`'s
+     is still a syntax error. In `.save`, `VOLTAGE_OPEN` (`v(`, `vr(`, `vi(`, `vm(`, `vp(`,
+     `vdb(`), `CURRENT_OPEN` (`i(`) and `CURRENT_VARIANT_OPEN` (`ir(` … `idb(`, rejected) are
+     one token each at priority 3, above the plain name, and close with `RPAR`; `@dev[param]`
+     and `name#branch` exist only inside `OUTPUT_VECTOR`. Statement keywords are strings at `DOT_NAME`'s
      priority (4); argument keywords (`uic`, `dec`, `oct`, `lin`, `all`, `tran`, `sp`) are
      strings at `WORD`'s priority (2), valid only where their rule names them. No new
      lookaround terminal: the pinned list in `tests/architecture/test_contracts.py` is
@@ -68,7 +72,12 @@
   - Shapes, spans and the manual-form → rule → field tables are in
     [m4-statements.md](../design/m4-statements.md); M6 edits replace those sub-spans.
   - Every case where ngspice 47 is more lenient is in `discrepancies.md`, paired with a test.
-  - Known limits: a `.meas` body is not parsed; `.save` accepts only the listed vector forms
-    (no `vdb(…)`, no blanks inside the parentheses); blanks inside `.ic v( n )` are ignored
-    like other inline blanks; a keyword prefix such as `decade` after `.ac` fails at the
+  - Known limits: a `.meas` body is not parsed; blanks inside `.ic v( n )` and `.save v( n )`
+    are ignored like other inline blanks; a keyword prefix such as `decade` after `.ac` fails at the
     letter after the keyword, not at the word.
+- **Amendment (2026-10-31, M4 review round 1, R1):** `.save` accepts every standard vector
+  form of §11.6.2 (`V(N1<,N2>)` with blanks allowed inside the parentheses and around the
+  comma, the AC variants `VR`, `VI`, `VM`, `VP`, `VDB`, and `I(source)`), as ngspice 47 does.
+  The `I` variants `IR`, `II`, `IM`, `IP`, `IDB` are rejected with a positioned error, because
+  §11.6.2 says they are not yet implemented. `OutputVector` gains `function`, `nodes` and
+  `source`. Still no new lookaround terminal.

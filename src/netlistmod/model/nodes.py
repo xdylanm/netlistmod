@@ -362,10 +362,20 @@ class NodesetDirective(Directive):
 
 @dataclass(frozen=True, slots=True)
 class OutputVector:
-    """One ``.save`` vector as written: ``name``, ``v(n)``, ``i(src)``, ``@dev[param]`` …"""
+    """One ``.save`` vector; ``text`` is the source slice of ``span`` (blanks included).
+
+    For the standard forms ``v(n)``, ``v(n1, n2)``, their AC variants (``vr``, ``vi``, ``vm``,
+    ``vp``, ``vdb``) and ``i(src)``, ``function`` is the function name as written and
+    ``nodes`` (voltages) or ``source`` (current) hold the arguments with their spans. A plain
+    name (a node, ``src#branch`` or ``all``) and ``@dev[param]`` have ``function=None`` and are
+    resolved in M5 from ``text``.
+    """
 
     text: str
     span: Span
+    function: str | None = None
+    nodes: tuple[Node, ...] = ()
+    source: ElementReference | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

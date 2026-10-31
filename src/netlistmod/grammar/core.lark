@@ -436,10 +436,22 @@ ALL_KW.2: "all"i
 // so the bracketed forms are matched before a plain name.
 // spec: NG-SAV-001
 save_stmt: SAVE_KW output_vector+ (NL | eol)
-output_vector: (SEP | CSEP | BS_CONT) OUTPUT_VECTOR
+output_vector: (SEP | CSEP | BS_CONT) (OUTPUT_VECTOR | voltage_vector | current_vector)
              | (SEP | TRAILING_COMMENT | BS_CONT) output_vector
 SAVE_KW.4: ".save"i
-OUTPUT_VECTOR.2: /[vViI]\(/ _WUNIT+ ("," _WUNIT+)? ")" | "@" _WUNIT+ "[" _WUNIT+ "]" | _WUNIT+
+OUTPUT_VECTOR.2: "@" _WUNIT+ "[" _WUNIT+ "]" | _WUNIT+
+
+// The standard voltage and current forms of §11.6.2: V(N1<,N2>) and its AC variants VR, VI,
+// VM, VP and VDB, and I(source). The function and "(" are one token, at a higher priority
+// than the plain name, so "vm(" is a function while "vm" alone is a name. Blanks inside the
+// parentheses are ignored and blanks around the comma belong to CSEP. The I variants
+// (IR, II, IM, IP, IDB) are "not yet implemented" (§11.6.2): recognised only to be rejected.
+// spec: NG-SAV-001
+voltage_vector: VOLTAGE_OPEN WORD (CSEP WORD)? RPAR
+current_vector: (CURRENT_OPEN | CURRENT_VARIANT_OPEN) WORD (CSEP WORD)? RPAR
+VOLTAGE_OPEN.3: /(?:v|vr|vi|vm|vp|vdb)\(/i
+CURRENT_OPEN.3: /i\(/i
+CURRENT_VARIANT_OPEN.3: /i(?:r|i|m|p|db)\(/i
 
 // .meas (or .measure) analysis result body (§11.4), typed shallowly: the analysis keyword and
 // the result name are fields; the rest of the statement is statement text (NG-TXT-001) and must

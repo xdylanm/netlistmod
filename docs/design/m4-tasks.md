@@ -1,6 +1,6 @@
 # M4 task list — statements and directives (ngspice)
 
-> **Status:** ACTIVE — review round 1 (section 10) requires one change before M4 can close. Implemented 2026-10-30 (section 9 is the report); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — review round 1 change R1 made 2026-10-31 (section 10.5 is the report). Implemented 2026-10-30 (section 9 is the report); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([archive/m2-tasks.md](./archive/m2-tasks.md)) and M3 ([archive/m3-tasks.md](./archive/m3-tasks.md), [m3-elements.md](./m3-elements.md), [decision 0004](../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -333,8 +333,7 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
 
 ### Limitations
 
-- A `.meas` body is not parsed; `.save` accepts only the listed vector forms (`vdb(out)` and
-  `v(a, b)` with a blank are rejected).
+- A `.meas` body is not parsed.
 - A keyword prefix (`.ac decade …`, `.tran 1n 1u uicx`) fails at the first character after
   the keyword rather than at the word, because argument keywords are strings without a
   competing name terminal in their state.
@@ -356,7 +355,7 @@ Accepted except for one finding. The rest of M4 holds up on review:
 
 ### 10.2 Required change
 
-[ ] **R1 — `.save` must accept the documented output-vector forms.**
+[x] **R1 — `.save` must accept the documented output-vector forms.**
 `OUTPUT_VECTOR` accepts only `v(n)`, `v(n1,n2)` (no blank), `i(src)`, `@dev[param]` and a plain name. The manual documents more:
 - §11.6.1 says "the standard vector names are accepted" and describes `.save vm(out)` (only `v(out)` is stored).
 - §11.6.2 "`.print` Lines" defines the standard forms: `V(N1<,N2>)`, written in its examples as `v(23, 17)` with a blank after the comma, and the AC forms `VR`, `VI`, `VM`, `VP`, `VDB` in place of `V`. It also says the corresponding replacements for `I` are "not yet implemented".
@@ -395,3 +394,28 @@ Probe (ngspice 47, 2026-10-31; `V1 in 0 DC 1 AC 1`, `R1 in out 1k`, `C1 out 0 1u
 ### 10.4 Exit for this round
 
 Run the full check set and the solver tests, append a short report under this section, and set the status to `READY FOR REVIEW`. **Do not archive.**
+
+### 10.5 Report for round 1 (2026-10-31)
+
+**R1 is done.** `.save` now accepts the standard output-vector forms of §11.6.2.
+- **Grammar:** `voltage_vector` (`v`, `vr`, `vi`, `vm`, `vp`, `vdb`, case-insensitive, one or
+  two nodes) and `current_vector` (`i(src)`). The function and `(` are one token at
+  priority 3, above the plain-name `OUTPUT_VECTOR` (2), which now holds only `@dev[param]`
+  and plain names. Blanks inside the parentheses are ignored; blanks around the comma belong
+  to `CSEP`, so `v( a )`, `v(a, b)` and `v(a ,b)` parse alike.
+- **Rejected forms:** `ir`, `ii`, `im`, `ip` and `idb` are recognised and rejected at the
+  function (settle: §11.6.2 says they are not yet implemented). `i(a, b)` is rejected at its
+  second name, and an unclosed `v(` is reported at the opener.
+- **Node shape:** `OutputVector` gains `function`, `nodes: tuple[Node, ...]` and
+  `source: ElementReference | None`, each name with its span; `text` is still the slice of
+  the whole vector, blanks included. Recorded in `m4-statements.md`.
+- **Records:** decision 0005 has a dated amendment, and `NG-SAV-001` adds the §11.6.2 citation
+  and the new rules. `discrepancies.md` records what ngspice 47 stores: `v(in, out)` as
+  `v(in)` and `v(out)`, and `vm`/`vdb` as `v`. The section 9 `.save` limitation is removed.
+- **Tests:** new accept, parts and reject cases in `test_statements.py`. The `statements_basic`
+  line `.save vm(out) vdb(out) v(in, out) v( in )` was added and the manifest hash updated. A
+  solver probe (`run_ngspice` gained an optional `raw=` path) asserts the raw-file variables
+  for each form in the review table. Node and source sub-spans are checked over the corpora.
+- **Pinned list:** no new lookaround terminal; the pinned list is unchanged.
+- **Checks:** ruff, ruff format, mypy `--strict`, pre-commit hooks and pytest
+  (`--require-solver ngspice`): 853 passed, 2 POSIX-only skips, 98% coverage.

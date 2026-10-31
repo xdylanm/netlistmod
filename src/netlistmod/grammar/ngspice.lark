@@ -23,7 +23,8 @@
 %import .core (OCT_KW, LIN_KW, dc_stmt, dc_sweep, DOT_DC_KW, op_stmt, OP_KW)
 %import .core (options_stmt, option_item, OPTIONS_KW, OPTION_KW, temp_stmt, TEMP_KW)
 %import .core (ic_stmt, nodeset_stmt, node_condition, nodeset_all, IC_KW, NODESET_KW, V_OPEN)
-%import .core (ALL_KW, save_stmt, output_vector, SAVE_KW, OUTPUT_VECTOR)
+%import .core (ALL_KW, save_stmt, output_vector, SAVE_KW, OUTPUT_VECTOR, voltage_vector)
+%import .core (current_vector, VOLTAGE_OPEN, CURRENT_OPEN, CURRENT_VARIANT_OPEN)
 %import .core (meas_stmt, meas_analysis, meas_body, MEAS_KW, MEASURE_KW, TRAN_ANALYSIS_KW, SP_KW)
 
 %ignore WS

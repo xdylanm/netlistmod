@@ -24,7 +24,7 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | `OptionsDirective` | `options: tuple[OptionItem, ...]`; `OptionItem(name, name_span, value: Value \| Identifier \| None, span)` |
 | `TempDirective` | `value` |
 | `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span)`, `node is None` for `all=` |
-| `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span)` |
+| `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span, function: str \| None, nodes: tuple[Node, ...], source: ElementReference \| None)` |
 | `MeasureDirective` | `analysis`, `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
 
 Values are `Value` (`NumericValue | Formula`, M3); `Identifier(name, span)` is new, for an
@@ -65,6 +65,7 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
 | `.temp value` (§2.14) | `temp_stmt: TEMP_KW value` | `value` |
 | `.ic v(n)=val …` (§11.2.2), `.nodeset … \| all=val` (§11.2.1) | `ic_stmt`, `nodeset_stmt`; `node_condition: … V_OPEN WORD RPAR EQ …`; `nodeset_all` | `conditions` |
 | `.save vector …` (§11.6.1) | `save_stmt: SAVE_KW output_vector+` | `vectors` |
+| `V(N1<,N2>)`, `VR`/`VI`/`VM`/`VP`/`VDB`, `I(src)` (§11.6.2) | `voltage_vector: VOLTAGE_OPEN WORD (CSEP WORD)? RPAR`; `current_vector` | `function`, `nodes` or `source`; `IR` … `IDB` rejected |
 | `.meas {DC\|AC\|TRAN\|SP} result …` (§11.4) | `meas_stmt: (MEAS_KW \| MEASURE_KW) meas_analysis x_name meas_body` | `analysis`, `result`, `body_text` |
 
 ## 4. Spans
@@ -77,7 +78,8 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
 - Sub-spans cover exactly their text, never a separator: `keyword_span`; every name span
   (`.param`/`.model`/default parameter names, model name and type, subcircuit name, ports,
   `.ends` name, `.dc` source, option names, `.ic` nodes, `.meas` analysis and result); every
-  value span (with formula delimiters); each `OutputVector.span`; the `uic` flag;
+  value span (with formula delimiters); each `OutputVector.span` (from the function to `)`,
+  blanks inside included, so `text` is its slice) and its node or source spans; the `uic` flag;
   `variation_span`. `ParamAssignment.span`, `OptionItem.span`, `NodeCondition.span` (from `v(`
   or `all`) and `DcSweep.span` run from their first to their last token. `body_span` runs
   from the first to the last text token of the `.meas` body.

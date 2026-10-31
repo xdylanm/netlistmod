@@ -3,26 +3,38 @@ dialect: ngspice
 construct: .save output vectors
 manual_ref:
 - '[ngspice-manual] §11.6.1 ".SAVE: Name vector(s) to be saved in raw file"'
+- '[ngspice-manual] §11.6.2 ".PRINT Lines"'
 status: validated
 validated_on:
 - solver: ngspice
   version: '47'
-  date: '2026-10-30'
+  date: '2026-10-31'
 grammar:
 - save_stmt
 - output_vector
 - SAVE_KW
 - OUTPUT_VECTOR
+- voltage_vector
+- current_vector
+- VOLTAGE_OPEN
+- CURRENT_OPEN
+- CURRENT_VARIANT_OPEN
 tests:
 - tests/grammar/ngspice/test_statements.py::test_save_directive_vectors
 - tests/grammar/ngspice/test_statements.py::test_malformed_save_directives_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_save_vector_parts_and_spans
+- tests/solver/test_ngspice_solver_statements.py::test_save_vector_forms_and_the_stored_variables
 - tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
 - tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
 - tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
 - tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
 - tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
 - tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
-notes: 'Vectors are kept as text with a span: v(n), v(n1,n2), i(src), @dev[param], or a name (which covers
-  src#branch and all). Other functions such as vdb(out) and blanks inside the parentheses are rejected
-  (narrow reading of the listed forms). Settled: an empty .save is rejected (ngspice 47 accepts it: discrepancy).
-  .probe stays unknown.'
+notes: 'Vectors keep their text and a span. §11.6.1 accepts "the standard vector names"; §11.6.2 defines
+  them: V(N1<,N2>) and the AC variants VR, VI, VM, VP, VDB (case-insensitive, one or two nodes), and I(source);
+  these also record the function and the node or source names with spans. Blanks inside the parentheses
+  and around the comma are accepted (v( a ), v(a, b)), like .ic v( n ). The I variants IR, II, IM, IP,
+  IDB are rejected with a positioned error: §11.6.2 says they are not yet implemented. @dev[param] and
+  a plain name (a node, src#branch, all) are kept as text. ngspice 47 stores v(a, b) as v(a) and v(b)
+  and vm/vdb as v (discrepancies.md); the library records the text only. Settled: an empty .save is rejected
+  (ngspice 47 accepts it: discrepancy). .probe stays unknown.'

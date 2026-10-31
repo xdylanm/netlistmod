@@ -32,7 +32,9 @@ _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
     },
 }
 # Opening parenthesis terminals; an unclosed one is reported at the opener when the line ends.
-_OPEN_PARENS: Final[frozenset[str]] = frozenset({"LPAR", "V_OPEN"})
+_OPEN_PARENS: Final[frozenset[str]] = frozenset(
+    {"LPAR", "V_OPEN", "VOLTAGE_OPEN", "CURRENT_OPEN", "CURRENT_VARIANT_OPEN"}
+)
 _LINE_ENDS: Final[frozenset[str]] = frozenset({"$END", "NL", "LINE_END"})
 _END_OF_INPUT = "$END"
 _TERMINAL_NAMES: Final[dict[str, str]] = {
@@ -120,6 +122,9 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "ALL_KW": "`all`",
     "SAVE_KW": "`.save`",
     "OUTPUT_VECTOR": "output vector",
+    "VOLTAGE_OPEN": "`v(` (or `vr(`, `vi(`, `vm(`, `vp(`, `vdb(`)",
+    "CURRENT_OPEN": "`i(`",
+    "CURRENT_VARIANT_OPEN": "`ir(`, `ii(`, `im(`, `ip(` or `idb(`",
     "MEAS_KW": "`.meas`",
     "MEASURE_KW": "`.measure`",
     "TRAN_ANALYSIS_KW": "`tran`",
