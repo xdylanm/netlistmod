@@ -88,6 +88,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 ### M6 — Edit layer
 - **Decision records before coding:** resolve the architecture §21 unresolved questions (edit lifecycle; `set_model` vs. includes) in `docs/decisions/`.
 - `Edit`/`EditPlan`/`apply_edits`, restricted edit API, directive placement, write-time verification (§7.6), `TopologyError`/`TopologyViolation`.
+- **Element edits build on the M3 design note [m3-elements.md](./m3-elements.md):** its §4 defines the sub-spans an edit replaces (value, model, parameter name and value, AC magnitude and phase) and what each covers. Value edits replace `value.span` (for `r=1k`, only `1k`). The note does not yet define where an added parameter is inserted; M6 decides that. Read it before designing the element operations, and update or archive it when M6 completes.
 - T4 golden-diff tests, T5 property tests (round-trip, signature preserved, idempotence), T6 forbidden-operation tests.
 - **Exit:** the operations in §7.2 work for phase 1 constructs; every forbidden operation in §7.3 has a negative test.
 
