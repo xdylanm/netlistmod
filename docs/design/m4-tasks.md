@@ -1,6 +1,6 @@
 # M4 task list — statements and directives (ngspice)
 
-> **Status:** READY FOR REVIEW — implemented 2026-10-30 (section 9 is the report); approved by the maintainer (2026-10-30), section 2 records the decisions.
+> **Status:** ACTIVE — review round 1 (section 10) requires one change before M4 can close. Implemented 2026-10-30 (section 9 is the report); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([archive/m2-tasks.md](./archive/m2-tasks.md)) and M3 ([archive/m3-tasks.md](./archive/m3-tasks.md), [m3-elements.md](./m3-elements.md), [decision 0004](../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -342,3 +342,56 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
   `expected` (for example `title text`), but positions are exact.
 - Model scoping (a `.model` inside a subcircuit is local, §2.6.1), `.ends` name mismatches
   and duplicate names are M5 diagnostics; the parser accepts them as syntax.
+
+## 10. Review round 1 (2026-10-31)
+
+### 10.1 Outcome
+
+Accepted except for one finding. The rest of M4 holds up on review:
+- **Checks:** 823 passed, 2 POSIX-only skips, 98% coverage, ruff and mypy `--strict` clean, ngspice required and found.
+- **Grammar:** no new lookaround terminal; no text scanning in the transformer (P13).
+- **Keywords:** keyword prefixes stay unknown or opaque as intended (`.opt`, `.params`, `.models`, `.transient`, `.icx`, `.measurement`, `.endsx`, and `.include` vs `.ic`).
+- **Subcircuits:** the body rules match decision 2 (`.if` and `.include` allowed; `.tran`, `.control` and `.end` rejected at their keyword), and KiCad `/net` names work in `.subckt`, `.ic` and `.save`.
+- **Records:** decision 0005, the architecture amendments, the design note and the spec entries agree with the shipped grammar.
+
+### 10.2 Required change
+
+[ ] **R1 — `.save` must accept the documented output-vector forms.**
+`OUTPUT_VECTOR` accepts only `v(n)`, `v(n1,n2)` (no blank), `i(src)`, `@dev[param]` and a plain name. The manual documents more:
+- §11.6.1 says "the standard vector names are accepted" and describes `.save vm(out)` (only `v(out)` is stored).
+- §11.6.2 "`.print` Lines" defines the standard forms: `V(N1<,N2>)`, written in its examples as `v(23, 17)` with a blank after the comma, and the AC forms `VR`, `VI`, `VM`, `VP`, `VDB` in place of `V`. It also says the corresponding replacements for `I` are "not yet implemented".
+
+Today `.save vm(out)`, `.save vdb(out)` and `.save v(a, b)` are `ParseError`s. ngspice 47 accepts all three (probe below), so the grammar rejects documented syntax (P5, P8).
+
+Change:
+1. Accept `v`, `vr`, `vi`, `vm`, `vp` and `vdb` (case-insensitive) with one node or two nodes, and keep `i(src)`. Settle `ir`/`ii`/`im`/`ip`/`idb`: default reject, because §11.6.2 says they are not implemented. Cite the reading in `NG-SAV-001`.
+2. Treat blanks inside the parentheses and around the comma consistently. Accept `v( a )`, `v(a, b)` and `v(a ,b)` alike, as `.ic`/`.nodeset` already do for `v( node )` (T5 settle). If the vector stays one token, its text and span still cover the whole vector including the blanks. Otherwise, give `OutputVector` the parts M5 will need (the function and the node names with spans), and record the shape in `m4-statements.md`.
+3. Record in `discrepancies.md` that ngspice 47 stores `.save v(in, out)` as the two vectors `v(in)` and `v(out)`, not as a difference. It also stores `vm(out)` and `vdb(out)` as `v(out)` (raw-file variable lists, probe below). This is an observation; the library only records the text.
+4. Tests:
+   - accept and reject cases in `test_statements.py`;
+   - a `statements_basic` line using `vm(...)` and `v(a, b)`, with updated manifest hashes;
+   - a solver probe asserting the raw-file variables for each form;
+   - the `.save` limitation removed from section 9.
+   No new lookaround terminal: the pinned list stays unchanged.
+
+*Done when:* the forms above parse with exact spans, the rejected `i` variants fail with a positioned error, and the full check set is green.
+
+Probe (ngspice 47, 2026-10-31; `V1 in 0 DC 1 AC 1`, `R1 in out 1k`, `C1 out 0 1u`, `.ac dec 2 1 1k`, one `.save` line; variables read from the raw file):
+
+| `.save` argument | exit | raw-file variables |
+|---|---|---|
+| `vm(out)` | 0 | `v(out)` |
+| `vdb(out)` | 0 | `v(out)` |
+| `v(in, out)` | 0 | `v(in)`, `v(out)` |
+| `v( out )` | 0 | `v(out)` |
+| `i(V1)` | 0 | `i(v1)` |
+
+### 10.3 Noted, no change required
+
+- **Error messages** for a missing argument (`.tran 1ns`, `.model dm`) list separators as the expected tokens rather than naming the missing field. Positions are exact and this matches the M3 messages. Revisit with the M9 error reference if it reads poorly.
+- **The keyword-prefix error position** (`.ac decade …` fails at the `a` after `dec`) is accepted as listed in section 9.
+- **`.options a="x"`** (a string value) is rejected. §11.1 documents no string-valued option, so no change is needed.
+
+### 10.4 Exit for this round
+
+Run the full check set and the solver tests, append a short report under this section, and set the status to `READY FOR REVIEW`. **Do not archive.**
