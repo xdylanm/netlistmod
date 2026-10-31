@@ -78,7 +78,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - `.param`, `.model`, `.subckt`/`.ends` (with instance and definition structure), typed analysis/control directives (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`).
 - **Exit:** same criteria as M3 for these constructs.
 
-### M5 — Document and semantic layer
+### M5 — Document and semantic layer ([task list](./m5-tasks.md))
 - `Lines`, element/param/model/subckt indexes, symbol tables, topology view and signature.
 - Read-only queries (`nets()`, `elements_on_net`, `connections`, subcircuit ports); diagnostics as data.
 - `docs/grammars/ngspice/names.md` (case sensitivity, ground aliases, net identity) and `scoping.md` (simple model, flagged for solver validation).
