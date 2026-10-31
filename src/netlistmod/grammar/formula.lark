@@ -1,0 +1,68 @@
+// The expression syntax of brace and single-quoted formulas (§2.11.5), used only to find the
+// names a formula refers to (M5, decision 0006 item 9). It is not an evaluator (non-goal 6) and
+// not a validator: text it cannot parse gives no references and no error.
+//
+// Precedence follows the §2.11.5 table, from loosest to tightest: ternary c?x:y, ||, &&,
+// comparisons, + and -, * / % and \, the power ** or ^ (right-associative), unary - ! and +.
+// An identifier directly followed by "(" is a function call, never a parameter. The voltage and
+// current accessors v(...) and i(...) (and the AC variants of v) are one token each, at a higher
+// priority than an identifier, so their arguments are node and source names, not parameters.
+// Identifiers are a letter, then letters, digits, "_", "[" and "]"; ngspice 47 does not read
+// "!", "#" or "%" as part of a name in an expression (scoping.md), so they are not name characters.
+
+%ignore WS
+
+// spec: NG-FML-001
+?start: ternary
+
+// spec: NG-FML-001
+?ternary: or_expr
+        | or_expr QUESTION ternary COLON ternary
+?or_expr: and_expr
+        | or_expr OROR and_expr
+?and_expr: comparison
+         | and_expr ANDAND comparison
+?comparison: sum
+           | comparison COMPARE sum
+?sum: product
+    | sum (PLUS | MINUS) product
+?product: power
+        | product (STAR | SLASH | PERCENT | BACKSLASH) power
+?power: unary
+      | unary POWER power
+?unary: atom
+      | (MINUS | BANG | PLUS) unary
+
+// spec: NG-FML-001
+?atom: NUMBER                                   -> number
+     | STRING                                   -> string
+     | IDENT                                    -> identifier
+     | IDENT LPAR (ternary (COMMA ternary)*)? RPAR -> call
+     | VOLTAGE_OPEN NAME (COMMA NAME)? RPAR     -> voltage
+     | CURRENT_OPEN NAME RPAR                   -> current
+     | LPAR ternary RPAR
+
+// spec: NG-FML-001
+WS: /[ \t]+/
+NUMBER: /(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:[A-Za-z]|µ)*/
+STRING: /"[^"]*"/
+IDENT.2: /[A-Za-z][A-Za-z0-9_\[\]]*/
+VOLTAGE_OPEN.3: /(?:v|vr|vi|vm|vp|vdb)\(/i
+CURRENT_OPEN.3: /i\(/i
+NAME: /[^ \t(),]+/
+LPAR: "("
+RPAR: ")"
+COMMA: ","
+QUESTION: "?"
+COLON: ":"
+OROR: "||"
+ANDAND: "&&"
+COMPARE: "==" | "!=" | "<>" | "<=" | ">=" | "<" | ">"
+PLUS: "+"
+MINUS: "-"
+STAR: "*"
+SLASH: "/"
+PERCENT: "%"
+BACKSLASH: "\\"
+POWER: "**" | "^"
+BANG: "!"

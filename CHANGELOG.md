@@ -2,6 +2,25 @@
 
 ## Unreleased
 
+- Add the read-only document layer (M5, decision 0006): `Netlist.load`,
+  `Netlist.from_text` and `Netlist.from_source` (explicit dialect), logical
+  `Line`/`Lines` with search and insertion points, definition `Scope`s with
+  `params`/`models`/`subckts`/`elements` tables, `Reference` resolution
+  (element → model, X → subcircuit and defaults, K → inductors, `.dc` and
+  `.save i(...)` → elements, formula names → parameters), a `TopologyView`
+  (`nets`, `elements_on_net`, `connections`, `ports`) with `Net` and
+  `Connection`, the exact-text `TopologySignature` with `digest()`, and
+  `Diagnostic`/`DiagnosticCode` (new codes `UNRESOLVED_ELEMENT`,
+  `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`,
+  `ENDS_NAME_MISMATCH`). Names and scoping follow `names.md` and `scoping.md`,
+  validated against ngspice 47.
+- Add a formula grammar (`grammar/formula.lark`, `NG-FML-001`) that finds the
+  parameter names in brace and quoted formulas without evaluating them.
+- Grammar change that alters what parses: `.global` is a typed
+  `GlobalDirective(nodes)` (`NG-GLB-001`) instead of an `UnknownDirective`, needs
+  at least one node, and is rejected inside a subcircuit body (ngspice 47
+  accepts it there: recorded discrepancy).
+- `UnknownDirective` records `name_span`.
 - Parse ngspice statements and directives into typed nodes with spans
   (decision 0005): `ParamStatement`, `ModelStatement`, `SubcktDefinition` (with
   its body and `EndsLine`; definitions nest), and the `Directive` subclasses

@@ -60,12 +60,14 @@ class UnknownDirective:
     ``raw`` runs from the name to the end of the last non-comment text, so it excludes comments
     after that text but includes those on earlier lines of a continued statement.
     ``trailing_comments`` holds every end-of-line comment of the statement in source order.
+    ``name_span`` covers the name (the parser always sets it; M5 places diagnostics there).
     """
 
     name: str
     raw: str
     span: Span
     trailing_comments: tuple[Span, ...] = ()
+    name_span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -403,6 +405,16 @@ class MeasureDirective(Directive):
     body_span: Span
 
 
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GlobalDirective(_DotCommand):
+    """``.global node …`` (top level only): nodes shared by every subcircuit definition.
+
+    It changes connectivity, so it is topology (decision 0006), not a :class:`Directive`.
+    """
+
+    nodes: tuple[Node, ...]
+
+
 BodyItem: TypeAlias = (
     BlankLine
     | CommentLine
@@ -438,6 +450,7 @@ TopLevelItem: TypeAlias = (
     | NodesetDirective
     | SaveDirective
     | MeasureDirective
+    | GlobalDirective
 )
 
 

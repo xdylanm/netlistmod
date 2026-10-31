@@ -180,6 +180,11 @@ def test_model_does_not_import_regular_expressions() -> None:
     assert _regex_imports(SOURCE / "model") == []
 
 
+def test_document_does_not_import_regular_expressions() -> None:
+    # P13 (M5): formula names come from the formula grammar, never from string scanning.
+    assert _regex_imports(SOURCE / "document") == []
+
+
 def test_regex_import_guard_detects_deliberate_violation(tmp_path: Path) -> None:
     (tmp_path / "bad.py").write_text("from re import compile\n", encoding="utf-8")
     assert _regex_imports(tmp_path) == [str(tmp_path / "bad.py")]
@@ -188,7 +193,10 @@ def test_regex_import_guard_detects_deliberate_violation(tmp_path: Path) -> None
 def test_every_lark_rule_has_a_transformer_method() -> None:
     from netlistmod.model.transform import _NodeBuilder
 
-    grammar_files = sorted((SOURCE / "grammar").glob("*.lark"))
+    # formula.lark is a separate grammar whose tree is walked by grammar/formula.py (M5).
+    grammar_files = sorted(
+        path for path in (SOURCE / "grammar").glob("*.lark") if path.name != "formula.lark"
+    )
     assert _missing_transformer_methods(grammar_files, _NodeBuilder) == set()
 
 

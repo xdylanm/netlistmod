@@ -1,0 +1,9 @@
+coupled inductor pair
+V1 in 0 DC 0 AC 1
+R1 in p 50
+L1 p 0 1m
+l2 s 0 1m
+k1 l1 L2 0.95
+R2 s 0 50
+.ac dec 10 10 100k
+.end

@@ -1,6 +1,6 @@
 # M5 task list — document and semantic layer (ngspice)
 
-> **Status:** READY — approved by the maintainer (2026-10-31); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — implemented 2026-10-31 (section 9); approved by the maintainer (2026-10-31); section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M5). Governed by [architecture.md](../architecture.md) (§2 P1–P4, P8, P13; §3 layer [3]; §5.4; §7.1, §7.7, §7.8; §8; §17; §21). Builds on M2–M4: the parser returns typed nodes with spans that tile the source ([m3-elements.md](./m3-elements.md), [m4-statements.md](./m4-statements.md), decisions 0002–0005). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -112,7 +112,7 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, `lint
 
 ### Decisions and design
 
-[ ] **D1 — Decision record 0006: document layer, names, scope and diagnostics.**
+[x] **D1 — Decision record 0006: document layer, names, scope and diagnostics.**
 Record the section 2 outcomes and amend the architecture:
 - §5.4: logical lines, insertion points;
 - §7.1: `.global` is topology;
@@ -121,24 +121,24 @@ Record the section 2 outcomes and amend the architecture:
 - §21: mark the deferred items "line model", "diagnostics API" and "hierarchical addressing (read-only part)" resolved, and record the diagnostics half of unresolved question 2.
 Status `proposed` until the maintainer accepts it.
 
-[ ] **D2 — Design note `docs/design/m5-document.md`.**
+[x] **D2 — Design note `docs/design/m5-document.md`.**
 The public API (every method and property with its signature), the shapes of 3.2, the resolution order, how signature entries are encoded, and the diagnostics table. This note is what M6 builds its edit API on, so keep each rule to one line. Reviewed by the maintainer before T4.
 
-[ ] **D3 — `docs/grammars/ngspice/names.md` and `scoping.md`.**
+[x] **D3 — `docs/grammars/ngspice/names.md` and `scoping.md`.**
 Each rule with its manual citation, its `status` (`documented`/`observed`/`validated` with the ngspice 47 probe from section 7), and its tests, in the spirit of the spec entries (§11.2). Record the §2.11.4 / §2.6.1 conflict, the `.param` order discrepancy, and the settings the library cannot see (`no_auto_gnd`, `ngbehavior`).
 
 ### Implementation
 
-[ ] **T1 — `.global` (grammar).**
+[x] **T1 — `.global` (grammar).**
 `GlobalDirective(nodes: tuple[Node, ...])` per §2.7: one or more node names, top level only. A spec entry `NG-GLB-001`, tests, and the corpus. Same separator design as M4; no new lookaround terminal.
 
-[ ] **T2 — Formula grammar.**
+[x] **T2 — Formula grammar.**
 `grammar/formula.lark` and `parse_formula(text) -> tuple[FormulaToken, ...]`, or an equivalent that returns identifier and call tokens with offsets relative to the formula, which the document layer maps to source spans. It covers numbers with scale factors and trailing letters (as `NG-NUM-001/002`), identifiers per §2.11.1 name characters, the §2.11.5 operators, parentheses, commas, the ternary `?:`, and strings. Settle: constants such as `pi` (not in §2.11.6; default: an identifier, so it may be reported unresolved; check §2.11.5 and settle); `!` and `#` in identifiers. A spec entry `NG-FML-001`.
 
-[ ] **T3 — `Netlist`, `Line`, `Lines`.**
+[x] **T3 — `Netlist`, `Line`, `Lines`.**
 Per decisions 1 and 2. Tests: lines tile the source, nested bodies, `find`/`find_all`/`index_of` (identity), insertion points at every boundary (first item, before `.end`, inside a body, a file without a final newline), and `to_bytes()` round-trip over every corpus file.
 
-[ ] **T4 — Scopes, symbol tables and resolution.**
+[x] **T4 — Scopes, symbol tables and resolution.**
 Per decisions 3–5, over the M3/M4 nodes:
 - elements → models (`R`/`C`/`L` model slots, `D`);
 - X → subcircuits;
@@ -149,17 +149,17 @@ API: `params`, `models`, `subckts`, `element()`, `elements()`, `references_to_pa
 - whether an X parameter (`X1 a b sub r2=3k`) is a reference to the definition's default `r2` (default: yes, a `Reference` of kind `subckt_param`);
 - whether a `.ic v(node)` naming a net that no element uses is reported (default: no).
 
-[ ] **T5 — Topology view and signature.**
+[x] **T5 — Topology view and signature.**
 Per decisions 3 and 6. `nets(scope=())`, `elements_on_net(net, scope=())`, `connections(designator, scope=())`, `ports(subckt, scope=())`, and `signature()` with `digest()`. Ports of a definition are nets of its scope; ground and `.global` nets are shared across scopes. Elements in opaque `.if` blocks are not seen (§7.8): `names.md` and the API docstrings say so.
 
-[ ] **T6 — Diagnostics.**
+[x] **T6 — Diagnostics.**
 Per decisions 7 and 8. Each code is emitted at the span named in the design note, with a message that names the construct and, for unresolved references, the scopes searched.
 
-[ ] **T7 — Settle `MODEL_TYPE_MISMATCH`** (decision 7). Either defer it with a note in the design note (default), or implement it from a table (element letter → allowed model types, from §2.5 Table 2.3) and say why.
+[x] **T7 — Settle `MODEL_TYPE_MISMATCH`** (decision 7). Either defer it with a note in the design note (default), or implement it from a table (element letter → allowed model types, from §2.5 Table 2.3) and say why.
 
 ### Validation, docs and tests
 
-[ ] **T8 — Solver probes (T8 tier).**
+[x] **T8 — Solver probes (T8 tier).**
 In `tests/solver/`, record the section 7 probes as tests that validate `names.md` and `scoping.md`, each paired with what the library reports:
 - node, designator, model, subcircuit and parameter case;
 - `gnd` and `00`;
@@ -170,21 +170,21 @@ In `tests/solver/`, record the section 7 probes as tests that validate `names.md
 - duplicate designators.
 Add a check that the nets the library reports for each `statements_basic` and `elements_basic` file match ngspice's node list for the same netlist. ngspice prints the list with `display` or after `op` in `.control`; check the manual and settle the command. Update `discrepancies.md`.
 
-[ ] **T9 — Tests and corpus.**
+[x] **T9 — Tests and corpus.**
 - *T1:* every class and query on small inline netlists.
 - *Corpus:* a new authored family `document_basic/` (author `xdylanm`, MIT, confirmed by the maintainer on 2026-10-31), with circuits whose nets, connections, references and diagnostics are written out in the manifest as the expected results: a divider, an RC filter, a diode clamp, a two-level subcircuit with instance overrides and a `.global`, a coupled-inductor pair, a KiCad export with `/` names and `gnd`, and a file with every diagnostic code. Run the queries over every existing accept corpus too (no crash, every reference resolved or diagnosed).
 - *T5 (Hypothesis):* (a) the signature is unchanged by any re-rendering that changes only whitespace, comments, continuation style, values, parameters or non-topology directives; (b) it changes when any topology token changes (designator, node, port, subcircuit name, K reference, `.global` node, element order); (c) `nets()` agrees with an independent oracle built by the generator.
 *Done when:* all pass with the 90% coverage gate.
 
-[ ] **T10 — Docs.**
+[x] **T10 — Docs.**
 - A usage page `docs/usage/document.md` with executed examples (load, find, resolve, nets, connections, diagnostics, signature).
 - `CHANGELOG.md`, `README.md` status, `docs/testing.md`, and the phase plan's M5 heading.
 - Docstrings on every public name.
 
-[ ] **T11 — Optional checkpoint demo.**
+[x] **T11 — Optional checkpoint demo.**
 `docs/usage/examples/read_only_demo.py` (executed by the usage test). It loads a `kicad_basic` netlist with `rkm=True` and prints its elements, nets, connections, resolved references and diagnostics. Mention it in the report so the maintainer can try read-only use before M6.
 
-[ ] **T12 — Exit.**
+[x] **T12 — Exit.**
 Full check set, a fresh-clone test, and the solver tests. Report what changed, every "settle" decision with its basis, deviations from this list, and limitations. Set this document's status to `READY FOR REVIEW`. **Do not archive.**
 
 ## 5. Dependencies between tasks
@@ -254,3 +254,38 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3`, two 1k resistors, `.o
 ## 8. Out of scope for M5
 
 Edits, `save()`, edit plans and verification (M6, including the `set_model` half of §21 question 2 and string path addressing); hierarchy flattening and instance-expanded queries (§8); expression evaluation (non-goal 6); model-parameter validation (non-goal 8); reading `.include`/`.lib` files (§7.8); elements inside `.if` blocks (§7.8); the LTspice dialect (M8).
+
+## 9. Implementation report (2026-10-31)
+
+**Settled** (each also in the named document):
+
+- *T1:* `.global` is top level only and rejected in a body (NG-GLB-001; ngspice 47 accepts it
+  there: `discrepancies.md`). It is a `GlobalDirective`, not a `Directive` subclass, because it
+  is topology.
+- *T2:* `pi` is an identifier (§2.11.5 has no constants; ngspice 47 rejects `{pi}`). `!`, `#` and
+  `%` are not name characters in a formula (ngspice 47 cannot read `{a#b}`, `{a!b}`, `{a%b}`);
+  `_`, `[` and `]` are. The formula grammar is a full §2.11.5 expression grammar, not only a
+  tokenizer, so malformed text gives no references (NG-FML-001).
+- *T4:* an X parameter is a `subckt_param` reference to the definition's default; an unknown one
+  has `target=None` and no diagnostic (ngspice 47 ignores it). `.ic`/`.nodeset` nodes are not
+  references and are not reported (`names.md`). A repeated `.model`/`.subckt` resolves to the
+  **first** definition (ngspice 47: "redefinition … ignored"), a repeated `.param` to the last.
+  Subcircuit defaults are parameters of the definition's own scope.
+- *T7:* `MODEL_TYPE_MISMATCH` is deferred to M6 (`m5-document.md` section 4).
+- *T8:* the node-list command is `display` after `op` in a `.control` block (§13.5.25); ngspice
+  lists a numeric node as `V(13)` and an internal node by instance path (`x1.mid`).
+
+**Deviations:**
+
+- `Reference` has an extra `owner` field (the item holding the reference) for M6.
+- `UnknownDirective` gained `name_span` (default `None`; the parser always sets it), so
+  `UNKNOWN_DIRECTIVE_PRESERVED` points at the name.
+- The M4 test that placed `.global gnd` in a body now uses `.probe` (decision 0006 behaviour
+  change).
+- D2 was not reviewed before T4: the design note was written with the implementation.
+- Probe circuit for `x1.mid`: the recorded value is 2.0 V for the circuit in the test (a 1k load
+  on `out`), not the 2.25 V of section 7, which used a different load.
+
+**Limitations:** see decision 0006 "Known limits" (`.if` blocks and includes not seen; an `.if`
+block does not soften an unresolved diagnostic; plain `.save` names, `@dev[param]` and
+`.ic` nodes are not references; formulas with verbose operators give no references).

@@ -1,0 +1,22 @@
+two-level hierarchy with instance overrides and a global supply
+.global vcc
+.param rload=10k
+VCC vcc 0 DC 5
+VIN in 0 DC 1
+XA in out amp g=3
+RL out gnd {rload}
+.subckt amp in out g=2
+* a nested stage, local to amp
+.param rbias=47k
+.subckt stage a y gain=2
+R1 a mid 1k
+R2 mid y {gain*1k}
+R3 vcc mid 100k
+.ends stage
+X1 in mid stage gain={g}
+X2 mid out stage
+R4 out 0 {rbias}
+R5 mid vcc {rload}
+.ends amp
+.op
+.end

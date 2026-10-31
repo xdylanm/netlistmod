@@ -26,6 +26,7 @@
 %import .core (ALL_KW, save_stmt, output_vector, SAVE_KW, OUTPUT_VECTOR, voltage_vector)
 %import .core (current_vector, VOLTAGE_OPEN, CURRENT_OPEN, CURRENT_VARIANT_OPEN)
 %import .core (meas_stmt, meas_analysis, meas_body, MEAS_KW, MEASURE_KW, TRAN_ANALYSIS_KW, SP_KW)
+%import .core (global_stmt, GLOBAL_KW)
 
 %ignore WS
 %ignore CONT

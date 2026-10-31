@@ -12,10 +12,12 @@ from netlistmod import (
     CommentLine,
     DcDirective,
     Dialect,
+    Directive,
     End,
     EndsLine,
     Flag,
     Formula,
+    GlobalDirective,
     IcDirective,
     Identifier,
     MeasureDirective,
@@ -259,7 +261,7 @@ def test_nested_subcircuits_and_allowed_body_items() -> None:
         ".if (1)\n"
         "R2 a b 1k\n"
         ".endif\n"
-        ".global gnd\n"
+        ".probe v(a)\n"
         "X1 a b inner r=2\n"
         ".ends outer"
     )
@@ -674,12 +676,60 @@ def test_malformed_measure_directives_are_rejected(statement: str, column: int) 
     assert (error.line, error.column) == (2, column)
 
 
+# NG-GLB-001 .global (M5, decision 0006)
+
+
+@pytest.mark.parametrize(
+    ("statement", "nodes"),
+    [
+        (".global vcc", ["vcc"]),
+        (".GLOBAL gnd vcc", ["gnd", "vcc"]),
+        (".global /vdd 0 n1 ; rails", ["/vdd", "0", "n1"]),
+        (".global a\n+ b,c", ["a", "b", "c"]),
+    ],
+)
+def test_global_directive_nodes_and_spans(statement: str, nodes: list[str]) -> None:
+    item = _item(statement)
+    assert isinstance(item, GlobalDirective)
+    assert [node.name for node in item.nodes] == nodes
+    assert [_slice(statement, node.span) for node in item.nodes] == nodes
+    assert _slice(statement, item.keyword_span) == statement.split()[0]
+
+
+@pytest.mark.parametrize(
+    ("text", "line", "column"),
+    [
+        ("title\n.global\n.end\n", 2, 8),
+        ("title\n.global a=1\n.end\n", 2, 10),
+        ("title\n.subckt d a b\n.global vcc\n.ends\n.end\n", 3, 1),
+    ],
+)
+def test_malformed_or_misplaced_global_directives_are_rejected(
+    text: str, line: int, column: int
+) -> None:
+    with pytest.raises(ParseError) as captured:
+        _parse(text)
+    assert (captured.value.line, captured.value.column) == (line, column)
+
+
+def test_global_is_not_a_removable_directive() -> None:
+    item = _item(".global vcc")
+    assert not isinstance(item, Directive)
+
+
 # Shared behaviour.
 
 
 @pytest.mark.parametrize(
     "statement",
-    [".opt gmin=1e-12", ".print tran v(1)", ".probe v(1)", ".func f(x) {x}", ".options_x a"],
+    [
+        ".opt gmin=1e-12",
+        ".print tran v(1)",
+        ".probe v(1)",
+        ".func f(x) {x}",
+        ".options_x a",
+        ".globals a",
+    ],
 )
 def test_other_dot_commands_stay_unknown_directives(statement: str) -> None:
     item = _item(statement)

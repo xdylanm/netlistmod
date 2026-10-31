@@ -110,3 +110,25 @@ their difference; `vm(out)` and `vdb(out)` store `v(out)` (the magnitude can be 
 the raw data, §11.6.1); `v( out )` stores `v(out)` and `i(V1)` stores `i(v1)`. The parser
 accepts the same forms and records each vector as written (`text`, `function`, nodes or
 source); it does not model what ngspice stores.
+
+## Names, scoping and formula observations (ngspice 47, 2026-10-31; M5)
+
+Probes are in `tests/solver/test_ngspice_solver_document.py`; the rules they validate are in
+[names.md](./names.md) and [scoping.md](./scoping.md).
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Resolves a parameter used before its `.param` line (2.25 V with `R2 out 0 {rx}` then `.param rx=3k`). | Resolves it and reports `PARAM_USED_BEFORE_DEFINITION` (warning): §2.11.1 says a parameter "must have been assigned a value" before its first use. | `test_parameter_case_order_and_redefinition` |
+| Accepts `.global vcc` inside a `.subckt` body and makes `vcc` global (1.5 V). | `ParseError` at `.global`: top level only, like the other statements §2.6.1 keeps out of a definition (decision 0006). | `test_global_inside_a_body_runs_but_the_library_rejects_it` |
+| A `.model` inside a definition is not found at the top level (§2.6.1), although §2.11.4 calls model and subcircuit names global. | Follows ngspice and §2.6.1: `UNRESOLVED_MODEL` (scoping.md, the §2.11.4 / §2.6.1 conflict). | `test_models_are_local_to_their_definition` |
+| `.param a#b=3`, `a!b`, `a%b` are accepted as names (§2.11.1), but `{a#b}` fails ("Undefined parameter [b]"), as do `{a!b}` and `{a%b}`. | The formula grammar does not read `!`, `#` or `%` as name characters (§2.11.5 uses `!` and `%` as operators): `{a#b}` and `{a!b}` give no references, `{a%b}` gives `a` and `b` (unresolved). | `test_formula_name_characters_and_constants` |
+| `{pi}` fails as an undefined parameter; §2.11.5 defines no constants (`vec(pi)` reads the const plot). | `pi` is an ordinary identifier: `UNRESOLVED_PARAM` unless a `.param pi` exists. | same |
+
+These agree: node, designator, model, subcircuit, parameter and inductor-reference case; `gnd`
+as ground and `00` as a separate node; duplicate designators (case-insensitive) and an X line
+with the wrong number of nodes are fatal in ngspice and diagnosed by the library; definition
+order does not matter; local parameters mask global ones; a repeated `.param` uses the last
+assignment and a repeated `.model`/`.subckt` the first; an unknown X parameter is ignored; a net
+inside a definition is local (`x1.mid`) unless it is ground, a port or `.global`. For every
+`statements_basic`, `elements_basic` and `document_basic` file, the library's top-level nets are
+ngspice's node list (`test_library_nets_match_the_ngspice_node_list`).

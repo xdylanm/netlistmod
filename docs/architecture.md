@@ -176,6 +176,8 @@ repo/
       ngspice.lark
       ltspice.lark
       loader.py              # dialect registry and strict parser builder
+      formula.lark           # formula expression syntax, for reference scans (decision 0006)
+      formula.py             # parse_formula: the names a formula refers to
     model/
       values.py              # NumericValue, Formula, ModelReference, ...
       nodes.py               # Component subclasses, statements
@@ -183,8 +185,10 @@ repo/
     document/
       document.py            # Netlist
       lines.py               # Line, Lines (ordered, searchable)
-      index.py               # element / param / model / subckt indexes
+      index.py               # scopes, element / param / model / subckt indexes, references
       topology.py            # TopologyView, signature
+      names.py               # name folding and ground aliases (names.md)
+      diagnostics.py         # Diagnostic, DiagnosticCode
     edit/
       plan.py                # Edit, EditPlan, apply_edits
       api.py                 # restricted public editing operations
@@ -215,7 +219,7 @@ repo/
 | Family | Examples | Notes |
 |---|---|---|
 | Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
-| Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
+| Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
 | Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/m4-statements.md](design/m4-statements.md). |
 | Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
 
@@ -243,7 +247,7 @@ class ModelReference:    model_name: str; span: Span
 
 ### 5.4 Lines
 
-A `Line` is one physical line: its typed content (or `None` for blank/comment-only), an optional trailing comment, and a span covering the line including its newline. `Lines` is the ordered, searchable sequence: `find`, `find_all`, `index_of` (identity-based), and anchor-relative insertion points (`insert_before`, `insert_after`). Content extraction MUST unwrap structural wrapper rules recursively so searches by node type work regardless of grammar nesting.
+A `Line` is one **logical** item: a statement with all its continuation lines and end-of-line comments (the node's `trailing_comments`), a blank line, a comment line, or a whole opaque block. Its span is the item span the parser tiles, so it covers the item including its terminator; `first_line`/`last_line` are the 1-based physical lines it spans, and `scope` is its definition scope. A subcircuit definition is one `Line` whose `body` is a nested `Lines`. `Lines` is the ordered, searchable sequence: `find`, `find_all`, `index_of` (identity-based), with `recursive=True` entering bodies, and anchor-relative insertion points (`insert_before`, `insert_after`), which are zero-width spans at the line's span start and end, both physical-line boundaries ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)).
 
 ---
 
@@ -317,7 +321,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 
 | Class | Contents | Permission |
 |---|---|---|
-| **Topology** | Element line structure: designator, element type, ordered node list; `.subckt` name, ports and body structure; `K` coupling targets | Read-only |
+| **Topology** | Element line structure: designator, element type, ordered node list; `.subckt` name, ports and body structure; `K` coupling targets; `.global` node declarations ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)) | Read-only |
 | **Properties** | Numeric values, formulas, instance parameters, model name (same model type), `.param` definitions, `.model` parameters, source stimulus specs | Editable (and `.param` addable) |
 | **Directives** | `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.step`, unknown dot-commands | Addable, replaceable, removable |
 | **Opaque** | `.control` blocks, conditional blocks, `.include` / `.lib` statements | Untouchable (an `.include` may be added, Section 7.9) |
@@ -357,7 +361,7 @@ On `save()` (and on request via `verify()`):
 
 ### 7.7 Topology signature
 
-The signature is a canonical, hashable value built from typed nodes: for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name. Comments, whitespace, values, params and directives are excluded.
+The signature is a canonical, hashable, ordered value built from typed nodes, using the **exact text** of every topology token (not the case-folded names): for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name; for every `K` line, its inductor references; and the `.global` node set. Comments, whitespace, values, params, other directives and the contents of opaque blocks are excluded. Exact text is stricter than net identity, so a change that only alters case is caught at save. It has a stable `digest()` (SHA-256 of a canonical encoding) so it can be logged and compared across runs ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); encoding in [m5-document.md](design/m5-document.md)).
 
 ### 7.8 Known limits (documented, not solved)
 
@@ -376,13 +380,13 @@ Adding sources, loads or probes changes the circuit and is out of scope. A separ
 
 In scope:
 
-- **Element index** by designator and hierarchical path.
+- **Element index** by designator and definition scope. M5 addresses definition scopes, not expanded instances: a scope is a tuple of subcircuit names (`()` for the top level, `("amp",)`, `("amp", "inner")`). There is no string path form and no instance-expanded view ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)).
 - **Symbol tables:** `params`, `models`, `subckts` with lookup by name.
 - **Reference resolution** (read-only): element → model; subcircuit instance → definition; formula → parameter names. Parameter-name extraction from a formula is a best-effort identifier scan, not an evaluator; function names are excluded using a per-dialect list; limits are documented.
 - **Topology queries:** `nets()`, `elements_on_net(net)`, `connections(designator)`, subcircuit ports. These let external tools (e.g. the harness tool, the controller's consistency checks) validate against the netlist without writing their own parser.
 - **Diagnostics:** unresolved model/subckt/param references, duplicate definitions, dialect-gated syntax. Diagnostics are data, not exceptions.
-- **Names and net identity:** case sensitivity of designators, models, params and subcircuits, and the identity of nets (including ground aliases), are defined per dialect in `docs/grammars/<dialect>/names.md`. The topology signature and all queries use these rules.
-- **Scoping:** parameter scoping rules are defined per dialect in `docs/grammars/<dialect>/scoping.md`. Simulators are reported to differ here; the behavior MUST be validated against the solver before being relied on. Until then v1 documents a simple scope model and its limitations.
+- **Names and net identity:** case sensitivity of designators, models, params and subcircuits, and the identity of nets (including ground aliases), are defined per dialect in `docs/grammars/<dialect>/names.md`. All queries use these rules; the topology signature uses the exact text of each token (Section 7.7, decision 0006).
+- **Scoping:** parameter scoping rules are defined per dialect in `docs/grammars/<dialect>/scoping.md`. Simulators are reported to differ here; the behavior MUST be validated against the solver before being relied on. Until then v1 documents a simple scope model and its limitations. For ngspice (validated on ngspice 47): models and subcircuits are local to the definition that contains them and visible in nested definitions (manual §2.6.1, which the solver follows where §2.11.4 calls them global); a reference is resolved in its own scope, then each enclosing scope, independent of file order.
 
 Out of scope: expression evaluation, unit arithmetic, hierarchy flattening, model-parameter validation.
 
@@ -594,7 +598,9 @@ SpiceNetlistError
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `DUPLICATE_DEFINITION`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`.
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`.
+
+A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNKNOWN_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
 
 ---
 
@@ -638,7 +644,7 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
 ## 20. Known risks
 
 - **Continuation lines** join across intervening comments and blank lines in ngspice 47; this behavior and span tiling are covered by solver and property tests.
-- **Scoping rules** differ between simulators and are not yet validated against solvers.
+- **Scoping rules** differ between simulators; the ngspice rules are validated on ngspice 47 (`scoping.md`), LTspice's are not yet.
 - **Hidden connectivity** in behavioral expressions can defeat the topology guarantee (documented limit).
 - **Encoding:** verified for LTspice 26.1.1 (exports are UTF-8 without a BOM; see `docs/usage/ltspice-export.md` and decision 0001). Re-verify on LTspice upgrades and on KiCad exports.
 - **LTspice CLI export** switch and behavior are unverified.
@@ -658,13 +664,13 @@ Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT
    - What happens to element handles after a re-parse?
    - What is the boundary of an "edit set"?
    - How are two edits to the same span handled (error or last-wins), given that edits MUST NOT overlap?
-2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The same question applies to the `UNRESOLVED_*` diagnostics.
+2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is open for M6.
 
 **Deferred to design documents and implementation (resolve with tests)**
 
 - Text conventions for inserted lines (EOL style, EOF without newline, keyword case, `.param` form) and placement semantics.
 - Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).
-- The line model for continuation lines, interleaved comments and anchor-relative insertion.
-- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only).
+- ~~The line model for continuation lines, interleaved comments and anchor-relative insertion.~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 5.4).
+- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only). The read-only part (definition-scope tuples) is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); the edit argument (`scope=Definition`, Section 7.4) and any string path form remain for M6.
 - ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md).
-- The diagnostics API (delivery and severity).
+- ~~The diagnostics API (delivery and severity).~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 17).

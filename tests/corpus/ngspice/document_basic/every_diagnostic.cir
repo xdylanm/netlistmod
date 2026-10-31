@@ -1,0 +1,26 @@
+one of every diagnostic code (parse with rkm=True)
+.param rx=1k
+.param rx=2k
+R1 a b {rx}
+r1 a 0 1k
+R2 b 0 {ry}
+.param ry=3k
+R3 b c {nowhere}
+D1 c 0 dnone
+X1 a b c div
+X2 a b nosuch
+.subckt div p q
+R1 p q 2k7
+R2 q 0 1M0
+.ends other
+.subckt lib_user p
+.include missing.lib
+D1 p 0 dfar
+.ends
+.model dm d
+.model DM d
+L1 a 0 1u
+K1 L1 L9 0.5
+.dc VSWEEP 0 1 0.1
+.print dc v(a)
+.end

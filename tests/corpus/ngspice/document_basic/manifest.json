@@ -1,0 +1,647 @@
+{
+  "family": "document_basic",
+  "origin": "Authored in this repository for the M5 document and semantic layer",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-31",
+  "notes": "Small circuits whose expected query results are written out here: 'nets' maps a scope path (subcircuit names joined by '/', '' for the top level) to [net name, net scope] in first-use order; 'connections' maps each top-level element to the nets of its terminals; 'references' lists [kind, name, scope, resolved] in source order; 'diagnostics' lists [code, severity, line, column] in source order. Expected values were checked by hand against names.md and scoping.md. LF, CRLF (diode_clamp.cir) and a missing final newline (coupled.cir). every_diagnostic.cir parses with rkm=True and is not run in ngspice (it is deliberately broken); the others run in ngspice 47.",
+  "fixtures": {
+    "coupled.cir": {
+      "sha256": "3472bf2a4cbf48afef2e4ce21166648a05d8fae32891d6b3f12fa65ea1fcaa34",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "p",
+            ""
+          ],
+          [
+            "s",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "p"
+        ],
+        "L1": [
+          "p",
+          "0"
+        ],
+        "l2": [
+          "s",
+          "0"
+        ],
+        "R2": [
+          "s",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "element",
+          "l1",
+          "",
+          true
+        ],
+        [
+          "element",
+          "L2",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": []
+    },
+    "diode_clamp.cir": {
+      "sha256": "0c9587a3579e75fa05d36c11aa9e28936cdb5249a554be4c07afc37c126ecb71",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "out",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "out"
+        ],
+        "D1": [
+          "out",
+          "0"
+        ],
+        "D2": [
+          "0",
+          "out"
+        ]
+      },
+      "references": [
+        [
+          "model",
+          "DCLAMP",
+          "",
+          true
+        ],
+        [
+          "model",
+          "dclamp",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": []
+    },
+    "divider.cir": {
+      "sha256": "ae1130f1130c9a1f986564aa1e830222d67fab48563fbc8ccccefffd2801c43c",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "out",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "out"
+        ],
+        "R2": [
+          "out",
+          "0"
+        ]
+      },
+      "references": [],
+      "diagnostics": []
+    },
+    "every_diagnostic.cir": {
+      "sha256": "be36c8a243b05b044a9858dd8f698d9eafac43d0424ed1818618e29d8c035e8e",
+      "rkm": true,
+      "nets": {
+        "": [
+          [
+            "a",
+            ""
+          ],
+          [
+            "b",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "c",
+            ""
+          ]
+        ],
+        "div": [
+          [
+            "p",
+            "div"
+          ],
+          [
+            "q",
+            "div"
+          ],
+          [
+            "0",
+            ""
+          ]
+        ],
+        "lib_user": [
+          [
+            "p",
+            "lib_user"
+          ],
+          [
+            "0",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "R1": [
+          "a",
+          "b"
+        ],
+        "R2": [
+          "b",
+          "0"
+        ],
+        "R3": [
+          "b",
+          "c"
+        ],
+        "D1": [
+          "c",
+          "0"
+        ],
+        "X1": [
+          "a",
+          "b",
+          "c"
+        ],
+        "X2": [
+          "a",
+          "b"
+        ],
+        "L1": [
+          "a",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "param",
+          "rx",
+          "",
+          true
+        ],
+        [
+          "param",
+          "ry",
+          "",
+          true
+        ],
+        [
+          "param",
+          "nowhere",
+          "",
+          false
+        ],
+        [
+          "model",
+          "dnone",
+          "",
+          false
+        ],
+        [
+          "subckt",
+          "div",
+          "",
+          true
+        ],
+        [
+          "subckt",
+          "nosuch",
+          "",
+          false
+        ],
+        [
+          "model",
+          "dfar",
+          "lib_user",
+          false
+        ],
+        [
+          "element",
+          "L1",
+          "",
+          true
+        ],
+        [
+          "element",
+          "L9",
+          "",
+          false
+        ],
+        [
+          "element",
+          "VSWEEP",
+          "",
+          false
+        ]
+      ],
+      "diagnostics": [
+        [
+          "DUPLICATE_DEFINITION",
+          "info",
+          3,
+          8
+        ],
+        [
+          "DUPLICATE_ELEMENT",
+          "warning",
+          5,
+          1
+        ],
+        [
+          "PARAM_USED_BEFORE_DEFINITION",
+          "warning",
+          6,
+          9
+        ],
+        [
+          "UNRESOLVED_PARAM",
+          "warning",
+          8,
+          9
+        ],
+        [
+          "UNRESOLVED_MODEL",
+          "warning",
+          9,
+          8
+        ],
+        [
+          "SUBCKT_PORT_MISMATCH",
+          "warning",
+          10,
+          10
+        ],
+        [
+          "UNRESOLVED_SUBCKT",
+          "warning",
+          11,
+          8
+        ],
+        [
+          "DIALECT_GATED_SYNTAX",
+          "info",
+          13,
+          8
+        ],
+        [
+          "DIALECT_GATED_SYNTAX",
+          "info",
+          14,
+          8
+        ],
+        [
+          "RKM_SOLVER_MISMATCH",
+          "warning",
+          14,
+          8
+        ],
+        [
+          "ENDS_NAME_MISMATCH",
+          "info",
+          15,
+          7
+        ],
+        [
+          "UNRESOLVED_MODEL",
+          "info",
+          18,
+          8
+        ],
+        [
+          "DUPLICATE_DEFINITION",
+          "warning",
+          21,
+          8
+        ],
+        [
+          "UNRESOLVED_ELEMENT",
+          "warning",
+          23,
+          7
+        ],
+        [
+          "UNRESOLVED_ELEMENT",
+          "warning",
+          24,
+          5
+        ],
+        [
+          "UNKNOWN_DIRECTIVE_PRESERVED",
+          "info",
+          25,
+          1
+        ]
+      ]
+    },
+    "hierarchy.cir": {
+      "sha256": "a83c483ded308e6c2dfe3a58ac87b2afb4f799fbd1c0ef95686a6197a97a50e9",
+      "nets": {
+        "": [
+          [
+            "vcc",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "in",
+            ""
+          ],
+          [
+            "out",
+            ""
+          ]
+        ],
+        "amp": [
+          [
+            "in",
+            "amp"
+          ],
+          [
+            "out",
+            "amp"
+          ],
+          [
+            "mid",
+            "amp"
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "vcc",
+            ""
+          ]
+        ],
+        "amp/stage": [
+          [
+            "a",
+            "amp/stage"
+          ],
+          [
+            "y",
+            "amp/stage"
+          ],
+          [
+            "mid",
+            "amp/stage"
+          ],
+          [
+            "vcc",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "VCC": [
+          "vcc",
+          "0"
+        ],
+        "VIN": [
+          "in",
+          "0"
+        ],
+        "XA": [
+          "in",
+          "out"
+        ],
+        "RL": [
+          "out",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "subckt",
+          "amp",
+          "",
+          true
+        ],
+        [
+          "subckt_param",
+          "g",
+          "",
+          true
+        ],
+        [
+          "param",
+          "rload",
+          "",
+          true
+        ],
+        [
+          "param",
+          "gain",
+          "amp/stage",
+          true
+        ],
+        [
+          "subckt",
+          "stage",
+          "amp",
+          true
+        ],
+        [
+          "subckt_param",
+          "gain",
+          "amp",
+          true
+        ],
+        [
+          "param",
+          "g",
+          "amp",
+          true
+        ],
+        [
+          "subckt",
+          "stage",
+          "amp",
+          true
+        ],
+        [
+          "param",
+          "rbias",
+          "amp",
+          true
+        ],
+        [
+          "param",
+          "rload",
+          "amp",
+          true
+        ]
+      ],
+      "diagnostics": []
+    },
+    "kicad_names.cir": {
+      "sha256": "9029cc6898a21410fb2a36227a36903c980920d699dd467b2b2740e1b3ae1b3d",
+      "nets": {
+        "": [
+          [
+            "/vin",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "/vout",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "/vin",
+          "0"
+        ],
+        "R1": [
+          "/vin",
+          "/vout"
+        ],
+        "R2": [
+          "/vout",
+          "0"
+        ],
+        "C1": [
+          "/vout",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "element",
+          "V1",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": []
+    },
+    "rc_filter.cir": {
+      "sha256": "38780b7b2e66e5c7d825c99357fc163cde59bbd12c3bf0f65e422b7f6bd76b4b",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "out",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "out"
+        ],
+        "C1": [
+          "out",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "param",
+          "rf",
+          "",
+          true
+        ],
+        [
+          "param",
+          "cf",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": [
+        [
+          "PARAM_USED_BEFORE_DEFINITION",
+          "warning",
+          3,
+          12
+        ],
+        [
+          "PARAM_USED_BEFORE_DEFINITION",
+          "warning",
+          4,
+          11
+        ]
+      ]
+    }
+  }
+}

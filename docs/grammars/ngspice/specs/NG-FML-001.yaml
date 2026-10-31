@@ -1,0 +1,69 @@
+id: NG-FML-001
+dialect: ngspice
+construct: Formula expression syntax (reference scan only)
+manual_ref:
+- '[ngspice-manual] §2.11.5 "Syntax of expressions"'
+- '[ngspice-manual] §2.11.6 "Reserved words"'
+- '[ngspice-manual] §2.11.1 ".param line"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-31'
+grammar:
+- start
+- ternary
+- or_expr
+- and_expr
+- comparison
+- sum
+- product
+- power
+- unary
+- atom
+- WS
+- NUMBER
+- STRING
+- IDENT
+- VOLTAGE_OPEN
+- CURRENT_OPEN
+- NAME
+- LPAR
+- RPAR
+- COMMA
+- QUESTION
+- COLON
+- OROR
+- ANDAND
+- COMPARE
+- PLUS
+- MINUS
+- STAR
+- SLASH
+- PERCENT
+- BACKSLASH
+- POWER
+- BANG
+tests:
+- tests/grammar/ngspice/test_formula.py::test_bare_identifiers_are_parameter_names
+- tests/grammar/ngspice/test_formula.py::test_calls_and_accessors_are_not_parameters
+- tests/grammar/ngspice/test_formula.py::test_reserved_words_are_not_parameters
+- tests/grammar/ngspice/test_formula.py::test_pi_is_an_identifier
+- tests/grammar/ngspice/test_formula.py::test_text_the_grammar_does_not_accept_gives_no_tokens
+- tests/grammar/ngspice/test_formula.py::test_formula_parser_is_strict_lalr_and_reserved_words_are_data
+- tests/grammar/ngspice/test_formula.py::test_generated_sums_report_every_identifier
+- tests/document/test_resolution.py::test_formula_identifiers_resolve_to_parameters
+- tests/solver/test_ngspice_solver_document.py::test_formula_name_characters_and_constants
+notes: 'A separate strict LALR grammar (formula.lark) over the text of a brace or single-quoted
+  Formula (decision 0006 item 9); double-quoted strings are string values and are not scanned. It
+  follows the §2.11.5 expression forms and operator table (unary - ! and +, ** or ^, * / % \, + -,
+  comparisons, && || and the ternary c?x:y) and numbers with scale factors and trailing letters
+  (as NG-NUM-001/002). An identifier directly followed by "(" is a function call; v(...) with its
+  AC variants and i(...) are accessors whose arguments are node and source names. A bare word of
+  the reserved list (formula-reserved.json: §2.11.5 function names, §2.11.6 reserved words and
+  verbose operators) is not a parameter. Settled (M5 T2): pi is an identifier (§2.11.5 defines no
+  constants; ngspice 47 reports {pi} as an undefined parameter); "!", "#" and "%" are not name
+  characters in a formula, although §2.11.1 allows them in .param names (ngspice 47 does not read
+  {a#b}, {a!b} or {a%b} as one name: discrepancies.md). Text the grammar does not accept (for
+  example the verbose operators used as operators, "v (a)" with a blank, @dev[param]) gives no
+  references and no error: the scan is best effort (architecture §8).'

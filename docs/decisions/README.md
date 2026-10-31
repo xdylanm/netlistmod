@@ -8,3 +8,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0003 — Grammar composition and opaque regions](0003-grammar-composition-and-opaque-regions.md)
 - [0004 — Element and value grammar](0004-element-and-value-grammar.md)
 - [0005 — Statement and directive grammar](0005-statement-and-directive-grammar.md)
+- [0006 — Document layer: names, scope and diagnostics](0006-document-layer-names-scope-and-diagnostics.md) (proposed)

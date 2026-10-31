@@ -1,0 +1,27 @@
+id: NG-GLB-001
+dialect: ngspice
+construct: .global node declarations
+manual_ref:
+- '[ngspice-manual] §2.7 ".GLOBAL"'
+- '[ngspice-manual] §2.6.1 ".SUBCKT Line"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-31'
+grammar:
+- global_stmt
+- GLOBAL_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_global_directive_nodes_and_spans
+- tests/grammar/ngspice/test_statements.py::test_malformed_or_misplaced_global_directives_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_global_is_not_a_removable_directive
+- tests/document/test_topology.py::test_global_nodes_are_shared_across_scopes
+- tests/solver/test_ngspice_solver_document.py::test_global_nodes_are_shared_and_other_nets_are_local
+notes: '.global takes one or more node names of the element node class (NG-NOD-001), separated
+  like element fields (blanks, one comma, continuations). It is typed GlobalDirective(nodes) and is
+  topology (decision 0006): it changes which nets are shared across subcircuit definitions. Settled
+  (M5 T1): .global is top level only; inside a subcircuit body it is rejected at its keyword like
+  the other top-level statements (decision 0005, §2.6.1 "Control lines may not appear within a
+  subcircuit definition"). ngspice 47 accepts .global in a body and makes the node global
+  (discrepancy). .globals and other longer names stay unknown dot-commands.'

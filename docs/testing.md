@@ -121,6 +121,15 @@ The test helpers run in temporary directories, use batch mode, and set a
 timeout. No simulator is launched from `src/`. Run only solver tests with
 `uv run --env-file .env python -m pytest -m solver`.
 
+The document layer (M5) is tested in `tests/document/`: lines and insertion
+points, resolution, topology (with Hypothesis properties of the signature and an
+independent net oracle), diagnostics, and the `document_basic` corpus, whose
+manifest lists the expected nets, connections, references and diagnostics. The
+formula grammar is tested in `tests/grammar/ngspice/test_formula.py`. The ngspice
+probes for names, net identity and scoping are in
+`tests/solver/test_ngspice_solver_document.py`; one compares the library's nets
+with the node list ngspice prints with `display` after `op` (manual §13.5.25).
+
 The ngspice structural probes are in
 `tests/solver/test_ngspice_solver_structure.py`. They record strict-policy
 discrepancies, title handling, `//` lines, quoted/braced include-path behavior,

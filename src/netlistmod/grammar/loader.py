@@ -129,6 +129,7 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "MEASURE_KW": "`.measure`",
     "TRAN_ANALYSIS_KW": "`tran`",
     "SP_KW": "`sp`",
+    "GLOBAL_KW": "`.global`",
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 

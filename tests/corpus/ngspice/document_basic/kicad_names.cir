@@ -1,0 +1,8 @@
+.title KiCad schematic
+V1 /vin GND DC 5
+R1 /vin /vout 10k
+R2 /vout gnd 10k
+C1 /vout GND 100n
+.save v(/vout) i(V1)
+.op
+.end

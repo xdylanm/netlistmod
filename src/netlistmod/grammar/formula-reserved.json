@@ -1,0 +1,12 @@
+{
+  "source": "ngspice manual §2.11.5 \"Syntax of expressions\" (built-in function names) and §2.11.6 \"Reserved words\" (reserved words and the verbose operators not, and, or, div, mod); see docs/grammars/ngspice/specs/NG-FML-001.yaml",
+  "words": [
+    "time", "temper", "hertz",
+    "not", "and", "or", "div", "mod", "defined",
+    "sqr", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh",
+    "asin", "acos", "atan", "asinh", "acosh", "atanh", "arctan",
+    "exp", "ln", "log", "log10", "abs", "nint", "int", "floor", "ceil",
+    "pow", "pwr", "min", "max", "sgn", "ternary_fcn",
+    "gauss", "agauss", "unif", "aunif", "limit", "var", "vec"
+  ]
+}

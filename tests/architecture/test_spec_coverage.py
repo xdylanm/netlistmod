@@ -14,6 +14,7 @@ REFERENCES_FILE = ROOT / "docs" / "references.md"
 GRAMMAR_FILES = [
     ROOT / "src" / "netlistmod" / "grammar" / "core.lark",
     ROOT / "src" / "netlistmod" / "grammar" / "ngspice.lark",
+    ROOT / "src" / "netlistmod" / "grammar" / "formula.lark",
 ]
 SPEC_MARKER = re.compile(r"^\s*//\s*spec:\s*([A-Z0-9-]+)\s*$", re.MULTILINE)
 GRAMMAR_DECLARATION = re.compile(

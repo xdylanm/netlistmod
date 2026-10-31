@@ -56,6 +56,7 @@ first_line: TITLE_KW TITLE_ARG? LINE_END    -> explicit_title
               | nodeset_stmt
               | save_stmt
               | meas_stmt
+              | global_stmt
 
 // spec: NG-TTL-001
 title_stmt: TITLE_KW TITLE_ARG? LINE_END
@@ -367,6 +368,7 @@ subckt_port: (SEP | CSEP | BS_CONT) (WORD | ZERO_PORT)
             | not_in_subckt
 not_in_subckt: (TITLE_KW | TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | OPTIONS_KW | OPTION_KW) rest NL
              | (TEMP_KW | IC_KW | NODESET_KW | SAVE_KW | MEAS_KW | MEASURE_KW | END_KW) rest NL
+             | GLOBAL_KW rest NL
 ends_line: ENDS_KW x_name? (NL | eol)
 SUBCKT_KW.4: ".subckt"i
 ENDS_KW.4: ".ends"i
@@ -466,3 +468,9 @@ MEAS_KW.4: ".meas"i
 MEASURE_KW.4: ".measure"i
 TRAN_ANALYSIS_KW.2: "tran"i
 SP_KW.2: "sp"i
+
+// .global nodename1 [nodename2 ...] (§2.7): one or more nodes of the element node class
+// (NG-NOD-001), top level only (decision 0006); in a subcircuit body it is not_in_subckt.
+// spec: NG-GLB-001
+global_stmt: GLOBAL_KW node+ (NL | eol)
+GLOBAL_KW.4: ".global"i

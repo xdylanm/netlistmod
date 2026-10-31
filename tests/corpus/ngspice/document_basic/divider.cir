@@ -1,0 +1,6 @@
+resistive divider with mixed-case node names
+V1 IN 0 DC 3
+R1 in OUT 1k
+R2 out 0 1k
+.op
+.end

@@ -45,6 +45,7 @@ from netlistmod.model.nodes import (
     Diode,
     End,
     EndsLine,
+    GlobalDirective,
     IcDirective,
     Inductor,
     MeasureDirective,
@@ -330,7 +331,10 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def unknown_stmt(self, children: list[Any]) -> _Item:
         name, raw, comments = self._statement(children)
-        return _Item(_end(children), lambda span: UnknownDirective(name, raw, span, comments))
+        name_span = _span(children[0])
+        return _Item(
+            _end(children), lambda span: UnknownDirective(name, raw, span, comments, name_span)
+        )
 
     def include_stmt(self, children: list[Any]) -> _Item:
         _, raw, comments = self._statement(children)
@@ -838,6 +842,11 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         span = Span(_span(first).start, rest.text_end or _span(first).end)
         body = _MeasBody(self._source.text[span.start : span.end], span)
         return _Field(body, (*comments, *rest.comments))
+
+    def global_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        nodes = element.all(Node)
+        return _Item(element.end, lambda span: GlobalDirective(**_dot(element, span), nodes=nodes))
 
     # Helpers.
 
