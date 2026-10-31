@@ -85,7 +85,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Design doc for the semantic API.
 - **Exit:** queries tested on corpus circuits. **Optional checkpoint:** read-only use is demonstrable here if you want an early look before editing exists.
 
-### M6 — Edit layer
+### M6 — Edit layer ([task list](./m6-tasks.md))
 - **Decision records before coding:** resolve the architecture §21 unresolved questions (edit lifecycle; `set_model` vs. includes) in `docs/decisions/`.
 - `Edit`/`EditPlan`/`apply_edits`, restricted edit API, directive placement, write-time verification (§7.6), `TopologyError`/`TopologyViolation`.
 - **Element edits build on the M3 design note [m3-elements.md](./m3-elements.md):** its §4 defines the sub-spans an edit replaces (value, model, parameter name and value, AC magnitude and phase) and what each covers. Value edits replace `value.span` (for `r=1k`, only `1k`). The note does not yet define where an added parameter is inserted; M6 decides that. Read it before designing the element operations, and update or archive it when M6 completes.
