@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0, M1, M2, M3 complete; M4 ready for review
+> **Status:** ACTIVE — M0–M4 complete; M5 next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -74,7 +74,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Spec entries (`docs/grammars/ngspice/`) with manual citations and tests; spec-coverage script.
 - **Exit:** every phase 1 element parses, rejects malformed input with positions (T6), and has a spec entry and tests.
 
-### M4 — Statements and directives (ngspice; ready for review; [task list](./m4-tasks.md), [design note](./m4-statements.md), [decision 0005](../decisions/0005-statement-and-directive-grammar.md))
+### M4 — Statements and directives (ngspice; complete; [task record](./archive/m4-tasks.md), [design note](./m4-statements.md), [decision 0005](../decisions/0005-statement-and-directive-grammar.md))
 - `.param`, `.model`, `.subckt`/`.ends` (with instance and definition structure), typed analysis/control directives (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`).
 - **Exit:** same criteria as M3 for these constructs.
 
@@ -89,6 +89,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - **Decision records before coding:** resolve the architecture §21 unresolved questions (edit lifecycle; `set_model` vs. includes) in `docs/decisions/`.
 - `Edit`/`EditPlan`/`apply_edits`, restricted edit API, directive placement, write-time verification (§7.6), `TopologyError`/`TopologyViolation`.
 - **Element edits build on the M3 design note [m3-elements.md](./m3-elements.md):** its §4 defines the sub-spans an edit replaces (value, model, parameter name and value, AC magnitude and phase) and what each covers. Value edits replace `value.span` (for `r=1k`, only `1k`). The note does not yet define where an added parameter is inserted; M6 decides that. Read it before designing the element operations, and update or archive it when M6 completes.
+- **Statement and directive edits build on the M4 design note [m4-statements.md](./m4-statements.md):** it defines the sub-spans of `.param` and `.model` values, directive arguments and whole directive lines (for replace and remove), and how a subcircuit body tiles. Read it before designing those operations, and update or archive it when M6 completes.
 - T4 golden-diff tests, T5 property tests (round-trip, signature preserved, idempotence), T6 forbidden-operation tests.
 - **Exit:** the operations in §7.2 work for phase 1 constructs; every forbidden operation in §7.3 has a negative test.
 

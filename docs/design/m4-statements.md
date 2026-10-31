@@ -1,7 +1,7 @@
 # M4 design note — statement and directive nodes, grammar and spans
 
-> **Status:** READY FOR REVIEW — the shapes that shipped with M4 (D2 of
-> [m4-tasks.md](./m4-tasks.md)); [decision 0005](../decisions/0005-statement-and-directive-grammar.md)
+> **Status:** ACTIVE — reviewed with M4 (2026-10-31); the shapes that shipped with M4 (D2 of
+> [m4-tasks.md](./archive/m4-tasks.md)); [decision 0005](../decisions/0005-statement-and-directive-grammar.md)
 > records why. The reference for directive and statement edits in M6.
 
 ## 1. Node shapes
