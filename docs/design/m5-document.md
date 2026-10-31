@@ -1,6 +1,6 @@
 # M5 design note — the read-only document layer
 
-> **Status:** ACTIVE — accepted by the maintainer (2026-10-31); implemented with M5; D2 of [m5-tasks.md](./m5-tasks.md).
+> **Status:** ACTIVE — accepted by the maintainer (2026-10-31); implemented with M5; D2 of [m5-tasks.md](./archive/m5-tasks.md).
 > [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md) records why.
 > The reference M6 builds its edit API on. Rules: [names.md](../grammars/ngspice/names.md),
 > [scoping.md](../grammars/ngspice/scoping.md).

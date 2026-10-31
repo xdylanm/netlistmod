@@ -1,13 +1,13 @@
 # 0006 — Document layer: names, scope and diagnostics
 
 - **Status:** accepted (2026-10-31, maintainer; the section 2 decisions of
-  [m5-tasks.md](../design/m5-tasks.md) were accepted on 2026-10-31 and this record after review)
+  [m5-tasks.md](../design/archive/m5-tasks.md) were accepted on 2026-10-31 and this record after review)
 - **Date:** 2026-10-31
 - **Context:** M5 builds the read-only document layer (architecture §3 layer [3], §8): the
   `Netlist`, its lines, symbol tables, reference resolution, topology view and signature, and
   diagnostics. Several architecture §21 items were deferred to this point (the line model, the
   diagnostics API, hierarchical addressing) and §8 left names, net identity and scoping to
-  per-dialect documents. ngspice 47 was probed for each rule ([m5-tasks.md](../design/m5-tasks.md)
+  per-dialect documents. ngspice 47 was probed for each rule ([m5-tasks.md](../design/archive/m5-tasks.md)
   section 7, re-recorded in `tests/solver/test_ngspice_solver_document.py`).
 - **Decision:**
   1. **Entry points.** `Netlist.load(path, *, dialect, rkm=False, fallback_encodings=...)`,
