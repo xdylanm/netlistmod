@@ -1,0 +1,18 @@
+M4 analyses, options and outputs
+V1 in 0 DC 1 AC 1
+R1 in out 1k
+C1 out 0 1u
+.options reltol=.005 trtol=8
+.option noacct method=gear
+.temp 27
+.op
+.tran 1u 1m 0 10u ; tstep tstop tstart tmax
+.ac dec 10 1 10K
+.dc V1 0 1 0.5
+.ic v(out)=0
+.nodeset v(out)=0.5
+.save v(out) i(v1) in v1#branch @r1[i]
+.meas tran tout FIND v(out)
++ AT=0.5m
+.measure ac vmax MAX vdb(out)
+.end

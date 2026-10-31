@@ -1,0 +1,36 @@
+id: NG-ICN-001
+dialect: ngspice
+construct: .ic and .nodeset
+manual_ref:
+- '[ngspice-manual] §11.2.2 ".IC: Set Initial Conditions"'
+- '[ngspice-manual] §11.2.1 ".NODESET: Specify Initial Node Voltage Guesses"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- ic_stmt
+- nodeset_stmt
+- node_condition
+- nodeset_all
+- IC_KW
+- NODESET_KW
+- V_OPEN
+- ALL_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_initial_condition_directives
+- tests/grammar/ngspice/test_statements.py::test_malformed_option_and_condition_directives_are_rejected
+- tests/solver/test_ngspice_solver_statements.py::test_initial_condition_with_blanks_inside_v
+- tests/solver/test_ngspice_solver_statements.py::test_solver_and_library_both_reject
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: 'v(node)=value items; .nodeset also all=value, alone. The node is a name of the element node class
+  (NG-NOD-001); v( is one token, so v (1) is rejected. Settled: blanks inside the parentheses are ignored
+  like other inline blanks (ngspice 47 reads .ic v( out )=2 the same); .ic all= is rejected (not in §11.2.2;
+  ngspice 47 also fails); mixing v() items with all= is rejected (ngspice 47 accepts it: discrepancy);
+  an unclosed v( is reported at the opener.'

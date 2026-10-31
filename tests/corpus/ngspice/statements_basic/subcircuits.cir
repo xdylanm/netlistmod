@@ -1,0 +1,28 @@
+M4 subcircuits
+.subckt div a b r2=1k
+R1 a b 1k
+R2 b 0 {r2}
+.ends div
+.subckt outer p q
+* a nested definition with a local model and parameter
+.param rin=500
+.model dloc D
+.subckt inner x y
+R1 x y {rin}
+.ends inner
+X1 p m inner
+X2 m q inner
+
+.ends
+.subckt commented n1 n2 ; a header comment
++ rval=2k
+R1 n1 n2 {rval}
+.ends commented
+V1 in 0 DC 3
+X1 in out div
+X2 in out2 div r2=3k
+X3 in out3 outer
+R3 out3 0 1k
+X4 in 0 commented rval=4k
+.op
+.end

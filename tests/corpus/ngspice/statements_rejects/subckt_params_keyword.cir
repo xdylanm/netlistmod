@@ -1,0 +1,5 @@
+M4 reject
+V1 in 0 DC 1
+.subckt div a b params: r=1
+.ends
+.end

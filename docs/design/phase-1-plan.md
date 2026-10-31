@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0, M1, M2, M3 complete; M4 next
+> **Status:** ACTIVE — M0, M1, M2, M3 complete; M4 ready for review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -74,7 +74,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Spec entries (`docs/grammars/ngspice/`) with manual citations and tests; spec-coverage script.
 - **Exit:** every phase 1 element parses, rejects malformed input with positions (T6), and has a spec entry and tests.
 
-### M4 — Statements and directives ([task list](./m4-tasks.md))
+### M4 — Statements and directives (ngspice; ready for review; [task list](./m4-tasks.md), [design note](./m4-statements.md), [decision 0005](../decisions/0005-statement-and-directive-grammar.md))
 - `.param`, `.model`, `.subckt`/`.ends` (with instance and definition structure), typed analysis/control directives (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`).
 - **Exit:** same criteria as M3 for these constructs.
 

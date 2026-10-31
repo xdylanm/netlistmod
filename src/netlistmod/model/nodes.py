@@ -9,6 +9,7 @@ from netlistmod.model.values import (
     AcSpec,
     ElementReference,
     Flag,
+    Identifier,
     ModelReference,
     ParamAssignment,
     SubcktReference,
@@ -190,15 +191,217 @@ class SubcktInstance(Component):
     subckt: SubcktReference
 
 
-TopLevelItem: TypeAlias = (
-    Title
-    | TitleDirective
-    | BlankLine
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _DotCommand:
+    """Fields shared by every typed dot-command (decision 0005).
+
+    ``keyword`` is the keyword as written (``.TRAN``); ``span`` is the item span, which tiles
+    the source like every item, and ``trailing_comments`` holds every end-of-line comment of
+    the statement in source order. Sub-spans cover exactly their text, never a separator.
+    """
+
+    keyword: str
+    keyword_span: Span
+    span: Span
+    trailing_comments: tuple[Span, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ParamStatement(_DotCommand):
+    """A ``.param`` line: one or more ``name=value`` assignments."""
+
+    assignments: tuple[ParamAssignment, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class ModelStatement(_DotCommand):
+    """A ``.model`` line; ``parenthesized`` records whether the parameters are in ``( … )``.
+
+    ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
+    """
+
+    name: str
+    name_span: Span
+    model_type: str
+    model_type_span: Span
+    params: tuple[ParamAssignment, ...]
+    parenthesized: bool
+
+
+@dataclass(frozen=True, slots=True)
+class EndsLine:
+    """The ``.ends`` line closing a subcircuit definition.
+
+    ``name`` is the optional name as written; it is not checked against the definition.
+    """
+
+    name: str | None
+    name_span: Span | None
+    span: Span
+    trailing_comments: tuple[Span, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SubcktDefinition(_DotCommand):
+    """A ``.subckt`` … ``.ends`` block, which contains its body.
+
+    ``header_span`` covers the ``.subckt`` line (with its continuations), the ``body`` items
+    tile the text between the header and the ``.ends`` line, and ``ends`` covers that line.
+    ``params`` holds the default parameter values; ``trailing_comments`` those of the header.
+    """
+
+    name: str
+    name_span: Span
+    ports: tuple[Node, ...]
+    params: tuple[ParamAssignment, ...]
+    body: tuple[BodyItem, ...]
+    ends: EndsLine
+    header_span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Directive(_DotCommand):
+    """Base of the typed analysis, option and output directives (top level only)."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TranDirective(Directive):
+    """``.tran tstep tstop [tstart [tmax]] [uic]``."""
+
+    tstep: Value
+    tstop: Value
+    tstart: Value | None
+    tmax: Value | None
+    uic: Flag | None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class AcDirective(Directive):
+    """``.ac dec|oct|lin points fstart fstop``; ``variation`` is the keyword as written."""
+
+    variation: str
+    variation_span: Span
+    points: Value
+    fstart: Value
+    fstop: Value
+
+
+@dataclass(frozen=True, slots=True)
+class DcSweep:
+    """One ``.dc`` sweep: the swept name and its range; ``span`` runs from source to increment."""
+
+    source: str
+    source_span: Span
+    start: Value
+    stop: Value
+    increment: Value
+    span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DcDirective(Directive):
+    """``.dc`` with one or two sweeps."""
+
+    sweeps: tuple[DcSweep, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OpDirective(Directive):
+    """``.op``."""
+
+
+@dataclass(frozen=True, slots=True)
+class OptionItem:
+    """One ``.options`` item, ``name`` or ``name=value``; ``span`` covers both."""
+
+    name: str
+    name_span: Span
+    value: Value | Identifier | None
+    span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OptionsDirective(Directive):
+    """``.options`` or ``.option`` with one or more items."""
+
+    options: tuple[OptionItem, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TempDirective(Directive):
+    """``.temp value``."""
+
+    value: Value
+
+
+@dataclass(frozen=True, slots=True)
+class NodeCondition:
+    """``v(node)=value``, or ``all=value`` (``node is None``, ``.nodeset`` only).
+
+    ``span`` runs from ``v(`` (or ``all``) to the end of the value.
+    """
+
+    node: Node | None
+    value: Value
+    span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class IcDirective(Directive):
+    """``.ic v(node)=value …``."""
+
+    conditions: tuple[NodeCondition, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class NodesetDirective(Directive):
+    """``.nodeset v(node)=value …`` or ``.nodeset all=value``."""
+
+    conditions: tuple[NodeCondition, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class OutputVector:
+    """One ``.save`` vector as written: ``name``, ``v(n)``, ``i(src)``, ``@dev[param]`` …"""
+
+    text: str
+    span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SaveDirective(Directive):
+    """``.save`` with one or more output vectors."""
+
+    vectors: tuple[OutputVector, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class MeasureDirective(Directive):
+    """``.meas`` or ``.measure``, typed shallowly.
+
+    ``analysis`` (``dc``, ``ac``, ``tran``, ``sp``, as written) and ``result`` are fields; the
+    rest of the statement is ``body_text``, the source slice of ``body_span``, which runs from
+    the first to the last text token (comments on earlier lines of a continued statement are
+    inside it; those are also listed in ``trailing_comments``).
+    """
+
+    analysis: str
+    analysis_span: Span
+    result: str
+    result_span: Span
+    body_text: str
+    body_span: Span
+
+
+BodyItem: TypeAlias = (
+    BlankLine
     | CommentLine
     | UnknownDirective
     | OpaqueBlock
     | OpaqueStatement
-    | End
+    | ParamStatement
+    | ModelStatement
+    | SubcktDefinition
     | Resistor
     | Capacitor
     | Inductor
@@ -207,6 +410,24 @@ TopLevelItem: TypeAlias = (
     | CurrentSource
     | Diode
     | SubcktInstance
+)
+"""An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
+
+TopLevelItem: TypeAlias = (
+    BodyItem
+    | Title
+    | TitleDirective
+    | End
+    | TranDirective
+    | AcDirective
+    | DcDirective
+    | OpDirective
+    | OptionsDirective
+    | TempDirective
+    | IcDirective
+    | NodesetDirective
+    | SaveDirective
+    | MeasureDirective
 )
 
 

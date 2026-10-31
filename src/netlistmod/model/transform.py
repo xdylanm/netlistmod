@@ -12,7 +12,12 @@ Element fields are rules that start with their separator (a "gap"). A field meth
 :class:`_Field` holding the field's node and the end-of-line comments of its gap; each element
 method collects its slots by node type (architecture §6.3 rule 11). Forms the grammar
 recognises only to reject them (RKM without the option, stimulus functions, ``q=``,
-``params:``) raise here, at the position of their token (P13 (c)).
+``params:``, bare ``.param`` expressions, reserved parameter names, a port named ``0`` and the
+statements not allowed in a subcircuit) raise here, at the position of their token (P13 (c)).
+
+Typed dot-commands (decision 0005) use the same field rules, with the keyword in the place of
+the designator. A subcircuit definition is an item whose body items tile the text between its
+header and its ``.ends`` line.
 """
 
 from __future__ import annotations
@@ -21,30 +26,50 @@ from collections.abc import Callable
 from dataclasses import dataclass, replace
 from typing import Any, Literal, NoReturn, TypeVar
 
-from lark import Token, Transformer
+from lark import Token, Transformer, v_args
 from lark.exceptions import VisitError
+from lark.tree import Meta
 
 from netlistmod.dialects import Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
 from netlistmod.grammar.loader import parse_tree
 from netlistmod.model.nodes import (
+    AcDirective,
     BlankLine,
+    BodyItem,
     Capacitor,
     CommentLine,
     CurrentSource,
+    DcDirective,
+    DcSweep,
     Diode,
     End,
+    EndsLine,
+    IcDirective,
     Inductor,
+    MeasureDirective,
+    ModelStatement,
     MutualCoupling,
     Node,
+    NodeCondition,
+    NodesetDirective,
     OpaqueBlock,
     OpaqueStatement,
+    OpDirective,
+    OptionItem,
+    OptionsDirective,
+    OutputVector,
+    ParamStatement,
     ParseResult,
     Resistor,
+    SaveDirective,
+    SubcktDefinition,
     SubcktInstance,
+    TempDirective,
     Title,
     TitleDirective,
     TopLevelItem,
+    TranDirective,
     UnknownDirective,
     VoltageSource,
 )
@@ -53,6 +78,7 @@ from netlistmod.model.values import (
     ElementReference,
     Flag,
     Formula,
+    Identifier,
     ModelReference,
     NumericValue,
     ParamAssignment,
@@ -73,6 +99,11 @@ _RKM_TERMINALS = frozenset({"RKM_R", "RKM_R_MEGA", "RKM_R_MILLI", "RKM_C", "RKM_
 _RKM_SOLVER_MISMATCH = frozenset({"RKM_R_MEGA", "RKM_C_FARAD"})
 # Field tokens: the token of a field rule that is neither a separator nor a comment.
 _GAP_TERMINALS = frozenset({"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT", "EQ"})
+# Names that §2.11.1 reserves and a .param assignment may not define.
+_RESERVED_PARAMS = frozenset({"TIME_KW", "TEMPER_KW", "HERTZ_KW"})
+_BARE_EXPRESSION = (
+    "bare expression in `.param`: write the expression in braces (`{...}`) or single quotes"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,6 +174,45 @@ class _XRest:
 class _Eol:
     end: int
     comments: tuple[Span, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Bare:
+    """A bare ``.param`` expression, recognised only to be rejected; ``span`` covers its text."""
+
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class _ModelParams:
+    """The parenthesized parameter list of a ``.model`` line."""
+
+    params: tuple[ParamAssignment, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _RParen:
+    pass
+
+
+@dataclass(frozen=True, slots=True)
+class _MeasBody:
+    text: str
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class _Header:
+    """A ``.subckt`` line: its fields and comments, and where it ends."""
+
+    element: _Element
+
+
+@dataclass(frozen=True, slots=True)
+class _Ends:
+    name: Token | None
+    comments: tuple[Span, ...]
+    end: int
 
 
 def _span(token: Token) -> Span:
@@ -381,8 +451,8 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def params_keyword(self, children: list[Any]) -> NoReturn:
         raise self._parse_error(
             _field_token(children),
-            "`params:` is not ngspice syntax for a subcircuit call; write the parameters as "
-            "name=value after the subcircuit name",
+            "`params:` is not ngspice syntax for subcircuit parameters; write them as "
+            "name=value without `params:`",
         )
 
     # Elements.
@@ -452,6 +522,289 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         assert isinstance(name, Token)
         subckt = SubcktReference(str(name), _span(name))
         return _XRest((), subckt, element.all(ParamAssignment), element.comments, element.end)
+
+    # Statements and directives (decision 0005). The keyword stands where an element has its
+    # designator, so `_Element` collects their fields too.
+
+    def param_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        assignments = element.all(ParamAssignment)
+        bare = element.optional(_Bare)
+        if bare is not None:
+            raise self._error_at(assignments[-1].value.span.start, _BARE_EXPRESSION)
+        return _Item(
+            element.end,
+            lambda span: ParamStatement(**_dot(element, span), assignments=assignments),
+        )
+
+    def param_def(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> ParamAssignment:
+            if name.type in _RESERVED_PARAMS:
+                raise self._parse_error(
+                    name,
+                    f"`{name}` is a reserved name (time, temper, hertz) and cannot be a parameter",
+                )
+            value = children[-1]
+            if isinstance(value, _Bare):
+                raise self._error_at(value.span.start, _BARE_EXPRESSION)
+            built = self._value(value)
+            name_span = _span(name)
+            return ParamAssignment(
+                str(name), built, Span(name_span.start, built.span.end), name_span
+            )
+
+        return self._field(children, build)
+
+    def core__bare_value(self, children: list[Token]) -> _Bare:
+        return _Bare(Span(_span(children[0]).start, _span(children[-1]).end))
+
+    def bare_tail(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _Bare(_span(token)))
+
+    def model_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        name, model_type = element.all(Token)[:2]
+        paren = element.optional(_ModelParams)
+        params = paren.params if paren is not None else element.all(ParamAssignment)
+        return _Item(
+            element.end,
+            lambda span: ModelStatement(
+                **_dot(element, span),
+                name=str(name),
+                name_span=_span(name),
+                model_type=str(model_type),
+                model_type_span=_span(model_type),
+                params=params,
+                parenthesized=paren is not None,
+            ),
+        )
+
+    def model_paren(self, children: list[Any]) -> _Field:
+        fields = [child for child in children if isinstance(child, _Field)]
+        comments = (*_comment_spans(children), *(c for f in fields for c in f.comments))
+        inner = fields[-1].node
+        if isinstance(inner, _ModelParams):
+            # A gap before the parenthesis: the list is the nested field.
+            return _Field(inner, comments)
+        params = tuple(f.node for f in fields if isinstance(f.node, ParamAssignment))
+        return _Field(_ModelParams(params), comments)
+
+    model_param_first = param
+
+    def rparen(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _RParen())
+
+    def subckt_def(self, children: list[Any]) -> _Item:
+        header: _Header = children[0]
+        items: list[_Item] = children[1:-1]
+        ends: _Ends = children[-1]
+        element = header.element
+        name = element.all(Token)[0]
+
+        def build(span: Span) -> SubcktDefinition:
+            body: list[BodyItem] = []
+            cursor = element.end
+            for item in items:
+                built = item.build(Span(cursor, item.end))
+                assert not isinstance(built, Title | TitleDirective | End)
+                body.append(built)  # type: ignore[arg-type]
+                cursor = item.end
+            ends_name = ends.name
+            return SubcktDefinition(
+                **_dot(element, span),
+                name=str(name),
+                name_span=_span(name),
+                ports=element.all(Node),
+                params=element.all(ParamAssignment),
+                body=tuple(body),
+                ends=EndsLine(
+                    str(ends_name) if ends_name is not None else None,
+                    _span(ends_name) if ends_name is not None else None,
+                    Span(cursor, ends.end),
+                    ends.comments,
+                ),
+                header_span=Span(span.start, element.end),
+            )
+
+        return _Item(ends.end, build)
+
+    def subckt_header(self, children: list[Any]) -> _Header:
+        return _Header(_Element(children))
+
+    def subckt_port(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> Node:
+            if token.type == "ZERO_PORT":
+                raise self._parse_error(
+                    token, "a subcircuit port cannot be `0` (ground); ports are external nodes"
+                )
+            return Node(str(token), _span(token))
+
+        return self._field(children, build)
+
+    @v_args(meta=True)
+    def not_in_subckt(self, meta: Meta, children: list[Any]) -> NoReturn:
+        keyword = str(children[0]) if isinstance(children[0], Token) else ".control"
+        raise self._error_at(
+            meta.start_pos,
+            f"`{keyword}` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)",
+        )
+
+    def ends_line(self, children: list[Any]) -> _Ends:
+        element = _Element(children)
+        return _Ends(element.optional(Token), element.comments, element.end)
+
+    def tran_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        values = element.values()
+        return _Item(
+            element.end,
+            lambda span: TranDirective(
+                **_dot(element, span),
+                tstep=values[0],
+                tstop=values[1],
+                tstart=values[2] if len(values) > 2 else None,
+                tmax=values[3] if len(values) > 3 else None,
+                uic=element.optional(Flag),
+            ),
+        )
+
+    uic = flag
+
+    def ac_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        variation = element.all(Token)[0]
+        points, fstart, fstop = element.values()
+        return _Item(
+            element.end,
+            lambda span: AcDirective(
+                **_dot(element, span),
+                variation=str(variation),
+                variation_span=_span(variation),
+                points=points,
+                fstart=fstart,
+                fstop=fstop,
+            ),
+        )
+
+    def ac_variation(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    meas_analysis = ac_variation
+
+    def dc_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        sweeps = element.all(DcSweep)
+        return _Item(element.end, lambda span: DcDirective(**_dot(element, span), sweeps=sweeps))
+
+    def dc_sweep(self, children: list[_Field]) -> _Field:
+        source = children[0].node
+        assert isinstance(source, Token)
+        start, stop, increment = (child.node for child in children[1:])
+        assert isinstance(start, NumericValue | Formula)
+        assert isinstance(stop, NumericValue | Formula)
+        assert isinstance(increment, NumericValue | Formula)
+        span = Span(_span(source).start, increment.span.end)
+        sweep = DcSweep(str(source), _span(source), start, stop, increment, span)
+        return _Field(sweep, tuple(c for child in children for c in child.comments))
+
+    def op_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        return _Item(element.end, lambda span: OpDirective(**_dot(element, span)))
+
+    def options_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        options = element.all(OptionItem)
+        return _Item(
+            element.end, lambda span: OptionsDirective(**_dot(element, span), options=options)
+        )
+
+    def option_item(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> OptionItem:
+            tokens = _field_tokens(children)
+            value: Value | Identifier | None = None
+            if len(tokens) > 1:
+                token = tokens[-1]
+                value = (
+                    Identifier(str(token), _span(token))
+                    if token.type == "WORD"
+                    else self._value(token)
+                )
+            name_span = _span(name)
+            end = value.span.end if value is not None else name_span.end
+            return OptionItem(str(name), name_span, value, Span(name_span.start, end))
+
+        return self._field(children, build)
+
+    def temp_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        value = element.values()[0]
+        return _Item(element.end, lambda span: TempDirective(**_dot(element, span), value=value))
+
+    def ic_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        conditions = element.all(NodeCondition)
+        return _Item(
+            element.end, lambda span: IcDirective(**_dot(element, span), conditions=conditions)
+        )
+
+    def nodeset_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        conditions = element.all(NodeCondition)
+        return _Item(
+            element.end,
+            lambda span: NodesetDirective(**_dot(element, span), conditions=conditions),
+        )
+
+    def node_condition(self, children: list[Any]) -> _Field:
+        def build(opener: Token) -> NodeCondition:
+            # v( node ) = value: the node is the second field token, the value the last.
+            tokens = _field_tokens(children)
+            value = self._value(tokens[-1])
+            node = Node(str(tokens[1]), _span(tokens[1])) if opener.type == "V_OPEN" else None
+            return NodeCondition(node, value, Span(_span(opener).start, value.span.end))
+
+        return self._field(children, build)
+
+    nodeset_all = node_condition
+
+    def save_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        vectors = element.all(OutputVector)
+        return _Item(
+            element.end, lambda span: SaveDirective(**_dot(element, span), vectors=vectors)
+        )
+
+    def output_vector(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: OutputVector(str(token), _span(token)))
+
+    def meas_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        analysis, result = element.all(Token)[:2]
+        body = element.all(_MeasBody)[0]
+        return _Item(
+            element.end,
+            lambda span: MeasureDirective(
+                **_dot(element, span),
+                analysis=str(analysis),
+                analysis_span=_span(analysis),
+                result=str(result),
+                result_span=_span(result),
+                body_text=body.text,
+                body_span=body.span,
+            ),
+        )
+
+    def meas_body(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        comments = _comment_spans(children)
+        if isinstance(inner, _Field):
+            return _Field(inner.node, (*comments, *inner.comments))
+        # [gap] first text token, then the statement text.
+        first: Token = children[-2]
+        rest: _Rest = inner
+        span = Span(_span(first).start, rest.text_end or _span(first).end)
+        body = _MeasBody(self._source.text[span.start : span.end], span)
+        return _Field(body, (*comments, *rest.comments))
 
     # Helpers.
 
@@ -532,8 +885,10 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         )
 
     def _parse_error(self, token: Token, reason: str) -> ParseError:
+        return self._error_at(_span(token).start, reason)
+
+    def _error_at(self, offset: int, reason: str) -> ParseError:
         source = self._source
-        offset = _span(token).start
         line, column = source.position(offset)
         return ParseError(line, column, source.excerpt(offset), (), reason)
 
@@ -564,6 +919,21 @@ def _common(
         "span": span,
         "trailing_comments": element.comments,
     }
+
+
+def _dot(element: _Element, span: Span) -> dict[str, Any]:
+    """The fields of a typed dot-command; its keyword stands where an element's designator is."""
+    return {
+        "keyword": str(element.designator),
+        "keyword_span": _span(element.designator),
+        "span": span,
+        "trailing_comments": element.comments,
+    }
+
+
+def _field_tokens(children: list[Any]) -> list[Token]:
+    """The tokens of a field rule that are neither separators, comments nor ``=``."""
+    return [c for c in children if isinstance(c, Token) and c.type not in _GAP_TERMINALS]
 
 
 def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseResult:

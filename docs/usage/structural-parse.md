@@ -15,7 +15,12 @@ for item in result.items:
 
 The result is an immutable sequence of typed nodes: `Title`, `TitleDirective`,
 `BlankLine`, `CommentLine`, `UnknownDirective`, `OpaqueStatement`
-(`.include`/`.lib`), `OpaqueBlock` (`.control` or nested `.if`), and `End`.
+(`.include`/`.lib`), `OpaqueBlock` (`.control` or nested `.if`), and `End`, plus
+the element nodes (M3) and the statement and directive nodes (M4:
+`ParamStatement`, `ModelStatement`, `SubcktDefinition`, `TranDirective`,
+`AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`,
+`IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`; see
+[the statement guide](./statements.md)).
 Every node has a character-offset `Span`; together, the spans tile the source.
 The first physical line is always a title. Later `.title` lines are represented
 as `TitleDirective`.
@@ -29,7 +34,7 @@ between them is an error, as is a `+` line after a title, comment, blank line,
 ends in `\\` (with nothing after the backslashes) also continues a statement;
 the next line must start with statement text.
 
-Unknown dot-commands are preserved without interpretation. `.control`,
+Dot-commands that are not typed are preserved without interpretation. `.control`,
 conditional blocks, `.include`, and `.lib` are opaque; the parser does not
 read referenced files. A `.lib name` … `.endl` definition block is not
 recognized in M2. Element lines of the phase 1 letters are parsed since M3

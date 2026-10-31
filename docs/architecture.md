@@ -215,8 +215,8 @@ repo/
 | Family | Examples | Notes |
 |---|---|---|
 | Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
-| Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `End` | Dot-statements with structure the library understands. |
-| Directive | `Directive` (known analysis/control) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). |
+| Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
+| Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/m4-statements.md](design/m4-statements.md). |
 | Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
 
 ### 5.3 Value slots
@@ -289,7 +289,7 @@ A `Line` is one physical line: its typed content (or `None` for blank/comment-on
 
 ### 6.5 Directives
 
-- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`/`.probe`, `.meas`; `.step` for LTspice).
+- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1 phase 1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError`.
 - `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
 - The first physical line is always the `Title` (implicit unless it is a `.title` statement; the node records which). `.title` may also occur later and replaces the displayed title; both source nodes are retained. `.end` is required (Section 6.3, rule 2). See [decision 0002](decisions/0002-grammar-structure-policy.md).
 - An **unknown dot-command** is preserved as `UnknownDirective(raw)`: it is not topology, so preserving it is safe.

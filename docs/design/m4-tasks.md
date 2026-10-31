@@ -1,6 +1,6 @@
 # M4 task list — statements and directives (ngspice)
 
-> **Status:** READY — approved by the maintainer (2026-10-30); section 2 records the decisions.
+> **Status:** READY FOR REVIEW — implemented 2026-10-30 (section 9 is the report); approved by the maintainer (2026-10-30), section 2 records the decisions.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([archive/m2-tasks.md](./archive/m2-tasks.md)) and M3 ([archive/m3-tasks.md](./archive/m3-tasks.md), [m3-elements.md](./m3-elements.md), [decision 0004](../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -102,41 +102,41 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, and `
 
 ### Decisions and design
 
-[ ] **D1 — Decision record 0005: statement and directive grammar.**
+[x] **D1 — Decision record 0005: statement and directive grammar.**
 Record the section 2 outcomes, the subcircuit block and body rules, the new tokens (parentheses, `@`, `#`, brackets) and where they are valid, and the directive typing depth. Amend architecture §5.2 (`SubcktDefinition` contains its body; the directive node family), §6.5 (typed directive list; `.probe` stays unknown) and §6.3 rule 9 if the node-name class changes. Status `proposed` until the maintainer accepts it.
 *Done when:* the record and the architecture agree with the shipped grammar.
 
-[ ] **D2 — Design note `docs/design/m4-statements.md`.**
+[x] **D2 — Design note `docs/design/m4-statements.md`.**
 Final node shapes (3.1), the spec IDs (T9), a manual-form → rule → node-field table per construct, and what each span and sub-span covers. Include body tiling, and say which sub-spans M6 replaces: `.param` values, `.model` parameter values, directive arguments, and whole directive lines for replace and remove (§7.2). Keep it short, as with `m3-elements.md`.
 *Done when:* the maintainer has reviewed it (can run in parallel with S1).
 
-[ ] **S1 — Spike: subcircuit blocks and rejected body directives.**
+[x] **S1 — Spike: subcircuit blocks and rejected body directives.**
 Questions: (a) can `.subckt` … `.ends` nest by recursion under strict LALR, with element and statement lines shared between the top level and the body, without duplicating every line rule? (b) Can the decision 2 directives be recognised inside a body and rejected with a clear, positioned error? (c) Does the unterminated-block error find the innermost open `.subckt`? (d) Spans and tiling of body items, including continued lines and a body that is only comments.
 Acceptance: one design that builds under `strict=True` and passes the section 6 subcircuit rows. Report with evidence if none does.
 
 ### Implementation
 
-[ ] **T1 — `.param`.**
+[x] **T1 — `.param`.**
 One or more `name=value` assignments; values per decision 4. Settle:
 - name characters (§2.11.1 allows `! # $ % [ ] _` after the first letter; `$` also starts an end-of-line comment, §2.4.4; default: `$` ends the name);
 - the reserved names `time`, `temper` and `hertz` (default: `ParseError`);
 - `.param` with no assignment (default: `ParseError`);
 - a repeated name on one line (default: accepted; M5 reports duplicates).
 
-[ ] **T2 — `.subckt` / `.ends`** (after S1).
+[x] **T2 — `.subckt` / `.ends`** (after S1).
 Header (name, ports, defaults), body (decision 2), `.ends` with an optional name, and nesting. Settle: duplicate port names (default: accepted as syntax; M5 diagnostic); a definition with an empty body (default: accepted).
 
-[ ] **T3 — `.model`.**
+[x] **T3 — `.model`.**
 Name, type and parameters, with and without parentheses, commas, and continuation inside the parentheses. Settle: an empty parameter list `D()`; unbalanced parentheses (error at the opener); a parameter without a value; a repeated parameter.
 
-[ ] **T4 — Analyses: `.tran`, `.ac`, `.dc`, `.op`.**
+[x] **T4 — Analyses: `.tran`, `.ac`, `.dc`, `.op`.**
 Per decision 6. Settle:
 - for `.tran`, `uic` without `tstart`/`tmax`, and fields past `tmax`;
 - the `.ac` variation keyword's case;
 - for `.dc`, the sweep source: `TEMP`, a resistor, or any name (default: any name; M5 resolves it);
 - `.op` with arguments (default: `ParseError`).
 
-[ ] **T5 — `.options`, `.temp`, `.ic`, `.nodeset`.**
+[x] **T5 — `.options`, `.temp`, `.ic`, `.nodeset`.**
 Settle:
 - for `.options`, option names (not checked, non-goal 8) and an empty `.options`;
 - for `.temp`, more than one value;
@@ -144,10 +144,10 @@ Settle:
 - `v( node )` with blanks inside the parentheses;
 - a node name in `v(…)`, which follows the M3 name class.
 
-[ ] **T6 — `.save` and `.meas`.**
+[x] **T6 — `.save` and `.meas`.**
 The vector forms of decision 6, and shallow `.meas`/`.measure`. Settle: `.save` with no vectors; a `.meas` analysis outside `dc|ac|tran|sp`; a `.meas` with only the analysis and result name.
 
-[ ] **T7 — Transformer, loader and errors.**
+[x] **T7 — Transformer, loader and errors.**
 - Transformer methods per new rule, dispatching on node type (§6.3 rule 11).
 - `_TERMINAL_NAMES` for every new terminal, and `.subckt` in `_BLOCKS`.
 - The "not allowed inside a subcircuit" error.
@@ -157,7 +157,7 @@ The vector forms of decision 6, and shallow `.meas`/`.measure`. Settle: `.save` 
 
 ### Validation, specs and tests
 
-[ ] **T8 — Solver probes (T8 tier).**
+[x] **T8 — Solver probes (T8 tier).**
 In `tests/solver/`:
 - record the section 7 probes as discrepancy evidence, each paired with what the library does;
 - check that every file in the new accept corpus runs in ngspice 47 without error;
@@ -165,7 +165,7 @@ In `tests/solver/`:
 - check that a `.param` value referenced from an element changes the result as expected (a first M7-style check).
 Update `discrepancies.md` and set `validated_on` in the spec entries.
 
-[ ] **T9 — Spec entries.**
+[x] **T9 — Spec entries.**
 One entry per construct, in the M2/M3 format:
 - `NG-PRM-001` `.param`; `NG-MOD-001` `.model`; `NG-SBD-001` `.subckt`/`.ends` and body rules;
 - `NG-TRN-001`, `NG-ACA-001`, `NG-DCA-001`, `NG-OPP-001` (`.op`);
@@ -173,7 +173,7 @@ One entry per construct, in the M2/M3 format:
 Update `NG-DIR-001` (unknown dot-commands: list what is now typed; `.ends` added to the stray terminators).
 *Done when:* the spec checker passes and every new rule and terminal carries a marker.
 
-[ ] **T10 — Tests and corpus.**
+[x] **T10 — Tests and corpus.**
 - *Corpus:* `statements_basic/` with small netlists covering each construct (including a nested subcircuit with a default and an override, a parenthesized multi-line `.model`, LF and CRLF, continuations and comments), and `statements_rejects/` with one file per reject in section 6 and a manifest giving the expected line and column. Each family has a manifest (origin: authored in this repository; author `xdylanm`, MIT, confirmed by the maintainer on 2026-10-30).
 - *T1:* each sub-span slices back to its text.
 - *T2:* one accept and one reject test per spec entry.
@@ -181,7 +181,7 @@ Update `NG-DIR-001` (unknown dot-commands: list what is now typed; `.ends` added
 - *T5:* extend the M3 Hypothesis oracle to generate `.param`, `.model`, typed directives and (nested) subcircuit blocks with element bodies, comparing kinds, names and nesting against the generator.
 *Done when:* all pass with the 90% coverage gate.
 
-[ ] **T11 — Docs.**
+[x] **T11 — Docs.**
 `CHANGELOG.md`, `README.md` status, `docs/testing.md` (new corpora), the usage doc with an executed example, and the phase plan's M4 heading. Public names get docstrings.
 
 [ ] **T12 — Exit.**
@@ -251,3 +251,93 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
 ## 8. Out of scope for M4
 
 `Document`, `Lines`, indexes, symbol tables, scoping, the topology signature, reference resolution and the diagnostics API (M5); edits and the directive matching and upsert rules (M6, §21); a full `.meas` grammar, `.probe`, `.print`/`.plot`, `.func`, `.global` and the other dot-commands listed in section 1; `.lib name` … `.endl` blocks (still not implemented, decision 0002); the LTspice grammar (M8); expression evaluation (non-goal 6) and model-parameter validation (non-goal 8).
+
+## 9. Report (2026-10-30)
+
+### What changed
+
+- **Grammar** (`core.lark`; `ngspice.lark` imports it by name): `line` is split into
+  `body_line` (allowed in a subcircuit body and at the top level) and `top_statement`.
+  New rules for `.param`, `.model`, `.subckt` … `.ends` (one recursive block), the ten
+  directives, and `not_in_subckt`, which recognises the top-level-only statements in a body
+  so that the transformer rejects them at their keyword. `.ends` joins the stray terminators
+  in the `DOT_NAME` override. Fields reuse the M3 gap design (`x_name`, `value`, `param`,
+  `x_param` are shared with element lines). Strict build is green; **no new lookaround
+  terminal**, so the pinned list is unchanged.
+- **Model:** `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `EndsLine`, the
+  `Directive` base and its ten subclasses with `DcSweep`, `OptionItem`, `NodeCondition`,
+  `OutputVector`; `Identifier` in `values.py`; `BodyItem` and the extended `TopLevelItem`.
+  All exported (`BodyItem` from `netlistmod.model`, like `TopLevelItem`). Shapes:
+  [m4-statements.md](./m4-statements.md).
+- **Loader:** an unterminated `.subckt` is found on the parser stack (the `SUBCKT_KW` token
+  or a reduced `subckt_header`) and reported at its innermost open line; an unclosed `(` or
+  `v(` is reported at the opener when the line ends; terminal names for every new terminal.
+- **Records:** decision [0005](../decisions/0005-statement-and-directive-grammar.md)
+  (proposed); architecture §5.2 and §6.5 amended; 12 new spec entries, `NG-STR-001`,
+  `NG-OPA-001` and `NG-DIR-001` updated; `discrepancies.md`; `provenance.md`.
+- **Tests:** `test_statements.py` (173 cases), a second Hypothesis generator in
+  `test_element_oracle.py` (statements, directives, nested subcircuits with element bodies),
+  `roundtrip/test_ngspice_statements.py` (round-trip, item and body tiling and sub-spans over
+  every accept corpus, the reject manifest), `solver/test_ngspice_solver_statements.py`
+  (section 7 probes, settle probes, closed-form divider with override, `.param` reaching an
+  element, every `statements_basic` file runs). Corpora `statements_basic` (4 files: LF, CRLF,
+  mixed, no final newline) and `statements_rejects` (26). M2/M3 tests that used `.options a`
+  or `.param n1=…` as unknown directives now use `.foo`; the `//` solver probe checks the
+  typed `.param`. The `params:` message now covers `.subckt` too.
+- **Checks:** ruff, ruff format, mypy `--strict`, pre-commit hooks and pytest (823 passed,
+  2 POSIX-only skips, coverage 98%, ngspice 47 required and found) are green.
+
+### Settle decisions (each also in its spec entry)
+
+| Item | Choice | Basis |
+|---|---|---|
+| `.param` name characters (T1) | a letter, then letters, digits and `! # % [ ] _`; `$` ends the name (comment) | §2.11.1, §2.4.4 |
+| `time`, `temper`, `hertz` (T1) | `ParseError` at the name | §2.11.1 |
+| Empty `.param`, `name=` (T1) | rejected | §2.11.1 general form |
+| Repeated name on one line (T1) | accepted (M5 reports duplicates) | task default |
+| `.param` separators (T1) | blanks and continuations; no comma | §2.11.1 "a separating space" |
+| Duplicate ports, empty body (T2) | accepted | task default |
+| `D()` (T3) | accepted, `parenthesized=True`, no params | §2.5 (unspecified parameters take defaults); `observed` ngspice 47 |
+| Unbalanced `(` (T3) | `ParseError` at the opener | task default |
+| Parameter without value (T3) | rejected | §2.5 `pname=pval` |
+| Repeated model parameter (T3) | accepted | syntax only (non-goal 8) |
+| `uic` without `tstart`/`tmax` (T4) | accepted after `tstop`, `tstart` or `tmax` | §11.3.10 `<tstart <tmax>> <uic>` |
+| Fields past `tmax` or after `uic` (T4) | rejected (ngspice 47 also fails) | §11.3.10 |
+| `.ac` variation case (T4) | case-insensitive, recorded as written | keywords are case-insensitive (decision 7) |
+| `.dc` source (T4) | any name; M5 resolves | §11.3.2 (source, resistor or TEMP) |
+| `.op` with arguments (T4) | rejected | §11.3.5 |
+| Option names, empty `.options` (T5) | not checked; empty rejected | non-goal 8; §11.1 general form |
+| `.temp` with more than one value (T5) | rejected | §2.14 `.temp value` |
+| `.ic all=` (T5) | rejected | §11.2.2 has no `all=` |
+| `v( node )` (T5) | blanks inside the parentheses accepted (ignored like other inline blanks); `v (` rejected | `observed` ngspice 47 reads it the same |
+| Node name in `v(…)` (T5) | the M3 name class | §6.3 rule 9 |
+| `.save` with no vectors (T6) | rejected | §11.6.1 general form |
+| `.meas` analysis outside `dc|ac|tran|sp` (T6) | rejected | §11.4.3 |
+| `.meas` with only analysis and result (T6) | rejected | §11.4 (a measurement follows the result) |
+| `.nodeset` mixing `v()` items and `all=` | rejected | §11.2.1 gives them as separate forms |
+
+### Deviations from this task list
+
+- **`.options` values may be names** (`method=gear`, §11.1.4), stored as the new
+  `Identifier`; decision 6 named numbers and formulas only, which would reject a documented
+  form. Recorded in decision 0005 item 6 for the maintainer to confirm.
+- **`.param` names use their own terminal** (`PARAM_NAME`), narrower than the M3 name class
+  (letter first, §2.11.1); `.subckt` defaults keep `WORD`, as on X lines, because ports and
+  default names share one lexer state.
+- **Node shapes** (D2): `DcSweep.span`, `EndsLine.trailing_comments` and the keyword fields
+  on `SubcktDefinition` were added; `Identifier` is new.
+- **Bare-expression detection** also covers a value glued to a number (`1k+a`) and a field
+  after a value (`123 * 3`), so all three section 6 rows are positioned at the value.
+- The fresh-clone run is recorded in the commit that checks off T12.
+
+### Limitations
+
+- A `.meas` body is not parsed; `.save` accepts only the listed vector forms (`vdb(out)` and
+  `v(a, b)` with a blank are rejected).
+- A keyword prefix (`.ac decade …`, `.tran 1n 1u uicx`) fails at the first character after
+  the keyword rather than at the word, because argument keywords are strings without a
+  competing name terminal in their state.
+- Error tokens reported from the contextual lexer's fallback can have odd names in
+  `expected` (for example `title text`), but positions are exact.
+- Model scoping (a `.model` inside a subcircuit is local, §2.6.1), `.ends` name mismatches
+  and duplicate names are M5 diagnostics; the parser accepts them as syntax.

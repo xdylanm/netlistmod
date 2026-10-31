@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+- Parse ngspice statements and directives into typed nodes with spans
+  (decision 0005): `ParamStatement`, `ModelStatement`, `SubcktDefinition` (with
+  its body and `EndsLine`; definitions nest), and the `Directive` subclasses
+  `TranDirective`, `AcDirective`, `DcDirective` (`DcSweep`), `OpDirective`,
+  `OptionsDirective` (`OptionItem`), `TempDirective`, `IcDirective`,
+  `NodesetDirective` (`NodeCondition`), `SaveDirective` (`OutputVector`) and
+  `MeasureDirective` (shallow). New value type `Identifier` for option values
+  such as `method=gear`.
+- Grammar changes that alter what parses: `.param`, `.model`, `.subckt`,
+  `.ends`, `.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`,
+  `.nodeset`, `.save` and `.meas`/`.measure` are no longer `UnknownDirective`
+  and are checked strictly per the manual. Rejected: bare `.param` expressions,
+  the reserved names `time`/`temper`/`hertz`, a `.subckt` port `0`, the analysis,
+  option and output directives, `.control`, `.title` and `.end` inside a
+  subcircuit, a stray `.ends`, and malformed directive arguments. An
+  unterminated `.subckt` and an unclosed `(` are reported at their opener.
+  `.opt`, `.probe`, `.print` and other dot-commands stay `UnknownDirective`.
+- The `params:` error message now covers `.subckt` lines as well as `X` lines.
 - Parse the phase 1 ngspice element lines (R, C, L, K, V, I, D, X) into typed,
   immutable nodes (`Resistor`, …, `SubcktInstance`, base `Component`) with
   value slots (`NumericValue`, `Formula`, `ModelReference`, `ParamAssignment`,

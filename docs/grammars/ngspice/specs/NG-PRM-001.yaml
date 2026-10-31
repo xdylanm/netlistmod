@@ -1,0 +1,40 @@
+id: NG-PRM-001
+dialect: ngspice
+construct: .param assignments
+manual_ref:
+- '[ngspice-manual] §2.11.1 ".param line"'
+- '[ngspice-manual] §2.11.2 "Brace expressions in circuit elements:"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- param_stmt
+- param_def
+- param_value
+- bare_tail
+- PARAM_KW
+- PARAM_NAME
+- TIME_KW
+- TEMPER_KW
+- HERTZ_KW
+- BARE_EXPR
+tests:
+- tests/grammar/ngspice/test_statements.py::test_param_statement_assignments_and_spans
+- tests/grammar/ngspice/test_statements.py::test_malformed_param_statements_are_rejected
+- tests/solver/test_ngspice_solver_statements.py::test_param_values_reach_the_element
+- tests/solver/test_ngspice_solver_statements.py::test_changing_a_param_value_moves_the_result
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: 'One or more name=value assignments separated by blanks or continuations (no comma: §2.11.1 says
+  a separating space). A value is a number, {formula}, ''formula'' or a double-quoted string. A bare expression
+  (a+1k, a, 1k+a, 123 * 3) is a ParseError at the value suggesting braces (decision 0005 item 4); ngspice
+  47 reads the blank-free forms, which is a recorded discrepancy. Settled: a name starts with a letter
+  and continues with letters, digits and ! # % [ ] _ (§2.11.1); $ always starts a comment (§2.4.4), so
+  it ends the name. time, temper and hertz are rejected (§2.11.1); an empty .param and name= are rejected;
+  a repeated name on one line is accepted (M5 reports duplicates).'

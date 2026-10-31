@@ -183,10 +183,10 @@ def test_include_and_lib_cannot_be_continued(
 @pytest.mark.parametrize(
     ("statement", "raw"),
     [
-        (".options a \\\\\nb", ".options a \\\\\nb"),
-        (".options a\\\\\nb", ".options a\\\\\nb"),
-        (".options a \\\\\n    b", ".options a \\\\\n    b"),
-        (".options a \\\\\r\nb", ".options a \\\\\r\nb"),
+        (".foo a \\\\\nb", ".foo a \\\\\nb"),
+        (".foo a\\\\\nb", ".foo a\\\\\nb"),
+        (".foo a \\\\\n    b", ".foo a \\\\\n    b"),
+        (".foo a \\\\\r\nb", ".foo a \\\\\r\nb"),
         (".foo a \\\\\nb \\\\\nc", ".foo a \\\\\nb \\\\\nc"),
         (".foo a \\\\\nb\n+ c", ".foo a \\\\\nb\n+ c"),
         (".foo a\n+ b \\\\\nc", ".foo a\n+ b \\\\\nc"),
@@ -259,11 +259,11 @@ def test_continued_element_line_is_reported_at_its_first_line(continued: str) ->
 
 
 def test_repeated_continuations_and_line_ending_variants_are_accepted() -> None:
-    text = "title\r\n.options a\r\n+ b\n+ c\r\n.end\n"
+    text = "title\r\n.foo a\r\n+ b\n+ c\r\n.end\n"
     result = _parse(text)
     directive = result.items[1]
     assert isinstance(directive, UnknownDirective)
-    assert directive.raw == ".options a\r\n+ b\n+ c"
+    assert directive.raw == ".foo a\r\n+ b\n+ c"
     _assert_spans_tile(text, result.items)
 
 
@@ -317,10 +317,10 @@ def test_trailing_comment_spans_preserve_marker_and_offset(text: str, comment: s
 @pytest.mark.parametrize(
     ("statement", "raw", "comment"),
     [
-        (".param n1=1 // new value", ".param n1=1 ", "// new value"),
-        (".options a // don't", ".options a ", "// don't"),
-        (".options a='x//y'", ".options a='x//y'", None),
-        (".param n1=2//3", ".param n1=2", "//3"),
+        (".foo n1=1 // new value", ".foo n1=1 ", "// new value"),
+        (".foo a // don't", ".foo a ", "// don't"),
+        (".foo a='x//y'", ".foo a='x//y'", None),
+        (".foo n1=2//3", ".foo n1=2", "//3"),
         (".foo a/ /b", ".foo a/ /b", None),
     ],
 )

@@ -1,0 +1,32 @@
+id: NG-OPT-001
+dialect: ngspice
+construct: .options / .option
+manual_ref:
+- '[ngspice-manual] §11.1 "Simulator Variables (.options)"'
+- '[ngspice-manual] §11.1.4 "Transient Analysis Options"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- options_stmt
+- option_item
+- OPTIONS_KW
+- OPTION_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_options_directive_items
+- tests/grammar/ngspice/test_statements.py::test_malformed_option_and_condition_directives_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_other_dot_commands_stay_unknown_directives
+- tests/solver/test_ngspice_solver_statements.py::test_option_spellings
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: '.options and .option (both used in the manual) with name or name=value items separated by blanks
+  or one comma. .opt is not in the manual and stays an UnknownDirective (ngspice 47 accepts it). Option
+  names are not checked (non-goal 8). A value is a number, a formula or a name (METHOD=name, §11.1.4),
+  the last as an Identifier; this extends decision 6 of the task list, which named numbers and formulas
+  only. Settled: an empty .options is rejected (ngspice 47 accepts it: discrepancy).'

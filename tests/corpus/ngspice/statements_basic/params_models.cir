@@ -1,0 +1,24 @@
+M4 parameters and models
+* .param forms (manual 2.11.1 examples, paraphrased)
+.param pippo=5
+.param po=6 pp=7.8 ; two assignments
+.param p={pp}
+.param pop='pp+p'
+.PARAM rload = 2k $ blanks around =
+.param label="txt"
+.param rtop=1k
++ rbot={rtop*2}
+V1 in 0 DC 3
+R1 in out {rtop}
+R2 out 0 {rbot}
+D1 out 0 dfast
+D2 out 0 dslow
+D3 out 0 dcomma
+.model dfast D (is=1e-14 n=1.05)
+.model dslow D(is=1e-15
++ n=1.5 // continued inside the parentheses
++ rs=10)
+.MODEL dcomma d is=1e-14, n=1.2
+.model rsemi R tc1=0.001
+.op
+.end

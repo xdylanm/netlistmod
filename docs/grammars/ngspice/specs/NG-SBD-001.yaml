@@ -1,0 +1,50 @@
+id: NG-SBD-001
+dialect: ngspice
+construct: .subckt ... .ends definitions and their bodies
+manual_ref:
+- '[ngspice-manual] §2.6.1 ".SUBCKT Line"'
+- '[ngspice-manual] §2.6.2 ".ENDS Line"'
+- '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- subckt_def
+- subckt_header
+- subckt_port
+- subckt_item
+- not_in_subckt
+- ends_line
+- SUBCKT_KW
+- ENDS_KW
+- ZERO_PORT
+tests:
+- tests/grammar/ngspice/test_statements.py::test_subcircuit_definition_fields_body_and_spans
+- tests/grammar/ngspice/test_statements.py::test_subcircuit_ends_name_is_recorded_not_checked
+- tests/grammar/ngspice/test_statements.py::test_nested_subcircuits_and_allowed_body_items
+- tests/grammar/ngspice/test_statements.py::test_statements_not_allowed_in_a_subcircuit_are_rejected_at_the_keyword
+- tests/grammar/ngspice/test_statements.py::test_end_inside_a_subcircuit_is_rejected
+- tests/grammar/ngspice/test_statements.py::test_malformed_subcircuit_lines_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_unterminated_subcircuit_is_reported_at_its_innermost_open_line
+- tests/grammar/ngspice/test_statements.py::test_stray_ends_is_rejected
+- tests/roundtrip/test_ngspice_statements.py::test_nested_definition_and_multi_line_model_in_the_corpus
+- tests/solver/test_ngspice_solver_statements.py::test_subcircuit_default_and_instance_override
+- tests/solver/test_ngspice_solver_statements.py::test_nested_subcircuit_definition_runs
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/solver/test_ngspice_solver_statements.py::test_solver_and_library_both_reject
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: 'One block, nested by recursion; SubcktDefinition contains its body, whose items tile the text
+  between the header and the .ends line. Header: name, at least one port (a port 0 is rejected, §2.6.1;
+  ngspice 47 accepts it: discrepancy), then name=value defaults (number, formula or double-quoted string,
+  as on X lines); params: is rejected. Body: elements, comments, blank lines, .param, .model, nested .subckt,
+  .include/.lib, .if blocks and unknown dot-commands. The analysis, option and output directives, .control,
+  .title and .end are rejected at their keyword (decision 0005 item 2; ngspice 47 accepts .tran and .op
+  in a body: discrepancy). .ends takes an optional name that is recorded and not checked (§2.6.2). An
+  unterminated .subckt is reported at its innermost open line; a stray .ends is a ParseError. Settled:
+  duplicate port names and an empty body are accepted.'

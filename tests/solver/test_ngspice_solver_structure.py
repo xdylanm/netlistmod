@@ -5,7 +5,16 @@ from pathlib import Path
 
 import pytest
 
-from netlistmod import Dialect, ParseError, SourceText, Title, UnsupportedConstruct, parse
+from netlistmod import (
+    Dialect,
+    ParamStatement,
+    ParseError,
+    SourceText,
+    Span,
+    Title,
+    UnsupportedConstruct,
+    parse,
+)
 from tests.support.solvers import Solver, run_ngspice
 
 pytestmark = pytest.mark.solver("ngspice")
@@ -229,9 +238,13 @@ def test_double_slash_comment_needs_no_preceding_space(
     code, log = _run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", source_line))
     assert code == 0, log
     assert float(_voltage(log)) == pytest.approx(2.0)
-    directive = source_line.replace("V1 in 0 DC", ".param v=")
-    result = parse(SourceText(f"probe circuit\n{directive}\n.end\n"), Dialect.NGSPICE)
-    assert getattr(result.items[1], "raw", None) == directive[: directive.index("//")]
+    directive = source_line.replace("V1 in 0 DC ", ".param v=")
+    text = f"probe circuit\n{directive}\n.end\n"
+    statement = parse(SourceText(text), Dialect.NGSPICE).items[1]
+    assert isinstance(statement, ParamStatement)
+    assert statement.assignments[0].value.text == "2"
+    marker = text.index("//")
+    assert statement.trailing_comments == (Span(marker, text.index("\n", marker)),)
 
 
 def test_include_path_is_cut_at_double_slash_unless_quoted(solver: Solver, tmp_path: Path) -> None:

@@ -1,0 +1,4 @@
+M4 reject
+V1 in 0 DC 1
+.meas foo x MAX v(1)
+.end

@@ -1,0 +1,26 @@
+id: NG-DCA-001
+dialect: ngspice
+construct: .dc transfer function
+manual_ref:
+- '[ngspice-manual] §11.3.2 ".DC: DC Transfer Function"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- dc_stmt
+- dc_sweep
+- DOT_DC_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_dc_directive_sweeps
+- tests/grammar/ngspice/test_statements.py::test_malformed_analyses_are_rejected
+- tests/solver/test_ngspice_solver_statements.py::test_solver_and_library_both_reject
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: '.dc source start stop increment, optionally a second sweep. Settled: the source is any name (an
+  independent source, a resistor or TEMP per §11.3.2); M5 resolves it. A third sweep or a missing value
+  is rejected.'

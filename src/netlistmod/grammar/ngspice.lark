@@ -2,8 +2,8 @@
 // %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
 // used by this dialect is imported by name, which keeps tree and token names unprefixed.
 
-%import .core (start, first_line, line, statement, title_stmt, unknown_stmt, rest, line_rest)
-%import .core (end_stmt, trailer)
+%import .core (start, first_line, line, body_line, statement, top_statement, title_stmt)
+%import .core (unknown_stmt, rest, line_rest, end_stmt, trailer)
 %import .core (WS, LINE_END, CONT, NL, BS_CONT, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
 %import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
 %import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
@@ -14,21 +14,32 @@
 %import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME, R_KW, RESISTANCE_KW)
 %import .core (C_NAME, C_KW, CAPACITANCE_KW, L_NAME, L_KW, INDUCTANCE_KW, K_NAME, L_REF, V_NAME)
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, STIMULUS_KW, Q_KW, PARAMS_KW)
+%import .core (param_stmt, param_def, param_value, bare_tail, PARAM_KW, PARAM_NAME, TIME_KW)
+%import .core (TEMPER_KW, HERTZ_KW, BARE_EXPR)
+%import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
+%import .core (subckt_def, subckt_header, subckt_port, subckt_item, not_in_subckt, ends_line)
+%import .core (SUBCKT_KW, ENDS_KW, ZERO_PORT)
+%import .core (tran_stmt, uic, TRAN_KW, UIC_KW, ac_stmt, ac_variation, DOT_AC_KW, DEC_KW)
+%import .core (OCT_KW, LIN_KW, dc_stmt, dc_sweep, DOT_DC_KW, op_stmt, OP_KW)
+%import .core (options_stmt, option_item, OPTIONS_KW, OPTION_KW, temp_stmt, TEMP_KW)
+%import .core (ic_stmt, nodeset_stmt, node_condition, nodeset_all, IC_KW, NODESET_KW, V_OPEN)
+%import .core (ALL_KW, save_stmt, output_vector, SAVE_KW, OUTPUT_VECTOR)
+%import .core (meas_stmt, meas_analysis, meas_body, MEAS_KW, MEASURE_KW, TRAN_ANALYSIS_KW, SP_KW)
 
 %ignore WS
 %ignore CONT
 
 // Element lines of the phase 1 letters (M3, decision 0004); other letters stay errors. They
-// extend `line` directly rather than `statement`, which saves a unit reduction per line.
+// extend `body_line` directly rather than `statement`, which saves a unit reduction per line.
 // spec: NG-STR-001
-%extend line: resistor
-            | capacitor
-            | inductor
-            | mutual_coupling
-            | voltage_source
-            | current_source
-            | diode
-            | subckt_instance
+%extend body_line: resistor
+                 | capacitor
+                 | inductor
+                 | mutual_coupling
+                 | voltage_source
+                 | current_source
+                 | diode
+                 | subckt_instance
 
 // .include and .lib cannot be continued (manual §2.4.5): they end with LINE_END, not NL.
 // spec: NG-OPA-002
@@ -37,9 +48,12 @@
 include_stmt: INCLUDE_KW line_rest LINE_END
 lib_stmt: LIB_KW line_rest LINE_END
 
+// A .control block is top-level only; inside a subcircuit it is recognised and rejected
+// (decision 0005). An .if block may stand in a subcircuit body.
 // spec: NG-OPA-001
-%extend statement: control_block
-                 | if_block
+%extend top_statement: control_block
+%extend statement: if_block
+%extend not_in_subckt: control_block
 control_block: CONTROL_KW BLOCK_TEXT? NL control_line* ENDC_KW BLOCK_TEXT? NL
 control_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
             | BLOCK_TEXT NL
@@ -62,7 +76,8 @@ ENDIF_KW.4: ".endif"i
 BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
 BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
 
-// Outside a block, a block delimiter name is not a directive: a stray .endc, .endif, .else or
-// .elseif at the top level must be a syntax error.
+// Outside a block, a block delimiter name is not a directive: a stray .endc, .endif, .else,
+// .elseif or .ends at the top level must be a syntax error. Inside a subcircuit body .ends is
+// ENDS_KW, which DOT_NAME then no longer shadows.
 // spec: NG-DIR-001
-%override DOT_NAME.4: /\.(?!(?:endc|endif|else|elseif)(?![a-z0-9_-]))[a-z][a-z0-9_-]*/i
+%override DOT_NAME.4: /\.(?!(?:endc|endif|else|elseif|ends)(?![a-z0-9_-]))[a-z][a-z0-9_-]*/i

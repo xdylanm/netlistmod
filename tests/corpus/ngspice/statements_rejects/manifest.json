@@ -1,0 +1,192 @@
+{
+  "family": "statements_rejects",
+  "origin": "Authored in this repository for the M4 ngspice statement and directive grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-30",
+  "notes": "Each fixture holds one malformed statement or directive (section 6 of docs/design/m4-tasks.md); line and column are 1-based. 'error' is ParseError or UnsupportedConstruct.",
+  "fixtures": {
+    "param_bare_expression.cir": {
+      "sha256": "6560c3d75312f562c3cccb101b04c35a036481b55f982bdc641ec1188c19fba8",
+      "line": 4,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".param c = a+1k"
+    },
+    "param_bare_identifier.cir": {
+      "sha256": "5dbdccfbdf4d11490132325c94b633e944d376056d8098102789ad45581891a4",
+      "line": 4,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".param c = a"
+    },
+    "param_bare_spaced.cir": {
+      "sha256": "840126afc5abaee1132975311a470ba7bc99ac952e81d929d2bedacf7af770f4",
+      "line": 3,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".param a = 123 * 3"
+    },
+    "param_empty.cir": {
+      "sha256": "f0c935806ad2299a391a90770c6f59acfe956464620e292f6d1ce80129874d8e",
+      "line": 3,
+      "column": 7,
+      "error": "ParseError",
+      "note": ".param"
+    },
+    "param_without_value.cir": {
+      "sha256": "60228e1723a1ca61004ed2acbefd01bbbaebd2e1a67e55aa2679531b6f783f19",
+      "line": 3,
+      "column": 10,
+      "error": "ParseError",
+      "note": ".param x="
+    },
+    "param_reserved_name.cir": {
+      "sha256": "2c741a6779ca310f34ad9c5821308adefc32136dbf41cffbf5b01fc9388a5bad",
+      "line": 3,
+      "column": 8,
+      "error": "ParseError",
+      "note": ".param time=1"
+    },
+    "model_unbalanced.cir": {
+      "sha256": "b75e61ffbf38a708da1e889d3b755dd6aa3ea3de361e71a760b6f6d2826dedbe",
+      "line": 3,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".model dm D(is=1e-14"
+    },
+    "model_without_type.cir": {
+      "sha256": "5bdc6f2d30e259f277ba9303701d3920f9c041647b44f7701daa8439cb5c4f62",
+      "line": 3,
+      "column": 10,
+      "error": "ParseError",
+      "note": ".model dm"
+    },
+    "model_empty.cir": {
+      "sha256": "a25abd5e4dc992b9a8072177a46084c8f47a15f64a5722cad08bbc9941f7bbaf",
+      "line": 3,
+      "column": 7,
+      "error": "ParseError",
+      "note": ".model"
+    },
+    "subckt_analysis_in_body.cir": {
+      "sha256": "dc533c665f1f4b02c69681ebddfadeb4005373a1f1811538c4e4032b578593bc",
+      "line": 5,
+      "column": 1,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "subckt_control_in_body.cir": {
+      "sha256": "3b16a0913d36291870550758e25424500eb1ef769253dd47bb9182c28d4b3f0c",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "subckt_zero_port.cir": {
+      "sha256": "e78bb6e172748c6fc9b0f1c7e03436b1cdb4fb1ba39239f106eaa1a7fe37163b",
+      "line": 3,
+      "column": 15,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "subckt_no_ports.cir": {
+      "sha256": "d7708861a30175b9cdbe475216cb2aa0857934979f52dbbb9249b7ee327b0875",
+      "line": 3,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "subckt_params_keyword.cir": {
+      "sha256": "03d30e781bc9b7d44ee8559a610a068125449cd027e3758f4fd752e49b2d958d",
+      "line": 3,
+      "column": 17,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "subckt_unterminated.cir": {
+      "sha256": "91f67ab9b7af46422c4475e470883b812473caad5abad28e14e417c3ff6d9945",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "missing .ends"
+    },
+    "stray_ends.cir": {
+      "sha256": "0cca373e871bfe648e176a2ef099f331b03f5a65f6f0b23a4463f4eecc7c5be1",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": ".ends"
+    },
+    "tran_one_value.cir": {
+      "sha256": "97652de506a5353536e90b1dd155724676f4173e937c12d870253b00036c5cf6",
+      "line": 3,
+      "column": 10,
+      "error": "ParseError",
+      "note": ".tran 1ns"
+    },
+    "ac_missing_stop.cir": {
+      "sha256": "e6bf0797803443863629b30abd2d1051f2f856a06f6947b09fbc1e2b8d4215af",
+      "line": 3,
+      "column": 13,
+      "error": "ParseError",
+      "note": ".ac dec 10 1"
+    },
+    "ac_unknown_variation.cir": {
+      "sha256": "0692571d71388f980374b7ff4900fa82b650c931893447bd29c0ee80b8ff366e",
+      "line": 3,
+      "column": 5,
+      "error": "ParseError",
+      "note": ".ac log 10 1 1k"
+    },
+    "dc_missing_increment.cir": {
+      "sha256": "7802840284a16a71bff6b80b40f03b94c4d33f5e5bee8c9201a5bf61300a558e",
+      "line": 3,
+      "column": 12,
+      "error": "ParseError",
+      "note": ".dc VIN 0 5"
+    },
+    "op_argument.cir": {
+      "sha256": "c9d93b54f30481c02e8780098f11f4fb91d12c459b5684cccc2faca1fbc5115a",
+      "line": 3,
+      "column": 5,
+      "error": "ParseError",
+      "note": ".op 1"
+    },
+    "ic_all.cir": {
+      "sha256": "643dd79096a8969009d3a6af4626936424e7af0e2dcb5d0ccee82cbca0b622e8",
+      "line": 3,
+      "column": 5,
+      "error": "ParseError",
+      "note": ".ic all=1"
+    },
+    "ic_without_value.cir": {
+      "sha256": "db0a0352f54e15fbefb493b7ca6d695d9bd63ec8c192fb767bf14b39616c0d10",
+      "line": 3,
+      "column": 9,
+      "error": "ParseError",
+      "note": ".ic v(1)"
+    },
+    "ic_unclosed.cir": {
+      "sha256": "40d69814f8fe48fb369294c0c97af89ed484446d90141e21ba5919e955b35f68",
+      "line": 3,
+      "column": 8,
+      "error": "ParseError",
+      "note": ".ic v(1=5"
+    },
+    "meas_unknown_analysis.cir": {
+      "sha256": "64cfe7e33ee850ad7eddcb04f7ee01092e10b089716b7e7bb29ca607bf96a75b",
+      "line": 3,
+      "column": 7,
+      "error": "ParseError",
+      "note": ".meas foo x MAX v(1)"
+    },
+    "meas_without_result.cir": {
+      "sha256": "54a1b97881da55dbc653ee17b59c386792f7b650114819cf3da650fc666da2d5",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": ".meas tran"
+    }
+  }
+}

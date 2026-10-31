@@ -1,0 +1,28 @@
+id: NG-SAV-001
+dialect: ngspice
+construct: .save output vectors
+manual_ref:
+- '[ngspice-manual] §11.6.1 ".SAVE: Name vector(s) to be saved in raw file"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- save_stmt
+- output_vector
+- SAVE_KW
+- OUTPUT_VECTOR
+tests:
+- tests/grammar/ngspice/test_statements.py::test_save_directive_vectors
+- tests/grammar/ngspice/test_statements.py::test_malformed_save_directives_are_rejected
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: 'Vectors are kept as text with a span: v(n), v(n1,n2), i(src), @dev[param], or a name (which covers
+  src#branch and all). Other functions such as vdb(out) and blanks inside the parentheses are rejected
+  (narrow reading of the listed forms). Settled: an empty .save is rejected (ngspice 47 accepts it: discrepancy).
+  .probe stays unknown.'

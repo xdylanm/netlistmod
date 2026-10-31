@@ -1,0 +1,14 @@
+{
+  "family": "statements_basic",
+  "origin": "Authored in this repository for the M4 ngspice statement and directive grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-10-30",
+  "notes": "One small netlist per group of statements and directives; manual examples are paraphrased. LF, CRLF and mixed line endings, a missing final newline, + and \\\\ continuations, trailing comments, a nested subcircuit with a default and an override, and a parenthesized multi-line .model. Every file runs in ngspice 47.",
+  "fixtures": {
+    "params_models.cir": "12c21e46c05fc1dcfbbdbf851b3336e1be3fa431095a1d91e885c85677c62d4c",
+    "subcircuits.cir": "44c6593dd5d793d3938f0e7d17ec7f8b5547891d715a83b1b3bffa8ff9f462ae",
+    "analyses.cir": "707300540b02da10c8370be2761ebf5271a882488cc849e929e5a94d388f6d40",
+    "continuations.cir": "49ac6023ed988d90749035fca8c813dbc6e9376abca19c66c14953b13f929b7f"
+  }
+}

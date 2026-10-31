@@ -1,0 +1,28 @@
+id: NG-TRN-001
+dialect: ngspice
+construct: .tran transient analysis
+manual_ref:
+- '[ngspice-manual] §11.3.10 ".TRAN: Transient Analysis"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- tran_stmt
+- uic
+- TRAN_KW
+- UIC_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_tran_directive_fields
+- tests/grammar/ngspice/test_statements.py::test_malformed_analyses_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_statements_not_allowed_in_a_subcircuit_are_rejected_at_the_keyword
+- tests/solver/test_ngspice_solver_statements.py::test_solver_and_library_both_reject
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: '.tran tstep tstop [tstart [tmax]] [uic]; values are numbers or formulas. Settled: uic may follow
+  tstop, tstart or tmax (the general form makes it independent of the optional times); a field after tmax
+  or after uic is rejected (ngspice 47 also fails).'

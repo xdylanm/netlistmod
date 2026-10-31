@@ -67,7 +67,11 @@ class ElementReference:
 
 @dataclass(frozen=True, slots=True)
 class ParamAssignment:
-    """An instance parameter ``name=value``; ``span`` runs from the name to the end of the value."""
+    """A ``name=value`` parameter; ``span`` runs from the name to the end of the value.
+
+    Used for instance parameters, ``.param`` assignments, ``.model`` parameters and ``.subckt``
+    default values.
+    """
 
     name: str
     value: Value
@@ -76,8 +80,16 @@ class ParamAssignment:
 
 
 @dataclass(frozen=True, slots=True)
+class Identifier:
+    """A bare name used as a value, such as the ``gear`` of ``.options method=gear``."""
+
+    name: str
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
 class Flag:
-    """A keyword flag on an element line, such as a diode's ``off``."""
+    """A keyword flag, such as a diode's ``off`` or the ``uic`` of ``.tran``."""
 
     name: str
     span: Span

@@ -7,9 +7,13 @@ status: validated
 grammar:
   - start
   - line
+  - body_line
   - statement
+  - top_statement
   - WS
 tests:
   - tests/grammar/ngspice/test_structure.py::test_end_is_required_last_and_allows_no_final_newline_or_blank_trailers
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
-notes: A non-empty first physical line is required, and the source must end with .end.
+  - tests/grammar/ngspice/test_statements.py::test_nested_subcircuits_and_allowed_body_items
+  - tests/grammar/ngspice/test_statements.py::test_statements_not_allowed_in_a_subcircuit_are_rejected_at_the_keyword
+notes: A non-empty first physical line is required, and the source must end with .end. A line is a body line (allowed at the top level and inside a subcircuit definition, NG-SBD-001) or a top-level-only statement (.title, the analysis, option and output directives, .control).

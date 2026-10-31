@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 USAGE = Path(__file__).parents[1] / "docs" / "usage"
-EXECUTED = ["elements.md"]
+EXECUTED = ["elements.md", "statements.md"]
 
 
 @pytest.mark.parametrize("name", EXECUTED)

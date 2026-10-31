@@ -26,14 +26,36 @@ first_line: TITLE_KW TITLE_ARG? LINE_END    -> explicit_title
           | TITLE_TEXT LINE_END             -> implicit_title
           | LINE_END                        -> empty_title
 
+// A line is a body line (allowed at the top level and inside a subcircuit definition) or a
+// top-level-only statement (decision 0005): .title, the analysis, option and output directives,
+// and (ngspice overlay) .control blocks.
 // spec: NG-STR-001
-?line: LINE_END                             -> blank_line
-    | COMMENT_LINE LINE_END                 -> comment_line
-    | statement
+?line: body_line
+     | top_statement
 
 // spec: NG-STR-001
-?statement: title_stmt
-          | unknown_stmt
+?body_line: LINE_END                        -> blank_line
+          | COMMENT_LINE LINE_END           -> comment_line
+          | statement
+
+// spec: NG-STR-001
+?statement: unknown_stmt
+          | param_stmt
+          | model_stmt
+          | subckt_def
+
+// spec: NG-STR-001
+?top_statement: title_stmt
+              | tran_stmt
+              | ac_stmt
+              | dc_stmt
+              | op_stmt
+              | options_stmt
+              | temp_stmt
+              | ic_stmt
+              | nodeset_stmt
+              | save_stmt
+              | meas_stmt
 
 // spec: NG-TTL-001
 title_stmt: TITLE_KW TITLE_ARG? LINE_END
@@ -283,3 +305,152 @@ params_keyword: (SEP | CSEP | BS_CONT) PARAMS_KW rest NL
 STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm|am|trnoise|trrandom|external|port|distof1|distof2/i
 Q_KW.2: "q"i
 PARAMS_KW.2: "params:"i
+
+// ---------------------------------------------------------------------------------------------
+// Statements and directives (M4; decision 0005). Every one is a continuable statement ended by
+// NL, and its fields reuse the element field design: each field rule starts with its own gap, so
+// the field's token is lexed in a state that offers only the terminals valid there. Keywords are
+// strings at DOT_NAME's priority (4), so Lark re-types an exact, case-insensitive DOT_NAME match;
+// a dot-command that is not one of them stays an unknown_stmt. Argument keywords (uic, dec, all,
+// ...) are strings at WORD's priority (2) and are valid only where the rule names them.
+
+// .param: one or more name=value assignments separated by blanks (manual §2.11.1). A value is a
+// number, a brace or single-quoted formula or a double-quoted string. A bare expression is
+// recognised (BARE_EXPR, the lowest priority, tried after every value terminal) only to be
+// rejected with a hint to use braces: in place of a value, glued to a number (a+1k, 1k+a), or as
+// a field after a value (123 * 3). The reserved names time, temper and hertz are rejected.
+// spec: NG-PRM-001
+param_stmt: PARAM_KW param_def+ (NL | eol | bare_tail)
+param_def: (SEP | BS_CONT) (PARAM_NAME | TIME_KW | TEMPER_KW | HERTZ_KW) EQ param_value
+         | (SEP | TRAILING_COMMENT | BS_CONT) param_def
+?param_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE
+            | BARE_EXPR -> bare_value
+            | NUMBER BARE_EXPR -> bare_value
+bare_tail: (SEP | BS_CONT) BARE_EXPR rest NL
+         | (SEP | TRAILING_COMMENT | BS_CONT) bare_tail
+PARAM_KW.4: ".param"i
+PARAM_NAME.2: /[A-Za-z][A-Za-z0-9_!#%\[\]]*/
+TIME_KW.2: "time"i
+TEMPER_KW.2: "temper"i
+HERTZ_KW.2: "hertz"i
+BARE_EXPR.1: /(?:[^ \t\r\n;$\\\/'"{}]|\/[^ \t\r\n;$\\\/'"{}])+/
+
+// .model name type, then parameters with or without parentheses (§2.5, §3.2.2). Parameters are
+// name=value fields separated by blanks or commas; inside parentheses the first one may follow
+// "(" directly. LPAR and RPAR are valid only here and in v(...) (NG-ICN-001); a parenthesis
+// anywhere else is still a syntax error.
+// spec: NG-MOD-001
+model_stmt: MODEL_KW x_name x_name param* (NL | eol)
+          | MODEL_KW x_name x_name model_paren (NL | eol)
+model_paren: LPAR (model_param_first param*)? rparen
+           | (SEP | TRAILING_COMMENT | BS_CONT) model_paren
+model_param_first: WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+                 | (SEP | TRAILING_COMMENT | BS_CONT) model_param_first
+rparen: RPAR
+      | (SEP | TRAILING_COMMENT | BS_CONT) rparen
+MODEL_KW.4: ".model"i
+LPAR: "("
+RPAR: ")"
+
+// .subckt name ports [defaults] ... .ends [name] (§2.6.1, §2.6.2, §2.11.3). The block nests by
+// recursion: a definition is a statement, so it may stand in another definition's body. A body
+// holds body lines only; the top-level-only statements are recognised in a body so that the
+// transformer can reject them at their keyword (not_in_subckt). A port named 0 is recognised
+// (ZERO_PORT, re-typed from WORD) and rejected. Defaults are subcircuit-call parameters
+// (x_param); "params:" is rejected as on an X line.
+// spec: NG-SBD-001
+subckt_def: subckt_header subckt_item* ends_line
+subckt_header: SUBCKT_KW x_name subckt_port+ x_param* (NL | eol | params_keyword)
+subckt_port: (SEP | CSEP | BS_CONT) (WORD | ZERO_PORT)
+           | (SEP | TRAILING_COMMENT | BS_CONT) subckt_port
+?subckt_item: body_line
+            | not_in_subckt
+not_in_subckt: (TITLE_KW | TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | OPTIONS_KW | OPTION_KW) rest NL
+             | (TEMP_KW | IC_KW | NODESET_KW | SAVE_KW | MEAS_KW | MEASURE_KW | END_KW) rest NL
+ends_line: ENDS_KW x_name? (NL | eol)
+SUBCKT_KW.4: ".subckt"i
+ENDS_KW.4: ".ends"i
+ZERO_PORT.2: "0"
+
+// .tran tstep tstop [tstart [tmax]] [uic] (§11.3.10).
+// spec: NG-TRN-001
+tran_stmt: TRAN_KW value value (value value?)? uic? (NL | eol)
+uic: (SEP | CSEP | BS_CONT) UIC_KW
+   | (SEP | TRAILING_COMMENT | BS_CONT) uic
+TRAN_KW.4: ".tran"i
+UIC_KW.2: "uic"i
+
+// .ac dec|oct|lin points fstart fstop (§11.3.1).
+// spec: NG-ACA-001
+ac_stmt: DOT_AC_KW ac_variation value value value (NL | eol)
+ac_variation: (SEP | CSEP | BS_CONT) (DEC_KW | OCT_KW | LIN_KW)
+            | (SEP | TRAILING_COMMENT | BS_CONT) ac_variation
+DOT_AC_KW.4: ".ac"i
+DEC_KW.2: "dec"i
+OCT_KW.2: "oct"i
+LIN_KW.2: "lin"i
+
+// .dc source start stop increment [source2 start2 stop2 increment2] (§11.3.2). The source is
+// any name (a source, a resistor or TEMP); references are resolved in M5.
+// spec: NG-DCA-001
+dc_stmt: DOT_DC_KW dc_sweep dc_sweep? (NL | eol)
+dc_sweep: x_name value value value
+DOT_DC_KW.4: ".dc"i
+
+// .op takes no arguments (§11.3.5).
+// spec: NG-OPP-001
+op_stmt: OP_KW (NL | eol)
+OP_KW.4: ".op"i
+
+// .options (or .option) name or name=value items (§11.1). A value is a number, a formula or a
+// name (METHOD=name, §11.1.4). Option names are not checked.
+// spec: NG-OPT-001
+options_stmt: (OPTIONS_KW | OPTION_KW) option_item+ (NL | eol)
+option_item: (SEP | CSEP | BS_CONT) WORD (EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | WORD))?
+           | (SEP | TRAILING_COMMENT | BS_CONT) option_item
+OPTIONS_KW.4: ".options"i
+OPTION_KW.4: ".option"i
+
+// .temp value (§2.14): exactly one value.
+// spec: NG-TMP-001
+temp_stmt: TEMP_KW value (NL | eol)
+TEMP_KW.4: ".temp"i
+
+// .ic and .nodeset: v(node)=value items (§11.2.2, §11.2.1); .nodeset also all=value. The node
+// is a name of the element node class (NG-NOD-001).
+// spec: NG-ICN-001
+ic_stmt: IC_KW node_condition+ (NL | eol)
+nodeset_stmt: NODESET_KW node_condition+ (NL | eol)
+            | NODESET_KW nodeset_all (NL | eol)
+node_condition: (SEP | CSEP | BS_CONT) V_OPEN WORD RPAR EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+              | (SEP | TRAILING_COMMENT | BS_CONT) node_condition
+nodeset_all: (SEP | CSEP | BS_CONT) ALL_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+           | (SEP | TRAILING_COMMENT | BS_CONT) nodeset_all
+IC_KW.4: ".ic"i
+NODESET_KW.4: ".nodeset"i
+V_OPEN.2: /[vV]\(/
+ALL_KW.2: "all"i
+
+// .save vectors (§11.6.1): v(n), v(n1,n2), i(src), @dev[param], or a name (which includes
+// src#branch and all). Each vector is one token, kept as text. Alternatives are tried in order,
+// so the bracketed forms are matched before a plain name.
+// spec: NG-SAV-001
+save_stmt: SAVE_KW output_vector+ (NL | eol)
+output_vector: (SEP | CSEP | BS_CONT) OUTPUT_VECTOR
+             | (SEP | TRAILING_COMMENT | BS_CONT) output_vector
+SAVE_KW.4: ".save"i
+OUTPUT_VECTOR.2: /[vViI]\(/ _WUNIT+ ("," _WUNIT+)? ")" | "@" _WUNIT+ "[" _WUNIT+ "]" | _WUNIT+
+
+// .meas (or .measure) analysis result body (§11.4), typed shallowly: the analysis keyword and
+// the result name are fields; the rest of the statement is statement text (NG-TXT-001) and must
+// not be empty.
+// spec: NG-MEA-001
+meas_stmt: (MEAS_KW | MEASURE_KW) meas_analysis x_name meas_body NL
+meas_analysis: (SEP | CSEP | BS_CONT) (DC_KW | AC_KW | TRAN_ANALYSIS_KW | SP_KW)
+             | (SEP | TRAILING_COMMENT | BS_CONT) meas_analysis
+meas_body: (SEP | CSEP | BS_CONT) (TEXT | QUOTED) rest
+         | (SEP | TRAILING_COMMENT | BS_CONT) meas_body
+MEAS_KW.4: ".meas"i
+MEASURE_KW.4: ".measure"i
+TRAN_ANALYSIS_KW.2: "tran"i
+SP_KW.2: "sp"i

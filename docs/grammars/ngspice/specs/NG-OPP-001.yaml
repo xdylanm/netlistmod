@@ -1,0 +1,24 @@
+id: NG-OPP-001
+dialect: ngspice
+construct: .op operating point
+manual_ref:
+- '[ngspice-manual] §11.3.5 ".OP: Operating Point Analysis"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- op_stmt
+- OP_KW
+tests:
+- tests/grammar/ngspice/test_statements.py::test_op_directive
+- tests/grammar/ngspice/test_statements.py::test_malformed_analyses_are_rejected
+- tests/solver/test_ngspice_solver_statements.py::test_solver_runs_these_and_the_library_follows_the_manual
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: '.op takes no arguments. Settled: .op with an argument is rejected (the general form has none);
+  ngspice 47 ignores the argument: discrepancy.'

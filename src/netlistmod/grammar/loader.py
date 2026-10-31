@@ -21,13 +21,19 @@ GRAMMARS: Final[dict[Dialect, tuple[str, ...]]] = {
 _PENDING_DIALECTS: Final[frozenset[Dialect]] = frozenset({Dialect.LTSPICE})
 _DEVICE_MATRIX = "ngspice-devices.json"
 
-# Opener terminal -> (block name, closing keyword). Used only to explain an unterminated block.
+# Opener terminal, or the rule whose first token is the opener -> (block name, closing keyword).
+# Used only to explain an unterminated block.
 _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
     Dialect.NGSPICE: {
         "CONTROL_KW": (".control", ".endc"),
         "IF_KW": (".if", ".endif"),
+        "SUBCKT_KW": (".subckt", ".ends"),
+        "subckt_header": (".subckt", ".ends"),
     },
 }
+# Opening parenthesis terminals; an unclosed one is reported at the opener when the line ends.
+_OPEN_PARENS: Final[frozenset[str]] = frozenset({"LPAR", "V_OPEN"})
+_LINE_ENDS: Final[frozenset[str]] = frozenset({"$END", "NL", "LINE_END"})
 _END_OF_INPUT = "$END"
 _TERMINAL_NAMES: Final[dict[str, str]] = {
     "$END": "end of input",
@@ -85,6 +91,39 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "AC_KW": "`AC`",
     "STIMULUS_KW": "source function",
     "PARAMS_KW": "`params:`",
+    "PARAM_KW": "`.param`",
+    "PARAM_NAME": "parameter name",
+    "TIME_KW": "`time`",
+    "TEMPER_KW": "`temper`",
+    "HERTZ_KW": "`hertz`",
+    "BARE_EXPR": "bare expression",
+    "MODEL_KW": "`.model`",
+    "LPAR": "`(`",
+    "RPAR": "`)`",
+    "SUBCKT_KW": "`.subckt`",
+    "ENDS_KW": "`.ends`",
+    "ZERO_PORT": "`0`",
+    "TRAN_KW": "`.tran`",
+    "UIC_KW": "`uic`",
+    "DOT_AC_KW": "`.ac`",
+    "DEC_KW": "`dec`",
+    "OCT_KW": "`oct`",
+    "LIN_KW": "`lin`",
+    "DOT_DC_KW": "`.dc`",
+    "OP_KW": "`.op`",
+    "OPTIONS_KW": "`.options`",
+    "OPTION_KW": "`.option`",
+    "TEMP_KW": "`.temp`",
+    "IC_KW": "`.ic`",
+    "NODESET_KW": "`.nodeset`",
+    "V_OPEN": "`v(`",
+    "ALL_KW": "`all`",
+    "SAVE_KW": "`.save`",
+    "OUTPUT_VECTOR": "output vector",
+    "MEAS_KW": "`.meas`",
+    "MEASURE_KW": "`.measure`",
+    "TRAN_ANALYSIS_KW": "`tran`",
+    "SP_KW": "`sp`",
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 
@@ -132,16 +171,36 @@ def _expected_names(terminals: Iterable[object]) -> tuple[str, ...]:
     return tuple(sorted(names))
 
 
+def _value_stack(error: UnexpectedToken) -> list[object]:
+    """The parser's value stack at the failure: tokens and trees of the still-open rules."""
+    if error.interactive_parser is not None:
+        return list(error.interactive_parser.parser_state.value_stack)
+    return list(getattr(error.state, "value_stack", ()))
+
+
 def _unterminated_block(
     dialect: Dialect, error: UnexpectedToken
 ) -> tuple[Token, tuple[str, str]] | None:
-    state = error.interactive_parser
-    if state is None:
-        return None
     blocks = _BLOCKS.get(dialect, {})
-    for value in reversed(state.parser_state.value_stack):
+    for value in reversed(_value_stack(error)):
         if isinstance(value, Token) and value.type in blocks:
             return value, blocks[value.type]
+        if isinstance(value, Tree) and value.data in blocks:
+            opener = value.children[0]
+            assert isinstance(opener, Token)
+            return opener, blocks[str(value.data)]
+    return None
+
+
+def _unclosed_parenthesis(error: UnexpectedToken) -> Token | None:
+    if error.token.type not in _LINE_ENDS:
+        return None
+    # A ")" still on the stack closes the parenthesis before it (v(1) waiting for "=value").
+    for value in reversed(_value_stack(error)):
+        if isinstance(value, Token) and value.type == "RPAR":
+            return None
+        if isinstance(value, Token) and value.type in _OPEN_PARENS:
+            return value
     return None
 
 
@@ -169,6 +228,18 @@ def _map_error(
         reason = _MISSING_END if "END_KW" in {str(t) for t in expected_terminals} else ""
         line, column = source.position(offset)
         return ParseError(line, column, source.excerpt(offset), expected, reason)
+    if isinstance(error, UnexpectedToken):
+        parenthesis = _unclosed_parenthesis(error)
+        if parenthesis is not None:
+            opener_offset = int(parenthesis.start_pos or 0)
+            line, column = source.position(opener_offset)
+            return ParseError(
+                line,
+                column,
+                source.excerpt(opener_offset),
+                ("`)`",),
+                "unbalanced `(`: `)` is missing before the end of the line",
+            )
 
     line, column = source.position(offset)
     line_start = source.line_span(line).start

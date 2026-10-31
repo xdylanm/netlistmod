@@ -1,0 +1,4 @@
+M4 reject
+V1 in 0 DC 1
+.model dm D(is=1e-14
+.end

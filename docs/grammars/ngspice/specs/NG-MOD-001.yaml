@@ -1,0 +1,37 @@
+id: NG-MOD-001
+dialect: ngspice
+construct: .model statements
+manual_ref:
+- '[ngspice-manual] §2.5 ".MODEL Device Models"'
+- '[ngspice-manual] §3.2.2 "Instance and model parameters"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-10-30'
+grammar:
+- model_stmt
+- model_paren
+- model_param_first
+- rparen
+- MODEL_KW
+- LPAR
+- RPAR
+tests:
+- tests/grammar/ngspice/test_statements.py::test_model_statement_fields_and_spans
+- tests/grammar/ngspice/test_statements.py::test_malformed_model_statements_are_rejected
+- tests/grammar/ngspice/test_statements.py::test_parentheses_stay_errors_on_element_lines
+- tests/solver/test_ngspice_solver_statements.py::test_model_forms_run_alike
+- tests/solver/test_ngspice_solver_statements.py::test_model_inside_subcircuit_is_local
+- tests/grammar/ngspice/test_element_oracle.py::test_generated_statements_and_subcircuits_match_the_generator
+- tests/roundtrip/test_ngspice_statements.py::test_accept_corpora_round_trip_and_tile_including_bodies
+- tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
+- tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
+- tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
+notes: '.model name type, then name=value parameters, in parentheses (§2.5) or not (§3.2.2), separated
+  by blanks, one comma or continuations; inside parentheses the first one may follow ( directly. The type
+  is any name, recorded as written (XSPICE types are not in Table 2.3; models are not validated, non-goal
+  8). Values are numbers or formulas. Settled: D() is accepted (§2.5: unspecified parameters take defaults;
+  ngspice 47 accepts it); an unclosed ( is reported at the opener; a parameter without a value is rejected
+  (§2.5 shows pname=pval; ngspice 47 accepts it: discrepancy); a repeated parameter is accepted as syntax;
+  nothing may follow the closing parenthesis.'

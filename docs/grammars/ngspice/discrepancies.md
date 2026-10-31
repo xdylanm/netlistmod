@@ -75,3 +75,28 @@ a model name starting with a digit (`test_digit_leading_model_name_agrees_with_s
 Every file of the `elements_basic` corpus loads and solves with model and subcircuit
 definitions added (`test_accept_corpus_runs_in_ngspice`). The LTspice reading of `1M0` is
 checked in M8.
+
+## Statement and directive observations (ngspice 47, 2026-10-30; M4)
+
+Probes are in `tests/solver/test_ngspice_solver_statements.py`. Unless noted, the circuit is a
+divider (`V1 in 0 DC 3`, two 1k resistors) and the result is `v(out)` after `.op`.
+
+| Solver behavior | Parser behavior | Evidence |
+|---|---|---|
+| Accepts `.tran` and `.op` inside a `.subckt` body (1.5 V). | `ParseError` at the directive: §2.6.1 forbids control lines in a definition (decision 0005). | `test_solver_runs_these_and_the_library_follows_the_manual` |
+| Accepts a port named `0` (`.subckt div a 0`). | `ParseError` at the port (§2.6.1: ports "cannot be zero"). | same |
+| Reads a blank-free bare `.param` expression (`.param c = a+1k`: 2.0 V; `.param c = a`: 1.5 V). | `ParseError` at the value suggesting braces (§2.11.1 recommends braces or quotes). | same; `test_param_values_reach_the_element` |
+| Accepts `.param time=1` and `.param 1a=2`. | `ParseError`: §2.11.1 reserves `time`, `temper`, `hertz` and requires a letter first. | `test_solver_runs_these_and_the_library_follows_the_manual` |
+| Accepts `.temp 27 30` with a warning and runs at the default temperature. | `ParseError`: `.temp` takes one value (§2.14). | same |
+| Accepts an empty `.options`, an empty `.save`, `.op 1` and `.meas tran x` (with an "incomplete measurement" warning). | `ParseError`: each general form has at least one item, `.op` none, a measurement after the result name. | same |
+| Accepts `.model x D bf` (a parameter without a value). | `ParseError`: §2.5 shows `pname=pval`. | same |
+| Accepts `.nodeset v(out)=1 all=2`. | `ParseError`: §11.2.1 gives the `v()` list and `all=` as separate forms. | same |
+
+These agree with the parser: a stray `.ends`, `.ic all=1`, a `.tran` field after `tmax`,
+`.ac log`, `.dc` with a missing increment and `.param c = a + 1k` fail in both
+(`test_solver_and_library_both_reject`); `.ends other` closing `.subckt div`, `D()`, duplicate
+ports, a nested definition, a default overridden on the call (2.25 V), the three `.model`
+parameter layouts, a `.model` local to a subcircuit (an error in ngspice when used outside it,
+accepted as syntax here and scoped in M5), `.option` (typed) and `.opt` (unknown), and blanks
+inside `.ic v( out )` (`test_initial_condition_with_blanks_inside_v`). Every file of the
+`statements_basic` corpus runs in ngspice 47 without an error (`test_accept_corpus_runs_in_ngspice`).

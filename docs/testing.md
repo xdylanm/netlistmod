@@ -80,7 +80,20 @@ records the ngspice 47 value probes. It reads values from the device tables
 ngspice prints after `.op`, writes a temporary `.spiceinit` with
 `set ngbehavior=lt` for LT-mode probes, and loads each accept fixture with added
 model and subcircuit definitions. `tests/test_usage_docs.py` runs the doctest
-examples in `docs/usage/elements.md`. Each construct has a YAML spec entry under
+examples in `docs/usage/elements.md`.
+
+Statements and directives (M4) are tested in
+`tests/grammar/ngspice/test_statements.py` and by the second generator in
+`test_element_oracle.py` (statements, typed directives and nested subcircuit
+blocks with element bodies). The `statements_basic` (accept) and
+`statements_rejects` (one malformed statement per file; the manifest records
+line, column and error class) corpora are checked in
+`tests/roundtrip/test_ngspice_statements.py`, which also checks byte-exact
+round-trip, item and subcircuit-body tiling and every sub-span over all accept
+corpora. `tests/solver/test_ngspice_solver_statements.py` records the ngspice 47
+probes (each paired with what the library does) and runs every
+`statements_basic` file; `tests/test_usage_docs.py` also runs the examples in
+`docs/usage/statements.md`. Each construct has a YAML spec entry under
 `docs/grammars/ngspice/specs/`. Add an entry with a unique `id`, a
 `manual_ref` (one citation or a list, each of the form
 `[ngspice-manual] §2.4.4 "End-of-line comments"`, whose key is listed in

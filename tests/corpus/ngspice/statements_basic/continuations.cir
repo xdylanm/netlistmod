@@ -1,0 +1,14 @@
+M4 continuations and comments
+.tran 1u \\
+1m
+.options reltol=1e-3 ; first line
++ abstol=1e-12 $ second line
+.nodeset all=0
+.save v(out)
++ v(in)
+.param gain=2 // a comment
+V1 in 0 DC 1
+R1 in out 1k
+R2 out 0 {gain*1k}
+.print tran v(out)
+.end
