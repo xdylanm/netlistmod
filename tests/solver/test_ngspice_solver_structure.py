@@ -109,8 +109,8 @@ def test_backslash_continuation_agrees_with_solver(
     result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
     assert result.returncode == 0, result.log
     assert result.voltage("in") == pytest.approx(2.0)
-    result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
-    assert getattr(result.items[1], "raw", None) == f".foo {continued}"
+    parsed = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
+    assert getattr(parsed.items[1], "raw", None) == f".foo {continued}"
 
 
 @pytest.mark.parametrize(
@@ -164,8 +164,8 @@ def test_comments_on_continued_lines_agree_with_solver(solver: Solver, tmp_path:
     result = run(solver, tmp_path, _CIRCUIT.replace("V1 in 0 DC 2", f"V1 {continued}"))
     assert result.returncode == 0, result.log
     assert result.voltage("in") == pytest.approx(2.0)
-    result = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
-    assert len(getattr(result.items[1], "trailing_comments", ())) == 3
+    parsed = parse(SourceText(f"probe circuit\n.foo {continued}\n.end\n"), Dialect.NGSPICE)
+    assert len(getattr(parsed.items[1], "trailing_comments", ())) == 3
 
 
 def test_plus_after_end_is_ignored_by_solver_rejected_by_parser(
@@ -202,11 +202,11 @@ def test_valid_if_form_is_accepted_by_solver_and_parser(solver: Solver, tmp_path
     result = run(solver, tmp_path, text)
     assert result.returncode == 0, result.log
     assert "Circuit: probe circuit" in result.log
-    result = parse(
+    parsed = parse(
         SourceText("probe circuit\n.if (1)\nR2 x 0 1k\n.endif\n.end\n"),
         Dialect.NGSPICE,
     )
-    assert any(getattr(item, "kind", None) == "if" for item in result.items)
+    assert any(getattr(item, "kind", None) == "if" for item in parsed.items)
 
 
 def test_double_slash_comment_probe(solver: Solver, tmp_path: Path) -> None:
@@ -282,9 +282,9 @@ def test_title_is_first_line_and_later_title_replaces_it(solver: Solver, tmp_pat
     result = run(solver, tmp_path, text)
     assert result.returncode == 0
     assert "Circuit: replacement ; still title" in result.log
-    result = parse(
+    parsed = parse(
         SourceText("initial title ; still title\n.title replacement ; still title\n.end\n"),
         Dialect.NGSPICE,
     )
-    assert isinstance(result.items[0], Title)
-    assert result.items[0].text == "initial title ; still title"
+    assert isinstance(parsed.items[0], Title)
+    assert parsed.items[0].text == "initial title ; still title"

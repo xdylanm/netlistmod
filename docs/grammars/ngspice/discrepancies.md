@@ -130,13 +130,16 @@ reports as unsupported runs, as do `DISTOF1`/`DISTOF2` and `q=`; `{â€¦}` and `'â
 `{a;b}` fails in both and string defaults and overrides run; a top-level `K`, `.dc` or
 `.save i()` cannot name an element inside an instance (S9, `UNRESOLVED_ELEMENT` in the library).
 
-### An `.if` condition in braces (`NG-OPA-001` stays `validated`)
+### An `.if` condition in braces (opaque text, `NG-OPA-001`)
 
-The library keeps an `.if` block opaque and does not check its condition, so it accepts
-`.if {enabled}` (as in `structure_basic.cir`). ngspice 47 stops at that line ("Bad syntax") and
-reads `.if (enabled)`. M7 raised this as a candidate `disputed` under decision 0008; the
-maintainer kept `NG-OPA-001` `validated` (2026-10-31, M7 review). The behaviour is recorded
-here and the grammar is unchanged. Evidence:
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Stops at `.if {enabled}` ("Bad syntax"); reads `.if (enabled)` (`NG-OPA-001`). | Accepts both: an `.if` block is opaque and its condition is not checked. | `test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it` |
+
+The condition is opaque text, which is not part of the library's model (decision 0008 item 1,
+opaque-text rule), so this difference does not decide the status of `NG-OPA-001`: a netlist with
+`.if {enabled}` is well-formed for the library and fails in ngspice, which is the netlist's error.
+The grammar is unchanged. Evidence:
 `test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it`.
 
 ngspice 47 also cannot include one file both whole (`.include`) and as a library section

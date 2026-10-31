@@ -504,6 +504,8 @@ Status meanings (decision 0008), checked by `tests/architecture/test_spec_covera
 - `disputed`: the solver reads a form the library accepts differently from the library's model, and the library does not flag it. Needs a `discrepancies.md` row naming the id.
 - `documented`: no solver evidence. Needs a `validation_note:` saying why the solver cannot decide.
 
+The text inside an opaque item (`.control` and `.if` blocks, including the `.if` condition, and `.include`/`.lib` statements) is not part of the library's model (decision 0007 amendment 1: opaque contents are a black box). How the solver reads that text does not decide the status, and a difference goes in `discrepancies.md`. Opaque items are not checked: a netlist that is well-formed for the library but fails in the solver because of opaque text is the netlist's error, not the library's.
+
 `validated_on` items are appended when an entry is re-validated, never replaced. Rule tables (`names.md`, `scoping.md`) follow the same rules, with one `Validated on:` line per document.
 
 ### 11.3 Rules

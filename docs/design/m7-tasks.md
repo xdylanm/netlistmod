@@ -1,6 +1,6 @@
 # M7 task list — local solver validation (ngspice)
 
-> **Status:** READY FOR REVIEW (2026-10-31) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
+> **Status:** CHANGES REQUESTED (2026-10-31, review round 1, section 10) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md), [discrepancies.md](../grammars/ngspice/discrepancies.md), and the edit API of [m6-edits.md](./m6-edits.md). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -224,8 +224,10 @@ the phase plan, `names.md`, `scoping.md`, `discrepancies.md`.
 **Results.** Full suite with `--require-solver ngspice`: 1703 passed, 2 skipped (POSIX-only),
 coverage 98.77%, 110 s. The solver suite: 334 tests (168 before M7) in about 75 s, of which the
 corpus sweep is about 26 s. `ruff check`, `ruff format --check`, `mypy --strict` and
-`lint-imports` are clean; the new test-support and test files also pass `mypy --strict`
-(outside the configured `src/` scope). Every spec entry now has a 2026-10-31 ngspice 47 record
+`lint-imports` are clean. Outside the configured `src/` scope, `mypy --strict` is also clean on
+`tests/support/`, `tests/solver/`, `tests/conftest.py`, `tests/test_ngspice_raw_reader.py` and
+`tests/test_corpus_manifests.py` (true since review round 1, R1; the first report claimed it for
+the new files only, and the migrated structure probes had 9 errors). Every spec entry now has a 2026-10-31 ngspice 47 record
 (appended; FML, GLB and SAV already had one). Statuses: 36 `validated`, 3 `observed`
 (`NG-COM-001`, `NG-NUM-004`, `NG-TXT-001`), none `documented` or `disputed`.
 
@@ -272,3 +274,88 @@ differently, without a diagnostic. `NG-OPA-001` is left `validated` with a note,
 `NG-OPA-001` `disputed`; or check the condition form (a grammar change, out of M7 scope).
 No other accepted form disagreed. **Decided (maintainer, 2026-10-31):** keep `NG-OPA-001`
 `validated`; the behaviour stays recorded in `discrepancies.md` and the grammar is unchanged.
+Review round 1 (R2) made this a general rule rather than an exception: opaque text does not
+decide a status (decision 0008 item 1, architecture §11.2).
+
+## 10. Review round 1 (2026-10-31)
+
+### 10.1 Outcome
+
+The work meets the scope of section 1 and the decisions of section 2. Checks re-run for the
+review:
+
+- `ruff check`, `ruff format --check`, `mypy --strict` (configured `src/` scope) and
+  `lint-imports` are clean.
+- The full suite with ngspice present gives 1703 passed, 2 skipped, and 98.77% coverage.
+- `tests/solver` gives 328 passed; `-m solver` collects 334.
+- With no solver found, the solver tests skip with a reason, and the session header prints
+  `solver ngspice: not found`.
+
+Probes:
+
+- `with_stubs` matches a whole path token: `models.lib.bak` is left alone.
+- The reader raises on a short `Values:` section and on `Binary:`.
+- `ensure_runs` adds `.op` to a file whose only analysis is inside a control block.
+
+The deviations of section 9 are accepted:
+
+- the `harness` manifest form;
+- skipping `structure_basic.cir`, with the equivalent sample test;
+- the wider excluded-character row;
+- the shared preparation for (c).
+
+Two changes are required.
+
+### 10.2 Required changes
+
+[x] **R1 — mypy on the migrated structure probes.**
+`tests/solver/test_ngspice_solver_structure.py` was clean under `mypy --strict` before M7. It
+now has 8 errors (lines 112–113, 167–168, 205–209, 285–290) because `result` is first a `Run`
+and then holds a `ParseResult`. Give the parse result its own name (for example `parsed`). The
+report in section 9 says the new test-support and test files pass `mypy --strict`, so make it
+true, and state which files that covers. Check with:
+`python -m mypy --strict tests/support tests/solver tests/test_ngspice_raw_reader.py tests/test_corpus_manifests.py`.
+The `yaml` stub warning in `test_spec_coverage.py` predates M7 and is out of scope.
+
+[x] **R2 — Reconcile decision 0008 item 1 with `NG-OPA-001`.** As item 1 is written,
+`.if {enabled}` is `disputed`: the library accepts it, ngspice 47 reads it differently, and no
+diagnostic flags it. The record keeps the entry `validated` only under Consequences, so
+decision 0008 contradicts itself. The checker cannot catch this.
+
+The maintainer's principle (2026-10-31): opaque items are not checked, and a netlist that is
+well-formed for the library but fails in ngspice is the netlist's error, not the library's.
+This is a general rule for every opaque item, not one specific to `.if`. Add it to item 1 and to
+the §11.2 text that mirrors it. Suggested wording: "The text inside an opaque item (`.control`
+and `.if` blocks, including the `.if` condition) is not part of the library's model (decision
+0007 amendment 1: opaque contents are a black box). How ngspice reads that text does not decide
+the status, and a difference goes in `discrepancies.md`." Then point the Consequences bullet,
+the `NG-OPA-001` note and the `discrepancies.md` section at that rule, rather than at an
+exception. The grammar and tests are unchanged.
+
+### 10.3 Observations (not required)
+
+- **The (c) raw comparison is implied by byte equality.** Both runs go through the same
+  preparation, and the saved file is asserted byte-identical to the original first. The raw
+  comparison therefore adds only a check that ngspice is deterministic. That fits decision 3,
+  but the module docstring could say so.
+- **Quoted paths with spaces.** `_include_path` splits the line on whitespace, so a quoted
+  include path with a space would not match its stub. This fails loudly (`ValueError`), and no
+  fixture has such a path.
+- **No generator for the status table.** `docs/testing.md` step 4 says "regenerate the status
+  table", but the table is edited by hand; the checker only reports a stale row. "Update"
+  would be accurate.
+
+### 10.4 Response (2026-10-31)
+
+- **R1:** the parse results in `test_ngspice_solver_structure.py` are named `parsed`.
+  `python -m mypy --strict tests/support tests/solver tests/conftest.py
+  tests/test_ngspice_raw_reader.py tests/test_corpus_manifests.py` reports no issues (15 files);
+  section 9 now names those files.
+- **R2:** decision 0008 item 1 and architecture §11.2 state the opaque-text rule. It covers
+  `.control` and `.if` blocks (with the `.if` condition) and also `.include`/`.lib` statements,
+  since decision 0007 amendment 1 treats those as opaque items too. The decision's Consequences
+  bullet, the `NG-OPA-001` note, the `discrepancies.md` section (now a table row) and the probe
+  comment point at the rule. Grammar and tests are unchanged.
+- **Observations:** the corpus test docstring says the raw comparison only adds a determinism
+  check, and `docs/testing.md` says the status table is updated by hand. Quoted include paths
+  with spaces are left as is (they fail loudly; no fixture has one).

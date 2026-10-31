@@ -22,6 +22,14 @@
        model, and the library does not flag it.
      - `documented`: no solver evidence. Allowed only with a `validation_note:` saying why the
        solver cannot decide.
+
+     **Opaque text** (maintainer, M7 review round 1): the text inside an opaque item
+     (`.control` and `.if` blocks, including the `.if` condition, and `.include`/`.lib`
+     statements) is not part of the library's model (decision 0007 amendment 1: opaque contents
+     are a black box). How ngspice reads that text does not decide the status, and a difference
+     goes in `discrepancies.md`. Opaque items are not checked: a netlist that is well-formed for
+     the library but fails in ngspice because of opaque text is the netlist's error, not the
+     library's.
   2. **Checked status** (`tests/architecture/test_spec_coverage.py`). `validated` and `observed`
      need a non-empty `validated_on` (each item has `solver`, `version` and `date`) and a
      `tests/solver/` test in `tests`; `disputed` needs a `discrepancies.md` row naming the id;
@@ -86,9 +94,8 @@
   - `structure_basic.cir` cannot run in ngspice 47 with any stub: it has `.if {enabled}`, and
     it includes one `models.lib` both whole and as a library section. It is skipped with that
     reason; an equivalent sample runs in `test_structure_sample_runs_with_a_valid_condition`.
-  - The library accepts `.if {expr}` (opaque block, condition not checked), which ngspice 47
-    stops at. M7 raised it as a candidate `disputed` for `NG-OPA-001`; the maintainer kept the
-    entry `validated` (2026-10-31). It is recorded in `discrepancies.md`; the grammar is
-    unchanged.
+  - The library accepts `.if {expr}`, which ngspice 47 stops at. The condition is opaque text,
+    so under the opaque-text rule of item 1 it does not decide the status: `NG-OPA-001` stays
+    `validated`, the difference is a row in `discrepancies.md`, and the grammar is unchanged.
   - The solver suite grows from 168 to 334 tests (about 75 s locally); its runtime is recorded in
     `docs/testing.md`.

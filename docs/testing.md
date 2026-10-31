@@ -202,7 +202,8 @@ To re-validate on a new ngspice version:
    to make it pass, AGENTS.md).
 4. When the suite passes, append a `validated_on` item (`solver`, `version`, `date`) to every
    entry the run covered (never replace one), update the `Validated on:` line of `names.md`
-   and `scoping.md`, and regenerate the status table in the ngspice README.
+   and `scoping.md`, and update the status table in the ngspice README by hand (the checker
+   reports a stale row).
 
 The ngspice solver suite (334 tests) runs in about 75 seconds on the maintainer's
 machine (M7, ngspice 47); the corpus sweep is about a third of it.

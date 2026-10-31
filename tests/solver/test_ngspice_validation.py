@@ -270,7 +270,7 @@ def test_structure_sample_runs_with_a_valid_condition(solver: Solver, tmp_path: 
 def test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it(
     solver: Solver, tmp_path: Path
 ) -> None:
-    # M7 finding (NG-OPA-001 kept `validated`): the library keeps `.if` blocks opaque, does not
+    # Opaque text (decision 0008 item 1): the library keeps `.if` blocks opaque and does not
     # check the condition; ngspice 47 reads `.if (expr)` and stops at `.if {expr}`.
     braces = _divider(".param enabled=1\n.if {enabled}\n.endif\n")
     result = run(solver, tmp_path, braces)

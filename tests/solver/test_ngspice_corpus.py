@@ -5,6 +5,8 @@ includes kept outside the repository, an included harness of definitions) and ru
 ``.op`` added when it has no analysis (``tests/support/ngspice.py``). (a) It must run without an
 error and produce data. (c) It is saved unedited with ``load(...).save(...)``, which must give
 the same bytes, and the saved file must give the same raw file, except its ``Date:`` line.
+Both runs go through the same preparation and the bytes are asserted equal first, so the raw
+comparison adds a check that ngspice is deterministic (decision 0008 item 3).
 """
 
 from __future__ import annotations
