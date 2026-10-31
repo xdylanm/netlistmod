@@ -307,3 +307,13 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
 - Diagnostics (`DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH`) are recorded in the nodes but not
   emitted until the M5 diagnostics API.
 - D2 (the design note) and decision 0004 have not been reviewed by the maintainer yet.
+
+### Review decisions (maintainer, 2026-10-30)
+
+- **Tree-less parser** (decision 0004, item 10): no preference stated; kept, because the
+  two-pass parse misses the 2 s requirement. `parse_tree()` still returns a positioned tree.
+- **Performance test:** keep the fresh-interpreter, best-of-three measurement with the 2 s bound.
+- **Loose model-name readings** (`Rx+1000`, `R1 a b 1k 2k`): accepted as limitations; M5
+  reports them through `UNRESOLVED_MODEL`.
+- **Sources:** keep DC before AC only, and `AcSpec.magnitude` required.
+- Decision 0004 stays `proposed` until the maintainer accepts it after this review.
