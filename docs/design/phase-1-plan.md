@@ -74,7 +74,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Spec entries (`docs/grammars/ngspice/`) with manual citations and tests; spec-coverage script.
 - **Exit:** every phase 1 element parses, rejects malformed input with positions (T6), and has a spec entry and tests.
 
-### M4 — Statements and directives
+### M4 — Statements and directives ([task list](./m4-tasks.md))
 - `.param`, `.model`, `.subckt`/`.ends` (with instance and definition structure), typed analysis/control directives (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`).
 - **Exit:** same criteria as M3 for these constructs.
 
