@@ -119,7 +119,7 @@ Record the section 2 outcomes and amend the architecture:
 - §7.7 and §8: the exact-text signature, definition-scope addressing, the model/subcircuit locality reading;
 - §17: the new codes and severities;
 - §21: mark the deferred items "line model", "diagnostics API" and "hierarchical addressing (read-only part)" resolved, and record the diagnostics half of unresolved question 2.
-Status `proposed` until the maintainer accepts it.
+Status `proposed` until the maintainer accepts it (accepted 2026-10-31).
 
 [x] **D2 — Design note `docs/design/m5-document.md`.**
 The public API (every method and property with its signature), the shapes of 3.2, the resolution order, how signature entries are encoded, and the diagnostics table. This note is what M6 builds its edit API on, so keep each rule to one line. Reviewed by the maintainer before T4.
@@ -282,7 +282,9 @@ Edits, `save()`, edit plans and verification (M6, including the `set_model` half
   `UNKNOWN_DIRECTIVE_PRESERVED` points at the name.
 - The M4 test that placed `.global gnd` in a body now uses `.probe` (decision 0006 behaviour
   change).
-- D2 was not reviewed before T4: the design note was written with the implementation.
+- D2 was not reviewed before T4: the design note was written with the implementation. The
+  maintainer accepted it and decision 0006 on 2026-10-31, along with the settled choices and
+  these deviations.
 - Probe circuit for `x1.mid`: the recorded value is 2.0 V for the circuit in the test (a 1k load
   on `out`), not the 2.25 V of section 7, which used a different load.
 

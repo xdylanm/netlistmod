@@ -1,7 +1,7 @@
 # 0006 — Document layer: names, scope and diagnostics
 
-- **Status:** proposed (2026-10-31; the section 2 decisions of [m5-tasks.md](../design/m5-tasks.md)
-  were accepted by the maintainer on 2026-10-31; this record awaits acceptance after the M5 review)
+- **Status:** accepted (2026-10-31, maintainer; the section 2 decisions of
+  [m5-tasks.md](../design/m5-tasks.md) were accepted on 2026-10-31 and this record after review)
 - **Date:** 2026-10-31
 - **Context:** M5 builds the read-only document layer (architecture §3 layer [3], §8): the
   `Netlist`, its lines, symbol tables, reference resolution, topology view and signature, and
