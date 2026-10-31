@@ -21,6 +21,7 @@ Active plans and design notes live in this folder. Completed work records move t
 | Document | Status |
 |---|---|
 | [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
+| [m7-tasks.md](./m7-tasks.md) | READY |
 | [m6-edits.md](./m6-edits.md) | ACTIVE |
 | [m3-elements.md](./m3-elements.md) | ACTIVE |
 | [m4-statements.md](./m4-statements.md) | ACTIVE |
