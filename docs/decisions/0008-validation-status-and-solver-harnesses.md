@@ -86,8 +86,9 @@
   - `structure_basic.cir` cannot run in ngspice 47 with any stub: it has `.if {enabled}`, and
     it includes one `models.lib` both whole and as a library section. It is skipped with that
     reason; an equivalent sample runs in `test_structure_sample_runs_with_a_valid_condition`.
-  - Open for the maintainer: the library accepts `.if {expr}` (opaque block, condition not
-    checked), which ngspice 47 stops at. Under item 1 this is a candidate `disputed` for
-    `NG-OPA-001`; it is recorded in `discrepancies.md` and left `validated` until decided.
+  - The library accepts `.if {expr}` (opaque block, condition not checked), which ngspice 47
+    stops at. M7 raised it as a candidate `disputed` for `NG-OPA-001`; the maintainer kept the
+    entry `validated` (2026-10-31). It is recorded in `discrepancies.md`; the grammar is
+    unchanged.
   - The solver suite grows from 168 to 334 tests (about 75 s locally); its runtime is recorded in
     `docs/testing.md`.

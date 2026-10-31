@@ -267,7 +267,8 @@ corpus sweep is about 26 s. `ruff check`, `ruff format --check`, `mypy --strict`
 `.if {expr}` (an opaque block; the condition is not checked), and ngspice 47 stops at it ("Bad
 syntax") and reads `.if (expr)`. That is a form the library accepts and ngspice reads
 differently, without a diagnostic. `NG-OPA-001` is left `validated` with a note, and
-`discrepancies.md` has an "open finding" section; evidence:
+`discrepancies.md` has a section on it; evidence:
 `test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it`. Options: mark
 `NG-OPA-001` `disputed`; or check the condition form (a grammar change, out of M7 scope).
-No other accepted form disagreed.
+No other accepted form disagreed. **Decided (maintainer, 2026-10-31):** keep `NG-OPA-001`
+`validated`; the behaviour stays recorded in `discrepancies.md` and the grammar is unchanged.
