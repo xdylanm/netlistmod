@@ -1,0 +1,49 @@
+.title KiCad schematic
+.include "~/spice-models/opa/TL07X.cir"
+.include "~/spice-models/passive/potentiometer.sub"
+C1 Net-_U1B--_ /OUT_A 22p
+XU1 Net-_R3-Pad2_ Net-_U1A--_ /IN_A -12V Net-_U1B-+_ Net-_U1B--_ /OUT_A +12V TL072
+R2 Net-_U1A--_ 0 100k
+R1 /IN_A 0 100k
+R3 Net-_U1A--_ Net-_R3-Pad2_ 100k
+C2 Net-_U2A--_ Net-_C2-Pad2_ 22p
+R10 /IN_B Net-_U2A-+_ 100k
+C7 0 -12V 100n
+C6 +12V 0 100n
+C5 0 -12V 100n
+C4 +12V 0 100n
+XU3 Net-_C3-Pad2_ Net-_U3A--_ Net-_U3A-+_ -12V Net-_U3B-+_ Net-_U3B--_ /OUT_C +12V TL072
+XU2 Net-_C2-Pad2_ Net-_U2A--_ Net-_U2A-+_ -12V Net-_U2B-+_ Net-_U2B--_ /OUT_B +12V TL072
+R11 Net-_R11-Pad1_ Net-_U2A--_ 49.9k
+XRV2 Net-_R11-Pad1_ 0 Net-_U2A-+_ pot R=100k wiper=0.5
+R9 /IN_B Net-_U2A--_ 100k
+R12 Net-_U2A--_ Net-_C2-Pad2_ 100k
+R14 /IN_C Net-_U3A-+_ 100k
+C8 +12V 0 100n
+C9 0 -12V 100n
+C13 0 -12V 10u
+C12 +12V 0 10u
+C11 0 -12V 100n
+C10 +12V 0 100n
+R5 Net-_R3-Pad2_ Net-_U1B-+_ 100k
+XRV1 Net-_R6-Pad1_ 0 Net-_U1B-+_ pot R=100k wiper=.5
+R7 Net-_U1B--_ /OUT_A 100k
+R4 Net-_R3-Pad2_ Net-_U1B--_ 100k
+R6 Net-_R6-Pad1_ Net-_U1B--_ 49.9k
+R13 /IN_C Net-_U3A--_ 100k
+R15 Net-_R15-Pad1_ Net-_U3A--_ 49.9k
+XRV3 Net-_R15-Pad1_ 0 Net-_U3A-+_ pot R=100k wiper=0.4
+R16 Net-_U3A--_ Net-_C3-Pad2_ 100k
+C3 Net-_U3A--_ Net-_C3-Pad2_ 22p
+R22 /OUT_B Net-_U3B-+_ 100k
+R23 Net-_C3-Pad2_ Net-_U3B-+_ 100k
+R25 Net-_U3B--_ /OUT_C 100k
+R24 Net-_U3B--_ 0 100k
+R17 /OUT_A Net-_U2B-+_ 100k
+R18 Net-_C2-Pad2_ Net-_U2B-+_ 100k
+R20 Net-_U2B--_ /OUT_B 100k
+R19 Net-_U2B--_ 0 100k
+V3 +5V 0 DC 5 
+V1 +12V 0 DC 12 
+V2 0 -12V DC 12 
+.end

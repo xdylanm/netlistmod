@@ -16,6 +16,7 @@ do not normalize line endings or whitespace.
 | Family | Origin | Author | License |
 |---|---|---|---|
 | `ngspice/kicad_basic` | Export of a KiCad project owned by the maintainer | xdylanm | MIT |
+| `ngspice/kicad_extended` | Export of a KiCad project owned by the maintainer | xdylanm | MIT |
 | `ngspice/structure_basic`, `ngspice/structure_rejects` | Authored in this repository (M2) | xdylanm | MIT |
 | `ngspice/elements_basic`, `ngspice/elements_rejects` | Authored in this repository (M3); manual examples paraphrased | xdylanm | MIT |
 | `ngspice/statements_basic`, `ngspice/statements_rejects` | Authored in this repository (M4); manual examples paraphrased | xdylanm | MIT |
