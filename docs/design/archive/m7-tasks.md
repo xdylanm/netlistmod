@@ -1,7 +1,7 @@
 # M7 task list — local solver validation (ngspice)
 
-> **Status:** READY FOR REVIEW (2026-10-31, review round 1 changes done, section 10.4) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md), [discrepancies.md](../grammars/ngspice/discrepancies.md), and the edit API of [m6-edits.md](./m6-edits.md). Citations use the manual edition in [references.md](../references.md).
+> **Status:** COMPLETE (2026-10-31) — review round 2 approved (section 11); approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
+> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M7). Governed by [architecture.md](../../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../../grammars/ngspice/names.md) and [scoping.md](../../grammars/ngspice/scoping.md), [discrepancies.md](../../grammars/ngspice/discrepancies.md), and the edit API of [m6-edits.md](../m6-edits.md). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 
@@ -206,7 +206,7 @@ Full check set, a fresh-clone run with `--require-solver ngspice`, and the runti
 ## 9. Implementation report (2026-10-31)
 
 **What changed.** Test and documentation changes only; `src/` is untouched. Decision record
-[0008](../decisions/0008-validation-status-and-solver-harnesses.md) (status `proposed`) and the
+[0008](../../decisions/0008-validation-status-and-solver-harnesses.md) (status `proposed`) and the
 architecture amendments of D1 (§10.3, §10.5, §11.2). The shared harness
 `tests/support/ngspice.py` (T1) with its solver-free tests `tests/test_ngspice_raw_reader.py`
 and raw samples in `tests/corpus/ngspice/solver_stubs/raw/`; `run_ngspice` gained an `env`
@@ -360,3 +360,26 @@ exception. The grammar and tests are unchanged.
 - **Observations:** the corpus test docstring says the raw comparison only adds a determinism
   check, and `docs/testing.md` says to update the status table (no longer "regenerate"). Quoted
   include paths with spaces are left as is (they fail loudly; no fixture has one).
+
+## 11. Review round 2 (2026-10-31) — approved
+
+R1 and R2 are done as section 10.4 describes, and the observations were handled as reported.
+Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy --strict` (configured `src/` scope) and
+  `lint-imports` are clean.
+- `mypy --strict tests/support tests/solver tests/test_ngspice_raw_reader.py
+  tests/test_corpus_manifests.py` reports no issues.
+- The full suite with `--require-solver ngspice` gives 1703 passed, 2 skipped, and 98.77%
+  coverage.
+
+The opaque-text rule now also covers `.include`/`.lib` statements, which the maintainer accepted
+(2026-10-31). This matches architecture §7.1, where those statements are not resolved, read or
+interpreted. The line form stays modelled and validated, because an `.include`/`.lib` line
+cannot be continued (`NG-OPA-002`).
+
+One more probe (ngspice 47, 2026-10-31): an inline `.lib typ` … `.endl` section in the main
+file stops ngspice ("unimplemented dot command '.lib'", exit 1). The library reads the `.lib`
+line as an opaque statement and the lines in between as ordinary elements. The netlist fails
+loudly in ngspice rather than being read differently, so the rule holds, and `NG-OPA-002`
+already notes the limitation.

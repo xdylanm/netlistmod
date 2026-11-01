@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0–M6 complete; M7 ready for review
+> **Status:** ACTIVE — M0–M7 complete; M8 next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -94,7 +94,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - T4 golden-diff tests, T5 property tests (round-trip, signature preserved, idempotence), T6 forbidden-operation tests.
 - **Exit:** the operations in §7.2 work for phase 1 constructs; every forbidden operation in §7.3 has a negative test.
 
-### M7 — Local solver validation (ngspice) (ready for review; [task list](./m7-tasks.md), [decision 0008](../decisions/0008-validation-status-and-solver-harnesses.md))
+### M7 — Local solver validation (ngspice) (complete; [task list](./archive/m7-tasks.md), [decision 0008](../decisions/0008-validation-status-and-solver-harnesses.md))
 - T8 tests: solver accepts the netlist; edited results move as expected (e.g. divider ratio); unedited round-trip gives identical results.
 - Validate the behaviors flagged in the spec entries and `scoping.md`; record discrepancies and mark entries `validated`/`observed`/`disputed` with solver version.
 - **Exit:** solver-backed suite passes locally; spec entries updated.
