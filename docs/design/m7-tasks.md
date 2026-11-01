@@ -1,6 +1,6 @@
 # M7 task list — local solver validation (ngspice)
 
-> **Status:** CHANGES REQUESTED (2026-10-31, review round 1, section 10) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
+> **Status:** READY FOR REVIEW (2026-10-31, review round 1 changes done, section 10.4) — approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md), [discrepancies.md](../grammars/ngspice/discrepancies.md), and the edit API of [m6-edits.md](./m6-edits.md). Citations use the manual edition in [references.md](../references.md).
 
 ## 1. Scope
@@ -355,7 +355,8 @@ exception. The grammar and tests are unchanged.
   `.control` and `.if` blocks (with the `.if` condition) and also `.include`/`.lib` statements,
   since decision 0007 amendment 1 treats those as opaque items too. The decision's Consequences
   bullet, the `NG-OPA-001` note, the `discrepancies.md` section (now a table row) and the probe
-  comment point at the rule. Grammar and tests are unchanged.
+  comment point at the rule. Grammar and tests are unchanged. The extension to `.include`/`.lib`
+  was accepted by the maintainer (2026-10-31).
 - **Observations:** the corpus test docstring says the raw comparison only adds a determinism
-  check, and `docs/testing.md` says the status table is updated by hand. Quoted include paths
-  with spaces are left as is (they fail loudly; no fixture has one).
+  check, and `docs/testing.md` says to update the status table (no longer "regenerate"). Quoted
+  include paths with spaces are left as is (they fail loudly; no fixture has one).
