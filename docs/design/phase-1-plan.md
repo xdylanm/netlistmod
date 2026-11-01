@@ -99,7 +99,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Validate the behaviors flagged in the spec entries and `scoping.md`; record discrepancies and mark entries `validated`/`observed`/`disputed` with solver version.
 - **Exit:** solver-backed suite passes locally; spec entries updated.
 
-### M8 — LTspice overlay
+### M8 — LTspice overlay ([task list](./m8-tasks.md))
 - `ltspice.lark` overlay on core; `devices.md`, `names.md`, `numbers.md` for LTspice; encoding policy validated on exported fixtures; document the export workflow.
 - Fixtures: LTspice exports of circuits authored in this repository (manifest per §10.5). Local LTspice-backed T8 tests.
 - **Exit:** the M3–M6 test suites run for LTspice where applicable; LTspice-only constructs have spec entries and tests.
