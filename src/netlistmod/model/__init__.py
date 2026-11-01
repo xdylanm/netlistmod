@@ -33,6 +33,7 @@ from netlistmod.model.nodes import (
     ParseResult,
     Resistor,
     SaveDirective,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     TempDirective,
@@ -54,6 +55,7 @@ from netlistmod.model.values import (
     ParamAssignment,
     SubcktReference,
     Value,
+    ValueList,
 )
 
 __all__ = [
@@ -97,6 +99,7 @@ __all__ = [
     "ParseResult",
     "Resistor",
     "SaveDirective",
+    "StepDirective",
     "SubcktDefinition",
     "SubcktInstance",
     "SubcktReference",
@@ -107,5 +110,6 @@ __all__ = [
     "TranDirective",
     "UnknownDirective",
     "Value",
+    "ValueList",
     "VoltageSource",
 ]

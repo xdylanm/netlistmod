@@ -13,17 +13,18 @@ from pathlib import Path
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from netlistmod import Dialect, EditPlan, Netlist, Placement, apply_edits
+from netlistmod import EditPlan, Netlist, Placement, apply_edits
 from netlistmod.edit import operations
 from netlistmod.edit.verify import check_outside
 from tests.document.test_topology import _STYLES, _Circuit, _circuits, _render, _Style
+from tests.support.dialects import current_dialect
 
 Operation = Callable[[Netlist], Netlist]
 _VALUES = ["2k", "{rx*2}", "'rx+1'", "4.7e3", "1"]
 
 
 def _load(circuit: _Circuit, style: _Style) -> Netlist:
-    return Netlist.from_text(_render(circuit, style), dialect=Dialect.NGSPICE)
+    return Netlist.from_text(_render(circuit, style), dialect=current_dialect())
 
 
 @st.composite
@@ -39,7 +40,7 @@ def _operations(draw: st.DrawFn, circuit: _Circuit) -> tuple[str, Operation]:
         else:
             safe = value if element.letter != "C" or value[0].isdigit() else "1p"
             choices.append((f"set_value {name}", lambda n, d=name, v=safe: n.set_value(d, v)))
-            choices.append((f"set_param {name}", lambda n, d=name: n.set_param(d, "tc1", "1m")))
+            choices.append((f"set_param {name}", lambda n, d=name: n.set_param(d, "m", "2")))
     for element in circuit.local:
         if element.letter != "V":
             name = element.designator
@@ -82,7 +83,7 @@ def test_any_sequence_of_allowed_edits_preserves_the_signature(
     for _, operation in steps:
         netlist = operation(netlist)
         assert netlist.signature() == netlist.baseline
-    fresh = Netlist.from_text(netlist.text, dialect=Dialect.NGSPICE)
+    fresh = Netlist.from_text(netlist.text, dialect=current_dialect())
     assert fresh.signature() == _load(circuit, style).signature()
 
 
@@ -118,10 +119,10 @@ def test_text_outside_the_edited_spans_is_unchanged(
     edits = (
         operations.set_dc(netlist, element.designator, "5")
         if element.letter == "V"
-        else operations.set_param(netlist, element.designator, "tc2", "0")
+        else operations.set_param(netlist, element.designator, "temp", "0")
     )
     edits += operations.set_param_statement(netlist, "rnew", value)
-    edits += operations.add_directive(netlist, ".save all", Placement.AFTER_TITLE)
+    edits += operations.add_directive(netlist, ".save v(in)", Placement.AFTER_TITLE)
     plan = EditPlan(edits)
     edited = netlist.apply(plan)
     assert edited.text == apply_edits(netlist.text, plan)
@@ -144,7 +145,7 @@ def test_save_then_load_gives_the_same_items(
     with tempfile.TemporaryDirectory() as folder:
         path = Path(folder) / "edited.cir"
         netlist.save(path)
-        loaded = Netlist.load(path, dialect=Dialect.NGSPICE)
+        loaded = Netlist.load(path, dialect=current_dialect())
     assert loaded.parse_result == netlist.parse_result
     assert loaded.to_bytes() == netlist.to_bytes()
     assert loaded.signature() == netlist.baseline

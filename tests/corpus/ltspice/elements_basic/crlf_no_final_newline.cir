@@ -1,0 +1,14 @@
+M8 LTspice CRLF, no final newline
+* a star comment
+; a semicolon comment
+   * an indented comment
+
+V1 in 0 3 ; end of line
+R1 in out 1k $ dollar with a space on both sides
+R2 out
++ 0
++ 1k ; a comment on a continued line
+R3 out 0 ; before the value
++ 1k
+.op ; c
+.end ; the end

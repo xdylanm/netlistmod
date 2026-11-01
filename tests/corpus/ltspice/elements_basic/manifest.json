@@ -1,0 +1,17 @@
+{
+  "family": "elements_basic",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Element and value forms of the phase 1 letters; every file runs in LTspice 26.1.1. LF, one file with CRLF and no final newline; + continuations and ;, * and ' $ ' comments; the embedded decimal.",
+  "fixtures": {
+    "capacitors_inductors.cir": "c1a1f383fbb1d8db8cc69becf086e237c66120074662fb5f8db0506934efbe4a",
+    "continuations_comments.cir": "75b8c3068500efa57ef0315114a4852dad8d2dcd3c91b080a02b8cc1d05003e3",
+    "crlf_no_final_newline.cir": "3d2fc878230d608a9fc9fd1a2810ecc031b39cf846681e371f6c1b56d6e2ef87",
+    "database_parts.cir": "81e2319cb0efacb3b0659fbd76e2831cf95fc7f7a7bffdec82b3e8e5d0e7779d",
+    "resistors.cir": "fcf22143667200e78507da1812ba46bd7bb597c8e4321db98a6d4b773961ce5b",
+    "sources_diodes.cir": "d9c1d334c63c9cd84b5ad792ee54548765821c8606b9c48c179c3b7382e10604",
+    "subcircuits_coupling.cir": "9a1efc33cb947ea52f9ceddbf1f8cc4eb94c33931fdc382e269fb8dda2c15757"
+  }
+}

@@ -1,6 +1,6 @@
 # M8 task list — LTspice overlay
 
-> **Status:** READY (2026-11-01) — section 2 decisions accepted by the maintainer (2026-10-31); the maintainer's schematics for decision 14 are in `tests/corpus/ltspice/contributed_examples/` (2026-11-01).
+> **Status:** IN PROGRESS: checkpoint A approved (2026-11-01, section 12), T9–T13 next — D1, T1–T8 and the review changes R1–R10 (sections 9 and 11) implemented; report in section 10; T9–T13 not started. Section 2 decisions accepted by the maintainer (2026-10-31); the maintainer's schematics for decision 14 are in `tests/corpus/ltspice/contributed_examples/` (2026-11-01).
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M8). Governed by [architecture.md](../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([m5-document.md](./m5-document.md)), the edit layer of M6 ([m6-edits.md](./m6-edits.md)), the validation layer of M7 ([decision 0008](../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../usage/ltspice-export.md)) and [decision 0001](../decisions/0001-source-text-policy.md) (encoding).
 
 ## 1. Scope
@@ -169,7 +169,7 @@ Every task ends with `ruff check`, `ruff format --check`, `mypy --strict`, `lint
 
 ### Decisions
 
-[ ] **D1 — Decision record 0009: the LTspice dialect.**
+[x] **D1 — Decision record 0009: the LTspice dialect.**
 Record section 2 and amend the architecture:
 - §6.1 (core content);
 - §6.3–§6.5 (the `.end` exception, the dot-command list, `.step`);
@@ -186,39 +186,39 @@ Status `proposed` until the maintainer accepts it.
 
 ### Grammar and documents (checkpoint A)
 
-[ ] **T1 — Baseline and reference survey.**
+[x] **T1 — Baseline and reference survey.**
 - Snapshot the ngspice node classes and spans per corpus file. This is the T2 regression gate, a test that stays.
 - Write `docs/grammars/ltspice/README.md` and the `references.md` entry (commit and date).
 - Make a construct-by-construct table (phase 1 letters and directives × the reference's forms × the ngspice form). It goes in the T2 report and drives T3–T5.
 
-[ ] **T2 — Move ngspice-only syntax out of core** (decision 3).
+[x] **T2 — Move ngspice-only syntax out of core** (decision 3).
 The ngspice tests, corpus results and the T1 snapshot are unchanged. Re-check the strict-mode lookaround list in the architecture test.
 
-[ ] **T3 — `ltspice.lark`, structure and comments** (decisions 4, 5, 9).
+[x] **T3 — `ltspice.lark`, structure and comments** (decisions 4, 5, 9).
 Title line, `.end`, `*`/`;`/`$`, `+` continuation, the closed dot-command list, `.include`/`.inc`/`.lib`, `.subckt`/`.ends` (with and without a name), and rejection of `.control`/`.if`/`\\`. Add the loader registration and an LTspice entry in `_BLOCKS`.
 
-[ ] **T4 — Directives** (decisions 11, 12).
+[x] **T4 — Directives** (decisions 11, 12).
 Typed `.step`. LTspice forms of `.tran`, `.ac`, `.dc`, `.op`, `.temp`, `.param`, `.options`, `.ic`, `.nodeset`, `.save`, `.meas`, `.global` and `.title`. Spec entries and tests (T1–T6 tiers) for each.
 
-[ ] **T5 — Elements and numbers** (decisions 6, 7, 13).
+[x] **T5 — Elements and numbers** (decisions 6, 7, 13).
 - The R, C, L, V, I, D, X and K lines with the reference's instance parameters.
 - Embedded-decimal values per slot.
 - `ltspice-devices.json` and `devices.md`; phase 2 letters raise `UnsupportedConstruct`.
 - Settle K with three inductors, and which value slots take the embedded decimal.
 
-[ ] **T6 — Names, scopes and the document layer** (decision 8).
+[x] **T6 — Names, scopes and the document layer** (decision 8).
 - The dialect-aware fold and ground aliases.
 - `names.md` and `scoping.md` for LTspice.
 - Document-layer tests parametrised over both dialects.
 - Diagnostics wording that names the dialect where it matters.
 
-[ ] **T7 — Edit layer for LTspice** (decisions 11, 17).
+[x] **T7 — Edit layer for LTspice** (decisions 11, 17).
 - Edit tests parametrised over both dialects.
 - `.step` upsert.
 - Golden edits on `contributed_examples` inputs: set a value, set `Rser`, change `.step`, add a `.param`.
 - Verification (signature, outside text, opaque cuts) holds unchanged.
 
-[ ] **T8 — Fixtures, encoding and export workflow** (decisions 10, 14).
+[x] **T8 — Fixtures, encoding and export workflow** (decisions 10, 14).
 - The `contributed_examples` family, once the maintainer has drawn the schematics, and the hand-written LTspice families with manifests.
 - The UTF-16LE-BOM fixture.
 - The local re-export test.
@@ -277,7 +277,7 @@ The M7 rows for R, C, L, V, I, D and K (`set_value`, `set_formula` with `params.
 
 ## 7. Probe facts gathered while planning (LTspice 26.1.1, Windows, 2026-10-31)
 
-Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
+The probes made while implementing (T1–T8, R1–R3) are recorded in [discrepancies.md](../grammars/ltspice/discrepancies.md), `names.md`, `scoping.md` and section 10. Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
 
 | # | Probe | LTspice |
 |---|---|---|
@@ -322,3 +322,195 @@ Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is fr
 - BOM-less UTF-16 detection.
 - Linux/macOS LTspice (wine) and CI.
 - qspice and xyce.
+
+## 9. Checkpoint A review, round 1 (2026-11-01)
+
+### 9.1 Outcome
+
+The grammar split, overlay, documents, layers and fixtures meet T1–T8, apart from the changes in 9.2. Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy` (configured `src/` scope) and `lint-imports` are clean.
+- The full suite with `--require-solver ngspice` gives 2864 passed, 2 skipped, 343 deselected (the other dialect's run of `ngspice_only` and `ltspice_only` tests), and 98.78% coverage.
+- `test_ltspice_export.py` and `test_ltspice_spike.py` pass with `--require-solver ltspice`.
+- **ngspice regression gate, checked independently:** the committed tests (`7d3a9cb`), unedited, were run against the new `src/`, with ngspice required: 1662 passed, 2 skipped, 42 failed. Those 42 are the expected API changes and registration: the new required `dialect` argument of `parse_formula`, `reserved_words`, `device_matrix` and `fold` (38), the new public exports, LTspice now being registered, and two architecture tests that the working tree updates. None is a change in ngspice parsing, and the golden, corpus and solver tests all pass unedited.
+- No LTspice raw file, log or machine path is in `tests/corpus/ltspice/`.
+
+### 9.2 Required changes
+
+[x] **R1 — Element parameters LTspice's own parts carry** (decision 7, widened by the maintainer on 2026-11-01: the lists stay closed, and a name is added only once it is verified). The per-letter lists stay closed, so `Rsr=1` still fails, but they are too narrow: parts from LTspice's component database do not parse. LTspice 26.1.1 runs each of these, and the library rejects them:
+
+```
+C1 b 0 10µ V=6.3 Irms=1.2 Rser=0.002 Lser=0 mfg="TDK" pn="C3216" type="X5R"
+L1 b 0 10µ Ipk=5 Rser=0.01 Rpar=1000 Cpar=1p mfg="Coilcraft" pn="MSS1038"
+R1 b 0 1k tol=1 pwr=0.25
+```
+
+A read-only scan of `SYMATTR SpiceLine` in the 4365 schematics LTspice installs (nothing copied; used only to choose what to probe) found, by count: C `V` 292, `Irms` 285, `mfg`, `pn` and `type` 274 each; L `Ipk` 28, `mfg` and `pn` 25 each; R `tol` 16, `pwr` 13. Add:
+
+- C: `V`, `Irms`, `mfg`, `pn`, `type`;
+- L: `Ipk`, `mfg`, `pn`, and the `noiseless` flag;
+- R: `tol`, `pwr`, `tc1`, and the `noiseless` flag;
+- D: `area=`.
+
+`mfg`, `pn` and `type` take a quoted string (settle by probe whether a bare word is also accepted on an element line). Probe each name on each letter, and probe `tc2` on R and the rest of the discrepancy row in the same pass. Each is a spec-entry note marked as observed (§11.3 rule 3), with tests, and the discrepancy row shrinks to what stays rejected. `set_param` edits the numeric ones.
+
+Add the maintainer's new schematic `LC_filter_mfg_components.asc` (2026-11-01) to `contributed_examples` with its normalised export, its manifest entry and a golden edit (a numeric parameter of C1 or L1). LTspice 26.1.1 exports and runs it. It holds real database lines, so it also pins that a quoted value may contain blanks and a comma (`type="Al electrolytic"`, `mfg="Bourns, Inc."`). The `.net` in the folder is the maintainer's GUI export, with a machine path on its first line: regenerate it.
+
+[x] **R2 — String parameters in `.model`** (LTspice overlay only). `.model DX D(Is=1e-14 Iave=1 Vpk=75 mfg=OnSemi type=silicon)` runs in LTspice and is a `ParseError`, as is the quoted `mfg="OnSemi"`. The bare form is what LTspice's own `lib/cmp/standard.dio` uses (924 of its 926 `.model` lines, by a read-only count), and users paste such lines into a schematic. Accept a bare word or a quoted string as a `.model` parameter value. Keep the value text verbatim; do not read a bare word as a formula or a reference.
+
+[x] **R3 — `.ic I(L1)=…`** Accept inductor currents in `.ic`, and keep `.ic I(R1)=1` out if the grammar or a diagnostic can tell. The discrepancy row says the reference shows only `V(node)`, but `[ltspice-ref] TROUBLESHOOTING-GUIDE.md` says `.ic` sets node voltages and inductor currents, so this is a documented form. The current names an element: index it like `.save I(...)`, so a name no element has gets `UNRESOLVED_ELEMENT`. `.nodeset I(...)` and `.ic V(a,b)` stay rejected, with their rows.
+
+[x] **R4 — Limit single `&` and `|` to LTspice.** Decision 3's gate is that ngspice is unchanged. ngspice 47 **fails** on `{a&b}` and `{a|b}` ("Error in netlist line"), so the shared formula grammar now reports references for a form ngspice rejects. Add a test that ngspice's `parse_formula("a&b")` gives no tokens, as it did before.
+
+[x] **R5 — mypy on the tests.** `mypy --strict tests/support tests/solver tests/conftest.py tests/test_ngspice_raw_reader.py tests/test_corpus_manifests.py` has 3 errors (`test_ngspice_solver_structure.py:232`, `test_ngspice_solver_statements.py:157`, `:194`). `Param.value` is now `Value | ValueList`, and `ValueList` has no `text`, which also breaks public callers on ngspice netlists. Give `ValueList` a `text` property (the source slice of its span), so the union stays uniform, rather than narrowing at each call.
+
+[x] **R6 — Edit messages that assume a resistor model.** In LTspice, `set_model("R1", …)` says "`R1` takes a model of type `R`", and `remove_value("R1")` says "add a model with set_model first". LTspice has no R, C or L model (confirmed: `.model rm R` with `R1 a 0 rm` exits 1). Say so, with an `EditError` before the type check. Test both.
+
+[x] **R7 — Implementation report.** Add a section 10 to this list, as in earlier milestones: what changed, each "settle" with its basis, the deviations from section 2 (below), and where to find the T1 table. Add the probes that later documents cite, or point section 7 at `discrepancies.md`.
+
+The maintainer confirmed R1–R7 (2026-11-01).
+
+### 9.3 Developer's calls: accepted by the maintainer (2026-11-01)
+
+- **Bare values rejected with a hint** (`R47`, `R1 a b x`). This corrects decision 6, which called `R47` a model name. LTspice stops at every such line, so no working netlist is lost and the hint is better than its message. Decision 0009 item 7 already records it.
+- **`.options` names not checked.** Unlike element parameters, the option set cannot be enumerated from the reference or by probing letter by letter, and an option is not topology. A false rejection would cost more than a typo, which LTspice stops at anyway. The discrepancy row stays.
+- **`.dc … list` only as the last sweep.** Rare, loud and recorded; not worth weakening the LALR grammar.
+- **Edits to existing ngspice tests.** The `dialect` argument and the registration test are required. Moving the property tests to `m` and `temp`, and two tests to `.save v(...)`, loses no ngspice coverage: `.save all` and `tc1` are still tested in `test_edit_directives.py` and `test_edit_elements.py`.
+- **Additions.** `.model … ako:` is in the reference (`SIMULATION-COMMANDS-REFERENCE.md`, `.MODEL`) and has entry `LT-MOD-001`. The `DUPLICATE_DEFINITION` warning on a repeated `.step` matches LTspice, which stops there, and is rule S12.
+- **The T1 table in the LTspice README.** Fine; R7 points to it.
+
+### 9.4 Observations (not required)
+
+- Every LTspice export now gets one `UNKNOWN_DIRECTIVE_PRESERVED` (info) for `.backanno`, and `.tf`, `.noise` and `.four` are reported as "unknown" although they are on the closed list. Consider a quieter path for listed commands in phase 2.
+- `BARE_FORMULA` in `ltspice.lark` is a long regular expression with a lookahead. It passes the probes (`.param x=2*pi*100 y=3`, `.param x 1k y 2k`, `.param x=1k, y=2k`) and is on the pinned lookaround list. Keep its tests close to it.
+- Decision 0009 is `proposed` and the work is uncommitted in the working tree.
+
+## 10. Implementation report (checkpoint A)
+
+All probes ran locally on LTspice 26.1.1 (Windows, 2026-11-01). Only syntax facts are recorded (decision 2).
+
+### 10.1 What changed
+
+- **D1:** [decision 0009](../decisions/0009-ltspice-dialect.md), status `proposed`; architecture amended.
+- **T1:** `tests/grammar/ngspice/test_tree_snapshot.py` with `tree_snapshot.json`, generated before the split. References entry `[ltspice-ref]`. The construct table is in [the LTspice README](../grammars/ltspice/README.md), section "Construct survey".
+- **T2:** `core.lark` holds the shared subset; `ngspice.lark` holds `\\`, commas, RKM, the keyword and model forms of R, C and L, and the forms recognised only to be rejected. The snapshot is unchanged.
+- **T3–T5:** `ltspice.lark`, `ltspice-devices.json`, `StepDirective`, `ValueList`, and new optional node fields; 40 `LT-*` entries, all `documented` until T12.
+- **T6:** dialect-aware names, `$G_*`, per-dialect diagnostics wording and reserved words. `tests/document` runs on both dialects.
+- **T7:** `.step` upsert, `set_param` on V, I and the D area. `tests/edits` runs on both dialects. Golden cases in `ltspice/edits_golden`.
+- **T8:** `contributed_examples` exports and manifest, hand-written families, `utf16le_bom.cir`, `tests/test_ltspice_export.py`, `docs/usage/ltspice-export.md`, `docs/provenance.md`.
+
+**Review round 1:**
+
+- **R1:** the names below, the `noiseless` flag (`flags` on R, C and L nodes), and `LC_filter_mfg_components` with its normalised export and the golden case `set_part_parameters`. Parameter terminals now hold a lookahead for `=`, so `m` never matches the start of `mfg`.
+- **R2:** `MODEL_WORD` and `STRING_VALUE` as `.model` values; a bare word is an `Identifier`.
+- **R3:** `current_condition` in `.ic`, with `NodeCondition.current`, indexed as an element reference.
+- **R4:** `formula_ltspice.lark`, an overlay, with `formula.lark` back to its committed operators. ngspice's `parse_formula("a&b")` is `None`.
+- **R5:** `ValueList.text` is a field holding the source slice of its span (a property could not reach the source), and `Identifier.text` a property. The named mypy command is clean.
+- **R6:** `set_model` and `remove_value` raise "LTspice has no R, C or L model", before the type check.
+
+**Review round 2:**
+
+- **R8:** `MODEL_TEXT_KW` gives `mfg` and `type` their text values. `MODEL_BARE` (renamed from `MODEL_WORD`) is now recognised only to be rejected, with a hint to write `{x}`. The bare word `mfg=3M` is now an `Identifier`, like any other text value. Rows corrected in `discrepancies.md`.
+- **R9:** `Flag.value`, with `Flag.span` running to the value; `noiseless`, `load` and `off` take a number or a formula. A formula in a flag value is indexed as a reference. `set_param` edits a flag's value in place (`off` becomes `off=1`), an addition the review did not ask for: without it, the call would fail.
+- **R10:** `mfg` and `pn` on R, `noiseless` on C, `Rpar=` on D. `ic=` on D stays rejected, with its row.
+
+### 10.2 Each "settle", with its basis
+
+| Item | Choice | Basis |
+|---|---|---|
+| `$` (decision 9) | A comment only as space, `$`, space | `1k $ c` runs; `1k$ c`, `1k $c`, `1k $`, and a tab on either side stop LTspice; `$G_x`, `a$b` and `a$` are names |
+| `//` (decision 9) | Not a comment | `1k // c` stops LTspice; `.include sub//h.inc` reads a path |
+| Value slots (decision 6) | Every slot | `1k5`-style values read correctly in R, C, L, V, I, K, the D area, parameters, `X`, `.subckt`, `.model`, `.param`, `.tran`, `.ac`, `.dc`, `.ic` and `.step` |
+| K with three inductors (decision 7) | Valid | Three and four run when each has its own load. An inductor loop reproduces L13's symptom; L13's circuit is not recorded, so that cause is an inference |
+| Name characters (decision 8) | Excluded: `= ( ) , { } ' " \|`, `;` and blanks | Each excluded character stops LTspice; about 20 others run |
+| Fourth `.step` (decision 11) | Not refused | Four run; the reference states no limit |
+| `.options` names (decision 12) | Not checked | Accepted by the maintainer (9.3) |
+| `mfg`, `pn`, `type` (R1) | Double-quoted string or bare word | Both run on an element line, also with `;` or ` $ ` inside the quotes; `V="6.3"` stops LTspice |
+| `type` on R and L (R1) | Not added | LTspice stops at it |
+| `tc2` on R (R1) | **Added** with `tc1` | The probe the task asked for: it runs |
+| `.model` bare words (R2, corrected by R8) | Only `mfg` and `type` take one; any other bare value is a `ParseError` suggesting `{x}` | LTspice reads it as a parameter reference (`Is=x`) and stops at an undefined one (`Is=abc`). A whole number under another name stays a number |
+| Flag values (R9) | A number or a formula | `noiseless=0`, `load=1`, `off=1` and `{1}` run; `noiseless="1"` and `noiseless=x` stop LTspice |
+| `.ic I(R1)` (R3) | Rejected by the grammar (`L_REF`) | LTspice runs it and ignores it. `.ic I(L1)=1` with `uic` gives -1 V across a 1 Ω load |
+| `.ic I(x1:L1)` (R3) | Rejected, with a row | LTspice sets the current, but the form is undocumented and names no element of the scope |
+
+### 10.3 Deviations from section 2
+
+- **Decision 6:** `R47` and other bare values are rejected with a hint, not read as model names, because LTspice has no R, C or L model (accepted, 9.3).
+- **Decision 7:** the lists are closed per letter, widened by R1 (accepted). Forms that stay rejected are rows in `discrepancies.md`.
+- **Decision 12:** `.dc ... list` only as the last sweep (accepted, 9.3).
+- **Decision 16:** besides the `ngspice_only` and `ltspice_only` markers, a module may name single cases in `NGSPICE_ONLY_CASES`, since parameter tables hold lambdas and ids. The LTspice forms of what they exclude are in `test_ltspice_*.py`.
+- **R1 wording:** `ValueList.text` is a field, not a property (R5, above).
+
+### 10.4 Candidates for later
+
+- `[ltspice-ref]` citations name the installed copy; check them against the recorded commit if it moves.
+
+## 11. Checkpoint A review, round 2 (2026-11-01)
+
+### 11.1 Outcome
+
+R1–R7 are done as section 10 reports, and the LC filter fixture parses and has a golden edit. Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy` (configured `src/` scope), the named `mypy --strict` test command and `lint-imports` are clean.
+- The full suite with `--require-solver ngspice --require-solver ltspice` gives 2949 passed, 2 skipped, 364 deselected, and 98.80% coverage.
+- The ngspice gate holds: the committed tests against the new `src/` give the same 1662 passed and 42 failed as in round 1, in the same expected classes (9.1).
+
+### 11.2 Required changes
+
+[x] **R8 — `.model` bare words only for `mfg` and `type`** (corrects R2; confirmed by the maintainer, 2026-11-01). R2 asked for "a bare word as a `.model` parameter value", and that was too wide. LTspice 26.1.1 **reads a bare word in a numeric parameter as a parameter reference**:
+
+| Line, with `.param x=2` or `x=1n` | LTspice | Library now |
+|---|---|---|
+| `.model DX D(Is=x*1n)` | same result as `Is=2n` | accepted, no reference to `x` |
+| `.model DX D(Is=x)` | same result as `Is=1n` | accepted as an `Identifier`, no reference to `x` |
+| `.model DX D(Is={x*1n})` | same result as `Is=2n` | accepted, one reference to `x` |
+| `.model DX D(Is=abc)` | stops: "No such parameter defined" | accepted |
+
+The first two are a form the library accepts and the solver reads differently, with no diagnostic: decision 0008's definition of `disputed`. They also make `references_to_param` silently incomplete. `test_a_bare_word_is_not_a_reference` pins the wrong behaviour.
+
+A read-only scan of LTspice's `lib/cmp` (2638 `.model` lines) finds bare words only as `mfg` (2871) and `type` (1157), with no quoted values. So:
+
+- accept a bare word or a quoted string only for `mfg` and `type`, in the LTspice overlay;
+- every other `.model` parameter takes a number or a delimited formula, as before R2, so `Is=x`, `Is=1n*2` and `Is=abc` are `ParseError`s. The hint suggests `{x}`;
+- correct the `discrepancies.md` row: the library rejects these forms, and restore "bare expressions only in `.param`";
+- replace `test_a_bare_word_is_not_a_reference` with tests of the above, and one that `mfg=x` gives no reference to a parameter `x`.
+
+`pn` stays out: `pn=1N4148A` stops LTspice, and no library line uses it.
+
+[x] **R9 — A flag may take a value** (10.4; confirmed by the maintainer, 2026-11-01). `[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md` "Element Overview" says a flag is active if present, or may be assigned a value (0.5 or more is on). LTspice runs `noiseless=1`, `noiseless=0`, `load=1` and `off=1`. Rejecting a documented form breaks §11.3 rule 2, and this is grammar, so do it in this checkpoint rather than at T12. Accept `name` and `name=value` for `noiseless`, `load` and `off`. The library keeps the text and does not interpret the threshold.
+
+[x] **R10 — Add the other verified names** (R1's rule; confirmed by the maintainer, 2026-11-01). The rule is that a closed list grows when a name is verified. These run, and are added as observed with tests:
+
+- `mfg` and `pn` on R, as on C and L;
+- `noiseless` on C, as on R and L;
+- `Rpar=` on D: it takes effect (with `Rpar=1`, a 3 V source through 1k gives 2.997 mV across the diode, against 0.677 V without it).
+
+`ic=` on D stays rejected, with its row: it runs, but a `.tran … uic` probe showed no effect on the result, so it is not verified as doing anything.
+
+The maintainer confirmed R8–R10 (2026-11-01).
+
+### 11.3 Developer's calls: accepted
+
+- **`ValueList.text` as a field.** Correct: the node cannot reach the source. It holds the slice (`tc=1, 2` gives `1, 2`), and that is what R5 needed. This section supersedes R5's wording.
+- **`.ic I(x1:L1)=1` stays rejected.** LTspice does set that current, but the form is undocumented and reaches into an instance, which S9 keeps out of scope. It fails loudly and has a row. The addition can wait until a real netlist needs it.
+
+## 12. Checkpoint A review, round 3 (2026-11-01) — approved
+
+R8–R10 are done, and checkpoint A is approved. T9 may start. Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy` (configured `src/` scope), the named `mypy --strict` test command and `lint-imports` are clean.
+- The full suite with `--require-solver ngspice --require-solver ltspice` gives 2995 passed, 2 skipped, 376 deselected, and 98.81% coverage.
+- The ngspice gate holds: the committed tests against the new `src/` give the same 1662 passed and 42 failed as in rounds 1 and 2.
+
+Probes (LTspice 26.1.1):
+
+- `Is=x` and `Is=1n*2` on a `.model` are `ParseError`s whose message suggests `{x}`; `Is={x}` gives a reference to `x`; `mfg=x` gives none.
+- Flags take values on R, C, L, I and D. `Rpar=` on D and `mfg`/`pn` on R parse; `ic=` on D stays rejected.
+
+**Developer's calls: accepted.**
+
+- **`mfg=3M` as an `Identifier`, not a number.** Under `mfg` and `type`, an unquoted value is text. Reading it as 3 milli would be wrong. `.text` is `3M` for both `mfg=3M` and `mfg="3M"`, so callers see the same text.
+- **`set_param` editing a flag's value in place** (`off` to `off=1`, `noiseless=1` to `noiseless=0`). It follows from R9, is tested, and leaves the topology signature unchanged. On ngspice, `off=1` stays an `EditError`, because the edit does not parse.
+- **`mfg={x}` stays rejected.** LTspice runs it but does not evaluate it: `mfg={nope}` (an undefined name) and `mfg={1+}` (not an expression) also run. Accepting it as a formula would report a reference to `x` that LTspice never reads. The form has a row in `discrepancies.md`, which may add that LTspice does not evaluate the value.
+
+**For T12:** `pn` on a `.model` is not a metadata name there. LTspice warns "Ignoring unknown model parameter" for `pn=OnSemi`, and `pn=1N4148A` is a syntax error. The library treats `pn` on a `.model` as an open numeric name (`pn=3M` is a number), and rejects `pn="3M"` and `pn=OnSemi`. That is acceptable, since nothing in LTspice's libraries uses it, but T12's `.model` probe should pin it.

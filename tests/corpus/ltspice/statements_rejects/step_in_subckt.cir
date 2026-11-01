@@ -1,0 +1,5 @@
+M8 reject
+.subckt s a
+.step param x 1 2 1
+.ends
+.end

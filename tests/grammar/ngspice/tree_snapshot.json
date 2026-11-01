@@ -1,0 +1,2550 @@
+{
+ "document_basic/coupled.cir": {
+  "rkm": {
+   "digest": "69a6a5bde8fbce79744c0ccc624db6a79edd04218eaf26f56f8a1ee3f765cf36",
+   "nodes": 32
+  },
+  "standard": {
+   "digest": "69a6a5bde8fbce79744c0ccc624db6a79edd04218eaf26f56f8a1ee3f765cf36",
+   "nodes": 32
+  }
+ },
+ "document_basic/diode_clamp.cir": {
+  "rkm": {
+   "digest": "0172adea9842965fba7473dd12265326ab22188bfb570414c6cc9fa2d8df16bd",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "0172adea9842965fba7473dd12265326ab22188bfb570414c6cc9fa2d8df16bd",
+   "nodes": 25
+  }
+ },
+ "document_basic/divider.cir": {
+  "rkm": {
+   "digest": "70e8b3f9c67d11f9df7a32dfe6e5c7ff87761fa11134490ad0b19462bf6c8c55",
+   "nodes": 15
+  },
+  "standard": {
+   "digest": "70e8b3f9c67d11f9df7a32dfe6e5c7ff87761fa11134490ad0b19462bf6c8c55",
+   "nodes": 15
+  }
+ },
+ "document_basic/every_diagnostic.cir": {
+  "rkm": {
+   "digest": "fdb12a4793ac971789ae378e9ebdc88988d00021d9680e96af2db9412f6886fc",
+   "nodes": 81
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "document_basic/hierarchy.cir": {
+  "rkm": {
+   "digest": "6ea5cc2b60bf8e8e474c2390cf30c83564825dfae8154ff0a594a43a5011b851",
+   "nodes": 72
+  },
+  "standard": {
+   "digest": "6ea5cc2b60bf8e8e474c2390cf30c83564825dfae8154ff0a594a43a5011b851",
+   "nodes": 72
+  }
+ },
+ "document_basic/kicad_names.cir": {
+  "rkm": {
+   "digest": "27513dadfb5648d1898ceb02c11e02bfeaca49a9aaf64f41d9cd5e20ddcdadc5",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "27513dadfb5648d1898ceb02c11e02bfeaca49a9aaf64f41d9cd5e20ddcdadc5",
+   "nodes": 24
+  }
+ },
+ "document_basic/library_first.cir": {
+  "rkm": {
+   "digest": "45df338dd7eaf931d38835bd9877b918fb2ecdd5b11a5fcaee19099651c83623",
+   "nodes": 45
+  },
+  "standard": {
+   "digest": "45df338dd7eaf931d38835bd9877b918fb2ecdd5b11a5fcaee19099651c83623",
+   "nodes": 45
+  }
+ },
+ "document_basic/rc_filter.cir": {
+  "rkm": {
+   "digest": "6deb6f69ede7c94e7ab03b927458e990093ccadd578ee3527ecd92daa5013737",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "6deb6f69ede7c94e7ab03b927458e990093ccadd578ee3527ecd92daa5013737",
+   "nodes": 25
+  }
+ },
+ "edits_golden/amp_lf.cir": {
+  "rkm": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  }
+ },
+ "edits_golden/batch.expected.cir": {
+  "rkm": {
+   "digest": "2a7e81dc899aa8c648afec328dc1cfdf010f15c5b8a901104bcdd725bc13890d",
+   "nodes": 107
+  },
+  "standard": {
+   "digest": "2a7e81dc899aa8c648afec328dc1cfdf010f15c5b8a901104bcdd725bc13890d",
+   "nodes": 107
+  }
+ },
+ "edits_golden/body.expected.cir": {
+  "rkm": {
+   "digest": "9461761d5898c497ec875d95253c87986c557e0a093c2d2ae7c47ac2545fb670",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "9461761d5898c497ec875d95253c87986c557e0a093c2d2ae7c47ac2545fb670",
+   "nodes": 105
+  }
+ },
+ "edits_golden/continued_tran.expected.cir": {
+  "rkm": {
+   "digest": "c84c4353352d15290a0d7dbc8b39607fe42f2eb7339cf8b6f350b78e932622e3",
+   "nodes": 30
+  },
+  "standard": {
+   "digest": "c84c4353352d15290a0d7dbc8b39607fe42f2eb7339cf8b6f350b78e932622e3",
+   "nodes": 30
+  }
+ },
+ "edits_golden/control_block.expected.cir": {
+  "rkm": {
+   "digest": "08ac883136725dcfc58013ece8460e267fdcde1c12b672be18ce9a086a6f38a7",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "08ac883136725dcfc58013ece8460e267fdcde1c12b672be18ce9a086a6f38a7",
+   "nodes": 28
+  }
+ },
+ "edits_golden/coupling.expected.cir": {
+  "rkm": {
+   "digest": "84da9b617b42a91028cdbca6b784bf3ab33f02fe407de4d89b1dcfdea20000ac",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "84da9b617b42a91028cdbca6b784bf3ab33f02fe407de4d89b1dcfdea20000ac",
+   "nodes": 102
+  }
+ },
+ "edits_golden/crlf.expected.cir": {
+  "rkm": {
+   "digest": "57ff4da55016d5cc3b208bee1ce8d0a5f341b1d6df360734bd506b887d90e89e",
+   "nodes": 20
+  },
+  "standard": {
+   "digest": "57ff4da55016d5cc3b208bee1ce8d0a5f341b1d6df360734bd506b887d90e89e",
+   "nodes": 20
+  }
+ },
+ "edits_golden/directives.expected.cir": {
+  "rkm": {
+   "digest": "eee4d7c57e870073ffd78218ce5eb8d60609900946d0f2de1e32a5dca5e97695",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "eee4d7c57e870073ffd78218ce5eb8d60609900946d0f2de1e32a5dca5e97695",
+   "nodes": 105
+  }
+ },
+ "edits_golden/divider_crlf.cir": {
+  "rkm": {
+   "digest": "2186929811c3a7365e84535186578835200343183e6b22ab4cfe365ab5f6b02f",
+   "nodes": 14
+  },
+  "standard": {
+   "digest": "2186929811c3a7365e84535186578835200343183e6b22ab4cfe365ab5f6b02f",
+   "nodes": 14
+  }
+ },
+ "edits_golden/empty_parentheses.expected.cir": {
+  "rkm": {
+   "digest": "8a3a9cdb6ba60066ccf5658e63394affba7a332d142290daa626be5ff18db55e",
+   "nodes": 30
+  },
+  "standard": {
+   "digest": "8a3a9cdb6ba60066ccf5658e63394affba7a332d142290daa626be5ff18db55e",
+   "nodes": 30
+  }
+ },
+ "edits_golden/formula.expected.cir": {
+  "rkm": {
+   "digest": "2d5c3f380e476226dcd84ac8a10502cf246d1d94fd79335866d8f3eac506f947",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "2d5c3f380e476226dcd84ac8a10502cf246d1d94fd79335866d8f3eac506f947",
+   "nodes": 102
+  }
+ },
+ "edits_golden/include.expected.cir": {
+  "rkm": {
+   "digest": "f65625ba6ae709726bc899b44b071eb59009dcb69c7f26171b947e915fd34c66",
+   "nodes": 103
+  },
+  "standard": {
+   "digest": "f65625ba6ae709726bc899b44b071eb59009dcb69c7f26171b947e915fd34c66",
+   "nodes": 103
+  }
+ },
+ "edits_golden/instance_param.expected.cir": {
+  "rkm": {
+   "digest": "35acec71302353a4a97b18136ae074b6c3c0b806a61a1f011bb8d54a502281c0",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "35acec71302353a4a97b18136ae074b6c3c0b806a61a1f011bb8d54a502281c0",
+   "nodes": 102
+  }
+ },
+ "edits_golden/keyword_value_with_tabs.expected.cir": {
+  "rkm": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  }
+ },
+ "edits_golden/mixed_eol.cir": {
+  "rkm": {
+   "digest": "74223e4959ce68b60bc3096e0a067f11416eb34845eda00bf8109b9d5c9f4a03",
+   "nodes": 15
+  },
+  "standard": {
+   "digest": "74223e4959ce68b60bc3096e0a067f11416eb34845eda00bf8109b9d5c9f4a03",
+   "nodes": 15
+  }
+ },
+ "edits_golden/mixed_eol.expected.cir": {
+  "rkm": {
+   "digest": "8c402588ea3e7fc006a6691401807a96bf95c0ab13964e1eb83fe3422357ce81",
+   "nodes": 22
+  },
+  "standard": {
+   "digest": "8c402588ea3e7fc006a6691401807a96bf95c0ab13964e1eb83fe3422357ce81",
+   "nodes": 22
+  }
+ },
+ "edits_golden/model.expected.cir": {
+  "rkm": {
+   "digest": "47673ffd5ba937a331f04015b953536f91458d6d328deef426cebc68cc0a0297",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "47673ffd5ba937a331f04015b953536f91458d6d328deef426cebc68cc0a0297",
+   "nodes": 102
+  }
+ },
+ "edits_golden/model_params.expected.cir": {
+  "rkm": {
+   "digest": "8671bfe79a224cb03a6364d379216e53778d59eccbd789346feb5e9cd6681ffc",
+   "nodes": 108
+  },
+  "standard": {
+   "digest": "8671bfe79a224cb03a6364d379216e53778d59eccbd789346feb5e9cd6681ffc",
+   "nodes": 108
+  }
+ },
+ "edits_golden/model_switch.expected.cir": {
+  "rkm": {
+   "digest": "fd94c9a8eda3d116ea5caa7eed70bb0a9482f1006510e32509d96e86cbef401b",
+   "nodes": 32
+  },
+  "standard": {
+   "digest": "fd94c9a8eda3d116ea5caa7eed70bb0a9482f1006510e32509d96e86cbef401b",
+   "nodes": 32
+  }
+ },
+ "edits_golden/no_final_newline.cir": {
+  "rkm": {
+   "digest": "9a77b6e731f694897dcd61b003a1b135be72e38af6c864f15c434b584b3a8c5a",
+   "nodes": 10
+  },
+  "standard": {
+   "digest": "9a77b6e731f694897dcd61b003a1b135be72e38af6c864f15c434b584b3a8c5a",
+   "nodes": 10
+  }
+ },
+ "edits_golden/no_final_newline.expected.cir": {
+  "rkm": {
+   "digest": "fa29d7bba5b0a90e7cbb8959d3835b0b938797bada6060612706ea0accde18dd",
+   "nodes": 11
+  },
+  "standard": {
+   "digest": "fa29d7bba5b0a90e7cbb8959d3835b0b938797bada6060612706ea0accde18dd",
+   "nodes": 11
+  }
+ },
+ "edits_golden/param_added.expected.cir": {
+  "rkm": {
+   "digest": "b1aa4a52c4d5cd9fa01d4609765366d5416abf504621fc4c8e3edd8c2fbb2a5b",
+   "nodes": 106
+  },
+  "standard": {
+   "digest": "b1aa4a52c4d5cd9fa01d4609765366d5416abf504621fc4c8e3edd8c2fbb2a5b",
+   "nodes": 106
+  }
+ },
+ "edits_golden/param_after_backslash_value.expected.cir": {
+  "rkm": {
+   "digest": "89ec8c4be3f8a675d04a14bc5493610a8f0c31f3bce90e83f086f09b8ba5e320",
+   "nodes": 104
+  },
+  "standard": {
+   "digest": "89ec8c4be3f8a675d04a14bc5493610a8f0c31f3bce90e83f086f09b8ba5e320",
+   "nodes": 104
+  }
+ },
+ "edits_golden/param_on_continuation.expected.cir": {
+  "rkm": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
+   "nodes": 102
+  }
+ },
+ "edits_golden/params.expected.cir": {
+  "rkm": {
+   "digest": "a4375457e8fc280383b7ef2b3100f6c2f03174a5c7208e8428af9d9a0e942d86",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "a4375457e8fc280383b7ef2b3100f6c2f03174a5c7208e8428af9d9a0e942d86",
+   "nodes": 105
+  }
+ },
+ "edits_golden/review1_lf.cir": {
+  "rkm": {
+   "digest": "27e85b0fccbb1f1b56124c094721b6c614f16eefaa68d46a6cbf33b1efb13a7a",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "27e85b0fccbb1f1b56124c094721b6c614f16eefaa68d46a6cbf33b1efb13a7a",
+   "nodes": 28
+  }
+ },
+ "edits_golden/sources.expected.cir": {
+  "rkm": {
+   "digest": "3819ba8411bc5213854fca9d166ce1e108f733060c97443d01b93c0d26d58917",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "3819ba8411bc5213854fca9d166ce1e108f733060c97443d01b93c0d26d58917",
+   "nodes": 105
+  }
+ },
+ "edits_golden/swap_include.expected.cir": {
+  "rkm": {
+   "digest": "e49ca21229bd285176e4fb05d16e61a112ac015b699badbb841277a3495680f2",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "e49ca21229bd285176e4fb05d16e61a112ac015b699badbb841277a3495680f2",
+   "nodes": 28
+  }
+ },
+ "edits_golden/value.expected.cir": {
+  "rkm": {
+   "digest": "c4e81966b7da76832b382e9914f3d9ca28fad89134e509c019320a5c3dd6e92f",
+   "nodes": 102
+  },
+  "standard": {
+   "digest": "c4e81966b7da76832b382e9914f3d9ca28fad89134e509c019320a5c3dd6e92f",
+   "nodes": 102
+  }
+ },
+ "edits_golden/value_before_model.expected.cir": {
+  "rkm": {
+   "digest": "b358dd2a8ffa2cca362a93f61694596bf27323e09bf7769c7c6b146ac03471a3",
+   "nodes": 103
+  },
+  "standard": {
+   "digest": "b358dd2a8ffa2cca362a93f61694596bf27323e09bf7769c7c6b146ac03471a3",
+   "nodes": 103
+  }
+ },
+ "elements_basic/capacitors_inductors.cir": {
+  "rkm": {
+   "digest": "244b37f42fec2288c10beeacf363ee44fafec2cfd8ecd04981747047571a5493",
+   "nodes": 61
+  },
+  "standard": {
+   "digest": "244b37f42fec2288c10beeacf363ee44fafec2cfd8ecd04981747047571a5493",
+   "nodes": 61
+  }
+ },
+ "elements_basic/continuations_comments.cir": {
+  "rkm": {
+   "digest": "f84db8e82238bbddfd0777f5aa8618684bfeb17cc451b4ed2d85ad095c662e16",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "f84db8e82238bbddfd0777f5aa8618684bfeb17cc451b4ed2d85ad095c662e16",
+   "nodes": 24
+  }
+ },
+ "elements_basic/resistors.cir": {
+  "rkm": {
+   "digest": "a1ed3d8f33f69d0d4ccd75345b585718ac4b9a5d4d6a318b69f22399477ace0a",
+   "nodes": 66
+  },
+  "standard": {
+   "digest": "a1ed3d8f33f69d0d4ccd75345b585718ac4b9a5d4d6a318b69f22399477ace0a",
+   "nodes": 66
+  }
+ },
+ "elements_basic/sources_diodes.cir": {
+  "rkm": {
+   "digest": "67562fd3d66fb2df488c292b9efc1273fa296b1448bcf538a051088cff9041de",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "67562fd3d66fb2df488c292b9efc1273fa296b1448bcf538a051088cff9041de",
+   "nodes": 44
+  }
+ },
+ "elements_basic/subcircuit_calls.cir": {
+  "rkm": {
+   "digest": "aaa1371dc30eb673e83878e4cbecaa408e055a69e5634da30ba09a270ee9f3ca",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "aaa1371dc30eb673e83878e4cbecaa408e055a69e5634da30ba09a270ee9f3ca",
+   "nodes": 25
+  }
+ },
+ "elements_rejects/bare_formula.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/charge_capacitor.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 8,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/continued_stimulus.cir": {
+  "rkm": {
+   "column": 3,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 3,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "elements_rejects/coupling_non_inductor.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "inductor name (`L...`)",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "inductor name (`L...`)",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/coupling_one_inductor.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "inductor name (`L...`)",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "inductor name (`L...`)",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/diode_without_model.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/distortion_input.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 8,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/double_comma.cir": {
+  "rkm": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "name"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "name"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/missing_node.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/nested_braces.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "RKM value",
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`r=`",
+    "`resistance=`",
+    "`{expression}`",
+    "field separator",
+    "name",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "RKM value",
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`r=`",
+    "`resistance=`",
+    "`{expression}`",
+    "field separator",
+    "name",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/no_value_or_model.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/parameter_without_value.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [
+    "`'expression'`",
+    "`{expression}`",
+    "number"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [
+    "`'expression'`",
+    "`{expression}`",
+    "number"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/phase_2_letter.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/rkm_lowercase_m.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/rkm_on_inductor.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/rkm_without_option.cir": {
+  "rkm": {
+   "digest": "4022a8eaf55d6ad520d01986322c18287fd87bb0fedd0dd897c516f7833a2cfb",
+   "nodes": 6
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/source_ac_without_magnitude.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/source_dc_without_value.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/stimulus_function.cir": {
+  "rkm": {
+   "column": 9,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 9,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/stray_parenthesis.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/subckt_no_nodes.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/subckt_params_keyword.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "kicad_basic/ac_basic_rc_lpf.cir": {
+  "rkm": {
+   "digest": "e0ede9fb81c39cf25eb0700e724f0c914dc00d6ddb5012bde79aa9d3195eb875",
+   "nodes": 16
+  },
+  "standard": {
+   "digest": "e0ede9fb81c39cf25eb0700e724f0c914dc00d6ddb5012bde79aa9d3195eb875",
+   "nodes": 16
+  }
+ },
+ "kicad_basic/dc_basic_r_divider.cir": {
+  "rkm": {
+   "digest": "24435774c7341bd3f3fc6fe045fd3de9073a7d91a488d30152d266e1dc68a139",
+   "nodes": 14
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "kicad_basic/dc_basic_r_divider_decimal_vals.cir": {
+  "rkm": {
+   "digest": "b0bc0aa19f8011a8acb17b726ced8b12d03b5746fcfa372a6403492a13335926",
+   "nodes": 14
+  },
+  "standard": {
+   "digest": "b0bc0aa19f8011a8acb17b726ced8b12d03b5746fcfa372a6403492a13335926",
+   "nodes": 14
+  }
+ },
+ "kicad_extended/shiftscaleinvert.cir": {
+  "rkm": {
+   "digest": "0c53ef2fafd1c8349cf38063b072f452e4ab1222adbb9723448726d99bace568",
+   "nodes": 217
+  },
+  "standard": {
+   "digest": "0c53ef2fafd1c8349cf38063b072f452e4ab1222adbb9723448726d99bace568",
+   "nodes": 217
+  }
+ },
+ "statements_basic/analyses.cir": {
+  "rkm": {
+   "digest": "e330ac3df71f63eadc84dcbb0ffa99ff36fc5c7d1a35e443489f3a6677a6a61f",
+   "nodes": 70
+  },
+  "standard": {
+   "digest": "e330ac3df71f63eadc84dcbb0ffa99ff36fc5c7d1a35e443489f3a6677a6a61f",
+   "nodes": 70
+  }
+ },
+ "statements_basic/continuations.cir": {
+  "rkm": {
+   "digest": "98bccf36b1e08d7cfc848e946490c7509e82d978c189aef57ef2ece7290a11a3",
+   "nodes": 34
+  },
+  "standard": {
+   "digest": "98bccf36b1e08d7cfc848e946490c7509e82d978c189aef57ef2ece7290a11a3",
+   "nodes": 34
+  }
+ },
+ "statements_basic/params_models.cir": {
+  "rkm": {
+   "digest": "f74e89b0c544481ae005ffa352c7f0b4e43f25548d0aa381061b4234959bd176",
+   "nodes": 73
+  },
+  "standard": {
+   "digest": "f74e89b0c544481ae005ffa352c7f0b4e43f25548d0aa381061b4234959bd176",
+   "nodes": 73
+  }
+ },
+ "statements_basic/subcircuits.cir": {
+  "rkm": {
+   "digest": "e9b547f28bfd3cb6f6dfe74bc6bd58c054fd8d5455f63a7fe508dad4a4662f36",
+   "nodes": 81
+  },
+  "standard": {
+   "digest": "e9b547f28bfd3cb6f6dfe74bc6bd58c054fd8d5455f63a7fe508dad4a4662f36",
+   "nodes": 81
+  }
+ },
+ "statements_rejects/ac_missing_stop.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/ac_unknown_variation.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`dec`",
+    "`lin`",
+    "`oct`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`dec`",
+    "`lin`",
+    "`oct`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/dc_missing_increment.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/ic_all.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`v(`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`v(`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/ic_unclosed.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "`)`"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "`)`"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/ic_without_value.cir": {
+  "rkm": {
+   "column": 9,
+   "error": "ParseError",
+   "expected": [
+    "`=`"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 9,
+   "error": "ParseError",
+   "expected": [
+    "`=`"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/meas_unknown_analysis.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`AC`",
+    "`DC`",
+    "`\\\\` continuation onto a line of statement text",
+    "`sp`",
+    "`tran`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`AC`",
+    "`DC`",
+    "`\\\\` continuation onto a line of statement text",
+    "`sp`",
+    "`tran`",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/meas_without_result.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/model_empty.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/model_unbalanced.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`)`"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`)`"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/model_without_type.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/op_argument.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/param_bare_expression.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  }
+ },
+ "statements_rejects/param_bare_identifier.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  }
+ },
+ "statements_rejects/param_bare_spaced.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "statements_rejects/param_empty.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/param_reserved_name.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "statements_rejects/param_without_value.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`\"string\"`",
+    "`'expression'`",
+    "`{expression}`",
+    "bare expression",
+    "number"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`\"string\"`",
+    "`'expression'`",
+    "`{expression}`",
+    "bare expression",
+    "number"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/stray_ends.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/subckt_analysis_in_body.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [],
+   "line": 5
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [],
+   "line": 5
+  }
+ },
+ "statements_rejects/subckt_control_in_body.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [],
+   "line": 4
+  }
+ },
+ "statements_rejects/subckt_no_ports.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/subckt_params_keyword.cir": {
+  "rkm": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "statements_rejects/subckt_unterminated.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`"
+   ],
+   "line": 3
+  }
+ },
+ "statements_rejects/subckt_zero_port.cir": {
+  "rkm": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "statements_rejects/tran_one_value.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 3
+  }
+ },
+ "structure_basic/structure_basic.cir": {
+  "rkm": {
+   "digest": "ca2a1c11c8b3bd5ab9b396e2c61eed632cd0ea5441e07f0823e97fced6cf38d7",
+   "nodes": 9
+  },
+  "standard": {
+   "digest": "ca2a1c11c8b3bd5ab9b396e2c61eed632cd0ea5441e07f0823e97fced6cf38d7",
+   "nodes": 9
+  }
+ },
+ "structure_rejects/blank_between_continuation.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 4
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 4
+  }
+ },
+ "structure_rejects/block_after_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/comment_after_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/comment_between_continuation.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 4
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 4
+  }
+ },
+ "structure_rejects/continuation_after_blank.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/continuation_after_comment.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/continuation_after_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/continuation_after_title.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/directive_after_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/double_slash_line.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/element_line.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "structure_rejects/empty.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "end of line",
+    "title text"
+   ],
+   "line": 1
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "end of line",
+    "title text"
+   ],
+   "line": 1
+  }
+ },
+ "structure_rejects/empty_dollar.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/empty_semicolon.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/end_double_slash_comment.cir": {
+  "rkm": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/end_trailing_comment.cir": {
+  "rkm": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/include_continuation.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/lib_continuation.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.ends`",
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/lone_cr_after_end.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/missing_end.cir": {
+  "rkm": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.ends`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.ends`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/second_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "end of line"
+   ],
+   "line": 3
+  }
+ },
+ "structure_rejects/stray_else.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/stray_elseif.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/stray_endc.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/stray_endif.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.title`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/text_after_end.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 3
+  },
+  "standard": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 3
+  }
+ },
+ "structure_rejects/title_only.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 1
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [
+    "`.ac`",
+    "`.control`",
+    "`.dc`",
+    "`.end`",
+    "`.global`",
+    "`.ic`",
+    "`.if`",
+    "`.include`",
+    "`.lib`",
+    "`.meas`",
+    "`.measure`",
+    "`.model`",
+    "`.nodeset`",
+    "`.op`",
+    "`.option`",
+    "`.options`",
+    "`.param`",
+    "`.save`",
+    "`.subckt`",
+    "`.temp`",
+    "`.title`",
+    "`.tran`",
+    "capacitor (`C`)",
+    "comment line (`*`)",
+    "coupling (`K`)",
+    "current source (`I`)",
+    "diode (`D`)",
+    "dot-command",
+    "end of line",
+    "inductor (`L`)",
+    "resistor (`R`)",
+    "subcircuit call (`X`)",
+    "voltage source (`V`)"
+   ],
+   "line": 1
+  }
+ },
+ "structure_rejects/unterminated_control.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.endc`"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.endc`"
+   ],
+   "line": 2
+  }
+ },
+ "structure_rejects/unterminated_if.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.endif`"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 1,
+   "error": "ParseError",
+   "expected": [
+    "`.endif`"
+   ],
+   "line": 2
+  }
+ }
+}

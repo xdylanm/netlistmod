@@ -57,10 +57,8 @@ def test_loader_builds_and_caches_registered_ngspice_grammar() -> None:
     assert parser.options.strict is True
     assert build_parser(Dialect.NGSPICE) is parser
     assert GRAMMARS[Dialect.NGSPICE] == ("core.lark", "ngspice.lark")
-    assert registered_dialects() == frozenset({Dialect.NGSPICE})
-    assert pending_dialects() == frozenset({Dialect.LTSPICE})
-    with pytest.raises(ValueError, match="No grammar registered"):
-        build_parser(Dialect.LTSPICE)
+    assert registered_dialects() == frozenset({Dialect.NGSPICE, Dialect.LTSPICE})
+    assert pending_dialects() == frozenset()
     with pytest.raises(ValueError, match="Unknown dialect"):
         build_parser("ngspice")  # type: ignore[arg-type]
 
@@ -537,7 +535,7 @@ def test_unknown_letter_is_parse_error_and_device_matrix_is_complete() -> None:
     with pytest.raises(ParseError) as captured:
         _parse("title\nΩ1 a b 1k\n.end\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
-    matrix = device_matrix()
+    matrix = device_matrix(Dialect.NGSPICE)
     assert set(matrix) == set(string.ascii_uppercase)
     assert all(entry["status"] in {"planned", "supported", "error"} for entry in matrix.values())
 

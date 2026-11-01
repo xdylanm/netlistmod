@@ -6,11 +6,17 @@ from collections.abc import Callable
 
 import pytest
 
-from netlistmod import DiagnosticCode, Dialect, EditError, Netlist, Placement
+from netlistmod import DiagnosticCode, EditError, Netlist, Placement
+from tests.support.dialects import current_dialect
+
+# Cases whose text only ngspice reads (tests/support/dialects.py).
+NGSPICE_ONLY_CASES = {
+    "test_statement_operation_errors": ["braces", "reserved name"],
+}
 
 
 def _netlist(text: str) -> Netlist:
-    return Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    return Netlist.from_text(text, dialect=current_dialect())
 
 
 Operation = Callable[[Netlist], Netlist]

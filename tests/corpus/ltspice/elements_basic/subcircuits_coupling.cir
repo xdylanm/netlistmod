@@ -1,0 +1,21 @@
+M8 LTspice subcircuit calls and couplings
+V1 in 0 3 AC 1
+X1 in out div
+X§U2 out a div r=2k ;§pnba p)q
+X3 a b div params: r=3k3
+R1 b 0 1k
+.subckt div p q r=1k
+R1 p q {r}
+.ends div
+L1 c 0 1m
+L2 e 0 1m
+L3 f 0 1m
+L4 g 0 1m
+R2 c 0 1k
+R3 e 0 1k
+R4 f 0 1k
+R5 g 0 1k
+K1 L1 L2 0.5
+K2 L3 L4 L2 0m5
+.op
+.end

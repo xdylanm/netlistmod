@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from netlistmod import (
-    Dialect,
     Edit,
     EditError,
     EditPlan,
@@ -18,10 +17,11 @@ from netlistmod import (
     TopologyViolation,
 )
 from netlistmod.edit.verify import check_outside, check_signature, check_slots
+from tests.support.dialects import current_dialect
 
 
 def _netlist(body: str, *, rkm: bool = False) -> Netlist:
-    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=Dialect.NGSPICE, rkm=rkm)
+    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=current_dialect(), rkm=rkm)
 
 
 def test_a_faulty_plan_that_edits_a_node_span_is_a_topology_violation() -> None:
@@ -65,6 +65,7 @@ def test_a_parse_failure_is_an_edit_error_carrying_the_parse_error() -> None:
     assert isinstance(raised.value.__cause__, ParseError)
 
 
+@pytest.mark.ngspice_only
 def test_rkm_text_names_the_option() -> None:
     with pytest.raises(EditError, match=r"rkm=True") as raised:
         _netlist("R1 a b 1k").set_value("R1", "2k7")
@@ -72,6 +73,7 @@ def test_rkm_text_names_the_option() -> None:
     assert _netlist("R1 a b 1k", rkm=True).set_value("R1", "2k7").element("R1").value is not None
 
 
+@pytest.mark.ngspice_only
 def test_the_slot_check_rejects_text_that_lands_as_more_than_the_slot() -> None:
     netlist = _netlist("R1 a b 1k")
     with pytest.raises(EditError, match="`1k 2k` does not re-parse as a value"):

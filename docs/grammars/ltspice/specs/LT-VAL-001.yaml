@@ -1,0 +1,18 @@
+id: LT-VAL-001
+dialect: ltspice
+construct: brace and quoted expressions
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".PARAM — User-Defined Parameters"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- BRACE_FORMULA
+- QUOTE_FORMULA
+core_rules:
+- STRING_VALUE
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_inductor_parameters
+- tests/grammar/ltspice/test_ltspice_elements.py::test_voltage_source_forms
+notes: Contents are not parsed. Braces do not nest in the library, although LTspice tolerates it (discrepancies.md).

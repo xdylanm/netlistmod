@@ -1,0 +1,20 @@
+{
+  "family": "statements_basic",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Statement and directive forms; every file runs in LTspice 26.1.1. One analysis per file except where a form needs its own.",
+  "fixtures": {
+    "ac_dec.cir": "0e3a39074906f2072d5d6e845369c418d608d78bc4ced87916ab4ad8202ef504",
+    "ac_list.cir": "16384eb1917fcde6d677b36f3ce57e2c4a3775a520f2819196e63fc85079eef1",
+    "dc_forms.cir": "143982a1b2c5bb0038ada9ff2241f21994b225e0ea32d331fabe3177c1cce3aa",
+    "ic_inductor_current.cir": "3ef108e305c9380f95c65c8a65173b67e98e93debcfa697998054e6f51ef3546",
+    "noise_temp.cir": "f0d43cac1693655914ef80b01310429cd08e78428ea978fdbce726eab261384d",
+    "params.cir": "6e92c425f53cef27feeada772e7fb99cd214c1d9d48549fa0b8cdf7598218323",
+    "step_forms.cir": "e9c423137da5674a11aed8afbb06d74f6ff425ae1259e9690ce34242c2599968",
+    "subckt_body.cir": "fb3c03f4a6a113589205d7c8887eb263ce9930a8d3e3ac3e13f97eae66cd6dde",
+    "tran_forms.cir": "d67eed2b71ec4f045b0eefccc7a2f1145818aacc6c1cb6c6e478416650b8fcce",
+    "tran_full.cir": "4936b3837e07167f740850fdcce4a8d6f7091a8f9e11b0ed1b6c666a769db594"
+  }
+}

@@ -1,0 +1,3 @@
+M8 reject
+.model dm D(Is=x)
+.end

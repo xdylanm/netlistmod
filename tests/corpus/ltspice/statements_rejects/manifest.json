@@ -1,0 +1,227 @@
+{
+  "family": "statements_rejects",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Each fixture is one malformed or unsupported construct; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. The notes quote LTspice 26.1.1 where it stops at the same construct.",
+  "fixtures": {
+    "ac_list_empty.cir": {
+      "sha256": "be1718ccee26fcef34c2a7c4d3957d2b77c1006ceb65cd88878dd012333fdb57",
+      "line": 2,
+      "column": 9,
+      "error": "ParseError",
+      "note": "Expected list"
+    },
+    "control_block.cir": {
+      "sha256": "e697b6139582fec11036d299fb711ce02ca862f5a6e355f910c92f03fd1aa696",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "L22"
+    },
+    "dc_four_sweeps.cir": {
+      "sha256": "f90b8c45e18c6e69544270fa54f6a7558f343d04bdf9d06e2bc0cb94935a5b54",
+      "line": 2,
+      "column": 32,
+      "error": "ParseError",
+      "note": "three sweeps at most"
+    },
+    "four_in_subckt.cir": {
+      "sha256": "935a7ca37d6a5dfab5c6ee3ef63b2a8bc1b4480438ed449f9994e857e553bf19",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "top level only"
+    },
+    "ic_all.cir": {
+      "sha256": "d1f866a31805924c28ca8ba5a8cd9d444d652f802c6e274e33c667c31938f0eb",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "all= is an error in LTspice"
+    },
+    "ic_resistor_current.cir": {
+      "sha256": "8d0f874000a4d0f1924f2d03077aa275bdc1cba1bd7c5e50a014cc4aee36f79e",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "LTspice ignores it: only inductor currents are set (reference, Tips)"
+    },
+    "if_block.cir": {
+      "sha256": "59b885741806f64286097be907a18c9305ad37ce02e639d9e63d3c23fa7e8568",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "L23"
+    },
+    "machine_block.cir": {
+      "sha256": "e384115f2ce63692f252b5e26dc34c19467bcb19ffdb7e2360b1271beb4596c5",
+      "line": 2,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "decision 5"
+    },
+    "meas_sp_body.cir": {
+      "sha256": "6d823fc9d78da77a253c043151784117a1b4262227c9df2c7def03b38eefb49d",
+      "line": 2,
+      "column": 9,
+      "error": "ParseError",
+      "note": "the library requires a name and a body"
+    },
+    "misspelt_directive.cir": {
+      "sha256": "68f68c424776f5cdc509c161bd70b84d0f91d1ec5c9e5534f215a7a962e0c6f4",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "closed list (decision 5)"
+    },
+    "model_bare_expression.cir": {
+      "sha256": "67391aa1350469275fdf53a47b64fb0f749afcfa86ddaab17971188029570394",
+      "line": 2,
+      "column": 16,
+      "error": "ParseError",
+      "note": "bare expressions only in .param"
+    },
+    "model_bare_parameter.cir": {
+      "sha256": "87376227f230c65a33c0f9796ac362764a8187738be43f70bc0d9ca7916f5899",
+      "line": 2,
+      "column": 16,
+      "error": "ParseError",
+      "note": "LTspice reads x as a parameter reference; write {x}"
+    },
+    "model_pn_word.cir": {
+      "sha256": "8baf2a94a066b7f1f491bc0bb1fb5dcef9d2929d8d20a3bf4f83fdb438eac2b0",
+      "line": 2,
+      "column": 16,
+      "error": "ParseError",
+      "note": "only mfg and type take a bare word; this stops LTspice"
+    },
+    "nodeset_all.cir": {
+      "sha256": "f35e68372e096e550ec3c699de9b350e5ff2965c8351ff7953153210521bf9a9",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "all= is an error in LTspice"
+    },
+    "nodeset_current.cir": {
+      "sha256": "81b94fe8e9144d91324fb47b39382f53c75ec6f9f6159ec3ef00225d8f9395bd",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "the library keeps .nodeset to voltages; LTspice ignores it"
+    },
+    "op_with_argument.cir": {
+      "sha256": "559889c58504c245d32732db0fab0b768d6139cb80e95cef7fb82ba3ca0a5816",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "syntax error"
+    },
+    "param_digit_name.cir": {
+      "sha256": "79bbf85cf69a00c4e387e27ba3afa8b91ad209baeb8ebc4e6feaffe5183c7d76",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a name starts with a letter or _"
+    },
+    "param_two_values.cir": {
+      "sha256": "534303ef9dffb0dbc725cb0ef201ac9082e8191086ebcd44b23a6f84b0817615",
+      "line": 2,
+      "column": 12,
+      "error": "ParseError",
+      "note": "syntax error"
+    },
+    "param_without_value.cir": {
+      "sha256": "89699846e96d75acebaf0252661218a5010eef3913431163ec371df67a8bfbe4",
+      "line": 2,
+      "column": 9,
+      "error": "ParseError",
+      "note": "Expected expression"
+    },
+    "save_ac_function.cir": {
+      "sha256": "4b3ebbbb89fc8a02bbbe2bf186922903bdc16e5a2d0e6c5a3c1a7f3c9030385b",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "Expected ("
+    },
+    "save_plain_name.cir": {
+      "sha256": "3c34caae956cdf25cc3d2dd230c974676b79842dfebf40ed50127e20f5e216df",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "syntax error"
+    },
+    "step_brace_number.cir": {
+      "sha256": "4d12ccfa7bda7df035977ab8bbd3fa9ba1c5309b1aef5b2dada6bf4503b0b4c3",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "Expected number"
+    },
+    "step_in_subckt.cir": {
+      "sha256": "1e0426e898a5c47e8bd336df326aa5555c4e4ae74d51b5421487614ad786d65c",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "top level only"
+    },
+    "step_list_with_variation.cir": {
+      "sha256": "f3b21180df1510e1bb490d5d091c7344d02c2ac008d3c704f986f38cc55b6509",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "the reference: cannot combine"
+    },
+    "step_one_value_list.cir": {
+      "sha256": "d7f4e3418a03efa61553fbb2c6bbc0ff7dc3aed7021c7f5deb6ce685fb8c9615",
+      "line": 2,
+      "column": 21,
+      "error": "ParseError",
+      "note": "This results in only one step"
+    },
+    "stray_ends.cir": {
+      "sha256": "b274c24c8f6acb0e3328e871371cb5c7c5acc185eea2983e6b455e661659f569",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "no open subcircuit"
+    },
+    "text_after_end.cir": {
+      "sha256": "da92d71e68733d7955e1443539ea63362f6bef216e1ce62c311d882924e4b85b",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "decision 4"
+    },
+    "tran_in_subckt.cir": {
+      "sha256": "2d7542bbfef2e1630beb285c2f8aa54fd97e1487e0c4f3d53e0e8ce246e2c713",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "top level only"
+    },
+    "tran_too_many.cir": {
+      "sha256": "361a6bb9410d23802fd70d04f6ece55ee28813c285c2f8e916113690832f760a",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "Expected end of line"
+    },
+    "tran_unknown_modifier.cir": {
+      "sha256": "ee488d5b89392eafd9f9c9d1de458b83ec70811b5eca1ae62d097990baa7b337",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "closed modifier list"
+    },
+    "unknown_dot_command.cir": {
+      "sha256": "b4aa14a2d8606bfca83367a658565cf877c7f01357996113b6876b1afe1da6ca",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "L18"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+M8 LTspice transient forms
+V1 in 0 3
+R1 in out 1k
+C1 out 0 1n
+.tran 1m startup uic nodiscard
+.ic V(out)=1 V(in)=3
+.nodeset V(out)=1
+.save V(out) V(*) I(R1), I(R?) Id(*) V(in,out)
+.meas tran y max V(out)
+.meas z param 1
+.measure noname avg V(out)
+.options reltol=1m logparams
+.option abstol=1p
+.opt method=gear
+.temp 27
+.global vcc vdd
+.title a later title
+.backanno
+.func f(x) {x*2}
+.four 1k V(out)
+.savestate
+.end

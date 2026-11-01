@@ -198,9 +198,9 @@ def test_regex_import_guard_detects_deliberate_violation(tmp_path: Path) -> None
 def test_every_lark_rule_has_a_transformer_method() -> None:
     from netlistmod.model.transform import _NodeBuilder
 
-    # formula.lark is a separate grammar whose tree is walked by grammar/formula.py (M5).
+    # The formula grammars are separate; their trees are walked by grammar/formula.py (M5).
     grammar_files = sorted(
-        path for path in (SOURCE / "grammar").glob("*.lark") if path.name != "formula.lark"
+        path for path in (SOURCE / "grammar").glob("*.lark") if not path.name.startswith("formula")
     )
     assert _missing_transformer_methods(grammar_files, _NodeBuilder) == set()
 
@@ -274,6 +274,19 @@ UNCHECKED_TERMINALS = {
             "BS_CONT",
             "COMMENT_LINE",
             "DOT_NAME",
+            "TEXT",
+            "TITLE_ARG",
+            "TITLE_TEXT",
+            "TRAILING_COMMENT",
+        }
+    ),
+    Dialect.LTSPICE: frozenset(
+        {
+            "BARE_FORMULA",
+            "BLOCK_TEXT",
+            "MODEL_BARE",
+            "BRACE_FORMULA",
+            "COMMENT_LINE",
             "TEXT",
             "TITLE_ARG",
             "TITLE_TEXT",

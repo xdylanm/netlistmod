@@ -12,8 +12,9 @@ Element fields are rules that start with their separator (a "gap"). A field meth
 :class:`_Field` holding the field's node and the end-of-line comments of its gap; each element
 method collects its slots by node type (architecture §6.3 rule 11). Forms the grammar
 recognises only to reject them (RKM without the option, stimulus functions, ``q=``,
-``params:``, bare ``.param`` expressions, reserved parameter names, a port named ``0`` and the
-statements not allowed in a subcircuit) raise here, at the position of their token (P13 (c)).
+``params:``, bare ``.param`` expressions, reserved parameter names, a port named ``0``, the
+statements not allowed in a subcircuit and, in LTspice, a bare name for a value, the nonlinear
+inductor forms and ``.machine``) raise here, at the position of their token (P13 (c)).
 
 Typed dot-commands (decision 0005) use the same field rules, with the keyword in the place of
 the designator. A subcircuit definition is an item whose body items tile the text between its
@@ -64,6 +65,7 @@ from netlistmod.model.nodes import (
     ParseResult,
     Resistor,
     SaveDirective,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     TempDirective,
@@ -85,6 +87,7 @@ from netlistmod.model.values import (
     ParamAssignment,
     SubcktReference,
     Value,
+    ValueList,
 )
 from netlistmod.source import SourceText, Span
 
@@ -96,6 +99,11 @@ _FORMULA_DELIMITERS: dict[str, Literal["{", "'", '"']] = {
     "STRING_VALUE": '"',
 }
 _RKM_TERMINALS = frozenset({"RKM_R", "RKM_R_MEGA", "RKM_R_MILLI", "RKM_C", "RKM_C_FARAD"})
+_EMBEDDED = "EMBEDDED"  # the LTspice embedded decimal, always LTspice's own reading
+_BARE_FORMULA = "BARE_FORMULA"
+_TEXT_WORD = "WORD"  # the value of mfg, pn or type, the only parameters whose grammar offers it
+_MODEL_BARE = "MODEL_BARE"
+_STEP_VARIATIONS = frozenset({"DEC_KW", "OCT_KW", "LIN_KW"})
 # RKM terminals that ngspice reads differently from IEC 60062 (decision 0004).
 _RKM_SOLVER_MISMATCH = frozenset({"RKM_R_MEGA", "RKM_C_FARAD"})
 # Field tokens: the token of a field rule that is neither a separator nor a comment.
@@ -172,7 +180,62 @@ class _XRest:
 
 
 @dataclass(frozen=True, slots=True)
+class _ListKeyword:
+    """The ``list`` keyword of an LTspice ``.ac``, ``.dc`` or ``.step``."""
+
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class _FileArgument:
+    """``file=name`` of an LTspice ``.ac``, ``.dc`` or ``.step``."""
+
+    keyword: Token
+    name: Identifier
+
+
+@dataclass(frozen=True, slots=True)
+class _ParamsMarker:
+    """An LTspice ``params:``, which adds nothing to the node."""
+
+
+@dataclass(frozen=True, slots=True)
+class _StepItem:
+    """The swept quantity of ``.step param name`` or ``.step temp``."""
+
+    kind: Literal["param", "temp"]
+    token: Token
+
+
+@dataclass(frozen=True, slots=True)
+class _StepModelRef:
+    """``2N2222(VAF)``: one token holding the model name and the parameter."""
+
+    name: str
+    span: Span
+    model: ModelReference
+
+
+@dataclass(frozen=True, slots=True)
+class _StepSweep:
+    """The sweep of a ``.step``: a range, a list, or a file."""
+
+    values: tuple[Value, ...]
+    listed: bool
+    file: Identifier | None
+
+
+@dataclass(frozen=True, slots=True)
 class _Eol:
+    end: int
+    comments: tuple[Span, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Tail:
+    """A last field whose rule also holds the end of the statement."""
+
+    field: _Field
     end: int
     comments: tuple[Span, ...]
 
@@ -232,6 +295,13 @@ def _end(children: list[Any]) -> int:
     raise ValueError("Lark did not propagate statement positions")
 
 
+def _statement_end(terminator: Token | _Eol) -> tuple[int, tuple[Span, ...]]:
+    """Where a statement ends and the comments of its end, from its NL token or ``eol``."""
+    if isinstance(terminator, _Eol):
+        return terminator.end, terminator.comments
+    return _end([terminator]), ()
+
+
 def _comment_spans(children: list[Any]) -> tuple[Span, ...]:
     return tuple(
         _span(child)
@@ -263,6 +333,10 @@ class _Element:
                 self.fields.append(child)
                 comments.extend(child.comments)
                 end = child.end
+            elif isinstance(child, _Tail):
+                self.fields.append(child.field.node)
+                comments.extend((*child.field.comments, *child.comments))
+                end = child.end
         self.comments = tuple(comments)
         self.end = end or _end(children)
 
@@ -280,9 +354,10 @@ class _Element:
 class _NodeBuilder(Transformer[Token, ParseResult]):
     """Build nodes for one parse; every grammar rule has exactly one method."""
 
-    def __init__(self, source: SourceText, *, rkm: bool = False) -> None:
+    def __init__(self, source: SourceText, dialect: Dialect, *, rkm: bool = False) -> None:
         super().__init__()
         self._source = source
+        self._dialect = dialect
         self._rkm = rkm
 
     def __default__(self, data: Any, children: Any, meta: Any) -> NoReturn:
@@ -300,7 +375,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         text = self._source.text
         if cursor < len(text):
             items[-1] = replace(items[-1], span=Span(items[-1].span.start, len(text)))
-        return ParseResult(tuple(items))
+        return ParseResult(tuple(items), self._dialect)
 
     def explicit_title(self, children: list[Token]) -> _Item:
         text = next((str(token) for token in children if token.type == "TITLE_ARG"), "")
@@ -337,6 +412,8 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return _Item(
             _end(children), lambda span: UnknownDirective(name, raw, span, comments, name_span)
         )
+
+    top_unknown_stmt = unknown_stmt
 
     def include_stmt(self, children: list[Any]) -> _Item:
         _, raw, comments = self._statement(children)
@@ -385,7 +462,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def param(self, children: list[Any]) -> _Field:
         def build(name: Token) -> ParamAssignment:
             # [gap] WORD EQ value: the value is the last token.
-            value = self._value(children[-1])
+            value = self._param_value(children[-1])
             name_span = _span(name)
             return ParamAssignment(
                 str(name), value, Span(name_span.start, value.span.end), name_span
@@ -394,12 +471,49 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return self._field(children, build)
 
     x_param = param
+    r_param = param
+    c_param = param
+    l_param = param
+    v_param = param
+    d_param = param
+    resistive_load = param
+
+    def tc_param(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> ParamAssignment:
+            # [gap] TC_KW EQ value (CSEP value)*: every token after the name is a value.
+            values = tuple(self._value(token) for token in _field_tokens(children)[1:])
+            name_span = _span(name)
+            span = Span(values[0].span.start, values[-1].span.end)
+            return ParamAssignment(
+                str(name),
+                ValueList(self._source.text[span.start : span.end], values, span),
+                Span(name_span.start, span.end),
+                name_span,
+            )
+
+        return self._field(children, build)
+
+    def params_marker(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _ParamsMarker())
+
+    def load_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    noiseless_flag = load_flag
 
     def model(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: ModelReference(str(token), _span(token)))
 
     def flag(self, children: list[Any]) -> _Field:
-        return self._field(children, lambda token: Flag(str(token), _span(token)))
+        def build(name: Token) -> Flag:
+            # [gap] keyword, or (LTspice) [gap] keyword EQ value.
+            tokens = _field_tokens(children)
+            if len(tokens) == 1:
+                return Flag(str(name), _span(name))
+            value = self._value(tokens[-1])
+            return Flag(str(name), Span(_span(name).start, value.span.end), value)
+
+        return self._field(children, build)
 
     def inductor_ref(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: ElementReference(str(token), _span(token)))
@@ -427,7 +541,12 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return _Field(_Dc(value.node, keyword is not None), comments)
 
     def ac_spec(self, children: list[Any]) -> _Field:
-        # [gap] AC_KW value, or a gap token and a nested ac_spec; both end in a _Field.
+        # [gap] AC_KW value, or a gap token and a nested ac_spec; both end in a _Field. LTspice
+        # also has [gap] AC_KW EQ value, which ends in the value's token.
+        if isinstance(children[-1], Token):
+            magnitude = self._value(children[-1])
+            start = _span(_field_token(children)).start
+            return _Field(_AcMagnitude(magnitude, start), _comment_spans(children))
         inner: _Field = children[-1]
         comments = (*_comment_spans(children), *inner.comments)
         if isinstance(inner.node, _AcMagnitude):
@@ -448,11 +567,12 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         keyword = _field_token(children)
         name = str(keyword).upper()
         kind = "distortion input" if name.startswith("DISTOF") else "function"
-        raise self._unsupported(keyword, f"ngspice {name} source {kind}")
+        raise self._unsupported(keyword, f"{self._dialect.display_name} {name} source {kind}")
 
     def charge(self, children: list[Any]) -> NoReturn:
         keyword = _field_token(children)
-        raise self._unsupported(keyword, "ngspice behavioral capacitor charge form (q=)")
+        construct = f"{self._dialect.display_name} behavioral capacitor charge form (q=)"
+        raise self._unsupported(keyword, construct)
 
     def params_keyword(self, children: list[Any]) -> NoReturn:
         raise self._parse_error(
@@ -460,6 +580,24 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
             "`params:` is not ngspice syntax for subcircuit parameters; write them as "
             "name=value without `params:`",
         )
+
+    def bare_name(self, children: list[Any]) -> NoReturn:
+        name = _field_token(children)
+        raise self._parse_error(
+            name,
+            f"`{name}` is not an LTspice value: LTspice reads a bare name as a model, and R, C "
+            "and L take no model. Write a number or a brace expression (`{...}`)",
+        )
+
+    def nonlinear_inductor(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        raise self._unsupported(keyword, f"LTspice nonlinear inductor form ({keyword}=)")
+
+    def machine_block(self, children: list[Any]) -> NoReturn:
+        raise self._unsupported(children[0], "LTspice .machine state machine")
+
+    def machine_line(self, children: list[Any]) -> None:
+        return None
 
     # Elements.
 
@@ -493,9 +631,12 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def diode(self, children: list[Any]) -> _Item:
         element = _Element(children)
         model = element.all(ModelReference)[0]
+        area = next(iter(element.values()), None)
         return _Item(
             element.end,
-            lambda span: Diode(**_common(element, span), model=model, flags=element.all(Flag)),
+            lambda span: Diode(
+                **_common(element, span), model=model, flags=element.all(Flag), area=area
+            ),
         )
 
     def subckt_instance(self, children: list[Any]) -> _Item:
@@ -561,15 +702,25 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
         return self._field(children, build)
 
-    def core__bare_value(self, children: list[Token]) -> _Bare:
+    def bare_value(self, children: list[Token]) -> _Bare:
         return _Bare(Span(_span(children[0]).start, _span(children[-1]).end))
 
     def bare_tail(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: _Bare(_span(token)))
 
+    def model_ako(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> ModelReference:
+            # AKO_REF is "ako:" and the base model name, one token.
+            prefix = len("ako:")
+            start = _span(token).start + prefix
+            return ModelReference(str(token)[prefix:], Span(start, _span(token).end))
+
+        return self._field(children, build)
+
     def model_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         name, model_type = element.all(Token)[:2]
+        ako = element.optional(ModelReference)
         paren = element.optional(_ModelParams)
         params = paren.params if paren is not None else element.all(ParamAssignment)
         return _Item(
@@ -584,6 +735,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 parenthesized=paren is not None,
                 open_paren_span=paren.open_span if paren is not None else None,
                 close_paren_span=paren.close_span if paren is not None else None,
+                ako=ako,
             ),
         )
 
@@ -666,38 +818,72 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def tran_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         values = element.values()
+        # LTspice's `.tran 1m` holds only tstop; the grammar requires both otherwise.
+        tstep, tstop = (None, values[0]) if len(values) == 1 else (values[0], values[1])
         return _Item(
             element.end,
             lambda span: TranDirective(
                 **_dot(element, span),
-                tstep=values[0],
-                tstop=values[1],
+                tstep=tstep,
+                tstop=tstop,
                 tstart=values[2] if len(values) > 2 else None,
                 tmax=values[3] if len(values) > 3 else None,
                 uic=element.optional(Flag),
+                modifiers=element.all(OptionItem),
             ),
         )
 
     uic = flag
 
+    def tran_modifier(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> OptionItem:
+            tokens = _field_tokens(children)
+            value = self._value(tokens[-1]) if len(tokens) > 1 else None
+            name_span = _span(name)
+            end = value.span.end if value is not None else name_span.end
+            return OptionItem(str(name), name_span, value, Span(name_span.start, end))
+
+        return self._field(children, build)
+
     def ac_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        variation = element.all(Token)[0]
-        points, fstart, fstop = element.values()
+        file = element.optional(_FileArgument)
+        listed = element.optional(_ListKeyword)
+        values = element.values()
+        if file is not None:
+            variation_span = _span(file.keyword)
+        elif listed is not None:
+            variation_span = listed.span
+        else:
+            variation_span = _span(element.all(Token)[0])
+        variation = self._source.text[variation_span.start : variation_span.end]
+        ranged = file is None and listed is None
         return _Item(
             element.end,
             lambda span: AcDirective(
                 **_dot(element, span),
-                variation=str(variation),
-                variation_span=_span(variation),
-                points=points,
-                fstart=fstart,
-                fstop=fstop,
+                variation=variation,
+                variation_span=variation_span,
+                points=values[0] if ranged else None,
+                fstart=values[1] if ranged else None,
+                fstop=values[2] if ranged else None,
+                frequencies=values if listed is not None else (),
+                file=file.name if file is not None else None,
             ),
         )
 
     def ac_variation(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: token)
+
+    def list_keyword(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _ListKeyword(_span(token)))
+
+    def file_argument(self, children: list[Any]) -> _Field:
+        def build(keyword: Token) -> _FileArgument:
+            name: Token = children[-1]
+            return _FileArgument(keyword, Identifier(str(name), _span(name)))
+
+        return self._field(children, build)
 
     meas_analysis = ac_variation
 
@@ -707,15 +893,33 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return _Item(element.end, lambda span: DcDirective(**_dot(element, span), sweeps=sweeps))
 
     def dc_sweep(self, children: list[_Field]) -> _Field:
-        source = children[0].node
+        tokens = [child.node for child in children if isinstance(child.node, Token)]
+        variation = tokens[0] if len(tokens) == 2 else None
+        source = tokens[-1]
         assert isinstance(source, Token)
-        start, stop, increment = (child.node for child in children[1:])
-        assert isinstance(start, NumericValue | Formula)
-        assert isinstance(stop, NumericValue | Formula)
-        assert isinstance(increment, NumericValue | Formula)
-        span = Span(_span(source).start, increment.span.end)
-        sweep = DcSweep(str(source), _span(source), start, stop, increment, span)
+        values = tuple(
+            child.node for child in children if isinstance(child.node, NumericValue | Formula)
+        )
+        listed = any(isinstance(child.node, _ListKeyword) for child in children)
+        file = next((c.node.name for c in children if isinstance(c.node, _FileArgument)), None)
+        ranged = not listed and file is None
+        last = file if file is not None else values[-1]
+        sweep = DcSweep(
+            str(source),
+            _span(source),
+            values[0] if ranged else None,
+            values[1] if ranged else None,
+            values[2] if ranged else None,
+            Span(_span(source).start, last.span.end),
+            str(variation) if variation is not None else None,
+            values if listed else (),
+            file,
+        )
         return _Field(sweep, tuple(c for child in children for c in child.comments))
+
+    def dc_list_sweep(self, children: list[Any]) -> _Tail:
+        # The statement's end is part of this rule: a value list is not delimited (LALR).
+        return _Tail(self.dc_sweep(children[:-1]), *_statement_end(children[-1]))
 
     def op_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
@@ -747,8 +951,11 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def temp_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        value = element.values()[0]
-        return _Item(element.end, lambda span: TempDirective(**_dot(element, span), value=value))
+        values = element.values()
+        return _Item(
+            element.end,
+            lambda span: TempDirective(**_dot(element, span), value=values[0], others=values[1:]),
+        )
 
     def ic_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
@@ -777,6 +984,17 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     nodeset_all = node_condition
 
+    def current_condition(self, children: list[Any]) -> _Field:
+        def build(opener: Token) -> NodeCondition:
+            # i( L_REF ) = value: the inductor is the second field token, the value the last.
+            tokens = _field_tokens(children)
+            value = self._value(tokens[-1])
+            current = ElementReference(str(tokens[1]), _span(tokens[1]))
+            span = Span(_span(opener).start, value.span.end)
+            return NodeCondition(None, value, span, current)
+
+        return self._field(children, build)
+
     def save_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         vectors = element.all(OutputVector)
@@ -804,6 +1022,10 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def current_vector(self, children: list[Token]) -> OutputVector:
         opener, *names = _field_tokens(children)[:-1]
         function = str(opener)[:-1]
+        if names[0].type == "SAVE_PATTERN":
+            # A wildcard or hierarchical name (LTspice) refers to no single element.
+            span = Span(_span(opener).start, _span(children[-1]).end)
+            return OutputVector(self._source.text[span.start : span.end], span, function=function)
         if opener.type == "CURRENT_VARIANT_OPEN":
             raise self._parse_error(
                 opener,
@@ -822,14 +1044,15 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def meas_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        analysis, result = element.all(Token)[:2]
+        tokens = element.all(Token)
+        analysis, result = (None, tokens[0]) if len(tokens) == 1 else tokens[:2]
         body = element.all(_MeasBody)[0]
         return _Item(
             element.end,
             lambda span: MeasureDirective(
                 **_dot(element, span),
-                analysis=str(analysis),
-                analysis_span=_span(analysis),
+                analysis=str(analysis) if analysis is not None else None,
+                analysis_span=_span(analysis) if analysis is not None else None,
                 result=str(result),
                 result_span=_span(result),
                 body_text=body.text,
@@ -854,6 +1077,78 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         nodes = element.all(Node)
         return _Item(element.end, lambda span: GlobalDirective(**_dot(element, span), nodes=nodes))
 
+    def step_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        tokens = element.all(Token)
+        variation = next((t for t in tokens if t.type in _STEP_VARIATIONS), None)
+        item = element.optional(_StepItem)
+        source = next((t for t in tokens if t.type not in _STEP_VARIATIONS), None)
+        model_ref = element.optional(_StepModelRef)
+        sweep = element.all(_StepSweep)[0]
+        if sweep.listed and variation is not None:
+            raise self._parse_error(
+                variation, f"`{variation}` cannot be combined with `list` in `.step` (reference)"
+            )
+        name = item.token if item is not None else source
+        assert name is not None
+        kind: Literal["param", "source", "temp", "model"]
+        if item is not None:
+            kind = item.kind
+        else:
+            kind = "model" if model_ref is not None else "source"
+        ranged = not sweep.listed and sweep.file is None
+        return _Item(
+            element.end,
+            lambda span: StepDirective(
+                **_dot(element, span),
+                kind=kind,
+                name=str(model_ref.name) if model_ref is not None else str(name),
+                name_span=model_ref.span if model_ref is not None else _span(name),
+                model_type=(Identifier(str(name), _span(name)) if model_ref is not None else None),
+                model=model_ref.model if model_ref is not None else None,
+                variation=str(variation) if variation is not None else None,
+                variation_span=_span(variation) if variation is not None else None,
+                start=sweep.values[0] if ranged else None,
+                stop=sweep.values[1] if ranged else None,
+                increment=sweep.values[2] if ranged else None,
+                values=sweep.values if sweep.listed else (),
+                file=sweep.file,
+            ),
+        )
+
+    def step_param(self, children: list[Any]) -> _Field:
+        comments = _comment_spans(children)
+        inner: _Field = children[-1]
+        if isinstance(inner.node, _StepItem):
+            return _Field(inner.node, (*comments, *inner.comments))
+        assert isinstance(inner.node, Token)
+        return _Field(_StepItem("param", inner.node), (*comments, *inner.comments))
+
+    def step_temp(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _StepItem("temp", token))
+
+    def step_model_ref(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _StepModelRef:
+            # STEP_MODEL_REF is name(parameter), one token, so the model name is its head.
+            span = _span(token)
+            head = str(token).partition("(")[0]
+            model = ModelReference(head, Span(span.start, span.start + len(head)))
+            return _StepModelRef(str(token), span, model)
+
+        return self._field(children, build)
+
+    def step_sweep(self, children: list[Any]) -> _Tail:
+        # The statement's end is part of this rule: a value list is not delimited (LALR).
+        fields: list[_Field] = children[:-1]
+        values = tuple(c.node for c in fields if isinstance(c.node, NumericValue | Formula))
+        listed = any(isinstance(c.node, _ListKeyword) for c in fields)
+        file = next((c.node.name for c in fields if isinstance(c.node, _FileArgument)), None)
+        comments = tuple(comment for child in fields for comment in child.comments)
+        sweep = _Field(_StepSweep(values, listed, file), comments)
+        return _Tail(sweep, *_statement_end(children[-1]))
+
+    step_value = r_value
+
     # Helpers.
 
     def _field(self, children: list[Any], build: Callable[[Token], object]) -> _Field:
@@ -872,9 +1167,25 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
             # The grammar guarantees exactly one delimiter character at each end of the token.
             text = self._source.text[span.start + 1 : span.end - 1]
             return Formula(text, _FORMULA_DELIMITERS[token.type], span)
+        if token.type == _BARE_FORMULA:
+            return Formula(str(token), "", _span(token))
+        if token.type == _EMBEDDED:
+            return NumericValue(str(token), _span(token), "rkm")
         if token.type in _RKM_TERMINALS:
             return self._rkm_value(token)
         return NumericValue(str(token), _span(token))
+
+    def _param_value(self, token: Token) -> Value | Identifier:
+        """A parameter value; an LTspice bare word stays a name, never a formula (review R8)."""
+        if token.type == _TEXT_WORD:
+            return Identifier(str(token), _span(token))
+        if token.type == _MODEL_BARE:
+            raise self._parse_error(
+                token,
+                f"`{token}`: LTspice reads a bare word in this `.model` parameter as a parameter "
+                f"reference; write `{{{token}}}`. Only `mfg` and `type` take a bare word",
+            )
+        return self._value(token)
 
     def _rkm_value(self, token: Token) -> NumericValue:
         if token.type == "RKM_R_MILLI":
@@ -910,6 +1221,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 value=value,
                 value_keyword=keyword,
                 model=model,
+                flags=element.all(Flag),
             ),
         )
 
@@ -925,10 +1237,11 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return _Item(
             element.end,
             lambda span: kind(
-                **_common(element, span, params=()),
+                **_common(element, span),
                 dc=dc.value if dc is not None else None,
                 dc_keyword=dc.keyword if dc is not None else False,
                 ac=ac,
+                flags=element.all(Flag),
             ),
         )
 
@@ -992,16 +1305,22 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
     letter that is not supported yet, a source stimulus function, ``DISTOF`` and the charge form
     ``q=`` of a capacitor raise ``UnsupportedConstruct``.
 
-    ``rkm=True`` accepts RKM values (``2k7``, ``4R7``, ``4p7``) for resistors and capacitors,
-    read per IEC 60062; without it they raise ``ParseError``. The option does not change the
-    grammar, and standard notation parses the same either way (decision 0004).
+    ``rkm=True`` accepts RKM values (``2k7``, ``4R7``, ``4p7``) for ngspice resistors and
+    capacitors, read per IEC 60062; without it they raise ``ParseError``. The option does not
+    change the grammar, and standard notation parses the same either way (decision 0004). LTspice
+    reads its embedded decimal natively, so ``rkm=True`` with ``Dialect.LTSPICE`` is a
+    ``ValueError`` (decision 0009).
 
     The whole source is parsed first, so a syntax error anywhere is reported before an RKM
     value, an unsupported form or ``params:`` that the transformer rejects.
     """
+    if rkm and dialect is Dialect.LTSPICE:
+        raise ValueError(
+            "rkm=True applies only to ngspice: LTspice reads its embedded decimal natively"
+        )
     tree = parse_tree(source, dialect)
     try:
-        return _NodeBuilder(source, rkm=rkm).transform(tree)
+        return _NodeBuilder(source, dialect, rkm=rkm).transform(tree)
     except VisitError as error:
         if isinstance(error.orig_exc, ParseError | UnsupportedConstruct):
             raise error.orig_exc from None

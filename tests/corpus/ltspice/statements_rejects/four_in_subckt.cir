@@ -1,0 +1,5 @@
+M8 reject
+.subckt s a
+.four 1k V(a)
+.ends
+.end

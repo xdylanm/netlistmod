@@ -25,3 +25,19 @@ adopted, update the edition and access date and re-check every citation.
 - **Edition:** 2016 (later amendments not checked)
 - **Used for:** RKM letter codes (decision 0004, `docs/grammars/ngspice/numbers.md`).
   Secondary source: https://en.wikipedia.org/wiki/RKM_code (accessed 2026-10-30).
+
+## [ltspice-ref]
+
+- **Title:** LTspice AI Reference (`analogdevicesinc/ltspice-reference`)
+- **Publisher:** Analog Devices, Inc.
+- **URL:** https://github.com/analogdevicesinc/ltspice-reference
+- **License:** Apache-2.0 for the documentation (`LICENSE.md`; verified 2026-10-31); LTspice itself
+  is proprietary
+- **Commit:** `b4358f83e9d09a719ee5c08f25b7e236a896c41d` (2026-09-16), the head of `main` on the
+  access date
+- **Copy cited:** the copy LTspice 26.1.1 installs under `%LOCALAPPDATA%\LTspice\reference\`, marked
+  version "24+"
+- **Accessed:** 2026-11-01
+- **Citation form:** `[ltspice-ref] <FILE>.md "<heading>"`, because the reference has no section
+  numbers. Paraphrase only (architecture §11.3 rule 4). The built-in LTspice Help is proprietary and
+  is not cited or copied (decision 0009).

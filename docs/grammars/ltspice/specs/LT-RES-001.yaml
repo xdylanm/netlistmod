@@ -1,0 +1,34 @@
+id: LT-RES-001
+dialect: ltspice
+construct: resistor (R) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "R — Resistor"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- resistor
+- r_value
+- r_param
+- tc_param
+- bare_name
+- noiseless_flag
+- R_PARAM_KW
+- R_TEXT_KW
+- TC_KW
+- NOISELESS_KW
+core_rules:
+- R_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_resistor_parameters
+- tests/grammar/ltspice/test_ltspice_elements.py::test_tc_forms
+- tests/grammar/ltspice/test_ltspice_elements.py::test_noiseless_flag
+- tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_resistor_lines
+- tests/grammar/ltspice/test_ltspice_elements.py::test_a_bare_name_for_a_value_says_what_is_wrong
+- tests/grammar/ltspice/test_ltspice_elements.py::test_keyword_values_are_not_ltspice_forms
+notes: 'Value, then tc (list), temp and m, a closed list. Observed (section 11.3 rule 3, probed on LTspice
+  26.1.1): tol, pwr, tc1, tc2, and mfg and pn (a quoted string or a bare word), which LTspice''s component
+  database writes (reviews R1, R10). The noiseless flag is observed; a flag may take a value, which the
+  reference documents (review R9). No model and no keyword form.'

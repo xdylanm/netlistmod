@@ -1,0 +1,20 @@
+M8 LTspice parameters
+.param a=1k
+.param b 2k
+.param c=1k d=2k, e=3k
+.param f 3k g 4k
+.param h=a+b
+.param i = a + b
+.param j=2*pi*100
+.param k=max(a, b) l=3
+.param m={a}
+.param n='b'
+.param o=1k5
+.param time=1 temper=2 hertz=3
+.param _p=1 q.r=2 s#t=3
+.param u="text"
+V1 in 0 3
+R1 in out {a}
+R2 out 0 {h}
+.op
+.end

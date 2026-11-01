@@ -52,6 +52,8 @@ testpaths = ["tests"]
 addopts = ["--strict-markers", "--cov=netlistmod", "--cov-report=term-missing"]
 markers = [
     "solver(name): test requiring a local solver (ngspice or ltspice)",
+    "ngspice_only: text only ngspice accepts; deselected in the LTspice run (M8 decision 16)",
+    "ltspice_only: text only LTspice accepts; deselected in the ngspice run (M8 decision 16)",
 ]
 
 [tool.coverage.run]

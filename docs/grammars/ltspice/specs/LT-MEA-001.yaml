@@ -1,0 +1,23 @@
+id: LT-MEA-001
+dialect: ltspice
+construct: .meas and .measure
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".MEASURE — User-Defined Measurements"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- meas_stmt
+- meas_analysis
+- NOISE_KW
+- OP_ANALYSIS_KW
+core_rules:
+- meas_body
+- MEAS_KW
+- MEASURE_KW
+- TRAN_ANALYSIS_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_meas
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_meas
+notes: Typed shallowly. The analysis is optional; op is observed (L30-L37).

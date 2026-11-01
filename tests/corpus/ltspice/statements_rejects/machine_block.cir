@@ -1,0 +1,5 @@
+M8 reject
+.machine
+.state a 0
+.endmachine
+.end

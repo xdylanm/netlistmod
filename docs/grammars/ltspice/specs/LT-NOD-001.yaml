@@ -1,0 +1,31 @@
+id: LT-NOD-001
+dialect: ltspice
+construct: node, element and subcircuit names
+manual_ref:
+- '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Node Naming"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- _LT_CHAR
+- WORD
+- R_NAME
+- C_NAME
+- L_NAME
+- K_NAME
+- L_REF
+- V_NAME
+- I_NAME
+- D_NAME
+- X_NAME
+core_rules:
+- node
+- x_name
+- model
+tests:
+- tests/grammar/ltspice/test_ltspice_structure.py::test_node_names_are_any_string_without_excluded_characters
+- tests/grammar/ltspice/test_ltspice_structure.py::test_excluded_name_characters
+- tests/grammar/ltspice/test_ltspice_structure.py::test_designators_use_the_same_characters
+notes: Any string without blanks and without = ( ) , { } ' " | ; (the excluded set is settled by probe;
+  the reference only says to avoid spaces). Expressions as node or subcircuit names are rejected (discrepancies.md).

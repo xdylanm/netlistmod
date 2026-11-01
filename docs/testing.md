@@ -16,6 +16,13 @@ paths and avoid dotenv backslash escaping. `.env` is ignored by Git and is not
 needed when a solver is available on `PATH` or in a standard install location.
 Never put credentials in this file.
 
+The project's `uv` and dev tools are in `.venv` and may not be on `PATH`. In that case start from
+the venv's interpreter (`.venv/bin/python` on Linux and macOS), and read each `uv run` below this way:
+
+```powershell
+.venv\Scripts\python.exe -m uv run --env-file .env python -m pytest
+```
+
 Run checks through uv so `.env` is loaded consistently:
 
 ```powershell

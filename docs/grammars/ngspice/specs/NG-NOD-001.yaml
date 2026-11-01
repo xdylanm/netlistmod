@@ -13,6 +13,8 @@ grammar:
 - _WCHAR
 - _WUNIT
 - WORD
+- _NG_CHAR
+- _NG_UNIT
 - node
 tests:
 - tests/grammar/ngspice/test_elements.py::test_resistor_value_model_and_parameters

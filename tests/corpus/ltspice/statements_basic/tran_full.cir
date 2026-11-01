@@ -1,0 +1,5 @@
+M8 LTspice full transient form
+V1 in 0 3
+R1 in out 1k
+.tran 1u 1m 0 1u uic
+.end

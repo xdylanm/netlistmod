@@ -1,0 +1,7 @@
+M8 LTspice .ic with an inductor current
+L1 out 0 1m
+R1 out 0 1
+.ic I(L1)=1 V(out)=0
+.ic i( l1 ) = 1k5
+.tran 1m uic
+.end

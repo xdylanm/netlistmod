@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 
 from netlistmod import (
-    Dialect,
     Diode,
     Inductor,
     ModelStatement,
@@ -17,10 +16,11 @@ from netlistmod import (
     SubcktDefinition,
     VoltageSource,
 )
+from tests.support.dialects import current_dialect
 
 
 def _netlist(body: str, **options: bool) -> Netlist:
-    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=Dialect.NGSPICE, **options)
+    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=current_dialect(), **options)
 
 
 def _refs(netlist: Netlist, kind: str | None = None) -> list[Reference]:
@@ -77,6 +77,7 @@ def test_symbol_tables_hold_every_definition_in_source_order() -> None:
     assert list(div.elements) == ["r1"]
 
 
+@pytest.mark.ngspice_only
 def test_element_models_resolve_through_enclosing_scopes_in_any_order() -> None:
     netlist = _netlist(
         "D1 a 0 DMOD\nR1 a b rmod l=1u\n.subckt outer p q\n.subckt inner x y\nD2 x y dloc\n"
@@ -149,6 +150,7 @@ def test_coupling_references_inductors_in_the_same_scope() -> None:
     assert [ref.target is None for ref in local] == [True, False]
 
 
+@pytest.mark.ngspice_only
 def test_dc_sources_and_saved_currents_reference_elements() -> None:
     netlist = _netlist(
         "VIN in 0 1\nR1 in 0 1\n.dc vin 0 5 0.1 TEMP -15 75 5\n.dc r1 1 2 1\n"
@@ -164,6 +166,7 @@ def test_dc_sources_and_saved_currents_reference_elements() -> None:
     assert isinstance(elements[0].target, VoltageSource)
 
 
+@pytest.mark.ngspice_only
 def test_formula_identifiers_resolve_to_parameters() -> None:
     netlist = _netlist(
         ".param gain=2 rx={gain*1k}\n"
@@ -227,6 +230,7 @@ def test_references_to_param_follow_masking() -> None:
     assert netlist.references_to_param("nope") == ()
 
 
+@pytest.mark.ngspice_only
 def test_unresolved_and_unparsed_formulas() -> None:
     netlist = _netlist("R1 a b {missing}\nR2 a b {a#b}\nR3 a b {2*pi}")
     params = _refs(netlist, "param")
@@ -242,6 +246,7 @@ def test_resolve_returns_the_target_of_this_netlists_references() -> None:
         netlist.resolve(stranger)
 
 
+@pytest.mark.ngspice_only
 def test_items_in_opaque_blocks_are_not_seen() -> None:
     netlist = _netlist(".if (1)\n.model dm d\nR9 a b 1\n.endif\nD1 a 0 dm")
     assert netlist.references[0].target is None

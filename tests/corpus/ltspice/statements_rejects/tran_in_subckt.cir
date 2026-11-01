@@ -1,0 +1,5 @@
+M8 reject
+.subckt s a
+.tran 1m
+.ends
+.end

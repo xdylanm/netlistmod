@@ -4,11 +4,12 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-10-21",
-  "notes": "Exported with LTspice 26.1.1.0. encoding_cp1252.asc is cp1252, and encoding_utf8.asc is UTF-8 because Omega (U+03A9) is not representable in cp1252. Both exported .net files are UTF-8 without a BOM. The cp1252 schematic's micro sign (U+00B5) and degree sign (U+00B0) are preserved; UTF-8 input is interpreted as Windows-1252, producing mojibake in the exported netlist. Absolute source-path comments were normalized to relative filenames.",
+  "notes": "Exported with LTspice 26.1.1.0. encoding_cp1252.asc is cp1252, and encoding_utf8.asc is UTF-8 because Omega (U+03A9) is not representable in cp1252. Both exported .net files are UTF-8 without a BOM. The cp1252 schematic's micro sign (U+00B5) and degree sign (U+00B0) are preserved; UTF-8 input is interpreted as Windows-1252, producing mojibake in the exported netlist. Absolute source-path comments were normalized to relative filenames. utf16le_bom.cir was authored here for M8 T8 (a UTF-16LE file with a BOM, which LTspice 26.1.1 runs).",
   "fixtures": {
     "encoding_cp1252.asc": "23500183933851b191f2515dfe03955fa41a371fa392a5f7ed59332bece92c74",
     "encoding_cp1252.net": "46d4f3138e25da452ee8cac1b02a002eb53f91f01d78f29666fcd1d30bbbac2f",
     "encoding_utf8.asc": "10d1b43041f071b9002e49e28a4c636709d4b0f24753a3f76811247f96e79573",
-    "encoding_utf8.net": "6a1b9bf5e6235a8099a322ad4e1176740f8bbaad17e6ce8d6f16c7f696aacd90"
+    "encoding_utf8.net": "6a1b9bf5e6235a8099a322ad4e1176740f8bbaad17e6ce8d6f16c7f696aacd90",
+    "utf16le_bom.cir": "2412934b2451df3e3c6e60c1da7bdde4b9e960fd5d1e24256b43e45f67be02b6"
   }
 }

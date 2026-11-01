@@ -1,0 +1,27 @@
+id: LT-ICN-001
+dialect: ltspice
+construct: .ic and .nodeset
+manual_ref:
+- '[ltspice-ref] TROUBLESHOOTING-GUIDE.md "Circuit Directives"'
+- '[ltspice-ref] TROUBLESHOOTING-GUIDE.md "Tips"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- node_condition
+- ic_stmt
+- current_condition
+core_rules:
+- ic_stmt
+- nodeset_stmt
+- IC_KW
+- NODESET_KW
+- V_OPEN
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_initial_conditions
+- tests/grammar/ltspice/test_ltspice_statements.py::test_inductor_currents_in_ic
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_initial_conditions
+- tests/document/test_ltspice_document.py::test_an_ic_current_is_indexed_like_a_saved_current
+notes: V(node)=value items, and for .ic the inductor currents I(L...)=value, which the reference documents
+  (review R3). all= is an error in LTspice, unlike ngspice. .nodeset takes voltages only.

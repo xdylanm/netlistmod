@@ -6,6 +6,7 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
+from netlistmod import Dialect
 from netlistmod.grammar.formula import (
     FormulaToken,
     build_formula_parser,
@@ -15,7 +16,7 @@ from netlistmod.grammar.formula import (
 
 
 def _names(text: str) -> list[tuple[str, str]]:
-    tokens = parse_formula(text)
+    tokens = parse_formula(text, Dialect.NGSPICE)
     assert tokens is not None, text
     for token in tokens:
         assert text[token.start : token.end] == token.text
@@ -72,18 +73,18 @@ def test_pi_is_an_identifier() -> None:
 
 @pytest.mark.parametrize("text", ["a#b", "a b", "a!b", "1k2", "(a", "a+", "", "v(a", "@r1[i]"])
 def test_text_the_grammar_does_not_accept_gives_no_tokens(text: str) -> None:
-    assert parse_formula(text) is None
+    assert parse_formula(text, Dialect.NGSPICE) is None
 
 
 def test_formula_parser_is_strict_lalr_and_reserved_words_are_data() -> None:
-    parser = build_formula_parser()
+    parser = build_formula_parser(Dialect.NGSPICE)
     assert parser.options.strict is True
     assert parser.options.parser == "lalr"
-    assert {"time", "temper", "hertz", "sqrt", "and"} <= reserved_words()
+    assert {"time", "temper", "hertz", "sqrt", "and"} <= reserved_words(Dialect.NGSPICE)
 
 
 _IDENT = st.from_regex(r"[a-z][a-z0-9_]{0,4}", fullmatch=True).filter(
-    lambda name: name not in reserved_words()
+    lambda name: name not in reserved_words(Dialect.NGSPICE)
 )
 
 
@@ -92,7 +93,16 @@ def test_generated_sums_report_every_identifier(names: list[str], ops: list[str]
     text = names[0]
     for name, op in zip(names[1:], ops, strict=False):
         text += f" {op} {name}"
-    tokens = parse_formula(text)
+    tokens = parse_formula(text, Dialect.NGSPICE)
     assert tokens is not None
     assert [token.text for token in tokens] == names
     assert all(isinstance(token, FormulaToken) for token in tokens)
+
+
+@pytest.mark.parametrize("text", ["a&b", "a|b", "a & b"])
+def test_single_character_logical_operators_are_not_ngspice(text: str) -> None:
+    # ngspice 47 stops at them, so a scan reports no names (M8 review R4); LTspice has them.
+    assert parse_formula(text, Dialect.NGSPICE) is None
+    tokens = parse_formula(text, Dialect.LTSPICE)
+    assert tokens is not None
+    assert [token.text for token in tokens] == ["a", "b"]

@@ -11,12 +11,13 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal
 
+from netlistmod.dialects import Dialect
 from netlistmod.document.index import Index, Reference, Scope, walk_nodes
 from netlistmod.document.models import allowed_model_types, model_type_allowed
-from netlistmod.document.names import fold
 from netlistmod.model.nodes import (
     Component,
     ModelStatement,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     UnknownDirective,
@@ -64,6 +65,8 @@ _UNRESOLVED: dict[str, tuple[DiagnosticCode, str]] = {
     "element": (DiagnosticCode.UNRESOLVED_ELEMENT, "element"),
 }
 _ORDER = {code: position for position, code in enumerate(DiagnosticCode)}
+# The solver version whose behaviour a message states (validated_on of the rule tables).
+_SOLVER: dict[Dialect, str] = {Dialect.NGSPICE: "ngspice 47", Dialect.LTSPICE: "LTspice 26.1.1"}
 
 
 def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, ...]:
@@ -76,14 +79,18 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
     for line in index.lines.walk():
         item = line.item
         if isinstance(item, SubcktDefinition) and item.ends.name is not None:
-            if fold(item.ends.name) != fold(item.name):
+            if index.root.fold(item.ends.name) != index.root.fold(item.name):
                 assert item.ends.name_span is not None
+                checks = (
+                    "ngspice does not check the name (§2.6.2)"
+                    if index.dialect is Dialect.NGSPICE
+                    else f"{_SOLVER[index.dialect]} does not check the name"
+                )
                 found.append(
                     (
                         DiagnosticCode.ENDS_NAME_MISMATCH,
                         "info",
-                        f"`.ends {item.ends.name}` closes subcircuit `{item.name}`; ngspice "
-                        "does not check the name (§2.6.2)",
+                        f"`.ends {item.ends.name}` closes subcircuit `{item.name}`; {checks}",
                         item.ends.name_span,
                     )
                 )
@@ -99,7 +106,8 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
             )
         # Bodies are walked as their own lines, so a definition contributes only its header.
         for value in walk_nodes(item, NumericValue, bodies=False):
-            found.extend(_value_findings(value))
+            if index.dialect is Dialect.NGSPICE:
+                found.extend(_value_findings(value))
     found.sort(key=lambda entry: (entry[3].start, entry[3].end, _ORDER[entry[0]]))
     diagnostics = []
     for code, severity, message, span in found:
@@ -129,7 +137,7 @@ def _reference_findings(
                 DiagnosticCode.PARAM_USED_BEFORE_DEFINITION,
                 "warning",
                 f"parameter `{reference.name}` is used before its `.param` definition "
-                "(§2.11.1); ngspice 47 still resolves it",
+                f"(§2.11.1); {_SOLVER[index.dialect]} still resolves it",
                 reference.span,
             )
         )
@@ -142,13 +150,14 @@ def _reference_findings(
         and not model_type_allowed(owner, target.model_type)
     ):
         allowed = ", ".join(f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner)))
+        cited = " (§2.5)" if index.dialect is Dialect.NGSPICE else ""
         findings.append(
             (
                 DiagnosticCode.MODEL_TYPE_MISMATCH,
                 "warning",
                 f"`{owner.designator}` refers to model `{target.name}` of type "
                 f"`{target.model_type}`, but a {type(owner).__name__.lower()} takes a model of "
-                f"type {allowed} (§2.5)",
+                f"type {allowed}{cited}",
                 reference.span,
             )
         )
@@ -173,8 +182,10 @@ def _reference_findings(
 def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     where = scope.describe()
+    fatal = scope.dialect is Dialect.LTSPICE
     tables: tuple[tuple[Mapping[str, tuple[object, ...]], str, Severity], ...] = (
-        (scope.params, "parameter", "info"),
+        # LTspice stops at any repeated definition; ngspice uses the last .param silently.
+        (scope.params, "parameter", "warning" if fatal else "info"),
         (scope.models, "model", "warning"),
         (scope.subckts, "subcircuit", "warning"),
     )
@@ -182,11 +193,12 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
         for definitions in table.values():
             for repeated in definitions[1:]:
                 name, span = _name_of(repeated)
-                rule = (
-                    "the last assignment is used"
-                    if noun == "parameter"
-                    else "ngspice uses the first definition"
-                )
+                if fatal:
+                    rule = f"{_SOLVER[scope.dialect]} stops with an error"
+                elif noun == "parameter":
+                    rule = "the last assignment is used"
+                else:
+                    rule = "ngspice uses the first definition"
                 findings.append(
                     (
                         DiagnosticCode.DUPLICATE_DEFINITION,
@@ -195,6 +207,21 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
                         span,
                     )
                 )
+    seen: set[tuple[str, str]] = set()
+    for line in scope.lines:
+        if isinstance(line.item, StepDirective):
+            quantity = (line.item.kind, scope.fold(line.item.name))
+            if quantity in seen:
+                findings.append(
+                    (
+                        DiagnosticCode.DUPLICATE_DEFINITION,
+                        "warning",
+                        f"`.step` sweeps `{line.item.name}` again; {_SOLVER[scope.dialect]} stops "
+                        "with an error",
+                        line.item.name_span,
+                    )
+                )
+            seen.add(quantity)
     for elements in scope.elements.values():
         for repeated in elements[1:]:
             findings.append(
@@ -202,7 +229,7 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
                     DiagnosticCode.DUPLICATE_ELEMENT,
                     "warning",
                     f"element `{repeated.designator}` repeats a designator in {where} "
-                    "(case-insensitive); ngspice 47 stops with an error",
+                    f"(case-insensitive); {_SOLVER[scope.dialect]} stops with an error",
                     repeated.designator_span,
                 )
             )

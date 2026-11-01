@@ -1,0 +1,66 @@
+{
+  "family": "names_rejects",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Each fixture is one malformed or unsupported construct; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. The notes quote LTspice 26.1.1 where it stops at the same construct.",
+  "fixtures": {
+    "brace_subcircuit_name.cir": {
+      "sha256": "bf8a8cc02ba966d3478844a8d27177277f67d26e26419702412e63c6c4b725ee",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "the library does not read an expression as a name"
+    },
+    "dollar_comment_line.cir": {
+      "sha256": "dc3fc104f91623ec74cf72b4479cb1df2266f78dbcad7e801aa8b7a30d68a4ff",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "only * and ; start a comment line"
+    },
+    "dollar_comment_without_space.cir": {
+      "sha256": "4ce4738cc6186c2efaeb57d6e24108f86545bdc6251408d0484e7ae434d34149",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "$ needs a space on both sides"
+    },
+    "double_slash_is_not_a_comment.cir": {
+      "sha256": "fb8f5fddd35c4c07b25d0bbd820907ae2a632f6dff5639ee45de2330215840e7",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "// is not a comment"
+    },
+    "name_with_brace.cir": {
+      "sha256": "fb57dbab6307e11af00e83f92ab20c069af88c6e49bb9aef61e6db103497cbbc",
+      "line": 2,
+      "column": 4,
+      "error": "ParseError",
+      "note": "the library does not read an expression as a node"
+    },
+    "name_with_equals.cir": {
+      "sha256": "e9fe5ab47b15945f6b8c78440115970657ad8fb9018f9acf71549687d0117d50",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "not a name character"
+    },
+    "name_with_parenthesis.cir": {
+      "sha256": "2f836b498e1830715b41a5ffcb9ebb8b4d04c3d306ac2c78da7e58dc985b16bf",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "Expected node name"
+    },
+    "name_with_pipe.cir": {
+      "sha256": "ad1cea577262263e4a04f31d29d476f4adaaaa10cc9122cbeec3091f36148714",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "not a name character"
+    }
+  }
+}

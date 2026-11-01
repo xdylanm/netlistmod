@@ -4,13 +4,26 @@ from __future__ import annotations
 
 import pytest
 
-from netlistmod import Diagnostic, DiagnosticCode, Dialect, Netlist
+from netlistmod import Diagnostic, DiagnosticCode, Netlist
+from tests.support.dialects import current_dialect
 
 C = DiagnosticCode
 
 
+# Cases whose text only ngspice reads (tests/support/dialects.py).
+NGSPICE_ONLY_CASES = {
+    "test_behaviour_table": [
+        "R1 a 0 1k rm",
+        "C1 a 0 cm",
+        "R1 in out {rx}",
+        ".param rx=1k",
+        ".print tran",
+    ],
+}
+
+
 def _netlist(body: str, **options: bool) -> Netlist:
-    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=Dialect.NGSPICE, **options)
+    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=current_dialect(), **options)
 
 
 def _codes(body: str, **options: bool) -> list[tuple[DiagnosticCode, str, str]]:
@@ -70,6 +83,7 @@ def test_behaviour_table(body: str, expected: list[tuple[DiagnosticCode, str, st
     assert _codes(body) == expected
 
 
+@pytest.mark.ngspice_only
 @pytest.mark.parametrize(
     ("body", "expected"),
     [
@@ -96,6 +110,7 @@ def test_used_before_definition_is_judged_within_one_scope(
     assert _codes(body) == expected
 
 
+@pytest.mark.ngspice_only
 def test_rkm_values_are_gated_syntax_and_some_are_read_differently() -> None:
     assert _codes("R1 a b 1M0\nR2 a b 2k7\nC1 a 0 4F7", rkm=True) == [
         (C.DIALECT_GATED_SYNTAX, "info", "1M0"),
@@ -106,6 +121,7 @@ def test_rkm_values_are_gated_syntax_and_some_are_read_differently() -> None:
     ]
 
 
+@pytest.mark.ngspice_only
 def test_rkm_values_inside_a_body_are_reported_once() -> None:
     assert _codes(".subckt d a b\nR1 a b 2k7\n.ends", rkm=True) == [
         (C.DIALECT_GATED_SYNTAX, "info", "2k7")
@@ -124,6 +140,7 @@ def test_include_in_an_enclosing_scope_softens_a_nested_unresolved_reference() -
     assert other.code == C.UNRESOLVED_ELEMENT
 
 
+@pytest.mark.ngspice_only
 def test_diagnostics_carry_positions_and_are_in_source_order() -> None:
     netlist = _netlist(".print x\nR1 a b {q}\nR1 a b 1")
     assert [(d.line, d.column, d.code) for d in netlist.diagnostics] == [

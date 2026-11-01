@@ -1,0 +1,16 @@
+M8 LTspice subcircuit body
+V1 in 0 3
+X1 in 0 div
+.subckt div p q
+.param r=1k
+.model dm D
+.func g(x) {x}
+.backanno
+R1 p q {r}
+D1 p q dm
+.subckt inner c e
+R1 c e 1k
+.ends
+.ends
+.op
+.end

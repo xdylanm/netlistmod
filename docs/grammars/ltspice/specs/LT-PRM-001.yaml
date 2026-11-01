@@ -1,0 +1,24 @@
+id: LT-PRM-001
+dialect: ltspice
+construct: .param assignments
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".PARAM — User-Defined Parameters"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- PARAM_NAME
+- param_def
+- param_value
+- BARE_FORMULA
+core_rules:
+- param_stmt
+- PARAM_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_param_forms
+- tests/grammar/ltspice/test_ltspice_statements.py::test_bare_expressions_are_formulas_without_a_delimiter
+- tests/grammar/ltspice/test_ltspice_statements.py::test_a_plain_number_stays_a_number
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_params
+notes: name=value, name value (L11, observed), bare expressions (documented; Formula with an empty delimiter).
+  time, temper and hertz are ordinary names.

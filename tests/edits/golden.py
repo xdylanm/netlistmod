@@ -28,8 +28,12 @@ def manifest() -> dict[str, Any]:
 
 
 def run_case(case: dict[str, Any]) -> Netlist:
-    netlist = Netlist.load(FAMILY / case["input"], dialect=Dialect.NGSPICE)
-    for step in case["steps"]:
+    return apply_steps(Netlist.load(FAMILY / case["input"], dialect=Dialect.NGSPICE), case["steps"])
+
+
+def apply_steps(netlist: Netlist, steps: Sequence[Step]) -> Netlist:
+    """Apply a case's steps in order (the LTspice cases use this too)."""
+    for step in steps:
         netlist = _step(netlist, step)
     return netlist
 

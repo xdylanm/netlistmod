@@ -1,0 +1,23 @@
+id: LT-DIR-001
+dialect: ltspice
+construct: closed list of dot-commands
+manual_ref:
+- '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Line Types by Leading Character"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- DOT_NAME
+- top_statement
+- top_unknown_stmt
+- TOP_DOT_NAME
+core_rules:
+- unknown_stmt
+- not_in_subckt
+tests:
+- tests/grammar/ltspice/test_ltspice_structure.py::test_untyped_commands_allowed_in_a_body
+- tests/grammar/ltspice/test_ltspice_structure.py::test_untyped_commands_top_level_only
+- tests/grammar/ltspice/test_ltspice_structure.py::test_other_dot_commands_are_errors
+notes: The reference's other commands are UnknownDirective; anything else is a ParseError (decision 0009
+  item 5).

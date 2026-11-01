@@ -1,0 +1,26 @@
+id: LT-DIO-001
+dialect: ltspice
+construct: diode (D) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "D — Diode"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- diode
+- d_param
+- flag
+- D_PARAM_KW
+core_rules:
+- D_NAME
+- flag
+- OFF_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_diodes
+- tests/grammar/ltspice/test_ltspice_elements.py::test_flags_may_take_a_value
+- tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_diodes
+notes: 'Model, positional area, then off, m, n, temp. A flag may take a value (off=1), which the reference
+  documents (review R9). Observed (section 11.3 rule 3): area= (review R1) and Rpar=, which takes effect
+  (review R10). ic= runs without effect on the result, so it stays rejected.'

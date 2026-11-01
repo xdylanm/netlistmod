@@ -6,11 +6,32 @@ from collections.abc import Callable
 
 import pytest
 
-from netlistmod import DiagnosticCode, Dialect, EditError, Netlist
+from netlistmod import DiagnosticCode, EditError, Netlist
+from tests.support.dialects import current_dialect
+
+# Cases whose text only ngspice reads (tests/support/dialects.py).
+NGSPICE_ONLY_CASES = {
+    "test_element_operation": [
+        "keyword formula",
+        "value after nodes",
+        "inductor keyword",
+        "param",
+        "resistor model",
+        "add a model",
+    ],
+    "test_element_operation_errors": [
+        "takes no model",
+        "use set_value",
+        "takes no parameters",
+        "repeated",
+        "type `c`",
+        "has no model, so it needs its value",
+    ],
+}
 
 
 def _netlist(body: str, *, rkm: bool = False) -> Netlist:
-    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=Dialect.NGSPICE, rkm=rkm)
+    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=current_dialect(), rkm=rkm)
 
 
 def _body(netlist: Netlist) -> str:
@@ -125,6 +146,7 @@ _CASES: list[tuple[str, str, Operation, str]] = [
 ]
 
 
+@pytest.mark.ngspice_only
 @pytest.mark.parametrize(
     ("body", "expected"),
     [
@@ -141,6 +163,7 @@ def test_remove_value(body: str, expected: str) -> None:
         edited.remove_value(body[:2])
 
 
+@pytest.mark.ngspice_only
 def test_switch_a_resistor_to_its_semiconductor_model() -> None:
     netlist = _netlist("R2 out 0 1k\n.model rmod r rsh=100")
     with netlist.batch() as batch:
@@ -174,6 +197,7 @@ def test_read_back_after_an_edit() -> None:
     assert [reference.name for reference in edited.references] == ["Rx"]
 
 
+@pytest.mark.ngspice_only
 def test_rkm_values_need_the_option() -> None:
     with pytest.raises(EditError, match="rkm=True"):
         _netlist("R1 a b 1k").set_value("R1", "2k7")

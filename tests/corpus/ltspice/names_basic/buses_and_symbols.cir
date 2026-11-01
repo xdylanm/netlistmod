@@ -1,0 +1,14 @@
+M8 LTspice names
+V1 d[0] 0 3
+R§1 d[0] a%b 1k
+R[2] a%b a<b> 1k
+R3 a<b> a~b 1k
+R4 a~b a\b 1k
+R5 a\b a/b 1k
+R6 a/b a//b 1k
+R7 a//b x1:n 1k
+R8 x1:n a$b 1k
+R9 a$b $G_x 1k
+R10 $G_x 0 1k
+.op
+.end

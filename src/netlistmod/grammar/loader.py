@@ -17,9 +17,13 @@ from netlistmod.source import SourceText
 
 GRAMMARS: Final[dict[Dialect, tuple[str, ...]]] = {
     Dialect.NGSPICE: ("core.lark", "ngspice.lark"),
+    Dialect.LTSPICE: ("core.lark", "ltspice.lark"),
 }
-_PENDING_DIALECTS: Final[frozenset[Dialect]] = frozenset({Dialect.LTSPICE})
-_DEVICE_MATRIX = "ngspice-devices.json"
+_PENDING_DIALECTS: Final[frozenset[Dialect]] = frozenset()
+_DEVICE_MATRICES: Final[dict[Dialect, str]] = {
+    Dialect.NGSPICE: "ngspice-devices.json",
+    Dialect.LTSPICE: "ltspice-devices.json",
+}
 
 # Opener terminal, or the rule whose first token is the opener -> (block name, closing keyword).
 # Used only to explain an unterminated block.
@@ -27,6 +31,11 @@ _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
     Dialect.NGSPICE: {
         "CONTROL_KW": (".control", ".endc"),
         "IF_KW": (".if", ".endif"),
+        "SUBCKT_KW": (".subckt", ".ends"),
+        "subckt_header": (".subckt", ".ends"),
+    },
+    Dialect.LTSPICE: {
+        "MACHINE_KW": (".machine", ".endmachine"),
         "SUBCKT_KW": (".subckt", ".ends"),
         "subckt_header": (".subckt", ".ends"),
     },
@@ -130,6 +139,50 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "TRAN_ANALYSIS_KW": "`tran`",
     "SP_KW": "`sp`",
     "GLOBAL_KW": "`.global`",
+    "EMBEDDED": "embedded-decimal value",
+    "BARE_FORMULA": "expression",
+    "TC_KW": "`tc=`",
+    "R_PARAM_KW": "resistor parameter",
+    "C_PARAM_KW": "capacitor parameter",
+    "L_PARAM_KW": "inductor parameter",
+    "V_PARAM_KW": "`Rser=` or `Cpar=`",
+    "D_PARAM_KW": "diode parameter",
+    "NONLINEAR_L_KW": "nonlinear inductor parameter",
+    "LOAD_KW": "`load`",
+    "I_R_KW": "`R=`",
+    "AKO_REF": "`ako:` base model",
+    "MODEL_TEXT_KW": "`mfg=` or `type=`",
+    "MODEL_BARE": "bare word",
+    "R_TEXT_KW": "`mfg=` or `pn=`",
+    "C_TEXT_KW": "`mfg=`, `pn=` or `type=`",
+    "L_TEXT_KW": "`mfg=` or `pn=`",
+    "NOISELESS_KW": "`noiseless`",
+    "TOP_DOT_NAME": "dot-command",
+    "INC_KW": "`.inc`",
+    "MACHINE_KW": "`.machine`",
+    "ENDMACHINE_KW": "`.endmachine`",
+    "TRAN_MODIFIER_KW": "`.tran` modifier",
+    "LIST_KW": "`list`",
+    "FILE_KW": "`file=`",
+    "FILE_NAME": "file name",
+    "OPT_KW": "`.opt`",
+    "DEVICE_CURRENT_OPEN": "device current (`Id(` and so on)",
+    "SAVE_PATTERN": "name with a wildcard",
+    "NOISE_KW": "`noise`",
+    "OP_ANALYSIS_KW": "`op`",
+    "STEP_KW": "`.step`",
+    "STEP_PARAM_KW": "`param`",
+    "STEP_TEMP_KW": "`temp`",
+    "STEP_MODEL_REF": "model(parameter)",
+}
+# Where a dialect's terminal means something else than in the table above.
+_DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
+    Dialect.NGSPICE: {},
+    Dialect.LTSPICE: {
+        "TRAILING_COMMENT": "trailing comment (`;`, or `$` with a space on both sides)",
+        "COMMENT_LINE": "comment line (`*` or `;`)",
+        "VOLTAGE_OPEN": "`v(`",
+    },
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 
@@ -172,8 +225,9 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
         ) from error
 
 
-def _expected_names(terminals: Iterable[object]) -> tuple[str, ...]:
-    names = {_TERMINAL_NAMES.get(str(terminal), str(terminal)) for terminal in terminals}
+def _expected_names(terminals: Iterable[object], dialect: Dialect) -> tuple[str, ...]:
+    table = {**_TERMINAL_NAMES, **_DIALECT_TERMINAL_NAMES[dialect]}
+    names = {table.get(str(terminal), str(terminal)) for terminal in terminals}
     return tuple(sorted(names))
 
 
@@ -217,7 +271,7 @@ def _map_error(
     expected_terminals: Iterable[object],
     error: UnexpectedToken | UnexpectedCharacters,
 ) -> ParseError | UnsupportedConstruct:
-    expected = _expected_names(expected_terminals)
+    expected = _expected_names(expected_terminals, dialect)
     if isinstance(error, UnexpectedToken) and error.token.type == _END_OF_INPUT:
         block = _unterminated_block(dialect, error)
         if block is not None:
@@ -250,23 +304,28 @@ def _map_error(
     line, column = source.position(offset)
     line_start = source.line_span(line).start
     letter = source.text[offset : offset + 1].upper()
-    if letter.isalpha() and not source.text[line_start:offset].strip(" \t"):
+    if not source.text[line_start:offset].strip(" \t"):
         # A supported letter fails inside its line, or where no element may stand (after
         # .end): both are syntax errors. Only a planned letter is an unsupported construct.
-        if device_matrix().get(letter, {}).get("status") == "planned":
+        if device_matrix(dialect).get(letter, {}).get("status") == "planned":
             return UnsupportedConstruct(
-                f"{dialect.value} {letter} device", line, column, source.excerpt(offset)
+                f"{dialect.display_name} {letter} device", line, column, source.excerpt(offset)
             )
+        if letter == "." and dialect is Dialect.LTSPICE:
+            # The closed list of decision 0009: no terminal of this place matches the command.
+            name = source.text[offset:].split(maxsplit=1)[0]
+            reason = f"`{name}` is not an LTspice dot-command, or is not allowed here"
+            return ParseError(line, column, source.excerpt(offset), expected, reason)
     return ParseError(line, column, source.excerpt(offset), expected)
 
 
-@lru_cache(maxsize=1)
-def device_matrix() -> dict[str, dict[str, int | str]]:
-    """Load the ngspice device status matrix used for strict element errors."""
-    resource = files("netlistmod.grammar") / _DEVICE_MATRIX
+@lru_cache(maxsize=None)
+def device_matrix(dialect: Dialect) -> dict[str, dict[str, int | str]]:
+    """Load a dialect's device status matrix, used for strict element errors."""
+    resource = files("netlistmod.grammar") / _DEVICE_MATRICES[dialect]
     parsed = json.loads(resource.read_text(encoding="utf-8"))
     if not isinstance(parsed, dict):
-        raise ValueError("ngspice device matrix must contain a JSON object")
+        raise ValueError(f"{dialect.value} device matrix must contain a JSON object")
     return parsed
 
 

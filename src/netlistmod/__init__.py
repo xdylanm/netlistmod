@@ -75,6 +75,7 @@ from netlistmod.model import (
     ParseResult,
     Resistor,
     SaveDirective,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     SubcktReference,
@@ -84,6 +85,7 @@ from netlistmod.model import (
     TranDirective,
     UnknownDirective,
     Value,
+    ValueList,
     VoltageSource,
 )
 from netlistmod.model.transform import parse
@@ -149,6 +151,7 @@ __all__ = [
     "Reference",
     "Resistor",
     "SaveDirective",
+    "StepDirective",
     "Scope",
     "SlotCheck",
     "SourceText",
@@ -168,6 +171,7 @@ __all__ = [
     "UnknownDirective",
     "UnsupportedConstruct",
     "Value",
+    "ValueList",
     "VoltageSource",
     "__version__",
     "apply_edits",

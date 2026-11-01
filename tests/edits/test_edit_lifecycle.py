@@ -8,7 +8,6 @@ import pytest
 
 from netlistmod import (
     Batch,
-    Dialect,
     Edit,
     EditError,
     EditPlan,
@@ -19,12 +18,13 @@ from netlistmod import (
     SourceText,
     TopologyViolation,
 )
+from tests.support.dialects import current_dialect
 
 _TEXT = "divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 1k\n.op\n.end\n"
 
 
 def _netlist(text: str = _TEXT) -> Netlist:
-    return Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    return Netlist.from_text(text, dialect=current_dialect())
 
 
 def test_a_batch_applies_one_plan() -> None:
@@ -63,6 +63,7 @@ def test_two_edits_of_one_span_in_a_batch_are_an_error() -> None:
             batch.set_value("R1", "3k")
 
 
+@pytest.mark.ngspice_only
 def test_a_batch_that_fails_verification_changes_nothing() -> None:
     netlist = _netlist()
     with pytest.raises(EditError, match="does not re-parse"):
@@ -109,7 +110,7 @@ def test_a_stale_line_is_an_edit_error() -> None:
     with pytest.raises(EditError, match="does not belong to this netlist"):
         edited.directives.replace(old.item, ".op")
     with pytest.raises(EditError, match="not a line of the top level of this netlist"):
-        edited.directives.add(".save all", Placement.before(old))
+        edited.directives.add(".save v(out)", Placement.before(old))
     current = edited.lines.find(OpDirective)
     assert current is not None
     assert edited.directives.remove(current).lines.find(OpDirective) is None
@@ -118,7 +119,7 @@ def test_a_stale_line_is_an_edit_error() -> None:
 def test_save_writes_the_edited_bytes_atomically(tmp_path: Path) -> None:
     path = tmp_path / "divider.cir"
     path.write_bytes(_TEXT.replace("\n", "\r\n").encode("utf-8"))
-    netlist = Netlist.load(path, dialect=Dialect.NGSPICE)
+    netlist = Netlist.load(path, dialect=current_dialect())
     assert netlist.path == path
     edited = netlist.set_value("R2", "2k")
     assert edited.path == path
@@ -135,7 +136,7 @@ def test_an_unedited_save_writes_the_original_bytes(tmp_path: Path) -> None:
     path = tmp_path / "odd.cir"
     path.write_bytes(original)
     target = tmp_path / "out.cir"
-    Netlist.load(path, dialect=Dialect.NGSPICE).save(target)
+    Netlist.load(path, dialect=current_dialect()).save(target)
     assert target.read_bytes() == original
 
 
@@ -147,7 +148,7 @@ def test_save_needs_a_path() -> None:
 def test_an_unencodable_edit_fails_before_anything_is_written(tmp_path: Path) -> None:
     path = tmp_path / "latin.cir"
     path.write_bytes("t\xe9\nR1 a 0 1k\n.end\n".encode("cp1252"))
-    netlist = Netlist.load(path, dialect=Dialect.NGSPICE)
+    netlist = Netlist.load(path, dialect=current_dialect())
     assert netlist.source.encoding == "cp1252"
     edited = netlist.directives.add(".save v(a) ; 漢")
     target = tmp_path / "out.cir"
@@ -162,9 +163,9 @@ def test_save_re_verifies_against_the_load_baseline(tmp_path: Path) -> None:
     tampered = Netlist(
         SourceText(_TEXT.replace("R2 out 0", "R2 out 1")),
         Netlist.from_text(
-            _TEXT.replace("R2 out 0", "R2 out 1"), dialect=Dialect.NGSPICE
+            _TEXT.replace("R2 out 0", "R2 out 1"), dialect=current_dialect()
         ).parse_result,
-        dialect=Dialect.NGSPICE,
+        dialect=current_dialect(),
         rkm=False,
         baseline=netlist.baseline,
     )
@@ -177,6 +178,6 @@ def test_save_re_verifies_against_the_load_baseline(tmp_path: Path) -> None:
 def test_the_read_only_netlist_has_no_edit_methods() -> None:
     from netlistmod.document import Netlist as ReadOnly
 
-    read_only = ReadOnly.from_text(_TEXT, dialect=Dialect.NGSPICE)
+    read_only = ReadOnly.from_text(_TEXT, dialect=current_dialect())
     assert not hasattr(read_only, "set_value")
     assert not hasattr(read_only, "save")

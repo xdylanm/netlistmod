@@ -6,6 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
+from tests.support.dialects import deselect_other_dialect
 from tests.support.solvers import Solver, SolverName, discover_solver
 
 
@@ -38,6 +39,10 @@ def pytest_configure(config: pytest.Config) -> None:
         "markers",
         "solver(name): test requiring a local solver (ngspice or ltspice)",
     )
+
+
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
+    deselect_other_dialect(config, items)
 
 
 @pytest.fixture

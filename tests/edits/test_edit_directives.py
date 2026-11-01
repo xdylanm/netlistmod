@@ -7,7 +7,6 @@ from collections.abc import Callable
 import pytest
 
 from netlistmod import (
-    Dialect,
     EditError,
     Netlist,
     OpDirective,
@@ -18,10 +17,31 @@ from netlistmod import (
     TranDirective,
     UnknownDirective,
 )
+from tests.support.dialects import current_dialect
+
+# Cases whose text only ngspice reads (tests/support/dialects.py).
+NGSPICE_ONLY_CASES = {
+    "test_directive_operation": [
+        "add unknown",
+        "add before anchor",
+        "add after anchor",
+        "remove unknown",
+        "backslash continuation",
+        "control block",
+        "if block",
+    ],
+    "test_directive_operation_errors": [
+        "repeatable",
+        "pass a list",
+        "exactly one statement",
+        "does not parse",
+        "inside a subcircuit",
+    ],
+}
 
 
 def _netlist(text: str) -> Netlist:
-    return Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    return Netlist.from_text(text, dialect=current_dialect())
 
 
 Operation = Callable[[Netlist], Netlist]

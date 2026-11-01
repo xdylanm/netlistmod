@@ -1,0 +1,21 @@
+id: LT-OPA-001
+dialect: ltspice
+construct: opaque .include, .inc and .lib
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".INCLUDE — Include File"'
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".LIB — Include Library"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- statement
+- include_stmt
+- lib_stmt
+- INCLUDE_KW
+- INC_KW
+- LIB_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements
+- tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements_cannot_be_continued
+notes: Preserved verbatim, never read.

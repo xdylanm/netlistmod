@@ -1,0 +1,25 @@
+id: LT-SAV-001
+dialect: ltspice
+construct: .save
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".SAVE — Limit Saved Data"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- output_vector
+- current_vector
+- voltage_vector
+- DEVICE_CURRENT_OPEN
+- SAVE_PATTERN
+core_rules:
+- save_stmt
+- SAVE_KW
+- VOLTAGE_OPEN
+- CURRENT_OPEN
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_save
+- tests/grammar/ltspice/test_ltspice_statements.py::test_a_wildcard_refers_to_no_single_element
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_save
+notes: V(...), I(...) and device currents, with wildcards and hierarchical names.

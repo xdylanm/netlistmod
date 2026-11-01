@@ -86,6 +86,8 @@ def test_public_exports_and_version() -> None:
         "OutputVector",
         "ParamStatement",
         "SaveDirective",
+        "StepDirective",
+        "ValueList",
         "SubcktDefinition",
         "TempDirective",
         "TranDirective",

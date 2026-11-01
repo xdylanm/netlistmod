@@ -1,0 +1,37 @@
+id: LT-SRC-001
+dialect: ltspice
+construct: independent sources (V, I)
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "I — Current Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- voltage_source
+- ac_spec
+- v_param
+- V_PARAM_KW
+- current_source
+- load_flag
+- resistive_load
+- LOAD_KW
+- I_R_KW
+core_rules:
+- dc_spec
+- dc_keyword
+- V_NAME
+- I_NAME
+- DC_KW
+- AC_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_voltage_sources
+- tests/grammar/ltspice/test_ltspice_elements.py::test_voltage_source_forms
+- tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_voltage_sources
+- tests/grammar/ltspice/test_ltspice_elements.py::test_current_sources
+- tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_current_sources
+notes: 'V: value, AC magnitude and phase with or without =, Rser, Cpar. I: a value, an AC part or R=,
+  and the load flag, with or without a value (review R9). AC without = and the DC keyword are observed
+  (LTspice''s own export writes AC 1).'

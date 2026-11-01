@@ -1,8 +1,9 @@
 """Read-only topology queries and the topology signature (architecture §7.7, decision 0006).
 
-Net identity follows ``docs/grammars/ngspice/names.md``: node names compare case-insensitively;
+Net identity follows ``docs/grammars/<dialect>/names.md``: node names compare case-insensitively;
 ``0`` and ``gnd`` are the one ground net ``"0"``; a net inside a subcircuit definition is local
-to that definition unless it is ground or a ``.global`` node, which are shared by every scope.
+to that definition unless it is ground, a ``.global`` node or an LTspice ``$G_*`` node, which are
+shared by every scope.
 A definition's ports are nets of its own scope. Elements inside opaque ``.if`` blocks and
 included files are not seen (§7.8).
 
@@ -19,7 +20,7 @@ from dataclasses import dataclass, field
 
 from netlistmod.document.index import Index, Scope
 from netlistmod.document.lines import ScopePath
-from netlistmod.document.names import GROUND, fold, is_ground, net_name
+from netlistmod.document.names import GROUND, is_automatic_global, is_ground, net_name
 from netlistmod.model.nodes import (
     Component,
     GlobalDirective,
@@ -81,8 +82,9 @@ class TopologyView:
     def __init__(self, index: Index) -> None:
         """Compute the nets of every scope."""
         self._index = index
+        self._dialect = index.dialect
         self._globals = frozenset(
-            fold(node.name)
+            index.root.fold(node.name)
             for line in index.lines
             if isinstance(line.item, GlobalDirective)
             for node in line.item.nodes
@@ -131,7 +133,7 @@ class TopologyView:
     def connections(self, designator: str, scope: ScopePath = ()) -> tuple[Connection, ...]:
         """The terminals of one element (a ``K`` line has none); ``KeyError`` if absent."""
         found = self._index.scope(scope)
-        elements = found.elements.get(fold(designator))
+        elements = found.elements.get(found.fold(designator))
         if not elements:
             raise KeyError(f"no element {designator!r} in {found.describe()}")
         element = elements[0]
@@ -149,7 +151,7 @@ class TopologyView:
         found = self._index.scope(scope)
         for candidate in found.chain():
             for child in candidate.children:
-                if child.path[-1] == fold(subckt):
+                if child.path[-1] == found.fold(subckt):
                     assert child.definition is not None
                     return tuple(
                         self._nets[self._key(child, port.name)] for port in child.definition.ports
@@ -172,11 +174,15 @@ class TopologyView:
         return TopologySignature(tuple(entries))
 
     def _shared(self, name: str) -> bool:
-        return name == GROUND or name in self._globals
+        return name == GROUND or name in self._globals or is_automatic_global(name, self._dialect)
 
     def _key(self, scope: Scope, name: str) -> tuple[ScopePath, str]:
-        canonical = net_name(name)
-        if is_ground(name) or canonical in self._globals:
+        canonical = net_name(name, self._dialect)
+        if (
+            is_ground(name, self._dialect)
+            or canonical in self._globals
+            or is_automatic_global(name, self._dialect)
+        ):
             return ((), canonical)
         return (scope.path, canonical)
 

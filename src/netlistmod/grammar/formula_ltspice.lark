@@ -1,0 +1,17 @@
+// LTspice overlay on formula.lark (M8 review R4): LTspice also writes the logical operators with
+// one character (reference, .PARAM); ngspice 47 stops at `{a&b}` and `{a|b}`, so they are not in
+// the shared grammar. Every rule and terminal is imported by name, which keeps token names
+// unprefixed; aliases of an imported grammar carry the prefix `formula__` (formula.py).
+
+%import .formula (start, ternary, or_expr, and_expr, comparison, sum, product, power, unary, atom)
+%import .formula (WS, NUMBER, STRING, IDENT, VOLTAGE_OPEN, CURRENT_OPEN, NAME, LPAR, RPAR, COMMA)
+%import .formula (QUESTION, COLON, OROR, ANDAND, COMPARE, PLUS, MINUS, STAR, SLASH, PERCENT)
+%import .formula (BACKSLASH, POWER, BANG)
+
+%ignore WS
+
+// spec: LT-FML-001
+%extend or_expr: or_expr SINGLE_OR and_expr
+%extend and_expr: and_expr SINGLE_AND comparison
+SINGLE_OR: "|"
+SINGLE_AND: "&"

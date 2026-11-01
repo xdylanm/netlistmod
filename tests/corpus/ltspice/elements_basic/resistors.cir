@@ -1,0 +1,16 @@
+M8 LTspice resistors
+V1 in 0 3
+R1 in a 1k
+R2 a b 2k2
+R3 b c 1meg5
+R4 c d 1R5
+R5 d e 1M0
+R6 e f {1k} temp=30
+R7 f g '1k' m=2
+R8 g h 1k tc=1m,1u
+R9 h i 1k tc=1m, 1u, 1n
+R10 i j 1kOhm
+R11 j k 1kΩ
+R12 k 0 100R
+.op
+.end

@@ -35,6 +35,20 @@ formatting, type checks, and hooks through `uv run --env-file .env python -m <to
 (for example `python -m pytest`, `python -m mypy`, `python -m ruff check`).
 Solver tests are local-only and skip with a reason when a solver is unavailable.
 
+### Use the project virtual environment by default
+
+Do not expect `uv` or the dev tools on `PATH`: they are installed in `.venv`, so a bare `uv` fails
+with "command not found" even though the project is set up. Do not install them or look for another
+copy. Start every command from the venv's interpreter, which is also the signed one that Smart App
+Control allows (below):
+
+```powershell
+.venv\Scripts\python.exe -m uv run --env-file .env python -m pytest
+```
+
+Elsewhere in the docs, read `uv run ...` as this form when `uv` is not on `PATH`. On Linux and macOS
+the interpreter is `.venv/bin/python`.
+
 ### Windows Smart App Control (read before debugging a tool failure)
 
 On the maintainer's Windows machine, Smart App Control can block unsigned

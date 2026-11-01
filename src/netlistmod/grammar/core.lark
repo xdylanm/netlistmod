@@ -1,4 +1,9 @@
-// Dialect-neutral structure of a SPICE netlist (M2). Syntax lives here, not in Python (P13).
+// The constructs ngspice and LTspice share (M2, M8 decision 3). Syntax lives here, not in Python
+// (P13). A dialect overlay adds what only it has with %extend, and replaces a terminal whose text
+// differs with %override: the "\\\\" continuation, RKM values, comma separators and the bare-expression
+// rejection are in ngspice.lark; the terminals here (names, comments, text) hold what both dialects
+// accept, so this file also compiles on its own. Spec markers name the ngspice entries; each LTspice
+// entry lists the shared rules it relies on under core_rules.
 //
 // Layout:  title line, body lines, a required .end, then blank lines only.
 // Each marker `// spec: <ID>` covers the definitions that follow it up to the next blank line.
@@ -65,11 +70,9 @@ title_stmt: TITLE_KW TITLE_ARG? LINE_END
 unknown_stmt: DOT_NAME rest NL
 
 // A comment runs to the end of its physical line, so a TEXT or QUOTED after it can only come from
-// a continuation line (the ignored CONT, or BS_CONT): each line of a continued statement may end
-// in a comment. BS_CONT is a token here, not an ignored terminal, so it is recognised only inside
-// a continuable statement; a line holding only "\\" is a syntax error, not silently dropped.
+// a continuation line: each line of a continued statement may end in a comment.
 // spec: NG-TXT-001
-rest: (TEXT | QUOTED | TRAILING_COMMENT | BS_CONT)*
+rest: (TEXT | QUOTED | TRAILING_COMMENT)*
 
 // The text of a statement that cannot be continued (.include, .lib; manual §2.4.5). The statement
 // ends with LINE_END, which outranks CONT, so a following "+" line is a syntax error.
@@ -93,12 +96,6 @@ LINE_END.8: /\r?\n/
 CONT.7: /\r?\n[ \t]*\+/
 NL.5: /\r?\n/
 
-// Backslash continuation (manual §2.4.5): "\\" immediately before LF or CRLF. The lookahead
-// requires the next line to start with statement text, so a blank line, a comment line, a "+"
-// line or an end-of-line comment after "\\" is an error. TEXT never consumes these backslashes.
-// spec: NG-CNT-001
-BS_CONT.7: /\\\\\r?\n(?=[ \t]*(?![*+;$]|\/\/)[^ \t\r\n])/
-
 // spec: NG-TTL-001
 TITLE_KW.6: /\.title(?![A-Za-z0-9_-])/i
 TITLE_ARG.3: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
@@ -107,13 +104,12 @@ TITLE_TEXT.2: /(?:[^\r\n]|\r(?!\r?\n))+/
 // spec: NG-COM-001
 COMMENT_LINE.3: /\*(?:[^\r\n]|\r(?!\r?\n))*/
 
-// End-of-line comments start at ";", "$" or "//", with or without whitespace before them, and
-// run to the end of the line, so quotes inside a comment are plain text. TEXT stops before any
-// of the three markers; a single "/" (as in a path) is ordinary text. TEXT also stops before a
-// "\\" that ends the line (BS_CONT); other backslashes, and "\\" followed by spaces, are text.
+// An end-of-line comment starts at ";" and runs to the end of the line, so quotes inside it are
+// plain text. TEXT stops before it. "$", "/" and "\\" have dialect rules, so this TEXT excludes them
+// and each overlay overrides both terminals.
 // spec: NG-TXT-001
-TRAILING_COMMENT.3: /(?:[;$]|\/\/)(?:[^\r\n]|\r(?!\r?\n))*/
-TEXT.2: /(?:[^ \t\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n))(?:[^\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n)|\r(?!\r?\n))*/
+TRAILING_COMMENT.3: /;(?:[^\r\n]|\r(?!\r?\n))*/
+TEXT.2: /[^ \t\r\n;$'"\/\\](?:[^\r\n;$'"\/\\]|\r(?!\r?\n))*/
 QUOTED.3: /"[^"\r\n]*"|'[^'\r\n]*'/
 
 // spec: NG-END-001
@@ -132,39 +128,38 @@ DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
 // place. If a separate gap rule ended right before a field, its LALR lookaheads would merge
 // across all elements, and a node named "1" would then be lexed as a NUMBER.
 //
-// A field rule is "gap, then field": blanks, "+" continuation lines, the end-of-line comment of
-// a continued line and "\\" continuations, of which the last one (or a single comma) is
-// directly before the field. The gap is right-recursive (`SEP field`), so the parser shifts
-// every separator and decides at the field itself. A field with one separator is one reduction.
-// Only gap tokens and NL follow a field rule, and those are lexically uniform.
+// A field rule is "gap, then field": blanks, "+" continuation lines and the end-of-line comment
+// of a continued line, of which the last one is directly before the field. The gap is
+// right-recursive (`SEP field`), so the parser shifts every separator and decides at the field
+// itself. A field with one separator is one reduction. Only gap tokens and NL follow a field rule,
+// and those are lexically uniform. An overlay adds its own gap tokens (a comma, "\\\\") to each rule.
 //
 // Priorities (decision 0004): EQ.11 and CSEP.11 > SEP.10 > WS.9, so blanks before "=" or ","
 // belong to that separator, and a "+" line after an element field is a separator rather than
-// the ignored CONT. RKM terminals (4) > NUMBER (3) > WORD (2): a digit-leading field in a value
-// position is a value, never a name, and an RKM form is tried before the standard number that
-// would match only its prefix. Keywords are strings at WORD's priority (2), so Lark re-types an
+// the ignored CONT. An overlay's embedded-decimal terminals (4) > NUMBER (3) > WORD (2): a
+// digit-leading field in a value position is a value, never a name, and an embedded decimal is
+// tried before the standard number that would match only its prefix. Keywords are strings at WORD's priority (2), so Lark re-types an
 // exact WORD match only in states where the keyword is valid.
 
 // A field separator: blanks, or a "+" continuation line with the blanks around it. A comma
-// separator (CSEP) is a single comma with optional blanks; it may only be the last separator
-// before a field, so a gap holds at most one comma. EQ is "=" with optional blanks. An element
-// line ends with NL, or with eol: gap material and then NL.
+// separator (CSEP) is a single comma with optional blanks; where an overlay allows it, it is the
+// last separator before a field, so a gap holds at most one comma. EQ is "=" with optional blanks.
+// An element line ends with NL, or with eol: gap material and then NL.
 // spec: NG-FLD-001
 SEP.10: /[ \t]*\r?\n[ \t]*\+[ \t]*|[ \t]+/
 CSEP.11: /[ \t]*,[ \t]*/
 EQ.11: /[ \t]*=[ \t]*/
-eol: (SEP | TRAILING_COMMENT | BS_CONT) (NL | eol)
+eol: (SEP | TRAILING_COMMENT) (NL | eol)
 
-// A node, model, subcircuit or parameter name: any characters except blanks, line ends, the
-// characters the manual excludes from node names (= % ( ) , [ ] < > ~ { } '), the comment
-// starters ; $ and //, a double quote and a backslash. A "/" is allowed when another name
-// character follows it, so "//" always starts a comment and a name cannot end in "/".
+// A node, model, subcircuit or parameter name: any characters except blanks, line ends and the
+// characters neither dialect allows in a name. Each overlay overrides _WCHAR and _WUNIT with its
+// own set; every name terminal is built from _WUNIT.
 // spec: NG-NOD-001
-_WCHAR: /[^ \t\r\n=%(),\[\]<>~{}'";$\\\/]/
-_WUNIT: _WCHAR | "/" _WCHAR
+_WCHAR: /[^ \t\r\n=%(),\[\]<>~{}'"|;$\\\/]/
+_WUNIT: _WCHAR
 WORD.2: _WUNIT+
-node: (SEP | CSEP | BS_CONT) WORD
-    | (SEP | TRAILING_COMMENT | BS_CONT) node
+node: SEP WORD
+    | (SEP | TRAILING_COMMENT) node
 
 // Numbers: an integer or decimal mantissa with optional sign and exponent, then optional
 // letters (scale factors, and the letters the manual says are ignored), all one token. Lark
@@ -183,79 +178,53 @@ _LETTERS: (/[A-Za-z]/ | _MICRO)+
 // spec: NG-NUM-004
 _MICRO: "µ"
 
-// RKM notation (IEC 60062): digits, a code letter in place of the decimal point, digits; for R
-// also a leading R or L (R47). E is not a code letter, so 4E7 stays an exponent. RKM_R_MEGA
-// (uppercase M on R) and RKM_C_FARAD (F on C) are the forms ngspice reads differently from the
-// standard. RKM_R_MILLI (lowercase m on R) is always rejected, with a hint to use L. Whether RKM
-// is accepted is the parser option rkm, applied by the transformer; the grammar does not change.
+// The value slots of R and C. An overlay adds its own notation (RKM in ngspice, the embedded
+// decimal in LTspice).
 // spec: NG-NUM-003
-RKM_R.4: /[0-9]+[RrKkGgTtLl][0-9]+|[RrLl][0-9]+/
-RKM_R_MEGA.4: /[0-9]+M[0-9]+/
-RKM_R_MILLI.4: /[0-9]+m[0-9]+/
-RKM_C.4: /[0-9]+/ (/[pPnNuUmM]/ | _MICRO) /[0-9]+/
-RKM_C_FARAD.4: /[0-9]+[fF][0-9]+/
-r_value: (SEP | CSEP | BS_CONT) (NUMBER | RKM_R | RKM_R_MEGA | RKM_R_MILLI | BRACE_FORMULA | QUOTE_FORMULA)
-       | (SEP | TRAILING_COMMENT | BS_CONT) r_value
-c_value: (SEP | CSEP | BS_CONT) (NUMBER | RKM_C | RKM_C_FARAD | BRACE_FORMULA | QUOTE_FORMULA)
-       | (SEP | TRAILING_COMMENT | BS_CONT) c_value
+r_value: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT) r_value
+c_value: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT) c_value
 
 // Brace and single-quoted expressions, and a double-quoted string as a subcircuit parameter
-// value. Contents are not parsed; braces do not nest. As in statement text (NG-TXT-001),
-// quotes protect the comment markers ; $ // and braces do not: a brace expression containing
-// one is unterminated. A "/" inside braces must be followed by another expression character.
-// `value` is a field holding a number or a formula.
+// value. Contents are not parsed; braces do not nest. As in statement text (NG-TXT-001), quotes
+// protect the comment markers and braces do not: a brace expression containing one is
+// unterminated. A "/" inside braces must be followed by another expression character. An overlay
+// overrides these where its comment markers differ. `value` is a field holding a number or a formula.
 // spec: NG-VAL-001
 BRACE_FORMULA.3: /\{(?:[^{}\r\n;$\/]|\/[^{}\r\n;$\/])+\}/
 QUOTE_FORMULA.3: /'[^'\r\n]+'/
 STRING_VALUE.3: /"[^"\r\n]*"/
-value: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-     | (SEP | TRAILING_COMMENT | BS_CONT) value
+value: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT) value
 
 // Instance parameters name=value, model references and flags (each a field).
 // spec: NG-PAR-001
-param: (SEP | CSEP | BS_CONT) WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-     | (SEP | TRAILING_COMMENT | BS_CONT) param
-model: (SEP | CSEP | BS_CONT) WORD
-     | (SEP | TRAILING_COMMENT | BS_CONT) model
-flag: (SEP | CSEP | BS_CONT) OFF_KW
-    | (SEP | TRAILING_COMMENT | BS_CONT) flag
+param: SEP WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT) param
+model: SEP WORD
+     | (SEP | TRAILING_COMMENT) model
+flag: SEP OFF_KW
+    | (SEP | TRAILING_COMMENT) flag
 OFF_KW.2: "off"i
 
 // spec: NG-RES-001
-resistor: R_NAME node node r_value model? param* (NL | eol)
-        | R_NAME node node model param* (NL | eol)
-        | R_NAME node node r_keyword_value param* (NL | eol)
-r_keyword_value: (SEP | CSEP | BS_CONT) (R_KW | RESISTANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-               | (SEP | TRAILING_COMMENT | BS_CONT) r_keyword_value
+resistor: R_NAME node node r_value param* (NL | eol)
 R_NAME.4: /[Rr]/ _WUNIT*
-R_KW.2: "r"i
-RESISTANCE_KW.2: "resistance"i
 
 // spec: NG-CAP-001
-capacitor: C_NAME node node c_value model? param* (NL | eol)
-         | C_NAME node node model param* (NL | eol)
-         | C_NAME node node c_keyword_value param* (NL | eol)
+capacitor: C_NAME node node c_value param* (NL | eol)
          | C_NAME node node charge
-c_keyword_value: (SEP | CSEP | BS_CONT) (C_KW | CAPACITANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-               | (SEP | TRAILING_COMMENT | BS_CONT) c_keyword_value
 C_NAME.4: /[Cc]/ _WUNIT*
-C_KW.2: "c"i
-CAPACITANCE_KW.2: "capacitance"i
 
 // spec: NG-IND-001
-inductor: L_NAME node node value model? param* (NL | eol)
-        | L_NAME node node model param* (NL | eol)
-        | L_NAME node node l_keyword_value param* (NL | eol)
-l_keyword_value: (SEP | CSEP | BS_CONT) (L_KW | INDUCTANCE_KW) EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-               | (SEP | TRAILING_COMMENT | BS_CONT) l_keyword_value
+inductor: L_NAME node node value param* (NL | eol)
 L_NAME.4: /[Ll]/ _WUNIT*
-L_KW.2: "l"i
-INDUCTANCE_KW.2: "inductance"i
 
 // spec: NG-MUT-001
 mutual_coupling: K_NAME inductor_ref inductor_ref+ value (NL | eol)
-inductor_ref: (SEP | CSEP | BS_CONT) L_REF
-            | (SEP | TRAILING_COMMENT | BS_CONT) inductor_ref
+inductor_ref: SEP L_REF
+            | (SEP | TRAILING_COMMENT) inductor_ref
 K_NAME.4: /[Kk]/ _WUNIT*
 L_REF.4: /[Ll]/ _WUNIT*
 
@@ -267,10 +236,10 @@ voltage_source: V_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus
 current_source: I_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus)
 dc_spec: dc_keyword value
        | value
-dc_keyword: (SEP | CSEP | BS_CONT) DC_KW
-          | (SEP | TRAILING_COMMENT | BS_CONT) dc_keyword
-ac_spec: (SEP | CSEP | BS_CONT) AC_KW value
-       | (SEP | TRAILING_COMMENT | BS_CONT) ac_spec
+dc_keyword: SEP DC_KW
+          | (SEP | TRAILING_COMMENT) dc_keyword
+ac_spec: SEP AC_KW value
+       | (SEP | TRAILING_COMMENT) ac_spec
 V_NAME.4: /[Vv]/ _WUNIT*
 I_NAME.4: /[Ii]/ _WUNIT*
 DC_KW.2: "dc"i
@@ -286,26 +255,23 @@ D_NAME.4: /[Dd]/ _WUNIT*
 // spec: NG-SUB-001
 subckt_instance: X_NAME node (x_node | x_last)
 x_node: x_name (x_node | x_last)
-x_last: x_name x_param* (NL | eol | params_keyword)
-x_name: (SEP | CSEP | BS_CONT) WORD
-      | (SEP | TRAILING_COMMENT | BS_CONT) x_name
-x_param: (SEP | CSEP | BS_CONT) WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
-       | (SEP | TRAILING_COMMENT | BS_CONT) x_param
+x_last: x_name x_param* (NL | eol)
+x_name: SEP WORD
+      | (SEP | TRAILING_COMMENT) x_name
+x_param: SEP WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
+       | (SEP | TRAILING_COMMENT) x_param
 X_NAME.4: /[Xx]/ _WUNIT*
 
-// Forms recognised only to be rejected: stimulus functions and DISTOF on a source and the charge
-// form of a behavioral capacitor (UnsupportedConstruct), and the HSPICE "params:" keyword on a
-// subcircuit call (ParseError). Their arguments are statement text up to the line end.
+// Forms recognised only to be rejected: source functions and the charge form of a behavioral
+// capacitor (UnsupportedConstruct). Their arguments are statement text up to the line end. Each
+// overlay overrides STIMULUS_KW with its own function names.
 // spec: NG-UNS-001
-stimulus: (SEP | CSEP | BS_CONT) STIMULUS_KW rest NL
-        | (SEP | TRAILING_COMMENT | BS_CONT) stimulus
-charge: (SEP | CSEP | BS_CONT) Q_KW EQ rest NL
-      | (SEP | TRAILING_COMMENT | BS_CONT) charge
-params_keyword: (SEP | CSEP | BS_CONT) PARAMS_KW rest NL
-              | (SEP | TRAILING_COMMENT | BS_CONT) params_keyword
-STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm|am|trnoise|trrandom|external|port|distof1|distof2/i
+stimulus: SEP STIMULUS_KW rest NL
+        | (SEP | TRAILING_COMMENT) stimulus
+charge: SEP Q_KW EQ rest NL
+      | (SEP | TRAILING_COMMENT) charge
+STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm/i
 Q_KW.2: "q"i
-PARAMS_KW.2: "params:"i
 
 // ---------------------------------------------------------------------------------------------
 // Statements and directives (M4; decision 0005). Every one is a continuable statement ended by
@@ -316,25 +282,15 @@ PARAMS_KW.2: "params:"i
 // ...) are strings at WORD's priority (2) and are valid only where the rule names them.
 
 // .param: one or more name=value assignments separated by blanks (manual §2.11.1). A value is a
-// number, a brace or single-quoted formula or a double-quoted string. A bare expression is
-// recognised (BARE_EXPR, the lowest priority, tried after every value terminal) only to be
-// rejected with a hint to use braces: in place of a value, glued to a number (a+1k, 1k+a), or as
-// a field after a value (123 * 3). The reserved names time, temper and hertz are rejected.
+// number, a brace or single-quoted formula or a double-quoted string. Each overlay overrides
+// PARAM_NAME and says what a bare expression is.
 // spec: NG-PRM-001
-param_stmt: PARAM_KW param_def+ (NL | eol | bare_tail)
-param_def: (SEP | BS_CONT) (PARAM_NAME | TIME_KW | TEMPER_KW | HERTZ_KW) EQ param_value
-         | (SEP | TRAILING_COMMENT | BS_CONT) param_def
+param_stmt: PARAM_KW param_def+ (NL | eol)
+param_def: SEP PARAM_NAME EQ param_value
+         | (SEP | TRAILING_COMMENT) param_def
 ?param_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE
-            | BARE_EXPR -> bare_value
-            | NUMBER BARE_EXPR -> bare_value
-bare_tail: (SEP | BS_CONT) BARE_EXPR rest NL
-         | (SEP | TRAILING_COMMENT | BS_CONT) bare_tail
 PARAM_KW.4: ".param"i
-PARAM_NAME.2: /[A-Za-z][A-Za-z0-9_!#%\[\]]*/
-TIME_KW.2: "time"i
-TEMPER_KW.2: "temper"i
-HERTZ_KW.2: "hertz"i
-BARE_EXPR.1: /(?:[^ \t\r\n;$\\\/'"{}]|\/[^ \t\r\n;$\\\/'"{}])+/
+PARAM_NAME.2: /[A-Za-z][A-Za-z0-9_#]*/
 
 // .model name type, then parameters with or without parentheses (§2.5, §3.2.2). Parameters are
 // name=value fields separated by blanks or commas; inside parentheses the first one may follow
@@ -344,11 +300,11 @@ BARE_EXPR.1: /(?:[^ \t\r\n;$\\\/'"{}]|\/[^ \t\r\n;$\\\/'"{}])+/
 model_stmt: MODEL_KW x_name x_name param* (NL | eol)
           | MODEL_KW x_name x_name model_paren (NL | eol)
 model_paren: LPAR (model_param_first param*)? rparen
-           | (SEP | TRAILING_COMMENT | BS_CONT) model_paren
+           | (SEP | TRAILING_COMMENT) model_paren
 model_param_first: WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-                 | (SEP | TRAILING_COMMENT | BS_CONT) model_param_first
+                 | (SEP | TRAILING_COMMENT) model_param_first
 rparen: RPAR
-      | (SEP | TRAILING_COMMENT | BS_CONT) rparen
+      | (SEP | TRAILING_COMMENT) rparen
 MODEL_KW.4: ".model"i
 LPAR: "("
 RPAR: ")"
@@ -357,13 +313,12 @@ RPAR: ")"
 // recursion: a definition is a statement, so it may stand in another definition's body. A body
 // holds body lines only; the top-level-only statements are recognised in a body so that the
 // transformer can reject them at their keyword (not_in_subckt). A port named 0 is recognised
-// (ZERO_PORT, re-typed from WORD) and rejected. Defaults are subcircuit-call parameters
-// (x_param); "params:" is rejected as on an X line.
+// (ZERO_PORT, re-typed from WORD) and rejected. Defaults are subcircuit-call parameters (x_param).
 // spec: NG-SBD-001
 subckt_def: subckt_header subckt_item* ends_line
-subckt_header: SUBCKT_KW x_name subckt_port+ x_param* (NL | eol | params_keyword)
-subckt_port: (SEP | CSEP | BS_CONT) (WORD | ZERO_PORT)
-           | (SEP | TRAILING_COMMENT | BS_CONT) subckt_port
+subckt_header: SUBCKT_KW x_name subckt_port+ x_param* (NL | eol)
+subckt_port: SEP (WORD | ZERO_PORT)
+           | (SEP | TRAILING_COMMENT) subckt_port
 ?subckt_item: body_line
             | not_in_subckt
 not_in_subckt: (TITLE_KW | TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | OPTIONS_KW | OPTION_KW) rest NL
@@ -377,16 +332,16 @@ ZERO_PORT.2: "0"
 // .tran tstep tstop [tstart [tmax]] [uic] (§11.3.10).
 // spec: NG-TRN-001
 tran_stmt: TRAN_KW value value (value value?)? uic? (NL | eol)
-uic: (SEP | CSEP | BS_CONT) UIC_KW
-   | (SEP | TRAILING_COMMENT | BS_CONT) uic
+uic: SEP UIC_KW
+   | (SEP | TRAILING_COMMENT) uic
 TRAN_KW.4: ".tran"i
 UIC_KW.2: "uic"i
 
 // .ac dec|oct|lin points fstart fstop (§11.3.1).
 // spec: NG-ACA-001
 ac_stmt: DOT_AC_KW ac_variation value value value (NL | eol)
-ac_variation: (SEP | CSEP | BS_CONT) (DEC_KW | OCT_KW | LIN_KW)
-            | (SEP | TRAILING_COMMENT | BS_CONT) ac_variation
+ac_variation: SEP (DEC_KW | OCT_KW | LIN_KW)
+            | (SEP | TRAILING_COMMENT) ac_variation
 DOT_AC_KW.4: ".ac"i
 DEC_KW.2: "dec"i
 OCT_KW.2: "oct"i
@@ -408,8 +363,8 @@ OP_KW.4: ".op"i
 // name (METHOD=name, §11.1.4). Option names are not checked.
 // spec: NG-OPT-001
 options_stmt: (OPTIONS_KW | OPTION_KW) option_item+ (NL | eol)
-option_item: (SEP | CSEP | BS_CONT) WORD (EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | WORD))?
-           | (SEP | TRAILING_COMMENT | BS_CONT) option_item
+option_item: SEP WORD (EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | WORD))?
+           | (SEP | TRAILING_COMMENT) option_item
 OPTIONS_KW.4: ".options"i
 OPTION_KW.4: ".option"i
 
@@ -423,51 +378,39 @@ TEMP_KW.4: ".temp"i
 // spec: NG-ICN-001
 ic_stmt: IC_KW node_condition+ (NL | eol)
 nodeset_stmt: NODESET_KW node_condition+ (NL | eol)
-            | NODESET_KW nodeset_all (NL | eol)
-node_condition: (SEP | CSEP | BS_CONT) V_OPEN WORD RPAR EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-              | (SEP | TRAILING_COMMENT | BS_CONT) node_condition
-nodeset_all: (SEP | CSEP | BS_CONT) ALL_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-           | (SEP | TRAILING_COMMENT | BS_CONT) nodeset_all
+node_condition: SEP V_OPEN WORD RPAR EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+              | (SEP | TRAILING_COMMENT) node_condition
 IC_KW.4: ".ic"i
 NODESET_KW.4: ".nodeset"i
 V_OPEN.2: /[vV]\(/
-ALL_KW.2: "all"i
 
-// .save vectors (§11.6.1): v(n), v(n1,n2), i(src), @dev[param], or a name (which includes
-// src#branch and all). Each vector is one token, kept as text. Alternatives are tried in order,
-// so the bracketed forms are matched before a plain name.
+// .save vectors (§11.6.1). The forms the dialects share are the bracketed ones, V(N1<,N2>) and
+// I(source). The function and "(" are one token. Blanks inside the parentheses are ignored and
+// blanks around the comma belong to CSEP. An overlay adds its other forms.
 // spec: NG-SAV-001
 save_stmt: SAVE_KW output_vector+ (NL | eol)
-output_vector: (SEP | CSEP | BS_CONT) (OUTPUT_VECTOR | voltage_vector | current_vector)
-             | (SEP | TRAILING_COMMENT | BS_CONT) output_vector
+output_vector: SEP (voltage_vector | current_vector)
+             | (SEP | TRAILING_COMMENT) output_vector
 SAVE_KW.4: ".save"i
-OUTPUT_VECTOR.2: "@" _WUNIT+ "[" _WUNIT+ "]" | _WUNIT+
 
-// The standard voltage and current forms of §11.6.2: V(N1<,N2>) and its AC variants VR, VI,
-// VM, VP and VDB, and I(source). The function and "(" are one token, at a higher priority
-// than the plain name, so "vm(" is a function while "vm" alone is a name. Blanks inside the
-// parentheses are ignored and blanks around the comma belong to CSEP. The I variants
-// (IR, II, IM, IP, IDB) are "not yet implemented" (§11.6.2): recognised only to be rejected.
 // spec: NG-SAV-001
 voltage_vector: VOLTAGE_OPEN WORD (CSEP WORD)? RPAR
-current_vector: (CURRENT_OPEN | CURRENT_VARIANT_OPEN) WORD (CSEP WORD)? RPAR
-VOLTAGE_OPEN.3: /(?:v|vr|vi|vm|vp|vdb)\(/i
+current_vector: CURRENT_OPEN WORD (CSEP WORD)? RPAR
+VOLTAGE_OPEN.3: /v\(/i
 CURRENT_OPEN.3: /i\(/i
-CURRENT_VARIANT_OPEN.3: /i(?:r|i|m|p|db)\(/i
 
 // .meas (or .measure) analysis result body (§11.4), typed shallowly: the analysis keyword and
 // the result name are fields; the rest of the statement is statement text (NG-TXT-001) and must
 // not be empty.
 // spec: NG-MEA-001
 meas_stmt: (MEAS_KW | MEASURE_KW) meas_analysis x_name meas_body NL
-meas_analysis: (SEP | CSEP | BS_CONT) (DC_KW | AC_KW | TRAN_ANALYSIS_KW | SP_KW)
-             | (SEP | TRAILING_COMMENT | BS_CONT) meas_analysis
-meas_body: (SEP | CSEP | BS_CONT) (TEXT | QUOTED) rest
-         | (SEP | TRAILING_COMMENT | BS_CONT) meas_body
+meas_analysis: SEP (DC_KW | AC_KW | TRAN_ANALYSIS_KW)
+             | (SEP | TRAILING_COMMENT) meas_analysis
+meas_body: SEP (TEXT | QUOTED) rest
+         | (SEP | TRAILING_COMMENT) meas_body
 MEAS_KW.4: ".meas"i
 MEASURE_KW.4: ".measure"i
 TRAN_ANALYSIS_KW.2: "tran"i
-SP_KW.2: "sp"i
 
 // .global nodename1 [nodename2 ...] (§2.7): one or more nodes of the element node class
 // (NG-NOD-001), top level only (decision 0006); in a subcircuit body it is not_in_subckt.

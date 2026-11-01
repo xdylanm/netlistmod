@@ -1,0 +1,20 @@
+M8 LTspice parts with the parameters of LTspice's component database
+V1 b 0 1 AC 1
+C1 b 0 10µ V=6.3 Irms=1.2 Rser=0.002 Lser=0 mfg="TDK" pn="C3216" type="X5R"
+C2 b 0 10µ V=10 mfg=word pn=1N4148 type="Al electrolytic"
+L1 b a 10µ Ipk=5 Rser=0.01 Rpar=1000 Cpar=1p mfg="Bourns, Inc." pn="MSS1038"
+L2 a e 1m noiseless Rser=1 mfg=word
+R1 e f 1k tol=1 pwr=0.25
+R2 f g 1k tc1=1m tc2=1u noiseless
+R3 g 0 1k noiseless tol=5 mfg="Vishay, Inc." pn=CRCW0603
+R4 b 0 1k noiseless=0
+C3 b 0 1n noiseless Rser=1
+C4 b 0 1n noiseless=1
+I1 0 b 1m load=1
+D1 b 0 DX area=2 Rpar=1Meg
+D2 b 0 DY 2 off area=3
+D3 b 0 DX off=1
+.model DX D(Is=1e-14 Iave=1 Vpk=75 mfg=OnSemi type=silicon)
+.model DY D Is=1n mfg="On Semi, Inc." type=1N4148A
+.ac list 1k
+.end

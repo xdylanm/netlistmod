@@ -10,6 +10,8 @@ import pytest
 
 from netlistmod import DiagnosticCode, Dialect, Netlist
 
+pytestmark = pytest.mark.ngspice_only
+
 CORPUS_ROOT = Path(__file__).parents[1] / "corpus" / "ngspice"
 FAMILY = CORPUS_ROOT / "document_basic"
 MANIFEST: dict[str, Any] = json.loads((FAMILY / "manifest.json").read_text(encoding="utf-8"))

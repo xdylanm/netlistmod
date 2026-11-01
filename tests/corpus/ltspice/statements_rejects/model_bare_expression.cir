@@ -1,0 +1,3 @@
+M8 reject
+.model dm D(Is=1n*2)
+.end

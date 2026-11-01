@@ -1,0 +1,22 @@
+id: LT-OPT-001
+dialect: ltspice
+construct: .options, .option and .opt
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".OPTIONS — Simulator Options"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- options_stmt
+- option_item
+- OPT_KW
+core_rules:
+- options_stmt
+- OPTIONS_KW
+- OPTION_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_options
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_options
+notes: 'Names are not checked: LTspice stops at an unknown name, but the reference''s list is partial
+  (discrepancies.md).'

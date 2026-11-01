@@ -256,7 +256,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 ### 6.1 Files and composition
 
-- `core.lark`: terminals and rules for constructs whose syntax is the same across supported dialects (comments, title, `.end`, R/C/L/V/I/D and other letters with common form, `.param`, `.model`, `.subckt`, common directives).
+- `core.lark`: terminals and rules for what the supported dialects share (comments, title, `.end`, R/C/L/V/I/D and other letters with common form, `.param`, `.model`, `.subckt`, common directives). It compiles on its own. Where a terminal differs per dialect (names, comments, text), it holds the common subset and each overlay overrides it ([decision 0009](decisions/0009-ltspice-dialect.md)).
 - `<dialect>.lark`: dialect overlay adding or overriding constructs (device letters with dialect-specific meaning, dialect-only directives, numeric-notation differences).
 - `grammar/loader.py` owns the dialect-to-grammar registry; `dialects.py` defines only the `Dialect` enum.
 - Each dialect grammar is composed from core + overlay with Lark relative `%import` and MUST compile independently under `strict=True`.
@@ -272,7 +272,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 | # | Rule | Why |
 |---|------|-----|
 | 1 | `NEWLINE` is a real token; only *inline* whitespace is ignored (`%ignore WS_INLINE`). Statements are terminated by `NEWLINE`. | With all whitespace ignored, "end of statement" had to be guessed from token shape; LALR states merged and designator-like model names (e.g. `V0`, `D1N4148`) collided with statement starts. |
-| 2 | Top-level shape: the first physical line is always the title; then body lines; `.end` is **required** and is the last statement; after it only blank lines. A missing newline after `.end` is tolerated. | The ngspice manual: the first line must be the title, and the last line must be `.end`. Anything else is a syntax error (P5). A final-newline alternative is spelled out explicitly: an empty optional newline is a shift/reduce conflict under `strict=True`. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
+| 2 | Top-level shape: the first physical line is always the title; then body lines; `.end` is **required** and is the last statement; after it only blank lines. A missing newline after `.end` is tolerated. For LTspice this is a deliberate exception to the reference, which lets `.end` be omitted ([decision 0009](decisions/0009-ltspice-dialect.md)). | The ngspice manual: the first line must be the title, and the last line must be `.end`. Anything else is a syntax error (P5). A final-newline alternative is spelled out explicitly: an empty optional newline is a shift/reduce conflict under `strict=True`. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
 | 3 | Continuation: `+` as the first non-blank character of the line *immediately* following the continued line is an **ignored terminal**; two backslashes immediately before the line terminator are a token of the statement's text rule, so they are recognised only inside a continuable statement (an ignored terminal would silently drop a line holding only `\\`). Blank and comment lines may not intervene. A `+` line after a comment, blank, title or `.end` line is a syntax error, and `.title`, `.lib` and `.include` cannot be continued. | The manual (§2.4.5): follow-up lines "have to follow immediately after each other", and `.title`, `.lib` and `.include` do not allow continuation. The ignored `+` terminal keeps statement rules free of continuation syntax while source spans stay correct. See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
 | 4 | Keywords are **named terminals**, case-insensitive (`"…"i`), written as quoted strings rather than regexes where possible. | Anonymous literals are filtered from the tree; unescaped `.` in a regex is a wildcard (a prototype bug made `.param` collide with `CPARAM`). |
 | 5 | In regex literals, `/` MUST be escaped and every literal closed. | An unclosed literal makes Lark report the error far from its cause. |
@@ -289,6 +289,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 - Standard form: number, optional scale suffix (`t g meg k mil m u n p f a`, plus the observed `µ`), case-insensitive, `meg` for mega. `m`/`M` is milli, always. Letters after a number are part of the value text (ngspice ignores them).
 - **RKM notation** (`2k7` = 2.7k, `4n7`, `R47`): the ngspice manual accepts it only in LTspice-compatibility mode. The grammar has dedicated RKM terminals; the parser option `rkm` (default off) decides whether they are accepted, for R and C values only, and the node records `notation="rkm"`. Letters follow IEC 60062 (IEC 60062:2016): `M` in mid-value position is mega for R and milli for C. ngspice reads R `1M0` as milli and C `4F7` as femto even in compatibility mode; such values are marked (`RKM_SOLVER_MISMATCH`). See [decision 0004](decisions/0004-element-and-value-grammar.md) and `docs/grammars/ngspice/numbers.md`.
+- **LTspice** reads an embedded decimal natively, in every value slot, with its own multipliers (`M` is always milli; `2R2` is 2.2; `R47` is a bare name, rejected). There is no option: `rkm=True` with `Dialect.LTSPICE` is a `ValueError`. The node records `notation="rkm"`. See [decision 0009](decisions/0009-ltspice-dialect.md) and `docs/grammars/ltspice/numbers.md`.
 - By the end of phase 2 the grammar MUST cover the full range of value specifications in the ngspice manual (scale-factor table and numeric forms), each with a spec entry and tests.
 - Interpretation of the numeric value is out of scope (non-goal 6); the library stores the text.
 
@@ -297,7 +298,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 - Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1 phase 1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError`.
 - `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
 - The first physical line is always the `Title` (implicit unless it is a `.title` statement; the node records which). `.title` may also occur later and replaces the displayed title; both source nodes are retained. `.end` is required (Section 6.3, rule 2). See [decision 0002](decisions/0002-grammar-structure-policy.md).
-- An **unknown dot-command** is preserved as `UnknownDirective(raw)`: it is not topology, so preserving it is safe.
+- An **unknown dot-command** is preserved as `UnknownDirective(raw)` in ngspice: it is not topology, so preserving it is safe. LTspice stops at one and has a documented set, so its overlay has a **closed list**: the reference's untyped commands are `UnknownDirective`, anything else is a `ParseError`, and `.machine` is an `UnsupportedConstruct` ([decision 0009](decisions/0009-ltspice-dialect.md)).
 - An **unknown element letter** is an error (P5): an unparsed element would be a blind spot in the topology guarantee.
 
 ### 6.6 Opaque regions
@@ -310,7 +311,7 @@ Opaque blocks are matched by grammar rules (nesting by recursion for `.if`), not
 
 ### 6.7 Device letters and dialects
 
-A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `Ö`; qspice's non-ASCII letters) live only in that dialect's overlay.
+A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `@` and `&`; qspice's non-ASCII letters) live only in that dialect's overlay.
 
 **Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5).
 
@@ -392,7 +393,7 @@ In scope:
 - **Reference resolution** (read-only): element → model; subcircuit instance → definition; formula → parameter names. Parameter-name extraction from a formula is a best-effort identifier scan, not an evaluator; function names are excluded using a per-dialect list; limits are documented.
 - **Topology queries:** `nets()`, `elements_on_net(net)`, `connections(designator)`, subcircuit ports. These let external tools (e.g. the harness tool, the controller's consistency checks) validate against the netlist without writing their own parser.
 - **Diagnostics:** unresolved model/subckt/param references, duplicate definitions, dialect-gated syntax. Diagnostics are data, not exceptions.
-- **Names and net identity:** case sensitivity of designators, models, params and subcircuits, and the identity of nets (including ground aliases), are defined per dialect in `docs/grammars/<dialect>/names.md`. All queries use these rules; the topology signature uses the exact text of each token (Section 7.7, decision 0006).
+- **Names and net identity:** case sensitivity of designators, models, params and subcircuits, and the identity of nets (including ground aliases), are defined per dialect in `docs/grammars/<dialect>/names.md`: ASCII lower-casing for ngspice, Unicode case folding after NFC for LTspice ([decision 0009](decisions/0009-ltspice-dialect.md)). The parse result carries the dialect. All queries use these rules; the topology signature uses the exact text of each token (Section 7.7, decision 0006).
 - **Scoping:** parameter scoping rules are defined per dialect in `docs/grammars/<dialect>/scoping.md`. Simulators are reported to differ here; the behavior MUST be validated against the solver before being relied on. Until then v1 documents a simple scope model and its limitations. For ngspice (validated on ngspice 47): models and subcircuits are local to the definition that contains them and visible in nested definitions (manual §2.6.1, which the solver follows where §2.11.4 calls them global); a reference is resolved in its own scope, then each enclosing scope, independent of file order.
 
 Out of scope: expression evaluation, unit arithmetic, hierarchy flattening, model-parameter validation.
@@ -408,7 +409,7 @@ Out of scope: expression evaluation, unit arithmetic, hierarchy flattening, mode
 | **ngspice** | `.cir`, `.sp`, `.net`, KiCad-exported netlists | Primary target. Reference: ngspice manual, SPICE3 manual. |
 | **LTspice** | `.net` / `.cir` netlists | Netlists **only**. `.asc` schematics are converted by an external LTspice netlist-export step; the library never reads `.asc`. Reference: `analogdevicesinc/ltspice-reference`. |
 
-LTspice can generate a netlist from the command line (spicelib's documentation describes this as its own workflow). The exact switch and its cross-platform behavior MUST be verified and documented in `docs/usage/ltspice-export.md`. Edits made to the exported netlist do not flow back to the `.asc`.
+LTspice generates a netlist from the command line with `-netlist`, verified on Windows (LTspice 26.1.1) and documented in `docs/usage/ltspice-export.md`; a local test re-exports each fixture ([decision 0009](decisions/0009-ltspice-dialect.md)). Linux and macOS are not verified. Edits made to the exported netlist do not flow back to the `.asc`.
 
 ### 9.2 Planned
 
@@ -456,6 +457,7 @@ LTspice can generate a netlist from the command line (spicelib's documentation d
 - **What they check:** (a) solver accepts the netlist; (b) results move as expected after an edit (e.g. a divider ratio against its closed form); (c) an unedited round-trip yields identical results; (d) each documented behavior that is marked solver-validated.
 - **Hygiene:** temporary directory per run, batch mode only, timeout, no GUI. Record solver name and version with every result; spec entries record which versions a behavior was validated on. The test session header names each discovered solver with its version and path.
 - **Harness** (decision 0008): ngspice tests run through `tests/support/ngspice.py`, which always writes a raw file (`-r`) and reads results from it; a file without an analysis line gets an `.op` line, added with the edit API.
+- **LTspice harness** ([decision 0009](decisions/0009-ltspice-dialect.md)): tests run through `tests/support/ltspice.py`, which uses `-b -ascii`; the raw reader is shared (`tests/support/raw.py`). LTspice raw files, logs and timings are never committed.
 - **Fixtures** (decision 0008): (a) and (c) run every accept fixture of the corpus. A fixture's manifest entry may carry a `solver` field: `{"skip": "<reason>"}`, or `{"stubs": {"<include path>": "<stub>"}}` and/or `{"harness": "<stub>"}`; stub files stand in for includes kept outside the repository and are wired in with the edit API. For (c), a fixture and its unedited `load(...).save(...)` copy must give identical raw files except the `Date:` line.
 - **Environment:** LTspice-backed tests run locally on a Windows machine with LTspice installed. **No solver is required in CI for v1.** An ngspice job on a Linux runner is encouraged but not a required check. LTspice-generated netlist fixtures are committed so the LTspice grammar is fully testable offline.
 - **Optional:** version-stamped observation files committed from solver runs, so offline CI can compare against recordings, refreshed by a scheduled job.
@@ -480,7 +482,7 @@ Fixtures live in `tests/corpus/<dialect>/<family>/`, each family with a manifest
 |---|---|
 | ngspice | [ngspice manual (HTML)](https://ngspice.sourceforge.io/docs/ngspice-html-manual/manual.xhtml); [PDF](https://ngspice.sourceforge.io/docs/ngspice-manual.pdf). Cited as `[ngspice-manual] §<section> "<title>"`; edition and access date in `docs/references.md`. |
 | SPICE3 (background) | https://www.macspice.com/ug/sec1.html |
-| LTspice | https://github.com/analogdevicesinc/ltspice-reference |
+| LTspice | https://github.com/analogdevicesinc/ltspice-reference. Cited as `[ltspice-ref] <FILE>.md "<heading>"`; commit and access date in `docs/references.md` ([decision 0009](decisions/0009-ltspice-dialect.md)). |
 
 ### 11.2 Spec entries
 
@@ -522,7 +524,8 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
 - **License:** MIT. Runtime dependencies MUST be permissively licensed (Lark is MIT; verify when pinning).
 - **spicelib is GPL-3.0.** No code, test files, or fixtures may be copied or closely adapted from it. spicelib's issue titles and changelog may be used as *facts* about which cases matter (e.g. RKM values, KiCad `.title`, hierarchical net names); its test sources MUST NOT be read for the purpose of reproducing them.
 - **Allowed sources:** content authored in this repository; exports from the maintainer's own KiCad projects; LTspice exports of circuits authored here; behaviors observed from solvers; paraphrased manual content with citations.
-- **Needs verification before use:** any file from ngspice or LTspice distributions (licenses are mixed per directory/file), and the license of `analogdevicesinc/ltspice-reference`.
+- **Needs verification before use:** any file from ngspice or LTspice distributions (licenses are mixed per directory/file). `analogdevicesinc/ltspice-reference` is Apache-2.0 (verified 2026-10-31).
+- **LTspice evidence** ([decision 0009](decisions/0009-ltspice-dialect.md)): only syntax facts are recorded. LTspice raw files, logs, and timing or performance numbers are never committed; the built-in LTspice Help is not cited or copied.
 - **Optional oracle:** spicelib MAY be installed as a dev-only dependency group for differential tests (T9). It MUST NOT appear in runtime requirements or published extras, its code MUST NOT be vendored, and T9 tests skip when it is absent.
 - **Contributors and agents:** `CONTRIBUTING.md` and `AGENTS.md` MUST state that GPL-derived code or tests are not accepted and that sources are declared in the corpus manifest. Clean-room discipline is process hygiene and an audit trail, not a legal guarantee; training-data exposure of agents cannot be fully excluded. Consider a legal review of this policy.
 - `docs/provenance.md` records the policy and each fixture family's origin.
@@ -666,10 +669,10 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 ## 20. Known risks
 
 - **Continuation lines** join across intervening comments and blank lines in ngspice 47; this behavior and span tiling are covered by solver and property tests.
-- **Scoping rules** differ between simulators; the ngspice rules are validated on ngspice 47 (`scoping.md`), LTspice's are not yet.
+- **Scoping rules** differ between simulators; the ngspice rules are validated on ngspice 47 (`scoping.md`), LTspice's are probed by hand and validated in M8 checkpoint B.
 - **Hidden connectivity** in behavioral expressions can defeat the topology guarantee (documented limit).
 - **Encoding:** verified for LTspice 26.1.1 (exports are UTF-8 without a BOM; see `docs/usage/ltspice-export.md` and decision 0001). Re-verify on LTspice upgrades and on KiCad exports.
-- **LTspice CLI export** switch and behavior are unverified.
+- **LTspice CLI export** is verified on Windows with LTspice 26.1.1 (`docs/usage/ltspice-export.md`, [decision 0009](decisions/0009-ltspice-dialect.md)); a re-export test shows version drift.
 - **Agent contamination:** training exposure to GPL code cannot be excluded; process controls and review are the mitigation.
 - **Grammar surface** grows with every dialect; the spec-entry checker and strict builds are the control.
 - **Conditional blocks.** The M2 parser preserves nested `.if` blocks opaquely. The valid `.if (1)` … `.endif` form is accepted by ngspice 47; the earlier `.if 1` probe was invalid and is superseded by decision 0002.

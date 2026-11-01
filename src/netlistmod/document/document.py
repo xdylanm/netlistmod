@@ -16,7 +16,6 @@ from netlistmod.dialects import Dialect
 from netlistmod.document.diagnostics import Diagnostic, collect_diagnostics
 from netlistmod.document.index import Index, Reference, Scope
 from netlistmod.document.lines import Lines, ScopePath
-from netlistmod.document.names import fold
 from netlistmod.document.topology import (
     Connection,
     Net,
@@ -39,8 +38,10 @@ class Netlist:
     ``from_source``.
 
     The dialect is always explicit (no default, no detection). ``rkm=True`` accepts RKM values
-    (decision 0004). Parsing errors raise ``ParseError`` or ``UnsupportedConstruct``; every
-    other finding is a :class:`Diagnostic` in :attr:`diagnostics`.
+    (decision 0004; ngspice only). Parsing errors raise ``ParseError`` or
+    ``UnsupportedConstruct``; every
+    other finding is a :class:`Diagnostic` in :attr:`diagnostics`. Name comparison follows the
+    dialect (``names.md``).
 
     Scopes are definition scopes (decision 0006 item 5): ``scope=()`` is the top level and
     ``scope=("amp",)`` the body of ``.subckt amp``, shared by every instance. Names compare
@@ -58,7 +59,7 @@ class Netlist:
         self._result = result
         self._dialect = dialect
         self._rkm = rkm
-        self._index = Index(result.items, source)
+        self._index = Index(result.items, source, result.dialect)
         self._topology = TopologyView(self._index)
         self._diagnostics = collect_diagnostics(self._index, source)
 
@@ -159,7 +160,7 @@ class Netlist:
         ``KeyError`` if there is none; elements of enclosing or nested scopes are not searched.
         """
         found = self._index.scope(scope)
-        elements = found.elements.get(fold(designator))
+        elements = found.elements.get(found.fold(designator))
         if not elements:
             raise KeyError(f"no element {designator!r} in {found.describe()}")
         return elements[0]
@@ -183,7 +184,8 @@ class Netlist:
         A reference from a nested definition is included unless that definition masks the
         name with its own default or ``.param``.
         """
-        definitions = self._index.scope(scope).params.get(fold(name), ())
+        found = self._index.scope(scope)
+        definitions = found.params.get(found.fold(name), ())
         return tuple(
             reference
             for reference in self._index.references

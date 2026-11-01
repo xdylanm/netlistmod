@@ -1,0 +1,7 @@
+M8 LTspice AC list
+V1 in 0 1 AC 1
+R1 in out 1k
+C1 out 0 1n
+.ac list 1 2 3k3
+.net V(out) V1
+.end

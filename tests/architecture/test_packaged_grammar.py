@@ -13,7 +13,10 @@ GRAMMAR_RESOURCES = {
     "netlistmod/grammar/core.lark",
     "netlistmod/grammar/ngspice.lark",
     "netlistmod/grammar/ngspice-devices.json",
+    "netlistmod/grammar/ltspice.lark",
+    "netlistmod/grammar/ltspice-devices.json",
     "netlistmod/grammar/formula.lark",
+    "netlistmod/grammar/formula_ltspice.lark",
     "netlistmod/grammar/formula-reserved.json",
     "netlistmod/document/model-types.json",
 }

@@ -1,0 +1,18 @@
+id: LT-TXT-001
+dialect: ltspice
+construct: statement text
+manual_ref:
+- '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Comments and Line Continuation"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- TEXT
+core_rules:
+- rest
+- line_rest
+- QUOTED
+tests:
+- tests/grammar/ltspice/test_ltspice_structure.py::test_dollar_and_slashes_in_names_and_statement_text
+notes: Text of an untyped dot-command or a .meas body, kept verbatim up to a comment.

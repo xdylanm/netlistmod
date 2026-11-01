@@ -11,3 +11,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0006 — Document layer: names, scope and diagnostics](0006-document-layer-names-scope-and-diagnostics.md)
 - [0007 — Edit lifecycle and edit semantics](0007-edit-lifecycle-and-edit-semantics.md)
 - [0008 — Validation status and solver harnesses](0008-validation-status-and-solver-harnesses.md)
+- [0009 — The LTspice dialect](0009-ltspice-dialect.md)

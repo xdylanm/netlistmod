@@ -16,7 +16,10 @@ from typing import Literal
 from lark import Lark, Token, Tree
 from lark.exceptions import LarkError
 
+from netlistmod.dialects import Dialect
+
 _RESERVED = "formula-reserved.json"
+_GRAMMARS = {Dialect.NGSPICE: "formula.lark", Dialect.LTSPICE: "formula_ltspice.lark"}
 
 FormulaTokenKind = Literal["parameter", "reserved", "function", "node", "source"]
 
@@ -26,7 +29,7 @@ class FormulaToken:
     """A name in a formula; ``start`` and ``end`` are offsets into the formula text.
 
     ``kind`` is ``"parameter"`` for a bare identifier that may name a parameter,
-    ``"reserved"`` for a bare word of the §2.11.6 reserved list, ``"function"`` for the name of
+    ``"reserved"`` for a bare word of the dialect's reserved list, ``"function"`` for the name of
     a call, and ``"node"`` or ``"source"`` for the argument of ``v(...)`` or ``i(...)``.
     """
 
@@ -36,12 +39,12 @@ class FormulaToken:
     end: int
 
 
-@lru_cache(maxsize=1)
-def build_formula_parser() -> Lark:
-    """Build or retrieve the strict LALR parser of the formula grammar."""
+@lru_cache(maxsize=None)
+def build_formula_parser(dialect: Dialect) -> Lark:
+    """Build or retrieve the strict LALR parser of a dialect's formula grammar."""
     return Lark.open_from_package(
         "netlistmod.grammar",
-        "formula.lark",
+        _GRAMMARS[dialect],
         parser="lalr",
         lexer="contextual",
         propagate_positions=True,
@@ -49,49 +52,53 @@ def build_formula_parser() -> Lark:
     )
 
 
-@lru_cache(maxsize=1)
-def reserved_words() -> frozenset[str]:
-    """The lower-case words that are never parameter names (§2.11.5 functions, §2.11.6)."""
+@lru_cache(maxsize=None)
+def reserved_words(dialect: Dialect) -> frozenset[str]:
+    """The lower-case words that are never parameter names in a dialect's formulas."""
     resource = files("netlistmod.grammar") / _RESERVED
     parsed = json.loads(resource.read_text(encoding="utf-8"))
-    if not isinstance(parsed, dict) or not isinstance(parsed.get("words"), list):
-        raise ValueError("formula-reserved.json must contain a list of words")
-    return frozenset(str(word).lower() for word in parsed["words"])
+    table = parsed.get(dialect.value) if isinstance(parsed, dict) else None
+    if not isinstance(table, dict) or not isinstance(table.get("words"), list):
+        raise ValueError("formula-reserved.json must contain a list of words per dialect")
+    return frozenset(str(word).lower() for word in table["words"])
 
 
-def parse_formula(text: str) -> tuple[FormulaToken, ...] | None:
+def parse_formula(text: str, dialect: Dialect) -> tuple[FormulaToken, ...] | None:
     """Return the names in ``text`` in source order, or ``None`` if it does not parse.
 
     A formula the grammar does not accept is not an error here: the scan is best effort, and
     the solver is the judge of an expression (non-goal 6).
     """
     try:
-        tree = build_formula_parser().parse(text)
+        tree = build_formula_parser(dialect).parse(text)
     except LarkError:
         return None
     tokens: list[FormulaToken] = []
+    reserved = reserved_words(dialect)
     if isinstance(tree, Token):
-        tokens.extend(_leaf(tree, None))
+        tokens.extend(_leaf(tree, None, reserved))
     else:
-        _collect(tree, tokens)
+        _collect(tree, tokens, reserved)
     return tuple(sorted(tokens, key=lambda token: token.start))
 
 
-def _collect(tree: Tree[Token], tokens: list[FormulaToken]) -> None:
+def _collect(tree: Tree[Token], tokens: list[FormulaToken], reserved: frozenset[str]) -> None:
     for child in tree.children:
         if isinstance(child, Tree):
-            _collect(child, tokens)
+            _collect(child, tokens, reserved)
         else:
-            tokens.extend(_leaf(child, tree.data))
+            tokens.extend(_leaf(child, tree.data, reserved))
 
 
-def _leaf(token: Token, rule: str | None) -> tuple[FormulaToken, ...]:
+def _leaf(token: Token, rule: str | None, reserved: frozenset[str]) -> tuple[FormulaToken, ...]:
     """The name a token stands for in the rule that holds it, if any."""
+    # An alias from an imported grammar carries its module's prefix (formula_ltspice.lark).
+    rule = rule.rpartition("__")[2] if rule is not None else None
     kind: FormulaTokenKind
     if token.type == "IDENT":
         if rule == "call":
             kind = "function"
-        elif str(token).lower() in reserved_words():
+        elif str(token).lower() in reserved:
             kind = "reserved"
         else:
             kind = "parameter"

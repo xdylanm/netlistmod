@@ -1,0 +1,14 @@
+id: LT-NUM-001
+dialect: ltspice
+construct: numbers
+manual_ref:
+- '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Engineering Multipliers"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- NUMBER
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_standard_numbers_with_any_trailing_letters
+notes: Sign, mantissa, exponent, multiplier. M is milli; Meg is mega.

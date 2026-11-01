@@ -1,0 +1,359 @@
+// LTspice overlay on core.lark (M8, decision 0009): the LTspice forms of the phase 1 constructs.
+// %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
+// used by this dialect is imported by name, which keeps tree and token names unprefixed. Lark
+// inlines sub-terminals at import, so a terminal built from one is overridden whole.
+//
+// What differs from ngspice, each with its evidence in docs/grammars/ltspice/discrepancies.md:
+// no "\\" continuation and almost no comma separators; ";" and " $ " comments; the embedded decimal
+// in every value slot; a closed list of dot-commands; closed instance parameter lists per letter.
+
+%import .core (start, first_line, line, body_line, statement, top_statement, title_stmt)
+%import .core (unknown_stmt, rest, line_rest, end_stmt, trailer)
+%import .core (WS, LINE_END, CONT, NL, TITLE_KW, TITLE_ARG, TITLE_TEXT, COMMENT_LINE)
+%import .core (TRAILING_COMMENT, TEXT, QUOTED, END_KW, DOT_NAME)
+%import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
+%import .core (diode, subckt_instance, x_node, x_last, x_name, x_param, eol, node, value, param)
+%import .core (r_value, c_value, model, flag)
+%import .core (inductor_ref, dc_spec, dc_keyword, ac_spec, stimulus, charge)
+%import .core (SEP, CSEP, EQ, WORD, NUMBER)
+%import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME)
+%import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
+%import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, STIMULUS_KW, Q_KW)
+%import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
+%import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
+%import .core (subckt_def, subckt_header, subckt_port, subckt_item, not_in_subckt, ends_line)
+%import .core (SUBCKT_KW, ENDS_KW, ZERO_PORT)
+%import .core (tran_stmt, uic, TRAN_KW, UIC_KW, ac_stmt, ac_variation, DOT_AC_KW, DEC_KW)
+%import .core (OCT_KW, LIN_KW, dc_stmt, dc_sweep, DOT_DC_KW, op_stmt, OP_KW)
+%import .core (options_stmt, option_item, OPTIONS_KW, OPTION_KW, temp_stmt, TEMP_KW)
+%import .core (ic_stmt, nodeset_stmt, node_condition, IC_KW, NODESET_KW, V_OPEN)
+%import .core (save_stmt, output_vector, SAVE_KW, voltage_vector)
+%import .core (current_vector, VOLTAGE_OPEN, CURRENT_OPEN)
+%import .core (meas_stmt, meas_analysis, meas_body, MEAS_KW, MEASURE_KW, TRAN_ANALYSIS_KW)
+%import .core (global_stmt, GLOBAL_KW)
+
+%ignore WS
+%ignore CONT
+
+// Element lines of the phase 1 letters; other letters stay errors (devices.md).
+// spec: LT-STR-001
+%extend body_line: resistor
+                 | capacitor
+                 | inductor
+                 | mutual_coupling
+                 | voltage_source
+                 | current_source
+                 | diode
+                 | subckt_instance
+
+// .end takes an end-of-line comment: the reference allows ";" anywhere on a line. Decision 0009:
+// .end stays required, with only blank lines after it.
+// spec: LT-END-001
+%override END_KW.4: /\.end(?![a-z0-9_-])/i
+%extend end_stmt: END_KW TRAILING_COMMENT LINE_END trailer* -> end
+                | END_KW TRAILING_COMMENT -> end
+
+// A comment line starts with "*" or ";" (a "$" line is an error in LTspice 26.1.1).
+// spec: LT-COM-001
+%override COMMENT_LINE.3: /[*;](?:[^\r\n]|\r(?!\r?\n))*/
+
+// An end-of-line comment starts at ";", anywhere, or at "$" with a space on both sides: LTspice
+// 26.1.1 reads "1k $ c" as a comment but fails on "1k$ c", "1k $c", "1k $" and on a tab next to the
+// "$" (probe, M8 T3). A "$" elsewhere is a name character ("$G_x", "a$b"). "//" is not a comment.
+// spec: LT-COM-002
+%override TRAILING_COMMENT.3: /(?:;|(?<= )\$ )(?:[^\r\n]|\r(?!\r?\n))*/
+
+// Statement text runs up to a comment or a quote. "/" and "\" are ordinary text here.
+// spec: LT-TXT-001
+%override TEXT.2: /[^ \t\r\n;'"](?:[^\r\n;'"$]|(?<! )\$|\$(?! )|\r(?!\r?\n))*/
+
+// A name is any string without blanks (reference, Node Naming); LTspice 26.1.1 refuses these
+// characters in one: = ( ) , { } ' " | (and ";", which starts a comment). Blanks and "=" end it.
+// Each name terminal is overridden because sub-terminals are inlined at import.
+// spec: LT-NOD-001
+_LT_CHAR: /[^ \t\r\n=(),{}'"|;]/
+%override WORD.2: _LT_CHAR+
+%override R_NAME.4: /[Rr]/ _LT_CHAR*
+%override C_NAME.4: /[Cc]/ _LT_CHAR*
+%override L_NAME.4: /[Ll]/ _LT_CHAR*
+%override K_NAME.4: /[Kk]/ _LT_CHAR*
+%override L_REF.4: /[Ll]/ _LT_CHAR*
+%override V_NAME.4: /[Vv]/ _LT_CHAR*
+%override I_NAME.4: /[Ii]/ _LT_CHAR*
+%override D_NAME.4: /[Dd]/ _LT_CHAR*
+%override X_NAME.4: /[Xx]/ _LT_CHAR*
+
+// A number: as in core, then any letters (Unicode included: 1kOhm, 1kΩ, 1µ, 1μ). LTspice ignores
+// the letters after a multiplier.
+// spec: LT-NUM-001
+%override NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?[^\W\d_]*/
+
+// The embedded decimal (decision 6): digits, a multiplier in place of the decimal point, digits.
+// 6K34 is 6.34K; M is milli, so 1M0 is 1m. R is unit (2R2 is 2.2; observed, not in the reference's
+// multiplier table). It is accepted in every value slot; the node records notation="rkm".
+// spec: LT-NUM-003
+EMBEDDED.4: /[0-9]+(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+/i
+%extend value: SEP EMBEDDED
+
+// Comment markers differ from ngspice, so a formula's character classes do too.
+// spec: LT-VAL-001
+%override BRACE_FORMULA.3: /\{(?:[^{}\r\n;$\/]|\/[^{}\r\n;\/]|\$(?! ))+\}/
+%override QUOTE_FORMULA.3: /'[^'\r\n;]+'/
+
+// Open-name parameters: .model only here, since each element letter has a closed list. A comma may
+// stand before one (observed). Only mfg and type, as in LTspice's own libraries, take a quoted string
+// or a bare word, kept verbatim and never read as a formula or a reference (review R8). LTspice reads
+// a bare word in any other parameter as a parameter reference, so MODEL_BARE is recognised only to be
+// rejected, with a hint to use braces. It has the highest priority and refuses a whole number, so a
+// number stays a number: its lookahead fails when a number or embedded decimal ends the field.
+// spec: LT-MOD-001
+%extend param: SEP WORD EQ (EMBEDDED | MODEL_BARE)
+             | CSEP WORD EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | MODEL_BARE)
+             | (SEP | CSEP) MODEL_TEXT_KW EQ (STRING_VALUE | WORD)
+%extend model_param_first: WORD EQ (EMBEDDED | MODEL_BARE)
+                         | MODEL_TEXT_KW EQ (STRING_VALUE | WORD)
+MODEL_TEXT_KW.3: /(?:mfg|type)(?=[ \t]*=)/i
+MODEL_BARE.5: /(?![+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[+-]?[0-9]+)?(?:[^\W\d_]*|(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+)(?:[ \t\r\n,)]|$))[^ \t\r\n=(),{}'"|;]+/i
+%extend model_stmt: MODEL_KW x_name model_ako x_name param* (NL | eol)
+                  | MODEL_KW x_name model_ako x_name model_paren (NL | eol)
+model_ako: SEP AKO_REF
+         | (SEP | TRAILING_COMMENT) model_ako
+AKO_REF.3: /ako:[^ \t\r\n=(),{}'"|;]+/i
+
+// R, C and L take a value and a closed list of parameters: LTspice stops at any other name
+// ("Unknown parameter"). They have no model form (no R, C or L .model type) and no keyword form. A
+// bare name in the value's place is recognised only to be rejected (LTspice reads it as a model:
+// "Undefined model"), with a hint. The lists hold the reference's names and, observed, the names
+// LTspice's own component database writes (M8 review R1). A name's "=" is part of its terminal's
+// lookahead, so m never matches the start of mfg.
+// spec: LT-RES-001
+%override resistor: R_NAME node node r_value (r_param | tc_param | noiseless_flag)* (NL | eol)
+                  | R_NAME node node bare_name
+%extend r_value: SEP EMBEDDED
+r_param: SEP R_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | SEP R_TEXT_KW EQ (STRING_VALUE | WORD)
+       | (SEP | TRAILING_COMMENT) r_param
+tc_param: SEP TC_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA) (CSEP (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA))*
+        | (SEP | TRAILING_COMMENT) tc_param
+bare_name: SEP WORD rest NL
+         | (SEP | TRAILING_COMMENT) bare_name
+noiseless_flag: SEP NOISELESS_KW (EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA))?
+              | (SEP | TRAILING_COMMENT) noiseless_flag
+R_PARAM_KW.2: /(?:temp|tol|pwr|tc1|tc2|m)(?=[ \t]*=)/i
+R_TEXT_KW.2: /(?:mfg|pn)(?=[ \t]*=)/i
+TC_KW.2: /tc(?=[ \t]*=)/i
+NOISELESS_KW.2: "noiseless"i
+
+// spec: LT-CAP-001
+%override capacitor: C_NAME node node c_value (c_param | noiseless_flag)* (NL | eol)
+                   | C_NAME node node charge
+                   | C_NAME node node bare_name
+%extend c_value: SEP EMBEDDED
+c_param: SEP C_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | SEP C_TEXT_KW EQ (STRING_VALUE | WORD)
+       | (SEP | TRAILING_COMMENT) c_param
+C_PARAM_KW.2: /(?:ic|rser|lser|rpar|cpar|rlshunt|temp|irms|v|m)(?=[ \t]*=)/i
+C_TEXT_KW.2: /(?:mfg|pn|type)(?=[ \t]*=)/i
+
+// The behavioral (Flux=) and hysteretic core (Hc= ...) forms are recognised only to be reported as
+// unsupported; their other parameters are statement text.
+// spec: LT-IND-001
+%override inductor: L_NAME node node value (l_param | noiseless_flag)* (NL | eol)
+                  | L_NAME node node nonlinear_inductor
+                  | L_NAME node node bare_name
+l_param: SEP L_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | SEP L_TEXT_KW EQ (STRING_VALUE | WORD)
+       | (SEP | TRAILING_COMMENT) l_param
+nonlinear_inductor: SEP NONLINEAR_L_KW EQ rest NL
+                  | (SEP | TRAILING_COMMENT) nonlinear_inductor
+L_PARAM_KW.2: /(?:ic|rser|rpar|cpar|temp|tc1|tc2|ipk|m)(?=[ \t]*=)/i
+L_TEXT_KW.2: /(?:mfg|pn)(?=[ \t]*=)/i
+NONLINEAR_L_KW.3: /flux|hc|bs|br|lm|lg|a|n/i
+
+// V: value, then AC with or without "=", then Rser and Cpar. A source function ends the line.
+// spec: LT-SRC-001
+%override voltage_source: V_NAME node node dc_spec? (ac_spec value?)? v_param* (NL | eol | stimulus)
+%extend ac_spec: SEP AC_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+v_param: SEP V_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT) v_param
+V_PARAM_KW.2: /(?:rser|cpar)(?=[ \t]*=)/i
+
+// I: a value is required ("Missing current value"), or an AC part, or the resistive load R=value.
+// "load" is a flag after the value and the AC part.
+// spec: LT-SRC-001
+%override current_source: I_NAME node node dc_spec (ac_spec value?)? load_flag? (NL | eol | stimulus)
+                        | I_NAME node node ac_spec value? load_flag? (NL | eol)
+                        | I_NAME node node resistive_load (ac_spec value?)? (NL | eol)
+                        | I_NAME node node stimulus
+load_flag: SEP LOAD_KW (EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA))?
+         | (SEP | TRAILING_COMMENT) load_flag
+resistive_load: SEP I_R_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+              | (SEP | TRAILING_COMMENT) resistive_load
+LOAD_KW.2: "load"i
+I_R_KW.2: "r"i
+
+// D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
+// order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold
+// is not interpreted.
+// spec: LT-DIO-001
+%override diode: D_NAME node node model value? (d_param | flag)* (NL | eol)
+d_param: SEP D_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT) d_param
+%extend flag: SEP OFF_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+D_PARAM_KW.2: /(?:temp|area|rpar|m|n)(?=[ \t]*=)/i
+
+// X: nodes, the subcircuit name, then parameters, with or without "params:". A comma may stand
+// before a parameter (observed).
+// spec: LT-SUB-001
+%extend x_last: x_name params_marker x_param* (NL | eol)
+%extend x_param: SEP WORD EQ EMBEDDED
+               | CSEP WORD EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
+params_marker: SEP PARAMS_KW
+             | (SEP | TRAILING_COMMENT) params_marker
+PARAMS_KW.2: "params:"i
+
+// spec: LT-SBD-001
+%extend subckt_header: SUBCKT_KW x_name subckt_port+ params_marker x_param* (NL | eol)
+%extend not_in_subckt: (STEP_KW | OPT_KW | TOP_DOT_NAME) rest NL
+
+// Source functions (phase 2), recognised only to be reported as unsupported, with I's table and
+// step-load forms.
+// spec: LT-UNS-001
+%override STIMULUS_KW.2: /pulse|sine|sin|exp|sffm|pwl|wavefile|tbl|step/i
+
+// Dot-commands form a closed list (decision 5). The reference's other commands stay
+// UnknownDirective: .backanno and .func may stand in a subcircuit body, the rest only at the top
+// level (LTspice stops at them in a body). Any other dot-command is a ParseError.
+// spec: LT-DIR-001
+%override DOT_NAME.4: /\.(?:backanno|func)(?![a-z0-9_-])/i
+%extend top_statement: top_unknown_stmt
+top_unknown_stmt: TOP_DOT_NAME rest NL
+TOP_DOT_NAME.4: /\.(?:four|noise|tf|fra|wave|net|savebias|savestate|loadstate)(?![a-z0-9_-])/i
+
+// .include, .inc and .lib are opaque and cannot be continued, as in ngspice.
+// spec: LT-OPA-001
+%extend statement: include_stmt
+                 | lib_stmt
+include_stmt: (INCLUDE_KW | INC_KW) line_rest LINE_END
+lib_stmt: LIB_KW line_rest LINE_END
+INCLUDE_KW.4: ".include"i
+INC_KW.4: ".inc"i
+LIB_KW.4: ".lib"i
+
+// .machine ... .endmachine is matched as a block only to be reported as unsupported (decision 5).
+// spec: LT-MCH-001
+%extend statement: machine_block
+machine_block: MACHINE_KW BLOCK_TEXT? NL machine_line* ENDMACHINE_KW BLOCK_TEXT? NL
+machine_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
+            | BLOCK_TEXT NL
+            | LINE_END
+MACHINE_KW.4: ".machine"i
+ENDMACHINE_KW.4: ".endmachine"i
+BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
+BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+
+// .param: name=value or name value (L11), separated by blanks or a comma. Names start with a letter
+// or "_" and hold letters, digits, "_", "#" and "."; time, temper and hertz are ordinary names. A
+// value may be a bare expression, which the reference documents (.param x=2*pi*100). BARE_FORMULA
+// has the highest priority of the value terminals and refuses a plain number, so a number stays a
+// number: its lookahead fails when a number is followed by the end of the field, not by an operator.
+// An expression holds no blank except around an operator or inside parentheses (three levels).
+// spec: LT-PRM-001
+%override PARAM_NAME.2: /[^\W\d][\w#.]*/
+%extend param_def: SEP PARAM_NAME SEP param_value
+                 | CSEP PARAM_NAME EQ param_value
+%extend param_value: EMBEDDED
+                   | BARE_FORMULA
+BARE_FORMULA.5: /(?![+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?[^\W\d_]*[0-9]*(?:[ \t]*(?:[\r\n,;]|$)|[ \t]+(?![-+*\/%^&|<>=!])))(?:[<>!=]=|[^ \t\r\n=,;(){}'"]|\((?:[^()\r\n;]|\((?:[^()\r\n;]|\([^()\r\n;]*\))*\))*\))+(?:[ \t]*(?:\*\*|==|!=|<=|>=|[-+*\/%^&|<>])[ \t]*(?:[<>!=]=|[^ \t\r\n=,;(){}'"]|\((?:[^()\r\n;]|\((?:[^()\r\n;]|\([^()\r\n;]*\))*\))*\))+)*/
+
+// .tran [Tstep] Tstop [Tstart [dTmax]], then modifiers (reference); Tstep may be left out.
+// spec: LT-TRN-001
+%override tran_stmt: TRAN_KW value (value (value value?)?)? (uic | tran_modifier)* (NL | eol)
+tran_modifier: SEP TRAN_MODIFIER_KW (EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE))?
+             | (SEP | TRAILING_COMMENT) tran_modifier
+TRAN_MODIFIER_KW.2: /steady|nodiscard|startup|step|convreport|loadstate|savestatetime|savestate/i
+
+// .ac also takes a list of frequencies or a file.
+// spec: LT-ACA-001
+%extend ac_stmt: DOT_AC_KW list_keyword value+ (NL | eol)
+               | DOT_AC_KW file_argument (NL | eol)
+list_keyword: SEP LIST_KW
+            | (SEP | TRAILING_COMMENT) list_keyword
+file_argument: SEP FILE_KW EQ FILE_NAME
+             | (SEP | TRAILING_COMMENT) file_argument
+LIST_KW.2: "list"i
+FILE_KW.2: "file"i
+FILE_NAME.3: /"[^"\r\n]*"|[^ \t\r\n;"]+/
+
+// .dc holds up to three sweeps (a fourth is a syntax error in LTspice), each with its own optional
+// variation. The last one may be a list or a file; a list cannot be followed by another sweep here,
+// since the fields are not delimited (discrepancies.md). The source may be any name, as in ngspice.
+// spec: LT-DCA-001
+%override dc_stmt: DOT_DC_KW dc_sweep (dc_sweep dc_sweep?)? (NL | eol)
+                 | DOT_DC_KW (dc_sweep dc_sweep?)? dc_list_sweep
+%extend dc_sweep: ac_variation x_name value value value
+dc_list_sweep: x_name list_keyword value+ (NL | eol)
+             | x_name file_argument (NL | eol)
+
+// .temp takes one or more values (a shorthand for .step temp list).
+// spec: LT-TMP-001
+%extend temp_stmt: TEMP_KW value value+ (NL | eol)
+
+// .options, .option and .opt. Names are not checked: the reference's list is not complete
+// (discrepancies.md).
+// spec: LT-OPT-001
+%extend options_stmt: OPT_KW option_item+ (NL | eol)
+%extend option_item: SEP WORD EQ EMBEDDED
+                   | CSEP WORD (EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | WORD))?
+OPT_KW.4: ".opt"i
+
+// .ic and .nodeset: V(node)=value items. all= is an error in LTspice, unlike ngspice. .ic also sets
+// inductor currents (reference, Tips): I(L...)=value. The grammar keeps out I(R1), which LTspice
+// ignores; the name is indexed like .save I(...). .nodeset takes voltages only.
+// spec: LT-ICN-001
+%extend node_condition: SEP V_OPEN WORD RPAR EQ EMBEDDED
+%override ic_stmt: IC_KW (node_condition | current_condition)+ (NL | eol)
+current_condition: SEP CURRENT_OPEN L_REF RPAR EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+                 | (SEP | TRAILING_COMMENT) current_condition
+
+// .save: V(...), I(...) and the device currents Id(...), Ib(...) and so on, with wildcards and
+// hierarchical names, kept as text; a plain name is an error in LTspice, unlike ngspice. A comma
+// may stand before a vector (observed).
+// spec: LT-SAV-001
+%extend output_vector: CSEP (voltage_vector | current_vector)
+%extend current_vector: DEVICE_CURRENT_OPEN WORD RPAR
+                      | (CURRENT_OPEN | DEVICE_CURRENT_OPEN) SAVE_PATTERN RPAR
+%extend voltage_vector: VOLTAGE_OPEN SAVE_PATTERN RPAR
+DEVICE_CURRENT_OPEN.3: /i[dgsbce]\(/i
+SAVE_PATTERN.3: /[^ \t\r\n=(),{}'"|;:*?]*[:*?][^ \t\r\n=(),{}'"|;]*/
+
+// .meas: the analysis keyword is optional; NOISE and OP are analyses too; SP is not.
+// spec: LT-MEA-001
+%extend meas_stmt: (MEAS_KW | MEASURE_KW) x_name meas_body NL
+%extend meas_analysis: SEP (NOISE_KW | OP_ANALYSIS_KW)
+NOISE_KW.2: "noise"i
+OP_ANALYSIS_KW.2: "op"i
+
+// .step [oct|dec|lin] item start end incr, or item list v1 v2 ..., or item file=name (reference).
+// The item is "param name", a source name, "temp", or a model type and name(parameter). Numbers
+// are plain: LTspice stops at a brace expression here. A list holds at least two values.
+// spec: LT-STP-001
+%extend top_statement: step_stmt
+step_stmt: STEP_KW ac_variation? x_name step_model_ref? step_sweep
+         | STEP_KW ac_variation? step_param step_sweep
+         | STEP_KW ac_variation? step_temp step_sweep
+step_param: SEP STEP_PARAM_KW x_name
+          | (SEP | TRAILING_COMMENT) step_param
+step_temp: SEP STEP_TEMP_KW
+         | (SEP | TRAILING_COMMENT) step_temp
+step_model_ref: SEP STEP_MODEL_REF
+              | (SEP | TRAILING_COMMENT) step_model_ref
+step_sweep: step_value step_value step_value (NL | eol)
+          | list_keyword step_value step_value+ (NL | eol)
+          | file_argument (NL | eol)
+step_value: SEP (NUMBER | EMBEDDED)
+          | (SEP | TRAILING_COMMENT) step_value
+STEP_KW.4: ".step"i
+STEP_PARAM_KW.2: "param"i
+STEP_TEMP_KW.2: "temp"i
+STEP_MODEL_REF.5: /[^ \t\r\n=(),{}'"|;]+\([^ \t\r\n=(),{}'"|;]+\)/

@@ -10,6 +10,8 @@ import pytest
 from netlistmod import Dialect, Netlist
 from tests.edits.golden import FAMILY, manifest, run_case
 
+pytestmark = pytest.mark.ngspice_only
+
 CASES: dict[str, dict[str, Any]] = manifest()["cases"]
 
 

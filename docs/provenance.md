@@ -24,4 +24,16 @@ do not normalize line endings or whitespace.
 | `ngspice/edits_golden` | Authored in this repository (M6); golden edit inputs and expected outputs, reviewed by hand | xdylanm | MIT |
 | `ngspice/solver_stubs` (with `raw/`) | Authored in this repository (M7); stand-ins for include files, and raw-file samples written by ngspice 47 for netlists authored here | xdylanm | MIT |
 | `ltspice/encoding_samples`, `ltspice/m0_export_candidate` | LTspice exports of circuits authored here | xdylanm | MIT |
-| `ltspice/contributed_examples` | LTspice schematics (`.asc`, `.asy`) drawn by the maintainer in LTspice 26.1.1 for M8 (2026-11-01); their `-netlist` exports and manifest are added in M8 T8. LTspice run output is never committed (`.gitignore`; M8 decision 2). | xdylanm | MIT |
+| `ltspice/contributed_examples` | LTspice schematics (`.asc`, `.asy`) drawn by the maintainer in LTspice 26.1.1 for M8 (2026-11-01), with their `-netlist` exports (path comment normalised). LTspice run output is never committed (`.gitignore`; decision 0009 item 2). | xdylanm | MIT |
+| `ltspice/elements_basic`, `ltspice/statements_basic`, `ltspice/names_basic`, and their `_rejects` families | Authored in this repository (M8) | xdylanm | MIT |
+| `ltspice/edits_golden` | Authored in this repository (M8); expected outputs of golden edits on `contributed_examples`, reviewed by hand | xdylanm | MIT |
+
+## LTspice evidence policy
+
+Decision 0009 item 2. The LTspice licence restricts publishing benchmark or comparison results and
+treats its documentation as confidential. The repository therefore records only syntax facts: what
+LTspice accepts or rejects, and how it reads a value. LTspice raw files, logs, and timing or
+performance numbers are never committed; probes run locally, and the LTspice reader tests use
+synthetic files written here. `analogdevicesinc/ltspice-reference` (Apache-2.0) is the cited manual,
+paraphrased; the built-in LTspice Help is not cited or copied. This policy is the maintainer's call
+and is not legal advice.

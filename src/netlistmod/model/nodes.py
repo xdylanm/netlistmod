@@ -1,10 +1,11 @@
-"""Immutable structural and element nodes produced by the ngspice parser."""
+"""Immutable structural and element nodes produced by the dialect parsers."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Literal, TypeAlias
 
+from netlistmod.dialects import Dialect
 from netlistmod.model.values import (
     AcSpec,
     ElementReference,
@@ -125,12 +126,14 @@ class _TwoTerminal(Component):
     """Fields shared by R, C and L: a value, a model, or both (architecture §5.3).
 
     ``value_keyword`` is the keyword as written when the value is given as ``r=1k``,
-    ``capacitance={c0}`` and similar; it is ``None`` for a positional value.
+    ``capacitance={c0}`` and similar; it is ``None`` for a positional value. ``flags`` holds an
+    LTspice ``noiseless``.
     """
 
     value: Value | None
     value_keyword: str | None
     model: ModelReference | None
+    flags: tuple[Flag, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -160,12 +163,14 @@ class MutualCoupling(Component):
 class _IndependentSource(Component):
     """Fields shared by V and I (phase 1: DC and AC only).
 
-    ``dc_keyword`` records whether ``DC`` was written before the value.
+    ``dc_keyword`` records whether ``DC`` was written before the value. ``flags`` holds an
+    LTspice current source's ``load``.
     """
 
     dc: Value | None
     dc_keyword: bool
     ac: AcSpec | None
+    flags: tuple[Flag, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -180,10 +185,14 @@ class CurrentSource(_IndependentSource):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Diode(Component):
-    """A ``D`` line; the model is mandatory and ``flags`` holds ``off``."""
+    """A ``D`` line; the model is mandatory and ``flags`` holds ``off``.
+
+    ``area`` is the positional area of an LTspice diode (``D1 a b dm 2``).
+    """
 
     model: ModelReference
     flags: tuple[Flag, ...]
+    area: Value | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -222,6 +231,7 @@ class ModelStatement(_DotCommand):
     ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
     ``open_paren_span`` and ``close_paren_span`` cover the ``(`` and ``)`` tokens of a
     parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (M6).
+    ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``.
     """
 
     name: str
@@ -232,6 +242,7 @@ class ModelStatement(_DotCommand):
     parenthesized: bool
     open_paren_span: Span | None = None
     close_paren_span: Span | None = None
+    ako: ModelReference | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -272,41 +283,59 @@ class Directive(_DotCommand):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TranDirective(Directive):
-    """``.tran tstep tstop [tstart [tmax]] [uic]``."""
+    """``.tran tstep tstop [tstart [tmax]] [uic]``.
 
-    tstep: Value
+    In LTspice ``tstep`` may be left out (``.tran 1m``), and ``modifiers`` holds the other
+    keywords (``startup``, ``steady``, ``savestate=...``).
+    """
+
+    tstep: Value | None
     tstop: Value
     tstart: Value | None
     tmax: Value | None
     uic: Flag | None
+    modifiers: tuple[OptionItem, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class AcDirective(Directive):
-    """``.ac dec|oct|lin points fstart fstop``; ``variation`` is the keyword as written."""
+    """``.ac dec|oct|lin points fstart fstop``; ``variation`` is the keyword as written.
+
+    LTspice also has ``.ac list f1 f2 ...`` (``frequencies``, the range fields ``None``) and
+    ``.ac file=name`` (``file``, ``variation`` is ``file``).
+    """
 
     variation: str
     variation_span: Span
-    points: Value
-    fstart: Value
-    fstop: Value
+    points: Value | None
+    fstart: Value | None
+    fstop: Value | None
+    frequencies: tuple[Value, ...] = ()
+    file: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True)
 class DcSweep:
-    """One ``.dc`` sweep: the swept name and its range; ``span`` runs from source to increment."""
+    """One ``.dc`` sweep: the swept name and its range; ``span`` runs from source to increment.
+
+    An LTspice sweep may name a ``variation`` before the source, or hold a ``values`` list or a
+    ``file`` in place of the range (``span`` then ends with the last of them).
+    """
 
     source: str
     source_span: Span
-    start: Value
-    stop: Value
-    increment: Value
+    start: Value | None
+    stop: Value | None
+    increment: Value | None
     span: Span
+    variation: str | None = None
+    values: tuple[Value, ...] = ()
+    file: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DcDirective(Directive):
-    """``.dc`` with one or two sweeps."""
+    """``.dc`` with one or two sweeps (up to three in LTspice)."""
 
     sweeps: tuple[DcSweep, ...]
 
@@ -335,21 +364,24 @@ class OptionsDirective(Directive):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class TempDirective(Directive):
-    """``.temp value``."""
+    """``.temp value``; LTspice allows more values (``others``)."""
 
     value: Value
+    others: tuple[Value, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
 class NodeCondition:
-    """``v(node)=value``, or ``all=value`` (``node is None``, ``.nodeset`` only).
+    """``v(node)=value``, ``all=value`` (``node is None``, ngspice ``.nodeset`` only), or an
+    inductor current ``i(L1)=value`` (``current`` is set, LTspice ``.ic`` only).
 
-    ``span`` runs from ``v(`` (or ``all``) to the end of the value.
+    ``span`` runs from ``v(`` (or ``all``, or ``i(``) to the end of the value.
     """
 
     node: Node | None
     value: Value
     span: Span
+    current: ElementReference | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -395,18 +427,45 @@ class SaveDirective(Directive):
 class MeasureDirective(Directive):
     """``.meas`` or ``.measure``, typed shallowly.
 
-    ``analysis`` (``dc``, ``ac``, ``tran``, ``sp``, as written) and ``result`` are fields; the
+    ``analysis`` (``dc``, ``ac``, ``tran``, ``sp``; in LTspice also ``noise`` and ``op``, or
+    ``None`` when it is left out; as written) and ``result`` are fields; the
     rest of the statement is ``body_text``, the source slice of ``body_span``, which runs from
     the first to the last text token (comments on earlier lines of a continued statement are
     inside it; those are also listed in ``trailing_comments``).
     """
 
-    analysis: str
-    analysis_span: Span
+    analysis: str | None
+    analysis_span: Span | None
     result: str
     result_span: Span
     body_text: str
     body_span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class StepDirective(Directive):
+    """An LTspice ``.step`` (decision 0009): one nested sweep of one quantity.
+
+    ``kind`` says what ``name`` is: a parameter (``.step param x``), a source (``.step V1``), the
+    temperature (``.step temp``) or a model parameter (``.step NPN 2N2222(VAF)``; ``model_type``
+    is then ``NPN``, ``name`` is ``2N2222(VAF)`` and ``model`` refers to ``2N2222``).
+    ``variation`` is ``oct``, ``dec`` or ``lin``
+    as written, if any. The sweep is a range (``start``, ``stop``, ``increment``), a ``values``
+    list or a ``file``.
+    """
+
+    kind: Literal["param", "source", "temp", "model"]
+    name: str
+    name_span: Span
+    model_type: Identifier | None
+    model: ModelReference | None
+    variation: str | None
+    variation_span: Span | None
+    start: Value | None
+    stop: Value | None
+    increment: Value | None
+    values: tuple[Value, ...]
+    file: Identifier | None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -454,12 +513,18 @@ TopLevelItem: TypeAlias = (
     | NodesetDirective
     | SaveDirective
     | MeasureDirective
+    | StepDirective
     | GlobalDirective
 )
 
 
 @dataclass(frozen=True, slots=True)
 class ParseResult:
-    """Top-level items whose spans tile the source, ending with :class:`End` and blank lines."""
+    """Top-level items whose spans tile the source, ending with :class:`End` and blank lines.
+
+    ``dialect`` is the dialect the source was parsed with, so the document layer's name rules
+    follow it.
+    """
 
     items: tuple[TopLevelItem, ...]
+    dialect: Dialect

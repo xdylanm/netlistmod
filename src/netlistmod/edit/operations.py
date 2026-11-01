@@ -8,10 +8,11 @@ text for syntax (P13). :mod:`netlistmod.edit.api` exposes these as methods.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from dataclasses import fields, is_dataclass
 
-from netlistmod.document import Line, Netlist, Scope, ScopePath, fold
+from netlistmod.dialects import Dialect
+from netlistmod.document import Line, Netlist, Scope, ScopePath
 from netlistmod.document.models import allowed_model_types, model_type_allowed
 from netlistmod.edit import conventions
 from netlistmod.edit.placement import Placement, insertion_point
@@ -37,6 +38,7 @@ from netlistmod.model.nodes import (
     OpDirective,
     ParamStatement,
     Resistor,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     TempDirective,
@@ -48,10 +50,19 @@ from netlistmod.model.nodes import (
     VoltageSource,
 )
 from netlistmod.model.transform import parse
-from netlistmod.model.values import AcSpec, Formula, ModelReference, NumericValue, ParamAssignment
+from netlistmod.model.values import (
+    AcSpec,
+    Flag,
+    Formula,
+    Identifier,
+    ModelReference,
+    NumericValue,
+    ParamAssignment,
+    ValueList,
+)
 from netlistmod.source import SourceText, Span
 
-_VALUE = SlotCheck((NumericValue, Formula), "a value")
+_VALUE = SlotCheck((NumericValue, Formula, ValueList, Identifier), "a value")
 _MODEL = SlotCheck((ModelReference,), "a model name")
 _TWO_TERMINAL = (Resistor, Capacitor, Inductor)
 _SOURCES = (VoltageSource, CurrentSource)
@@ -73,6 +84,12 @@ SINGLETON_DIRECTIVES: tuple[type[Directive], ...] = (
     OpDirective,
     TempDirective,
 )
+
+# LTspice has no R, C or L .model type, so the semiconductor form does not exist (review R6).
+_NO_LTSPICE_MODEL = "LTspice has no R, C or L model"
+
+# The name of an LTspice diode's positional area, which set_param routes to its slot.
+_POSITIONAL_AREA = "area"
 
 # Topology items (§7.1): directive operations never add, replace or remove them.
 _TOPOLOGY_ITEMS = (Component, SubcktDefinition, GlobalDirective)
@@ -102,7 +119,7 @@ def resolve_scope(netlist: Netlist, scope: ScopePath, in_definition: bool) -> Sc
 
 def _element(netlist: Netlist, designator: str, scope: ScopePath, in_definition: bool) -> Component:
     found = resolve_scope(netlist, scope, in_definition)
-    elements = found.elements.get(fold(designator), ())
+    elements = found.elements.get(found.fold(designator), ())
     if not elements:
         raise EditError(f"no element `{designator}` in {found.describe()}")
     if len(elements) > 1:
@@ -191,21 +208,43 @@ def set_param(
     scope: ScopePath = (),
     in_definition: bool = False,
 ) -> list[Edit]:
-    """Set or add an instance parameter of an R, C, L or D line."""
+    """Set or add an instance parameter of an R, C, L or D line, or of an LTspice V or I line."""
     element = _element(netlist, designator, scope, in_definition)
     reason = f"set_param {designator} {name}"
+    found_fold = netlist.scope(scope).fold
+    folded = found_fold(name)
+    ltspice = netlist.dialect is Dialect.LTSPICE
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
-    if not isinstance(element, (*_TWO_TERMINAL, Diode)):
+    takes_params = (*_TWO_TERMINAL, Diode, *(_SOURCES if ltspice else ()))
+    if not isinstance(element, takes_params):
         raise EditError(f"`{designator}` is a {_kind(element)} line and takes no parameters")
-    if isinstance(element, _TWO_TERMINAL) and fold(name) in _VALUE_KEYWORDS[type(element)]:
+    if (
+        isinstance(element, _TWO_TERMINAL)
+        and not ltspice
+        and folded in _VALUE_KEYWORDS[type(element)]
+    ):
         if element.value_keyword is None or element.value is None:
             raise EditError(
                 f"`{name}` names the value of `{designator}`, which is not written as "
                 f"`{name}=…`; use set_value"
             )
         return [Edit(element.value.span, value, reason, (_VALUE,))]
-    return _assign(element.params, element, name, value, reason)
+    for flag in getattr(element, "flags", ()):
+        # A flag takes its value in place: `noiseless=1` -> `noiseless=0`, `off` -> `off=1`.
+        if found_fold(flag.name) == folded:
+            if flag.value is not None:
+                return [Edit(flag.value.span, value, reason, (_VALUE,))]
+            text = f"={value}"
+            return [_insert(flag.span.end, text, reason, _VALUE, 1)]
+    if isinstance(element, Diode) and ltspice and folded == _POSITIONAL_AREA:
+        # LTspice's area is positional, right after the model, unless it is written `area=`.
+        if any(found_fold(param.name) == folded for param in element.params):
+            return _assign(element.params, element, name, value, reason, folded=found_fold)
+        if element.area is not None:
+            return [Edit(element.area.span, value, reason, (_VALUE,))]
+        return [_insert(element.model.span.end, conventions.field(value), reason, _VALUE, 1)]
+    return _assign(element.params, element, name, value, reason, folded=found_fold)
 
 
 def set_instance_param(
@@ -221,7 +260,8 @@ def set_instance_param(
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is not a subcircuit call; use set_param")
-    return _assign(element.params, element, name, value, f"set_instance_param {designator} {name}")
+    reason = f"set_instance_param {designator} {name}"
+    return _assign(element.params, element, name, value, reason, folded=netlist.scope(scope).fold)
 
 
 def _assign(
@@ -231,17 +271,20 @@ def _assign(
     value: str,
     reason: str,
     after: int | None = None,
+    *,
+    folded: Callable[[str], str],
 ) -> list[Edit]:
     """Replace the value of parameter ``name`` or add ``name=value`` after the last field
-    (or after offset ``after``)."""
-    matches = [param for param in params if fold(param.name) == fold(name)]
+    (or after offset ``after``); ``folded`` is the dialect's name comparison."""
+    matches = [param for param in params if folded(param.name) == folded(name)]
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
     if matches:
         return [Edit(matches[0].value.span, value, reason, (_VALUE,))]
     point = _last_field_end(owner) if after is None else after
     text = conventions.field(conventions.assignment(name, value))
-    return [_insert(point, text, reason, SlotCheck((ParamAssignment,), "a parameter"), 1)]
+    # A flag's keyword may be written with a value too (LTspice), which parses as a Flag.
+    return [_insert(point, text, reason, SlotCheck((ParamAssignment, Flag), "a parameter"), 1)]
 
 
 def set_model(
@@ -258,15 +301,16 @@ def set_model(
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, (*_TWO_TERMINAL, Diode)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
+    if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
+        raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
     if element.model is None and element.value_keyword is not None:
         raise EditError(
             f"`{designator}` writes its value as `{element.value_keyword}=…`, a form that takes "
             "no model; use set_value to write a positional value first"
         )
     chain = tuple(netlist.scope(scope).chain())
-    definition = next(
-        (found.models[fold(model)][0] for found in chain if fold(model) in found.models), None
-    )
+    key = chain[0].fold(model)
+    definition = next((found.models[key][0] for found in chain if key in found.models), None)
     if definition is not None:
         if not model_type_allowed(element, definition.model_type):
             allowed = ", ".join(
@@ -307,6 +351,8 @@ def remove_value(
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` is a {_kind(element)} line; only R, C and L have a value")
+    if netlist.dialect is Dialect.LTSPICE:
+        raise EditError(f"`{designator}` needs its value: {_NO_LTSPICE_MODEL}")
     if element.value is None:
         raise EditError(f"`{designator}` has no value to remove")
     if element.model is None:
@@ -403,7 +449,7 @@ def set_param_statement(
     in ``scope`` (defaults count), or add a ``.param`` line by placement."""
     found = resolve_scope(netlist, scope, in_definition)
     reason = f"params.set {name}"
-    assignments = found.params.get(fold(name))
+    assignments = found.params.get(found.fold(name))
     if assignments:
         return [Edit(assignments[-1].value.span, value, reason, (_VALUE,))]
     point = insertion_point(placement or Placement.AFTER_LAST_PARAM, netlist, found.path)
@@ -430,21 +476,22 @@ def set_model_param(
 ) -> list[Edit]:
     """Set or add a parameter of the ``.model`` named ``model`` defined in ``scope``."""
     found = resolve_scope(netlist, scope, in_definition)
-    definitions = found.models.get(fold(model))
+    definitions = found.models.get(found.fold(model))
     if not definitions:
         raise EditError(f"no model `{model}` in {found.describe()}")
     statement = definitions[0]  # ngspice uses the first definition (decision 0006)
     reason = f"set_model_param {model} {name}"
     if statement.params:
         after = statement.params[-1].span.end  # inside the parentheses, if any
-        return _assign(statement.params, statement, name, value, reason, after)
+        return _assign(statement.params, statement, name, value, reason, after, folded=found.fold)
     if statement.open_paren_span is not None:
         # Empty parentheses: `d()` -> `d(n=1.5)`, right after the `(` token.
         text = conventions.assignment(name, value)
         check = SlotCheck((ParamAssignment,), "a parameter")
         return [_insert(statement.open_paren_span.end, text, reason, check, 0)]
     # `.model dm d` -> `.model dm d n=1.5`.
-    return _assign((), statement, name, value, reason, statement.model_type_span.end)
+    point = statement.model_type_span.end
+    return _assign((), statement, name, value, reason, point, folded=found.fold)
 
 
 # Directive operations.
@@ -561,6 +608,8 @@ def set_directive(netlist: Netlist, text: DirectiveText) -> list[Edit]:
     lines = _physical_lines(text, "directives.set")
     item = _addable(netlist, lines, "directives.set")
     kind = type(item)
+    if isinstance(item, StepDirective):
+        return _set_step(netlist, item, lines)
     if not issubclass(kind, SINGLETON_DIRECTIVES):
         raise EditError(
             f"directives.set: {_show(lines)} is a repeatable directive or an opaque item "
@@ -575,6 +624,30 @@ def set_directive(netlist: Netlist, text: DirectiveText) -> list[Edit]:
     if existing:
         return replace_directive(netlist, existing[0], lines)
     return [_line_insertion(netlist, lines, kind, Placement.BEFORE_END, "directives.set")]
+
+
+def _set_step(netlist: Netlist, step: StepDirective, lines: tuple[str, ...]) -> list[Edit]:
+    """Upsert a ``.step``: replace the line that sweeps the same quantity, or add one (decision
+    0009). Nested ``.step`` lines sweep different quantities, so they are not a repeated kind."""
+    fold = netlist.scope().fold
+
+    def quantity(item: StepDirective) -> tuple[str, str, str]:
+        model_type = item.model_type.name if item.model_type is not None else ""
+        return (item.kind, fold(model_type), fold(item.name))
+
+    same = [
+        line
+        for line in netlist.lines.find_all(StepDirective)
+        if isinstance(line.item, StepDirective) and quantity(line.item) == quantity(step)
+    ]
+    if len(same) > 1:
+        raise EditError(
+            f"directives.set: {len(same)} `.step` lines sweep `{step.name}`, so the line to "
+            "replace is ambiguous; use directives.replace(line, …)"
+        )
+    if same:
+        return replace_directive(netlist, same[0], lines)
+    return [_line_insertion(netlist, lines, StepDirective, Placement.BEFORE_END, "directives.set")]
 
 
 def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:

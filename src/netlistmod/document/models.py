@@ -11,7 +11,6 @@ import json
 from functools import lru_cache
 from importlib.resources import files
 
-from netlistmod.document.names import fold
 from netlistmod.model.nodes import Component
 
 _MODEL_TYPES = "model-types.json"
@@ -25,7 +24,8 @@ def _table() -> dict[str, frozenset[str]]:
     if not isinstance(elements, dict):
         raise ValueError("model-types.json must map element class names to model types")
     return {
-        str(name): frozenset(fold(str(kind)) for kind in kinds) for name, kinds in elements.items()
+        str(name): frozenset(str(kind).lower() for kind in kinds)
+        for name, kinds in elements.items()
     }
 
 
@@ -36,4 +36,4 @@ def allowed_model_types(element: Component) -> frozenset[str]:
 
 def model_type_allowed(element: Component, model_type: str) -> bool:
     """Whether a model of ``model_type`` (as written) fits ``element``."""
-    return fold(model_type) in allowed_model_types(element)
+    return model_type.lower() in allowed_model_types(element)

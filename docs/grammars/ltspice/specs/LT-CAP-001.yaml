@@ -1,0 +1,28 @@
+id: LT-CAP-001
+dialect: ltspice
+construct: capacitor (C) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "C — Capacitor"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- capacitor
+- c_value
+- c_param
+- C_PARAM_KW
+- C_TEXT_KW
+core_rules:
+- C_NAME
+- Q_KW
+- charge
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_capacitor_parameters
+- tests/grammar/ltspice/test_ltspice_elements.py::test_database_text_parameters
+- tests/grammar/ltspice/test_ltspice_elements.py::test_other_parameters_are_rejected
+- tests/grammar/ltspice/test_ltspice_elements.py::test_nonlinear_forms_are_unsupported
+notes: 'Value, then ic, Rser, Lser, Rpar, Cpar, m, RLshunt, temp. Observed (section 11.3 rule 3): V and
+  Irms, mfg, pn and type, which take a quoted string or a bare word (settled by probe; review R1), and
+  the noiseless flag, with or without a value (reviews R9, R10). Q= is unsupported in phase 1.'

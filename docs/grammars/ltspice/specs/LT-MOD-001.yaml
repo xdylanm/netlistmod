@@ -1,0 +1,32 @@
+id: LT-MOD-001
+dialect: ltspice
+construct: .model statements
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".MODEL — SPICE Model Definition"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- param
+- model_param_first
+- MODEL_TEXT_KW
+- MODEL_BARE
+- model_stmt
+- model_ako
+- AKO_REF
+core_rules:
+- model_paren
+- rparen
+- MODEL_KW
+- LPAR
+- RPAR
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_model_forms
+- tests/grammar/ltspice/test_ltspice_statements.py::test_model_text_parameters
+- tests/grammar/ltspice/test_ltspice_statements.py::test_other_model_parameters_reject_a_bare_word
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_models
+- tests/document/test_ltspice_document.py::test_a_model_text_value_is_not_a_reference
+notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string
+  or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with
+  a hint, since LTspice reads it as a parameter reference (reviews R2, R8).'

@@ -1,0 +1,35 @@
+{
+  "family": "contributed_examples",
+  "origin": "LTspice schematics drawn by the maintainer in LTspice 26.1.1 for M8, with their -netlist exports",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Exported by LTspice 26.1.1 with -netlist, with Default Devices and Default Libraries off. The first comment line holds the absolute schematic path in the export; it is replaced by the file name, and nothing else is changed. r_subckt.asc and r_subckt.asy are the block symbol and sheet of r_divider_subckt.asc; LTspice does not netlist a block's sheet from the command line (L43), so the parent holds the definition in a directive and r_subckt.asc has no export. .gitignore keeps LTspice run output out (decision 0009).",
+  "fixtures": {
+    ".gitignore": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
+    "bus_connectors.asc": "36ee8af50283472a22a0af4989107ce694f1b81db6534b00f88d0f6c91f82a02",
+    "bus_connectors.net": "fcb4dd26a2352384028bc7be7817bc3f00bf401f2d793b78442a8c521943b499",
+    "half_rectifier.asc": "d3b8ef9886e5b16f6c25adc347998795be39d25ba6e4da59e869c058abca4cc7",
+    "half_rectifier.net": {
+      "sha256": "c32b3000ac823d2eb490b66c8ff61c6c85b2922f6a51a14c4696c6c86ad458f5",
+      "line": 3,
+      "column": 11,
+      "error": "UnsupportedConstruct",
+      "note": "SINE is a phase 2 source function (L46); LTspice runs this file"
+    },
+    "LC_filter_mfg_components.asc": "d65414cb2bca12b2db4f18f1050f3510c5e18b85e1367a4d52ab4c2667c33973",
+    "LC_filter_mfg_components.net": "9a5b33d7e5b82979b097483cc365d11ea44335242fd08bfa602ff0822098cffd",
+    "r_divider.asc": "86bacdb03d7630c508e4485624a77fbfa278f268592ad64a78753862b23d015d",
+    "r_divider.net": "1fa551f1a52839f8824cfa92916a2ed058d9b957dfa840e5d45bb97235186c2b",
+    "r_divider_subckt.asc": "7e20ae5d6f58b3ba303af7feb0c37ce96e3bbe70168168ad694f58920c8e643f",
+    "r_divider_subckt.net": "5414147c2e200e98d727bf326c5c228b122b8e15492e01e0c5c3bbfd72a9dd14",
+    "r_divider_sweep.asc": "80339b0174de17a336bb93a990188aacb3f1d6ade229a52f1afaec6eb376fda8",
+    "r_divider_sweep.net": "53b810c4317a27591ff2d314a307436c79874db26e10fd18044f557232794ef8",
+    "r_subckt.asc": "743d847bda85bd8547e817d0c67e1b1de43deea46a21707d315e1f29c89081bc",
+    "r_subckt.asy": "6a46ad7092ad207c5faba16c502bea0767940a266b28ed7f72e77e2c9a52cd5a",
+    "rc_lowpass.asc": "31e0938f02bbfc987afa4d575cc2b2e9adb3ffeeab6919309ab8ced8db27a762",
+    "rc_lowpass.net": "2d74762dc46afe03e066473d03e329519385b6f2aec220e8a083a7b2fef6442e",
+    "simple_transformer.asc": "06b6403f8a2de6d57353a4eb3f6b9e6def8cbc11349fbc76ce44cc0d0dce86e6",
+    "simple_transformer.net": "98900d63f049b538fcb6c0a52ee259036726e756bdc3f3872277f4c2dceb2740"
+  }
+}

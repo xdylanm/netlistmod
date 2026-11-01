@@ -8,11 +8,12 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from netlistmod import Dialect, Net, Netlist, Resistor, SubcktInstance
+from netlistmod import Net, Netlist, Resistor, SubcktInstance
+from tests.support.dialects import current_dialect, is_ltspice
 
 
 def _netlist(body: str) -> Netlist:
-    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=Dialect.NGSPICE)
+    return Netlist.from_text(f"title\n{body}\n.end\n", dialect=current_dialect())
 
 
 def _names(nets: tuple[Net, ...]) -> list[tuple[str, tuple[str, ...]]]:
@@ -82,6 +83,7 @@ def test_connections_list_each_terminal() -> None:
         netlist.connections("R1")
 
 
+@pytest.mark.ngspice_only
 def test_elements_in_opaque_blocks_are_not_seen() -> None:
     netlist = _netlist(".if (1)\nR1 hidden 0 1\n.endif\nR2 a 0 1")
     assert _names(netlist.nets()) == [("a", ()), ("0", ())]
@@ -184,6 +186,8 @@ _STYLES = st.builds(
 
 
 def _element_line(element: _Element, style: _Style) -> str:
+    if is_ltspice() and style.continuation == "\\\\":
+        style = replace(style, continuation="+")  # LTspice has no backslash continuation
     gap = style.blank
     value = style.value if element.letter != "V" else "DC 1"
     if element.letter == "C" and style.value == "{rx}":
@@ -224,7 +228,7 @@ def _render(circuit: _Circuit, style: _Style) -> str:
 
 
 def _load(circuit: _Circuit, style: _Style) -> Netlist:
-    return Netlist.from_text(_render(circuit, style), dialect=Dialect.NGSPICE)
+    return Netlist.from_text(_render(circuit, style), dialect=current_dialect())
 
 
 @settings(max_examples=150, deadline=None)

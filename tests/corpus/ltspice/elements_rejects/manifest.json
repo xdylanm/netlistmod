@@ -1,0 +1,206 @@
+{
+  "family": "elements_rejects",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Each fixture is one malformed or unsupported construct; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. The notes quote LTspice 26.1.1 where it stops at the same construct.",
+  "fixtures": {
+    "backslash_continuation.cir": {
+      "sha256": "451b23fadb9cb419e5eb52270d0a793077e78889cb9d5e404d3c0a3f8d2b8cd7",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "L24: no backslash continuation"
+    },
+    "bare_formula.cir": {
+      "sha256": "9b31b69ce3ea9d58d0e158095b3d23dfa37a5bcf30e60d73020b245c7888fc24",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "unbraced expression in a value slot"
+    },
+    "bare_name_value.cir": {
+      "sha256": "fdad26c76548c89db485061aa2871c2ef1e4b2697eb7cf06273f0cbf065c441d",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a bare name is a model in LTspice, and R takes none"
+    },
+    "behavioral_charge.cir": {
+      "sha256": "a839847a28d965811a31fb07bea41a75d84ed2d3f51ded38433510bfa0ab5bb6",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "charge form"
+    },
+    "behavioral_flux.cir": {
+      "sha256": "b0bd1b8265595eea958d0484aa510516f95b3f0779667010f0c75e706a36a34c",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "flux form"
+    },
+    "comma_between_nodes.cir": {
+      "sha256": "fb33ff21550d8b305db5338b30144b6e793234a886a8ca1d8523161ca1989456",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "no comma separators between nodes"
+    },
+    "coupling_one_inductor.cir": {
+      "sha256": "399662042d70702e6ee42e7c9bf15c20cb8ae73e44ad134be6563bad345f6603",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "two or more inductors"
+    },
+    "current_rser.cir": {
+      "sha256": "fa04792dcbb4e9579c08b5637090879fa0e01edf842f1b00057814ff54c4d0e7",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "I takes no Rser"
+    },
+    "current_without_value.cir": {
+      "sha256": "d86fde990bd46cc98404776d7b5321d9b730853605e9460246c3d95ff6de9321",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "Missing current value"
+    },
+    "diode_off_then_area.cir": {
+      "sha256": "d88a17152adab2966d7ac39791ab7bfa17136875f0a664ecfe4351db2ca4768d",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "area comes before off"
+    },
+    "double_quoted_value.cir": {
+      "sha256": "a39693caf9b1e4b33176cc1abcd75f868e498cf35287b4fbf6ab4886290e3e6e",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "Numeric value expected"
+    },
+    "embedded_tail.cir": {
+      "sha256": "648373d2e4c8c04076243428f90a06b2edcbc67fe799b2ed8477380f6381aafe",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "text after an embedded decimal"
+    },
+    "flag_with_a_word.cir": {
+      "sha256": "ef7ec0379b2c5f77844e990fc8d4d86e9784e1826a3b0cc5b8bb3e1e4a7de037",
+      "line": 2,
+      "column": 21,
+      "error": "ParseError",
+      "note": "a flag's value is a number or a formula"
+    },
+    "frequency_analyzer.cir": {
+      "sha256": "e2b6c8eb6105359d1dcd87d1dd3ffab2f324eeb74cc655dec9a70bbe032ffdaf",
+      "line": 2,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "planned for phase 2"
+    },
+    "hysteretic_core.cir": {
+      "sha256": "3fe1f692437eed949949b9d02375bb54a7157b00d0e97ae8323552903c027ea0",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "hysteretic core form"
+    },
+    "misspelt_parameter.cir": {
+      "sha256": "1157f726629652b1bea81ae69a04a7cc56fb9a0f635f526614c5cd7454254405",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "closed parameter list"
+    },
+    "not_a_letter.cir": {
+      "sha256": "1e7fca278284c7044f77d64c5c594202dff0fb6b9b9ae15f8fef20b848ac3692",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "N is not an LTspice letter"
+    },
+    "phase_2_letter.cir": {
+      "sha256": "b60be86ad14b5c9529398eb6a7db7efb985302537ab2c5658719bc48075c8c94",
+      "line": 2,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "planned for phase 2"
+    },
+    "quoted_number.cir": {
+      "sha256": "5184ef3fba50fc9359e3387deaa9c287d3c9f820aa5ba25595dc0f76d057cc8b",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "Numeric value expected"
+    },
+    "resistor_keyword_value.cir": {
+      "sha256": "5e961f2bfe5f377c3f9e336b7a7bfe57c806562e36091f31dd28d794833c9cba",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "no keyword form"
+    },
+    "resistor_model_after_value.cir": {
+      "sha256": "7cc8df0a67681cb85da64da9ad751a65fb7c02f0d7fbebac3175a870eac4c637",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "R has no model form"
+    },
+    "second_value.cir": {
+      "sha256": "1a36b9cc080704e2e60f957805d5c6cddd01a9466dcecdad03a8942f69ac743e",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "L38: Unknown parameter"
+    },
+    "source_after_ac.cir": {
+      "sha256": "8be654cd8bdbc18fec49f324a4b2631ee9af148d31f792ce2cf058975854fdd2",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "the reference's order: AC before Rser"
+    },
+    "stimulus_function.cir": {
+      "sha256": "c8c5bc5e9937b49e5fbbe1091202d5d3ed63606ff9da876c81ad8bd6fd797a50",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "source functions are phase 2"
+    },
+    "tc_on_inductor.cir": {
+      "sha256": "10d7658bf35fe029237383a27e69c777004c2985ba0043e19c292aef71e2b5ed",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "L has tc1 and tc2"
+    },
+    "type_on_inductor.cir": {
+      "sha256": "0d1b548d8408438a574220507dfe2b0209663cc85a9a2c8aac8d7cf65fe46d84",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "type is a C parameter; LTspice stops at it on L and R"
+    },
+    "unknown_capacitor_parameter.cir": {
+      "sha256": "a78220798ef83b91283d68cdf12290316db9ea40dda799e53e8203baa0756afb",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "closed parameter list"
+    },
+    "unknown_resistor_parameter.cir": {
+      "sha256": "4a4aed8f177c80b2b851ee5980c0a10eacb0c00ab54e8236f8ea0e258240c677",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "closed parameter list"
+    }
+  }
+}

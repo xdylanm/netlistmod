@@ -1,0 +1,16 @@
+M8 LTspice .step forms
+.param x=1k
+V1 in 0 3
+R1 in out {x}
+R2 out 0 {y}
+D1 out 0 dm
+.model dm D(Is=1n)
+.model slow ako:dm D(N=2)
+.step param x 1k 3k 2k
+.step param y list 1k 2k2
+.step lin V1 1 2 1
+.step oct param z 1 8 4
+.step temp list 0 27
+.step D dm(Is) 1n 2n 1n
+.op
+.end

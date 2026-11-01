@@ -1,0 +1,26 @@
+id: LT-SBD-001
+dialect: ltspice
+construct: .subckt ... .ends definitions
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".SUBCKT / .ENDS — Subcircuit Definition"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- subckt_header
+- not_in_subckt
+core_rules:
+- subckt_def
+- subckt_port
+- subckt_item
+- ends_line
+- SUBCKT_KW
+- ENDS_KW
+- ZERO_PORT
+tests:
+- tests/grammar/ltspice/test_ltspice_elements.py::test_subcircuit_headers
+- tests/grammar/ltspice/test_ltspice_elements.py::test_a_port_cannot_be_zero
+- tests/grammar/ltspice/test_ltspice_statements.py::test_top_level_statements_are_rejected_in_a_body
+notes: Definitions nest. Top-level statements are rejected in a body; LTspice tolerates .ic and .nodeset
+  there, and a port named 0 (discrepancies.md).

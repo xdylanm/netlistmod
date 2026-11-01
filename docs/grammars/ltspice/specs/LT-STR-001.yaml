@@ -1,0 +1,23 @@
+id: LT-STR-001
+dialect: ltspice
+construct: top-level source structure
+manual_ref:
+- '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Structure"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- body_line
+core_rules:
+- start
+- line
+- statement
+- top_statement
+- WS
+tests:
+- tests/grammar/ltspice/test_ltspice_structure.py::test_top_level_shape
+- tests/grammar/ltspice/test_ltspice_structure.py::test_spans_tile_the_source
+- tests/grammar/ltspice/test_ltspice_corpus.py::test_accept_files_round_trip_and_tile
+notes: First line is the title, then body lines, then .end. A line is a body line or a top-level-only
+  statement, as in ngspice.

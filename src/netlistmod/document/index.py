@@ -1,6 +1,6 @@
 """Definition scopes, symbol tables and read-only reference resolution (architecture §8).
 
-The scope model is ``docs/grammars/ngspice/scoping.md`` (decision 0006 items 3-5):
+The scope model is ``docs/grammars/<dialect>/scoping.md`` (decision 0006 items 3-5):
 
 - A scope is the top level or one subcircuit definition, addressed by its path of folded
   subcircuit names (``()``, ``("amp",)``, ``("amp", "inner")``). Definitions are scopes, not
@@ -11,7 +11,9 @@ The scope model is ``docs/grammars/ngspice/scoping.md`` (decision 0006 items 3-5
 - A model, subcircuit or parameter reference is looked up in its own scope, then each
   enclosing scope, independent of file order. A repeated ``.param`` resolves to the last
   assignment of the scope; a repeated model or subcircuit to the first (ngspice 47 ignores a
-  redefinition). Element references (``K`` inductors, ``.dc`` sources, ``.save i(src)``) are
+  redefinition; LTspice 26.1.1 stops at any of them). A parameter swept by an LTspice
+  ``.step param`` is defined by that line. Element references (``K`` inductors, ``.dc`` sources,
+  ``.save i(src)``) are
   looked up in their own scope only.
 
 Items inside opaque ``.if`` blocks and ``.include``/``.lib`` files are not seen (§7.8).
@@ -24,6 +26,7 @@ from dataclasses import dataclass, fields, is_dataclass
 from types import MappingProxyType
 from typing import Literal, TypeVar
 
+from netlistmod.dialects import Dialect
 from netlistmod.document.lines import Line, Lines, ScopePath
 from netlistmod.document.names import fold
 from netlistmod.grammar.formula import parse_formula
@@ -32,6 +35,7 @@ from netlistmod.model.nodes import (
     Component,
     DcDirective,
     Diode,
+    IcDirective,
     Inductor,
     ModelStatement,
     MutualCoupling,
@@ -39,6 +43,7 @@ from netlistmod.model.nodes import (
     ParamStatement,
     Resistor,
     SaveDirective,
+    StepDirective,
     SubcktDefinition,
     SubcktInstance,
     TopLevelItem,
@@ -85,6 +90,7 @@ class Scope:
     __slots__ = (
         "_children",
         "definition",
+        "dialect",
         "display",
         "elements",
         "has_opaque_include",
@@ -103,8 +109,10 @@ class Scope:
         definition: SubcktDefinition | None,
         lines: Lines,
         parent: Scope | None,
+        dialect: Dialect,
     ) -> None:
         """Build the tables of one scope; the builder adds the children."""
+        self.dialect = dialect
         self.path = path
         self.display = display
         self.definition = definition
@@ -113,7 +121,7 @@ class Scope:
         self._children: tuple[Scope, ...] = ()
         params: dict[str, list[ParamAssignment]] = {}
         for assignment in definition.params if definition is not None else ():
-            params.setdefault(fold(assignment.name), []).append(assignment)
+            params.setdefault(self.fold(assignment.name), []).append(assignment)
         models: dict[str, list[ModelStatement]] = {}
         subckts: dict[str, list[SubcktDefinition]] = {}
         elements: dict[str, list[Component]] = {}
@@ -122,13 +130,13 @@ class Scope:
             item = line.item
             if isinstance(item, ParamStatement):
                 for assignment in item.assignments:
-                    params.setdefault(fold(assignment.name), []).append(assignment)
+                    params.setdefault(self.fold(assignment.name), []).append(assignment)
             elif isinstance(item, ModelStatement):
-                models.setdefault(fold(item.name), []).append(item)
+                models.setdefault(self.fold(item.name), []).append(item)
             elif isinstance(item, SubcktDefinition):
-                subckts.setdefault(fold(item.name), []).append(item)
+                subckts.setdefault(self.fold(item.name), []).append(item)
             elif isinstance(item, Component):
-                elements.setdefault(fold(item.designator), []).append(item)
+                elements.setdefault(self.fold(item.designator), []).append(item)
             elif isinstance(item, OpaqueStatement):
                 include = True
         self.params = _frozen(params)
@@ -136,6 +144,10 @@ class Scope:
         self.subckts = _frozen(subckts)
         self.elements = _frozen(elements)
         self.has_opaque_include = include
+
+    def fold(self, name: str) -> str:
+        """``name`` in the form this netlist's dialect compares names in."""
+        return fold(name, self.dialect)
 
     @property
     def children(self) -> tuple[Scope, ...]:
@@ -173,10 +185,13 @@ def _frozen(table: dict[str, list[_T]]) -> Mapping[str, tuple[_T, ...]]:
 class Index:
     """The scopes of a netlist and every reference in it, resolved at construction."""
 
-    def __init__(self, items: tuple[TopLevelItem, ...], source: SourceText) -> None:
+    def __init__(
+        self, items: tuple[TopLevelItem, ...], source: SourceText, dialect: Dialect
+    ) -> None:
         """Build lines, scopes and references for a parsed netlist."""
-        self.lines = build_lines(items, (), source)
-        self.root = _build_scope(self.lines, (), (), None, None)
+        self.dialect = dialect
+        self.lines = build_lines(items, (), source, dialect)
+        self.root = _build_scope(self.lines, (), (), None, None, dialect)
         self.scopes = tuple(self.root.walk())
         self._by_path: dict[ScopePath, Scope] = {}
         for scope in self.scopes:
@@ -192,14 +207,16 @@ class Index:
 
     def scope(self, path: ScopePath = ()) -> Scope:
         """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``."""
-        folded = tuple(fold(name) for name in path)
+        folded = tuple(fold(name, self.dialect) for name in path)
         try:
             return self._by_path[folded]
         except KeyError:
             raise KeyError(f"no subcircuit definition scope {tuple(path)!r}") from None
 
 
-def build_lines(items: tuple[TopLevelItem, ...], path: ScopePath, source: SourceText) -> Lines:
+def build_lines(
+    items: tuple[TopLevelItem, ...], path: ScopePath, source: SourceText, dialect: Dialect
+) -> Lines:
     """Wrap parsed items as lines with physical line numbers; bodies become nested lines."""
     lines: list[Line] = []
     for item in items:
@@ -208,7 +225,7 @@ def build_lines(items: tuple[TopLevelItem, ...], path: ScopePath, source: Source
         last = source.position(max(span.end - 1, span.start))[0]
         body = None
         if isinstance(item, SubcktDefinition):
-            body = build_lines(item.body, (*path, fold(item.name)), source)
+            body = build_lines(item.body, (*path, fold(item.name, dialect)), source, dialect)
         lines.append(Line(item, span, first, last, path, body))
     return Lines(lines)
 
@@ -219,14 +236,22 @@ def _build_scope(
     display: tuple[str, ...],
     definition: SubcktDefinition | None,
     parent: Scope | None,
+    dialect: Dialect,
 ) -> Scope:
-    scope = Scope(path, display, definition, lines, parent)
+    scope = Scope(path, display, definition, lines, parent, dialect)
     children = []
     for line in lines:
         if isinstance(line.item, SubcktDefinition) and line.body is not None:
             name = line.item.name
             children.append(
-                _build_scope(line.body, (*path, fold(name)), (*display, name), line.item, scope)
+                _build_scope(
+                    line.body,
+                    (*path, fold(name, dialect)),
+                    (*display, name),
+                    line.item,
+                    scope,
+                    dialect,
+                )
             )
     scope._children = tuple(children)
     return scope
@@ -235,7 +260,7 @@ def _build_scope(
 def _lookup(
     scope: Scope, table: Literal["params", "models", "subckts"], name: str
 ) -> tuple[Scope, tuple[object, ...]] | None:
-    key = fold(name)
+    key = scope.fold(name)
     for candidate in scope.chain():
         definitions: Mapping[str, tuple[object, ...]] = getattr(candidate, table)
         if key in definitions:
@@ -267,7 +292,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                 )
         elif isinstance(item, DcDirective):
             for sweep in item.sweeps:
-                if fold(sweep.source) != _DC_TEMPERATURE:
+                if scope.fold(sweep.source) != _DC_TEMPERATURE:
                     references.append(
                         _element_reference(scope, item, sweep.source, sweep.source_span)
                     )
@@ -279,6 +304,22 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                             scope, item, vector.source.designator, vector.source.span
                         )
                     )
+        elif isinstance(item, IcDirective):
+            for condition in item.conditions:
+                if condition.current is not None:
+                    references.append(
+                        _element_reference(
+                            scope, item, condition.current.designator, condition.current.span
+                        )
+                    )
+        elif isinstance(item, StepDirective):
+            _step_references(scope, item, references)
+        elif isinstance(item, ModelStatement) and item.ako is not None:
+            found = _lookup(scope, "models", item.ako.model_name)
+            target = found[1][0] if found else None
+            references.append(
+                Reference("model", item.ako.model_name, item.ako.span, scope.path, item, target)
+            )
         _formula_references(scope, item, item, references, late)
 
 
@@ -289,16 +330,48 @@ def _instance_references(scope: Scope, item: SubcktInstance, references: list[Re
     references.append(
         Reference("subckt", item.subckt.name, item.subckt.span, scope.path, item, definition)
     )
-    defaults = {fold(p.name): p for p in definition.params} if definition is not None else {}
+    defaults = {scope.fold(p.name): p for p in definition.params} if definition is not None else {}
     for param in item.params:
-        target = defaults.get(fold(param.name))
+        target = defaults.get(scope.fold(param.name))
         references.append(
             Reference("subckt_param", param.name, param.name_span, scope.path, item, target)
         )
 
 
+def _step_references(scope: Scope, item: StepDirective, references: list[Reference]) -> None:
+    """A ``.step`` sweeps a source, a model parameter or a parameter it defines itself, so a
+    parameter name is a reference only when a ``.param`` line defines it as well."""
+    if item.kind == "source":
+        references.append(_element_reference(scope, item, item.name, item.name_span))
+    elif item.kind == "model" and item.model is not None:
+        found = _lookup(scope, "models", item.model.model_name)
+        target = found[1][0] if found else None
+        references.append(
+            Reference("model", item.model.model_name, item.model.span, scope.path, item, target)
+        )
+    elif item.kind == "param":
+        found = _lookup(scope, "params", item.name)
+        if found:
+            references.append(
+                Reference("param", item.name, item.name_span, scope.path, item, found[1][-1])
+            )
+
+
+def _stepped_parameter(scope: Scope, name: str) -> StepDirective | None:
+    """The top-level ``.step param`` that defines ``name``, if any."""
+    root = next(candidate for candidate in scope.chain() if candidate.parent is None)
+    for line in root.lines:
+        if (
+            isinstance(line.item, StepDirective)
+            and line.item.kind == "param"
+            and scope.fold(line.item.name) == scope.fold(name)
+        ):
+            return line.item
+    return None
+
+
 def _element_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:
-    elements = scope.elements.get(fold(name), ())
+    elements = scope.elements.get(scope.fold(name), ())
     return Reference("element", name, span, scope.path, owner, elements[0] if elements else None)
 
 
@@ -313,19 +386,24 @@ def _formula_references(
     for formula in walk_nodes(node, Formula, bodies=False):
         if formula.delimiter == '"':
             continue  # a string value, not an expression
-        tokens = parse_formula(formula.text)
+        tokens = parse_formula(formula.text, scope.dialect)
+        # A bare LTspice expression has no delimiter in front of its text.
+        text_start = formula.span.start + (1 if formula.delimiter else 0)
         for token in tokens or ():
             if token.kind != "parameter":
                 continue
-            start = formula.span.start + 1 + token.start
+            start = text_start + token.start
             span = Span(start, start + len(token.text))
             found = _lookup(scope, "params", token.text)
-            target = found[1][-1] if found else None
+            target: object | None = found[1][-1] if found else None
+            if target is None:
+                target = _stepped_parameter(scope, token.text)
             reference = Reference("param", token.text, span, scope.path, owner, target)
             references.append(reference)
             # Order is only meaningful within one scope: a body is expanded where it is
-            # called, not where it is defined (§2.11.1; M5 review R1).
-            if found and found[0] is scope:
+            # called, not where it is defined (§2.11.1; M5 review R1). In LTspice line order
+            # never matters (reference, Netlist Structure).
+            if found and found[0] is scope and scope.dialect is not Dialect.LTSPICE:
                 first = found[1][0]
                 assert isinstance(first, ParamAssignment)
                 if first.name_span.start > span.start:

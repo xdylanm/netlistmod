@@ -22,6 +22,7 @@ from netlistmod import (
     Title,
 )
 from netlistmod.document import fold, is_ground, net_name
+from tests.support.dialects import current_dialect
 
 CORPUS = Path(__file__).parents[1] / "corpus" / "ngspice"
 ACCEPT_FILES = sorted(
@@ -48,16 +49,16 @@ TEXT = (
 
 
 def _netlist(text: str = TEXT, **options: bool) -> Netlist:
-    return Netlist.from_text(text, dialect=Dialect.NGSPICE, **options)
+    return Netlist.from_text(text, dialect=current_dialect(), **options)
 
 
 def test_constructors_take_an_explicit_dialect(tmp_path: Path) -> None:
     path = tmp_path / "x.cir"
     path.write_bytes(TEXT.replace("\n", "\r\n").encode("utf-8"))
-    loaded = Netlist.load(path, dialect=Dialect.NGSPICE)
+    loaded = Netlist.load(path, dialect=current_dialect())
     assert loaded.to_bytes() == path.read_bytes()
-    assert loaded.dialect is Dialect.NGSPICE
-    from_source = Netlist.from_source(SourceText(TEXT), dialect=Dialect.NGSPICE)
+    assert loaded.dialect is current_dialect()
+    from_source = Netlist.from_source(SourceText(TEXT), dialect=current_dialect())
     assert from_source.text == TEXT
     assert not from_source.rkm
     with pytest.raises(TypeError):
@@ -71,14 +72,15 @@ def test_constructors_take_an_explicit_dialect(tmp_path: Path) -> None:
 def test_load_uses_the_fallback_encodings(tmp_path: Path) -> None:
     path = tmp_path / "micro.cir"
     path.write_bytes("t\nC1 a 0 1\xb5\n.end\n".encode("cp1252"))
-    netlist = Netlist.load(path, dialect=Dialect.NGSPICE, fallback_encodings=("cp1252",))
+    netlist = Netlist.load(path, dialect=current_dialect(), fallback_encodings=("cp1252",))
     assert netlist.source.encoding == "cp1252"
     assert netlist.to_bytes() == path.read_bytes()
 
 
+@pytest.mark.ngspice_only
 @pytest.mark.parametrize("path", ACCEPT_FILES, ids=lambda path: f"{path.parent.name}/{path.name}")
 def test_to_bytes_round_trips_every_accept_corpus_file(path: Path) -> None:
-    netlist = Netlist.load(path, dialect=Dialect.NGSPICE, rkm=True)
+    netlist = Netlist.load(path, dialect=current_dialect(), rkm=True)
     assert netlist.to_bytes() == path.read_bytes()
     _assert_tiles(netlist.lines, 0, len(netlist.text))
     for line in netlist.lines.walk():
@@ -174,19 +176,19 @@ def test_insertion_after_a_last_line_without_final_newline() -> None:
 
 
 def test_names_fold_ascii_and_ground_aliases() -> None:
-    assert fold("R1_ÄB") == "r1_Äb"
-    assert [is_ground(name) for name in ("0", "GND", "gNd", "00", "gnd1")] == [
+    assert fold("R1_ÄB", Dialect.NGSPICE) == "r1_Äb"
+    assert [is_ground(name, Dialect.NGSPICE) for name in ("0", "GND", "gNd", "00", "gnd1")] == [
         True,
         True,
         True,
         False,
         False,
     ]
-    assert net_name("GND") == "0"
-    assert net_name("/Vout") == "/vout"
+    assert net_name("GND", Dialect.NGSPICE) == "0"
+    assert net_name("/Vout", Dialect.NGSPICE) == "/vout"
 
 
 def test_repr_and_parse_result() -> None:
     netlist = _netlist()
-    assert repr(netlist) == "Netlist(ngspice, 7 lines)"
+    assert repr(netlist) == f"Netlist({current_dialect().value}, 7 lines)"
     assert netlist.parse_result.items[0] is netlist.lines[0].item

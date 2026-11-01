@@ -1,0 +1,15 @@
+M8 LTspice capacitors and inductors
+V1 in 0 1 AC 1
+R1 in a 1k
+C1 a 0 1µ
+C2 a 0 1μ Rser=1
+C3 a 0 4u7 Lser=1n RLshunt=1
+C4 a 0 1n Rpar=1Meg Cpar=1p
+C5 a 0 1n ic=0 m=2 temp=30
+L1 a b 1m
+L2 b c 1m Rser=1m
+L3 c d 4u7 Rpar=1k Cpar=1p
+L4 d e 1m ic=0 m=2 temp=30 tc1=1m tc2=1u
+R2 e 0 1k
+.ac list 1k
+.end

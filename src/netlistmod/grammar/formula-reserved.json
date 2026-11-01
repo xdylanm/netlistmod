@@ -1,12 +1,25 @@
 {
-  "source": "ngspice manual §2.11.5 \"Syntax of expressions\" (built-in function names) and §2.11.6 \"Reserved words\" (reserved words and the verbose operators not, and, or, div, mod); see docs/grammars/ngspice/specs/NG-FML-001.yaml",
-  "words": [
-    "time", "temper", "hertz",
-    "not", "and", "or", "div", "mod", "defined",
-    "sqr", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh",
-    "asin", "acos", "atan", "asinh", "acosh", "atanh", "arctan",
-    "exp", "ln", "log", "log10", "abs", "nint", "int", "floor", "ceil",
-    "pow", "pwr", "min", "max", "sgn", "ternary_fcn",
-    "gauss", "agauss", "unif", "aunif", "limit", "var", "vec"
-  ]
+  "ngspice": {
+    "source": "ngspice manual §2.11.5 \"Syntax of expressions\" (built-in function names) and §2.11.6 \"Reserved words\" (reserved words and the verbose operators not, and, or, div, mod); see docs/grammars/ngspice/specs/NG-FML-001.yaml",
+    "words": [
+      "time", "temper", "hertz",
+      "not", "and", "or", "div", "mod", "defined",
+      "sqr", "sqrt", "sin", "cos", "tan", "sinh", "cosh", "tanh",
+      "asin", "acos", "atan", "asinh", "acosh", "atanh", "arctan",
+      "exp", "ln", "log", "log10", "abs", "nint", "int", "floor", "ceil",
+      "pow", "pwr", "min", "max", "sgn", "ternary_fcn",
+      "gauss", "agauss", "unif", "aunif", "limit", "var", "vec"
+    ]
+  },
+  "ltspice": {
+    "source": "[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md \".PARAM\" (built-in constants and functions), and the solver variables time, temp and freq; see docs/grammars/ltspice/specs/LT-FML-001.yaml",
+    "words": [
+      "time", "temp", "freq",
+      "pi", "boltz", "echarge", "planck", "kelvin", "gmin",
+      "abs", "acos", "asin", "atan", "atan2", "cos", "sin", "tan", "cosh", "sinh", "tanh",
+      "exp", "ln", "log10", "sqrt", "cbrt", "pow", "pwr", "pwrs", "int", "floor", "ceil", "round",
+      "buf", "inv", "u", "uramp", "sgn", "if", "limit", "min", "max", "hypot",
+      "rand", "flat", "gauss", "mc", "mod", "select", "table", "xor"
+    ]
+  }
 }

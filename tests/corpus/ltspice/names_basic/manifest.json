@@ -1,0 +1,12 @@
+{
+  "family": "names_basic",
+  "origin": "Authored in this repository for the M8 LTspice grammar",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-01",
+  "notes": "Name characters, buses, Unicode case folding and ground aliases; every file runs in LTspice 26.1.1.",
+  "fixtures": {
+    "buses_and_symbols.cir": "29914929de495d685f92091a6c6dfe370be805cb9de9edf6283b4f80aaa50969",
+    "ground_and_case.cir": "2a8517bb93669d7ab298c09e5d3e58530e43e50f79abb68ead52519dbcd99140"
+  }
+}

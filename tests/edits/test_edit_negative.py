@@ -13,7 +13,6 @@ from pathlib import Path
 import pytest
 
 from netlistmod import (
-    Dialect,
     Edit,
     EditError,
     Netlist,
@@ -26,6 +25,7 @@ from netlistmod import (
     TopologyError,
     TopologyViolation,
 )
+from tests.support.dialects import current_dialect, is_ltspice
 
 _TEXT = (
     "negative\n"
@@ -52,9 +52,25 @@ _TEXT = (
     ".end\n"
 )
 
+_NGSPICE_BLOCKS = ".control\nrun\n.endc\n.if (1)\nRc out 0 1k\n.endif\n"
+
+
+# Cases whose text only ngspice reads (tests/support/dialects.py).
+NGSPICE_ONLY_CASES = {
+    "test_crafted_plans_that_change_topology_raise": [".control", ".if"],
+    "test_whole_opaque_items_may_be_added_or_removed": [
+        ".control",
+        ".if",
+        "conditional",
+        "block after",
+    ],
+}
+
 
 def _netlist() -> Netlist:
-    return Netlist.from_text(_TEXT, dialect=Dialect.NGSPICE)
+    # LTspice has no .control or .if block.
+    text = _TEXT.replace(_NGSPICE_BLOCKS, "") if is_ltspice() else _TEXT
+    return Netlist.from_text(text, dialect=current_dialect())
 
 
 def _span(netlist: Netlist, text: str, occurrence: int = 0) -> Span:
@@ -147,7 +163,7 @@ def test_crafted_plans_that_change_topology_raise(craft: Crafted, tmp_path: Path
         with netlist.batch() as batch:
             batch.set_dc("V1", "5")
             batch._edits.extend(craft(netlist))
-    assert netlist.text == _TEXT
+    assert netlist.text == _netlist().text
     assert list(tmp_path.iterdir()) == []
 
 
@@ -219,7 +235,7 @@ def _diode(netlist: Netlist, models: str = "") -> Netlist:
     text = netlist.text.replace(
         ".op\n", f"D1 out 0 dm\n{models}\n.op\n" if models else "D1 out 0 dm\n.op\n"
     )
-    return Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    return Netlist.from_text(text, dialect=current_dialect())
 
 
 def _overlap(netlist: Netlist) -> object:
@@ -231,7 +247,7 @@ def _overlap(netlist: Netlist) -> object:
 
 def _foreign_anchor(netlist: Netlist) -> object:
     other = _netlist()
-    return netlist.directives.add(".save all", Placement.before(other.lines[-1]))
+    return netlist.directives.add(".save v(out)", Placement.before(other.lines[-1]))
 
 
 @pytest.mark.parametrize(

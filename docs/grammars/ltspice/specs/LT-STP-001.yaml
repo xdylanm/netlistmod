@@ -1,0 +1,28 @@
+id: LT-STP-001
+dialect: ltspice
+construct: .step
+manual_ref:
+- '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".STEP — Parameter Sweeps"'
+status: documented
+validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
+  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
+validated_on: []
+grammar:
+- top_statement
+- step_stmt
+- step_param
+- step_temp
+- step_model_ref
+- step_sweep
+- step_value
+- STEP_KW
+- STEP_PARAM_KW
+- STEP_TEMP_KW
+- STEP_MODEL_REF
+tests:
+- tests/grammar/ltspice/test_ltspice_statements.py::test_step_forms
+- tests/grammar/ltspice/test_ltspice_statements.py::test_step_slots
+- tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_step
+- tests/edits/test_ltspice_edits.py::test_step_upsert
+notes: param, a source, temp or a model parameter; lin, dec, oct; a range, a list of at least two numbers,
+  or file=. No limit on nesting (four run).

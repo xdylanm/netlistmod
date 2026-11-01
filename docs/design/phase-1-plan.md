@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0–M7 complete; M8 next
+> **Status:** ACTIVE — M0–M7 complete; M8 in progress (checkpoint A approved; T9–T13 next)
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective

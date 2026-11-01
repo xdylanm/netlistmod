@@ -1,0 +1,9 @@
+M8 LTspice DC sweeps
+V1 in 0 1
+V2 a 0 1
+V3 b 0 1
+R1 in 0 1k
+R2 a 0 1k
+R3 b 0 1k
+.dc dec V1 1 100 1 V2 1 2 1 V3 list 1 2
+.end

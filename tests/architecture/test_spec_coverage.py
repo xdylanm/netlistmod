@@ -16,13 +16,25 @@ GRAMMAR_FILES = [
     ROOT / "src" / "netlistmod" / "grammar" / "ngspice.lark",
     ROOT / "src" / "netlistmod" / "grammar" / "formula.lark",
 ]
+LTSPICE_SPEC_DIRECTORY = ROOT / "docs" / "grammars" / "ltspice" / "specs"
+LTSPICE_GRAMMAR_FILES = [
+    ROOT / "src" / "netlistmod" / "grammar" / "ltspice.lark",
+    ROOT / "src" / "netlistmod" / "grammar" / "formula_ltspice.lark",
+]
+LTSPICE_SHARED_FILES = [
+    ROOT / "src" / "netlistmod" / "grammar" / "core.lark",
+    ROOT / "src" / "netlistmod" / "grammar" / "formula.lark",
+]
 SPEC_MARKER = re.compile(r"^\s*//\s*spec:\s*([A-Z0-9-]+)\s*$", re.MULTILINE)
 GRAMMAR_DECLARATION = re.compile(
     r"^\s*(?:(?:%extend|%override)\s+)?"
     r"(\??[a-z_][a-z_0-9]*|_?[A-Z][A-Z_0-9]*)(?:\.\d+)?\s*:"
 )
 # `[<key>] §<number> "<title>"`, for example `[ngspice-manual] §2.4.4 "End-of-line comments"`.
-MANUAL_REF = re.compile(r'\[([a-z0-9][a-z0-9-]*)\] §(\d+(?:\.\d+)*) "([^"\r\n]+)"')
+# The LTspice reference has files and headings, not numbers: `[ltspice-ref] <FILE>.md "<heading>"`.
+MANUAL_REF = re.compile(
+    r'\[([a-z0-9][a-z0-9-]*)\] (?:§\d+(?:\.\d+)*|[A-Z][A-Z0-9-]*\.md) "([^"\r\n]+)"'
+)
 REFERENCE_KEY = re.compile(r"^## \[([a-z0-9][a-z0-9-]*)\]\s*$", re.MULTILINE)
 # Section numbers cited before F1 that do not exist in the manual edition in references.md.
 STALE_CITATION = re.compile(r"§§|manual, §|§5\.1\.1|§5\.2\.[1-4]")
@@ -66,12 +78,22 @@ def _grammar_declarations(grammar_files: list[Path]) -> dict[str, list[tuple[str
     return declarations
 
 
-def check_spec_coverage(root: Path, spec_directory: Path, grammar_files: list[Path]) -> None:
-    """Validate spec references, grammar traceability, and test selectors."""
+def check_spec_coverage(
+    root: Path,
+    spec_directory: Path,
+    grammar_files: list[Path],
+    shared_files: list[Path] | None = None,
+) -> None:
+    """Validate spec references, grammar traceability, and test selectors.
+
+    An overlay's entry lists its rules under ``grammar`` and the shared rules it relies on, which
+    carry another dialect's markers, under ``core_rules``; it may have only the latter.
+    """
     specs = _load_specs(spec_directory)
     if not specs:
         raise ValueError(f"No spec entries found in {spec_directory}")
     declarations = _grammar_declarations(grammar_files)
+    shared = _grammar_declarations(shared_files or [])
     for identifier, path, line_number in (
         (marker, path, line_number)
         for entries in declarations.values()
@@ -84,8 +106,12 @@ def check_spec_coverage(root: Path, spec_directory: Path, grammar_files: list[Pa
         if "grammar" not in entry:
             raise ValueError(f"Spec entry has no grammar field: {identifier}")
         grammar_names = entry["grammar"]
-        if not isinstance(grammar_names, list) or not grammar_names:
+        core_rules = entry.get("core_rules", [])
+        if not isinstance(grammar_names, list) or not (grammar_names or core_rules):
             raise ValueError(f"Spec grammar must be a non-empty list: {identifier}")
+        for rule in core_rules:
+            if rule not in shared:
+                raise ValueError(f"Spec references missing core rule: {identifier}: {rule}")
         for grammar_name in grammar_names:
             if not isinstance(grammar_name, str) or grammar_name not in declarations:
                 raise ValueError(
@@ -155,7 +181,7 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
     matrix = json.loads(device_json.read_text(encoding="utf-8"))
     document = device_document.read_text(encoding="utf-8")
     rows = re.findall(
-        r"^\| ([A-Z]) \| (supported|planned|error) \| ([12]) \| (.+) \|$",
+        r"^\| ([A-Z@&]) \| (supported|planned|error) \| ([12]) \| (.+) \|$",
         document,
         re.MULTILINE,
     )
@@ -164,10 +190,10 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
         parsed[letter] = {
             "status": status,
             "phase": int(phase),
-            "milestone": "M3" if milestone == "M3" else "post-review",
+            "milestone": milestone if milestone in {"M3", "M8"} else "post-review",
         }
     if parsed != matrix:
-        raise ValueError("devices.md does not match ngspice-devices.json")
+        raise ValueError(f"{device_document.name} does not match {device_json.name}")
 
 
 STATUSES = ("documented", "observed", "validated", "disputed")
@@ -290,6 +316,45 @@ def test_ngspice_statuses_are_backed_by_solver_evidence() -> None:
     check_validation_status(ROOT, SPEC_DIRECTORY, DISCREPANCIES)
     check_rule_tables(ROOT, RULE_DOCUMENTS, DISCREPANCIES)
     check_status_summary(ROOT / "docs" / "grammars" / "ngspice" / "README.md", SPEC_DIRECTORY)
+
+
+def test_ltspice_specs_reference_tests_and_grammar_rules() -> None:
+    check_spec_coverage(
+        ROOT, LTSPICE_SPEC_DIRECTORY, LTSPICE_GRAMMAR_FILES, shared_files=LTSPICE_SHARED_FILES
+    )
+    check_manual_references(LTSPICE_SPEC_DIRECTORY, REFERENCES_FILE)
+    check_device_matrix(
+        ROOT / "src" / "netlistmod" / "grammar" / "ltspice-devices.json",
+        ROOT / "docs" / "grammars" / "ltspice" / "devices.md",
+    )
+
+
+def test_ltspice_statuses_are_backed_by_their_evidence() -> None:
+    ltspice = ROOT / "docs" / "grammars" / "ltspice"
+    discrepancies = ltspice / "discrepancies.md"
+    check_validation_status(ROOT, LTSPICE_SPEC_DIRECTORY, discrepancies)
+    check_rule_tables(ROOT, [ltspice / "names.md", ltspice / "scoping.md"], discrepancies)
+    check_status_summary(ltspice / "README.md", LTSPICE_SPEC_DIRECTORY)
+
+
+def test_an_overlay_entry_may_rely_on_core_rules_only(tmp_path: Path) -> None:
+    specs = tmp_path / "specs"
+    specs.mkdir()
+    test_file = tmp_path / "test_x.py"
+    test_file.write_text("def test_x():\n    pass\n", encoding="utf-8")
+    entry = (
+        "id: LT-TEST-001\nstatus: documented\ngrammar: []\ncore_rules: [{}]\ntests: [test_x.py]\n"
+    )
+    path = specs / "LT-TEST-001.yaml"
+    overlay = tmp_path / "overlay.lark"
+    overlay.write_text("// spec: LT-TEST-001\n", encoding="utf-8")
+    core = tmp_path / "core.lark"
+    core.write_text("// spec: NG-TEST-001\nstart: WORD\n", encoding="utf-8")
+    path.write_text(entry.format("start"), encoding="utf-8")
+    check_spec_coverage(tmp_path, specs, [overlay], shared_files=[core])
+    path.write_text(entry.format("nothing"), encoding="utf-8")
+    with pytest.raises(ValueError, match="missing core rule"):
+        check_spec_coverage(tmp_path, specs, [overlay], shared_files=[core])
 
 
 def test_status_summary_check_rejects_a_stale_row(tmp_path: Path) -> None:
@@ -526,6 +591,7 @@ def _reference_project(tmp_path: Path, manual_ref: str | None) -> tuple[Path, Pa
     [
         "'[test-manual] §2.4.4 \"End-of-line comments\"'",
         "['[test-manual] §2.1.1 \"Input file structure\"', '[test-manual] §2.8 \".INCLUDE\"']",
+        "'[test-manual] SPICE-SYNTAX-REFERENCE.md \"Node Naming\"'",
     ],
 )
 def test_manual_reference_check_accepts_single_and_listed_citations(
