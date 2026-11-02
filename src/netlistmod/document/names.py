@@ -21,6 +21,7 @@ GROUND: Final = "0"
 _ASCII_LOWER: Final = str.maketrans(ascii_uppercase, ascii_lowercase)
 _GROUND_NAMES: Final = frozenset({"0", "gnd"})
 _LTSPICE_GLOBAL_PREFIX: Final = "$g_"
+_LTSPICE_BLOCK_PREFIX: Final = "x§"
 
 
 def fold(name: str, dialect: Dialect) -> str:
@@ -38,6 +39,11 @@ def is_ground(name: str, dialect: Dialect) -> bool:
 def net_name(name: str, dialect: Dialect) -> str:
     """The canonical net name of a node: ``"0"`` for ground, otherwise the folded name."""
     return GROUND if is_ground(name, dialect) else fold(name, dialect)
+
+
+def instance_name(designator: str, dialect: Dialect) -> str:
+    """The folded name an LTspice node path uses for an ``X`` line: ``X§U1`` is ``u1``."""
+    return fold(designator, dialect).removeprefix(_LTSPICE_BLOCK_PREFIX)
 
 
 def is_automatic_global(name: str, dialect: Dialect) -> bool:

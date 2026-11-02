@@ -88,7 +88,11 @@ input netlist, also when the working directory is another folder.
 
 - `-ascii` writes an 8-bit text raw file with CRLF line endings and full precision. Without it, the
   raw file is binary with a UTF-16LE header, and it stores the variables after the first as float32.
-- A failed run exits non-zero, and the log has a `file(line): message` line; a run with no analysis
-  line exits 1 with no message.
+- An AC analysis also writes its bias point to `circuit.op.raw`.
+- A failed run exits non-zero, and the log usually has a `file(line): message` line. A run with no
+  analysis line exits 1 with "No analysis specified." in the log, and an over-defined circuit (a loop
+  of inductors and a source) exits 1 with a message that has no `file(line):`.
+- A warning can take the same form: `V1 a 0` (no value) runs, with exit code 0 and a
+  `file(line): Missing value, assuming 0V` line.
 
 LTspice raw files, logs and timing are never committed (decision 0009 item 2).

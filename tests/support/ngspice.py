@@ -6,9 +6,8 @@
 ``with_stubs`` prepare a library netlist with the M6 edit API: an ``.op`` line for a file without
 an analysis, and stub files in place of includes kept outside the repository.
 
-The raw-file reader is clean-room: it was written from the ASCII files ngspice 47 produces
-(m7-tasks.md section 7; samples in ``tests/corpus/ngspice/solver_stubs/raw/``). It is test code
-reading solver output, not netlist syntax, so it uses ``str`` methods (P13 governs ``src/``).
+The raw-file reader is shared with the LTspice harness (``tests/support/raw.py``); its names stay
+importable from here.
 """
 
 from __future__ import annotations
@@ -28,9 +27,26 @@ from netlistmod import (
     Placement,
     TranDirective,
 )
+from tests.support.raw import Plot, RawFileError, read_raw, without_date
 from tests.support.solvers import Solver, run_ngspice
 
-Value = float | complex
+__all__ = [
+    "ELEMENTS_HARNESS",
+    "STUBS",
+    "Plot",
+    "RawFileError",
+    "Run",
+    "RunOptions",
+    "Source",
+    "ac",
+    "ensure_runs",
+    "op",
+    "read_raw",
+    "run",
+    "tran_rows",
+    "with_stubs",
+    "without_date",
+]
 
 STUBS = Path(__file__).parents[1] / "corpus" / "ngspice" / "solver_stubs"
 # The models and subcircuits the elements_basic fixtures refer to (included before `.end`).
@@ -41,132 +57,6 @@ ELEMENTS_HARNESS = (STUBS / "elements_harness.inc").read_text(encoding="utf-8")
 # would still win, and the reader then fails loudly (m7-tasks.md T1).
 _ENVIRONMENT = {"SPICE_ASCIIRAWFILE": "1"}
 _ANALYSES = (OpDirective, TranDirective, AcDirective, DcDirective)
-
-
-class RawFileError(ValueError):
-    """A raw file that this reader cannot read."""
-
-
-@dataclass(frozen=True, slots=True)
-class Plot:
-    """One analysis of a raw file: variable names as written (``v(out)``) and the data rows."""
-
-    title: str
-    name: str
-    flags: tuple[str, ...]
-    variables: tuple[str, ...]
-    kinds: tuple[str, ...]
-    rows: tuple[tuple[Value, ...], ...]
-
-    def column(self, variable: str) -> tuple[Value, ...]:
-        """The values of ``variable`` (case-insensitive), one per point."""
-        names = [name.lower() for name in self.variables]
-        try:
-            index = names.index(variable.lower())
-        except ValueError:
-            raise KeyError(f"{variable!r} is not in plot {self.name!r}: {self.variables}") from None
-        return tuple(row[index] for row in self.rows)
-
-    def real(self, variable: str) -> tuple[float, ...]:
-        """The values of ``variable`` in a real plot."""
-        values = self.column(variable)
-        if not all(isinstance(value, float) for value in values):
-            raise RawFileError(f"{variable!r} in plot {self.name!r} is complex")
-        return tuple(float(value.real) for value in values)
-
-
-def read_raw(data: bytes | str) -> tuple[Plot, ...]:
-    """Parse an ASCII raw file into its plots, in file order."""
-    text = data.decode("utf-8", errors="replace") if isinstance(data, bytes) else data
-    lines = text.splitlines()
-    plots: list[Plot] = []
-    position = 0
-    while position < len(lines):
-        if not lines[position].strip():
-            position += 1
-            continue
-        plot, position = _read_plot(lines, position)
-        plots.append(plot)
-    return tuple(plots)
-
-
-def _read_plot(lines: list[str], position: int) -> tuple[Plot, int]:
-    header: dict[str, str] = {}
-    while True:
-        if position >= len(lines):
-            raise RawFileError("the raw file ends inside a plot header")
-        key, separator, value = lines[position].partition(":")
-        position += 1
-        if not separator:
-            raise RawFileError(
-                f"line {position}: expected `Key: value`, got {lines[position - 1]!r}"
-            )
-        if key.strip() == "Variables":
-            break
-        header[key.strip()] = value.strip()
-    for required in ("Title", "Plotname", "Flags", "No. Variables", "No. Points"):
-        if required not in header:
-            raise RawFileError(f"plot header without `{required}:`")
-    count, points = int(header["No. Variables"]), int(header["No. Points"])
-    variables: list[str] = []
-    kinds: list[str] = []
-    for index in range(count):
-        fields = _line(lines, position).split()
-        position += 1
-        if len(fields) < 3 or fields[0] != str(index):
-            raise RawFileError(f"line {position}: expected variable {index}, got {fields}")
-        variables.append(fields[1])
-        kinds.append(fields[2])
-    marker = _line(lines, position).strip()
-    position += 1
-    if marker == "Binary:":
-        raise RawFileError("binary raw file: only ASCII raw files are read (SPICE_ASCIIRAWFILE)")
-    if marker != "Values:":
-        raise RawFileError(f"line {position}: expected `Values:`, got {marker!r}")
-    flags = tuple(header["Flags"].split())
-    convert = _complex if "complex" in flags else float
-    rows: list[tuple[Value, ...]] = []
-    for point in range(points):
-        fields = _line(lines, position).split()
-        position += 1
-        if not fields or fields[0] != str(point):
-            raise RawFileError(f"line {position}: expected point {point}, got {fields}")
-        values = fields[1:]
-        while len(values) < count:
-            values.extend(_line(lines, position).split())
-            position += 1
-        if len(values) != count:
-            raise RawFileError(f"point {point}: {len(values)} values for {count} variables")
-        rows.append(tuple(convert(value) for value in values))
-    plot = Plot(
-        header["Title"],
-        header["Plotname"],
-        flags,
-        tuple(variables),
-        tuple(kinds),
-        tuple(rows),
-    )
-    return plot, position
-
-
-def _line(lines: list[str], position: int) -> str:
-    if position >= len(lines):
-        raise RawFileError("the raw file ends inside a plot")
-    return lines[position]
-
-
-def _complex(text: str) -> complex:
-    real, separator, imaginary = text.partition(",")
-    if not separator:
-        raise RawFileError(f"complex value without `,`: {text!r}")
-    return complex(float(real), float(imaginary))
-
-
-def without_date(data: bytes) -> bytes:
-    """A raw file without its ``Date:`` lines, the only part that differs between runs."""
-    return b"".join(
-        line for line in data.splitlines(keepends=True) if not line.startswith(b"Date:")
-    )
 
 
 @dataclass(frozen=True, slots=True)

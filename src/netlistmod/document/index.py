@@ -11,7 +11,8 @@ The scope model is ``docs/grammars/<dialect>/scoping.md`` (decision 0006 items 3
 - A model, subcircuit or parameter reference is looked up in its own scope, then each
   enclosing scope, independent of file order. A repeated ``.param`` resolves to the last
   assignment of the scope; a repeated model or subcircuit to the first (ngspice 47 ignores a
-  redefinition; LTspice 26.1.1 stops at any of them). A parameter swept by an LTspice
+  redefinition; LTspice 26.1.1 stops at one that is used, ``scoping.md`` S7). A parameter swept by
+  an LTspice
   ``.step param`` is defined by that line. Element references (``K`` inductors, ``.dc`` sources,
   ``.save i(src)``) are
   looked up in their own scope only.
@@ -268,6 +269,14 @@ def _lookup(
     return None
 
 
+def definition_scope(scope: Scope, name: str) -> Scope | None:
+    """The scope of the subcircuit ``name`` as seen from ``scope``, if the netlist defines it."""
+    found = _lookup(scope, "subckts", name)
+    if found is None:
+        return None
+    return next(child for child in found[0].children if child.definition is found[1][0])
+
+
 def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -> None:
     """Add the references made from ``scope`` (not from nested definitions)."""
     if scope.definition is not None:
@@ -390,7 +399,7 @@ def _formula_references(
         # A bare LTspice expression has no delimiter in front of its text.
         text_start = formula.span.start + (1 if formula.delimiter else 0)
         for token in tokens or ():
-            if token.kind != "parameter":
+            if token.kind not in ("parameter", "reserved"):
                 continue
             start = text_start + token.start
             span = Span(start, start + len(token.text))
@@ -398,6 +407,12 @@ def _formula_references(
             target: object | None = found[1][-1] if found else None
             if target is None:
                 target = _stepped_parameter(scope, token.text)
+            # A definition in scope masks an LTspice constant (scoping.md S11); otherwise a
+            # reserved word is not a reference.
+            if token.kind == "reserved" and (
+                target is None or scope.dialect is not Dialect.LTSPICE
+            ):
+                continue
             reference = Reference("param", token.text, span, scope.path, owner, target)
             references.append(reference)
             # Order is only meaningful within one scope: a body is expanded where it is

@@ -13,8 +13,10 @@ from tests.support.solvers import Solver, SolverName, discover_solver
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--require-solver",
+        action="append",
         choices=("ngspice", "ltspice"),
-        help="fail instead of skipping tests when this solver is unavailable",
+        default=[],
+        help="fail instead of skipping tests when this solver is unavailable (may be repeated)",
     )
 
 
@@ -65,7 +67,7 @@ def solver(request: pytest.FixtureRequest) -> Iterator[Solver]:
     solver_info = discover_solver(name)
     if solver_info is None:
         message = f"{name} not found; set {name.upper()}_EXE or add it to PATH"
-        if request.config.getoption("--require-solver") == name:
+        if name in request.config.getoption("--require-solver"):
             pytest.fail(message, pytrace=False)
         pytest.skip(message)
     yield solver_info

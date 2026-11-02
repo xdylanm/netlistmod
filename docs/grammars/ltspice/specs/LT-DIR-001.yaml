@@ -3,10 +3,11 @@ dialect: ltspice
 construct: closed list of dot-commands
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Line Types by Leading Character"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - DOT_NAME
 - top_statement
@@ -19,5 +20,14 @@ tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_untyped_commands_allowed_in_a_body
 - tests/grammar/ltspice/test_ltspice_structure.py::test_untyped_commands_top_level_only
 - tests/grammar/ltspice/test_ltspice_structure.py::test_other_dot_commands_are_errors
-notes: The reference's other commands are UnknownDirective; anything else is a ParseError (decision 0009
+- tests/solver/test_ltspice_validation.py::test_the_untyped_commands_are_kept_and_run
+- tests/solver/test_ltspice_validation.py::test_other_dot_commands_stop_both
+- tests/solver/test_ltspice_validation.py::test_commands_allowed_in_a_body
+- tests/solver/test_ltspice_validation.py::test_commands_stopped_in_a_body
+- tests/solver/test_ltspice_validation.py::test_loadstate_without_a_file_runs_with_a_message_and_stays_text
+- tests/solver/test_ltspice_validation.py::test_loadstate_reads_a_saved_state
+- tests/solver/test_ltspice_validation.py::test_fra_needs_its_device
+- tests/solver/test_ltspice_validation.py::test_fra_keywords_are_read
+- tests/solver/test_ltspice_discrepancies.py::test_undocumented_commands_run_but_the_library_rejects_them
+notes: The reference's other commands are UnknownDirective; .fra runs with an @ device and stops without one, and .loadstate runs with a saved state or with a message when no file is named (discrepancies.md); anything else is a ParseError (decision 0009
   item 5).

@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .temp
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".TEMP — Temperature Sweeps"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - temp_stmt
 core_rules:
@@ -14,4 +15,6 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_temp
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_temp
+- tests/solver/test_ltspice_validation.py::test_temp
+- tests/solver/test_ltspice_edit_results.py::test_directives_set_moves_the_temperature
 notes: One or more values.

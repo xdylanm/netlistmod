@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .ac
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".AC — AC Analysis"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - ac_stmt
 - list_keyword
@@ -23,4 +24,7 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_ac_forms
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_ac
+- tests/solver/test_ltspice_validation.py::test_ac_forms
+- tests/solver/test_ltspice_validation.py::test_ac_reads_a_file
+- tests/solver/test_ltspice_validation.py::test_an_empty_ac_list_stops_both
 notes: dec, oct or lin with a range, list, or file=.

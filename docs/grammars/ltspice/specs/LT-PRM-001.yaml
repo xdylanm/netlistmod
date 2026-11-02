@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .param assignments
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".PARAM — User-Defined Parameters"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - PARAM_NAME
 - param_def
@@ -20,5 +21,9 @@ tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_bare_expressions_are_formulas_without_a_delimiter
 - tests/grammar/ltspice/test_ltspice_statements.py::test_a_plain_number_stays_a_number
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_params
+- tests/solver/test_ltspice_validation.py::test_param_forms_give_the_same_value
+- tests/solver/test_ltspice_validation.py::test_other_parameter_names_run
+- tests/solver/test_ltspice_validation.py::test_a_string_parameter_runs
+- tests/solver/test_ltspice_validation.py::test_malformed_params_stop_both
 notes: name=value, name value (L11, observed), bare expressions (documented; Formula with an empty delimiter).
   time, temper and hertz are ordinary names.

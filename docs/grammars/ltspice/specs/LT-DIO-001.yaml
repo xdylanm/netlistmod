@@ -4,10 +4,11 @@ construct: diode (D) lines
 manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "D — Diode"'
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - diode
 - d_param
@@ -21,6 +22,10 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_diodes
 - tests/grammar/ltspice/test_ltspice_elements.py::test_flags_may_take_a_value
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_diodes
+- tests/solver/test_ltspice_validation.py::test_diode_parameters_take_effect
+- tests/solver/test_ltspice_validation.py::test_diode_rpar_takes_effect
+- tests/solver/test_ltspice_validation.py::test_other_diode_forms_run
+- tests/solver/test_ltspice_validation.py::test_malformed_diodes_stop_both
 notes: 'Model, positional area, then off, m, n, temp. A flag may take a value (off=1), which the reference
   documents (review R9). Observed (section 11.3 rule 3): area= (review R1) and Rpar=, which takes effect
   (review R10). ic= runs without effect on the result, so it stays rejected.'

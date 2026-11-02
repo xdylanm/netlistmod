@@ -3,10 +3,11 @@ dialect: ltspice
 construct: field separators
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Structure"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - eol
@@ -15,5 +16,8 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_param_assignment_spans_slice_back
 - tests/grammar/ltspice/test_ltspice_elements.py::test_tc_forms
+- tests/solver/test_ltspice_validation.py::test_blanks_tabs_and_the_equals_sign_separate_fields
+- tests/solver/test_ltspice_validation.py::test_the_commas_the_library_accepts_run
+- tests/solver/test_ltspice_discrepancies.py::test_other_commas_run_but_the_library_rejects_them
 notes: Blanks, a + line, and = with optional blanks. A comma separates only tc values, .model and X parameters,
   .param assignments, .options items and .save vectors. LTspice tolerates a few more commas (discrepancies.md).

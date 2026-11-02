@@ -44,6 +44,27 @@ def test_every_corpus_family_has_a_manifest_and_matching_hashes() -> None:
             assert actual_hash == expected_hash, f"Fixture hash changed: {family / filename}"
 
 
+def test_every_accept_fixture_runs_in_ltspice_or_has_a_reason() -> None:
+    """The fields of decision 0008, and ``warning``: the one message the run may write."""
+    from tests.solver.test_ltspice_solver_corpus import FAMILIES, STUBS, solver_fields
+
+    ltspice = CORPUS / "ltspice"
+    families = {
+        family.name
+        for family in ltspice.iterdir()
+        if family.is_dir() and not family.name.endswith("_rejects")
+    }
+    assert set(FAMILIES) == families
+    fields = solver_fields()
+    assert {path.parent.name for path in fields} == families
+    for path, field in fields.items():
+        assert set(field) <= {"skip", "stubs", "harness", "warning"}, path
+        if "skip" in field:
+            assert set(field) == {"skip"} and len(field["skip"]) > 20, path
+        for stub in [*field.get("stubs", {}).values(), *filter(None, [field.get("harness")])]:
+            assert (STUBS / stub).is_file(), f"{path}: missing stub {stub}"
+
+
 def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
     """Decision 0008: a fixture's optional ``solver`` field is ``{"skip": reason}``, or names
     stub files for its includes (``stubs``) and an included harness (``harness``)."""

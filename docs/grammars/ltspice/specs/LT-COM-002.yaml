@@ -3,15 +3,17 @@ dialect: ltspice
 construct: end-of-line comments (; and space-$-space)
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Comments and Line Continuation"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - TRAILING_COMMENT
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_end_of_line_comments
 - tests/grammar/ltspice/test_ltspice_structure.py::test_dollar_needs_a_space_on_both_sides
 - tests/grammar/ltspice/test_ltspice_structure.py::test_double_slash_is_not_a_comment
-notes: '; is documented. $ is not in the reference: LTspice 26.1.1 reads it as a comment only with a space
-  on both sides (T12 marks this part observed). // is not a comment.'
+- tests/solver/test_ltspice_validation.py::test_end_of_line_comments_hide_the_rest_of_the_line
+- tests/solver/test_ltspice_validation.py::test_other_comment_forms_stop_both
+notes: '; is documented. $ is not in the reference: LTspice 26.1.1 reads it as a comment only with a space on both sides (observed, section 11.3 rule 3). // is not a comment.'

@@ -2,6 +2,23 @@
 
 ## Unreleased
 
+- Add the LTspice dialect (M8, decision 0009). `Dialect.LTSPICE` parses, indexes, edits and
+  verifies netlists with the phase 1 elements, through the overlay `ltspice.lark` on a `core.lark`
+  that now holds only what both dialects share. ngspice parsing is unchanged. New for LTspice: the
+  native embedded decimal in every value slot, closed lists of dot-commands and element parameters,
+  a typed `.step` with an upsert, `.ic I(L...)`, Unicode name folding and `$G_*` global nodes.
+  `parse_formula`, `reserved_words`, `device_matrix` and `fold` now take a dialect.
+- Validate the LTspice dialect on LTspice 26.1.1 (M8 checkpoint B). A shared raw reader
+  (`tests/support/raw.py`) and an LTspice harness (`tests/support/ltspice.py`); every accept fixture
+  runs and gives identical results after an unedited save; edits are checked against closed forms;
+  every `LT-*` entry and rule row has solver evidence. In LTspice, a definition in scope now masks a
+  built-in constant (`.param pi=3k` gives a reference to `pi`), and a bare function name, `time` or
+  `freq` is an ordinary parameter name, so `{sqrt}` alone gets `UNRESOLVED_PARAM`. New diagnostic
+  `NODE_INTO_INSTANCE`: LTspice connects a node named `x1:n` to `n` inside the instance `X1`, which the
+  library does not model.
+  LTspice raw files and logs are never committed. `--require-solver` may be repeated (only the last
+  value used to count). The `DUPLICATE_DEFINITION` message for a repeated LTspice `.model` or
+  `.subckt` now says it stops LTspice only when the definition is used.
 - Local solver validation (M7, decision 0008). Test and documentation changes only; no
   library code changed. A shared ngspice harness (`tests/support/ngspice.py`: `run`, a
   clean-room ASCII raw-file reader, `op`/`ac`/`tran_rows`, stub wiring through the edit API)

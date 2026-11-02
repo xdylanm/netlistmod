@@ -3,10 +3,11 @@ dialect: ltspice
 construct: mutual inductance (K) lines
 manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "K — Mutual Inductance"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - mutual_coupling
@@ -16,5 +17,8 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_couplings_take_two_or_more_inductors
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_couplings
-notes: Two or more inductors, then the coefficient. Three and four inductors run when each has its own
-  load (settled; an inductor loop reproduces the L13 symptom, which is an inference).
+- tests/solver/test_ltspice_validation.py::test_couplings
+- tests/solver/test_ltspice_validation.py::test_a_coupling_with_one_inductor_stops_both
+- tests/solver/test_ltspice_edit_results.py::test_set_coupling_on_a_transformer
+- tests/solver/test_ltspice_discrepancies.py::test_an_inductor_loop_stops_ltspice_without_an_error_line
+notes: Two or more inductors, then the coefficient. Three and four inductors run when each has its own load (settled; an inductor loop reproduces the L13 symptom, which is an inference). An inductor loop stops LTspice with an over-defined matrix message and no error line.

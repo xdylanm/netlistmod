@@ -3,10 +3,11 @@ dialect: ltspice
 construct: statement text
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Comments and Line Continuation"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - TEXT
 core_rules:
@@ -15,4 +16,6 @@ core_rules:
 - QUOTED
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_dollar_and_slashes_in_names_and_statement_text
+- tests/solver/test_ltspice_validation.py::test_a_comment_ends_the_text_of_a_measurement
+- tests/solver/test_ltspice_validation.py::test_a_func_takes_effect_and_stays_text
 notes: Text of an untyped dot-command or a .meas body, kept verbatim up to a comment.

@@ -1,7 +1,7 @@
 # M8 task list — LTspice overlay
 
-> **Status:** IN PROGRESS: checkpoint A approved (2026-11-01, section 12), T9–T13 next — D1, T1–T8 and the review changes R1–R10 (sections 9 and 11) implemented; report in section 10; T9–T13 not started. Section 2 decisions accepted by the maintainer (2026-10-31); the maintainer's schematics for decision 14 are in `tests/corpus/ltspice/contributed_examples/` (2026-11-01).
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M8). Governed by [architecture.md](../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([m5-document.md](./m5-document.md)), the edit layer of M6 ([m6-edits.md](./m6-edits.md)), the validation layer of M7 ([decision 0008](../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../usage/ltspice-export.md)) and [decision 0001](../decisions/0001-source-text-policy.md) (encoding).
+> **Status:** COMPLETE (2026-11-02) — checkpoint A approved in section 12, checkpoint B in section 16; section 2 records the decisions, sections 10, 13 and 15 the implementation.
+> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M8). Governed by [architecture.md](../../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([m5-document.md](../m5-document.md)), the edit layer of M6 ([m6-edits.md](../m6-edits.md)), the validation layer of M7 ([decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../../usage/ltspice-export.md)) and [decision 0001](../../decisions/0001-source-text-policy.md) (encoding).
 
 ## 1. Scope
 
@@ -230,19 +230,19 @@ Typed `.step`. LTspice forms of `.tran`, `.ac`, `.dc`, `.op`, `.temp`, `.param`,
 
 ### Solver validation (checkpoint B)
 
-[ ] **T9 — Shared raw reader and the LTspice harness** (decision 15).
+[x] **T9 — Shared raw reader and the LTspice harness** (decision 15).
 Move the reader to `tests/support/raw.py` (the ngspice tests keep their names). Add `tests/support/ltspice.py` with `run`, `op`, `ac`, `tran_rows`, `ensure_runs` and `with_stubs`. The LTspice reader tests use synthetic files written here (decision 2). The pytest header already lists LTspice.
 
-[ ] **T10 — Corpus sweep, (a) and (c).**
+[x] **T10 — Corpus sweep, (a) and (c).**
 Manifest `solver` fields for the LTspice families, and `test_ltspice_corpus.py`.
 
-[ ] **T11 — Edit results, (b).**
+[x] **T11 — Edit results, (b).**
 The M7 closed-form table for the phase 1 letters, plus `Rser` on C, and `.step` giving one result per step value.
 
-[ ] **T12 — Entry and rule validation, (d).**
+[x] **T12 — Entry and rule validation, (d).**
 Probe tests for every `LT-*` entry and every rule row, with assertions on both LTspice and the library. Statuses and `validated_on` (ltspice 26.1.1). The status checker is extended to the LTspice documents. LTspice discrepancies go in `discrepancies.md`.
 
-[ ] **T13 — Docs and exit.**
+[x] **T13 — Docs and exit.**
 - `docs/testing.md` (LTspice procedure and runtime);
 - README supported-dialects table;
 - CHANGELOG;
@@ -277,7 +277,7 @@ The M7 rows for R, C, L, V, I, D and K (`set_value`, `set_formula` with `params.
 
 ## 7. Probe facts gathered while planning (LTspice 26.1.1, Windows, 2026-10-31)
 
-The probes made while implementing (T1–T8, R1–R3) are recorded in [discrepancies.md](../grammars/ltspice/discrepancies.md), `names.md`, `scoping.md` and section 10. Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
+The probes made while implementing (T1–T8, R1–R3) are recorded in [discrepancies.md](../../grammars/ltspice/discrepancies.md), `names.md`, `scoping.md` and section 10. Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
 
 | # | Probe | LTspice |
 |---|---|---|
@@ -391,8 +391,8 @@ All probes ran locally on LTspice 26.1.1 (Windows, 2026-11-01). Only syntax fact
 
 ### 10.1 What changed
 
-- **D1:** [decision 0009](../decisions/0009-ltspice-dialect.md), status `proposed`; architecture amended.
-- **T1:** `tests/grammar/ngspice/test_tree_snapshot.py` with `tree_snapshot.json`, generated before the split. References entry `[ltspice-ref]`. The construct table is in [the LTspice README](../grammars/ltspice/README.md), section "Construct survey".
+- **D1:** [decision 0009](../../decisions/0009-ltspice-dialect.md), status `proposed`; architecture amended.
+- **T1:** `tests/grammar/ngspice/test_tree_snapshot.py` with `tree_snapshot.json`, generated before the split. References entry `[ltspice-ref]`. The construct table is in [the LTspice README](../../grammars/ltspice/README.md), section "Construct survey".
 - **T2:** `core.lark` holds the shared subset; `ngspice.lark` holds `\\`, commas, RKM, the keyword and model forms of R, C and L, and the forms recognised only to be rejected. The snapshot is unchanged.
 - **T3–T5:** `ltspice.lark`, `ltspice-devices.json`, `StepDirective`, `ValueList`, and new optional node fields; 40 `LT-*` entries, all `documented` until T12.
 - **T6:** dialect-aware names, `$G_*`, per-dialect diagnostics wording and reserved words. `tests/document` runs on both dialects.
@@ -514,3 +514,220 @@ Probes (LTspice 26.1.1):
 - **`mfg={x}` stays rejected.** LTspice runs it but does not evaluate it: `mfg={nope}` (an undefined name) and `mfg={1+}` (not an expression) also run. Accepting it as a formula would report a reference to `x` that LTspice never reads. The form has a row in `discrepancies.md`, which may add that LTspice does not evaluate the value.
 
 **For T12:** `pn` on a `.model` is not a metadata name there. LTspice warns "Ignoring unknown model parameter" for `pn=OnSemi`, and `pn=1N4148A` is a syntax error. The library treats `pn` on a `.model` as an open numeric name (`pn=3M` is a number), and rejects `pn="3M"` and `pn=OnSemi`. That is acceptable, since nothing in LTspice's libraries uses it, but T12's `.model` probe should pin it.
+
+## 13. Implementation report (checkpoint B)
+
+Probes ran on LTspice 26.1.1 and ngspice 47 (Windows, 2026-11-01, the machine's date). Only syntax facts are recorded; no raw file, log or timing from LTspice is committed (decision 2). Nothing is committed yet: the work is in the working tree, on top of `0b464ae`.
+
+### 13.1 What changed
+
+- **T9:** `tests/support/raw.py` holds the reader, and `tests/support/ngspice.py` re-exports its names, so the ngspice tests are unedited. `tests/support/ltspice.py` has `run`, `op`, `op_steps`, `ac`, `tran_rows`, `ensure_runs` and `with_stubs`. `run_ltspice` gains `ascii_raw`. Synthetic reader tests are in `tests/test_ltspice_raw_reader.py`, and solver tests of the harness in `tests/solver/test_ltspice_harness.py`.
+- **T10:** `tests/solver/test_ltspice_solver_corpus.py` runs every accept fixture, (a) and (c). A checker test covers the `solver` fields.
+- **T11:** `tests/solver/test_ltspice_edit_results.py` has the M7 table, the three rows of section 6, and `set_param` on V `Rser` and the D area. `test_ltspice_edit_properties.py` is the Hypothesis test of decision 0008 item 5 on LTspice, an addition.
+- **T12:** `test_ltspice_validation.py` (entries), `test_ltspice_discrepancies.py` (rows, and every `*_rejects` fixture) and `test_ltspice_solver_document.py` (rule tables). 40 entries are `validated`. Rules: 13 `validated`, 9 `observed`, none `disputed`. The checker now also requires `validated_on` to name the dialect's solver.
+- **T13:** `docs/testing.md`, the README's new supported-dialects table, CHANGELOG, the phase plan, `docs/design/README.md`, decision 0009 and architecture §10.3.
+
+### 13.2 Results
+
+From a fresh clone of `0b464ae` with the working-tree changes copied on top, with a new environment, since the work is uncommitted (so not a clone of a commit):
+
+- `ruff check`, `ruff format --check`, `mypy` (configured scope), `mypy --strict` on the named test command plus `tests/test_ltspice_raw_reader.py`, and `lint-imports` are clean.
+- `pytest --require-solver ngspice --require-solver ltspice`: 3778 passed, 2 skipped (POSIX only), 396 deselected, 98.81% coverage.
+- After that run only this section and the runtime sentence in `docs/testing.md` changed; `tests/architecture` and `tests/test_usage_docs.py` were re-run on them.
+- ngspice gate: the ngspice test files and `tree_snapshot.json` are unedited, and they pass. The `src/` changes of this checkpoint are listed in 13.3 and 13.5; each applies to LTspice only.
+
+### 13.3 Rule S11: a candidate `disputed`, resolved (maintainer, 2026-11-01)
+
+T12 found that `.param pi=3k` overrides the constant in LTspice while the library kept `pi` reserved, so `references_to_param("pi")` was empty with nothing flagging it. The maintainer chose to fix it, after asking for the probes below. On every word of the former list (`tests/solver/test_ltspice_solver_document.py`):
+
+| Group | Words | Bare, no definition | With a definition | Library now |
+|---|---|---|---|---|
+| Built-in values | `pi`, `BOLTZ`, `ECHARGE`, `PLANCK`, `KELVIN`, `GMIN` | the value | masked, in that scope only | no reference, or a reference to the definition |
+| | `temp` | the temperature | a top-level `.param` stops LTspice; a default or body `.param` masks it | the same, with a discrepancy row |
+| Everything else | the function names, `time`, `freq` | stops | a parameter | an ordinary name: `UNRESOLVED_PARAM`, or a reference |
+
+- The constant behaves as if it were in a scope outside the top level: one `.param pi` masks it, and a second is a repeat that stops LTspice (S6).
+- `sqrt(9)` and bare `sqrt` are separate: `{sqrt+sqrt(9)}` with `.param sqrt=3k` is 3003. The grammar already tells a call apart.
+- `time` and `freq` were to stay silent in the proposal to the maintainer, since bare `{time}` in a `.tran` was unprobed. The probe stops, in `.tran` and `.ac`, in a value, a parameter, a capacitor and a `.param`, so they are ordinary names too.
+- **Scope limit for phase 2:** with `.param time=3k`, `R={time}` in a `.tran` reads the simulation time, not the parameter. The library rejects that form today, but behavioural expressions will need their own rule.
+- ngspice is unchanged; the change is the LTspice list and one LTspice branch in `document/index.py`.
+- **A gap from checkpoint A, fixed with this:** `{x}` with only a `.step param x` resolved to the step, but `references_to_param("x")` returned nothing, because it compared with `.param` lines only. It now includes them at the top level.
+
+The full check set was re-run after this change (13.2). No other accepted form was found to be read differently from the library's model.
+
+### 13.4 Each "settle", with its basis
+
+| Item | Choice | Basis |
+|---|---|---|
+| Raw files of one run | A `Run` holds `<name>.raw` and `<name>.op.raw`, and (c) compares both | An AC analysis writes its bias point to the second file |
+| A warning written as an error line | Manifest field `{"warning": "<text>"}`, used by `elements_basic/sources_diodes.cir` only | `V7 h 0` runs with exit 0 and `file(line): Missing value, assuming 0V`. Decision 15's rule would fail it, and it is a form the library accepts and LTspice reads as 0 V |
+| Other `solver` fields | None needed | Every other accept fixture runs as it is, so there is no LTspice stub family |
+| `.op` for a `.noise` or `.tf` file | `ensure_runs` treats those untyped commands as analyses | LTspice runs them as analyses |
+| `validated` or `observed` for an entry with a mix | `validated`, with the undocumented part marked observed in `notes` | One status per entry; follows R1's "a spec-entry note marked as observed" (`LT-COM-002` `$`, `LT-TTL-001` `.title`) |
+| `.model` `pn` (section 12's pin) | Pinned as stated | `pn=3M` runs and parses; `pn=OnSemi` warns in LTspice; `pn=1N4148A` stops it; the library rejects both words |
+| `.tran ... steady` | Accepted, with a row | LTspice reads it, then stops on a circuit whose steady state it cannot detect; that is not syntax |
+
+### 13.5 Corrections to what checkpoint A recorded
+
+- **S7 was too broad.** A repeated `.model` or `.subckt` does not always stop LTspice: an unused one runs, and a used `.model` repeated with the same text runs. Rule, discrepancy row and comment corrected. The `DUPLICATE_DEFINITION` message in `document/diagnostics.py` is corrected too, message text only, LTspice only; severity is unchanged.
+- **`1e3k2`** reads as 1.0002 Meg, not 1 Meg.
+- **`noiseless=x`** runs when `x` is a parameter (LTspice reads it as a reference). It stops only when `x` is undefined. Added to the bare-expression row; the library still rejects it.
+- **L13:** three coupled inductors in a loop with an ideal source reproduce exit 1 with no `file(line):` line, with an "over-defined circuit matrix" message. This is a better match than the two-inductor circuit recorded before, which runs when the source has `Rser`. L13's own circuit is still unknown, so the cause remains an inference.
+- **N, P and Y:** all stop both, but LTspice's message for P and Y is "Expected nodes", so it may read them as undocumented letters. Recorded; nothing changed.
+- `docs/usage/ltspice-export.md` said a run with no analysis has no message; the log has "No analysis specified."
+
+### 13.6 Deviations and additions
+
+- **File name:** T10 names `test_ltspice_corpus.py`. In `tests/solver/` that collides with `tests/grammar/ltspice/test_ltspice_corpus.py` under pytest's import mode, and collection fails, so it is `test_ltspice_solver_corpus.py`, like `test_ngspice_solver_*`.
+- **`--require-solver` is now repeatable.** Before, the last value silently won, so `--require-solver ngspice --require-solver ltspice` required only LTspice, including in the checks reported in sections 9, 11 and 12. Those runs did find both solvers. M2 deferred this item.
+- **Runtime in `docs/testing.md`:** T13 asks for the LTspice runtime, and decision 2 forbids committing timing numbers. I recorded one coarse sentence on the test run's duration, stated not to be a measure of LTspice. Remove it if you read decision 2 more strictly.
+- **Dates:** `validated_on` uses 2026-11-01, the date on the machine that ran the probes.
+
+### 13.7 Not verified, and one unexplained event
+
+- **`.fra` and `.loadstate`** are on the closed list but not probed; each needs a setup of its own. `LT-DIR-001` says so and is `validated` for the rest.
+- **One unexplained failure burst.** The first corpus sweep had 7 failures in a row: `sources_diodes.cir` twice, which is the warning above, and 5 others, of which the last visible was a 30 s `LTspice.exe` timeout; the output of the other 4 was not kept. It did not recur in three more sweeps, 300 repeated runs, or the full runs, so I treated it as host noise and changed nothing. A local timeout could reappear.
+- **Linux and macOS** LTspice remain unverified (section 8).
+- **Decision 0009** is still `proposed`, for acceptance at this review.
+
+## 14. Checkpoint B review, round 1 (2026-11-02)
+
+### 14.1 Outcome
+
+T9–T13 meet the scope of section 1 and the decisions of section 2, apart from the changes in 14.2. Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy` (configured `src/` scope), `mypy --strict` on the named test command and `lint-imports` are clean.
+- The full suite with `--require-solver ngspice --require-solver ltspice` gives 3778 passed, 2 skipped, 396 deselected, and 98.81% coverage, as section 13.2 reports. `-m solver` collects 1087 tests.
+- No ngspice test file or `tree_snapshot.json` changed since `0b464ae`. The `src/` changes were read: each takes effect for LTspice only.
+- No LTspice raw file or log is in the working tree. All 40 `LT-*` entries are `validated`, and the rule tables have the 13 `validated` and 9 `observed` rows reported.
+
+The edit tests assert the unedited result as well as the edited one. Probes confirmed S11 (`.param pi=3k` masks in its own scope only; `{sqrt+sqrt(9)}` with `.param sqrt=3k`; `{time+1}` stops and gives `UNRESOLVED_PARAM`; bare `{temp}`), and N1 and N2 (NFC and NFD, `straße` and `STRASSE`, `Gnd`). `$G_*` and `.global` also agree.
+
+### 14.2 Required changes
+
+[x] **R11 — A node name that reaches into an instance** (a candidate `disputed`; the maintainer chose the warning diagnostic, 2026-11-02). LTspice 26.1.1 connects a node named `<instance>:<node>` to that node inside the instance. The library reports a separate net, with no diagnostic. With `X1 a c s`, where `s` holds `R5 p n 1k` and `R6 n q 1k`:
+
+```
+V1 a 0 3
+R1 a b 1k
+R2 c 0 1k
+R9 x1:n b 1k
+```
+
+| Probe | LTspice | Library |
+|---|---|---|
+| `R9 x1:n b 1k`, also written `X1:N` | `V(b)` = 2.625, so `R9` is joined to `n` inside `X1` | separate net `x1:n` |
+| `R9 x1:q b 1k` (a port) | `V(b)` = 2.25, joined to the port's net | separate net `x1:q` |
+| `a:b` with no instance, or `x7:n` with no `x7` | an ordinary node | an ordinary net (correct) |
+| `x1.n` | an ordinary node | an ordinary net (correct) |
+
+Decision 1 calls this `disputed`: an accepted form the solver reads differently, unflagged. It is also a wrong answer from the topology view, so section 13.3's "no other accepted form was found" no longer holds. The join is undocumented, and no export writes it.
+
+Modelling the join is out of proportion for phase 1, and `a:b` must stay legal, so:
+
+- add a warning diagnostic when the part before the first `:` of a node name folds to an instance of the same scope. The net keeps its text; the message says LTspice connects it into the instance and the library does not model that;
+- add a rule row to `names.md` (`observed`), a row to `discrepancies.md`, and a known limit to architecture §7.8, through decision 0009;
+- settle by probe, with solver tests: a name inside a definition (`x2:n` in a body), two levels (`x1:x2:n`), a name no instance holds (`x1:zz`), and `X§U1`, the form LTspice writes, which may be `U1:n` or `xu1:n`.
+
+With the flag, the form no longer meets the definition of `disputed`, so `LT-NOD-001` can stay `validated`.
+
+[x] **R12 — Remove the LTspice runtime from `docs/testing.md`.** The report asked about this (13.6). The sentence giving the suite's duration contradicts the bold line above it, "Never commit an LTspice raw file, log, or timing number", and it sits near the ngspice figure, which together reads as the comparison decision 2 keeps out. T13's request for a runtime was my error. Keep the test count, and say only that the LTspice suite runs for much longer than a normal test run and is worth starting on its own.
+
+[x] **R13 — Probe `.loadstate` and `.fra`** (13.7). They need no setup worth skipping. `.loadstate` with no file runs in LTspice 26.1.1 and writes "no default loadstate file found", in the `file(line):` form. `.fra` takes keywords, and the reference says it requires an FRA device (`@`, phase 2), so probe it on its own and record what LTspice does; `.fra dec 10 1 1k`, which is not its form, is a syntax error there but is accepted as text here, like any argument of an untyped command. Then drop the "were not probed" note from `LT-DIR-001`, or say why one remains.
+
+### 14.3 Developer's calls: accepted
+
+- **`{"warning": …}` manifest field**, for the one form LTspice writes as an error line and runs.
+- **S7's correction, `--require-solver` being repeatable, and the file name** `test_ltspice_solver_corpus.py`. The earlier reports' "both solvers required" should be read as "both found", as 13.6 says.
+- **One status per entry, with the undocumented part marked in `notes`**, following R1.
+- **The unexplained failure burst**, treated as host noise under `AGENTS.md`: it did not recur, and the full run in this review was clean. Consider one line in `docs/testing.md`: if a local LTspice timeout appears, close the GUI and rerun once.
+
+### 14.4 Remaining before approval
+
+- A true fresh-clone run needs a commit: section 13.2's run copied the working tree over a clone of `0b464ae`. Run it once from the commit that closes M8.
+- Decision 0009 is accepted, and the list archived, at approval.
+
+## 15. Implementation report (checkpoint B, round 1)
+
+R11–R13 are done. Probes ran on LTspice 26.1.1 and record only syntax facts (decision 2). Section 14.4 is the reviewers', and nothing is committed.
+
+From a clone of `0b464ae` with the working-tree changes copied on top, with both solvers required: `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named test command and `lint-imports` are clean, and `pytest` gives 3853 passed, 2 skipped (POSIX only), 426 deselected, 98.84% coverage. After that run only this section, the status lines and the test count in `docs/testing.md` changed; `tests/architecture` and `tests/test_usage_docs.py` were re-run on them.
+
+### 15.1 R11: a node name that reaches into an instance
+
+New diagnostic `NODE_INTO_INSTANCE`, LTspice only; the net keeps its text, and the signature is unchanged. Rule `N11` in `names.md` (`observed`), a new "flagged" table in `discrepancies.md`, a limit in architecture §7.8 and an entry in §17, and decision 0009 item 19. `LT-NOD-001` stays `validated`.
+
+| Settle | Choice | Basis (`V(b)`: 3 ordinary, 2.625 joined to `n`, 2.25 joined to port `q`) |
+|---|---|---|
+| A name inside a definition | Looks in the instances of the same scope | `x2:n` in the body of `o` joins an `X2` of that body. `x1:n` in a body does not reach a top-level `X1` |
+| Two levels | Each part follows an instance | `x1:x2:n` and `x1:x2:q` join; `x1:x2:zz` and `x1:x9:n` do not |
+| `X§U1` | `u1`, removing only `X§` | `U1:n` joins; `xu1:n` and `x§u1:n` do not. `Xq1` is `xq1` (`q1:n` does not join), and `XY§U1` is `xy§u1` (`U1:n` does not join). The same holds at a second level (`x1:u2:n`) |
+| A name no instance holds | **No warning** | `x1:zz` stays an ordinary node in LTspice and in the library, so a warning would be false |
+
+**Two places this goes beyond R11's wording, for your review:**
+
+- R11 says to warn when the part before the first `:` folds to an instance. That would also warn on `x1:zz`, which both read the same way, so the check follows the path into the definition and warns only if the node exists there.
+- **Severity is not always a warning.** When the definition is in an `.include`, the library cannot see the node, so the finding is `info`, as for `UNRESOLVED_*` (section 17 of the architecture). LTspice does join in that case. If the subcircuit is simply undefined, there is only `UNRESOLVED_SUBCKT`.
+
+**Found while settling, also flagged or recorded:**
+
+- `x1:0`, `x1:gnd`, `x1:$G_x` and `x1:vcc` with `vcc` global stop LTspice ("Ill-formed node name"). The library accepts them, with the same code (a warning) and a message saying LTspice stops. An empty rest, `x1:`, is treated the same way.
+- A `:` in a `.global` node or a `.subckt` port stops LTspice, and the library accepts it: a new row.
+- `.save V(x1:n)` reads the inner node, and `.ic V(x1:n)` is accepted by both. They make no net in the library, so they get no finding. I did not measure the effect of `.ic V(x1:n)`: my probe could not tell.
+
+**An ngspice-run test changed:** `test_every_diagnostic_code_occurs_in_the_corpus` in `tests/document/test_document_corpus.py` requires every code in the ngspice corpus, so it now leaves out this LTspice-only code. Nothing under `tests/grammar/ngspice/` and no `test_ngspice_*` file changed.
+
+Section 13.3's "no other accepted form was found" is superseded by R11. I did not search further for other reach-in forms beyond those above.
+
+### 15.2 R12
+
+The runtime is gone from `docs/testing.md`. The test count stays, with the wording you asked for, and I added the optional line from 14.3 on a local timeout. No LTspice duration remains in the repository's docs; the ngspice figure next to it is unchanged.
+
+### 15.3 R13
+
+| Form | LTspice 26.1.1 | Library |
+|---|---|---|
+| `.loadstate`, `.loadstate reset` | runs, with `file(line): no default loadstate file found` | `UnknownDirective` |
+| `.loadstate "s.st"` after `.savestate "s.st" time=1u` | runs | `UnknownDirective` |
+| `.loadstate "nosuch.st"`, `.loadstate nosuch.st` | stops ("does not exist"; "syntax error") | accepted as text, a new row |
+| `.fra`, `.fra Tstart=0 dTmax=1u Tstep=1u Tstop=1m`, no device | past the syntax, then stops: "requires at least one enabled fra device" | accepted, a new row |
+| `@1 a b fstart=1k ...` with `.fra` | runs | `UnsupportedConstruct` for `@` (phase 2) |
+| `.fra dec 10 1 1k`, `.fra foo=1` | "syntax error" | accepted as text, a new row |
+| `.fra` or `.loadstate` in a body | stops | `ParseError` |
+
+The "were not probed" note is gone from `LT-DIR-001`; nothing on the closed list remains unprobed.
+
+## 16. Checkpoint B review, round 2 (2026-11-02) — approved
+
+R11–R13 are done as section 15 reports, and M8 is approved. Checks re-run for the review:
+
+- `ruff check`, `ruff format --check`, `mypy` (configured `src/` scope), `mypy --strict` on the named test command plus `tests/test_ltspice_raw_reader.py`, and `lint-imports` are clean.
+- The full suite with `--require-solver ngspice --require-solver ltspice` gives 3853 passed, 2 skipped, 426 deselected, and 98.84% coverage.
+- Nothing under `tests/grammar/ngspice/` changed since `0b464ae`, and the one ngspice-run test changed, `test_every_diagnostic_code_occurs_in_the_corpus`, only leaves out the LTspice-only code.
+
+`NODE_INTO_INSTANCE`, probed against LTspice 26.1.1, flags each form LTspice joins and none it does not:
+
+| Form | LTspice | Library |
+|---|---|---|
+| `x1:n`, `X1:N`, `x1:q` (a port), `x3:n` (a second instance) | joined | warning |
+| `x1:x2:n`; `U1:n` for `X§U1` | joined | warning |
+| A definition after its use; the name as an `X` node or on a source | joined | warning |
+| The definition in an `.include` | joined | info |
+| `a:b`, `x1:zz`, `xu1:n` for `X§U1` | ordinary node | no finding |
+| `x1:gnd` | stops | warning that says it stops |
+
+An edit keeps the finding, and the signature does not change.
+
+**Accepted, beyond R11's wording:**
+
+- following the path into the definition, so that `x1:zz` gets no false warning;
+- `info` when the definition is in an include, as for `UNRESOLVED_*`.
+
+**Probe the developer could not settle:** `.ic V(x1:n)=1` showed no difference in `V(b)` at the end of a short `uic` run, which does not show its effect on the inner node. It makes no net in the library, so nothing depends on it.
+
+**Observations (not required):**
+
+- `NODE_INTO_INSTANCE` occurs only in tests, not in an LTspice corpus file. A small fixture would extend the "every code occurs in a corpus" idea to LTspice.
+- The diagnostic quiets nothing else: `.backanno` still gives `UNKNOWN_DIRECTIVE_PRESERVED` on every export (9.4), which phase 2 may revisit.
+
+**Still open:** the true fresh-clone run of section 14.4 needs a commit, so it runs from the commit that closes M8. Decision 0009 is accepted with this review.

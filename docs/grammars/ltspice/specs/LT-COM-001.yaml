@@ -3,13 +3,16 @@ dialect: ltspice
 construct: comment lines (* and ;)
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Comments and Line Continuation"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - COMMENT_LINE
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_comment_lines
 - tests/grammar/ltspice/test_ltspice_structure.py::test_dollar_does_not_start_a_comment_line
+- tests/solver/test_ltspice_validation.py::test_comment_lines_are_ignored
+- tests/solver/test_ltspice_validation.py::test_a_dollar_line_stops_both
 notes: '* at the start of a line, and ; anywhere. A line holding only a ; comment is a comment line.'

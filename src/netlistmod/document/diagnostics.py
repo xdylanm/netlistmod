@@ -12,10 +12,12 @@ from enum import StrEnum
 from typing import Literal
 
 from netlistmod.dialects import Dialect
-from netlistmod.document.index import Index, Reference, Scope, walk_nodes
+from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
 from netlistmod.document.models import allowed_model_types, model_type_allowed
+from netlistmod.document.names import instance_name, is_automatic_global, is_ground
 from netlistmod.model.nodes import (
     Component,
+    GlobalDirective,
     ModelStatement,
     StepDirective,
     SubcktDefinition,
@@ -44,6 +46,7 @@ class DiagnosticCode(StrEnum):
     DIALECT_GATED_SYNTAX = "DIALECT_GATED_SYNTAX"
     RKM_SOLVER_MISMATCH = "RKM_SOLVER_MISMATCH"
     UNKNOWN_DIRECTIVE_PRESERVED = "UNKNOWN_DIRECTIVE_PRESERVED"
+    NODE_INTO_INSTANCE = "NODE_INTO_INSTANCE"
 
 
 @dataclass(frozen=True, slots=True)
@@ -76,6 +79,8 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         found.extend(_reference_findings(index, reference))
     for scope in index.scopes:
         found.extend(_duplicate_findings(scope))
+        if index.dialect is Dialect.LTSPICE:
+            found.extend(_instance_node_findings(index, scope))
     for line in index.lines.walk():
         item = line.item
         if isinstance(item, SubcktDefinition) and item.ends.name is not None:
@@ -179,12 +184,95 @@ def _reference_findings(
     return findings
 
 
+def _instance_node_findings(
+    index: Index, scope: Scope
+) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
+    """LTspice nodes named ``<instance>:<node>``, which the library keeps as nets of their own."""
+    findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
+    solver = _SOLVER[scope.dialect]
+    for elements in scope.elements.values():
+        for element in elements:
+            for node in element.nodes:
+                reading = _reading_of_instance_node(index, scope, node.name)
+                if reading == "joined":
+                    severity: Severity = "warning"
+                    rule = f"{solver} connects it to that node inside the instance"
+                elif reading == "unknown":
+                    severity = "info"
+                    rule = f"{solver} connects it to a node of that name in the included definition"
+                elif reading == "stopped":
+                    severity = "warning"
+                    rule = f"{solver} stops: the part after the instance is not a local node"
+                else:
+                    continue
+                findings.append(
+                    (
+                        DiagnosticCode.NODE_INTO_INSTANCE,
+                        severity,
+                        f"node `{node.name}` names an instance; {rule}, and the library keeps it "
+                        "as a separate net",
+                        node.span,
+                    )
+                )
+    return findings
+
+
+def _reading_of_instance_node(
+    index: Index, scope: Scope, name: str
+) -> Literal["joined", "unknown", "stopped"] | None:
+    """How LTspice reads ``<instance>:<node>`` from ``scope`` (``names.md`` N11), if it is one."""
+    head, colon, rest = name.partition(":")
+    if not colon:
+        return None
+    key = scope.fold(head)
+    instance = next(
+        (
+            element
+            for elements in scope.elements.values()
+            for element in elements
+            if isinstance(element, SubcktInstance)
+            and instance_name(element.designator, scope.dialect) == key
+        ),
+        None,
+    )
+    if instance is None:
+        return None
+    child = definition_scope(scope, instance.subckt.name)
+    if ":" not in rest and (not rest or _is_global(index, rest)):
+        return "stopped"
+    if child is None:
+        included = any(candidate.has_opaque_include for candidate in scope.chain())
+        return "unknown" if included else None
+    if ":" in rest:
+        return _reading_of_instance_node(index, child, rest)
+    assert child.definition is not None
+    local = {child.fold(port.name) for port in child.definition.ports}
+    local.update(
+        child.fold(node.name)
+        for elements in child.elements.values()
+        for element in elements
+        for node in element.nodes
+    )
+    return "joined" if child.fold(rest) in local else None
+
+
+def _is_global(index: Index, name: str) -> bool:
+    """Whether a node name means the same net everywhere: ground or a global node."""
+    if is_ground(name, index.dialect) or is_automatic_global(name, index.dialect):
+        return True
+    return any(
+        isinstance(line.item, GlobalDirective)
+        and any(index.root.fold(node.name) == index.root.fold(name) for node in line.item.nodes)
+        for line in index.lines
+    )
+
+
 def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     where = scope.describe()
     fatal = scope.dialect is Dialect.LTSPICE
     tables: tuple[tuple[Mapping[str, tuple[object, ...]], str, Severity], ...] = (
-        # LTspice stops at any repeated definition; ngspice uses the last .param silently.
+        # LTspice stops at a repeated .param; ngspice uses the last one silently.
         (scope.params, "parameter", "warning" if fatal else "info"),
         (scope.models, "model", "warning"),
         (scope.subckts, "subcircuit", "warning"),
@@ -195,6 +283,10 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
                 name, span = _name_of(repeated)
                 if fatal:
                     rule = f"{_SOLVER[scope.dialect]} stops with an error"
+                    if noun == "model":
+                        rule += " if an element uses it and the definitions differ"
+                    elif noun == "subcircuit":
+                        rule += " if an instance uses it"
                 elif noun == "parameter":
                     rule = "the last assignment is used"
                 else:

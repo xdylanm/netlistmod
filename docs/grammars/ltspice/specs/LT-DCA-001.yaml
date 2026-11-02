@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .dc
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".DC — DC Sweep"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - dc_stmt
 - dc_sweep
@@ -17,4 +18,7 @@ tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_dc_forms
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_dc
 - tests/grammar/ltspice/test_ltspice_statements.py::test_a_dc_sweep_span_covers_its_fields
+- tests/solver/test_ltspice_validation.py::test_dc_forms
+- tests/solver/test_ltspice_validation.py::test_dc_reads_a_file
+- tests/solver/test_ltspice_validation.py::test_four_sweeps_stop_both
 notes: Up to three sweeps, each with its own variation; a list or file on the last only (discrepancies.md).

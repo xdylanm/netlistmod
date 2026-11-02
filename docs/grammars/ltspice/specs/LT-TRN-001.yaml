@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .tran
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".TRAN — Transient Analysis"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - tran_stmt
 - tran_modifier
@@ -17,5 +18,7 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_tran_forms
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_tran
-notes: Tstep may be left out; modifiers follow the values. A state file name is a quoted string (LTspice
-  stops at an unquoted one).
+- tests/solver/test_ltspice_validation.py::test_tran_forms
+- tests/solver/test_ltspice_validation.py::test_steady_is_read_but_needs_a_circuit_with_a_steady_state
+- tests/solver/test_ltspice_validation.py::test_malformed_tran_stops_both
+notes: Tstep may be left out; modifiers follow the values. A state file name is a quoted string (LTspice stops at an unquoted one). LTspice reads steady, but stops on a circuit whose steady state it cannot detect (discrepancies.md).

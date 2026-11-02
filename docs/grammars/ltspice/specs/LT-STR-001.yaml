@@ -3,10 +3,11 @@ dialect: ltspice
 construct: top-level source structure
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Structure"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - body_line
 core_rules:
@@ -19,5 +20,8 @@ tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_top_level_shape
 - tests/grammar/ltspice/test_ltspice_structure.py::test_spans_tile_the_source
 - tests/grammar/ltspice/test_ltspice_corpus.py::test_accept_files_round_trip_and_tile
+- tests/solver/test_ltspice_validation.py::test_the_first_line_is_the_title_even_if_it_looks_like_an_element
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+- tests/solver/test_ltspice_solver_corpus.py::test_unedited_round_trip_gives_identical_results
 notes: First line is the title, then body lines, then .end. A line is a body line or a top-level-only
   statement, as in ngspice.

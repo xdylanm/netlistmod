@@ -216,12 +216,15 @@ def _solver_test_names(root: Path) -> set[str]:
     return names
 
 
-def check_validation_status(root: Path, spec_directory: Path, discrepancies: Path) -> None:
+def check_validation_status(
+    root: Path, spec_directory: Path, discrepancies: Path, solver: str = "ngspice"
+) -> None:
     """Tie each spec entry's status to its solver evidence (decision 0008, architecture §11.2).
 
     ``validated`` and ``observed`` need a ``validated_on`` list (``solver``, ``version`` and
-    ``date`` in each item) and a ``tests/solver/`` test; ``disputed`` needs a row in
-    ``discrepancies.md`` that names the id; ``documented`` needs a ``validation_note``.
+    ``date`` in each item, the solver being the dialect's) and a ``tests/solver/`` test;
+    ``disputed`` needs a row in ``discrepancies.md`` that names the id; ``documented`` needs a
+    ``validation_note``.
     """
     discrepancy_text = discrepancies.read_text(encoding="utf-8")
     for identifier, entry in _load_specs(spec_directory).items():
@@ -238,6 +241,8 @@ def check_validation_status(root: Path, spec_directory: Path, discrepancies: Pat
                     for key in ("solver", "version", "date")
                 ):
                     raise ValueError(f"Malformed validated_on item in {identifier}: {record!r}")
+                if record["solver"] != solver:
+                    raise ValueError(f"validated_on names another solver in {identifier}")
             if not any(str(test).startswith(SOLVER_TESTS) for test in entry.get("tests", [])):
                 raise ValueError(f"{status} entry cites no solver test: {identifier}")
         elif status == "disputed":
@@ -332,7 +337,7 @@ def test_ltspice_specs_reference_tests_and_grammar_rules() -> None:
 def test_ltspice_statuses_are_backed_by_their_evidence() -> None:
     ltspice = ROOT / "docs" / "grammars" / "ltspice"
     discrepancies = ltspice / "discrepancies.md"
-    check_validation_status(ROOT, LTSPICE_SPEC_DIRECTORY, discrepancies)
+    check_validation_status(ROOT, LTSPICE_SPEC_DIRECTORY, discrepancies, solver="ltspice")
     check_rule_tables(ROOT, [ltspice / "names.md", ltspice / "scoping.md"], discrepancies)
     check_status_summary(ltspice / "README.md", LTSPICE_SPEC_DIRECTORY)
 
@@ -412,6 +417,11 @@ def test_status_check_accepts_backed_statuses(tmp_path: Path, entry: str, discre
         ("status: validated\n" + _RECORD + "tests: [tests/grammar/x.py::test_x]\n", "no solver"),
         ("status: disputed\n", "no discrepancies.md row"),
         ("status: documented\n", "no validation_note"),
+        (
+            "status: validated\nvalidated_on:\n- solver: ltspice\n  version: '1'\n"
+            "  date: '2026-10-31'\n" + _SOLVER_TEST,
+            "another solver",
+        ),
     ],
 )
 def test_status_check_rejects_unbacked_statuses(tmp_path: Path, entry: str, message: str) -> None:

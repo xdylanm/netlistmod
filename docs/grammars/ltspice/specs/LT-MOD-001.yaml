@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .model statements
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".MODEL — SPICE Model Definition"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - param
 - model_param_first
@@ -27,6 +28,8 @@ tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_other_model_parameters_reject_a_bare_word
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_models
 - tests/document/test_ltspice_document.py::test_a_model_text_value_is_not_a_reference
-notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string
-  or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with
-  a hint, since LTspice reads it as a parameter reference (reviews R2, R8).'
+- tests/solver/test_ltspice_validation.py::test_model_forms_read_the_same
+- tests/solver/test_ltspice_validation.py::test_a_derived_model_inherits_and_overrides
+- tests/solver/test_ltspice_validation.py::test_pn_on_a_model_is_an_ignored_numeric_name
+- tests/solver/test_ltspice_discrepancies.py::test_a_bare_word_in_a_model_is_a_parameter_reference_in_ltspice
+notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with a hint, since LTspice reads it as a parameter reference (reviews R2, R8). pn is not a metadata name on a .model: pn=3M is an open numeric name, LTspice warns at pn=OnSemi and stops at pn=1N4148A, and the library rejects both.'

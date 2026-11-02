@@ -3,15 +3,18 @@ dialect: ltspice
 construct: letters following a number
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Engineering Multipliers"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - NUMBER
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_standard_numbers_with_any_trailing_letters
 - tests/grammar/ltspice/test_ltspice_elements.py::test_digits_after_other_letters_are_rejected
+- tests/solver/test_ltspice_validation.py::test_letters_after_a_number_are_ignored
+- tests/solver/test_ltspice_discrepancies.py::test_other_digits_after_letters_read_oddly_and_the_library_rejects_them
 notes: Unrecognized letters are ignored by LTspice and kept in the value text. Digits after other letters
   are rejected.

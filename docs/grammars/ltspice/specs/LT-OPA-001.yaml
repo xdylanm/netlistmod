@@ -4,10 +4,11 @@ construct: opaque .include, .inc and .lib
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".INCLUDE — Include File"'
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".LIB — Include Library"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - statement
 - include_stmt
@@ -18,4 +19,6 @@ grammar:
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements
 - tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements_cannot_be_continued
+- tests/solver/test_ltspice_validation.py::test_an_include_brings_in_its_file_and_stays_opaque
+- tests/solver/test_ltspice_edit_results.py::test_add_include_brings_in_a_harness
 notes: Preserved verbatim, never read.

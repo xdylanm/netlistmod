@@ -3,15 +3,19 @@ dialect: ltspice
 construct: embedded decimal
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Engineering Multipliers"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - EMBEDDED
 - value
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_embedded_decimal_is_recorded_as_rkm_without_an_option
 - tests/grammar/ltspice/test_ltspice_elements.py::test_the_embedded_decimal_is_accepted_in_every_value_slot
+- tests/solver/test_ltspice_validation.py::test_the_embedded_decimal
+- tests/solver/test_ltspice_validation.py::test_the_embedded_decimal_in_other_slots
+- tests/solver/test_ltspice_edit_results.py::test_set_value_with_an_embedded_decimal
 notes: 6K34 is 6.34K, for all multipliers, in every value slot (settled by probe). R as the unit (2R2)
   is observed. notation=rkm; no parser option.

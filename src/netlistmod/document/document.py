@@ -26,6 +26,7 @@ from netlistmod.model.nodes import (
     Component,
     ModelStatement,
     ParseResult,
+    StepDirective,
     SubcktDefinition,
 )
 from netlistmod.model.transform import parse
@@ -182,7 +183,8 @@ class Netlist:
         """The references that resolve to the parameter ``name`` defined in ``scope``.
 
         A reference from a nested definition is included unless that definition masks the
-        name with its own default or ``.param``.
+        name with its own default or ``.param``. At the top level, an LTspice ``.step param`` of
+        the name also defines it (``scoping.md`` S12).
         """
         found = self._index.scope(scope)
         definitions = found.params.get(found.fold(name), ())
@@ -190,7 +192,14 @@ class Netlist:
             reference
             for reference in self._index.references
             if reference.kind == "param"
-            and any(reference.target is definition for definition in definitions)
+            and (
+                any(reference.target is definition for definition in definitions)
+                or (
+                    not scope
+                    and isinstance(reference.target, StepDirective)
+                    and found.fold(reference.name) == found.fold(name)
+                )
+            )
         )
 
     def resolve(self, reference: Reference) -> object | None:

@@ -3,15 +3,18 @@ dialect: ltspice
 construct: micro signs
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Options"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - NUMBER
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_standard_numbers_with_any_trailing_letters
 - tests/grammar/ltspice/test_ltspice_corpus.py::test_exports_are_utf8_without_a_bom_and_hold_the_micro_signs
+- tests/solver/test_ltspice_validation.py::test_both_micro_signs_read_as_micro
+- tests/solver/test_ltspice_validation.py::test_a_cp1252_micro_sign_reads_as_micro
 notes: U+00B5 and U+03BC read as micro; LTspice's own export writes either, depending on the schematic's
   encoding (L41).

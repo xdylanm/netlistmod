@@ -3,10 +3,11 @@ dialect: ltspice
 construct: recognised but unsupported forms
 manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - STIMULUS_KW
 core_rules:
@@ -15,4 +16,9 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_source_functions_are_unsupported
 - tests/grammar/ltspice/test_ltspice_elements.py::test_ngspice_source_functions_are_not_ltspice_syntax
 - tests/grammar/ltspice/test_ltspice_elements.py::test_phase_2_letters_are_unsupported
-notes: 'Source functions, I''s tbl= and step(), phase 2 letters: UnsupportedConstruct.'
+- tests/solver/test_ltspice_validation.py::test_source_functions_run_and_are_unsupported
+- tests/solver/test_ltspice_validation.py::test_the_half_rectifier_export_runs_and_is_unsupported
+- tests/solver/test_ltspice_validation.py::test_other_forms_run_and_are_unsupported
+- tests/solver/test_ltspice_validation.py::test_ngspice_source_functions_stop_ltspice
+- tests/solver/test_ltspice_validation.py::test_letters_that_are_not_ltspice_letters_stop_both
+notes: 'Source functions, I''s tbl= and step(), phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes.'

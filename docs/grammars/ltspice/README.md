@@ -53,47 +53,48 @@ only syntax facts about LTspice: never its raw files, logs, or timing or perform
 Status words have the meanings of
 [decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md);
 `tests/architecture/test_spec_coverage.py` checks each against its evidence and this table against
-the entries. Every entry is `documented` until T12 (checkpoint B) adds its solver test.
+the entries. The probes are in `tests/solver/test_ltspice_validation.py`; a part of an entry that the
+reference does not mention is marked observed in the entry's notes (§11.3 rule 3).
 
 | Entry | Construct | Status | Validated on |
 |---|---|---|---|
-| [LT-ACA-001](./specs/LT-ACA-001.yaml) | .ac | documented |  |
-| [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | documented |  |
-| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | documented |  |
-| [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | documented |  |
-| [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | documented |  |
-| [LT-DCA-001](./specs/LT-DCA-001.yaml) | .dc | documented |  |
-| [LT-DIO-001](./specs/LT-DIO-001.yaml) | diode (D) lines | documented |  |
-| [LT-DIR-001](./specs/LT-DIR-001.yaml) | closed list of dot-commands | documented |  |
-| [LT-END-001](./specs/LT-END-001.yaml) | required final .end | documented |  |
-| [LT-FLD-001](./specs/LT-FLD-001.yaml) | field separators | documented |  |
-| [LT-FML-001](./specs/LT-FML-001.yaml) | formula expression syntax (reference scan only) | documented |  |
-| [LT-GLB-001](./specs/LT-GLB-001.yaml) | .global | documented |  |
-| [LT-ICN-001](./specs/LT-ICN-001.yaml) | .ic and .nodeset | documented |  |
-| [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | documented |  |
-| [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | documented |  |
-| [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | documented |  |
-| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | documented |  |
-| [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | documented |  |
-| [LT-NOD-001](./specs/LT-NOD-001.yaml) | node, element and subcircuit names | documented |  |
-| [LT-NUM-001](./specs/LT-NUM-001.yaml) | numbers | documented |  |
-| [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | documented |  |
-| [LT-NUM-003](./specs/LT-NUM-003.yaml) | embedded decimal | documented |  |
-| [LT-NUM-004](./specs/LT-NUM-004.yaml) | micro signs | documented |  |
-| [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib | documented |  |
-| [LT-OPP-001](./specs/LT-OPP-001.yaml) | .op | documented |  |
-| [LT-OPT-001](./specs/LT-OPT-001.yaml) | .options, .option and .opt | documented |  |
-| [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | documented |  |
-| [LT-RES-001](./specs/LT-RES-001.yaml) | resistor (R) lines | documented |  |
-| [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | documented |  |
-| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | documented |  |
-| [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | documented |  |
-| [LT-STP-001](./specs/LT-STP-001.yaml) | .step | documented |  |
-| [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | documented |  |
-| [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | documented |  |
-| [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | documented |  |
-| [LT-TRN-001](./specs/LT-TRN-001.yaml) | .tran | documented |  |
-| [LT-TTL-001](./specs/LT-TTL-001.yaml) | implicit first-line title and .title | documented |  |
-| [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | documented |  |
-| [LT-UNS-001](./specs/LT-UNS-001.yaml) | recognised but unsupported forms | documented |  |
-| [LT-VAL-001](./specs/LT-VAL-001.yaml) | brace and quoted expressions | documented |  |
+| [LT-ACA-001](./specs/LT-ACA-001.yaml) | .ac | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-DCA-001](./specs/LT-DCA-001.yaml) | .dc | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-DIO-001](./specs/LT-DIO-001.yaml) | diode (D) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-DIR-001](./specs/LT-DIR-001.yaml) | closed list of dot-commands | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-END-001](./specs/LT-END-001.yaml) | required final .end | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-FLD-001](./specs/LT-FLD-001.yaml) | field separators | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-FML-001](./specs/LT-FML-001.yaml) | formula expression syntax (reference scan only) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-GLB-001](./specs/LT-GLB-001.yaml) | .global | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-ICN-001](./specs/LT-ICN-001.yaml) | .ic and .nodeset | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NOD-001](./specs/LT-NOD-001.yaml) | node, element and subcircuit names | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NUM-001](./specs/LT-NUM-001.yaml) | numbers | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NUM-003](./specs/LT-NUM-003.yaml) | embedded decimal | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NUM-004](./specs/LT-NUM-004.yaml) | micro signs | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-OPP-001](./specs/LT-OPP-001.yaml) | .op | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-OPT-001](./specs/LT-OPT-001.yaml) | .options, .option and .opt | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-RES-001](./specs/LT-RES-001.yaml) | resistor (R) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-TRN-001](./specs/LT-TRN-001.yaml) | .tran | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-TTL-001](./specs/LT-TTL-001.yaml) | implicit first-line title and .title | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-UNS-001](./specs/LT-UNS-001.yaml) | recognised but unsupported forms | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-VAL-001](./specs/LT-VAL-001.yaml) | brace and quoted expressions | validated | ltspice 26.1.1 (2026-11-01) |

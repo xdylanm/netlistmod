@@ -12,14 +12,7 @@
     ]
   },
   "ltspice": {
-    "source": "[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md \".PARAM\" (built-in constants and functions), and the solver variables time, temp and freq; see docs/grammars/ltspice/specs/LT-FML-001.yaml",
-    "words": [
-      "time", "temp", "freq",
-      "pi", "boltz", "echarge", "planck", "kelvin", "gmin",
-      "abs", "acos", "asin", "atan", "atan2", "cos", "sin", "tan", "cosh", "sinh", "tanh",
-      "exp", "ln", "log10", "sqrt", "cbrt", "pow", "pwr", "pwrs", "int", "floor", "ceil", "round",
-      "buf", "inv", "u", "uramp", "sgn", "if", "limit", "min", "max", "hypot",
-      "rand", "flat", "gauss", "mc", "mod", "select", "table", "xor"
-    ]
+    "source": "[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md \".PARAM\" (built-in constants), and the solver variable temp: the bare words LTspice gives a value by itself, settled by probe in M8 T12; a call is told apart by the grammar; see docs/grammars/ltspice/scoping.md S11",
+    "words": ["temp", "pi", "boltz", "echarge", "planck", "kelvin", "gmin"]
   }
 }

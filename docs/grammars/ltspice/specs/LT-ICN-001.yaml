@@ -4,10 +4,11 @@ construct: .ic and .nodeset
 manual_ref:
 - '[ltspice-ref] TROUBLESHOOTING-GUIDE.md "Circuit Directives"'
 - '[ltspice-ref] TROUBLESHOOTING-GUIDE.md "Tips"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - node_condition
 - ic_stmt
@@ -23,5 +24,10 @@ tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_inductor_currents_in_ic
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_initial_conditions
 - tests/document/test_ltspice_document.py::test_an_ic_current_is_indexed_like_a_saved_current
+- tests/solver/test_ltspice_validation.py::test_ic_sets_a_node_voltage
+- tests/solver/test_ltspice_validation.py::test_ic_sets_an_inductor_current
+- tests/solver/test_ltspice_validation.py::test_nodeset_runs
+- tests/solver/test_ltspice_validation.py::test_all_stops_both
+- tests/solver/test_ltspice_discrepancies.py::test_other_initial_conditions_run_but_the_library_rejects_them
 notes: V(node)=value items, and for .ic the inductor currents I(L...)=value, which the reference documents
   (review R3). all= is an error in LTspice, unlike ngspice. .nodeset takes voltages only.

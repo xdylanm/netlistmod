@@ -54,7 +54,10 @@ def build_formula_parser(dialect: Dialect) -> Lark:
 
 @lru_cache(maxsize=None)
 def reserved_words(dialect: Dialect) -> frozenset[str]:
-    """The lower-case words that are never parameter names in a dialect's formulas."""
+    """The lower-case bare words a dialect's formulas read as something other than a parameter.
+
+    In LTspice a definition of the name in scope wins over the word (``scoping.md`` S11).
+    """
     resource = files("netlistmod.grammar") / _RESERVED
     parsed = json.loads(resource.read_text(encoding="utf-8"))
     table = parsed.get(dialect.value) if isinstance(parsed, dict) else None

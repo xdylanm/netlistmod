@@ -4,8 +4,23 @@
 to make permitted value and directive edits while preserving the original text
 and circuit topology.
 
-**Status:** M0–M7 are complete, including the edit layer and local ngspice validation. The strict
-ngspice parser preserves titles, comments, unknown dot-commands, immediate
+## Supported dialects
+
+The caller always selects the dialect; there is no default and no detection.
+
+| Dialect | `Dialect` | Input | Phase 1 elements | Reference | Validated on |
+|---|---|---|---|---|---|
+| ngspice | `NGSPICE` | `.cir`, `.sp`, `.net`, KiCad exports | R, C, L, K, V, I, D, X | [ngspice manual](docs/references.md) | ngspice 47 |
+| LTspice | `LTSPICE` | `.net`, `.cir` (an `.asc` schematic is [exported first](docs/usage/ltspice-export.md)) | R, C, L, K, V, I, D, X | [ltspice-reference](docs/references.md) | LTspice 26.1.1, Windows |
+
+Where a solver and the library differ, the file is `docs/grammars/<dialect>/discrepancies.md`. Other
+device letters raise `UnsupportedConstruct` until phase 2.
+
+## Status
+
+**Status:** M0–M8 are complete, including the edit layer, local ngspice validation and the
+LTspice dialect with the same guarantees, validated on LTspice 26.1.1. The strict
+parser preserves titles, comments, unknown dot-commands, immediate
 continuations and opaque blocks/statements, and parses the phase 1 element lines
 (R, C, L, K, V, I, D, X) into typed nodes with exact source spans. RKM values
 need `parse(..., rkm=True)`. `.param`, `.model`, `.subckt` … `.ends` (nested, with

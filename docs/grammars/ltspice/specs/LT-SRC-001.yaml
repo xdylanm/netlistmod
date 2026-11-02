@@ -5,10 +5,11 @@ manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "I — Current Source"'
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - voltage_source
 - ac_spec
@@ -32,6 +33,10 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_voltage_sources
 - tests/grammar/ltspice/test_ltspice_elements.py::test_current_sources
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_current_sources
-notes: 'V: value, AC magnitude and phase with or without =, Rser, Cpar. I: a value, an AC part or R=,
-  and the load flag, with or without a value (review R9). AC without = and the DC keyword are observed
-  (LTspice''s own export writes AC 1).'
+- tests/solver/test_ltspice_validation.py::test_voltage_source_forms
+- tests/solver/test_ltspice_validation.py::test_a_source_without_a_value_runs_with_a_warning
+- tests/solver/test_ltspice_validation.py::test_current_source_forms
+- tests/solver/test_ltspice_validation.py::test_a_load_source_sinks_its_current
+- tests/solver/test_ltspice_validation.py::test_current_source_forms_without_a_dc_value
+- tests/solver/test_ltspice_validation.py::test_malformed_current_sources_stop_both
+notes: 'V: value, AC magnitude and phase with or without =, Rser, Cpar. I: a value, an AC part or R=, and the load flag, with or without a value (review R9). AC without = and the DC keyword are observed (LTspice''s own export writes AC 1). A V line without a value runs with a warning, read as 0 V.'

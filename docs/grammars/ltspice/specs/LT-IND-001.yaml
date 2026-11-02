@@ -4,10 +4,11 @@ construct: inductor (L) lines
 manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "L — Inductor"'
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - inductor
 - l_param
@@ -21,6 +22,9 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_inductor_parameters
 - tests/grammar/ltspice/test_ltspice_elements.py::test_other_parameters_are_rejected
 - tests/grammar/ltspice/test_ltspice_elements.py::test_nonlinear_forms_are_unsupported
+- tests/solver/test_ltspice_validation.py::test_inductor_parameters_run
+- tests/solver/test_ltspice_validation.py::test_inductor_parameters_take_effect
+- tests/solver/test_ltspice_validation.py::test_malformed_inductor_lines_stop_both
 notes: 'Value, then ic, Rser, Rpar, Cpar, m, temp, tc1, tc2. Observed (section 11.3 rule 3): Ipk, the
   noiseless flag (with or without a value, review R9), and mfg and pn, which take a quoted string or a
   bare word (review R1). Flux= and the hysteretic core form are unsupported in phase 1.'

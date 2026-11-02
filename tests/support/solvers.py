@@ -237,15 +237,20 @@ def run_ltspice(
     source: Path,
     *,
     export_netlist: bool = False,
+    ascii_raw: bool = False,
     working_directory: Path | None = None,
     timeout: float = 30,
 ) -> subprocess.CompletedProcess[str]:
-    """Run LTspice headlessly in batch-simulation or schematic-netlist mode."""
+    """Run LTspice headlessly in batch-simulation or schematic-netlist mode.
+
+    With ``ascii_raw``, a batch run writes an ASCII raw file (``-ascii``), with full precision in
+    every variable; the default binary file stores floats for all but the first (L0).
+    """
     if solver.name != "ltspice":
         raise ValueError(f"Expected LTspice, got {solver.name}")
-    switch = "-netlist" if export_netlist else "-b"
+    switches = ["-netlist"] if export_netlist else ["-b", *(["-ascii"] if ascii_raw else [])]
     return subprocess.run(
-        [str(solver.path), switch, str(source)],
+        [str(solver.path), *switches, str(source)],
         capture_output=True,
         check=False,
         cwd=source.parent if working_directory is None else working_directory,

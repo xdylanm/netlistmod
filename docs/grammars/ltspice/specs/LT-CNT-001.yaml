@@ -3,10 +3,11 @@ dialect: ltspice
 construct: + continuation lines
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Comments and Line Continuation"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - CONT
@@ -16,5 +17,8 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_continuation_must_follow_immediately
 - tests/grammar/ltspice/test_ltspice_structure.py::test_backslash_continuation_is_rejected
+- tests/solver/test_ltspice_validation.py::test_continuation_lines_join_the_statement
+- tests/solver/test_ltspice_validation.py::test_backslash_continuation_stops_both
+- tests/solver/test_ltspice_discrepancies.py::test_a_continuation_across_other_lines_runs_but_the_library_rejects_it
 notes: The + line must follow immediately; LTspice also joins across comment and blank lines (discrepancies.md).
   No backslash continuation (L24).

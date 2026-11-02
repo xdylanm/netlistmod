@@ -3,10 +3,11 @@ dialect: ltspice
 construct: .save
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".SAVE — Limit Saved Data"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - output_vector
 - current_vector
@@ -22,4 +23,8 @@ tests:
 - tests/grammar/ltspice/test_ltspice_statements.py::test_save
 - tests/grammar/ltspice/test_ltspice_statements.py::test_a_wildcard_refers_to_no_single_element
 - tests/grammar/ltspice/test_ltspice_statements.py::test_malformed_save
+- tests/solver/test_ltspice_validation.py::test_save_limits_the_saved_data
+- tests/solver/test_ltspice_validation.py::test_save_vectors
+- tests/solver/test_ltspice_validation.py::test_save_device_currents_and_differences_run
+- tests/solver/test_ltspice_validation.py::test_malformed_save_stops_both
 notes: V(...), I(...) and device currents, with wildcards and hierarchical names.

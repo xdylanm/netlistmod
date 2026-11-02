@@ -3,10 +3,11 @@ dialect: ltspice
 construct: node, element and subcircuit names
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Node Naming"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar:
 - _LT_CHAR
 - WORD
@@ -27,5 +28,10 @@ tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_node_names_are_any_string_without_excluded_characters
 - tests/grammar/ltspice/test_ltspice_structure.py::test_excluded_name_characters
 - tests/grammar/ltspice/test_ltspice_structure.py::test_designators_use_the_same_characters
+- tests/solver/test_ltspice_validation.py::test_name_characters_run
+- tests/solver/test_ltspice_validation.py::test_excluded_name_characters_stop_both
+- tests/solver/test_ltspice_validation.py::test_designators_use_the_same_characters
+- tests/solver/test_ltspice_solver_document.py::test_a_node_into_an_instance_is_joined_and_flagged
+- tests/solver/test_ltspice_solver_document.py::test_other_names_with_a_colon_are_ordinary_nodes
 notes: Any string without blanks and without = ( ) , { } ' " | ; (the excluded set is settled by probe;
-  the reference only says to avoid spaces). Expressions as node or subcircuit names are rejected (discrepancies.md).
+  the reference only says to avoid spaces). Expressions as node or subcircuit names are rejected (discrepancies.md). A name that reaches into an instance (x1:n) is joined by LTspice and flagged with NODE_INTO_INSTANCE (names.md N11).

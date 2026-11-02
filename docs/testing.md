@@ -124,6 +124,8 @@ when its solver is absent. To make absence fail instead:
 uv run --env-file .env python -m pytest --require-solver ngspice -m solver
 ```
 
+`--require-solver` may be repeated, once per solver.
+
 The test helpers run in temporary directories, use batch mode, and set a
 timeout. No simulator is launched from `src/`. Run only solver tests with
 `uv run --env-file .env python -m pytest -m solver --no-cov` (the coverage gate is for the
@@ -214,6 +216,42 @@ To re-validate on a new ngspice version:
 
 The ngspice solver suite (334 tests) runs in about 75 seconds on the maintainer's
 machine (M7, ngspice 47); the corpus sweep is about a third of it.
+
+### The LTspice harness (M8)
+
+Every LTspice solver test goes through `tests/support/ltspice.py`
+([decision 0009](decisions/0009-ltspice-dialect.md)). LTspice-backed tests run locally on Windows
+with LTspice installed; nothing is needed offline, because the exports are committed.
+
+- `run(solver, folder, source, *, harness=None, stubs=None, name="probe.cir")` writes `source` (a
+  `Netlist`, text, bytes or a path) to `folder/probe.cir`, runs `LTspice.exe -b -ascii` and returns a
+  `Run`: `returncode`, `log`, `raw_bytes`, `op_raw_bytes`, `plots`, `ok` (exit code 0 and no
+  `file(line): message` line), `errors`, `comparable`, `plot(name)` and `voltage(node)`.
+- `op`, `op_steps`, `ac` and `tran_rows` run a netlist that must succeed. `op_steps` gives one mapping
+  per `.step` value; `tests.support.raw.sweeps` splits a stepped `.tran`, `.ac` or `.dc` plot.
+- A `Netlist` source is prepared as for ngspice. `ensure_runs` adds an `.op` line unless there is an
+  analysis, including the untyped `.noise` and `.tf`.
+- The reader (`tests/support/raw.py`) is shared with ngspice. An AC analysis writes its bias point to
+  `<name>.op.raw`, which the `Run` holds too. The first row of a `uic` transient holds zeros, so an
+  initial value is in the second row.
+
+**Never commit an LTspice raw file, log, or timing number** (decision 0009 item 2). The reader's unit
+tests (`tests/test_ltspice_raw_reader.py`) use synthetic strings written in the test.
+
+`tests/solver/test_ltspice_solver_corpus.py` runs every accept fixture and compares an unedited save, leaving
+out `Title:` (the absolute path) and `Date:`. A manifest's `solver` field takes the ngspice forms and
+`{"warning": "<text>"}`, the one message the run may write as a `file(line):` line.
+`test_ltspice_validation.py` probes each `LT-*` entry, `test_ltspice_discrepancies.py` each row of
+`discrepancies.md` and every `*_rejects` fixture, `test_ltspice_solver_document.py` the rule tables,
+and `test_ltspice_edit_results.py` and `test_ltspice_edit_properties.py` the edits.
+
+To re-validate on a new LTspice version, turn off Default Devices and Default Libraries and close the
+GUI ([export guide](usage/ltspice-export.md)), then follow the ngspice steps above with
+`--require-solver ltspice`, and re-export with `tests/test_ltspice_export.py`, which shows version
+drift. Append `validated_on` items with `solver: ltspice`.
+
+The LTspice solver suite (800 tests) runs for much longer than a normal test run, so it is worth
+starting on its own (`-m solver -k ltspice`). If a local LTspice timeout appears, close the GUI and rerun once.
 
 The document layer (M5) is tested in `tests/document/`: lines and insertion
 points, resolution, topology (with Hypothesis properties of the signature and an

@@ -3,10 +3,11 @@ dialect: ltspice
 construct: implicit first-line title and .title
 manual_ref:
 - '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Structure"'
-status: documented
-validation_note: T12 (checkpoint B) adds the solver test and sets the status; the forms were probed by
-  hand on LTspice 26.1.1 on 2026-11-01 (m8-tasks.md, discrepancies.md).
-validated_on: []
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-01'
 grammar: []
 core_rules:
 - first_line
@@ -16,5 +17,6 @@ core_rules:
 - TITLE_TEXT
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_top_level_shape
-notes: The reference says the first line is always a comment. .title is not in the reference and runs
-  in LTspice 26.1.1 (L30-L37), so it rests on the solver; T12 marks it observed.
+- tests/solver/test_ltspice_validation.py::test_the_first_line_is_the_title_even_if_it_looks_like_an_element
+- tests/solver/test_ltspice_validation.py::test_a_later_title_runs_and_is_kept
+notes: The reference says the first line is always a comment. .title is not in the reference and runs in LTspice 26.1.1 (L30-L37), so that part is observed (section 11.3 rule 3).
