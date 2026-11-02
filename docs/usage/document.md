@@ -1,10 +1,10 @@
 # Reading a netlist: lines, references, nets and diagnostics
 
-`Netlist` is the read-only document layer (M5). It parses a netlist with an explicit dialect
+This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. `Netlist` is the read-only document layer. It parses a netlist with an explicit dialect
 and answers queries about its lines, symbol tables, references, topology and diagnostics.
 Editing and `save()` are described in [editing.md](./editing.md) (M6). The rules behind the answers are in
 [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md);
-the API is listed in [m5-document.md](../design/m5-document.md). The examples below are
+the API is listed in [document-layer.md](../design/document-layer.md). The examples below are
 executed by the test suite.
 
 ## Load
@@ -153,6 +153,30 @@ True
 ## Limits
 
 Elements, models and parameters inside `.if` blocks and `.include`/`.lib` files are not seen
-(§7.8). An unresolved reference in a scope with an `.include` or `.lib` is reported as `info`.
+(§7.8). An unresolved reference in a scope with an `.include` or `.lib` is reported as `info`. A
+name defined only inside an `.if` block is reported as a warning, although the solver may see it.
+`references_to_param` does not see `.meas` bodies, unknown dot-commands such as `.func`, or opaque
+items, so an empty answer does not prove that a parameter is unused.
 Formula names are found by a grammar (`NG-FML-001`); a formula it cannot parse gives no
 references. A read-only demo is in [examples/read_only_demo.py](./examples/read_only_demo.py).
+
+## LTspice
+
+The API is the same. Names compare by Unicode case folding, `0` and `GND` are ground, and `$G_*` nodes are global ([LTspice names](../grammars/ltspice/names.md), [LTspice scoping](../grammars/ltspice/scoping.md)).
+
+```python
+>>> lt = Netlist.from_text(
+...     "t\nR1 $G_vdd GND 1k\nX1 a s\n.subckt s p\nR1 p $g_VDD 1k\n.ends\n"
+...     ".step param rx 1 2 1\nR2 a 0 {rx}\n.end\n",
+...     dialect=Dialect.LTSPICE,
+... )
+>>> [net.global_ for net in lt.nets() if net.name.startswith("$g")]
+[True]
+>>> [net.name for net in lt.nets()][:2]
+['$g_vdd', '0']
+>>> lt.diagnostics  # rx is defined by the .step
+()
+
+```
+
+The diagnostics that report RKM values are not used, and `NODE_INTO_INSTANCE` is LTspice's own; see the [error reference](./errors.md).

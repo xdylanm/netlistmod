@@ -1,7 +1,7 @@
 # M8 task list — LTspice overlay
 
 > **Status:** COMPLETE (2026-11-02) — checkpoint A approved in section 12, checkpoint B in section 16; section 2 records the decisions, sections 10, 13 and 15 the implementation.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M8). Governed by [architecture.md](../../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([m5-document.md](../m5-document.md)), the edit layer of M6 ([m6-edits.md](../m6-edits.md)), the validation layer of M7 ([decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../../usage/ltspice-export.md)) and [decision 0001](../../decisions/0001-source-text-policy.md) (encoding).
+> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M8). Governed by [architecture.md](../../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([document-layer.md](../document-layer.md)), the edit layer of M6 ([edit-layer.md](../edit-layer.md)), the validation layer of M7 ([decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../../usage/ltspice-export.md)) and [decision 0001](../../decisions/0001-source-text-policy.md) (encoding).
 
 ## 1. Scope
 

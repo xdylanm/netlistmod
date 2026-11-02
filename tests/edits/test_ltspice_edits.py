@@ -303,8 +303,14 @@ def _diff(expected: bytes, actual: bytes) -> str:
     return "".join(repr(line) + "\n" for line in lines)
 
 
+def _input(case: dict[str, Any]) -> Path:
+    """A case's input: an authored file in the family, otherwise an export."""
+    authored = GOLDEN / case["input"]
+    return authored if authored.exists() else INPUTS / case["input"]
+
+
 def _run(case: dict[str, Any]) -> Netlist:
-    netlist = Netlist.load(INPUTS / case["input"], dialect=Dialect.LTSPICE)
+    netlist = Netlist.load(_input(case), dialect=Dialect.LTSPICE)
     return apply_steps(netlist, case["steps"])
 
 
@@ -318,14 +324,29 @@ def test_golden_case(name: str) -> None:
 @pytest.mark.parametrize("name", sorted(CASES))
 def test_golden_output_keeps_the_input_topology(name: str) -> None:
     case = CASES[name]
-    original = Netlist.load(INPUTS / case["input"], dialect=Dialect.LTSPICE)
+    original = Netlist.load(_input(case), dialect=Dialect.LTSPICE)
     edited = Netlist.load(GOLDEN / case["expected"], dialect=Dialect.LTSPICE)
     assert edited.signature() == original.signature()
 
 
 def test_the_cases_cover_the_task_list() -> None:
     operations = {step[0] for case in CASES.values() for step in case["steps"]}
-    assert operations >= {"set_value", "set_param", "directives.set", "params.set"}
+    assert operations >= {
+        "set_value",
+        "set_formula",
+        "set_param",
+        "set_instance_param",
+        "set_model_param",
+        "set_dc",
+        "set_ac",
+        "set_coupling",
+        "params.set",
+        "directives.set",
+        "directives.add",
+        "directives.replace",
+        "directives.remove",
+        "add_include",
+    }
     steps = [step for case in CASES.values() for step in case["steps"]]
     assert any(step[0] == "set_param" and step[2] == "Rser" for step in steps)
     assert any(step[0] == "directives.set" and step[1].startswith(".step") for step in steps)

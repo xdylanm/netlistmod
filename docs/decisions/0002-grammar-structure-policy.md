@@ -1,6 +1,6 @@
 # 0002 — Strict grammar structure policy
 
-- **Status:** proposed
+- **Status:** accepted (maintainer, 2026-11-02, M9 review)
 - **Date:** 2026-10-22
 - **Context:** M2 requires the netlist structure to be expressed in Lark, with
   source-preserving nodes produced by a transformer. The grammar follows the
@@ -88,3 +88,8 @@
 - **Consequences:** `parse("")` and a missing `.end` raise `ParseError`. The
   grammar is intentionally stricter than ngspice where accepting input could
   hide or discard source. No solver behavior relaxes the manual policy.
+- **Amendments at acceptance (2026-11-02, M9 review; wording only, no change of behaviour):**
+  - A title does not split on `//` either, as `NG-TTL-001` and the `Title` node say.
+  - `.if (1)` is the conditional form validated on ngspice 47, not the only form the grammar accepts. A block's header is opaque text and is not checked, so `.if 1` and a bare `.if` parse too (§7.8).
+  - A `*` comment line may be indented (`NG-COM-001`).
+  - These rules are ngspice's. LTspice's are in [decision 0009](0009-ltspice-dialect.md): for example, `.end` may carry a comment there, and `;` starts a comment line.

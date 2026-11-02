@@ -1,11 +1,11 @@
 # Editing a netlist
 
-`netlistmod.Netlist` edits values, parameters and directives in place and writes the netlist
+This guide's examples use ngspice; [LTspice](#ltspice) differs as noted at the end. `netlistmod.Netlist` edits values, parameters and directives in place and writes the netlist
 back with a minimal diff, without changing its topology (M6,
 [decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)). Every edit method
 returns a **new** netlist that has been re-parsed and verified; the original is unchanged. The
 operations, the slots they edit and their errors are listed in
-[m6-edits.md](../design/m6-edits.md). The examples below are executed by the test suite.
+[edit-layer.md](../design/edit-layer.md). The examples below are executed by the test suite.
 
 ```python
 >>> from netlistmod import Dialect, Netlist
@@ -249,3 +249,31 @@ True
 >>> shutil.rmtree(folder)
 
 ```
+
+## LTspice
+
+Conventions, verification and `save()` are the same, and the examples above that use forms both dialects read work unchanged. Some operations go further or are refused ([decision 0009](../decisions/0009-ltspice-dialect.md) item 17):
+
+```python
+>>> lt = Netlist.from_text(
+...     "t\nV1 a 0 3\nD1 a 0 dm 2 off\nR1 a 0 1k\n.model dm D\n.step param x 1 2 1\n.end\n",
+...     dialect=Dialect.LTSPICE,
+... )
+>>> lt = lt.set_param("V1", "Rser", "1").set_param("D1", "area", "4").set_param("D1", "off", "1")
+>>> lt = lt.directives.set(".step param x 1 9 1")
+>>> print(lt.text, end="")
+t
+V1 a 0 3 Rser=1
+D1 a 0 dm 4 off=1
+R1 a 0 1k
+.model dm D
+.step param x 1 9 1
+.end
+>>> lt.set_model("R1", "rm")
+Traceback (most recent call last):
+...
+netlistmod.errors.EditError: `R1` takes no model: LTspice has no R, C or L model
+
+```
+
+`directives.set` upserts a `.step` by its swept quantity, so a nested `.step` of another quantity adds a line.

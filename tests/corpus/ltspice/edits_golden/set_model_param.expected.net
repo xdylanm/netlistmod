@@ -1,0 +1,6 @@
+diode input
+V1 a 0 1
+D1 a 0 dm
+.model dm D(Is=2e-14 n=2)
+.op
+.end

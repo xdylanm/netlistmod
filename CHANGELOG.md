@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+**Phase 1 summary.** A source-preserving editor for SPICE netlists, with no release yet.
+
+- **Dialects:** ngspice, validated on ngspice 47, and LTspice, validated on LTspice 26.1.1 on Windows. The caller always selects the dialect.
+- **Constructs:** R, C, L, K, V, I, D and X elements; `.param`, `.model`, `.subckt`; `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.global`; LTspice `.step`. Other dot-commands are preserved verbatim, and `.control`, `.if`, `.include` and `.lib` are opaque.
+- **Guarantees:** an unedited save is byte-identical; an edit changes only its own text; each edit is re-parsed and checked against the topology signature of the load, and nothing is written if a check fails; `src/` never launches a solver.
+- **Known limits:** Q, M and other device letters and stimulus functions such as `PULSE` wait for phase 2. Contents of opaque items are not read. LTspice's `.end` is required although LTspice lets it be omitted. About 300 nested `.if` levels raise `RecursionError`. Python 3.13 is declared but untested: every run was on 3.14. No stress or performance testing was done (decision 0010), and CI starts with phase 2.
+
+Changes:
+
+- Add the review package for phase 1 (M9, decision 0010): a README quick start, usage guides for both dialects, an error reference (`docs/usage/errors.md`), the demo `docs/usage/examples/edit_and_simulate.py`, and the broader oracle. The four design notes are now living references under topic names (`docs/design/elements.md`, `statements.md`, `document-layer.md`, `edit-layer.md`). New tests check that relative Markdown links resolve, and that the notes name each public name.
 - Add the LTspice dialect (M8, decision 0009). `Dialect.LTSPICE` parses, indexes, edits and
   verifies netlists with the phase 1 elements, through the overlay `ltspice.lark` on a `core.lark`
   that now holds only what both dialects share. ngspice parsing is unchanged. New for LTspice: the

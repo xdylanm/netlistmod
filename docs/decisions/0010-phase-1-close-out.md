@@ -1,0 +1,23 @@
+# 0010 — Phase 1 close-out
+
+- **Status:** proposed
+- **Date:** 2026-11-02
+- **Context:** The M9 review of phase 1 ([m9-tasks.md](../design/m9-tasks.md)) found that some architecture text no longer matches the repository, that an open point from the plan and a carried requirement need closing, that four design notes are still the current specification though named after milestones, and that a batch can write a repeated target with no error ([m9-code-changes.md](../design/m9-code-changes.md) H1). The maintainer decided these points on 2026-11-02.
+- **Decision:**
+  1. **Living design notes.** `m3-elements.md`, `m4-statements.md`, `m5-document.md` and `m6-edits.md` become `design/elements.md`, `statements.md`, `document-layer.md` and `edit-layer.md`. They describe the library as it is, are not archived, and change with the public API. `tests/architecture/test_design_notes.py` fails if a public name, dataclass field or diagnostic code is missing from them.
+  2. **CI is deferred to the start of phase 2.** There is no `.github/` in phase 1, and the checks are run locally. This closes open point 1 of the phase 1 plan. §10.4, §13 and §14 describe the intended CI, and §4 and §13 now say so.
+  3. **No stress or performance testing in phase 1.** The 20,000-line performance test carried from M2 is dropped from the requirements, and no size test replaces it. Phase 1 has no need to stress-test or performance-profile anything.
+  4. **M9's boundary.** "Code" in the M9 handoff means `src/`. M9 writes tests, documents, the demo and report scripts itself. A library bug found by a new test gets a handoff entry with the reproducer, and the test stays in the suite as a strict `xfail` naming that entry until the fix removes the marker.
+  5. **A repeated upsert in a batch is an error (amends decision 0007 item 1 and §7.5).** Each operation in a batch is computed against the netlist the batch was opened on, so two upserts of one target that does not exist yet would each add it. The second is an `EditError` naming the target, raised when the operation is submitted. The key is the operation family, scope and folded target: element and parameter name; model and parameter name; parameter name; directive kind, or `.step` quantity; include path. Nothing is merged and last-wins does not apply. Different new parameters on one line stay valid. Evidence: LTspice stops at a repeated `.param` and a second `.tran`, and ngspice runs both analyses, while the library reported success. Implemented by handoff entry H1.
+  6. **P13 and parts of one token (maintainer).** A transformer may take a part out of one token the grammar has already matched in full, by removing a fixed delimiter or separating at one, when it makes no decision about syntax. Three places do this: `AKO_REF`, `STEP_MODEL_REF` and the `v(` opener (`model/transform.py`). They stay. A trial on a scratch copy of the LTspice grammar showed that splitting the `ako:` and `.step` tokens makes the grammar worse. Without lookarounds, `.step NPN 2N2222(VAF) 1 2 1` stops parsing, because `2N2222` lexes as an embedded decimal, and `ako: fast` becomes valid. With lookaheads, `2N2222( VAF)` becomes valid and the terminals join those strict mode cannot check. This does not permit scanning source text, or a branch on a token's text that decides what the syntax is.
+  7. **Architecture corrections**, which record the repository as it is:
+     - §4: the layout adds `edit/operations.py`, `document/models.py` and the JSON data files, and drops `.github/workflows/` until phase 2, and `tests/unit`, `property` and `negative`, which never existed: those tests live with their layer.
+     - §13: CI is planned for phase 2, per item 2.
+     - The status line no longer says `DRAFT v0.1`: the document has been the authority throughout phase 1.
+     - `docs/testing.md` is corrected to §10.2: T9 is differential testing, optional and not done in phase 1. Documentation examples and spec coverage are checks outside the tiers.
+- **Consequences:**
+  - A batch that repeats a new target now fails, where before it wrote a file a solver might refuse. No golden diff changes.
+  - Phase 2 begins by adding CI. Until then a local run is the only evidence, and `docs/testing.md` lists it.
+  - Nothing bounds the time or memory of a large netlist in phase 1. Hands-on use may reopen this.
+  - The archived task lists use the old note names in prose; `design/README.md` maps them.
+  - This record stays `proposed` until the maintainer accepts it when M9 closes (T11). H1 is implemented against item 5.

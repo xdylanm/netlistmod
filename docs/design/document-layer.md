@@ -1,10 +1,11 @@
-# M5 design note — the read-only document layer
+# The read-only document layer
 
-> **Status:** ACTIVE — accepted by the maintainer (2026-10-31); implemented with M5; D2 of [m5-tasks.md](./archive/m5-tasks.md).
-> [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md) records why.
-> The reference M6 builds its edit API on. Rules: [names.md](../grammars/ngspice/names.md),
-> [scoping.md](../grammars/ngspice/scoping.md). Kept ACTIVE after M6: the edit layer
-> ([m6-edits.md](./m6-edits.md)) extends this `Netlist` and adds `MODEL_TYPE_MISMATCH`.
+> **Status:** ACTIVE — living reference, kept current with the code; began as the M5 design note (D2 of
+> [m5-tasks.md](./archive/m5-tasks.md)). [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md)
+> and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. Rules:
+> [ngspice names](../grammars/ngspice/names.md), [ngspice scoping](../grammars/ngspice/scoping.md),
+> [LTspice names](../grammars/ltspice/names.md), [LTspice scoping](../grammars/ltspice/scoping.md).
+> The edit layer ([edit-layer.md](./edit-layer.md)) extends this `Netlist`.
 
 ## 1. Public API
 
@@ -17,9 +18,9 @@ every `scope=` argument accepts any case.
 | Member | Signature / type | Notes |
 |---|---|---|
 | `load` | `(path, *, dialect, rkm=False, fallback_encodings=DEFAULT_FALLBACKS) -> Netlist` | bytes, no newline translation |
-| `from_text` | `(text, *, dialect, rkm=False) -> Netlist` | UTF-8, no BOM |
+| `from_text` | `(text, *, dialect, rkm=False) -> Netlist` | UTF-8, no BOM; `rkm=True` with `Dialect.LTSPICE` is a `ValueError` |
 | `from_source` | `(source: SourceText, *, dialect, rkm=False) -> Netlist` | |
-| `source`, `text`, `dialect`, `rkm` | properties | the source exactly as read (P1) |
+| `source`, `text`, `dialect`, `rkm` | properties | the source exactly as read (P1); `SourceText(text, encoding, bom)` |
 | `parse_result` | `ParseResult` | the M3/M4 items |
 | `to_bytes()` | `-> bytes` | the original bytes (P3) |
 | `slice(span)` | `-> str` | source text of a span |
@@ -66,7 +67,7 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 | `subckt` | X subcircuit name | `SubcktDefinition` |
 | `subckt_param` | X `name=value` (the name) | the definition's default `ParamAssignment`, or `None` (not diagnosed: ngspice 47 ignores an unknown one) |
 | `param` | a bare identifier in a `{…}` or `'…'` formula anywhere (values, parameters, `.param`, `.model`, defaults, X parameters, directive arguments) | the `ParamAssignment` (last in its scope) |
-| `element` | K inductors; `.dc` sources (not `TEMP`); `.save i(src)` | `Component` |
+| `element` | K inductors; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources | `Component` |
 
 ### `TopologyView`
 
@@ -120,7 +121,7 @@ separators=(",", ":"))` encoded as UTF-8.
 
 | Code | Severity | Span | When |
 |---|---|---|---|
-| `UNRESOLVED_MODEL` / `_SUBCKT` / `_PARAM` / `_ELEMENT` | warning; info if a searched scope has `.include`/`.lib` | the name | reference not found; the message lists the scopes searched |
+| `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT` | warning; info if a searched scope has `.include`/`.lib` | the name | reference not found; the message lists the scopes searched |
 | `DUPLICATE_DEFINITION` | info (`.param`), warning (`.model`, `.subckt`) | the repeated name | a name defined again in one scope (defaults count as parameters) |
 | `DUPLICATE_ELEMENT` | warning | the repeated designator | case-insensitive |
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
@@ -129,9 +130,10 @@ separators=(",", ":"))` encoded as UTF-8.
 | `DIALECT_GATED_SYNTAX` | info | the value | `notation == "rkm"` |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNKNOWN_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
+| `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
-the model name) was added by M6 ([m6-edits.md](./m6-edits.md) §6). It was **deferred** to
+the model name) was added by M6 ([edit-layer.md](./edit-layer.md) §6). It was **deferred** to
 M6 (T7): the element-to-model-type table belongs with §7.2's same-type rule for `set_model`, and
 M5 has no edit that needs it.
 
@@ -149,3 +151,13 @@ grammar does not accept the text. Double-quoted strings are not scanned.
   newline) is M6's decision.
 - `Reference.owner` and `.span` give the item and the exact name span to replace.
 - The signature is compared after re-parse (§7.6); `digest()` is for logs.
+
+## 7. LTspice
+
+The API and the signature encoding are the same; `$G_*` nodes count as global. What differs:
+
+- **Names** compare by Unicode case folding after NFC, by `ParseResult.dialect` (`names.py`). `0` and `GND` in any case are ground.
+- **Resolution:** a repeated `.subckt` still resolves to the first definition, and LTspice stops if it is used. A parameter swept by `.step param` counts as defined.
+- **Formula scan:** the overlay `formula_ltspice.lark`, whose reserved words are only LTspice's built-in values, and a definition in scope masks them. A bare `.param` expression has no delimiter, so its offsets start at `span.start`.
+- **`PARAM_USED_BEFORE_DEFINITION`** and **`DUPLICATE_DEFINITION`** follow the solver: for `.param`, the latter is a warning, because LTspice stops at a repeated definition.
+- **`DIALECT_GATED_SYNTAX`** and **`RKM_SOLVER_MISMATCH`** are not used.

@@ -95,4 +95,4 @@
     parse in about 2.3–3.1 s, and 200 lines in about 30 ms.
   - M6 edits replace the sub-spans recorded here (designator, nodes, values, model, parameter
     names and values); each slices back to exactly its text
-    ([m3-elements.md](../design/m3-elements.md)).
+    ([elements.md](../design/elements.md)).

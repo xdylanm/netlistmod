@@ -1,11 +1,10 @@
-# M6 design note — the edit layer
+# The edit layer
 
-> **Status:** ACTIVE — accepted by the maintainer (2026-10-31) with the M6 implementation;
-> D2 of [m6-tasks.md](./archive/m6-tasks.md) (reviewed with the implementation rather than
-> before T3: see its section 9). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
-> records why. Builds on [m3-elements.md](./m3-elements.md) (element sub-spans),
-> [m4-statements.md](./m4-statements.md) (statement sub-spans) and [m5-document.md](./m5-document.md)
-> (`Netlist`, `Lines`, scopes, signature), which stay ACTIVE as the references for node shapes.
+> **Status:** ACTIVE — living reference, kept current with the code; began as the M6 design note (D2 of
+> [m6-tasks.md](./archive/m6-tasks.md)). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
+> and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. Builds on
+> [elements.md](./elements.md) (element sub-spans), [statements.md](./statements.md) (statement
+> sub-spans) and [document-layer.md](./document-layer.md) (`Netlist`, `Lines`, scopes, signature).
 
 ## 1. Layering and lifecycle
 
@@ -72,7 +71,7 @@ goes right after it, so a trailing comment or a continuation stays after the new
 | `add(text, placement=BEFORE_END)` | insert `text` + terminator | text classification below; placement errors |
 | `replace(line, text)` | replace the whole `line.span` with `text` + the line's terminator | line targets below |
 | `remove(line)` | delete `line.span` | as `replace` |
-| `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end` | two or more lines of the kind; a repeatable kind |
+| `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end`. LTspice `.step`: the same, by swept quantity | two or more lines of the kind (or quantity); a repeatable kind |
 | `add_include(path, placement=AFTER_TITLE)` (on the netlist) | insert `.include "path"` + terminator | an include with the same statement text; a path that does not parse (a `"` or a line break) |
 
 **Text.** `text` is one physical line (a `str`) or a sequence of physical lines (a continued
@@ -150,6 +149,8 @@ Directive text is classified (section 2) **before** the plan is applied, so a li
 change the topology is reported as the `TopologyError` of the misused API rather than a
 `TopologyViolation`.
 
+All errors derive from `SpiceNetlistError`. `EditError`, `TopologyError` and `TopologyViolation` are as above; `ParseError` and `UnsupportedConstruct` come from the parse; `EncodingError` comes from `save` when the text does not fit the file's encoding. The file is then left unchanged.
+
 ## 4. Settled points (T3–T5)
 
 | Point | Choice | Basis |
@@ -208,3 +209,14 @@ The table is data, `src/netlistmod/document/model-types.json`, read by
 `netlistmod.document.models`; `set_model` uses the same table. An unresolved model gives the
 `UNRESOLVED_MODEL` diagnostic instead. Tests: `tests/document/test_diagnostics.py`, and the
 `every_diagnostic.cir` fixture of `document_basic` (lines 26–27).
+
+## 7. LTspice
+
+The conventions, verification and placement are the same (decision 0009 item 17). The operations differ only where the dialect does:
+
+- `set_param` also edits V and I parameters, a diode's area (positional, or written `area=`), and a flag's value in place (`off` becomes `off=1`).
+- `set_model` and `remove_value` on an R, C or L line are an `EditError`: LTspice has no such model.
+- `rkm=True` is a `ValueError`; embedded decimals need no option.
+- `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused.
+
+`tests/edits` runs on both dialects, with `tests/support/dialects.py` marking the cases only one dialect reads.

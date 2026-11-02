@@ -12,3 +12,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0007 — Edit lifecycle and edit semantics](0007-edit-lifecycle-and-edit-semantics.md)
 - [0008 — Validation status and solver harnesses](0008-validation-status-and-solver-harnesses.md)
 - [0009 — The LTspice dialect](0009-ltspice-dialect.md)
+- [0010 — Phase 1 close-out](0010-phase-1-close-out.md)

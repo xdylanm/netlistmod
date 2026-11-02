@@ -1,7 +1,7 @@
 # M5 task list — document and semantic layer (ngspice)
 
 > **Status:** COMPLETE (2026-10-31) — review approved after round 1 (section 10; R1 done, section 10.5). Implemented 2026-10-31 (section 9); section 2 records the decisions.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M5). Governed by [architecture.md](../../architecture.md) (§2 P1–P4, P8, P13; §3 layer [3]; §5.4; §7.1, §7.7, §7.8; §8; §17; §21). Builds on M2–M4: the parser returns typed nodes with spans that tile the source ([m3-elements.md](../m3-elements.md), [m4-statements.md](../m4-statements.md), decisions 0002–0005). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M5). Governed by [architecture.md](../../architecture.md) (§2 P1–P4, P8, P13; §3 layer [3]; §5.4; §7.1, §7.7, §7.8; §8; §17; §21). Builds on M2–M4: the parser returns typed nodes with spans that tile the source ([elements.md](../elements.md), [statements.md](../statements.md), decisions 0002–0005). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 

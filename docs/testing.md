@@ -53,7 +53,9 @@ Tests follow architecture §10:
 | T6 | Negative tests for malformed input and forbidden operations. |
 | T7 | Architecture contracts: source boundaries, layering, strict grammars, and licensing. |
 | T8 | Optional local simulator validation. |
-| T9 | Documentation examples and spec-coverage checks. |
+| T9 | Differential testing against spicelib: optional, dev-only, not done in phase 1 (§12). |
+
+Outside the tiers, the suite also runs the usage guides' examples and checks spec coverage and relative Markdown links.
 
 Corpus fixtures live under `tests/corpus/<dialect>/<family>/`. Each family has a
 manifest with provenance and SHA-256 hashes; tests detect missing manifests or

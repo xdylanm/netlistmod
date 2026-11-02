@@ -70,7 +70,7 @@
     family) and §6.5 (typed directive list; `.probe` stays unknown). §6.3 rule 9 is unchanged:
     node names keep the M3 class, including inside `v(…)`.
   - Shapes, spans and the manual-form → rule → field tables are in
-    [m4-statements.md](../design/m4-statements.md); M6 edits replace those sub-spans.
+    [statements.md](../design/statements.md); M6 edits replace those sub-spans.
   - Every case where ngspice 47 is more lenient is in `discrepancies.md`, paired with a test.
   - Known limits: a `.meas` body is not parsed; blanks inside `.ic v( n )` and `.save v( n )`
     are ignored like other inline blanks; a keyword prefix such as `decade` after `.ac` fails at the

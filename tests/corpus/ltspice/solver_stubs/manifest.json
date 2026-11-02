@@ -1,0 +1,11 @@
+{
+  "family": "solver_stubs",
+  "origin": "Authored in this repository for the M9 LTspice golden tests",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-02",
+  "notes": "Stand-ins for the files an edited fixture includes, so that it runs in LTspice.",
+  "fixtures": {
+    "harness.inc": "70c2c44aedf80268a3186ad8dd8d0632a1acfeb3daa5f5eeed1771a64b5fda54"
+  }
+}

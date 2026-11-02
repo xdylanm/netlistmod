@@ -52,7 +52,7 @@ def test_every_accept_fixture_runs_in_ltspice_or_has_a_reason() -> None:
     families = {
         family.name
         for family in ltspice.iterdir()
-        if family.is_dir() and not family.name.endswith("_rejects")
+        if family.is_dir() and not family.name.endswith("_rejects") and family != STUBS
     }
     assert set(FAMILIES) == families
     fields = solver_fields()

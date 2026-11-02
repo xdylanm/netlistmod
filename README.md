@@ -16,23 +16,49 @@ The caller always selects the dialect; there is no default and no detection.
 Where a solver and the library differ, the file is `docs/grammars/<dialect>/discrepancies.md`. Other
 device letters raise `UnsupportedConstruct` until phase 2.
 
+## Quick start
+
+```bash
+uv sync
+```
+
+```python
+>>> from pathlib import Path
+>>> from tempfile import TemporaryDirectory
+>>> from netlistmod import Dialect, Netlist
+>>> folder = TemporaryDirectory()
+>>> path = Path(folder.name) / "divider.cir"
+>>> _ = path.write_bytes(b"divider\nV1 in 0 DC 3\nR1 in out 1k ; top\nR2 out 0 1k\n.op\n.end\n")
+
+>>> netlist = Netlist.load(path, dialect=Dialect.NGSPICE)
+>>> edited = netlist.set_value("R2", "3k").directives.set(".tran 1u 5u")
+>>> edited.save()
+>>> print(path.read_text(), end="")
+divider
+V1 in 0 DC 3
+R1 in out 1k ; top
+R2 out 0 3k
+.op
+.tran 1u 5u
+.end
+>>> folder.cleanup()
+
+```
+
+Every edit returns a new netlist that has been re-parsed and checked against the topology of the original. `save()` changes only the edited text: comments, spacing, line endings and encoding stay as they were. For the whole cycle with a solver, see [edit_and_simulate.py](docs/usage/examples/edit_and_simulate.py).
+
+## What it does and does not do
+
+- **Reads** titles, comments, the phase 1 elements, `.param`, `.model`, `.subckt`, the analysis, option and output directives, and LTspice's `.step`, into typed nodes with exact source spans. It answers queries about lines, references, nets and connections.
+- **Edits** values, formulas, instance and model parameters, source DC and AC values, `.param` lines and directives, and adds an `.include`.
+- **Preserves** other dot-commands verbatim. `.control`, `.if`, `.include` and `.lib` are opaque: their contents are not read.
+- **Never** changes topology (elements, nodes, subcircuit ports), evaluates a value, or launches a solver.
+- **Refuses loudly.** A line outside the grammar is an error, not a guess. Netlists with Q or M devices or `PULSE` and `SIN` sources are rejected until phase 2.
+
 ## Status
 
-**Status:** M0–M8 are complete, including the edit layer, local ngspice validation and the
-LTspice dialect with the same guarantees, validated on LTspice 26.1.1. The strict
-parser preserves titles, comments, unknown dot-commands, immediate
-continuations and opaque blocks/statements, and parses the phase 1 element lines
-(R, C, L, K, V, I, D, X) into typed nodes with exact source spans. RKM values
-need `parse(..., rkm=True)`. `.param`, `.model`, `.subckt` … `.ends` (nested, with
-its body) and the analysis, option and output directives (`.tran`, `.ac`, `.dc`,
-`.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`) are typed nodes
-too. `Netlist` answers read-only queries: lines, symbol tables, resolved
-references, nets and connections, diagnostics and the topology signature. Its edit
-methods set values, formulas, instance and model parameters, source DC/AC values,
-`.param` lines and directives, add a harness `.include`, and return a new netlist
-that has been re-parsed and checked against the topology signature of the load;
-`save()` writes it back with a minimal diff. See the [structural parse guide](docs/usage/structural-parse.md),
-the [element guide](docs/usage/elements.md), the [statement guide](docs/usage/statements.md),
-the [document guide](docs/usage/document.md), the [editing guide](docs/usage/editing.md),
-[architecture](docs/architecture.md), and [Phase 1 plan](docs/design/phase-1-plan.md).
-Local setup and checks are documented in [testing](docs/testing.md).
+Phase 1 (M0–M8) is implemented, with both dialects validated on their solvers, and is under review ([M9](docs/design/m9-tasks.md)). There is no release yet.
+
+- **Guides:** [usage](docs/usage/README.md), including the [error reference](docs/usage/errors.md).
+- **Design:** [architecture](docs/architecture.md), [phase 1 plan](docs/design/phase-1-plan.md).
+- **Development:** [testing](docs/testing.md), [changelog](CHANGELOG.md).

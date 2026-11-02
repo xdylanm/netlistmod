@@ -1,6 +1,6 @@
-# Parsing ngspice statements and directives
+# Parsing statements and directives
 
-From M4 on, the ngspice parser types `.param`, `.model`, `.subckt` … `.ends` and the
+This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser types `.param`, `.model`, `.subckt` … `.ends` and the
 analysis, option and output directives. Every node keeps the text of each value and a span
 for each field; the library never evaluates a value. Other dot-commands (`.print`, `.probe`,
 `.opt`, `.func`, …) stay `UnknownDirective`, preserved verbatim.
@@ -79,7 +79,7 @@ subcircuit and a port named `0` are errors, although ngspice runs them
 ```
 
 What is typed (details and citations are in the [spec entries](../grammars/ngspice/specs/)
-and [m4-statements.md](../design/m4-statements.md)):
+and [statements.md](../design/statements.md)):
 
 - **`.param`**: `name=value` assignments separated by blanks. A value is a number, `{expr}`,
   `'expr'` or a `"string"`. `time`, `temper` and `hertz` are reserved.
@@ -98,3 +98,34 @@ and [m4-statements.md](../design/m4-statements.md)):
   forms also record `function`, `nodes` or `source`. `ir(…)` … `idb(…)` are rejected.
 - **`.meas`/`.measure`**: the analysis (`dc`, `ac`, `tran`, `sp`) and the result name are
   fields; the rest of the statement is kept as `body_text`.
+
+## LTspice
+
+The nodes are the same, with more forms and a typed `.step` ([decision 0009](../decisions/0009-ltspice-dialect.md)):
+
+```python
+>>> source = SourceText(
+...     "t\n"
+...     ".param a 3k\n"
+...     ".tran 1m\n"
+...     ".ac list 1 10 100\n"
+...     ".step param a 1 3 1\n"
+...     ".model slow ako:fast D\n"
+...     ".model fast D\n"
+...     ".end\n"
+... )
+>>> _, param, tran, ac, step, slow, *_ = parse(source, Dialect.LTSPICE).items
+>>> param.assignments[0].name, param.assignments[0].value.text
+('a', '3k')
+>>> tran.tstep, tran.tstop.text
+(None, '1m')
+>>> [f.text for f in ac.frequencies]
+['1', '10', '100']
+>>> step.kind, step.name, step.increment.text
+('param', 'a', '1')
+>>> slow.ako.model_name
+'fast'
+
+```
+
+Dot-commands outside LTspice's closed list are a `ParseError`, and `.control` and `.if` are among them.

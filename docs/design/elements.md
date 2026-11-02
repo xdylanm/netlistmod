@@ -1,10 +1,10 @@
-# M3 design note — element nodes, grammar and spans
+# Element nodes, grammar and spans
 
-> **Status:** ACTIVE — reviewed with M3 (2026-10-30); the reference for element shapes and spans
-> until M6 edits build on them (D2 of [m3-tasks.md](./archive/m3-tasks.md)). Records the shapes
-> that shipped; [decision 0004](../decisions/0004-element-and-value-grammar.md) records why.
-> Kept ACTIVE after M6: the element operations of [m6-edits.md](./m6-edits.md)
-> edit the sub-spans of section 4, and m6-edits.md §2 adds where new fields go.
+> **Status:** ACTIVE — living reference, kept current with the code; began as the M3 design note (D2 of
+> [m3-tasks.md](./archive/m3-tasks.md)). [Decision 0004](../decisions/0004-element-and-value-grammar.md)
+> and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. The element operations of
+> [edit-layer.md](./edit-layer.md) edit the sub-spans of section 4, and its §2 adds where new fields go.
+> Sections 2 and 3 describe the ngspice grammar; section 5 gives what LTspice changes.
 
 ## 1. Node and value shapes
 
@@ -12,14 +12,16 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 
 | Type | Fields |
 |---|---|
-| `NumericValue` | `text`, `span`, `notation: "standard" \| "rkm"`, `solver_mismatch: bool` |
-| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'`, `span` (with delimiters) |
+| `NumericValue` | `text`, `span`, `notation: "standard" \| "rkm"`, `solver_mismatch: bool` (`"rkm"` is also an LTspice embedded decimal) |
+| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'` or empty for a bare LTspice `.param` expression, `span` (with delimiters) |
 | `Value` | alias `NumericValue \| Formula` |
 | `ModelReference` | `model_name`, `span` |
 | `SubcktReference` | `name`, `span` |
 | `ElementReference` | `designator`, `span` (the inductors of a `K` line) |
-| `ParamAssignment` | `name`, `value: Value`, `span` (name to end of value), `name_span` |
-| `Flag` | `name`, `span` (the diode's `off`) |
+| `ValueList` | `text`, `values: tuple[Value, ...]`, `span` (first to last); an LTspice `tc=a,b` |
+| `Identifier` | `name`, `span`; a bare word, such as an option value or an LTspice `mfg=` |
+| `ParamAssignment` | `name`, `value: Value \| ValueList \| Identifier`, `span` (name to end of value), `name_span` |
+| `Flag` | `name`, `span`, `value: Value \| None` (the diode's `off`; an LTspice flag may take a value, which `span` then includes) |
 | `AcSpec` | `magnitude: Value`, `phase: Value \| None`, `span` (keyword to last value) |
 | `Node` | `name`, `span` |
 
@@ -28,10 +30,10 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 
 | Node | Extra fields |
 |---|---|
-| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None` |
+| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`) |
 | `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`; `nodes == ()` |
-| `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`; `params == ()` |
-| `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]` |
+| `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
+| `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
 Deviation from task 3.1: `AcSpec.magnitude` is required, because the manual requires ACMAG
@@ -81,3 +83,16 @@ An element line ends with `NL`, or with `eol` (blanks, comments or continuations
   - `AcSpec.span`: from `AC` to the last AC value.
 - `trailing_comments` lists the span of every end-of-line comment of the element in source
   order, including comments on earlier lines of a continued element.
+
+## 5. LTspice
+
+The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 6, 7 and 9, and the syntax facts in [docs/grammars/ltspice/](../grammars/ltspice/README.md). The shapes above serve both dialects. What differs:
+
+- **Spec IDs:** `LT-FLD-001`, `LT-NOD-001`, `LT-NUM-001` to `LT-NUM-004`, `LT-VAL-001`, `LT-RES-001`, `LT-CAP-001`, `LT-IND-001`, `LT-MUT-001`, `LT-SRC-001`, `LT-DIO-001`, `LT-SUB-001`, `LT-UNS-001`.
+- **R, C, L:** no model form and no keyword form, so `model` and `value_keyword` are `None`. The parameter names of each letter are a closed list.
+- **V, I:** `params` holds `Rser` and `Cpar` on V, and `R=` on I. `flags` holds I's `load`.
+- **D:** `area` is the positional area; `area=` written out is a parameter.
+- **X:** open parameter names, with or without `params:`.
+- **K:** three or more inductors, as in ngspice.
+- **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.
+- **Separators:** no comma separator and no `\\` continuation; see the comment rules in decision 0009 item 9.

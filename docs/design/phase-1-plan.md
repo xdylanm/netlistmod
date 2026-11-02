@@ -67,30 +67,30 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - ParseError with line/column/excerpt.
 - **Exit:** T2 grammar tests and T3 round-trip over the corpus for this subset; strict build is green.
 
-### M3 — Elements and values (ngspice; complete; [task record](./archive/m3-tasks.md), [design note](./m3-elements.md), [decision 0004](../decisions/0004-element-and-value-grammar.md))
+### M3 — Elements and values (ngspice; complete; [task record](./archive/m3-tasks.md), [design note](./elements.md), [decision 0004](../decisions/0004-element-and-value-grammar.md))
 - R, C, L, V, I, D, X, K with typed nodes (`Resistor`, … `MutualCoupling`), value slots (`NumericValue`, `Formula`, `ModelReference`), instance parameters. Standard scale factors; RKM per decision 8.
 - Transformer (dispatch by node type, §6.3 rule 11), spans on every node.
 - V/I sources: plain values and the `DC` and `AC` keywords are in phase 1 (maintainer decision). Stimulus functions (PULSE/SIN/…) as typed specs are phase 2 and fail with `UnsupportedConstruct` (P5) in phase 1.
 - Spec entries (`docs/grammars/ngspice/`) with manual citations and tests; spec-coverage script.
 - **Exit:** every phase 1 element parses, rejects malformed input with positions (T6), and has a spec entry and tests.
 
-### M4 — Statements and directives (ngspice; complete; [task record](./archive/m4-tasks.md), [design note](./m4-statements.md), [decision 0005](../decisions/0005-statement-and-directive-grammar.md))
+### M4 — Statements and directives (ngspice; complete; [task record](./archive/m4-tasks.md), [design note](./statements.md), [decision 0005](../decisions/0005-statement-and-directive-grammar.md))
 - `.param`, `.model`, `.subckt`/`.ends` (with instance and definition structure), typed analysis/control directives (`.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`).
 - **Exit:** same criteria as M3 for these constructs.
 
-### M5 — Document and semantic layer (complete; [task record](./archive/m5-tasks.md), [design note](./m5-document.md), [decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md))
+### M5 — Document and semantic layer (complete; [task record](./archive/m5-tasks.md), [design note](./document-layer.md), [decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md))
 - `Lines`, element/param/model/subckt indexes, symbol tables, topology view and signature.
 - Read-only queries (`nets()`, `elements_on_net`, `connections`, subcircuit ports); diagnostics as data.
 - `docs/grammars/ngspice/names.md` (case sensitivity, ground aliases, net identity) and `scoping.md` (simple model, flagged for solver validation).
 - Design doc for the semantic API.
 - **Exit:** queries tested on corpus circuits. **Optional checkpoint:** read-only use is demonstrable here if you want an early look before editing exists.
 
-### M6 — Edit layer (complete; [task list](./archive/m6-tasks.md), [design note](./m6-edits.md), [decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md))
+### M6 — Edit layer (complete; [task list](./archive/m6-tasks.md), [design note](./edit-layer.md), [decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md))
 - **Decision records before coding:** resolve the architecture §21 unresolved questions (edit lifecycle; `set_model` vs. includes) in `docs/decisions/`.
 - `Edit`/`EditPlan`/`apply_edits`, restricted edit API, directive placement, write-time verification (§7.6), `TopologyError`/`TopologyViolation`.
-- **Element edits build on the M3 design note [m3-elements.md](./m3-elements.md):** its §4 defines the sub-spans an edit replaces (value, model, parameter name and value, AC magnitude and phase) and what each covers. Value edits replace `value.span` (for `r=1k`, only `1k`). The note does not yet define where an added parameter is inserted; M6 decides that. Read it before designing the element operations, and update or archive it when M6 completes.
-- **Statement and directive edits build on the M4 design note [m4-statements.md](./m4-statements.md):** it defines the sub-spans of `.param` and `.model` values, directive arguments and whole directive lines (for replace and remove), and how a subcircuit body tiles. Read it before designing those operations, and update or archive it when M6 completes.
-- **The edit API builds on the M5 design note [m5-document.md](./m5-document.md):** `Netlist`, logical `Lines` and their insertion points, definition-scope addressing, reference resolution, and the exact-text topology signature that write-time verification compares (§7.6). M6 also resolves the `set_model` half of §21 question 2 (decision 0006 settled the diagnostics half) and decides `MODEL_TYPE_MISMATCH`, which M5 deferred.
+- **Element edits build on the M3 design note [elements.md](./elements.md):** its §4 defines the sub-spans an edit replaces (value, model, parameter name and value, AC magnitude and phase) and what each covers. Value edits replace `value.span` (for `r=1k`, only `1k`). The note does not yet define where an added parameter is inserted; M6 decides that. Read it before designing the element operations, and update or archive it when M6 completes.
+- **Statement and directive edits build on the M4 design note [statements.md](./statements.md):** it defines the sub-spans of `.param` and `.model` values, directive arguments and whole directive lines (for replace and remove), and how a subcircuit body tiles. Read it before designing those operations, and update or archive it when M6 completes.
+- **The edit API builds on the M5 design note [document-layer.md](./document-layer.md):** `Netlist`, logical `Lines` and their insertion points, definition-scope addressing, reference resolution, and the exact-text topology signature that write-time verification compares (§7.6). M6 also resolves the `set_model` half of §21 question 2 (decision 0006 settled the diagnostics half) and decides `MODEL_TYPE_MISMATCH`, which M5 deferred.
 - T4 golden-diff tests, T5 property tests (round-trip, signature preserved, idempotence), T6 forbidden-operation tests.
 - **Exit:** the operations in §7.2 work for phase 1 constructs; every forbidden operation in §7.3 has a negative test.
 

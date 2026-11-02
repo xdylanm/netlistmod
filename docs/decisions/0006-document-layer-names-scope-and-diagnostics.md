@@ -70,7 +70,7 @@
     (definition-scope addressing, model/subcircuit locality, the signature's exact text), §17
     (new codes and severities), §21 (line model, diagnostics API and the read-only part of
     hierarchical addressing resolved; the diagnostics half of question 2 recorded).
-  - API, shapes and the encoding of signature entries: [m5-document.md](../design/m5-document.md).
+  - API, shapes and the encoding of signature entries: [document-layer.md](../design/document-layer.md).
     M6 builds its edit API on them.
   - Behavior change: `.global` was an `UnknownDirective` and was accepted inside a subcircuit
     body; it is now typed and rejected there (ngspice 47 accepts it: `discrepancies.md`).

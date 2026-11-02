@@ -239,7 +239,7 @@ RKM letters, default mode and with `set ngbehavior=lt` (same divider; C values m
 - **Model:** `model/values.py` (`NumericValue`, `Formula`, `ModelReference`,
   `SubcktReference`, `ElementReference`, `ParamAssignment`, `Flag`, `AcSpec`) and the
   `Component` subclasses in `model/nodes.py`, all exported. Shapes:
-  [m3-elements.md](../m3-elements.md).
+  [elements.md](../elements.md).
 - **Parser:** `parse(source, dialect, *, rkm=False)` parses the whole source, then transforms
   the tree, so syntax errors come before rejected forms. The loader classifies only `planned`
   letters as `UnsupportedConstruct`.

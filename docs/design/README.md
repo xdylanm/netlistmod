@@ -13,6 +13,7 @@ Active plans and design notes live in this folder. Completed work records move t
   archived record.
 - Archived files are history: do not edit them except to fix links. Changes to
   normative behavior go through a decision record in `../decisions/`.
+- **Living references** (`elements.md`, `statements.md`, `document-layer.md`, `edit-layer.md`) describe the library as it is, not a piece of work. They stay `ACTIVE` in this folder and are not archived. A change to the public API updates them in the same commit; `tests/architecture/test_design_notes.py` fails if a public name is missing. Their state at each milestone is in Git history. They were renamed in M9 from `m3-elements.md`, `m4-statements.md`, `m5-document.md` and `m6-edits.md`, the names the archived task lists still use in prose.
 - Stay flat until `archive/` grows past roughly a dozen files; then group by phase
   (`archive/phase-1/`).
 
@@ -21,10 +22,13 @@ Active plans and design notes live in this folder. Completed work records move t
 | Document | Status |
 |---|---|
 | [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
-| [m6-edits.md](./m6-edits.md) | ACTIVE |
-| [m3-elements.md](./m3-elements.md) | ACTIVE |
-| [m4-statements.md](./m4-statements.md) | ACTIVE |
-| [m5-document.md](./m5-document.md) | ACTIVE |
+| [m9-tasks.md](./m9-tasks.md) | ACTIVE |
+| [phase-1-review.md](./phase-1-review.md) | ACTIVE |
+| [m9-code-changes.md](./m9-code-changes.md) | READY |
+| [elements.md](./elements.md) | ACTIVE (living reference) |
+| [statements.md](./statements.md) | ACTIVE (living reference) |
+| [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
+| [edit-layer.md](./edit-layer.md) | ACTIVE (living reference) |
 | [archive/m0-tasks.md](./archive/m0-tasks.md) | COMPLETE (2026-10-20) |
 | [archive/m1-tasks.md](./archive/m1-tasks.md) | COMPLETE (2026-10-21) |
 | [archive/m2-tasks.md](./archive/m2-tasks.md) | COMPLETE (2026-10-30) |

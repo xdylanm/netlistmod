@@ -26,7 +26,8 @@ do not normalize line endings or whitespace.
 | `ltspice/encoding_samples`, `ltspice/m0_export_candidate` | LTspice exports of circuits authored here | xdylanm | MIT |
 | `ltspice/contributed_examples` | LTspice schematics (`.asc`, `.asy`) drawn by the maintainer in LTspice 26.1.1 for M8 (2026-11-01), with their `-netlist` exports (path comment normalised). LTspice run output is never committed (`.gitignore`; decision 0009 item 2). | xdylanm | MIT |
 | `ltspice/elements_basic`, `ltspice/statements_basic`, `ltspice/names_basic`, and their `_rejects` families | Authored in this repository (M8) | xdylanm | MIT |
-| `ltspice/edits_golden` | Authored in this repository (M8); expected outputs of golden edits on `contributed_examples`, reviewed by hand | xdylanm | MIT |
+| `ltspice/solver_stubs` | Authored in this repository (M9); stand-ins for included files | xdylanm | MIT |
+| `ltspice/edits_golden` | Authored in this repository (M8, M9); expected outputs of golden edits on `contributed_examples` and an authored input, reviewed by hand | xdylanm | MIT |
 
 ## LTspice evidence policy
 

@@ -1,6 +1,6 @@
 # Architecture
 
-> **Status:** DRAFT v0.1 — initial design reference for maintainers, contributors and coding agents
+> **Status:** ACTIVE — the design authority for maintainers, contributors and coding agents; changed through [decision records](decisions/README.md)
 > **License of this library:** MIT
 
 ## 0. How to use this document
@@ -112,7 +112,7 @@ Editing an element inside a subcircuit definition affects every instance. The AP
 Small modules, explicit invariants, layering rules that can be checked mechanically, and documentation kept next to the code it describes.
 
 **P13 — Syntax lives in the grammar.**
-Every syntactic rule (what a line, comment, continuation, keyword, statement or block is) MUST be expressed in the `.lark` files. Python code MAY (a) build parsers, (b) convert a parse tree into typed nodes with spans, one transformer method per rule, without re-scanning source text, and (c) enrich errors (positions, expected tokens, classifying an unsupported element letter from the failure position). Python code MUST NOT recognise, split, classify or validate syntax with regular expressions or string scanning. This is checked mechanically where possible (for example, no `re` import under `src/netlistmod/model/`) and in review.
+Every syntactic rule (what a line, comment, continuation, keyword, statement or block is) MUST be expressed in the `.lark` files. Python code MAY (a) build parsers, (b) convert a parse tree into typed nodes with spans, one transformer method per rule, without re-scanning source text, and (c) enrich errors (positions, expected tokens, classifying an unsupported element letter from the failure position). Python code MUST NOT recognise, split, classify or validate syntax with regular expressions or string scanning. A transformer MAY take a part out of one token the grammar has already matched in full, by removing a fixed delimiter or separating at one, when it makes no decision about syntax ([decision 0010](decisions/0010-phase-1-close-out.md)). This is checked mechanically where possible (for example, no `re` import under `src/netlistmod/model/`) and in review.
 
 ---
 
@@ -164,7 +164,6 @@ repo/
   LICENSE                    # MIT
   .gitattributes             # tests/corpus/** -text  (see Section 13)
   .pre-commit-config.yaml
-  .github/workflows/
   src/netlistmod/
     __init__.py              # public API re-exports only
     py.typed
@@ -178,6 +177,8 @@ repo/
       loader.py              # dialect registry and strict parser builder
       formula.lark           # formula expression syntax, for reference scans (decision 0006)
       formula.py             # parse_formula: the names a formula refers to
+      formula_ltspice.lark   # the LTspice overlay of the formula grammar
+      *.json                 # data tables, such as the device matrices
     model/
       values.py              # NumericValue, Formula, ModelReference, ...
       nodes.py               # Component subclasses, statements
@@ -189,14 +190,16 @@ repo/
       topology.py            # TopologyView, signature
       names.py               # name folding and ground aliases (names.md)
       diagnostics.py         # Diagnostic, DiagnosticCode
+      models.py              # element-to-model-type table, read from model-types.json
     edit/
       plan.py                # Edit, EditPlan, apply_edits
       api.py                 # restricted public editing operations
+      operations.py          # one plan builder per operation
       placement.py           # directive placement strategies
       verify.py              # write-time verification
       conventions.py         # text conventions of inserted lines (decision 0007)
   tests/
-    unit/  grammar/  roundtrip/  edits/  property/  negative/  architecture/  solver/
+    architecture/  document/  edits/  grammar/  roundtrip/  solver/   # by layer, with property and negative tests
     corpus/<dialect>/<family>/        # provenance-tracked fixtures
     support/solvers.py                # solver discovery (tests only)
   docs/
@@ -221,7 +224,7 @@ repo/
 |---|---|---|
 | Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
 | Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
-| Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/m4-statements.md](design/m4-statements.md). |
+| Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/statements.md](design/statements.md). |
 | Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
 
 ### 5.3 Value slots
@@ -243,7 +246,7 @@ class ModelReference:    model_name: str; span: Span
 - `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
 - `VoltageSource` / `CurrentSource` (phase 1): `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`); full stimulus specs are a typed node to be added before phase 2 completes ([decision 0004](decisions/0004-element-and-value-grammar.md)).
-- Node and value shapes are detailed in [docs/design/m3-elements.md](design/m3-elements.md).
+- Node and value shapes are detailed in [docs/design/elements.md](design/elements.md).
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
 
 ### 5.4 Lines
@@ -338,7 +341,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 - Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed. Directive text may span several physical lines (a list of lines), joined with the file's line ending.
 - Add, replace or remove a whole opaque item (`.control` or `.if` block, `.include` or `.lib` statement); its contents are never edited.
 - Add an `.include` of a harness file as a directive.
-- Inserted text follows the conventions of decision 0007 (line ending of the preceding line, lowercase dot-command keywords, `name=value`, nothing after `.end`). The API and the slots each operation edits: [docs/design/m6-edits.md](design/m6-edits.md).
+- Inserted text follows the conventions of decision 0007 (line ending of the preceding line, lowercase dot-command keywords, `name=value`, nothing after `.end`). The API and the slots each operation edits: [docs/design/edit-layer.md](design/edit-layer.md).
 
 ### 7.3 Forbidden operations (raise `TopologyError` or have no API)
 
@@ -369,7 +372,7 @@ On every applied plan, and again on `save()` (and on request via `verify()`):
 
 ### 7.7 Topology signature
 
-The signature is a canonical, hashable, ordered value built from typed nodes, using the **exact text** of every topology token (not the case-folded names): for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name; for every `K` line, its inductor references; and the `.global` node set. Comments, whitespace, values, params, other directives and the contents of opaque blocks are excluded. Exact text is stricter than net identity, so a change that only alters case is caught at save. It has a stable `digest()` (SHA-256 of a canonical encoding) so it can be logged and compared across runs ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); encoding in [m5-document.md](design/m5-document.md)).
+The signature is a canonical, hashable, ordered value built from typed nodes, using the **exact text** of every topology token (not the case-folded names): for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name; for every `K` line, its inductor references; and the `.global` node set. Comments, whitespace, values, params, other directives and the contents of opaque blocks are excluded. Exact text is stricter than net identity, so a change that only alters case is caught at save. It has a stable `digest()` (SHA-256 of a canonical encoding) so it can be logged and compared across runs ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); encoding in [document-layer.md](design/document-layer.md)).
 
 ### 7.8 Known limits (documented, not solved)
 
@@ -552,6 +555,7 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
   - Dependabot for actions and dependencies.
 - **Branch protection:** required checks are lint, types, tests, grammar build, spec coverage.
 - **LTspice:** no CI job in v1; local procedure documented in `docs/testing.md`.
+- **Phase 1:** none of the above exists yet. CI is deferred to the start of phase 2, and the checks run locally ([decision 0010](decisions/0010-phase-1-close-out.md)).
 
 ---
 
@@ -587,7 +591,7 @@ Rules: documentation changes ship in the same change as the code; usage examples
 
 ## 16. Public API sketch (illustrative, not frozen)
 
-The implemented API is specified in [docs/design/m6-edits.md](design/m6-edits.md) ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)); edit methods return a new `Netlist`. The sketch below is the original illustration.
+The implemented API is specified in [docs/design/edit-layer.md](design/edit-layer.md) ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)); edit methods return a new `Netlist`. The sketch below is the original illustration.
 
 ```python
 from netlistmod import Netlist, Dialect, Placement

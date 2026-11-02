@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from netlistmod import DiagnosticCode, Dialect, Netlist, StepDirective
@@ -424,3 +426,12 @@ def test_an_ic_current_is_indexed_like_a_saved_current() -> None:
 def test_saved_currents_reference_elements_unless_they_are_patterns() -> None:
     netlist = _netlist("R1 a 0 1\n.save I(R1) I(R9) I(R?) V(*) Id(x1:D1)")
     assert [d.code for d in netlist.diagnostics] == [DiagnosticCode.UNRESOLVED_ELEMENT]
+
+
+def test_the_corpus_fixture_has_a_node_into_an_instance() -> None:
+    path = Path(__file__).parents[1] / "corpus" / "ltspice" / "names_basic"
+    netlist = Netlist.load(path / "node_into_instance.cir", dialect=Dialect.LTSPICE)
+    assert [(d.code, d.severity, d.line, d.column) for d in netlist.diagnostics] == [
+        (DiagnosticCode.NODE_INTO_INSTANCE, "warning", 4, 4)
+    ]
+    assert "x1:n" in {net.name for net in netlist.nets()}

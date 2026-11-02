@@ -1,6 +1,6 @@
-# Parsing ngspice element lines
+# Parsing element lines
 
-From M3 on, the ngspice parser turns the phase 1 element lines into typed nodes: `Resistor`,
+This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser turns the phase 1 element lines into typed nodes: `Resistor`,
 `Capacitor`, `Inductor`, `MutualCoupling`, `VoltageSource`, `CurrentSource`, `Diode` and
 `SubcktInstance`, all subclasses of `Component`. Each node keeps the text of every value and
 a span for every field. The library never evaluates a value.
@@ -61,3 +61,42 @@ What the parser accepts (details and citations are in
 The charge form `C… q='expr'` and every element letter outside the phase 1 set raise
 `UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
 excerpt and expected tokens.
+
+## LTspice
+
+The nodes are the same. These forms differ ([decision 0009](../decisions/0009-ltspice-dialect.md)):
+
+```python
+>>> from netlistmod import Diode, VoltageSource
+>>> source = SourceText(
+...     "t\n"
+...     "R1 a 0 2k7 tc=1,2 noiseless\n"
+...     "V1 a 0 3 Rser=1\n"
+...     "D1 a 0 dm 2 off\n"
+...     ".model dm D\n"
+...     ".end\n"
+... )
+>>> _, r1, v1, d1, *_ = parse(source, Dialect.LTSPICE).items
+>>> r1.value.text, r1.value.notation
+('2k7', 'rkm')
+>>> r1.params[0].value.text, r1.flags[0].name
+('1,2', 'noiseless')
+>>> v1.params[0].name
+'Rser'
+>>> d1.area.text, d1.flags[0].name
+('2', 'off')
+
+```
+
+- The embedded decimal needs no option, and `M` is milli.
+- Each letter's parameter names are a closed list, so a misspelt `Rsr=1` fails at load.
+- R, C and L have no model form and no keyword form:
+
+```python
+>>> try:
+...     parse(SourceText("t\nR1 a 0 rmod\n.end\n"), Dialect.LTSPICE)
+... except ParseError as error:
+...     print(error.line)
+2
+
+```

@@ -13,7 +13,7 @@
   this record states them and the points settled while implementing (T3–T5). ngspice 47 was
   probed for the directive rules ([m6-tasks.md](../design/archive/m6-tasks.md) section 7, re-recorded in
   `tests/solver/test_ngspice_solver_edits.py`). API and slot details:
-  [m6-edits.md](../design/m6-edits.md).
+  [edit-layer.md](../design/edit-layer.md).
 - **Decision:**
   1. **Lifecycle: immutable and eager** (§21 question 1). Each edit method returns a **new**
      `Netlist`; the old one is unchanged. The call builds an `EditPlan` against the current

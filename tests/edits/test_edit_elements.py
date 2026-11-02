@@ -1,4 +1,4 @@
-"""Element operations (M6 T3; decision 0007 items 2, 3 and 5; m6-edits.md §2)."""
+"""Element operations (M6 T3; decision 0007 items 2, 3 and 5; edit-layer.md §2)."""
 
 from __future__ import annotations
 

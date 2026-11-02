@@ -1,9 +1,10 @@
-# M4 design note — statement and directive nodes, grammar and spans
+# Statement and directive nodes, grammar and spans
 
-> **Status:** ACTIVE — reviewed with M4 (2026-10-31); the shapes that shipped with M4 (D2 of
-> [m4-tasks.md](./archive/m4-tasks.md)); [decision 0005](../decisions/0005-statement-and-directive-grammar.md)
-> records why. Kept ACTIVE after M6 as the reference for statement shapes; the
-> statement and directive operations are specified in [m6-edits.md](./m6-edits.md).
+> **Status:** ACTIVE — living reference, kept current with the code; began as the M4 design note (D2 of
+> [m4-tasks.md](./archive/m4-tasks.md)). [Decision 0005](../decisions/0005-statement-and-directive-grammar.md)
+> and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. The statement and directive
+> operations are specified in [edit-layer.md](./edit-layer.md). Sections 2 and 3 describe the ngspice
+> grammar; section 5 gives what LTspice changes.
 
 ## 1. Node shapes
 
@@ -14,19 +15,29 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | Node | Fields |
 |---|---|
 | `ParamStatement` | `assignments: tuple[ParamAssignment, ...]` |
-| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized`, `open_paren_span`, `close_paren_span` (the `(` and `)` tokens, `None` without parentheses; added in M6 review round 1) |
+| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized`, `open_paren_span`, `close_paren_span` (the `(` and `)` tokens, `None` without parentheses; added in M6 review round 1), `ako: ModelReference \| None` (LTspice's `ako:` base) |
 | `SubcktDefinition` | `name`, `name_span`, `ports: tuple[Node, ...]`, `params` (defaults), `body: tuple[BodyItem, ...]`, `ends: EndsLine`, `header_span` |
 | `EndsLine` | `name: str \| None`, `name_span: Span \| None`, `span`, `trailing_comments` |
 | `Directive` | base of the directives below (top level only) |
-| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None` |
-| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop` |
-| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span)` |
+| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None`, `modifiers: tuple[OptionItem, ...]` (LTspice) |
+| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop`, `frequencies` (LTspice `.ac list`; range fields `None`), `file` (LTspice `.ac file=`) |
+| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span, variation, values, file)`; the last three are LTspice's |
 | `OpDirective` | — |
 | `OptionsDirective` | `options: tuple[OptionItem, ...]`; `OptionItem(name, name_span, value: Value \| Identifier \| None, span)` |
-| `TempDirective` | `value` |
-| `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span)`, `node is None` for `all=` |
+| `TempDirective` | `value`, `others` (LTspice's further values) |
+| `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span, current)`, `node is None` for `all=` or for an LTspice `.ic i(L1)=…` (`current: ElementReference`) |
 | `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span, function: str \| None, nodes: tuple[Node, ...], source: ElementReference \| None)` |
 | `MeasureDirective` | `analysis`, `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
+| `StepDirective` (LTspice) | `kind: "param" \| "source" \| "temp" \| "model"`, `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file` |
+| `GlobalDirective` | `nodes: tuple[Node, ...]`; not a `Directive` subclass, because it is topology |
+| `Title` | `text`, `explicit` (written `.title`), `span` |
+| `TitleDirective` | `text`, `span`; a `.title` after the first line |
+| `BlankLine` | `span` |
+| `CommentLine` | `text`, `span` |
+| `UnknownDirective` | `name`, `raw`, `span`, `trailing_comments`, `name_span` |
+| `OpaqueBlock` | `kind: "control" \| "if"`, `span` |
+| `OpaqueStatement` | `kind: "include" \| "lib"`, `raw`, `span`, `trailing_comments` |
+| `End` | `span` |
 
 Values are `Value` (`NumericValue | Formula`, M3); `Identifier(name, span)` is new, for an
 option value such as `gear`. `ParamAssignment` (M3) serves `.param`, `.model` parameters and
@@ -88,3 +99,17 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
   directive arguments (the value spans above, `variation_span`, option values, condition
   values), and whole directive lines (`span`) for replace and remove (architecture §7.2).
   Names, ports and `.subckt` structure are topology or identity and are not edited.
+
+## 5. LTspice
+
+The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 4, 5, 11 and 12, and the syntax facts in [docs/grammars/ltspice/](../grammars/ltspice/README.md). What differs:
+
+- **Spec IDs:** `LT-PRM-001`, `LT-MOD-001`, `LT-SBD-001`, `LT-TRN-001`, `LT-ACA-001`, `LT-DCA-001`, `LT-OPP-001`, `LT-OPT-001`, `LT-TMP-001`, `LT-ICN-001`, `LT-SAV-001`, `LT-MEA-001`, `LT-STP-001`, `LT-GLB-001`, `LT-STR-001`, `LT-OPA-001`, `LT-DIR-001`, `LT-END-001`, `LT-MCH-001`.
+- **`.end`** is required, with only blank lines after it (a deliberate exception, decision 0009 item 4).
+- **Dot-commands** are a closed list. Anything else is a `ParseError`, including `.control` and `.if`. `.machine` is an `UnsupportedConstruct`.
+- **`.tran`** may have one argument (`tstep` is then `None`) and modifiers.
+- **`.ac`** also has `list` and `file=`; **`.dc`** a variation per sweep, up to three sweeps, and `list` or `file=` on the last; **`.temp`** a list.
+- **`.param`** also has `.param x 3k` and bare expressions, which give a `Formula` with an empty `delimiter`.
+- **`.model`** has `ako:`, and a string or bare word for `mfg` and `type` only.
+- **`.ic`** has `i(L1)=value`; **`.meas`** may omit the analysis, and has `noise` and `op`; **`.save`** has device currents and wildcards.
+- **`.step`** is a typed node, with no limit on nesting. A parameter swept by `.step param` counts as defined.

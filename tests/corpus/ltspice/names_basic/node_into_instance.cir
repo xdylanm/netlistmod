@@ -1,0 +1,9 @@
+M9 node into an instance
+V1 a 0 1
+X1 a sub
+R2 x1:n 0 1k
+.subckt sub p
+R1 p n 1k
+.ends
+.op
+.end
