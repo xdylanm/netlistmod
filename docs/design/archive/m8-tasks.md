@@ -730,4 +730,6 @@ An edit keeps the finding, and the signature does not change.
 - `NODE_INTO_INSTANCE` occurs only in tests, not in an LTspice corpus file. A small fixture would extend the "every code occurs in a corpus" idea to LTspice.
 - The diagnostic quiets nothing else: `.backanno` still gives `UNKNOWN_DIRECTIVE_PRESERVED` on every export (9.4), which phase 2 may revisit.
 
-**Still open:** the true fresh-clone run of section 14.4 needs a commit, so it runs from the commit that closes M8. Decision 0009 is accepted with this review.
+**Fresh-clone run (section 14.4), done 2026-11-02:** a clean clone of `93da644`, the commit that closes M8, with a new environment and both solvers required. `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named test command plus `tests/test_ltspice_raw_reader.py`, and `lint-imports` are clean, and `pytest` gives 3853 passed, 2 skipped, 426 deselected, and 98.84% coverage.
+
+Decision 0009 is accepted with this review.
