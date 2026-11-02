@@ -1,6 +1,6 @@
 # M9 code changes — handoff to a developer
 
-> **Status:** READY — from the M9 review (2026-11-02, `2127bb3`). The maintainer triaged it on 2026-11-02: H1–H4 must land before M9 is accepted; H5–H8 are phase 2.
+> **Status:** READY — from the M9 review (2026-11-02, `2127bb3`). The maintainer triaged it on 2026-11-02: H1–H4 must land before M9 is accepted; H5–H8 are phase 2. H1–H4 are implemented and reviewed, and the fixes in [section 5](#5-review-of-h1h4-fixes-to-make) are made; none of it is committed yet.
 > **Part of:** [m9-tasks.md](./m9-tasks.md) (R7). Governed by [architecture.md](../architecture.md). The M9 review itself changes nothing under `src/`.
 
 ## 1. Summary
@@ -136,3 +136,25 @@ About 15 messages cite internal documents, such as "(decision 0007 item 8)" and 
 - `Dialect`: a string, `None` or an unknown value is a `ValueError` (`build_parser` checks the type), so the code's `is` comparisons are safe.
 - Repeated `.subckt`: an edit addresses the first definition, the one ngspice uses (`scoping.md` S7); LTspice stops if it is used.
 - Packaging: the wheel and sdist build, and the wheel imports and edits from a clean environment.
+
+## 5. Review of H1–H4: fixes to make
+
+The maintainer sent these four to the developer on 2026-11-02, after the review of the uncommitted H1–H4 work. Everything else in that work is accepted, including the regenerated snapshot, the two changed assertions, the wider H2 rule and existing targets failing on submission. T10 waits for these fixes.
+
+1. **Report `.end` before an unsupported letter** (`grammar/loader.py` `_map_error`). `structure_rejects/text_after_end.cir` holds the word `text`, and it still gets an unsupported T device error. H2 asked for the `.end` reason on any element after `.end`.
+   - Move the `_after_end` check above the planned-letter check, and update the comment above them.
+   - Replace `test_a_planned_letter_after_end_stays_an_unsupported_construct` with a test that `Q1 a b c m` and `hello world` after `.end` get the `.end` reason on both dialects. A planned letter before `.end` stays an `UnsupportedConstruct`.
+   - Regenerate `tree_snapshot.json`, and compare it with the current version: only `structure_rejects/text_after_end.cir` should change, from `UnsupportedConstruct` to `ParseError`, in both `rkm` modes. Update the count in the `test_tree_snapshot.py` docstring and in the CHANGELOG.
+   - A trial on a scratch copy failed only the snapshot entry and the replaced test, but it skipped the solver tests. Run those too, including `test_element_after_end_is_ignored_by_solver_rejected_by_parser`.
+2. **Correct the incomplete-line reason** (`_INCOMPLETE_LINE` in `grammar/loader.py`). ngspice reads `R1 a 0 1k foo bar`, which has too many fields, as a parameter waiting for `=`, and says "another field is needed". A repeated `set_value` gets the same message on `R2 a 0 1 2 rm`.
+   - Change the reason to "this line ends too early". Keep the rule for when it applies, and what `expected` lists.
+   - Update `tests/grammar/test_parse_messages.py`, the `docs/usage/errors.md` example and the CHANGELOG.
+   - Add `R1 a 0 1k foo bar` on ngspice to the tests.
+3. **Bring decision 0010 item 5 into line with the code.**
+   - Add element (`set_dc`, `set_ac`) to the key list, as `edit-layer.md` has it.
+   - Add that the second upsert is an error whether or not the target exists yet.
+4. **Update `phase-1-review.md`.**
+   - In section 1, H1–H4 are no longer "not yet made".
+   - Add a limit to section 6: `directives.add` is not an upsert, so `directives.add(".tran …")` over an existing `.tran`, or followed by `directives.set` in a batch, writes two `.tran` lines. ngspice runs both analyses and LTspice stops. Section 2's results stay interim until T10.
+
+Finish with the full check set green, with `--require-solver ngspice --require-solver ltspice`. Do not commit unless the maintainer asks.

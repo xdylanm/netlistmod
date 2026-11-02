@@ -41,6 +41,22 @@ The text does not match the dialect's grammar. The library does not guess: it st
 
 ```
 
+`reason` adds a sentence where the library can say more. A line that ends before its fields do says so, and `expected` then leaves out separators and comments, which would not help. Text after `.end` is told that the netlist ends there.
+
+```python
+>>> try:
+...     parse(SourceText("title\nR1 a 0\n.end\n"), Dialect.NGSPICE)
+... except ParseError as error:
+...     print(error.reason)
+this line ends too early
+>>> try:
+...     parse(SourceText("title\n.end\nR1 a 0 1k\n"), Dialect.NGSPICE)
+... except ParseError as error:
+...     print(error.reason)
+the netlist ends at `.end`: only blank lines may follow it
+
+```
+
 **What to do:** correct the line, or check that the right dialect is selected. If a solver accepts the line, the dialect's `discrepancies.md` under `docs/grammars/` may list it as a deliberate difference.
 
 ### `UnsupportedConstruct`
@@ -73,7 +89,22 @@ EditError
 
 ```
 
-**What to do:** read the message, which names the operation and the target. The operations and their errors are listed in [edit-layer.md](../design/edit-layer.md).
+In a batch, a second upsert of one target is an `EditError` when it is submitted, even if the target does not exist yet. Each operation in a batch is computed against the netlist the batch was opened on, so the two would otherwise each add the target, and one of the duplicates can stop a solver. The first one stays in the batch.
+
+```python
+>>> with netlist.batch() as batch:
+...     batch.set_param("R1", "m", "1")
+...     try:
+...         batch.set_param("R1", "m", "2")
+...     except EditError as error:
+...         print(error)
+set_param R1 m in top level: this batch already sets this target, and each operation is computed against the netlist the batch was opened on; make one upsert per target
+>>> batch.result.text
+'t\nR1 a 0 1k m=1\n.end\n'
+
+```
+
+**What to do:** read the message, which names the operation and the target. For a repeated upsert, keep the one you mean, or apply the batch and edit its result. The operations and their errors are listed in [edit-layer.md](../design/edit-layer.md).
 
 ### `TopologyError`
 

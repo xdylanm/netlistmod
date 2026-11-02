@@ -4,7 +4,11 @@
 corpus netlist and per ``rkm`` mode, a digest of the node classes and spans of the parse, or the
 error class, position and expected terminals of a rejected file, so a change of lexer state shows
 as well. Regenerating it is a deliberate act:
-``python -m tests.grammar.ngspice.test_tree_snapshot``.
+``python -m tests.grammar.ngspice.test_tree_snapshot``. It was regenerated for M9 H2, when parse
+errors for incomplete lines stopped listing punctuation as expected, and text after ``.end`` stopped
+being reported as an unsupported letter. 15 rejected files changed: 14 lost those names, and
+``structure_rejects/text_after_end.cir`` went from ``UnsupportedConstruct`` to ``ParseError``. No
+node or position changed.
 """
 
 from __future__ import annotations

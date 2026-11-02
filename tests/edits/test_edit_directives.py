@@ -263,7 +263,7 @@ def test_set_is_idempotent() -> None:
         (
             "t\n.end\n",
             lambda n: n.directives.add(".model dm d"),
-            "use params.set or set_model_param",
+            "`.model` line cannot be added, and set_model_param edits an existing one",
         ),
         ("t\n.end\n", lambda n: n.directives.add("* comment"), "comment line, not a directive"),
         ("t\n.end\n", lambda n: n.directives.add(".title other"), "`.title` line"),
@@ -289,7 +289,7 @@ def test_set_is_idempotent() -> None:
         (
             "t\n.subckt s a\nR1 a 0 1\n.ends\n.end\n",
             lambda n: n.directives.add(".op", Placement.after(n.scope(("s",)).lines[0])),
-            "not a line of the top level",
+            "is inside subcircuit `s`",
         ),
         ('t\n.include "h.cir"\n.end\n', lambda n: n.add_include("h.cir"), "already includes"),
         ("t\n.end\n", lambda n: n.add_include('a"b'), "does not parse"),

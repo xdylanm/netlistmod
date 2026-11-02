@@ -79,7 +79,7 @@ def insertion_point(placement: Placement, netlist: Netlist, scope: ScopePath = (
         end = lines.find(End)
         assert end is not None  # the grammar requires .end
         return end.span.start
-    anchor = _anchor(placement, lines, "the top level")
+    anchor = _top_level_anchor(placement, netlist)
     if placement.kind == "before":
         if isinstance(anchor.item, Title):
             raise EditError("cannot insert before the title: the first line is always the title")
@@ -102,6 +102,18 @@ def _in_body(
         )
     anchor = _anchor(placement, body, f"the body of subcircuit `{definition.name}`")
     return anchor.span.start if placement.kind == "before" else anchor.span.end
+
+
+def _top_level_anchor(placement: Placement, netlist: Netlist) -> Line:
+    anchor = placement.anchor
+    assert anchor is not None
+    if anchor.scope and any(line is anchor for line in netlist.lines.walk()):
+        raise EditError(
+            f"the anchor line (line {anchor.first_line}) is inside "
+            f"{netlist.scope(anchor.scope).describe()}, and directives and other top-level lines "
+            "go to the top level; use a line of the top level"
+        )
+    return _anchor(placement, netlist.lines, "the top level")
 
 
 def _anchor(placement: Placement, lines: Lines, where: str) -> Line:

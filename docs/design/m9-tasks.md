@@ -1,6 +1,6 @@
 # M9 task list — Phase 1 review package
 
-> **Status:** ACTIVE — section 2 decided by the maintainer (2026-11-02); the review (R1–R7) is done and section 7 records it. The maintainer triaged [m9-code-changes.md](./m9-code-changes.md): H1–H4 land before M9 is accepted, and T10 waits for them.
+> **Status:** ACTIVE — section 2 decided by the maintainer (2026-11-02); the review (R1–R7) is done and section 7 records it. The maintainer triaged [m9-code-changes.md](./m9-code-changes.md): H1–H4 land before M9 is accepted, and T10 waits for them. They are implemented and reviewed, with the review's fixes made ([section 5 there](./m9-code-changes.md#5-review-of-h1h4-fixes-to-make)), and are not yet committed.
 > **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M9, review gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §7, §10, §11, §12 are normative; §13, §14, §15, §19, §21).
 
 ## 1. Scope

@@ -15,6 +15,7 @@ import pytest
 from netlistmod import (
     Edit,
     EditError,
+    Line,
     Netlist,
     OpaqueBlock,
     OpaqueStatement,
@@ -248,6 +249,35 @@ def _overlap(netlist: Netlist) -> object:
 def _foreign_anchor(netlist: Netlist) -> object:
     other = _netlist()
     return netlist.directives.add(".save v(out)", Placement.before(other.lines[-1]))
+
+
+def _body_line(netlist: Netlist) -> Line:
+    line = netlist.lines.find(SubcktDefinition)
+    assert line is not None and line.body is not None
+    return line.body[0]
+
+
+def test_adding_a_model_says_there_is_no_api_for_it() -> None:
+    with pytest.raises(EditError) as captured:
+        _netlist().directives.add(".model d1 D")
+    assert "a `.model` line cannot be added" in str(captured.value)
+    assert "set_model_param edits an existing one" in str(captured.value)
+    assert "params.set" not in str(captured.value)
+
+
+def test_a_body_line_as_a_directive_anchor_is_named_as_such() -> None:
+    netlist = _netlist()
+    with pytest.raises(EditError) as captured:
+        netlist.directives.add(".op", Placement.after(_body_line(netlist)))
+    assert "is inside subcircuit `div`" in str(captured.value)
+    assert "go to the top level" in str(captured.value)
+    assert "look the line up again" not in str(captured.value)
+
+
+def test_a_stale_body_line_as_an_anchor_says_to_look_it_up_again() -> None:
+    netlist = _netlist()
+    with pytest.raises(EditError, match="look the line up again"):
+        netlist.directives.add(".op", Placement.after(_body_line(_netlist())))
 
 
 @pytest.mark.parametrize(

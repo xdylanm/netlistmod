@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,7 @@ from netlistmod import (
     SourceText,
     TopologyViolation,
 )
-from tests.support.dialects import current_dialect
+from tests.support.dialects import current_dialect, ltspice_only
 
 _TEXT = "divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 1k\n.op\n.end\n"
 
@@ -71,6 +72,155 @@ def test_a_batch_that_fails_verification_changes_nothing() -> None:
             batch.set_value("R1", "2k")
             batch.set_value("R2", "1k 2k")
     assert netlist.text == _TEXT
+
+
+_UPSERTS_TEXT = (
+    "upserts\n"
+    ".model dm D\n"
+    ".subckt s p\n"
+    ".param k=1\n"
+    "Ra p 0 1k\n"
+    ".ends\n"
+    "V1 a 0\n"
+    "R1 a 0 1k\n"
+    "D1 a 0 dm\n"
+    "X1 a s\n"
+    ".end\n"
+)
+
+Upsert = Callable[[Batch, str], object]
+
+# Each operation with the name of its target.
+_REPEATED_UPSERTS: list[tuple[str, Upsert, str]] = [
+    ("set_param", lambda b, v: b.set_param("R1", "m", v), "set_param R1 m"),
+    ("set_model_param", lambda b, v: b.set_model_param("dm", "n", v), "set_model_param dm n"),
+    ("set_instance_param", lambda b, v: b.set_instance_param("X1", "k", v), "set_instance_param"),
+    ("params.set", lambda b, v: b.params.set("x", v), "params.set x"),
+    ("set_ac", lambda b, v: b.set_ac("V1", v), "set_ac V1"),
+    ("set_dc", lambda b, v: b.set_dc("V1", v), "set_dc V1"),
+]
+
+
+@pytest.mark.parametrize(
+    ("upsert", "target"),
+    [case[1:] for case in _REPEATED_UPSERTS],
+    ids=[case[0] for case in _REPEATED_UPSERTS],
+)
+def test_a_repeated_upsert_of_a_new_target_is_an_error_on_submission(
+    upsert: Upsert, target: str
+) -> None:
+    netlist = _netlist(_UPSERTS_TEXT)
+    with pytest.raises(EditError, match=f"{target}.*already sets this target"):
+        with netlist.batch() as batch:
+            upsert(batch, "1")
+            upsert(batch, "2")
+    assert netlist.text == _UPSERTS_TEXT
+
+
+def test_a_target_spelled_with_another_case_is_the_same_target() -> None:
+    with pytest.raises(EditError, match="set_param r1 M.*already sets this target"):
+        with _netlist(_UPSERTS_TEXT).batch() as batch:
+            batch.set_param("R1", "m", "1")
+            batch.set_param("r1", "M", "2")
+    with pytest.raises(EditError, match="params.set X.*already sets this target"):
+        with _netlist(_UPSERTS_TEXT).batch() as batch:
+            batch.params.set("x", "1")
+            batch.params.set("X", "2")
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "target"),
+    [
+        (".tran 1u 1m", ".tran 2u 2m", "TranDirective"),
+        (".op", ".op", "OpDirective"),
+    ],
+    ids=["tran", "op"],
+)
+def test_a_repeated_directive_upsert_is_an_error_on_submission(
+    first: str, second: str, target: str
+) -> None:
+    with pytest.raises(EditError, match=f"directives.set {target}.*already sets this target"):
+        with _netlist(_UPSERTS_TEXT).batch() as batch:
+            batch.directives.set(first)
+            batch.directives.set(second)
+
+
+def test_a_repeated_include_is_an_error_on_submission() -> None:
+    with pytest.raises(EditError, match="add_include `m.lib`.*already sets this target"):
+        with _netlist(_UPSERTS_TEXT).batch() as batch:
+            batch.add_include("m.lib")
+            batch.add_include("m.lib")
+
+
+@ltspice_only
+def test_a_repeated_step_of_one_quantity_is_an_error_but_another_quantity_is_not() -> None:
+    with pytest.raises(EditError, match="`.step` of `X`.*already sets this target"):
+        with _netlist(_UPSERTS_TEXT).batch() as batch:
+            batch.directives.set(".step param x 1 2 1")
+            batch.directives.set(".step param X 1 3 1")
+    with _netlist(_UPSERTS_TEXT).batch() as batch:
+        batch.directives.set(".step param x 1 2 1")
+        batch.directives.set(".step param y 1 2 1")
+    assert batch.result.text.endswith(".step param x 1 2 1\n.step param y 1 2 1\n.end\n")
+
+
+def test_a_repeated_upsert_of_an_existing_target_is_refused_on_submission() -> None:
+    text = "t\n.param x=1\nV1 a 0 DC 1 AC 1\nR1 a 0 1k m=1\n.tran 1u 1m\n.end\n"
+    for upsert in (
+        lambda b, v: b.set_param("R1", "m", v),
+        lambda b, v: b.params.set("x", v),
+        lambda b, v: b.set_dc("V1", v),
+        lambda b, v: b.set_ac("V1", v),
+        lambda b, v: b.directives.set(f".tran {v}u 1m"),
+    ):
+        with _netlist(text).batch() as batch:
+            upsert(batch, "2")
+            with pytest.raises(EditError, match="already sets this target"):
+                upsert(batch, "3")
+            assert len(batch.plan) == 1
+
+
+def test_a_refused_upsert_leaves_the_batch_usable() -> None:
+    with _netlist(_UPSERTS_TEXT).batch() as batch:
+        batch.set_param("R1", "m", "1")
+        with pytest.raises(EditError, match="already sets this target"):
+            batch.set_param("R1", "m", "2")
+    assert "R1 a 0 1k m=1\n" in batch.result.text
+
+
+def test_different_targets_in_one_batch_stay_valid() -> None:
+    with _netlist(_UPSERTS_TEXT).batch() as batch:
+        batch.set_param("R1", "m", "1")
+        batch.set_param("R1", "tc1", "2")
+        batch.set_model_param("dm", "n", "1")
+        batch.set_model_param("dm", "rs", "2")
+        batch.set_instance_param("X1", "k", "1")
+        batch.set_instance_param("X1", "j", "2")
+        batch.params.set("x", "1")
+        batch.params.set("y", "2")
+        batch.directives.set(".tran 1u 1m")
+        batch.directives.set(".op")
+        batch.add_include("a.lib")
+        batch.add_include("b.lib")
+    result = batch.result.text
+    assert "R1 a 0 1k m=1 tc1=2\n" in result
+    assert ".model dm D n=1 rs=2\n" in result
+    assert "X1 a s k=1 j=2\n" in result
+    assert ".param x=1\n.param y=2\n" in result
+    assert ".tran 1u 1m\n.op\n.end\n" in result
+
+
+def test_one_name_in_two_scopes_is_two_targets() -> None:
+    with _netlist(_UPSERTS_TEXT).batch() as batch:
+        batch.params.set("k", "1")
+        batch.params.set("k", "2", scope=("s",), in_definition=True)
+    assert ".param k=1\n" in batch.result.text
+    assert ".param k=2\n" in batch.result.text
+
+
+def test_repeated_upserts_outside_a_batch_each_see_the_last_result() -> None:
+    netlist = _netlist(_UPSERTS_TEXT).set_param("R1", "m", "1").set_param("R1", "m", "2")
+    assert "R1 a 0 1k m=2\n" in netlist.text
 
 
 def test_insertions_at_one_point_keep_their_order_in_a_batch() -> None:

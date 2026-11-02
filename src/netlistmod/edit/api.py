@@ -19,7 +19,7 @@ from netlistmod.dialects import Dialect
 from netlistmod.document import Line, ScopePath, TopologySignature
 from netlistmod.document import Netlist as ReadOnlyNetlist
 from netlistmod.edit import conventions, operations
-from netlistmod.edit.operations import DirectiveText
+from netlistmod.edit.operations import DirectiveText, UpsertTarget
 from netlistmod.edit.placement import Placement
 from netlistmod.edit.plan import Edit, EditPlan
 from netlistmod.edit.verify import apply_plan
@@ -45,7 +45,7 @@ class _Operations(Generic[_R]):
     def _target(self) -> Netlist:
         raise NotImplementedError
 
-    def _submit(self, edits: Sequence[Edit]) -> _R:
+    def _submit(self, edits: Sequence[Edit], target: UpsertTarget | None = None) -> _R:
         raise NotImplementedError
 
     def set_value(
@@ -93,8 +93,9 @@ class _Operations(Generic[_R]):
         scope: ScopePath = (),
         in_definition: bool = False,
     ) -> _R:
-        """Set an instance parameter of an R, C, L or D line, or add ``name=value`` after the
-        line's last field.
+        """Set an instance parameter of an R, C, L or D line, or of an LTspice V or I line, or
+        add ``name=value`` after the line's last field. On LTspice a flag takes its value in
+        place (``noiseless`` → ``noiseless=1``).
 
         A name that is the line's value keyword (``r``, ``resistance``, …) sets the value when
         it is written that way, otherwise ``EditError`` (use :meth:`set_value`). A repeated
@@ -103,7 +104,8 @@ class _Operations(Generic[_R]):
         return self._submit(
             operations.set_param(
                 self._target(), designator, name, value, scope=scope, in_definition=in_definition
-            )
+            ),
+            operations.upsert_target(self._target(), "set_param", scope, designator, name),
         )
 
     def set_model(
@@ -123,7 +125,8 @@ class _Operations(Generic[_R]):
         model is accepted only with ``allow_external=True`` when an ``.include`` or ``.lib``
         is in a searched scope (decision 0007 item 3). A value written ``r=1k`` takes no
         model. ngspice uses a given value over the model's geometry; see
-        :meth:`remove_value`.
+        :meth:`remove_value`. LTspice has no R, C or L model, so there only a D line takes one,
+        and an R, C or L line is an ``EditError``.
         """
         return self._submit(
             operations.set_model(
@@ -143,7 +146,8 @@ class _Operations(Generic[_R]):
         applies (``R1 a b 1k rmod l=20u w=1u`` → ``R1 a b  rmod l=20u w=1u``).
 
         Only the value's text is removed; the blank before it stays. ``EditError`` if the line
-        has no value or no model (it would have neither, which the grammar forbids).
+        has no value or no model (it would have neither, which the grammar forbids), and always
+        on LTspice, which has no R, C or L model.
         """
         return self._submit(
             operations.remove_value(
@@ -158,7 +162,8 @@ class _Operations(Generic[_R]):
         return self._submit(
             operations.set_dc(
                 self._target(), designator, value, scope=scope, in_definition=in_definition
-            )
+            ),
+            operations.upsert_target(self._target(), "set_dc", scope, designator),
         )
 
     def set_ac(
@@ -183,7 +188,8 @@ class _Operations(Generic[_R]):
                 phase,
                 scope=scope,
                 in_definition=in_definition,
-            )
+            ),
+            operations.upsert_target(self._target(), "set_ac", scope, designator),
         )
 
     def set_coupling(
@@ -210,7 +216,8 @@ class _Operations(Generic[_R]):
         return self._submit(
             operations.set_instance_param(
                 self._target(), designator, name, value, scope=scope, in_definition=in_definition
-            )
+            ),
+            operations.upsert_target(self._target(), "set_instance_param", scope, designator, name),
         )
 
     def set_model_param(
@@ -227,7 +234,8 @@ class _Operations(Generic[_R]):
         return self._submit(
             operations.set_model_param(
                 self._target(), model, name, value, scope=scope, in_definition=in_definition
-            )
+            ),
+            operations.upsert_target(self._target(), "set_model_param", scope, model, name),
         )
 
     def add_include(self, path: str, placement: Placement = Placement.AFTER_TITLE) -> _R:
@@ -236,7 +244,10 @@ class _Operations(Generic[_R]):
         The path is written as given and never read; ngspice resolves a relative path from the
         netlist file's folder. An include with the same statement text is an ``EditError``.
         """
-        return self._submit(operations.add_include(self._target(), path, placement))
+        return self._submit(
+            operations.add_include(self._target(), path, placement),
+            operations.include_target(path),
+        )
 
 
 class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
@@ -290,7 +301,8 @@ class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
                 scope=scope,
                 in_definition=in_definition,
                 placement=placement,
-            )
+            ),
+            operations.upsert_target(self._operations._target(), "params.set", scope, name),
         )
 
 
@@ -336,11 +348,16 @@ class DirectiveEditor(Generic[_R]):
 
     def set(self, text: DirectiveText) -> _R:
         """Upsert a singleton directive (``.tran``, ``.ac``, ``.dc``, ``.op``, ``.temp``):
-        replace the one line of its kind or add one before ``.end``.
+        replace the one line of its kind or add one before ``.end``. An LTspice ``.step`` is
+        upserted by the quantity it sweeps, so ``.step`` lines of different quantities coexist.
 
-        ``EditError`` with two or more lines of the kind, or for a repeatable kind.
+        ``EditError`` with two or more lines of the kind (or of the quantity), or for a
+        repeatable kind.
         """
-        return self._operations._submit(operations.set_directive(self._operations._target(), text))
+        target = self._operations._target()
+        return self._operations._submit(
+            operations.set_directive(target, text), operations.directive_target(target, text)
+        )
 
 
 class Netlist(ReadOnlyNetlist, _Operations["Netlist"]):
@@ -474,7 +491,7 @@ class Netlist(ReadOnlyNetlist, _Operations["Netlist"]):
     def _target(self) -> Netlist:
         return self
 
-    def _submit(self, edits: Sequence[Edit]) -> Netlist:
+    def _submit(self, edits: Sequence[Edit], target: UpsertTarget | None = None) -> Netlist:
         return self.apply(EditPlan(edits))
 
 
@@ -482,15 +499,18 @@ class Batch(_Operations[None]):
     """Operations collected into one plan (decision 0007 item 1).
 
     Each operation is computed against the netlist the batch was opened on and adds its edits;
-    two edits of the same span are an ``EditError`` when the plan is applied.
+    two edits of the same span are an ``EditError`` when the plan is applied. A second upsert
+    of one target is an ``EditError`` when it is submitted, whether or not the target exists
+    yet (decision 0010 item 5).
     """
 
-    __slots__ = ("_closed", "_edits", "_netlist", "_result")
+    __slots__ = ("_closed", "_edits", "_netlist", "_result", "_targets")
 
     def __init__(self, netlist: Netlist) -> None:
         """Open a batch on ``netlist``; prefer :meth:`Netlist.batch`."""
         self._netlist = netlist
         self._edits: list[Edit] = []
+        self._targets: set[UpsertTarget] = set()
         self._result: Netlist | None = None
         self._closed = False
 
@@ -534,7 +554,15 @@ class Batch(_Operations[None]):
     def _target(self) -> Netlist:
         return self._netlist
 
-    def _submit(self, edits: Sequence[Edit]) -> None:
+    def _submit(self, edits: Sequence[Edit], target: UpsertTarget | None = None) -> None:
         if self._closed:
             raise EditError("the batch is closed; open a new one with netlist.batch()")
+        if target is not None:
+            if target in self._targets:
+                raise EditError(
+                    f"{target.label}: this batch already sets this target, and each operation "
+                    "is computed against the netlist the batch was opened on; make one upsert "
+                    "per target"
+                )
+            self._targets.add(target)
         self._edits.extend(edits)

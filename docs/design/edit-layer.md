@@ -24,6 +24,16 @@
 - **Batches.** `with nl.batch() as b: …` collects the edits of several operations, each
   computed against `nl`; on a clean exit they are applied as one plan (`b.result`). A failure
   in an operation or the verification leaves nothing applied. `b.plan` shows the edits so far.
+  Because each operation sees `nl` and not the batch so far, a second upsert of one target is an
+  `EditError` naming the target, raised when it is submitted, whether or not the target exists
+  yet (decision 0010 item 5). Nothing is merged and last-wins does not apply. The key is the
+  operation family, the scope and the folded target: element and parameter name (`set_param`,
+  `set_instance_param`), model and parameter name (`set_model_param`), parameter name
+  (`params.set`), element (`set_dc`, `set_ac`), directive kind or `.step` quantity
+  (`directives.set`), and include path as written (`add_include`). Different new parameters on
+  one line stay valid, and so does one name in two scopes. `set_value`, `set_formula` and
+  `set_model` are not keyed: a repeat fails when the plan is applied, as overlapping edits or a
+  result that does not parse.
 - **Stale handles.** Operations that take a `Line` (or its item) look it up by identity in the
   netlist being edited; one from another netlist is an `EditError`.
 

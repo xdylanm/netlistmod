@@ -185,6 +185,12 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
     },
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
+_INCOMPLETE_LINE = "this line ends too early"
+_AFTER_END = "the netlist ends at `.end`: only blank lines may follow it"
+# May stand after any field, so they do not tell a reader what a line that ended early is missing.
+_FIELD_PUNCTUATION: Final[frozenset[str]] = frozenset(
+    {"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT"}
+)
 
 
 @lru_cache(maxsize=None)
@@ -264,6 +270,41 @@ def _unclosed_parenthesis(error: UnexpectedToken) -> Token | None:
     return None
 
 
+def _missing_after_line_end(
+    error: UnexpectedToken, expected_terminals: Iterable[object]
+) -> frozenset[str] | None:
+    """What a line that ended too early still needs, without punctuation; often nothing, since
+    only the grammar knows the missing field. ``None`` if this error is not such a line."""
+    if error.token.type not in _LINE_ENDS:
+        return None
+    terminals = {str(terminal) for terminal in expected_terminals}
+    if error.token.type == _END_OF_INPUT:
+        # At end of input the parser has not reduced yet, so its list holds lookaheads of other
+        # rules, such as a line end it would refuse. Ask it what it really accepts.
+        if error.interactive_parser is None:
+            return None
+        terminals = set(error.interactive_parser.accepts())  # type: ignore[no-untyped-call]
+    if terminals & _LINE_ENDS or "END_KW" in terminals:
+        return None
+    return frozenset(terminals - _FIELD_PUNCTUATION)
+
+
+def _after_end(error: UnexpectedToken | UnexpectedCharacters, expected: Iterable[object]) -> bool:
+    """Whether the parser has read the top-level ``.end`` line, where only blank lines remain."""
+    if not isinstance(error, UnexpectedToken) or {str(t) for t in expected} != {"LINE_END"}:
+        return False
+    return any(isinstance(v, Token) and v.type == "END_KW" for v in _value_stack(error))
+
+
+def _incomplete_line(
+    source: SourceText, dialect: Dialect, offset: int, missing: Iterable[object]
+) -> ParseError:
+    line, column = source.position(offset)
+    return ParseError(
+        line, column, source.excerpt(offset), _expected_names(missing, dialect), _INCOMPLETE_LINE
+    )
+
+
 def _map_error(
     source: SourceText,
     dialect: Dialect,
@@ -285,6 +326,9 @@ def _map_error(
                 (f"`{closing}`",),
                 f"unterminated `{name}` block: `{closing}` is missing before end of input",
             )
+        missing = _missing_after_line_end(error, expected_terminals)
+        if missing is not None:
+            return _incomplete_line(source, dialect, offset, missing)
         reason = _MISSING_END if "END_KW" in {str(t) for t in expected_terminals} else ""
         line, column = source.position(offset)
         return ParseError(line, column, source.excerpt(offset), expected, reason)
@@ -300,13 +344,19 @@ def _map_error(
                 ("`)`",),
                 "unbalanced `(`: `)` is missing before the end of the line",
             )
+        missing = _missing_after_line_end(error, expected_terminals)
+        if missing is not None:
+            return _incomplete_line(source, dialect, offset, missing)
 
     line, column = source.position(offset)
     line_start = source.line_span(line).start
     letter = source.text[offset : offset + 1].upper()
     if not source.text[line_start:offset].strip(" \t"):
-        # A supported letter fails inside its line, or where no element may stand (after
-        # .end): both are syntax errors. Only a planned letter is an unsupported construct.
+        # No element may stand after .end, whatever its letter, so that comes first. Otherwise a
+        # supported letter fails inside its line, a syntax error; only a planned letter is an
+        # unsupported construct.
+        if _after_end(error, expected_terminals):
+            return ParseError(line, column, source.excerpt(offset), expected, _AFTER_END)
         if device_matrix(dialect).get(letter, {}).get("status") == "planned":
             return UnsupportedConstruct(
                 f"{dialect.display_name} {letter} device", line, column, source.excerpt(offset)

@@ -38,7 +38,8 @@ class Net:
     """A net: its canonical name and the scope it belongs to.
 
     ``name`` is folded (``"0"`` for ground). ``scope`` is ``()`` for a net that is shared by
-    every scope (``global_``: ground or a ``.global`` node), otherwise the definition scope.
+    every scope (``global_``: ground, a ``.global`` node or an LTspice ``$G_*`` node), otherwise
+    the definition scope.
     ``spellings`` lists the names as written, in first-seen order; nets compare by name and
     scope only.
     """

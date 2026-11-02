@@ -1,6 +1,6 @@
 # Phase 1 review package
 
-> **Status:** ACTIVE — written with M9 T9. Its results are interim until T10 repeats them from a fresh clone, after H1–H4 land. Archived with the plan once the gate passes.
+> **Status:** ACTIVE — written with M9 T9. Its results are interim until T10 repeats them from a fresh clone, once H1–H4 are committed. Archived with the plan once the gate passes.
 > **Part of:** [m9-tasks.md](./m9-tasks.md). The gate is [phase-1-plan.md](./phase-1-plan.md) section 6.
 
 ## 1. Where things stand
@@ -9,8 +9,8 @@
 |---|---|
 | Implementation (M0–M8) | Complete |
 | Review findings | [m9-tasks.md](./m9-tasks.md) section 7 |
-| Required code changes (H1–H4) | [m9-code-changes.md](./m9-code-changes.md): **not yet made** |
-| Final evidence (T10) | **Not yet run:** waits for H1–H4 |
+| Required code changes (H1–H4) | [m9-code-changes.md](./m9-code-changes.md): made and reviewed, with the review's fixes (section 5 there); not yet committed |
+| Final evidence (T10) | **Not yet run:** waits for H1–H4 to be committed |
 | The maintainer's own use | Not yet done: section 7 below is a suggested script |
 
 ## 2. Results so far
@@ -182,7 +182,8 @@ From [m9-tasks.md](./m9-tasks.md) section 5. M9 records these and resolves none 
 6. **A `.lib name` … `.endl` block is not recognised:** its body is read as top-level lines, so its elements count as topology.
 7. **Python 3.13 is untested.**
 8. **No stress or performance testing, and no CI,** by decision 0010.
-9. **Whether phase 2's order should change,** based on your hands-on use.
+9. **`directives.add` is not an upsert.** `directives.add(".tran …")` over an existing `.tran`, or followed by `directives.set` in a batch, writes two `.tran` lines. ngspice runs both analyses and LTspice stops.
+10. **Whether phase 2's order should change,** based on your hands-on use.
 
 ## 7. Suggested hands-on script
 
@@ -191,6 +192,7 @@ About half an hour. Use a copy of each netlist, under version control or beside 
 1. **Load your own netlist,** with the dialect explicit. A failure here is the most useful finding: note whether the message told you what to do.
    ```python
    from netlistmod import Dialect, Netlist
+
    netlist = Netlist.load("my_circuit.net", dialect=Dialect.LTSPICE)
    print(len(netlist.lines), [d.code.value for d in netlist.diagnostics])
    ```

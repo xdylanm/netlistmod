@@ -9,7 +9,8 @@ text for syntax (P13). :mod:`netlistmod.edit.api` exposes these as methods.
 from __future__ import annotations
 
 from collections.abc import Callable, Iterator, Sequence
-from dataclasses import fields, is_dataclass
+from dataclasses import dataclass, fields, is_dataclass
+from dataclasses import field as dataclass_field
 
 from netlistmod.dialects import Dialect
 from netlistmod.document import Line, Netlist, Scope, ScopePath
@@ -167,6 +168,42 @@ def resolve_line(netlist: Netlist, target: Line | object) -> Line:
         "the line or node does not belong to this netlist (each edit returns a new netlist; "
         "look the line up again in the netlist being edited)"
     )
+
+
+# Upsert targets (decision 0010 item 5).
+
+
+@dataclass(frozen=True, slots=True)
+class UpsertTarget:
+    """What an upsert writes to, by operation family, scope and folded names; a batch takes
+    one upsert of each. ``label`` names the target as the caller wrote it, for the message."""
+
+    key: tuple[object, ...]
+    label: str = dataclass_field(compare=False)
+
+
+def upsert_target(netlist: Netlist, family: str, scope: ScopePath, *names: str) -> UpsertTarget:
+    """The target of an operation that has already resolved ``scope``."""
+    found = netlist.scope(scope)
+    key = (family, found.path, *(found.fold(name) for name in names))
+    return UpsertTarget(key, f"{family} {' '.join(names)} in {found.describe()}")
+
+
+def include_target(path: str) -> UpsertTarget:
+    """The target of ``add_include``; a path is compared as written, like the statement text
+    the operation already compares."""
+    return UpsertTarget(("add_include", path), f"add_include `{path}`")
+
+
+def directive_target(netlist: Netlist, text: DirectiveText) -> UpsertTarget:
+    """The target of a ``directives.set`` that was accepted: its kind, or a ``.step``'s
+    quantity."""
+    item = classify_text(netlist, _physical_lines(text, "directives.set"), "directives.set")
+    if isinstance(item, StepDirective):
+        label = f"directives.set `.step` of `{item.name}`"
+        return UpsertTarget(("directives.set", *_step_quantity(netlist, item)), label)
+    kind = type(item).__name__
+    return UpsertTarget(("directives.set", kind), f"directives.set {kind}")
 
 
 # Element operations.
@@ -558,9 +595,17 @@ def _addable(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelIte
     if not isinstance(item, _DIRECTIVE_LINES):
         raise EditError(
             f"{what}: {_show(lines)} is a {_describe_item(item)}, not a directive"
-            + ("; use params.set or set_model_param" if _is_property(item) else "")
+            + _property_hint(item)
         )
     return item
+
+
+def _property_hint(item: TopLevelItem) -> str:
+    if isinstance(item, ParamStatement):
+        return "; use params.set"
+    if isinstance(item, ModelStatement):
+        return "; a `.model` line cannot be added, and set_model_param edits an existing one"
+    return ""
 
 
 def _is_property(item: TopLevelItem) -> bool:
@@ -629,16 +674,11 @@ def set_directive(netlist: Netlist, text: DirectiveText) -> list[Edit]:
 def _set_step(netlist: Netlist, step: StepDirective, lines: tuple[str, ...]) -> list[Edit]:
     """Upsert a ``.step``: replace the line that sweeps the same quantity, or add one (decision
     0009). Nested ``.step`` lines sweep different quantities, so they are not a repeated kind."""
-    fold = netlist.scope().fold
-
-    def quantity(item: StepDirective) -> tuple[str, str, str]:
-        model_type = item.model_type.name if item.model_type is not None else ""
-        return (item.kind, fold(model_type), fold(item.name))
-
     same = [
         line
         for line in netlist.lines.find_all(StepDirective)
-        if isinstance(line.item, StepDirective) and quantity(line.item) == quantity(step)
+        if isinstance(line.item, StepDirective)
+        and _step_quantity(netlist, line.item) == _step_quantity(netlist, step)
     ]
     if len(same) > 1:
         raise EditError(
@@ -648,6 +688,12 @@ def _set_step(netlist: Netlist, step: StepDirective, lines: tuple[str, ...]) -> 
     if same:
         return replace_directive(netlist, same[0], lines)
     return [_line_insertion(netlist, lines, StepDirective, Placement.BEFORE_END, "directives.set")]
+
+
+def _step_quantity(netlist: Netlist, step: StepDirective) -> tuple[str, str, str]:
+    fold = netlist.scope().fold
+    model_type = step.model_type.name if step.model_type is not None else ""
+    return (step.kind, fold(model_type), fold(step.name))
 
 
 def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:

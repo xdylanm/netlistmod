@@ -25,7 +25,9 @@
      - `netlist.batch()` collects several operations and applies them as **one** plan with one
        re-parse and verification; it is all or nothing.
      - Two edits to the same span in one plan are an `EditError` (never last-wins, §7.5); two
-       insertions at the same point keep their submission order.
+       insertions at the same point keep their submission order. Amended by
+       [decision 0010](0010-phase-1-close-out.md) item 5: a second upsert of one target in a
+       batch is an `EditError` too, including a target that does not exist yet.
      - Every derived netlist carries the topology signature of the **original** load, and
        verification always compares against it (§7.6).
   2. **Edits inside a subcircuit definition** (§7.4, P11). An edit is addressed by designator
