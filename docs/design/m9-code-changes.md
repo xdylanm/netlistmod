@@ -1,6 +1,6 @@
 # M9 code changes — handoff to a developer
 
-> **Status:** READY — from the M9 review (2026-11-02, `2127bb3`). The maintainer triaged it on 2026-11-02: H1–H4 must land before M9 is accepted; H5–H8 are phase 2. H1–H4 are implemented and reviewed, and the fixes in [section 5](#5-review-of-h1h4-fixes-to-make) are made; none of it is committed yet.
+> **Status:** READY — from the M9 review (2026-11-02, `2127bb3`). The maintainer triaged it on 2026-11-02: H1–H4 must land before M9 is accepted; H5–H8 are phase 2. H1–H4 and the fixes in [section 5](#5-review-of-h1h4-fixes-to-make) are made, reviewed and committed (`88a8754`). H5–H8 stay open for phase 2.
 > **Part of:** [m9-tasks.md](./m9-tasks.md) (R7). Governed by [architecture.md](../architecture.md). The M9 review itself changes nothing under `src/`.
 
 ## 1. Summary

@@ -1,6 +1,6 @@
 # Phase 1 review package
 
-> **Status:** ACTIVE — written with M9 T9. Its results are interim until T10 repeats them from a fresh clone, once H1–H4 are committed. Archived with the plan once the gate passes.
+> **Status:** READY FOR REVIEW — T10 ran on 2026-11-02 from a clean clone of `88a8754`. Archived with the plan once the gate passes.
 > **Part of:** [m9-tasks.md](./m9-tasks.md). The gate is [phase-1-plan.md](./phase-1-plan.md) section 6.
 
 ## 1. Where things stand
@@ -9,22 +9,23 @@
 |---|---|
 | Implementation (M0–M8) | Complete |
 | Review findings | [m9-tasks.md](./m9-tasks.md) section 7 |
-| Required code changes (H1–H4) | [m9-code-changes.md](./m9-code-changes.md): made and reviewed, with the review's fixes (section 5 there); not yet committed |
-| Final evidence (T10) | **Not yet run:** waits for H1–H4 to be committed |
+| Required code changes (H1–H4) | [m9-code-changes.md](./m9-code-changes.md): made, reviewed and committed (`88a8754`) |
+| Final evidence (T10) | Done: section 2 |
 | The maintainer's own use | Not yet done: section 7 below is a suggested script |
 
-## 2. Results so far
+## 2. Results
 
-Run on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1, on the working tree over `2127bb3`, before H1–H4. Both solvers were required (`--require-solver ngspice --require-solver ltspice`).
+T10, 2026-11-02: a clean clone of `88a8754` with a new environment, on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1. Both solvers were required (`--require-solver ngspice --require-solver ltspice`). The run left the clone's working tree clean. Only these records changed after it, and `tests/test_docs.py` and `tests/architecture` were re-run on them.
 
 | Check | Result |
 |---|---|
-| `pytest` | 4405 passed, 2 skipped (POSIX only), 445 deselected (the other dialect's run of a one-dialect test) |
-| Coverage | 98.84% (24 lines and 17 branches uncovered); the gate is 90% |
+| `pytest` | 4507 passed, 2 skipped (POSIX only), 446 deselected (the other dialect's run of a one-dialect test) |
+| Coverage | 98.92% (23 lines and 16 branches uncovered); the gate is 90% |
 | `ruff check`, `ruff format --check` | Clean |
 | `mypy` (configured `src/` scope) | Clean |
 | `mypy --strict` on test support, the solver tests and the new doc tests | Clean |
 | `lint-imports` | Contract kept |
+| `pre-commit run --all-files` | Passed |
 | Python 3.13 | **Untested** (maintainer, 2026-11-02) |
 
 ## 3. Coverage
@@ -35,26 +36,26 @@ Per module, from that run. Modules not listed are at 100%.
 |---|---|---|
 | `document/models.py` | 90% | 25 |
 | `edit/api.py` | 99% | 46, 49 |
-| `edit/operations.py` | 99% | 574, 576 |
+| `edit/operations.py` | 99% | 619, 621 |
 | `edit/verify.py` | 99% | branch 163→165 |
 | `grammar/formula.py` | 95% | 65, 82 |
-| `grammar/loader.py` | 94% | 197–198, 222–223, 238, branch 291→304, 328 |
-| `model/transform.py` | 99% | 286, 295, 364, 377, 1123, 1327 |
+| `grammar/loader.py` | 94% | 203–204, 228–229, 244, 285, branch 335→351, 378 |
+| `model/transform.py` | 99% | 286, 295, 364, 1327 |
 | `source.py` | 96% | 191, 211–212, 216, 228 |
 
 Each uncovered line:
 
 | Lines | What it is | Disposition |
 |---|---|---|
-| `models.py:25`, `formula.py:65`, `loader.py:328` | A packaged JSON data file has the wrong shape | Accepted: a packaging fault, and the tests that read the real files would fail first |
+| `models.py:25`, `formula.py:65`, `loader.py:378` | A packaged JSON data file has the wrong shape | Accepted: a packaging fault, and the tests that read the real files would fail first |
 | `api.py:46, 49` | Abstract methods of the shared editing base | Accepted |
-| `operations.py:574, 576` | Describing an opaque item in a message; `_directive_line` accepts those items, so they do not reach it | Accepted: dead for now, harmless |
+| `operations.py:619, 621` | Describing an opaque item in a message; `_directive_line` accepts those items, so they do not reach it | Accepted: dead for now, harmless |
 | `verify.py` 163→165 | A dataclass in the walk with no `span` | Accepted: a defensive branch |
 | `formula.py:82` | A formula whose tree is a single token | Accepted; reachability not established |
-| `loader.py:197–198` | A dialect with no grammar | Accepted: every `Dialect` has one, and a test pins that |
-| `loader.py:222–223, 238`, 291→304 | Lark's other error paths. A probe with a bad character did not reach 223 or 238 | Accepted; reachability not established |
+| `loader.py:203–204` | A dialect with no grammar | Accepted: every `Dialect` has one, and a test pins that |
+| `loader.py:228–229, 244`, 335→351 | Lark's other error paths. A probe with a bad character did not reach 229 or 244 | Accepted; reachability not established |
+| `loader.py:285` | Lark gave no interactive parser at end of input (H2) | Accepted: a defensive branch, which falls back to the earlier message |
 | `transform.py:286, 295, 364, 1327` | Lark gave no positions, an unhandled rule, or a foreign exception | Accepted: internal faults that fail loudly |
-| `transform.py:377, 1123` | Whitespace after `.end` with no newline; a comment before a `.step` item | **Now tested** (`tests/grammar/test_broad_oracle.py`): a probe showed both are reachable |
 | `source.py:191` | Saving through a symlink | Covered by a test that runs only on POSIX |
 | `source.py:211–212, 216, 228` | A temporary-file name collision, and cleanup after one | Accepted: hard to force, and the write stays atomic |
 
@@ -64,10 +65,10 @@ Plan section 6. Only the maintainer can tick these.
 
 | Gate item | Evidence | State |
 |---|---|---|
-| All phase 1 constructs have spec entries and tests; spec-coverage and strict-grammar checks pass | Section 5; `tests/architecture/test_spec_coverage.py`, `test_contracts.py` | Ready, pending T10 |
-| Round-trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `test_edit_golden.py`, `test_ltspice_edits.py`, `tests/grammar/test_broad_oracle.py` | Ready, pending T10 |
-| The topology guarantee is demonstrated by negative and property tests | `test_edit_negative.py`, `test_edit_properties.py`, the broad oracle's edits | Ready, pending T10 |
-| ngspice and LTspice solver-backed tests pass on your machine | Section 2; T10 repeats it from a fresh clone | Ready, pending T10 |
+| All phase 1 constructs have spec entries and tests; spec-coverage and strict-grammar checks pass | Section 5; `tests/architecture/test_spec_coverage.py`, `test_contracts.py` | Ready |
+| Round-trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `test_edit_golden.py`, `test_ltspice_edits.py`, `tests/grammar/test_broad_oracle.py` | Ready |
+| The topology guarantee is demonstrated by negative and property tests | `test_edit_negative.py`, `test_edit_properties.py`, the broad oracle's edits | Ready |
+| ngspice and LTspice solver-backed tests pass on your machine | Section 2, from a clean clone | Ready |
 | You have used the library on at least one of your own netlists | Section 7 | **Maintainer** |
 | The §21 questions resolved in M6 are recorded as decision records, and new findings are logged | Decisions 0007–0010; [m9-tasks.md](./m9-tasks.md) section 7 | Ready; decision 0010 awaits acceptance |
 | The phase 1 limitations are acceptable, or the phase 2 plan is adjusted | Section 6 | **Maintainer** |

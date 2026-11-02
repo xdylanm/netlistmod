@@ -1,6 +1,6 @@
 # Phase 1 development plan
 
-> **Status:** ACTIVE — M0–M8 complete; M9 next
+> **Status:** ACTIVE — M0–M8 complete; M9 ready for review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 
 ## 1. Objective
@@ -104,7 +104,7 @@ The phase plan itself is archived at the end of the phase, after the review gate
 - Fixtures: LTspice exports of circuits authored in this repository (manifest per §10.5). Local LTspice-backed T8 tests.
 - **Exit:** the M3–M6 test suites run for LTspice where applicable; LTspice-only constructs have spec entries and tests.
 
-### M9 — Phase 1 review package
+### M9 — Phase 1 review package (ready for review; [task list](./m9-tasks.md), [review package](./phase-1-review.md), [decision 0010](../decisions/0010-phase-1-close-out.md))
 - README quick start, executed usage examples, a short demo script covering load → edit → save → run solver, error reference, `CHANGELOG.md`.
 - Coverage report (target 90%) and spec-coverage report.
 - Broader testing carried from M2: extend the independent Hypothesis oracle (CRLF/mixed endings, `+` and `\\` continuations, trailing comments, indentation, whitespace-only lines, block variants).
@@ -143,6 +143,6 @@ You confirm phase 2 can start when:
 
 ## 8. Open points for this plan
 
-1. **CI.** The plan assumes solver-free checks run locally in phase 1. Should a GitHub Actions workflow (lint, types, solver-free tests) be set up in M0, or deferred?
-2. **LTspice timing.** LTspice (M8) is placed after ngspice is complete, so the shared design is proven on one dialect first. Say if you want it earlier.
-3. **Optional checkpoint after M5** (read-only use) is proposed but not mandatory.
+1. **CI.** Decided: deferred to phase 2 (decision 0010, proposed until T11). Phase 1 checks run locally.
+2. **LTspice timing.** Settled: LTspice came in M8, after ngspice was complete, as planned.
+3. **Optional checkpoint after M5** (read-only use). Settled: M5 T11 prepared the demo.
