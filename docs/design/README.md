@@ -20,6 +20,7 @@ Active plans and design notes live in this folder. Completed work records move t
 
 | Document | Status |
 |---|---|
+| [phase-2-plan.md](./phase-2-plan.md) | READY |
 | [phase-2-code-changes.md](./phase-2-code-changes.md) | READY (H5–H8, phase 2) |
 | [elements.md](./elements.md) | ACTIVE (living reference) |
 | [statements.md](./statements.md) | ACTIVE (living reference) |
