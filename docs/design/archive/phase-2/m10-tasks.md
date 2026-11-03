@@ -1,7 +1,7 @@
 # M10 task list — CI and project infrastructure
 
-> **Status:** READY FOR REVIEW — T1–T10 are done, with the results in section 5; T11 follows the maintainer's approval
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M10). Governed by [architecture.md](../architecture.md) (§10, §13, §14, §19).
+> **Status:** COMPLETE (2026-11-03) — approved by the maintainer; the results are in section 5
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M10). Governed by [architecture.md](../../../architecture.md) (§10, §13, §14, §19).
 
 ## 1. Scope
 
@@ -18,7 +18,7 @@ The maintainer accepted each recommendation. "Alternative" marks an option consi
 
 1. **How CI treats solver tests.** Run the whole suite with no `-m` filter and no `--require-solver`, so solver tests skip through the fixture. This also proves that they skip cleanly, and any unmarked test that needs a solver fails instead of staying hidden. *Alternative:* `-m "not solver"`, which is simpler but proves neither.
 2. **Merge method for milestone pull requests.** "Rebase and merge", which keeps `main` linear and keeps each commit's message, as in phase 1. *Alternatives:* squash, which loses the milestones' separate commits; a merge commit, which ends the linear history.
-3. **Repository visibility and branch protection.** Stay private for M10, and merge only on green by convention, since the free plan does not enforce branch protection on a private repository. Going public is decided at the 0.9 tag, after weighing the LTspice licence point in [provenance.md](../provenance.md). The maintainer changes visibility; no task here does. If the repository goes public sooner, T9 turns on protection.
+3. **Repository visibility and branch protection.** Stay private for M10, and merge only on green by convention, since the free plan does not enforce branch protection on a private repository. Going public is decided at the 0.9 tag, after weighing the LTspice licence point in [provenance.md](../../../provenance.md). The maintainer changes visibility; no task here does. If the repository goes public sooner, T9 turns on protection.
 4. **Coverage gate in CI.** Keep the 90% gate on every test job. The solver-free run on Windows gives 98.92% with no solver tests, the same as the full run, so nothing depends on a solver to reach it.
 5. **Hypothesis in CI.** A CI profile with `derandomize=True` for the required jobs, so a pull request cannot fail on an example unrelated to its change. Local runs stay random and keep finding new examples. The tests already set `deadline=None`.
 
@@ -79,9 +79,11 @@ Optionally, the maintainer can run the suite earlier on their Linux machine or i
 
 ### After the maintainer's approval
 
-[ ] **T11 — Close M10.** Merge the pull request by the chosen method. Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0011. Then confirm that Dependabot reads its configuration, which it only does from the default branch (T5); if it rejects the `uv` ecosystem, leave dependencies out and record that.
+[x] **T11 — Close M10.** Merge the pull request by the chosen method. Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0011. Dependabot only reads its configuration from the default branch (T5), so that check follows the merge and its result is not in this record; if it rejects the `uv` ecosystem, leave dependencies out and record that.
 
 ## 5. Results
+
+The commit hashes below are those of the pull request's branch; "Rebase and merge" gives the commits new hashes on `main`.
 
 **CI on `861dbbc` (T4, [PR 1](https://github.com/xdylanm/netlistmod/pull/1), run 41582121058): all five jobs green.** This was the first run on Linux and on Python 3.13, and it needed no fixes, so `src/` has no platform change and `requires-python` stays `>=3.13`. There is no Linux finding to record in `docs/testing.md`.
 
@@ -109,5 +111,5 @@ Optionally, the maintainer can run the suite earlier on their Linux machine or i
 **Full local run on `861dbbc` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4532 passed, 2 skipped, 446 deselected, 11 minutes 14 seconds, coverage 98.92%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (29 files), the import contract and `pre-commit run --all-files` are all clean.
 
 **Not confirmed:**
-- **Dependabot (T5).** It only reads `.github/dependabot.yml` from the default branch, so the `uv` ecosystem cannot be confirmed until this pull request merges. T11 checks it.
+- **Dependabot (T5).** It only reads `.github/dependabot.yml` from the default branch, so the `uv` ecosystem cannot be confirmed until this pull request merges.
 - **A Linux desktop or WSL run.** It was optional and has not been done. CI's Ubuntu 24.04 jobs are the only Linux evidence, and they run no solver, so no solver has been run on Linux.
