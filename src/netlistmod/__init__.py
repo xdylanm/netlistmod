@@ -177,3 +177,5 @@ __all__ = [
     "apply_edits",
     "parse",
 ]
+
+_M10_T6: int = "not an int"
