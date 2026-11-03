@@ -17,7 +17,7 @@ needed when a solver is available on `PATH` or in a standard install location.
 Never put credentials in this file.
 
 The project's `uv` and dev tools are in `.venv` and may not be on `PATH`. In that case start from
-the venv's interpreter (`.venv/bin/python` on Linux and macOS), and read each `uv run` below this way:
+the venv's interpreter (`.venv/bin/python` on Linux), and read each `uv run` below this way:
 
 ```powershell
 .venv\Scripts\python.exe -m uv run --env-file .env python -m pytest
@@ -38,6 +38,31 @@ executables; on Windows with Smart App Control the unsigned shims can be blocked
 (see the note at the end of this document).
 
 `pytest` enforces the project's 90% line-coverage target.
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs on every pull request and on pushes to `main`
+([decision 0011](decisions/0011-ci-and-release-scope.md)):
+
+| Job | Runs on | What it does |
+|---|---|---|
+| Lint and types | Ubuntu, Python 3.13 | `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests below, `lint-imports`, `pre-commit run --all-files` |
+| Test | Ubuntu and Windows, Python 3.13 and 3.14 | The whole suite with the 90% coverage gate, including strict grammar builds, spec coverage and link checks |
+
+The named test command, which runs locally too:
+
+```powershell
+uv run --env-file .env python -m mypy --strict tests/support tests/solver tests/conftest.py tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
+```
+
+**CI does not replace the local run.** It installs no solver, so the solver tests skip and no
+solver behaviour is checked. Each milestone also runs the full suite locally with
+`--require-solver ngspice --require-solver ltspice`. macOS is not tested.
+
+CI runs Hypothesis with `--hypothesis-profile=ci`, which is derandomized, so a pull request fails
+only on examples that its change affects. Local runs stay random. If CI fails where a local run
+passes, look first at the platform and Python version in the job's name; the session header shows
+which solvers were found, and in CI both should say `not found`.
 
 ## Test tiers
 

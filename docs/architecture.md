@@ -164,6 +164,7 @@ repo/
   LICENSE                    # MIT
   .gitattributes             # tests/corpus/** -text  (see Section 13)
   .pre-commit-config.yaml
+  .github/                   # CI workflow and Dependabot
   src/netlistmod/
     __init__.py              # public API re-exports only
     py.typed
@@ -463,7 +464,7 @@ LTspice generates a netlist from the command line with `-netlist`, verified on W
 - **Harness** (decision 0008): ngspice tests run through `tests/support/ngspice.py`, which always writes a raw file (`-r`) and reads results from it; a file without an analysis line gets an `.op` line, added with the edit API.
 - **LTspice harness** ([decision 0009](decisions/0009-ltspice-dialect.md)): tests run through `tests/support/ltspice.py`, which uses `-b -ascii`; the raw reader is shared (`tests/support/raw.py`). LTspice raw files, logs and timings are never committed. For (c), raw files are compared without `Title:` (the absolute path) and `Date:`. A manifest's `solver` field may also be `{"warning": "<text>"}`, the one message a run may write as a `file(line):` line.
 - **Fixtures** (decision 0008): (a) and (c) run every accept fixture of the corpus. A fixture's manifest entry may carry a `solver` field: `{"skip": "<reason>"}`, or `{"stubs": {"<include path>": "<stub>"}}` and/or `{"harness": "<stub>"}`; stub files stand in for includes kept outside the repository and are wired in with the edit API. For (c), a fixture and its unedited `load(...).save(...)` copy must give identical raw files except the `Date:` line.
-- **Environment:** LTspice-backed tests run locally on a Windows machine with LTspice installed. **No solver is required in CI for v1.** An ngspice job on a Linux runner is encouraged but not a required check. LTspice-generated netlist fixtures are committed so the LTspice grammar is fully testable offline.
+- **Environment:** LTspice-backed tests run locally on a Windows machine with LTspice installed. **CI installs no solver in v1,** so the solver tests skip there, and the local run with both solvers stays required ([decision 0011](decisions/0011-ci-and-release-scope.md)). LTspice-generated netlist fixtures are committed so the LTspice grammar is fully testable offline.
 - **Optional:** version-stamped observation files committed from solver runs, so offline CI can compare against recordings, refreshed by a scheduled job.
 
 ### 10.4 Coverage requirements
@@ -544,18 +545,13 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
 - **Lint/format:** `ruff`. **Types:** `mypy --strict` (or pyright). **Tests:** `pytest`, `pytest-cov`, `hypothesis`.
 - **Pre-commit hooks:** ruff, ruff-format, mypy, YAML/TOML checks, merge-conflict check. Hooks that rewrite whitespace or line endings (`trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending`) MUST exclude `tests/corpus/` and golden files, because those files intentionally contain trailing whitespace, CRLF, and missing final newlines.
 - **`.gitattributes`:** `tests/corpus/** -text` (and golden outputs) so Git never converts line endings in fixtures.
-- **GitHub Actions:**
+- **GitHub Actions** ([decision 0011](decisions/0011-ci-and-release-scope.md)):
   - lint + type check;
-  - test matrix across OS (Linux, Windows, macOS) and supported Python versions;
-  - strict grammar build check and spec-coverage check;
-  - docs link check;
-  - coverage reporting;
-  - optional ngspice job (non-required);
-  - release on tag with PyPI trusted publishing;
+  - test matrix across Linux and Windows and supported Python versions, which includes the strict grammar build, spec-coverage, docs link and coverage checks;
   - Dependabot for actions and dependencies.
-- **Branch protection:** required checks are lint, types, tests, grammar build, spec coverage.
+- **Merging:** one pull request per milestone, merged after review and only when CI is green. Branch protection enforces this where the repository's plan allows.
+- **Not in v1:** macOS, a solver in CI, and a release workflow. v1 is a beta tagged `0.9.0`, not published to PyPI.
 - **LTspice:** no CI job in v1; local procedure documented in `docs/testing.md`.
-- **Phase 1:** none of the above exists yet. CI is deferred to the start of phase 2, and the checks run locally ([decision 0010](decisions/0010-phase-1-close-out.md)).
 
 ---
 
@@ -659,7 +655,7 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 | 11 | Line-coverage target | 90% |
 | 12 | Scoping model for `.param` in subcircuits | Document a simple model; validate per dialect against the solver |
 | 13 | Handling of `.include`/`.lib` | Opaque statements in v1: not resolved, read or indexed. Conditional blocks are also opaque; topology-changing conditionals are out of scope |
-| 14 | ngspice job in CI | Optional, non-required |
+| 14 | ngspice job in CI | None; CI installs no solver ([decision 0011](decisions/0011-ci-and-release-scope.md)) |
 | 15 | Docs site generator | Plain Markdown in `docs/` |
 | 16 | Name case sensitivity and net identity | Defined per dialect in `docs/grammars/<dialect>/names.md` |
 | 17 | Dialect selection | Always explicit from the caller; no default, no auto-detection |

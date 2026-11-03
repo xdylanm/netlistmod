@@ -8,33 +8,34 @@ until its scheduled grammar milestone. The table is checked against
 
 | Letter | Status | Phase | Milestone |
 |---|---|---:|---|
-| A | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| B | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| A | planned | 2 | M17 |
+| B | planned | 2 | M15 |
 | C | supported | 1 | M3 |
 | D | supported | 1 | M3 |
-| E | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| F | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| G | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| H | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| E | planned | 2 | M14, M15 |
+| F | planned | 2 | M14, M15 |
+| G | planned | 2 | M14, M15 |
+| H | planned | 2 | M14, M15 |
 | I | supported | 1 | M3 |
-| J | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| J | planned | 2 | M13 |
 | K | supported | 1 | M3 |
 | L | supported | 1 | M3 |
-| M | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| N | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| O | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| P | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| Q | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| M | planned | 2 | M13 |
+| N | planned | 2 | M17 |
+| O | planned | 2 | M16 |
+| P | planned | 2 | M16 |
+| Q | planned | 2 | M13 |
 | R | supported | 1 | M3 |
-| S | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| T | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| U | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| S | planned | 2 | M14 |
+| T | planned | 2 | M16 |
+| U | planned | 2 | M16, M17 |
 | V | supported | 1 | M3 |
-| W | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| W | planned | 2 | M14 |
 | X | supported | 1 | M3 |
-| Y | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| Z | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| Y | planned | 2 | M16 |
+| Z | planned | 2 | M13 |
 
-The post-review phase 2 work is required by architecture decision 6, but the
-phase-2 milestone sequence has not yet been added to the phase plan. No device
-letter is unassigned.
+The milestones are those of the [phase 2 plan](../../design/phase-2-plan.md). E, F, G and H have
+linear forms in M14 and nonlinear forms in M15. U is a URC line in M16 and a digital primitive in
+M17 (`[ngspice-manual] §10.1.3 "URC transmission line versus U devices"`). No device letter is
+unassigned.

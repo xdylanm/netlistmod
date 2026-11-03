@@ -11,6 +11,7 @@
 
 Changes:
 
+- Add CI on Linux and Windows with Python 3.13 and 3.14, with no solver, plus Dependabot (M10, decision 0011). macOS is not tested or claimed.
 - A second upsert of one target in a batch is now an `EditError` naming the target, raised when it is submitted, whether or not the target exists yet (M9 H1, decision 0010 item 5). This covers `set_param`, `set_instance_param`, `set_model_param`, `params.set`, `directives.set` (by kind, or by `.step` quantity), `add_include`, `set_ac` and `set_dc`. Before, a repeated new target could write `m=1 m=2`, or two `.param` or `.tran` lines, one of which stops LTspice. Golden diffs do not change.
 - A line that ends before its fields do now has the parse-error reason "this line ends too early", and `expected` leaves out separators, continuations and comments. Text after `.end` has a reason saying the netlist ends there, and is a `ParseError` even when its first letter is a planned device, which was an `UnsupportedConstruct` before. Line and column do not change (M9 H2). `tests/grammar/ngspice/tree_snapshot.json` is regenerated for this: 15 rejected files changed. 14 lost those names from `expected`, `structure_rejects/text_after_end.cir` went from `UnsupportedConstruct` to `ParseError`, and no node or position changed.
 - Two edit messages are corrected (M9 H3): `directives.add(".model …")` says a `.model` line cannot be added and that `set_model_param` edits an existing one, and `Placement.after(line)` with a line of a subcircuit body says so, rather than calling the line stale.

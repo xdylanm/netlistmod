@@ -16,3 +16,10 @@ author, date, and notes. Preserve fixture bytes exactly.
 Use Python 3.13 or newer and uv. Copy `.env.example` to `.env`, set local solver
 paths if installed, and run checks as described in [docs/testing.md](docs/testing.md).
 Solver tests must skip cleanly when the corresponding solver is unavailable.
+
+## Pull requests
+
+Each milestone is one pull request. CI runs lint, types and the solver-free tests on Linux and
+Windows. It does not run solvers, so the local run with both solvers is still required. Merge with
+"Rebase and merge" after the maintainer's review, and only when CI is green; on the current
+repository plan this is a convention, not enforced by branch protection.

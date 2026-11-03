@@ -5,9 +5,13 @@ from __future__ import annotations
 from collections.abc import Iterator
 
 import pytest
+from hypothesis import settings
 
 from tests.support.dialects import deselect_other_dialect
 from tests.support.solvers import Solver, SolverName, discover_solver
+
+# CI selects this with --hypothesis-profile=ci; local runs stay random (decision 0011).
+settings.register_profile("ci", derandomize=True)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:

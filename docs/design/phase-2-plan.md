@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** READY — approved by the maintainer on 2026-11-03, with section 8 decided; M10 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 is in progress
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -40,7 +40,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 
 **Closing procedure.** As in phase 1: a task list is written before the milestone starts, implementation ends at `READY FOR REVIEW`, and after the maintainer approves it becomes `COMPLETE (date)` and moves to `archive/phase-2/`. Decisions go in `docs/decisions/`, and any new risks go in the architecture or this plan.
 
-### M10 — CI and project infrastructure
+### M10 — CI and project infrastructure ([task list](./m10-tasks.md))
 
 - GitHub Actions: lint and types; solver-free tests on Linux and Windows with Python 3.13 and 3.14; strict grammar build and spec coverage; docs links; coverage. Add Dependabot.
 - No solver is installed in CI, and there is no ngspice job (section 8, point 5). The solver tests skip, as §10.3 provides.
