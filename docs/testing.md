@@ -375,3 +375,5 @@ event log). Run tools through the signed Python interpreter, e.g.
 through the unsigned console-script shims (`pytest.exe`, `mypy.exe`). With that
 invocation the full suite passes on this host with all plugins enabled; the
 earlier `-p no:hypothesispytest` workaround is no longer needed.
+
+[broken link](no-such-file-m10-t6.md)
