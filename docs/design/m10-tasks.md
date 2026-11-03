@@ -1,6 +1,6 @@
 # M10 task list — CI and project infrastructure
 
-> **Status:** ACTIVE — T1–T3, T5, T7 and T8 are done; T4, T6 and T9–T11 follow the first CI run
+> **Status:** READY FOR REVIEW — T1–T10 are done, with the results in section 5; T11 follows the maintainer's approval
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M10). Governed by [architecture.md](../architecture.md) (§10, §13, §14, §19).
 
 ## 1. Scope
@@ -51,7 +51,7 @@ Set `permissions: contents: read`, and cancel a superseded run on the same branc
 
 [x] **T3 — Test job.** A matrix of `ubuntu-latest` and `windows-latest` with Python 3.13 and 3.14, `fail-fast: false`, per decisions 1, 4 and 5. Use `uv python install` for the interpreter, and `python -m pytest` as elsewhere. The log's session header shows no solver found. Add the Hypothesis profile of decision 5, selected with `--hypothesis-profile=ci`.
 
-[ ] **T4 — First Linux and Python 3.13 run.** Open the pull request and fix what fails:
+[x] **T4 — First Linux and Python 3.13 run.** Open the pull request and fix what fails:
 - Expected kinds of failure: default text encoding, path separators and case, file permissions, line endings, the two POSIX-only tests, and packaging in `test_packaged_grammar.py`.
 - A test that turns out to need a solver gets the marker.
 - A real library defect gets its own test and CHANGELOG line. Never weaken an invariant, and never skip a test to get a pass (§15); a platform skip needs a stated reason that is a real platform difference.
@@ -62,7 +62,7 @@ Optionally, the maintainer can run the suite earlier on their Linux machine or i
 
 [x] **T5 — Dependabot, `.github/dependabot.yml`.** GitHub Actions and the uv lockfile, weekly, with minor and patch updates grouped to limit noise. Confirm that the `uv` ecosystem is supported for `uv.lock` on the first run; if it is not, leave dependencies out and record that. An update goes through the same checks, and a Lark update needs extra care because it can change what parses.
 
-[ ] **T6 — Keep the checks honest.** A deliberately broken commit on a throwaway branch shows each kind of check fails: a lint error, a type error, a failing test, and a broken link. Delete the branch afterwards. Record the result in section 5 of this list.
+[x] **T6 — Keep the checks honest.** A deliberately broken commit on a throwaway branch shows each kind of check fails: a lint error, a type error, a failing test, and a broken link. Delete the branch afterwards. Record the result in section 5 of this list.
 
 [x] **T7 — Device matrices.** Replace the `post-review` milestone and "milestone sequence TBD" in `ngspice-devices.json`, `ltspice-devices.json` and both `devices.md` files with the assignments of plan section 5. U in ngspice is `M16` and `M17`; say so in the note under the table. Change `test_spec_coverage.py` so it compares milestones exactly rather than mapping them. Check that nothing else reads this field; no behaviour changes.
 
@@ -73,14 +73,41 @@ Optionally, the maintainer can run the suite earlier on their Linux machine or i
 - `AGENTS.md` and `docs/testing.md`: the "Linux and macOS" interpreter wording becomes Linux.
 - `CHANGELOG.md`: CI added, macOS not claimed.
 
-[ ] **T9 — Merge rule.** Merge only on green. If the repository is public by then (decision 3), turn on branch protection for `main`, requiring the lint and test checks; that setting is the maintainer's, with instructions here. Otherwise record in `CONTRIBUTING.md` that the rule is by convention.
+[x] **T9 — Merge rule.** Merge only on green. If the repository is public by then (decision 3), turn on branch protection for `main`, requiring the lint and test checks; that setting is the maintainer's, with instructions here. Otherwise record in `CONTRIBUTING.md` that the rule is by convention. The repository is still private, so the convention stands.
 
-[ ] **T10 — Final evidence and handover.** Run the full local check set with `--require-solver ngspice --require-solver ltspice` on Windows, to show that the fixes broke nothing. Record that run and the green CI run with its commit in section 5, set the status to `READY FOR REVIEW`, and update the plan's status and M10 heading and the index.
+[x] **T10 — Final evidence and handover.** Run the full local check set with `--require-solver ngspice --require-solver ltspice` on Windows, to show that the fixes broke nothing. Record that run and the green CI run with its commit in section 5, set the status to `READY FOR REVIEW`, and update the plan's status and M10 heading and the index.
 
 ### After the maintainer's approval
 
-[ ] **T11 — Close M10.** Merge the pull request by the chosen method. Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0011.
+[ ] **T11 — Close M10.** Merge the pull request by the chosen method. Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0011. Then confirm that Dependabot reads its configuration, which it only does from the default branch (T5); if it rejects the `uv` ecosystem, leave dependencies out and record that.
 
 ## 5. Results
 
-To be filled in by T6 and T10.
+**CI on `861dbbc` (T4, [PR 1](https://github.com/xdylanm/netlistmod/pull/1), run 41582121058): all five jobs green.** This was the first run on Linux and on Python 3.13, and it needed no fixes, so `src/` has no platform change and `requires-python` stays `>=3.13`. There is no Linux finding to record in `docs/testing.md`.
+
+| Job | Python | Passed | Skipped | Deselected | Coverage |
+|---|---|---:|---:|---:|---:|
+| Ubuntu | 3.13.18 | 3379 | 1155 | 446 | 98.92% |
+| Ubuntu | 3.14.10 | 3379 | 1155 | 446 | 98.92% |
+| Windows | 3.13.17 | 3378 | 1156 | 446 | 98.92% |
+| Windows | 3.14.10 | 3378 | 1156 | 446 | 98.92% |
+
+- Each session header says both solvers are `not found`, and the solver tests skip through their fixture.
+- The difference of one between platforms is `tests/test_source.py`: Windows skips the two POSIX tests and Linux skips the one Windows read-only test. The POSIX tests ran for the first time here, and passed.
+- The 446 deselected are the dialect pairs of M8 decision 16, the same as locally.
+- The lint and types job passed every step, including the import contract (1 kept, 0 broken).
+
+**The checks fail when they should (T6, `861dbbc` plus one break each).** Each break had its own draft pull request, because the lint job stops at its first failing step. All four were closed and their branches deleted.
+
+| Break | Pull request | Failed | Reported as | Other jobs |
+|---|---|---|---|---|
+| Unused import in `src/` | [2](https://github.com/xdylanm/netlistmod/pull/2) | `ruff check` in lint and types | `F401` | Test jobs green |
+| Wrong type in `src/` | [3](https://github.com/xdylanm/netlistmod/pull/3) | `mypy` in lint and types | `Incompatible types in assignment` | Test jobs green |
+| Failing test | [4](https://github.com/xdylanm/netlistmod/pull/4) | All four test jobs | `tests/test_m10_t6.py::test_m10_t6_fails` | Lint and types green |
+| Broken link in `docs/testing.md` | [5](https://github.com/xdylanm/netlistmod/pull/5) | All four test jobs | `test_relative_links_resolve[docs/testing.md]` | Lint and types green |
+
+**Full local run on `861dbbc` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4532 passed, 2 skipped, 446 deselected, 11 minutes 14 seconds, coverage 98.92%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (29 files), the import contract and `pre-commit run --all-files` are all clean.
+
+**Not confirmed:**
+- **Dependabot (T5).** It only reads `.github/dependabot.yml` from the default branch, so the `uv` ecosystem cannot be confirmed until this pull request merges. T11 checks it.
+- **A Linux desktop or WSL run.** It was optional and has not been done. CI's Ubuntu 24.04 jobs are the only Linux evidence, and they run no solver, so no solver has been run on Linux.
