@@ -1,7 +1,7 @@
 # M2 task list — grammar core (ngspice)
 
 > **Status:** COMPLETE (2026-10-30) — first rework and second-round fixes ([m2-review2-tasks.md](./m2-review2-tasks.md)) approved by the maintainer.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M2). Governed by [architecture.md](../../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([m1-tasks.md](./m1-tasks.md)).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M2). Governed by [architecture.md](../../../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([m1-tasks.md](./m1-tasks.md)).
 
 ## 0. Review outcome and rework (governs wherever it conflicts with sections 1–7)
 
@@ -20,7 +20,7 @@ These supersede decisions 2.1, 3.3 and the continuation handling in S1/decision 
 
 ### 0.2 Validated starting point
 
-[prototype/ngspice_structure.lark](../../../prototype/ngspice_structure.lark) is a strict-LALR grammar for exactly these decisions. It builds under `Lark(parser="lalr", lexer="contextual", strict=True, propagate_positions=True)`; accepts and rejects every case in the table in R2; and parsed 20,000 lines in about 0.55 s (the hand-written version took 18 s). It is exploratory: use it as the basis, not as the final text. Techniques it demonstrates (each commented in the file): the ignored continuation terminal; keywords at the same priority as the generic dot-name terminal; block-scoped dot-name terminals; `\r(?!\r?\n)` free text; and an explicit final-newline alternative because an empty optional newline is a strict-mode conflict. Lark only collision-checks terminals of equal priority, so every priority must be deliberate and commented.
+[prototype/ngspice_structure.lark](../../../../prototype/ngspice_structure.lark) is a strict-LALR grammar for exactly these decisions. It builds under `Lark(parser="lalr", lexer="contextual", strict=True, propagate_positions=True)`; accepts and rejects every case in the table in R2; and parsed 20,000 lines in about 0.55 s (the hand-written version took 18 s). It is exploratory: use it as the basis, not as the final text. Techniques it demonstrates (each commented in the file): the ignored continuation terminal; keywords at the same priority as the generic dot-name terminal; block-scoped dot-name terminals; `\r(?!\r?\n)` free text; and an explicit final-newline alternative because an empty optional newline is a strict-mode conflict. Lark only collision-checks terminals of equal priority, so every priority must be deliberate and commented.
 
 ### 0.3 Keep, change, replace
 

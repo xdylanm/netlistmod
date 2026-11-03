@@ -3,7 +3,7 @@
 - **Status:** accepted (2026-10-30, maintainer, after the M3 review)
 - **Date:** 2026-10-30
 - **Context:** M3 parses the phase 1 element lines (R, C, L, K, V, I, D, X) and their values
-  into typed nodes ([m3-tasks.md](../design/archive/m3-tasks.md), section 2 records the maintainer's
+  into typed nodes ([m3-tasks.md](../design/archive/phase-1/m3-tasks.md), section 2 records the maintainer's
   decisions). Architecture §21 left open how the RKM mode option interacts with the grammar
   and diagnostics. §5.3 described source value slots only as `value`, and §6.4 had an
   incomplete scale-factor set and placed RKM in the grammar without an option. The lexing

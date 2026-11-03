@@ -9,7 +9,7 @@
 |---|---|
 | Implementation (M0–M8) | Complete |
 | Review findings | [m9-tasks.md](./m9-tasks.md) section 7 |
-| Required code changes (H1–H4) | [m9-code-changes.md](../m9-code-changes.md): made, reviewed and committed (`88a8754`) |
+| Required code changes (H1–H4) | [phase-2-code-changes.md](../../phase-2-code-changes.md): made, reviewed and committed (`88a8754`) |
 | Final evidence (T10) | Done: section 2 |
 | The maintainer's own use | Done, 2026-11-03: [m9-tasks.md](./m9-tasks.md) section 7.7 |
 | Limits | Decided, 2026-11-03: section 6 |

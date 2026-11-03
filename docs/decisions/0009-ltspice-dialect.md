@@ -1,6 +1,6 @@
 # 0009 — The LTspice dialect
 
-- **Status:** accepted (2026-11-02, maintainer; the section 2 decisions of [m8-tasks.md](../design/archive/m8-tasks.md) were accepted on 2026-10-31, and this record, with the points settled in T1–T13 and the review rounds, after the checkpoint B review)
+- **Status:** accepted (2026-11-02, maintainer; the section 2 decisions of [m8-tasks.md](../design/archive/phase-1/m8-tasks.md) were accepted on 2026-10-31, and this record, with the points settled in T1–T13 and the review rounds, after the checkpoint B review)
 - **Date:** 2026-11-01
 - **Context:** M8 makes `Dialect.LTSPICE` a working dialect for the phase 1 constructs, with the same guarantees as ngspice. Architecture §6, §8, §9.1, §10.3, §11.1, §12 and §21 were written with one dialect built, and name some things that the LTspice reference and LTspice 26.1.1 do not bear out. Evidence: probes on LTspice 26.1.1 (Windows, 2026-10-31 and 2026-11-01; m8-tasks.md section 7, [discrepancies.md](../grammars/ltspice/discrepancies.md)). Only syntax facts are recorded (item 2).
 - **Decision:**

@@ -1,7 +1,7 @@
 # 0008 — Validation status and solver harnesses
 
 - **Status:** accepted (2026-10-31, maintainer; the section 2 decisions of
-  [m7-tasks.md](../design/archive/m7-tasks.md) were accepted before implementation, and this
+  [m7-tasks.md](../design/archive/phase-1/m7-tasks.md) were accepted before implementation, and this
   record, with the opaque-text rule of review round 1, after review round 2)
 - **Date:** 2026-10-31
 - **Context:** M7 turns the solver checks that M2–M6 added one milestone at a time into a
@@ -9,7 +9,7 @@
   status words of a spec entry but not their meaning; §10.3 asks for solver acceptance, edited
   results, unedited round trips and validated behaviors without saying how fixtures that need
   files kept outside the repository are run, or how a status is tied to evidence. The maintainer
-  accepted the recommendations of [m7-tasks.md](../design/archive/m7-tasks.md) section 2 on 2026-10-31;
+  accepted the recommendations of [m7-tasks.md](../design/archive/phase-1/m7-tasks.md) section 2 on 2026-10-31;
   this record states them and the points settled while implementing (T1–T8). Probe evidence:
   m7-tasks.md section 7 and `tests/solver/`.
 - **Decision:**

@@ -77,4 +77,4 @@
   - The 20,000-line performance bound under *Validation* was withdrawn by [decision 0004](0004-element-and-value-grammar.md), and its test removed. [Decision 0010](0010-phase-1-close-out.md) confirms that phase 1 has no such requirement.
   - Later milestones extended the grammar. `SEP.10` (M3) now ranks above `WS.9` in the priorities listed above. [Decision 0009](0009-ltspice-dialect.md) item 3 moved `BS_CONT`, the `TEXT` that excludes `\\` and the `%extend` of block statements to `ngspice.lark`, and added an LTspice overlay that builds in strict mode too.
   - `.control` is added through `%extend top_statement`, since it is top-level only (M4); `.if` remains in `%extend statement`.
-  - Rewriting the lookaround terminals is still an open design question for the gate ([phase 1 plan](../design/archive/phase-1-plan.md) section 7). Accepting this record does not close it.
+  - Rewriting the lookaround terminals is still an open design question for the gate ([phase 1 plan](../design/archive/phase-1/phase-1-plan.md) section 7). Accepting this record does not close it.

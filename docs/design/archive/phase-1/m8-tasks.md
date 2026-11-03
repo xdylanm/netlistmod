@@ -1,7 +1,7 @@
 # M8 task list — LTspice overlay
 
 > **Status:** COMPLETE (2026-11-02) — checkpoint A approved in section 12, checkpoint B in section 16; section 2 records the decisions, sections 10, 13 and 15 the implementation.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M8). Governed by [architecture.md](../../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([document-layer.md](../document-layer.md)), the edit layer of M6 ([edit-layer.md](../edit-layer.md)), the validation layer of M7 ([decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../../usage/ltspice-export.md)) and [decision 0001](../../decisions/0001-source-text-policy.md) (encoding).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M8). Governed by [architecture.md](../../../architecture.md) (§2 P5, P7, P8, P10, P13; §4; §5.1; §6.1–§6.7; §9; §10; §11 (normative); §12; §21). Builds on the grammar of M2–M4 (`core.lark`, `ngspice.lark`), the document layer of M5 ([document-layer.md](../../document-layer.md)), the edit layer of M6 ([edit-layer.md](../../edit-layer.md)), the validation layer of M7 ([decision 0008](../../../decisions/0008-validation-status-and-solver-harnesses.md)), the LTspice spikes of M0/M1 ([ltspice-export.md](../../../usage/ltspice-export.md)) and [decision 0001](../../../decisions/0001-source-text-policy.md) (encoding).
 
 ## 1. Scope
 
@@ -277,7 +277,7 @@ The M7 rows for R, C, L, V, I, D and K (`set_value`, `set_formula` with `params.
 
 ## 7. Probe facts gathered while planning (LTspice 26.1.1, Windows, 2026-10-31)
 
-The probes made while implementing (T1–T8, R1–R3) are recorded in [discrepancies.md](../../grammars/ltspice/discrepancies.md), `names.md`, `scoping.md` and section 10. Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
+The probes made while implementing (T1–T8, R1–R3) are recorded in [discrepancies.md](../../../grammars/ltspice/discrepancies.md), `names.md`, `scoping.md` and section 10. Runs used `LTspice.exe -b [-ascii] file.net` in a scratch folder. `v(out)` is from the raw file, on a 3 V divider unless noted. Nothing from these runs is committed.
 
 | # | Probe | LTspice |
 |---|---|---|
@@ -391,8 +391,8 @@ All probes ran locally on LTspice 26.1.1 (Windows, 2026-11-01). Only syntax fact
 
 ### 10.1 What changed
 
-- **D1:** [decision 0009](../../decisions/0009-ltspice-dialect.md), status `proposed`; architecture amended.
-- **T1:** `tests/grammar/ngspice/test_tree_snapshot.py` with `tree_snapshot.json`, generated before the split. References entry `[ltspice-ref]`. The construct table is in [the LTspice README](../../grammars/ltspice/README.md), section "Construct survey".
+- **D1:** [decision 0009](../../../decisions/0009-ltspice-dialect.md), status `proposed`; architecture amended.
+- **T1:** `tests/grammar/ngspice/test_tree_snapshot.py` with `tree_snapshot.json`, generated before the split. References entry `[ltspice-ref]`. The construct table is in [the LTspice README](../../../grammars/ltspice/README.md), section "Construct survey".
 - **T2:** `core.lark` holds the shared subset; `ngspice.lark` holds `\\`, commas, RKM, the keyword and model forms of R, C and L, and the forms recognised only to be rejected. The snapshot is unchanged.
 - **T3–T5:** `ltspice.lark`, `ltspice-devices.json`, `StepDirective`, `ValueList`, and new optional node fields; 40 `LT-*` entries, all `documented` until T12.
 - **T6:** dialect-aware names, `$G_*`, per-dialect diagnostics wording and reserved words. `tests/document` runs on both dialects.

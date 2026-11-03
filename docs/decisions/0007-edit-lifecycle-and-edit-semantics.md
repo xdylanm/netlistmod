@@ -1,7 +1,7 @@
 # 0007 — Edit lifecycle and edit semantics
 
 - **Status:** accepted (2026-10-31, maintainer; the section 2 decisions of
-  [m6-tasks.md](../design/archive/m6-tasks.md) were accepted on 2026-10-31, amendment 1 in review
+  [m6-tasks.md](../design/archive/phase-1/m6-tasks.md) were accepted on 2026-10-31, amendment 1 in review
   round 1, and this record after review round 2)
 - **Date:** 2026-10-31
 - **Context:** M6 builds the edit layer (architecture §3 layers [4] and [5], §7). Architecture
@@ -9,9 +9,9 @@
   (models that only an `.include` could define) open for M6, and deferred the text conventions
   of inserted lines, placement semantics, directive and `.param` matching, and the edit argument
   of hierarchical addressing. Decision 0006 deferred `MODEL_TYPE_MISMATCH`. The maintainer
-  accepted the recommendations of [m6-tasks.md](../design/archive/m6-tasks.md) section 2 on 2026-10-31;
+  accepted the recommendations of [m6-tasks.md](../design/archive/phase-1/m6-tasks.md) section 2 on 2026-10-31;
   this record states them and the points settled while implementing (T3–T5). ngspice 47 was
-  probed for the directive rules ([m6-tasks.md](../design/archive/m6-tasks.md) section 7, re-recorded in
+  probed for the directive rules ([m6-tasks.md](../design/archive/phase-1/m6-tasks.md) section 7, re-recorded in
   `tests/solver/test_ngspice_solver_edits.py`). API and slot details:
   [edit-layer.md](../design/edit-layer.md).
 - **Decision:**

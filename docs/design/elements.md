@@ -1,7 +1,7 @@
 # Element nodes, grammar and spans
 
 > **Status:** ACTIVE — living reference, kept current with the code; began as the M3 design note (D2 of
-> [m3-tasks.md](./archive/m3-tasks.md)). [Decision 0004](../decisions/0004-element-and-value-grammar.md)
+> [m3-tasks.md](./archive/phase-1/m3-tasks.md)). [Decision 0004](../decisions/0004-element-and-value-grammar.md)
 > and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. The element operations of
 > [edit-layer.md](./edit-layer.md) edit the sub-spans of section 4, and its §2 adds where new fields go.
 > Sections 2 and 3 describe the ngspice grammar; section 5 gives what LTspice changes.

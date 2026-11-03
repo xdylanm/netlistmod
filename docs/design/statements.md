@@ -1,7 +1,7 @@
 # Statement and directive nodes, grammar and spans
 
 > **Status:** ACTIVE — living reference, kept current with the code; began as the M4 design note (D2 of
-> [m4-tasks.md](./archive/m4-tasks.md)). [Decision 0005](../decisions/0005-statement-and-directive-grammar.md)
+> [m4-tasks.md](./archive/phase-1/m4-tasks.md)). [Decision 0005](../decisions/0005-statement-and-directive-grammar.md)
 > and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. The statement and directive
 > operations are specified in [edit-layer.md](./edit-layer.md). Sections 2 and 3 describe the ngspice
 > grammar; section 5 gives what LTspice changes.

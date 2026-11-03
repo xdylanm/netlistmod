@@ -4,7 +4,7 @@
 - **Date:** 2026-10-30
 - **Context:** M4 types the dot-statements and directives that phase 1 needs: `.param`,
   `.model`, `.subckt` … `.ends`, `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`,
-  `.nodeset`, `.save` and `.meas` ([m4-tasks.md](../design/archive/m4-tasks.md); section 2 records the
+  `.nodeset`, `.save` and `.meas` ([m4-tasks.md](../design/archive/phase-1/m4-tasks.md); section 2 records the
   maintainer's decisions of 2026-10-30). Until M4 each was an `UnknownDirective`. The open
   points were how a subcircuit definition is represented, what may stand in its body, how
   strictly `.param` values are read, how deeply directives are typed, which new tokens

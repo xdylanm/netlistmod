@@ -2,7 +2,7 @@
 
 > **Status:** COMPLETE (2026-10-20)
 > **Progress:** T1–T16 complete.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M0). Governed by [architecture.md](../../architecture.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M0). Governed by [architecture.md](../../../architecture.md).
 
 ## 1. Current state
 
@@ -54,7 +54,7 @@ Hooks: ruff, ruff-format, mypy, YAML/TOML checks, merge-conflict check. Whitespa
 *Done when:* `pre-commit run --all-files` is green and leaves the corpus files byte-identical (verified by `git diff --exit-code`).
 
 - [x] **T6 — `AGENTS.md` (project constitution and patterns).**
-A short file (about one page) at the repository root. It MUST point to [docs/architecture.md](../../architecture.md) as the authority and MUST NOT duplicate it. Content:
+A short file (about one page) at the repository root. It MUST point to [docs/architecture.md](../../../architecture.md) as the authority and MUST NOT duplicate it. Content:
 - *Constitution* (one line each, referencing the architecture sections): source text is the single source of truth (P1); typed view with edits as span replacements (P2); exact round-trip and minimal diff (P3); topology is read-only (P4); strict grammar, fail loudly (P5); grammar constructs have spec entries and tests (P6); dialects are separate grammars over a shared core and the caller selects the dialect (P7); no simulator launching in `src/` (P9); clean-room provenance, no GPL-derived code or tests, including spicelib (P10, §12).
 - *Working rules:* the agent working agreement in architecture §15; do not resolve items in architecture §21 silently; do not weaken an invariant to pass a test; architecture changes go through a decision record in `docs/decisions/`; detailed requirements live in `docs/design/`.
 - *Patterns:* layering (architecture §3) and package layout (§4); tests first for each construct (tiers T1–T9, §10); golden-diff tests for edits; corpus fixtures with manifests and byte-exact preservation (`-text`); prototype code in `prototype/` is exploratory and not to be imported.

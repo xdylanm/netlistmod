@@ -48,6 +48,8 @@ def test_error_reference_has_an_entry(name: str) -> None:
 
 def test_review_package_holds_the_generated_spec_coverage() -> None:
     # An archived record: remove this test when phase 2 adds a spec entry.
-    text = (ROOT / "docs" / "design" / "archive" / "phase-1-review.md").read_text(encoding="utf-8")
+    text = (ROOT / "docs" / "design" / "archive" / "phase-1" / "phase-1-review.md").read_text(
+        encoding="utf-8"
+    )
     between = text.split("<!-- spec-coverage:begin -->\n")[1].split("<!-- spec-coverage:end -->")[0]
     assert between == report()

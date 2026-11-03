@@ -1,7 +1,7 @@
 # The edit layer
 
 > **Status:** ACTIVE — living reference, kept current with the code; began as the M6 design note (D2 of
-> [m6-tasks.md](./archive/m6-tasks.md)). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
+> [m6-tasks.md](./archive/phase-1/m6-tasks.md)). [Decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)
 > and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. Builds on
 > [elements.md](./elements.md) (element sub-spans), [statements.md](./statements.md) (statement
 > sub-spans) and [document-layer.md](./document-layer.md) (`Netlist`, `Lines`, scopes, signature).

@@ -1,7 +1,7 @@
 # M9 task list — Phase 1 review package
 
 > **Status:** COMPLETE (2026-11-03) — approved by the maintainer. T1–T11 are done; H1–H4 and the review's fixes are in `88a8754`, and T10 ran from a clean clone of that commit ([results](./phase-1-review.md#2-results)).
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M9, review gate in section 6). Governed by [architecture.md](../../architecture.md) (§2, §7, §10, §11, §12 are normative; §13, §14, §15, §19, §21).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M9, review gate in section 6). Governed by [architecture.md](../../../architecture.md) (§2, §7, §10, §11, §12 are normative; §13, §14, §15, §19, §21).
 
 ## 1. Scope
 
@@ -11,7 +11,7 @@ M9 reviews phase 1 as a whole and assembles what the maintainer needs for the ha
 - **Package (plan M9):** README quick start, executed usage examples, a load → edit → save → run solver demo, an error reference, `CHANGELOG.md`, a coverage report (target 90%), a spec-coverage report, the broader Hypothesis oracle carried from M2, and the gate checklist.
 - **Exit:** ready for hands-on review.
 
-**Source changes are not made in M9.** Any change needed under `src/` is written up in a separate handoff document, [m9-code-changes.md](../m9-code-changes.md) (created by R7), for a developer. The maintainer decides which entries must land before M9 is accepted. Documents, tests and the demo are M9's own work (decision 3).
+**Source changes are not made in M9.** Any change needed under `src/` is written up in a separate handoff document, [phase-2-code-changes.md](../../phase-2-code-changes.md) (created by R7), for a developer. The maintainer decides which entries must land before M9 is accepted. Documents, tests and the demo are M9's own work (decision 3).
 
 Not in M9: phase 2 letters and stimulus functions, a release or version tag, and the maintainer's own use of the library (a gate item that follows this package).
 
@@ -225,7 +225,7 @@ Documentation findings beyond section 3, for T2 and T4:
 
 ### 7.5 For the maintainer at checkpoint A
 
-1. ~~Triage [m9-code-changes.md](../m9-code-changes.md).~~ Decided 2026-11-02: H1–H4 land before M9 is accepted.
+1. ~~Triage [phase-2-code-changes.md](../../phase-2-code-changes.md).~~ Decided 2026-11-02: H1–H4 land before M9 is accepted.
 2. ~~Accept or correct decisions 0002 and 0003.~~ Decided 2026-11-02: reviewed against the code and accepted, with wording amendments. No behaviour differed from them; what was stale was text (section 7.6).
 3. ~~Whether the token slicing in the handoff's section 3 is acceptable under P13.~~ Decided 2026-11-02: it stays, and decision 0010 item 6 clarifies P13.
 4. ~~Whether to install Python 3.13 for one run.~~ Decided 2026-11-02: no. It is recorded as untested (section 5).

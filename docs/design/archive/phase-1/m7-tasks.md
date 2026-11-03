@@ -1,7 +1,7 @@
 # M7 task list — local solver validation (ngspice)
 
 > **Status:** COMPLETE (2026-10-31) — review round 2 approved (section 11); approved by the maintainer (2026-10-31); section 2 records the decisions, section 9 the implementation.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../../grammars/ngspice/names.md) and [scoping.md](../../grammars/ngspice/scoping.md), [discrepancies.md](../../grammars/ngspice/discrepancies.md), and the edit API of [edit-layer.md](../edit-layer.md). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M7). Governed by [architecture.md](../../../architecture.md) (§2 P5, P8, P9, P10; §10.1–§10.3 (T8); §11 (normative); §20). Builds on the solver tests of M0–M6 (`tests/solver/`, `tests/support/solvers.py`), the rule documents [names.md](../../../grammars/ngspice/names.md) and [scoping.md](../../../grammars/ngspice/scoping.md), [discrepancies.md](../../../grammars/ngspice/discrepancies.md), and the edit API of [edit-layer.md](../../edit-layer.md). Citations use the manual edition in [references.md](../../../references.md).
 
 ## 1. Scope
 
@@ -206,7 +206,7 @@ Full check set, a fresh-clone run with `--require-solver ngspice`, and the runti
 ## 9. Implementation report (2026-10-31)
 
 **What changed.** Test and documentation changes only; `src/` is untouched. Decision record
-[0008](../../decisions/0008-validation-status-and-solver-harnesses.md) (status `proposed`) and the
+[0008](../../../decisions/0008-validation-status-and-solver-harnesses.md) (status `proposed`) and the
 architecture amendments of D1 (§10.3, §10.5, §11.2). The shared harness
 `tests/support/ngspice.py` (T1) with its solver-free tests `tests/test_ngspice_raw_reader.py`
 and raw samples in `tests/corpus/ngspice/solver_stubs/raw/`; `run_ngspice` gained an `env`

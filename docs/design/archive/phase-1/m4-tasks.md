@@ -1,7 +1,7 @@
 # M4 task list — statements and directives (ngspice)
 
 > **Status:** COMPLETE (2026-10-31) — review approved after round 1 (section 10; R1 done, section 10.5). Implemented 2026-10-30 (section 9 is the report); section 2 records the decisions.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([m2-tasks.md](./m2-tasks.md)) and M3 ([m3-tasks.md](./m3-tasks.md), [elements.md](../elements.md), [decision 0004](../../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([m2-tasks.md](./m2-tasks.md)) and M3 ([m3-tasks.md](./m3-tasks.md), [elements.md](../../elements.md), [decision 0004](../../../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../../../references.md).
 
 ## 1. Scope
 
@@ -72,7 +72,7 @@ Smaller choices are marked "settle" in the tasks: pick the narrowest reading, ci
 
 ### 3.1 Nodes (proposed; D2 finalizes them in a design note)
 
-Frozen, slotted dataclasses, exported like the M3 nodes. Every sub-span covers exactly its text, never a separator (as in [elements.md](../elements.md) §4). These are what M6 replaces.
+Frozen, slotted dataclasses, exported like the M3 nodes. Every sub-span covers exactly its text, never a separator (as in [elements.md](../../elements.md) §4). These are what M6 replaces.
 
 - **Values.** `ParamAssignment` and `Value` from M3 are reused. `.param` and `.subckt` defaults also accept a double-quoted string, as `Formula(delimiter='"')` already allows on X lines.
 - `Directive`, a keyword-only base: `keyword` (as written, e.g. `.TRAN`), `keyword_span`, `span`, `trailing_comments`.
@@ -268,11 +268,11 @@ Re-recorded as solver tests in T8. Divider `V1 in 0 DC 3` with two 1k resistors 
   `Directive` base and its ten subclasses with `DcSweep`, `OptionItem`, `NodeCondition`,
   `OutputVector`; `Identifier` in `values.py`; `BodyItem` and the extended `TopLevelItem`.
   All exported (`BodyItem` from `netlistmod.model`, like `TopLevelItem`). Shapes:
-  [statements.md](../statements.md).
+  [statements.md](../../statements.md).
 - **Loader:** an unterminated `.subckt` is found on the parser stack (the `SUBCKT_KW` token
   or a reduced `subckt_header`) and reported at its innermost open line; an unclosed `(` or
   `v(` is reported at the opener when the line ends; terminal names for every new terminal.
-- **Records:** decision [0005](../../decisions/0005-statement-and-directive-grammar.md)
+- **Records:** decision [0005](../../../decisions/0005-statement-and-directive-grammar.md)
   (accepted 2026-10-30); architecture §5.2 and §6.5 amended; 12 new spec entries, `NG-STR-001`,
   `NG-OPA-001` and `NG-DIR-001` updated; `discrepancies.md`; `provenance.md`.
 - **Tests:** `test_statements.py` (173 cases), a second Hypothesis generator in

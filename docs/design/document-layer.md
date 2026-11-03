@@ -1,7 +1,7 @@
 # The read-only document layer
 
 > **Status:** ACTIVE — living reference, kept current with the code; began as the M5 design note (D2 of
-> [m5-tasks.md](./archive/m5-tasks.md)). [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md)
+> [m5-tasks.md](./archive/phase-1/m5-tasks.md)). [Decision 0006](../decisions/0006-document-layer-names-scope-and-diagnostics.md)
 > and [decision 0009](../decisions/0009-ltspice-dialect.md) record why. Rules:
 > [ngspice names](../grammars/ngspice/names.md), [ngspice scoping](../grammars/ngspice/scoping.md),
 > [LTspice names](../grammars/ltspice/names.md), [LTspice scoping](../grammars/ltspice/scoping.md).
