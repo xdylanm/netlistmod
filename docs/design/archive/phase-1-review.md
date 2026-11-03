@@ -1,6 +1,6 @@
 # Phase 1 review package
 
-> **Status:** READY FOR REVIEW — T10 ran on 2026-11-02 from a clean clone of `88a8754`. Archived with the plan once the gate passes.
+> **Status:** COMPLETE (2026-11-03) — the maintainer passed the review gate. T10 ran on 2026-11-02 from a clean clone of `88a8754`.
 > **Part of:** [m9-tasks.md](./m9-tasks.md). The gate is [phase-1-plan.md](./phase-1-plan.md) section 6.
 
 ## 1. Where things stand
@@ -9,13 +9,15 @@
 |---|---|
 | Implementation (M0–M8) | Complete |
 | Review findings | [m9-tasks.md](./m9-tasks.md) section 7 |
-| Required code changes (H1–H4) | [m9-code-changes.md](./m9-code-changes.md): made, reviewed and committed (`88a8754`) |
+| Required code changes (H1–H4) | [m9-code-changes.md](../m9-code-changes.md): made, reviewed and committed (`88a8754`) |
 | Final evidence (T10) | Done: section 2 |
-| The maintainer's own use | Not yet done: section 7 below is a suggested script |
+| The maintainer's own use | Done, 2026-11-03: [m9-tasks.md](./m9-tasks.md) section 7.7 |
+| Limits | Decided, 2026-11-03: section 6 |
+| Review gate | Passed, 2026-11-03 |
 
 ## 2. Results
 
-T10, 2026-11-02: a clean clone of `88a8754` with a new environment, on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1. Both solvers were required (`--require-solver ngspice --require-solver ltspice`). The run left the clone's working tree clean. Only these records changed after it, and `tests/test_docs.py` and `tests/architecture` were re-run on them.
+T10, 2026-11-02: a clean clone of `88a8754` with a new environment, on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1. Both solvers were required (`--require-solver ngspice --require-solver ltspice`). The run left the clone's working tree clean. Only these records changed after it, and `tests/test_docs.py` and `tests/architecture` were re-run on them. On 2026-11-03, for the maintainer's hands-on use, `edit_and_simulate.py` gained options and `tests/test_usage_docs.py` gained tests; `src/` did not change, and T10 was not repeated.
 
 | Check | Result |
 |---|---|
@@ -61,20 +63,20 @@ Each uncovered line:
 
 ## 4. Gate checklist
 
-Plan section 6. Only the maintainer can tick these.
+Plan section 6. The maintainer passed the gate on 2026-11-03.
 
 | Gate item | Evidence | State |
 |---|---|---|
-| All phase 1 constructs have spec entries and tests; spec-coverage and strict-grammar checks pass | Section 5; `tests/architecture/test_spec_coverage.py`, `test_contracts.py` | Ready |
-| Round-trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `test_edit_golden.py`, `test_ltspice_edits.py`, `tests/grammar/test_broad_oracle.py` | Ready |
-| The topology guarantee is demonstrated by negative and property tests | `test_edit_negative.py`, `test_edit_properties.py`, the broad oracle's edits | Ready |
-| ngspice and LTspice solver-backed tests pass on your machine | Section 2, from a clean clone | Ready |
-| You have used the library on at least one of your own netlists | Section 7 | **Maintainer** |
-| The §21 questions resolved in M6 are recorded as decision records, and new findings are logged | Decisions 0007–0010; [m9-tasks.md](./m9-tasks.md) section 7 | Ready; decision 0010 awaits acceptance |
-| The phase 1 limitations are acceptable, or the phase 2 plan is adjusted | Section 6 | **Maintainer** |
-| All milestone task lists are archived, and the plan is archived as `COMPLETE` once the gate passes | M0–M8 archived; M9 follows T11 | After the gate |
+| All phase 1 constructs have spec entries and tests; spec-coverage and strict-grammar checks pass | Section 5; `tests/architecture/test_spec_coverage.py`, `test_contracts.py` | Confirmed, 2026-11-03 |
+| Round-trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `test_edit_golden.py`, `test_ltspice_edits.py`, `tests/grammar/test_broad_oracle.py` | Confirmed, 2026-11-03 |
+| The topology guarantee is demonstrated by negative and property tests | `test_edit_negative.py`, `test_edit_properties.py`, the broad oracle's edits | Confirmed, 2026-11-03 |
+| ngspice and LTspice solver-backed tests pass on your machine | Section 2, from a clean clone | Confirmed, 2026-11-03 |
+| You have used the library on at least one of your own netlists | [m9-tasks.md](./m9-tasks.md) section 7.7 | Confirmed by the maintainer, 2026-11-03 |
+| The §21 questions resolved in M6 are recorded as decision records, and new findings are logged | Decisions 0007–0010; [m9-tasks.md](./m9-tasks.md) section 7 | Confirmed, 2026-11-03; decision 0010 accepted |
+| The phase 1 limitations are acceptable, or the phase 2 plan is adjusted | Section 6 | Confirmed by the maintainer, 2026-11-03: accepted, and phase 2's order set |
+| All milestone task lists are archived, and the plan is archived as `COMPLETE` once the gate passes | M0–M9, the plan and this package are archived | Done, 2026-11-03 |
 
-**Also to accept:** decision 0010 (T11). Decisions 0002 and 0003 were accepted on 2026-11-02.
+**Also accepted:** decision 0010 on 2026-11-03 (T11), and decisions 0002 and 0003 on 2026-11-02.
 
 ## 5. Spec coverage
 
@@ -186,6 +188,12 @@ From [m9-tasks.md](./m9-tasks.md) section 5. M9 records these and resolves none 
 9. **`directives.add` is not an upsert.** `directives.add(".tran …")` over an existing `.tran`, or followed by `directives.set` in a batch, writes two `.tran` lines. ngspice runs both analyses and LTspice stops.
 10. **Whether phase 2's order should change,** based on your hands-on use.
 
+**Decided (maintainer, 2026-11-03):** all ten are accepted for phase 1.
+
+- **Fix early in phase 2:** items 6 and 9, because the library accepts the input and the result can be wrong.
+- **Phase 2's order:** CI, then items 6 and 9, then stimulus specs and Q and M devices, then the rest of phase 2.
+- **Settled in phase 2:** whether LTspice still requires `.end` (item 2), and Python 3.13, which is included when CI is added (item 7).
+
 ## 7. Suggested hands-on script
 
 About half an hour. Use a copy of each netlist, under version control or beside the original.
@@ -201,8 +209,8 @@ About half an hour. Use a copy of each netlist, under version control or beside 
 3. **Read it back.** Do `netlist.elements()`, `netlist.nets()` and `netlist.connections("R1")` match the schematic?
 4. **Make your usual edits:** a value, a formula with a new `.param`, an analysis with `directives.set`, and a harness with `add_include`. After `save()`, read `git diff`: only the intended text should change.
 5. **Try to break it.** Edit an element that does not exist, set a value to `1k 2k`, and call `directives.add("R9 a 0 1k")`. Each should refuse, and nothing should be written.
-6. **Run it.** Run the edited file in your solver, or start from the demo:
+6. **Run it.** Run the edited file in your solver, or use the demo, which edits one value, runs `.op` and prints a net's voltage. Run it from PowerShell if a net name starts with `/`, because Git Bash rewrites that as a path:
    ```bash
-   uv run --env-file .env python docs/usage/examples/edit_and_simulate.py --dialect ltspice
+   uv run --env-file .env python docs/usage/examples/edit_and_simulate.py my_circuit.net --dialect ltspice --edit-value="R1,3k" --probe="out"
    ```
 7. **Note anything awkward,** especially what is rejected. That feeds section 6's last item.

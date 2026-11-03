@@ -1,7 +1,7 @@
 # M3 task list — elements and values (ngspice)
 
 > **Status:** COMPLETE (2026-10-30) — review approved by the maintainer; decision 0004 accepted. Section 9 is the report. (Planned as READY — approved by the maintainer on 2026-10-30; section 2 records the decisions.)
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M3). Governed by [architecture.md](../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2–5.3; §6.3–6.5, §6.7; §10; §11). Builds on the M2 grammar core ([archive/m2-tasks.md](./m2-tasks.md), [archive/m2-review2-tasks.md](./m2-review2-tasks.md)). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M3). Governed by [architecture.md](../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2–5.3; §6.3–6.5, §6.7; §10; §11). Builds on the M2 grammar core ([archive/m2-tasks.md](./m2-tasks.md), [archive/m2-review2-tasks.md](./m2-review2-tasks.md)). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 

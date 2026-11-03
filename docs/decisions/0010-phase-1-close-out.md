@@ -1,8 +1,8 @@
 # 0010 — Phase 1 close-out
 
-- **Status:** proposed
+- **Status:** accepted (2026-11-03, maintainer; M9 T11)
 - **Date:** 2026-11-02
-- **Context:** The M9 review of phase 1 ([m9-tasks.md](../design/m9-tasks.md)) found that some architecture text no longer matches the repository, that an open point from the plan and a carried requirement need closing, that four design notes are still the current specification though named after milestones, and that a batch can write a repeated target with no error ([m9-code-changes.md](../design/m9-code-changes.md) H1). The maintainer decided these points on 2026-11-02.
+- **Context:** The M9 review of phase 1 ([m9-tasks.md](../design/archive/m9-tasks.md)) found that some architecture text no longer matches the repository, that an open point from the plan and a carried requirement need closing, that four design notes are still the current specification though named after milestones, and that a batch can write a repeated target with no error ([m9-code-changes.md](../design/m9-code-changes.md) H1). The maintainer decided these points on 2026-11-02.
 - **Decision:**
   1. **Living design notes.** `m3-elements.md`, `m4-statements.md`, `m5-document.md` and `m6-edits.md` become `design/elements.md`, `statements.md`, `document-layer.md` and `edit-layer.md`. They describe the library as it is, are not archived, and change with the public API. `tests/architecture/test_design_notes.py` fails if a public name, dataclass field or diagnostic code is missing from them.
   2. **CI is deferred to the start of phase 2.** There is no `.github/` in phase 1, and the checks are run locally. This closes open point 1 of the phase 1 plan. §10.4, §13 and §14 describe the intended CI, and §4 and §13 now say so.
@@ -20,4 +20,4 @@
   - Phase 2 begins by adding CI. Until then a local run is the only evidence, and `docs/testing.md` lists it.
   - Nothing bounds the time or memory of a large netlist in phase 1. Hands-on use may reopen this.
   - The archived task lists use the old note names in prose; `design/README.md` maps them.
-  - This record stays `proposed` until the maintainer accepts it when M9 closes (T11). H1 is implemented against item 5.
+  - The maintainer accepted this record when M9 closed (T11, 2026-11-03). H1 is implemented against item 5.

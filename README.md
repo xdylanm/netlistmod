@@ -57,8 +57,8 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 
 ## Status
 
-Phase 1 (M0–M8) is implemented, with both dialects validated on their solvers, and is under review ([M9](docs/design/m9-tasks.md)). There is no release yet.
+Phase 1 is complete, with both dialects validated on their solvers ([M9](docs/design/archive/m9-tasks.md)), and phase 2 is next. There is no release yet.
 
 - **Guides:** [usage](docs/usage/README.md), including the [error reference](docs/usage/errors.md).
-- **Design:** [architecture](docs/architecture.md), [phase 1 plan](docs/design/phase-1-plan.md).
+- **Design:** [architecture](docs/architecture.md), [phase 1 plan](docs/design/archive/phase-1-plan.md).
 - **Development:** [testing](docs/testing.md), [changelog](CHANGELOG.md).

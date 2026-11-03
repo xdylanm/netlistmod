@@ -1,7 +1,7 @@
 # M9 task list — Phase 1 review package
 
-> **Status:** READY FOR REVIEW — T1–T10 are done. H1–H4 and the review's fixes are committed (`88a8754`), and T10 ran from a clean clone of that commit on 2026-11-02 ([results](./phase-1-review.md#2-results)). T11 waits for the maintainer's approval.
-> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M9, review gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §7, §10, §11, §12 are normative; §13, §14, §15, §19, §21).
+> **Status:** COMPLETE (2026-11-03) — approved by the maintainer. T1–T11 are done; H1–H4 and the review's fixes are in `88a8754`, and T10 ran from a clean clone of that commit ([results](./phase-1-review.md#2-results)).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M9, review gate in section 6). Governed by [architecture.md](../../architecture.md) (§2, §7, §10, §11, §12 are normative; §13, §14, §15, §19, §21).
 
 ## 1. Scope
 
@@ -11,7 +11,7 @@ M9 reviews phase 1 as a whole and assembles what the maintainer needs for the ha
 - **Package (plan M9):** README quick start, executed usage examples, a load → edit → save → run solver demo, an error reference, `CHANGELOG.md`, a coverage report (target 90%), a spec-coverage report, the broader Hypothesis oracle carried from M2, and the gate checklist.
 - **Exit:** ready for hands-on review.
 
-**Source changes are not made in M9.** Any change needed under `src/` is written up in a separate handoff document, [m9-code-changes.md](./m9-code-changes.md) (created by R7), for a developer. The maintainer decides which entries must land before M9 is accepted. Documents, tests and the demo are M9's own work (decision 3).
+**Source changes are not made in M9.** Any change needed under `src/` is written up in a separate handoff document, [m9-code-changes.md](../m9-code-changes.md) (created by R7), for a developer. The maintainer decides which entries must land before M9 is accepted. Documents, tests and the demo are M9's own work (decision 3).
 
 Not in M9: phase 2 letters and stimulus functions, a release or version tag, and the maintainer's own use of the library (a gate item that follows this package).
 
@@ -148,13 +148,13 @@ Every task that changes a file ends with the full check set green, run as `uv ru
 
 ### After the maintainer's approval (closing procedure, plan section 4)
 
-[ ] **T11 — Close M9.** Status `COMPLETE (date)`, `git mv` to `archive/`, fix links, update the plan and index, and accept decision 0010.
+[x] **T11 — Close M9.** Status `COMPLETE (date)`, `git mv` to `archive/`, fix links, update the plan and index, and accept decision 0010.
 
 **The gate itself** (the maintainer's use on their own netlists, section 5's decisions, then archiving the plan) follows M9 and is not a task of this list.
 
 ## 5. Limits for the maintainer to weigh at the gate
 
-Started from earlier reviews; R5 and R6 extend this. M9 records them and does not resolve them.
+Started from earlier reviews; R5 and R6 extend this. M9 records them and does not resolve them. The maintainer accepted all of them on 2026-11-03 and set phase 2's order ([decision](./phase-1-review.md#6-limits-for-your-decision)).
 
 - Phase 1 limits named by the gate: opaque statements, no stimulus specs, unsupported element letters. Real netlists with Q or M devices or `PULSE`/`SIN` sources are rejected until phase 2.
 - `.end` is required for LTspice too, although LTspice lets it be omitted (decision 0009; "revisit after the phase 1 review").
@@ -225,7 +225,7 @@ Documentation findings beyond section 3, for T2 and T4:
 
 ### 7.5 For the maintainer at checkpoint A
 
-1. ~~Triage [m9-code-changes.md](./m9-code-changes.md).~~ Decided 2026-11-02: H1–H4 land before M9 is accepted.
+1. ~~Triage [m9-code-changes.md](../m9-code-changes.md).~~ Decided 2026-11-02: H1–H4 land before M9 is accepted.
 2. ~~Accept or correct decisions 0002 and 0003.~~ Decided 2026-11-02: reviewed against the code and accepted, with wording amendments. No behaviour differed from them; what was stale was text (section 7.6).
 3. ~~Whether the token slicing in the handoff's section 3 is acceptable under P13.~~ Decided 2026-11-02: it stays, and decision 0010 item 6 clarifies P13.
 4. ~~Whether to install Python 3.13 for one run.~~ Decided 2026-11-02: no. It is recorded as untested (section 5).
@@ -244,3 +244,12 @@ Each rule of decision 0002 was probed on the parser, and the terminals and prior
 | 0003 | 20,000-line performance bound | Withdrawn by decision 0004; the test is gone |
 | 0003 | Priority list and file locations | `SEP.10` is new; decision 0009 moved `BS_CONT` and `TEXT` |
 | 0003 | `%extend statement` for opaque blocks | `.control` now uses `%extend top_statement` |
+
+### 7.7 Hands-on use (maintainer, 2026-11-03)
+
+The maintainer ran `read_only_demo.py` and `edit_and_simulate.py` on `dc_basic_r_divider.cir` and `shiftscaleinvert.cir`, with further tweaks, and confirmed that the basic operations behave as expected. `edit_and_simulate.py` gained a netlist path, `--edit-value`, `--probe` and `--rkm` for this; `src/` did not change.
+
+Findings, both decided by the maintainer on 2026-11-03 with no change:
+
+- **`limit` differs between solvers.** `limit(0.5, 1m, 0.999)` returned 1.499 or -0.499 at random in ngspice 47, and 0.5 in LTspice. A subcircuit in the maintainer's model library used it as a clamp, so `.op` results changed from run to run on byte-identical files. The maintainer fixed that file. No diagnostic is required for `limit`.
+- **RKM values can give wrong voltages with only an `info` diagnostic.** With `rkm=True`, the library reads `2k7` as 2.7k, while ngspice 47 without `ngbehavior=lt` read it as 2k: a test divider gave 1.0000 V rather than 0.8108 V. `DIALECT_GATED_SYNTAX` is `info`, and `RKM_SOLVER_MISMATCH` (a warning) did not fire for `2k7`, though it did for `1M0`. The warning stays as it is: validating solver inputs is out of scope for this library.

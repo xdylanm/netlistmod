@@ -1,7 +1,7 @@
 # M1 task list — source layer
 
 > **Status:** COMPLETE (2026-10-21)
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M1). Governed by [architecture.md](../../architecture.md) (§2 P1/P3, §5.1, §17). Follows the closing procedure in the plan (§4).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M1). Governed by [architecture.md](../../architecture.md) (§2 P1/P3, §5.1, §17). Follows the closing procedure in the plan (§4).
 
 ## 1. Scope
 

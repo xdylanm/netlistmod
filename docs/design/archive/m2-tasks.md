@@ -1,7 +1,7 @@
 # M2 task list — grammar core (ngspice)
 
 > **Status:** COMPLETE (2026-10-30) — first rework and second-round fixes ([m2-review2-tasks.md](./m2-review2-tasks.md)) approved by the maintainer.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M2). Governed by [architecture.md](../../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([m1-tasks.md](./m1-tasks.md)).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M2). Governed by [architecture.md](../../architecture.md) (§2 P5–P8 and P13, §3, §6, §10, §11). Builds on the M1 source layer ([m1-tasks.md](./m1-tasks.md)).
 
 ## 0. Review outcome and rework (governs wherever it conflicts with sections 1–7)
 

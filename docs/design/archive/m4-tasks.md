@@ -1,7 +1,7 @@
 # M4 task list — statements and directives (ngspice)
 
 > **Status:** COMPLETE (2026-10-31) — review approved after round 1 (section 10; R1 done, section 10.5). Implemented 2026-10-30 (section 9 is the report); section 2 records the decisions.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M4). Governed by [architecture.md](../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([m2-tasks.md](./m2-tasks.md)) and M3 ([m3-tasks.md](./m3-tasks.md), [elements.md](../elements.md), [decision 0004](../../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M4). Governed by [architecture.md](../../architecture.md) (§2 P2, P4, P5, P8, P13; §5.2; §6.3, §6.5; §7.1; §10; §11). Builds on M2 ([m2-tasks.md](./m2-tasks.md)) and M3 ([m3-tasks.md](./m3-tasks.md), [elements.md](../elements.md), [decision 0004](../../decisions/0004-element-and-value-grammar.md)). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 

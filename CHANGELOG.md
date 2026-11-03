@@ -16,6 +16,7 @@ Changes:
 - Two edit messages are corrected (M9 H3): `directives.add(".model …")` says a `.model` line cannot be added and that `set_model_param` edits an existing one, and `Placement.after(line)` with a line of a subcircuit body says so, rather than calling the line stale.
 - Public docstrings now cover LTspice: `set_param`, `set_model`, `remove_value`, `DirectiveEditor.set` and `Net` (M9 H4).
 - Add the review package for phase 1 (M9, decision 0010): a README quick start, usage guides for both dialects, an error reference (`docs/usage/errors.md`), the demo `docs/usage/examples/edit_and_simulate.py`, and the broader oracle. The four design notes are now living references under topic names (`docs/design/elements.md`, `statements.md`, `document-layer.md`, `edit-layer.md`). New tests check that relative Markdown links resolve, and that the notes name each public name.
+- `docs/usage/examples/edit_and_simulate.py` also runs `.op` on your own netlist and prints a net's voltage, with `--edit-value`, `--probe` and `--rkm` (M9 hands-on use).
 - Add the LTspice dialect (M8, decision 0009). `Dialect.LTSPICE` parses, indexes, edits and
   verifies netlists with the phase 1 elements, through the overlay `ltspice.lark` on a `core.lark`
   that now holds only what both dialects share. ngspice parsing is unchanged. New for LTspice: the

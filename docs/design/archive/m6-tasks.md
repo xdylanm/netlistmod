@@ -1,7 +1,7 @@
 # M6 task list — edit layer (ngspice)
 
 > **Status:** COMPLETE (2026-10-31) — implemented 2026-10-31 (sections 9 and 10), review approved (section 11); plan approved by the maintainer (2026-10-31); section 2 records the decisions.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M6). Governed by [architecture.md](../../architecture.md) (§2 P1–P4, P11; §3 layers [4]–[5]; §7 (normative); §10 T4–T6; §16; §17; §19 decision 18; §21). Builds on the design notes [elements.md](../elements.md) (element sub-spans), [statements.md](../statements.md) (statement and directive sub-spans), and [document-layer.md](../document-layer.md) (`Netlist`, `Lines`, scopes, references, signature). Citations use the manual edition in [references.md](../../references.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M6). Governed by [architecture.md](../../architecture.md) (§2 P1–P4, P11; §3 layers [4]–[5]; §7 (normative); §10 T4–T6; §16; §17; §19 decision 18; §21). Builds on the design notes [elements.md](../elements.md) (element sub-spans), [statements.md](../statements.md) (statement and directive sub-spans), and [document-layer.md](../document-layer.md) (`Netlist`, `Lines`, scopes, references, signature). Citations use the manual edition in [references.md](../../references.md).
 
 ## 1. Scope
 

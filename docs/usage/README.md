@@ -15,6 +15,6 @@ The examples in these guides are executed by the test suite. Each guide says whi
 Examples you can run:
 
 - [read_only_demo.py](./examples/read_only_demo.py): what the library sees in a KiCad export.
-- [edit_and_simulate.py](./examples/edit_and_simulate.py): load, edit, save and run a solver, with `--dialect ngspice` or `ltspice`.
+- [edit_and_simulate.py](./examples/edit_and_simulate.py): load, edit, save and run `.op` in a solver, on a built-in divider or your own netlist, and print a net's voltage. It takes `--dialect`, `--edit-value`, `--probe` and `--rkm`.
 
 See [the architecture](../architecture.md) for the design and its constraints.

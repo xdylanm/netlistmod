@@ -21,10 +21,7 @@ Active plans and design notes live in this folder. Completed work records move t
 
 | Document | Status |
 |---|---|
-| [phase-1-plan.md](./phase-1-plan.md) | ACTIVE |
-| [m9-tasks.md](./m9-tasks.md) | READY FOR REVIEW |
-| [phase-1-review.md](./phase-1-review.md) | READY FOR REVIEW |
-| [m9-code-changes.md](./m9-code-changes.md) | READY |
+| [m9-code-changes.md](./m9-code-changes.md) | READY (H5–H8, phase 2) |
 | [elements.md](./elements.md) | ACTIVE (living reference) |
 | [statements.md](./statements.md) | ACTIVE (living reference) |
 | [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
@@ -39,3 +36,6 @@ Active plans and design notes live in this folder. Completed work records move t
 | [archive/m6-tasks.md](./archive/m6-tasks.md) | COMPLETE (2026-10-31) |
 | [archive/m7-tasks.md](./archive/m7-tasks.md) | COMPLETE (2026-10-31) |
 | [archive/m8-tasks.md](./archive/m8-tasks.md) | COMPLETE (2026-11-02) |
+| [archive/m9-tasks.md](./archive/m9-tasks.md) | COMPLETE (2026-11-03) |
+| [archive/phase-1-review.md](./archive/phase-1-review.md) | COMPLETE (2026-11-03) |
+| [archive/phase-1-plan.md](./archive/phase-1-plan.md) | COMPLETE (2026-11-03) |

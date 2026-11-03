@@ -2,7 +2,7 @@
 
 > **Status:** COMPLETE (2026-10-20)
 > **Progress:** T1–T16 complete.
-> **Part of:** [phase-1-plan.md](../phase-1-plan.md) (milestone M0). Governed by [architecture.md](../../architecture.md).
+> **Part of:** [phase-1-plan.md](./phase-1-plan.md) (milestone M0). Governed by [architecture.md](../../architecture.md).
 
 ## 1. Current state
 
@@ -18,7 +18,7 @@
 
 1. **Prototype files** move to `prototype/` (outside `src/`) so they are not packaged, type-checked, or covered by the "every `.lark` builds strict" test. They remain a starting point for M2.
 2. **Fixtures** move to the architecture layout `tests/corpus/<dialect>/<family>/` with a manifest (T11): `tests/corpus/ngspice/kicad_basic/`.
-3. **Phase 1 scope change:** V (and I) sources with the `DC` and `AC` keywords are in phase 1 scope (applied to [phase-1-plan.md](../phase-1-plan.md), M3). Stimulus functions (`SIN`, `PULSE`, …) remain phase 2. The `SIN(...)` stimulus has been removed from `ac_basic_rc_lpf.cir`, so all three fixtures are within phase 1 scope.
+3. **Phase 1 scope change:** V (and I) sources with the `DC` and `AC` keywords are in phase 1 scope (applied to [phase-1-plan.md](./phase-1-plan.md), M3). Stimulus functions (`SIN`, `PULSE`, …) remain phase 2. The `SIN(...)` stimulus has been removed from `ac_basic_rc_lpf.cir`, so all three fixtures are within phase 1 scope.
 4. **Environment loading:** use `uv` only: tests are run with `uv run --env-file .env pytest`. No `python-dotenv` dependency. Solver discovery still falls back to `PATH` and default install locations when the variables are not set.
 
 ## 3. Tasks
