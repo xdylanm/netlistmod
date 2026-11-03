@@ -46,8 +46,8 @@ Control allows (below):
 .venv\Scripts\python.exe -m uv run --env-file .env python -m pytest
 ```
 
-Elsewhere in the docs, read `uv run ...` as this form when `uv` is not on `PATH`. On Linux and macOS
-the interpreter is `.venv/bin/python`.
+Elsewhere in the docs, read `uv run ...` as this form when `uv` is not on `PATH`. On Linux the
+interpreter is `.venv/bin/python`.
 
 ### Windows Smart App Control (read before debugging a tool failure)
 

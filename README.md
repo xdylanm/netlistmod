@@ -59,6 +59,8 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 
 Phase 1 is complete, with both dialects validated on their solvers ([M9](docs/design/archive/phase-1/m9-tasks.md)), and phase 2 is next. There is no release yet.
 
+Supported platforms are Linux and Windows, with Python 3.13 or newer. LTspice validation runs on Windows. macOS is not tested.
+
 - **Guides:** [usage](docs/usage/README.md), including the [error reference](docs/usage/errors.md).
-- **Design:** [architecture](docs/architecture.md), [phase 1 plan](docs/design/archive/phase-1/phase-1-plan.md).
+- **Design:** [architecture](docs/architecture.md), [phase 2 plan](docs/design/phase-2-plan.md), [phase 1 plan](docs/design/archive/phase-1/phase-1-plan.md).
 - **Development:** [testing](docs/testing.md), [changelog](CHANGELOG.md).

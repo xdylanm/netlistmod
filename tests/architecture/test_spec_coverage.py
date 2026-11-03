@@ -190,7 +190,7 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
         parsed[letter] = {
             "status": status,
             "phase": int(phase),
-            "milestone": milestone if milestone in {"M3", "M8"} else "post-review",
+            "milestone": milestone,
         }
     if parsed != matrix:
         raise ValueError(f"{device_document.name} does not match {device_json.name}")

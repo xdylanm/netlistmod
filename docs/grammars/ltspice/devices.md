@@ -8,32 +8,33 @@ phase 2. The table is checked against
 
 | Letter | Status | Phase | Milestone |
 |---|---|---:|---|
-| A | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| B | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| A | planned | 2 | M17 |
+| B | planned | 2 | M15 |
 | C | supported | 1 | M8 |
 | D | supported | 1 | M8 |
-| E | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| F | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| G | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| H | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| E | planned | 2 | M14, M15 |
+| F | planned | 2 | M14, M15 |
+| G | planned | 2 | M14, M15 |
+| H | planned | 2 | M14, M15 |
 | I | supported | 1 | M8 |
-| J | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| J | planned | 2 | M13 |
 | K | supported | 1 | M8 |
 | L | supported | 1 | M8 |
-| M | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| O | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| Q | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| M | planned | 2 | M13 |
+| O | planned | 2 | M16 |
+| Q | planned | 2 | M13 |
 | R | supported | 1 | M8 |
-| S | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| T | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| U | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| S | planned | 2 | M14 |
+| T | planned | 2 | M16 |
+| U | planned | 2 | M16 |
 | V | supported | 1 | M8 |
-| W | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| W | planned | 2 | M14 |
 | X | supported | 1 | M8 |
-| Z | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| & | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
-| @ | planned | 2 | Post-review phase 2 (milestone sequence TBD) |
+| Z | planned | 2 | M13 |
+| & | planned | 2 | M17 |
+| @ | planned | 2 | M17 |
 
 `@` is the frequency response analyzer and `&` its probe. N, P and Y are not LTspice letters, so a
 line starting with one is a `ParseError`. The architecture's `Ö` is not in the reference (decision
-0009 corrects §6.7).
+0009 corrects §6.7). The milestones are those of the [phase 2 plan](../../design/phase-2-plan.md). E, F, G
+and H have linear forms in M14 and nonlinear forms in M15.

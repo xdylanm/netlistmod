@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint and types
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run python -m ruff check
+      - run: uv run python -m ruff format --check
+      - run: uv run python -m mypy
+      - run: >-
+          uv run python -m mypy --strict
+          tests/support tests/solver tests/conftest.py
+          tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py
+          tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
+      - run: uv run lint-imports
+      - run: uv run python -m pre_commit run --all-files
+
+  test:
+    # The suite includes the strict grammar builds, spec coverage and link checks. No solver is
+    # installed, so the solver tests skip (decision 0011).
+    name: Test (${{ matrix.os }}, Python ${{ matrix.python }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python: ["3.13", "3.14"]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: ${{ matrix.python }}
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run python -m pytest --hypothesis-profile=ci
