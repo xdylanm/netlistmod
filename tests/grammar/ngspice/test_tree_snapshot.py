@@ -8,7 +8,8 @@ as well. Regenerating it is a deliberate act:
 errors for incomplete lines stopped listing punctuation as expected, and text after ``.end`` stopped
 being reported as an unsupported letter. 15 rejected files changed: 14 lost those names, and
 ``structure_rejects/text_after_end.cir`` went from ``UnsupportedConstruct`` to ``ParseError``. No
-node or position changed.
+node or position changed. M11 added ``structure_basic/lib_block.cir`` and
+``edits_golden/add_lib_block.expected.cir``, and no other entry changed.
 """
 
 from __future__ import annotations

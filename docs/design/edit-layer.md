@@ -227,6 +227,6 @@ The conventions, verification and placement are the same (decision 0009 item 17)
 - `set_param` also edits V and I parameters, a diode's area (positional, or written `area=`), and a flag's value in place (`off` becomes `off=1`).
 - `set_model` and `remove_value` on an R, C or L line are an `EditError`: LTspice has no such model.
 - `rkm=True` is a `ValueError`; embedded decimals need no option.
-- `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused.
+- `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused. A whole `.lib` block is accepted on both dialects (decision 0012).
 
 `tests/edits` runs on both dialects, with `tests/support/dialects.py` marking the cases only one dialect reads.

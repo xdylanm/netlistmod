@@ -180,7 +180,7 @@ A wrong call, as opposed to a problem with the netlist, gets a standard Python e
 
 ### `UNRESOLVED_MODEL`
 
-A model name that no visible `.model` defines. A warning, or `info` when a searched scope has an `.include` or `.lib`, which may define it.
+A model name that no visible `.model` defines. A warning, or `info` when a searched scope has an `.include`, a `.lib`, or an opaque `.if` or `.lib` block, which may define it.
 
 ```python
 >>> report("t\nD1 a 0 dm\n.end\n")
@@ -325,13 +325,13 @@ An ngspice RKM value that ngspice 47 reads differently from the notation's meani
 
 **What to do:** write the value without RKM notation; see the ngspice `discrepancies.md`.
 
-### `UNKNOWN_DIRECTIVE_PRESERVED`
+### `UNTYPED_DIRECTIVE_PRESERVED`
 
-A dot-command the library does not type. Its text is kept exactly, and its contents are not read, so references inside it are not seen. LTspice's `.backanno`, `.tf`, `.noise` and `.four` get this code too, although they are on that dialect's closed list.
+A dot-command the library does not type. It may well be a documented command, such as ngspice `.print` or LTspice `.backanno`. Its text is kept exactly, and its contents are not read, so references inside it are not seen.
 
 ```python
 >>> report("t\n.print op v(a)\n.end\n")
-2 1 UNKNOWN_DIRECTIVE_PRESERVED info
+2 1 UNTYPED_DIRECTIVE_PRESERVED info
 
 ```
 

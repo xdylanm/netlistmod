@@ -44,7 +44,6 @@ instance-expanded view (ngspice's `x1.r1`) in M5.
 
 ## Includes and conditional blocks
 
-The library never reads `.include`/`.lib` files or `.if` blocks (§7.8). An `UNRESOLVED_*`
-diagnostic whose searched scopes contain an `.include` or `.lib` is **info** and says the name
-may be defined there (decision 0006 item 8). An `.if` block does not soften a diagnostic (a
-limitation: a model defined only in a conditional block is reported as a warning).
+The library never reads `.include`/`.lib` files, `.if` blocks or `.lib` blocks (§7.8). An
+`UNRESOLVED_*` diagnostic whose searched scopes contain any of these is **info** and says the name
+may be defined there (decision 0006 item 8, decision 0012). A `.control` block does not count.

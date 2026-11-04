@@ -40,6 +40,7 @@ from netlistmod.model.nodes import (
     Inductor,
     ModelStatement,
     MutualCoupling,
+    OpaqueBlock,
     OpaqueStatement,
     ParamStatement,
     Resistor,
@@ -94,7 +95,7 @@ class Scope:
         "dialect",
         "display",
         "elements",
-        "has_opaque_include",
+        "may_define_elsewhere",
         "lines",
         "models",
         "params",
@@ -126,7 +127,7 @@ class Scope:
         models: dict[str, list[ModelStatement]] = {}
         subckts: dict[str, list[SubcktDefinition]] = {}
         elements: dict[str, list[Component]] = {}
-        include = False
+        elsewhere = False
         for line in lines:
             item = line.item
             if isinstance(item, ParamStatement):
@@ -138,13 +139,15 @@ class Scope:
                 subckts.setdefault(self.fold(item.name), []).append(item)
             elif isinstance(item, Component):
                 elements.setdefault(self.fold(item.designator), []).append(item)
-            elif isinstance(item, OpaqueStatement):
-                include = True
+            elif isinstance(item, OpaqueStatement) or (
+                isinstance(item, OpaqueBlock) and item.kind != "control"
+            ):
+                elsewhere = True
         self.params = _frozen(params)
         self.models = _frozen(models)
         self.subckts = _frozen(subckts)
         self.elements = _frozen(elements)
-        self.has_opaque_include = include
+        self.may_define_elsewhere = elsewhere
 
     def fold(self, name: str) -> str:
         """``name`` in the form this netlist's dialect compares names in."""
@@ -208,6 +211,8 @@ class Index:
 
     def scope(self, path: ScopePath = ()) -> Scope:
         """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``."""
+        if isinstance(path, str):
+            raise TypeError(f"a scope is a sequence of subcircuit names: write ({path!r},)")
         folded = tuple(fold(name, self.dialect) for name in path)
         try:
             return self._by_path[folded]

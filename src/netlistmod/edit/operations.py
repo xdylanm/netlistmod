@@ -76,8 +76,8 @@ _VALUE_KEYWORDS: dict[type[Component], frozenset[str]] = {
     Inductor: frozenset({"l", "inductance"}),
 }
 
-# Directive kinds that `directives.set` upserts (decision 0007 item 7): ngspice 47 runs a
-# repeated .tran/.op again and uses the last .temp, so a second line is never what is meant.
+# Directive kinds that `directives.set` upserts (decision 0007 item 7). `directives.add` writes
+# a second line of one when asked, because ngspice runs two .ac or .dc lines (decision 0012).
 SINGLETON_DIRECTIVES: tuple[type[Directive], ...] = (
     TranDirective,
     AcDirective,
@@ -113,7 +113,7 @@ def resolve_scope(netlist: Netlist, scope: ScopePath, in_definition: bool) -> Sc
         raise EditError(
             f"scope {tuple(scope)!r} edits the definition of {found.describe()}, which changes "
             "every instance of it; pass in_definition=True to confirm, or use "
-            "set_instance_param on an X line to change one instance (architecture §7.4)"
+            "set_instance_param on an X line to change one instance"
         )
     return found
 
@@ -355,17 +355,18 @@ def set_model(
             )
             raise EditError(
                 f"model `{model}` has type `{definition.model_type}`, but `{designator}` "
-                f"takes a model of type {allowed} (architecture §7.2)"
+                f"takes a model of type {allowed}"
             )
     else:
         searched = ", ".join(found.describe() for found in chain)
-        include = any(found.has_opaque_include for found in chain)
+        include = any(found.may_define_elsewhere for found in chain)
         if not include:
             raise EditError(f"model `{model}` is not defined (searched: {searched})")
         if not allow_external:
             raise EditError(
                 f"model `{model}` is not defined (searched: {searched}); it may be defined in "
-                "an `.include` or `.lib` file, which is not read: pass allow_external=True to "
+                "an `.include` or `.lib` file or an opaque block, which is not read: pass "
+                "allow_external=True to "
                 "set it without a type check"
             )
     reason = f"set_model {designator}"
@@ -583,15 +584,15 @@ def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLev
 
 def _addable(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelItem:
     """The item ``lines`` hold, if directive operations may write it: a directive, an unknown
-    dot-command, a whole ``.control`` or ``.if`` block or a ``.lib`` statement."""
+    dot-command, a whole ``.control``, ``.if`` or ``.lib`` block or a ``.lib`` statement."""
     item = classify_text(netlist, lines, what)
     if isinstance(item, _TOPOLOGY_ITEMS):
         raise TopologyError(
             f"{what}: {_show(lines)} is a {_describe_item(item)}, which is topology; only "
-            "directives and whole opaque items can be added or replaced (architecture §7.3)"
+            "directives and whole opaque items can be added or replaced"
         )
     if isinstance(item, OpaqueStatement) and item.kind == "include":
-        raise EditError(f"{what}: add an `.include` with add_include (architecture §7.9)")
+        raise EditError(f"{what}: add an `.include` with add_include")
     if not isinstance(item, _DIRECTIVE_LINES):
         raise EditError(
             f"{what}: {_show(lines)} is a {_describe_item(item)}, not a directive"
@@ -625,8 +626,8 @@ def _describe_item(item: object) -> str:
 def add_directive(
     netlist: Netlist, text: DirectiveText, placement: Placement = Placement.BEFORE_END
 ) -> list[Edit]:
-    """Insert one directive, a whole ``.control``/``.if`` block or a ``.lib`` statement at
-    ``placement`` (top level)."""
+    """Insert one directive, a whole ``.control``, ``.if`` or ``.lib`` block or a ``.lib``
+    statement at ``placement`` (top level), even if a line of its kind exists (decision 0012)."""
     lines = _physical_lines(text, "directives.add")
     item = _addable(netlist, lines, "directives.add")
     return [_line_insertion(netlist, lines, type(item), placement, "directives.add")]
@@ -702,7 +703,7 @@ def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
     if isinstance(item, _TOPOLOGY_ITEMS):
         raise TopologyError(
             f"{what}: line {line.first_line} is a {_describe_item(item)}, which is topology and "
-            "cannot be replaced or removed (architecture §7.3)"
+            "cannot be replaced or removed"
         )
     if not isinstance(item, _DIRECTIVE_LINES):
         raise EditError(

@@ -87,7 +87,7 @@ def check_signature(baseline: TopologySignature, signature: TopologySignature) -
 def check_opaque(original_text: str, original: ParseResult, plan: EditPlan) -> None:
     """``TopologyViolation`` if an edit cuts into an opaque item of the original text.
 
-    A ``.control`` or ``.if`` block or an ``.include``/``.lib`` statement is a black box
+    A ``.control``, ``.if`` or ``.lib`` block or an ``.include``/``.lib`` statement is a black box
     (architecture §6.6, §7.3): an edit may leave it alone, remove or replace it whole, or insert
     next to it, but may not touch part of it (review round 1).
     """
@@ -101,7 +101,7 @@ def check_opaque(original_text: str, original: ParseResult, plan: EditPlan) -> N
                 raise TopologyViolation(
                     f"{edit.reason or 'an edit'} changes part of the opaque `.{node.kind}` item "
                     f"{text!r}; opaque items are added or removed whole, never edited "
-                    "(architecture §7.3); nothing was written"
+                    "; nothing was written"
                 )
 
 
@@ -148,8 +148,8 @@ def check_slots(text: str, result: ParseResult, plan: EditPlan) -> None:
 def _slot_message(edit: Edit, written: str, description: str) -> str:
     reason = f"{edit.reason}: " if edit.reason else ""
     return (
-        f"{reason}`{written}` does not re-parse as {description} (decision 0007 item 8); "
-        "the text would change more than the intended slot"
+        f"{reason}`{written}` does not re-parse as {description}; the text would change more "
+        "than the intended slot"
     )
 
 

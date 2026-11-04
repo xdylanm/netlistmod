@@ -73,9 +73,9 @@ class UnknownDirective:
 
 @dataclass(frozen=True, slots=True)
 class OpaqueBlock:
-    """A preserved ``.control`` or conditional block."""
+    """A preserved ``.control``, conditional or ``.lib`` … ``.endl`` block."""
 
-    kind: Literal["control", "if"]
+    kind: Literal["control", "if", "lib"]
     span: Span
 
 

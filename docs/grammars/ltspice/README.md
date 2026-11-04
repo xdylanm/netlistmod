@@ -81,7 +81,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-003](./specs/LT-NUM-003.yaml) | embedded decimal | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-004](./specs/LT-NUM-004.yaml) | micro signs | validated | ltspice 26.1.1 (2026-11-01) |
-| [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib, and .lib blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPP-001](./specs/LT-OPP-001.yaml) | .op | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPT-001](./specs/LT-OPT-001.yaml) | .options, .option and .opt | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | validated | ltspice 26.1.1 (2026-11-01) |

@@ -56,7 +56,7 @@ def test_unknown_dot_commands_run_and_stay_unknown_directives(
     assert result.voltage("out") == pytest.approx(1.5)
     netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
     assert isinstance(netlist.lines[4].item, UnknownDirective)
-    assert [d.code for d in netlist.diagnostics] == [DiagnosticCode.UNKNOWN_DIRECTIVE_PRESERVED]
+    assert [d.code for d in netlist.diagnostics] == [DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED]
 
 
 def test_a_func_directive_takes_effect_in_a_value(solver: Solver, tmp_path: Path) -> None:

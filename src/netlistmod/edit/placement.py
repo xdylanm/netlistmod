@@ -85,7 +85,7 @@ def insertion_point(placement: Placement, netlist: Netlist, scope: ScopePath = (
             raise EditError("cannot insert before the title: the first line is always the title")
         return anchor.span.start
     if isinstance(anchor.item, End):
-        raise EditError("cannot insert after `.end`: the netlist ends there (decision 0007)")
+        raise EditError("cannot insert after `.end`: the netlist ends there")
     return anchor.span.end
 
 

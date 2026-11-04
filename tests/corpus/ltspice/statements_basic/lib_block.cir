@@ -1,0 +1,20 @@
+block in the main netlist
+V1 in 0 1
+R1 in out 1k
+R2 out 0 1k
+.lib fast
+* a section: none of this is read
+R3 out hidden 1k
+.model dfast D
+.lib "vendor.lib" tt
+.endl fast
+.lib models.lib
+.subckt s p
+.LIB inner
+R9 p other 1k
+.ENDL
+R8 p 0 1k
+.ends
+X1 out s
+.op
+.end

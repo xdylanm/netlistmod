@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 is complete and M11 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 is complete and M11 is in progress
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -12,7 +12,7 @@ This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngs
 
 **v1 is a beta.** It is feature complete and tagged `0.9.0`, and it is not published to PyPI. The maintainer then uses it in practice; a 1.0 release is outside this plan.
 
-**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4).
+**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./m11-tasks.md)).
 
 ## 2. Assumptions
 
@@ -50,13 +50,13 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - Replace "milestone sequence TBD" in both device matrices and their JSON files with the milestones in section 5.
 - **Exit:** all checks are green on a pull request. Branch protection is on if the repository's GitHub plan allows it; otherwise the rule is to merge only on green.
 
-### M11 — Carried limits and messages
+### M11 — Carried limits and messages ([task list](./m11-tasks.md))
 
-- **`.lib name` … `.endl` blocks** (limit 6): recognise the block in the grammar, and stop counting its body as top-level topology. Decision record, amending decision 0002.
-- **`directives.add` over a singleton** (limit 9): refuse a second `.tran`, including in a batch, and point to `directives.set`. Decision record, amending decision 0007. Check first whether any dialect has a real use for two lines of one kind.
-- **H5–H8** from [phase-2-code-changes.md](./phase-2-code-changes.md): argument type errors, wording for listed LTspice commands, internal references in messages, and models defined in `.if` blocks. H6 and H8 change §17, so they need a decision. Doing H7 now means later messages start clean.
+- **`.lib name` … `.endl` blocks** (limit 6): recognise the block in the grammar as opaque, and stop counting its body as top-level topology ([decision 0012](../decisions/0012-carried-limits.md)).
+- **`directives.add` over a singleton** (limit 9): it stays literal and is documented, because ngspice has a real use for two lines of one kind ([decision 0012](../decisions/0012-carried-limits.md)).
+- **H5–H8** from [phase-2-code-changes.md](./archive/phase-2/phase-2-code-changes.md): argument type errors, wording for listed LTspice commands, internal references in messages, and models defined in `.if` blocks. H6 and H8 change §17, so they need a decision. Doing H7 now means later messages start clean.
 - **LTspice `.end`** (limit 2): record that it stays required, closing the question decision 0009 left open (section 8, point 3).
-- **Exit:** both limits are closed with negative and golden tests, and `phase-2-code-changes.md` is archived.
+- **Exit:** both limits are closed with tests, and `phase-2-code-changes.md` is archived.
 
 ### M12 — Stimulus specs
 
@@ -64,7 +64,6 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **ngspice** (manual §4.1): PULSE, SIN, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL and DISTOF1/2.
 - **LTspice:** PULSE, SINE, EXP, SFFM, PWL with its file and repeat forms, the WAV file form and the trigger parameter; for I, also `tbl=`, `step(...)`, `load` and `R=`.
 - **Edit API:** set a whole stimulus, and set one argument. Decide what setting a stimulus does to an existing DC or AC value, and what happens when a source has none.
-- Remove `test_review_package_holds_the_generated_spec_coverage` with the first new spec entry, as its comment says.
 - **Exit:** `half_rectifier.net` loads and edits, its solver test passes on LTspice, and each function has a spec entry, golden diff and solver test.
 
 ### M13 — Transistors (Q, M, J, Z)

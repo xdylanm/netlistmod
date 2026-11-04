@@ -1,6 +1,6 @@
 id: LT-OPA-001
 dialect: ltspice
-construct: opaque .include, .inc and .lib
+construct: opaque .include, .inc and .lib, and .lib blocks
 manual_ref:
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".INCLUDE — Include File"'
 - '[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md ".LIB — Include Library"'
@@ -16,7 +16,15 @@ grammar:
 - INCLUDE_KW
 - INC_KW
 - LIB_KW
+- lib_block
+- lib_line
+- LIB_BLOCK_KW
+- ENDL_KW
 tests:
+- tests/grammar/test_lib_blocks.py::test_the_body_of_a_block_is_not_topology
+- tests/grammar/test_lib_blocks.py::test_blocks_do_not_nest
+- tests/solver/test_decision_0012_probes.py::test_ltspice_stops_on_a_block_in_a_netlist
+- tests/solver/test_decision_0012_probes.py::test_ltspice_reads_a_section_and_ignores_its_elements
 - tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements
 - tests/grammar/ltspice/test_ltspice_structure.py::test_opaque_statements_cannot_be_continued
 - tests/solver/test_ltspice_validation.py::test_an_include_brings_in_its_file_and_stays_opaque

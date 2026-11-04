@@ -45,11 +45,19 @@
                  | subckt_instance
 
 // .include and .lib cannot be continued (manual §2.4.5): they end with LINE_END, not NL.
+// A .lib line opens an opaque block when it has one field and an .endl follows before the next
+// one-field .lib or .end (decision 0012). A two-field .lib may stand in the body, and any other
+// .lib stays lib_stmt. The body is never read, so its lines are not topology. A "+" line is an
+// ignored continuation, so one line of the body may hold several texts.
 // spec: NG-OPA-002
 %extend statement: include_stmt
                  | lib_stmt
+                 | lib_block
 include_stmt: INCLUDE_KW line_rest LINE_END
 lib_stmt: LIB_KW line_rest LINE_END
+lib_block: LIB_BLOCK_KW BLOCK_TEXT? NL lib_line* ENDL_KW BLOCK_TEXT? NL
+lib_line: (BLOCK_DOT_NAME | BLOCK_TEXT) BLOCK_TEXT* NL
+        | LINE_END
 
 // A .control block is top-level only; inside a subcircuit it is recognised and rejected
 // (decision 0005). An .if block may stand in a subcircuit body.
@@ -70,6 +78,8 @@ if_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
 // spec: NG-OPA-002
 INCLUDE_KW.4: ".include"i
 LIB_KW.4: ".lib"i
+LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\r?\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
+ENDL_KW.4: ".endl"i
 
 // spec: NG-OPA-001
 CONTROL_KW.4: ".control"i

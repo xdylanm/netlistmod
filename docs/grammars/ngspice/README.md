@@ -42,7 +42,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-NUM-003](./specs/NG-NUM-003.yaml) | RKM notation for R and C values (parser option rkm) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NUM-004](./specs/NG-NUM-004.yaml) | micro sign as a scale factor | observed | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-OPA-001](./specs/NG-OPA-001.yaml) | opaque .control and nested .if blocks | validated | ngspice 47 (2026-10-22, 2026-10-31) |
-| [NG-OPA-002](./specs/NG-OPA-002.yaml) | opaque .include and .lib statements | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-OPA-002](./specs/NG-OPA-002.yaml) | opaque .include and .lib statements, and .lib blocks | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-OPP-001](./specs/NG-OPP-001.yaml) | .op operating point | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-OPT-001](./specs/NG-OPT-001.yaml) | .options / .option | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-PAR-001](./specs/NG-PAR-001.yaml) | instance parameters, model references and the off flag | validated | ngspice 47 (2026-10-31) |

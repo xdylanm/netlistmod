@@ -75,7 +75,7 @@ def _codes(body: str, **options: bool) -> list[tuple[DiagnosticCode, str, str]]:
         (".save i(vx)", [(C.UNRESOLVED_ELEMENT, "warning", "vx")]),
         (".subckt div a b\n.ends other", [(C.ENDS_NAME_MISMATCH, "info", "other")]),
         (".subckt div a b\n.ends DIV", []),
-        (".print tran v(1)", [(C.UNKNOWN_DIRECTIVE_PRESERVED, "info", ".print")]),
+        (".print tran v(1)", [(C.UNTYPED_DIRECTIVE_PRESERVED, "info", ".print")]),
         (".lib x.lib sect\nX1 a b far", [(C.UNRESOLVED_SUBCKT, "info", "far")]),
     ],
 )
@@ -144,7 +144,7 @@ def test_include_in_an_enclosing_scope_softens_a_nested_unresolved_reference() -
 def test_diagnostics_carry_positions_and_are_in_source_order() -> None:
     netlist = _netlist(".print x\nR1 a b {q}\nR1 a b 1")
     assert [(d.line, d.column, d.code) for d in netlist.diagnostics] == [
-        (2, 1, C.UNKNOWN_DIRECTIVE_PRESERVED),
+        (2, 1, C.UNTYPED_DIRECTIVE_PRESERVED),
         (3, 9, C.UNRESOLVED_PARAM),
         (4, 1, C.DUPLICATE_ELEMENT),
     ]

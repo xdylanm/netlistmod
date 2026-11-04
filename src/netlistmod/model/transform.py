@@ -429,10 +429,16 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     def if_block(self, children: list[Any]) -> _Item:
         return _Item(_end(children), lambda span: OpaqueBlock("if", span))
 
+    def lib_block(self, children: list[Any]) -> _Item:
+        return _Item(_end(children), lambda span: OpaqueBlock("lib", span))
+
     def control_line(self, children: list[Any]) -> None:
         return None
 
     def if_line(self, children: list[Any]) -> None:
+        return None
+
+    def lib_line(self, children: list[Any]) -> None:
         return None
 
     def end(self, children: list[Any]) -> tuple[_Item, ...]:
@@ -1029,7 +1035,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         if opener.type == "CURRENT_VARIANT_OPEN":
             raise self._parse_error(
                 opener,
-                f"`{function}(...)` is not implemented in ngspice (manual §11.6.2); "
+                f"`{function}(...)` is not implemented in ngspice (ngspice manual §11.6.2); "
                 "save `i(...)` instead",
             )
         if len(names) > 1:
@@ -1314,6 +1320,8 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
     The whole source is parsed first, so a syntax error anywhere is reported before an RKM
     value, an unsupported form or ``params:`` that the transformer rejects.
     """
+    if not isinstance(source, SourceText):
+        raise TypeError(f"parse takes a SourceText, not {type(source).__name__}")
     if rkm and dialect is Dialect.LTSPICE:
         raise ValueError(
             "rkm=True applies only to ngspice: LTspice reads its embedded decimal natively"

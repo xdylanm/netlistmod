@@ -45,7 +45,7 @@ class DiagnosticCode(StrEnum):
     ENDS_NAME_MISMATCH = "ENDS_NAME_MISMATCH"
     DIALECT_GATED_SYNTAX = "DIALECT_GATED_SYNTAX"
     RKM_SOLVER_MISMATCH = "RKM_SOLVER_MISMATCH"
-    UNKNOWN_DIRECTIVE_PRESERVED = "UNKNOWN_DIRECTIVE_PRESERVED"
+    UNTYPED_DIRECTIVE_PRESERVED = "UNTYPED_DIRECTIVE_PRESERVED"
     NODE_INTO_INSTANCE = "NODE_INTO_INSTANCE"
 
 
@@ -87,7 +87,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
             if index.root.fold(item.ends.name) != index.root.fold(item.name):
                 assert item.ends.name_span is not None
                 checks = (
-                    "ngspice does not check the name (§2.6.2)"
+                    "ngspice does not check the name (ngspice manual §2.6.2)"
                     if index.dialect is Dialect.NGSPICE
                     else f"{_SOLVER[index.dialect]} does not check the name"
                 )
@@ -103,7 +103,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
             span = item.name_span or item.span
             found.append(
                 (
-                    DiagnosticCode.UNKNOWN_DIRECTIVE_PRESERVED,
+                    DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED,
                     "info",
                     f"`{item.name}` is not typed by the library and is preserved verbatim",
                     span,
@@ -132,17 +132,21 @@ def _reference_findings(
         where = ", ".join(candidate.describe() for candidate in searched)
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
-        if any(candidate.has_opaque_include for candidate in searched):
+        if any(candidate.may_define_elsewhere for candidate in searched):
             severity = "info"
-            message += "; it may be defined in an `.include` or `.lib` file, which is not read"
+            message += (
+                "; it may be defined in an `.include` or `.lib` file or an opaque block, which "
+                "is not read"
+            )
         findings.append((code, severity, message, reference.span))
     if reference in index.late_param_uses:
         findings.append(
             (
                 DiagnosticCode.PARAM_USED_BEFORE_DEFINITION,
                 "warning",
-                f"parameter `{reference.name}` is used before its `.param` definition "
-                f"(§2.11.1); {_SOLVER[index.dialect]} still resolves it",
+                f"parameter `{reference.name}` is used before its `.param` definition"
+                f"{' (ngspice manual §2.11.1)' if index.dialect is Dialect.NGSPICE else ''}; "
+                f"{_SOLVER[index.dialect]} still resolves it",
                 reference.span,
             )
         )
@@ -155,7 +159,7 @@ def _reference_findings(
         and not model_type_allowed(owner, target.model_type)
     ):
         allowed = ", ".join(f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner)))
-        cited = " (§2.5)" if index.dialect is Dialect.NGSPICE else ""
+        cited = " (ngspice manual §2.5)" if index.dialect is Dialect.NGSPICE else ""
         findings.append(
             (
                 DiagnosticCode.MODEL_TYPE_MISMATCH,
@@ -241,7 +245,7 @@ def _reading_of_instance_node(
     if ":" not in rest and (not rest or _is_global(index, rest)):
         return "stopped"
     if child is None:
-        included = any(candidate.has_opaque_include for candidate in scope.chain())
+        included = any(candidate.may_define_elsewhere for candidate in scope.chain())
         return "unknown" if included else None
     if ":" in rest:
         return _reading_of_instance_node(index, child, rest)
@@ -342,7 +346,7 @@ def _value_findings(value: NumericValue) -> list[tuple[DiagnosticCode, Severity,
                 DiagnosticCode.DIALECT_GATED_SYNTAX,
                 "info",
                 f"`{value.text}` is RKM notation, which ngspice reads only in LT compatibility "
-                "mode (decision 0004)",
+                "mode",
                 value.span,
             )
         )
@@ -351,8 +355,7 @@ def _value_findings(value: NumericValue) -> list[tuple[DiagnosticCode, Severity,
             (
                 DiagnosticCode.RKM_SOLVER_MISMATCH,
                 "warning",
-                f"`{value.text}` is read per IEC 60062, but ngspice reads it differently "
-                "(decision 0004)",
+                f"`{value.text}` is read per IEC 60062, but ngspice reads it differently",
                 value.span,
             )
         )

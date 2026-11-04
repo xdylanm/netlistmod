@@ -231,14 +231,24 @@ top_unknown_stmt: TOP_DOT_NAME rest NL
 TOP_DOT_NAME.4: /\.(?:four|noise|tf|fra|wave|net|savebias|savestate|loadstate)(?![a-z0-9_-])/i
 
 // .include, .inc and .lib are opaque and cannot be continued, as in ngspice.
+// A .lib line opens an opaque block when it has one field and an .endl follows before the next
+// one-field .lib or .end (decision 0012). A two-field .lib may stand in the body, and any other
+// .lib stays lib_stmt. The body is never read, so its lines are not topology. A "+" line is an
+// ignored continuation, so one line of the body may hold several texts.
 // spec: LT-OPA-001
 %extend statement: include_stmt
                  | lib_stmt
+                 | lib_block
 include_stmt: (INCLUDE_KW | INC_KW) line_rest LINE_END
 lib_stmt: LIB_KW line_rest LINE_END
+lib_block: LIB_BLOCK_KW BLOCK_TEXT? NL lib_line* ENDL_KW BLOCK_TEXT? NL
+lib_line: (BLOCK_DOT_NAME | BLOCK_TEXT) BLOCK_TEXT* NL
+        | LINE_END
 INCLUDE_KW.4: ".include"i
 INC_KW.4: ".inc"i
 LIB_KW.4: ".lib"i
+LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\r?\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
+ENDL_KW.4: ".endl"i
 
 // .machine ... .endmachine is matched as a block only to be reported as unsupported (decision 5).
 // spec: LT-MCH-001
