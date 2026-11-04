@@ -458,6 +458,7 @@ def test_an_i_line_takes_a_wave_channel() -> None:
         "I1 a 0 1 tbl=(0 0, 1 1)",
         "I1 a 0 AC 1 tbl=(0 0, 1 1)",
         "I1 a 0 tbl=(0 0, 1 1) DC 1",
+        "I1 a 0 tbl=(0 0, 1 1) AC 1",
         "I1 a 0 tbl=(0 0, 1 1) load",
     ],
 )

@@ -42,7 +42,7 @@ of the `*_rejects` families.
 | `PULSE(…) m=2` runs. | `ParseError`: the reference gives V no `m`. | `test_forms_that_run_and_the_library_refuses` |
 | Two `REPEAT` blocks in a row run. | `ParseError`: the reference shows one. | `test_forms_that_the_reference_does_not_show_are_refused` |
 | `I1 a 0 load PULSE(…)`, `I1 a 0 1 load PULSE(…)` and `I1 a 0 load DC 1 PULSE(…)` run. | `ParseError`: the reference writes `load` after the value, and M12 allows it after a function. | `test_forms_outside_the_reference_that_run_and_the_library_refuses` |
-| `I1 a 0 1 tbl=(0 0, 1 1)` runs. | `ParseError`: the reference writes `tbl=` with no value. | `test_forms_outside_the_reference_that_run_and_the_library_refuses` |
+| `I1 a 0 1 tbl=(0 0, 1 1)`, `I1 a 0 AC 1 tbl=(…)`, `I1 a 0 tbl=(…) DC 1`, `I1 a 0 tbl=(…) AC 1` and `I1 a 0 tbl=(…) load` run. | `ParseError`: the reference writes `tbl=` alone. | `test_forms_outside_the_reference_that_run_and_the_library_refuses` |
 | `Trigger=V(a) > 0.5`, with blanks, runs. | `ParseError`: a blank ends the field, so the library cannot tell where the expression stops. Write it without blanks. | `test_forms_outside_the_reference_that_run_and_the_library_refuses` |
 | Joins a `+` line across comment and blank lines. | The `+` line must follow immediately (`LT-CNT-001`). | `test_a_continuation_across_other_lines_runs_but_the_library_rejects_it`; `test_continuation_must_follow_immediately` |
 | Runs `.print`, `.plot` and `.width`. | `ParseError`: not on the closed list (`LT-DIR-001`). | `test_undocumented_commands_run_but_the_library_rejects_them`; `test_other_dot_commands_are_errors` |

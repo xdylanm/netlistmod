@@ -307,6 +307,10 @@ def test_a_scale_factor_after_the_list_or_a_file_stops_both(
         "I1 a 0 1 load PULSE(0 1 1u 1u 1u 2u 5u)",
         "I1 a 0 load DC 1 PULSE(0 1 1u 1u 1u 2u 5u)",
         "I1 a 0 1 tbl=(0 0, 1 1)",
+        "I1 a 0 AC 1 tbl=(0 0, 1 1)",
+        "I1 a 0 tbl=(0 0, 1 1) DC 1",
+        "I1 a 0 tbl=(0 0, 1 1) AC 1",
+        "I1 a 0 tbl=(0 0, 1 1) load",
         "V1 a 0 PULSE(0 1 1u 1u 1u 2u 5u) Trigger=V(a) > 0.5",
     ],
 )

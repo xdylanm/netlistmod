@@ -1,6 +1,6 @@
 # M12 task list — Stimulus specs
 
-> **Status:** READY FOR REVIEW — T1–T10 and the review's R1–R9 are done, with the results in section 5; T11 follows the maintainer's approval
+> **Status:** READY FOR REVIEW — T1–T10 and the reviews' R1–R10 are done, with the results in section 5; T11 follows the maintainer's approval
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M12). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
 
 ## 1. Scope
@@ -200,6 +200,8 @@ The first review's handover was `5e77131`: 5395 passed locally, and `7ebd2e9` ad
 
 **Probes that settled T5:** a nested `REPEAT` stops LTspice, so refusing it costs nothing. Two `REPEAT` blocks in a row run on LTspice, but the reference shows one, so they are refused and recorded in `discrepancies.md`. Scale factors stand before the list, `FILE=` or `REPEAT` (R8).
 
+**R10 (second review)** changes one row of `discrepancies.md` and two tests, and no library code, so the full run above was not repeated. Both table tests pass on the commit that adds them, and CI runs the grammar test.
+
 **The review's non-required items are not taken:** they stay as section 6 describes them. All of them fail loudly with nothing written, or accept a form that does no harm.
 
 **While doing R4,** the solver sweep rejected three of my new golden inputs: `r=` on the last time point, a lone `portnum 2`, and an LTspice `PULSE` with too few arguments. These were data errors, corrected in `eaf36b1`; the library's behaviour was right.
@@ -257,3 +259,18 @@ The developer may take these now or leave them. All of them fail loudly with not
 - **Repeated names.** `PWL(…) r=0 r=1` loads and stops ngspice. `td=`, `z0=` and `Rser=` repeated load and run. `set_stimulus_arg` edits the first.
 - **Batch order.** `set_stimulus("V1", "DISTOF2 .2")` then `set_stimulus("V1", "SIN(0 1)")`, on a line with neither, is refused, while the reverse order works.
 - **`key=True`** is taken as position 1.
+
+## 7. Second review (2026-11-04, `c3c6778`): one change requested
+
+**What the review ran:** `ruff check`, `ruff format --check`, `mypy` and the named `mypy --strict`, all clean. CI on `c3c6778` is green. The full suite with `--require-solver ngspice --require-solver ltspice` gave 5714 passed, 17 failed, 2 skipped, coverage 98.98%. All 17 failures come from three untracked files in `tests/corpus/ngspice/kicad_basic/`, which hold Q and M devices and are not in this branch. The five test modules that failed pass on a clean checkout of `c3c6778` (518 passed). Without the 15 parametrized failures on those files, the count matches the 5716 in section 5. The review did not repeat the whole suite on a clean checkout, or `pre-commit` and the import contract.
+
+**R1–R9:** each first-round reproduction now behaves as requested, and each item has tests. The 309-variant sweep was not repeated; its crashing forms and the forms R7 and R8 changed were checked directly. The golden cases match the table in section 5, and each function's edit changes that function. The new I rules refuse what R7 names, and `set_dc` beside `tbl=` is refused with them.
+
+### Required
+
+[x] **R10 — Record the other table forms that are now refused.** `I1 a 0 tbl=(0 0, 1 1) load`, `I1 a 0 AC 1 tbl=(…)`, `I1 a 0 tbl=(…) DC 1` and `I1 a 0 tbl=(…) AC 1` all run on LTspice, and the library refuses them. Refusing them follows decision 0013, but `ltspice/discrepancies.md` and `test_forms_outside_the_reference_that_run_and_the_library_refuses` cover only `I1 a 0 1 tbl=(…)`. Add them to that row and that test. This changes no library code. The maintainer asks for it before approval, not with T11 (2026-11-04), and the refusals stay as they are.
+
+### Not required
+
+- `V1 a 0 DC 1 ; c` followed by `+ SIN(0 1), AC 1` leaves `+ , AC 1` after `remove_stimulus`. The library loads it and ngspice runs it, so this is only untidy.
+- Section 6's non-required items stay open, as section 5 says. Any that should be fixed need their own task.
