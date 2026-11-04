@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 is complete and M11 is ready for review
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 and M11 are complete, and M12 is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -12,7 +12,7 @@ This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngs
 
 **v1 is a beta.** It is feature complete and tagged `0.9.0`, and it is not published to PyPI. The maintainer then uses it in practice; a 1.0 release is outside this plan.
 
-**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./m11-tasks.md)).
+**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./archive/phase-2/m11-tasks.md)).
 
 ## 2. Assumptions
 
@@ -50,7 +50,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - Replace "milestone sequence TBD" in both device matrices and their JSON files with the milestones in section 5.
 - **Exit:** all checks are green on a pull request. Branch protection is on if the repository's GitHub plan allows it; otherwise the rule is to merge only on green.
 
-### M11 — Carried limits and messages (ready for review; [task list](./m11-tasks.md), [decision 0012](../decisions/0012-carried-limits.md))
+### M11 — Carried limits and messages (complete; [task list](./archive/phase-2/m11-tasks.md), [decision 0012](../decisions/0012-carried-limits.md))
 
 - **`.lib name` … `.endl` blocks** (limit 6): recognise the block in the grammar as opaque, and stop counting its body as top-level topology ([decision 0012](../decisions/0012-carried-limits.md)).
 - **`directives.add` over a singleton** (limit 9): it stays literal and is documented, because ngspice has a real use for two lines of one kind ([decision 0012](../decisions/0012-carried-limits.md)).
