@@ -1,0 +1,9 @@
+the separators before a function
+V1 1 0 1
++ PULSE(0 1 1u)
+R1 1 0 1k
+V2 2 0 1 ; kept
++ SINE(0 1 1k) AC 1
+R2 2 0 1k
+.tran 1u 10u
+.end

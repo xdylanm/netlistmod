@@ -17,6 +17,8 @@ grammar:
 - FOREVER_KW
 - ENDREPEAT_KW
 tests:
+- tests/grammar/test_source_functions.py::test_scale_factors_stand_before_a_file_or_a_repeat
+- tests/solver/test_ltspice_source_functions.py::test_a_scale_factor_before_a_file_or_a_repeat
 - tests/grammar/test_source_functions.py::test_ltspice_repeat_forms
 - tests/solver/test_ltspice_source_functions.py::test_pwl_repeat
 - tests/solver/test_ltspice_source_functions.py::test_a_nested_pwl_repeat_stops_both

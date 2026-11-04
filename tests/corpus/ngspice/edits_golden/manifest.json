@@ -107,7 +107,40 @@
     "source_function.cir": "fa0c34ff7e3a63e339afd8df552a90baf856c8c1bb4efb5af1f7a81460dc991a",
     "set_stimulus.expected.cir": "d2e31cba44de916ec653db77fa1b0548203532b678144f52a53b9dc9e901fba4",
     "set_stimulus_arg.expected.cir": "76f09dd5fa147a26b765e424acdbde76c4b5ef2a14d27497c38454a00b0815aa",
-    "remove_stimulus.expected.cir": "881eb5fe1facdd00dd974e0ce54efb2c9027f5eb5af765c9ab70851396341491"
+    "remove_stimulus.expected.cir": "881eb5fe1facdd00dd974e0ce54efb2c9027f5eb5af765c9ab70851396341491",
+    "source_forms.cir": "76be5b2291aa76f94d4cb9bf6ae39dae642dad7d20c221402267de72a4dea087",
+    "source_external.cir": {
+      "sha256": "8b56c8f009f1b99f5893bc28be5d481a688b5e1374cee911b4c76c4733e92bc9",
+      "solver": {
+        "skip": "EXTERNAL needs ngspice as a shared library."
+      }
+    },
+    "source_separators.cir": "f0d97620b1e4d28e0ba19884c184e25c1b399b71414f0d1ba18c9239145a628e",
+    "exp_arg.expected.cir": "349f4f2cbc6e4201ff85d411459163d305f186bde86ce8057c33e1b2c2892c82",
+    "pwl_arg.expected.cir": "1526e1c3a60eebfd0cda778044a8cfc9859d5a2f5009b04c441dd8418e091ae5",
+    "pwl_r.expected.cir": "108268f0acb6ef45eab6bcba8ce79a01a49087ae4bde909b594c948793bc3198",
+    "pwl_td.expected.cir": "5b1893a9713e9b236dc60fa24e2716d18b7245696c7ebba7a4c1f69ae3c452de",
+    "pwl_replaced.expected.cir": "30256621998a5d183444a20e9c651b58964aa02d8b4a46b0e84f254e97f87a2d",
+    "sffm_arg.expected.cir": "7ccdb11dec4b8f9d5ce224250fffb9471bef1fc0628b2843b7e1fd6f0b3eef9d",
+    "am_arg.expected.cir": "be200fac5ed26527740258e94ad32b8a61486754c0b0749f4366f310f0ca5547",
+    "trnoise_arg.expected.cir": "ffb8b8a421a43aed3d82fe0e674d9ba0a025ff52c35bcf209c5364b04fdeb823",
+    "trrandom_arg.expected.cir": "6f63a27b15a25c6dd2ec2cac15f5cf79bb858bdcf6bff7aaa69a10977c6db1a7",
+    "distof1_arg.expected.cir": "6a20cd3fcf498ce854fbacd22fd52e49d830b9ce1317bcfef8eab05c28cc2ca4",
+    "distof2_set.expected.cir": "1ab73cb0ed551c554fa8eac6eb4c1cbddca6d55ae77724fcd11b785772cf66f1",
+    "distof1_remove.expected.cir": "5f8434c9cc5199cbb22512f8308deeb858915dd851c5eace27031db8f9697a45",
+    "port_z0.expected.cir": "3d249e6ba9e5ed17ff2fab93d8b807324bd72b7dd4b798a0b34dcf38ddba0445",
+    "port_num.expected.cir": "83438cda7ed77b001340af677145b7f4eb5da0ac7d299f2ed38e39de8e740cd8",
+    "external_m.expected.cir": {
+      "sha256": "63e00920b5e473dc4ce1b3f6fdb76116462952709e5852186f491871f9c58cff",
+      "solver": {
+        "skip": "EXTERNAL needs ngspice as a shared library."
+      }
+    },
+    "remove_after_comma.expected.cir": "1d0f8c011f0ecc3e4c7c5fd0406ce0cf5becc52568d21b5736b5ad13f4d31eee",
+    "remove_after_backslash.expected.cir": "10d5f346845321ec314df21a50b7dc6287d18c3defb8854a77092cd8f4a4e3d1",
+    "remove_after_continuation.expected.cir": "3339daa757b73368066bb15780ae4096613283b50dd7891475ba808c6aa1aaab",
+    "remove_after_comment.expected.cir": "ac198275fd0a81f5aceff3f559ac3b7fe762560cff4119410e20046cf658d74c",
+    "remove_distortion_after_comma.expected.cir": "30037177fc324ecd132e65b465a2378ddcaf3edb5785c271ac29ac998f9d0ba2"
   },
   "cases": {
     "value": {
@@ -608,6 +641,241 @@
         ]
       ],
       "expected": "remove_stimulus.expected.cir"
+    },
+    "exp_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VE",
+          1,
+          "2"
+        ]
+      ],
+      "expected": "exp_arg.expected.cir"
+    },
+    "pwl_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VP",
+          3,
+          "-5"
+        ]
+      ],
+      "expected": "pwl_arg.expected.cir"
+    },
+    "pwl_r": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VP",
+          "r",
+          "11NS"
+        ]
+      ],
+      "expected": "pwl_r.expected.cir"
+    },
+    "pwl_td": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VP",
+          "td",
+          "1NS"
+        ]
+      ],
+      "expected": "pwl_td.expected.cir"
+    },
+    "pwl_replaced": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus",
+          "VP",
+          "SIN(0 1 1k)"
+        ]
+      ],
+      "expected": "pwl_replaced.expected.cir"
+    },
+    "sffm_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VS",
+          1,
+          "3"
+        ]
+      ],
+      "expected": "sffm_arg.expected.cir"
+    },
+    "am_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VA",
+          5,
+          "1m"
+        ]
+      ],
+      "expected": "am_arg.expected.cir"
+    },
+    "trnoise_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VN",
+          0,
+          "2m"
+        ]
+      ],
+      "expected": "trnoise_arg.expected.cir"
+    },
+    "trrandom_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VR",
+          3,
+          "2"
+        ]
+      ],
+      "expected": "trrandom_arg.expected.cir"
+    },
+    "distof1_arg": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VD",
+          1,
+          "-45",
+          {
+            "function": "DISTOF1"
+          }
+        ]
+      ],
+      "expected": "distof1_arg.expected.cir"
+    },
+    "distof2_set": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_stimulus",
+          "VD",
+          "DISTOF2 0.5 30"
+        ]
+      ],
+      "expected": "distof2_set.expected.cir"
+    },
+    "distof1_remove": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "VD",
+          {
+            "function": "DISTOF1"
+          }
+        ]
+      ],
+      "expected": "distof1_remove.expected.cir"
+    },
+    "port_z0": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_param",
+          "VQ",
+          "z0",
+          "75"
+        ]
+      ],
+      "expected": "port_z0.expected.cir"
+    },
+    "port_num": {
+      "input": "source_forms.cir",
+      "steps": [
+        [
+          "set_param",
+          "VQ",
+          "portnum",
+          "2"
+        ]
+      ],
+      "expected": "port_num.expected.cir"
+    },
+    "external_m": {
+      "input": "source_external.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VX",
+          "m",
+          "2"
+        ]
+      ],
+      "expected": "external_m.expected.cir"
+    },
+    "remove_after_comma": {
+      "input": "source_separators.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V1"
+        ]
+      ],
+      "expected": "remove_after_comma.expected.cir"
+    },
+    "remove_after_backslash": {
+      "input": "source_separators.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V2"
+        ]
+      ],
+      "expected": "remove_after_backslash.expected.cir"
+    },
+    "remove_after_continuation": {
+      "input": "source_separators.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V3"
+        ]
+      ],
+      "expected": "remove_after_continuation.expected.cir"
+    },
+    "remove_after_comment": {
+      "input": "source_separators.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V4"
+        ]
+      ],
+      "expected": "remove_after_comment.expected.cir"
+    },
+    "remove_distortion_after_comma": {
+      "input": "source_separators.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V5",
+          {
+            "function": "DISTOF1"
+          }
+        ]
+      ],
+      "expected": "remove_distortion_after_comma.expected.cir"
     }
   }
 }

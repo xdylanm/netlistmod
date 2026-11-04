@@ -104,7 +104,6 @@ def test_a_nested_pwl_repeat_stops_both(solver: Solver, tmp_path: Path) -> None:
     "source",
     [
         "V1 a 0 PWL REPEAT FOR 2 (0 0 1u 1 2u 0) ENDREPEAT REPEAT FOR 2 (3u 0 4u 1 5u 0) ENDREPEAT",
-        "V1 a 0 PWL TIME_SCALE_FACTOR=2 REPEAT FOR 2 (0 0 1u 1 2u 0) ENDREPEAT",
     ],
 )
 def test_forms_that_the_reference_does_not_show_are_refused(
@@ -239,3 +238,81 @@ def test_the_half_rectifier_export_loads_and_edits(solver: Solver, tmp_path: Pat
     after = max(run(solver, tmp_path / "after", edited).plot("Transient").real("V(vout)"))
     assert after > before
     assert edited.signature() == netlist.signature()
+
+
+def _half_scale_wave(path: Path) -> None:
+    with wave.open(str(path), "wb") as file:
+        file.setnchannels(1)
+        file.setsampwidth(2)
+        file.setframerate(1_000_000)
+        file.writeframes(struct.pack("<20h", *([16384] * 20)))
+
+
+def test_a_wave_file_on_an_i_line(solver: Solver, tmp_path: Path) -> None:
+    _half_scale_wave(tmp_path / "x.wav")
+    high, low = _range(run(solver, tmp_path, _netlist("I1 a 0 wavefile=x.wav chan=0")))
+    assert low == pytest.approx(-500, abs=5)
+    assert high <= 0
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "I1 a 0 PULSE(0 1 1u 1u 1u 2u 5u) Trigger=V(a)>0.5",
+        "I1 a 0 PULSE(0 1 1u 1u 1u 2u 5u) tripdv=1m",
+    ],
+)
+def test_a_trigger_on_an_i_line_stops_ltspice(solver: Solver, tmp_path: Path, source: str) -> None:
+    # The reference says all time-dependent sources support it, so the library follows it.
+    assert _netlist(source) is not None
+    result = run(solver, tmp_path, _text(source))
+    assert result.returncode != 0
+    assert "Unknown parameter" in result.log
+
+
+@pytest.mark.parametrize(
+    "tail",
+    [
+        "FILE=x.txt",
+        "REPEAT FOR 2 (0 0 1u 1 2u 0) ENDREPEAT",
+        "REPEAT FOREVER (0 0 1u 1 2u 0) ENDREPEAT",
+    ],
+)
+def test_a_scale_factor_before_a_file_or_a_repeat(
+    solver: Solver, tmp_path: Path, tail: str
+) -> None:
+    (tmp_path / "x.txt").write_text("0 0\n1u 1\n", encoding="utf-8")
+    source = f"V1 a 0 PWL VALUE_SCALE_FACTOR=3 {tail}"
+    assert _range(run(solver, tmp_path, _netlist(source))) == pytest.approx((3.0, 0.0), abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    "tail",
+    ["PWL(0 0 1u 1) VALUE_SCALE_FACTOR=3", "PWL FILE=x.txt VALUE_SCALE_FACTOR=3"],
+)
+def test_a_scale_factor_after_the_list_or_a_file_stops_both(
+    solver: Solver, tmp_path: Path, tail: str
+) -> None:
+    (tmp_path / "x.txt").write_text("0 0\n1u 1\n", encoding="utf-8")
+    source = f"V1 a 0 {tail}"
+    assert run(solver, tmp_path, _text(source)).returncode != 0
+    with pytest.raises(ParseError):
+        _netlist(source)
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        "I1 a 0 load PULSE(0 1 1u 1u 1u 2u 5u)",
+        "I1 a 0 1 load PULSE(0 1 1u 1u 1u 2u 5u)",
+        "I1 a 0 load DC 1 PULSE(0 1 1u 1u 1u 2u 5u)",
+        "I1 a 0 1 tbl=(0 0, 1 1)",
+        "V1 a 0 PULSE(0 1 1u 1u 1u 2u 5u) Trigger=V(a) > 0.5",
+    ],
+)
+def test_forms_outside_the_reference_that_run_and_the_library_refuses(
+    solver: Solver, tmp_path: Path, source: str
+) -> None:
+    assert run(solver, tmp_path, _text(source)).ok
+    with pytest.raises(ParseError):
+        _netlist(source)

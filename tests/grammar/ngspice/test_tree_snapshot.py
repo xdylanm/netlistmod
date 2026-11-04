@@ -10,7 +10,8 @@ being reported as an unsupported letter. 15 rejected files changed: 14 lost thos
 ``structure_rejects/text_after_end.cir`` went from ``UnsupportedConstruct`` to ``ParseError``. No
 node or position changed. M11 added ``structure_basic/lib_block.cir`` and
 ``edits_golden/add_lib_block.expected.cir``, and no other entry changed. M12 removed the three
-rejected source function files, added the new accept files, and changed no other entry.
+rejected source function files, added the new accept files and golden files, and changed no other
+entry.
 """
 
 from __future__ import annotations

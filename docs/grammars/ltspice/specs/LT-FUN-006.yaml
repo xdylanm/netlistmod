@@ -18,6 +18,9 @@ grammar:
 core_rules:
 - PWL_KW
 tests:
+- tests/grammar/test_source_functions.py::test_scale_factors_stand_before_a_file_or_a_repeat
+- tests/solver/test_ltspice_source_functions.py::test_a_scale_factor_before_a_file_or_a_repeat
+- tests/solver/test_ltspice_source_functions.py::test_a_scale_factor_after_the_list_or_a_file_stops_both
 - tests/grammar/test_source_functions.py::test_ltspice_file_paths_are_text
 - tests/grammar/test_source_functions.py::test_ltspice_scale_factors_and_wave_channel
 - tests/solver/test_ltspice_source_functions.py::test_pwl_gives_its_waveform

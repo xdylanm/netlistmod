@@ -1,6 +1,6 @@
 # M12 task list — Stimulus specs
 
-> **Status:** READY FOR REVIEW — T1–T10 are done, with the results in section 5; T11 follows the maintainer's approval
+> **Status:** ACTIVE — changes requested: the review of `7ebd2e9` requires R1–R9 in section 6; T11 follows the maintainer's approval
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M12). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
 
 ## 1. Scope
@@ -42,7 +42,7 @@ Based on the probes in section 3. "Alternative" marks an option considered and n
    - There is no table of argument names such as `td` for PULSE's third position. The manual and the LTspice reference name them differently, and each would be one more list to maintain. *Alternative:* add such a table, later, if use shows the need.
 5. **Argument counts are not checked, except that an empty list is refused.** Both solvers refuse `PULSE()`, and it has no slot to edit. `PULSE(1)` and an odd-length `PWL` parse and fail at the solver, because the library does not validate solver inputs. Extra arguments run on both solvers and are kept.
 6. **Add the RF port parameters, which the plan's list leaves out.** `portnum` and `z0` are in the manual (§4.1.11), and today they are recognised only to be rejected. v1 must not leave a manual form unsupported (§6.7). They are written `portnum 1 z0 100` or with `=`, so they are named parameters, not a function. *Alternative:* a named exclusion, like `.machine`.
-7. **One decision record, 0013,** amending §5.3, §7.1 and §7.2, and removing the source functions from `NG-UNS-001` and `LT-UNS-001`.
+7. **One decision record, 0013,** amending §5.3 and §7.2, and removing the source functions from `NG-UNS-001` and `LT-UNS-001`.
 
 ## 3. Starting point (2026-11-04, `a9efb31`)
 
@@ -80,7 +80,7 @@ Probes on ngspice 47 and LTspice 26.1.1: about 150 runs in a `.tran`, from a scr
 - `Rser=` and `Cpar=` run before or after a function on V, and stop on I. `AC 1`, `AC=1` and `Rser` mix with a function in any order.
 - `Trigger=V(a)>0.5` with `tripdv=` and `tripdt=` runs.
 - `PWL TIME_SCALE_FACTOR=2 VALUE_SCALE_FACTOR=3 (…)` runs. The factors stop if written after the list, and after `FILE=`.
-- `PWL REPEAT FOR 2 (…) ENDREPEAT` and `FOREVER` run with a closed sequence, and stop if the last value differs from the first. A nested repeat stops. Two repeats in a row, scale factors before a repeat, and `Rser=` after one run; the reference shows none, so the library refuses the first two and accepts the third as it does after any function.
+- `PWL REPEAT FOR 2 (…) ENDREPEAT` and `FOREVER` run with a closed sequence, and stop if the last value differs from the first. A nested repeat stops. Two repeats in a row, scale factors before a repeat, and `Rser=` after one run. The library refuses the first, because the reference shows one repeat, and accepts the other two (R8; `Rser=` as after any function).
 - `wavefile=x.wav chan=0` was read and stopped on the missing file; T5 runs it with a real file, made in the test's folder.
 - `tbl=(0 0, 1 1)`, with or without commas, runs. `1 step(1,2,3)`, `step(1,2,3)` and `1 step(1 2 3) load` run. `PULSE(...) load` runs. `wavefile=` on an I line stops here on the missing file.
 - `PULSE(...) m=2` runs, although the reference does not list `m` on V. It stays refused and goes in `discrepancies.md`.
@@ -93,7 +93,7 @@ Probes on ngspice 47 and LTspice 26.1.1: about 150 runs in a `.tran`, from a scr
 
 ## 4. Tasks
 
-[x] **T1 — Decision record 0013.** Status `proposed` until M12 closes. It records section 2, and amends §5.3 (`SourceSpec`), §7.1 and §7.2 (the operations and "phase 1: DC and AC only"), and records `SINE` on ngspice as the exception to decision 0002.
+[x] **T1 — Decision record 0013.** Status `proposed` until M12 closes. It records section 2, and amends §5.3 (`SourceSpec`) and §7.2 (the operations and "phase 1: DC and AC only"), and records `SINE` on ngspice as the exception to decision 0002.
 
 [x] **T2 — Shared syntax and node.** Tests first, on both dialects:
 - A typed `SourceSpec` on `_IndependentSource`, with `None` when there is no function: the function's name and span; each argument with its span, as `NumericValue` or `Formula`; the named parameters; and the whole span.
@@ -170,3 +170,55 @@ The commit that records these results adds a few tests and changes docs; its run
 **Probes that settled T5:** a nested `REPEAT` stops LTspice, so refusing it costs nothing. Two `REPEAT` blocks in a row, and scale factors before `REPEAT`, run on LTspice but are not in the reference, so they are refused and recorded in `discrepancies.md`.
 
 **Not done:** no solver has been run on Linux, as before. `Trigger=` with a blank in its expression is refused, because a blank ends the field; I did not probe whether LTspice accepts one.
+
+## 6. Review (2026-11-04, `7ebd2e9`): changes requested
+
+**What the review ran:** the full suite with `--require-solver ngspice --require-solver ltspice` (5403 passed, 2 skipped, 493 deselected, coverage 98.98%), `ruff check`, `ruff format --check`, `mypy` and the named `mypy --strict`, all clean. CI on `7ebd2e9` is green. It also ran about 70 forms on ngspice 47 and LTspice 26.1.1 against the library, and 309 variants that put a comment, a `+` line or a backslash continuation at each field boundary.
+
+**What held:** the 309 variants that loaded gave the same typed fields and a byte-exact round trip. No edit text added topology or a statement. `Formula` arguments and parameters reach `UNRESOLVED_PARAM`, and a quoted file path does not. Batches refuse overlaps. The first parse costs about the same as on `main`, and a 20000-point PWL loads in under 2 seconds.
+
+### Required
+
+Each item needs a test that fails before the fix.
+
+[ ] **R1 — A comment or backslash before a named parameter crashes the load.** `V1 a 0 PWL(0 0 1 1) ; c` followed by `+ r=0` raises `lark.exceptions.VisitError`, not a `ParseError`, from a form that T2 says is accepted. The same happens on ngspice with `\` before `r=`, between `r=` and `td=`, and before EXTERNAL's `m=`, and on LTspice with a comment between `wavefile=x.wav` and `chan=0`. `fn_param` (`transform.py:696`) passes its nested case through `param`, and then the assertion on `ParamAssignment` fails. Add these forms to the comment tests in `test_source_functions.py`.
+
+[ ] **R2 — `chan=` is refused on an I line.** `I1 a 0 wavefile=x.wav chan=0` is a `ParseError`, while `I1 a 0 wavefile=x.wav` loads. The reference gives I the same waveform types, WAV included, and the line runs on LTspice with the expected output (-500 V across 1k at half scale). `_if` (`ltspice.lark:233`) has no `fn_param`. Add a solver test with a real wave file on I, and cite the I section in `LT-FUN-008`. Section 3 records this form only as stopping on a missing file, so T5 never ran it.
+
+[ ] **R3 — `remove_stimulus` handles only blanks before the function** (`operations.py:554`).
+- `V1 a 0 DC 1, SIN(0 1)` and `V1 a 0, SIN(0 1)` load and run on ngspice, and the removal is an `EditError`, because the comma stays.
+- A backslash continuation before the function fails the same way.
+- `V1 a 0 DC 1` followed by `+ PULSE(0 1 1u)` leaves a line holding only `+`. Both solvers run that, but it is text the edit did not need to leave (P3).
+
+Remove the separator before the function, including a comma or a whole continuation that holds nothing else, and keep any comment. The same applies to a distortion input. Add golden diffs.
+
+[ ] **R4 — The exit criterion is not met: not every function has a golden diff.** Section 1 asks for a spec entry, golden diff and solver test for each function. The golden cases are three per dialect, and their inputs are only PULSE on ngspice and SINE on LTspice. Add cases for the other forms: on ngspice EXP, PWL with `r=` and `td=`, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1 and DISTOF2, and the port parameters; on LTspice EXP, SFFM, PWL, the file, repeat and scale forms, `wavefile=`, `tbl=` and `step(...)`. Inline tests in `test_edit_stimulus.py` do not count. Section 5 should state the result against this criterion.
+
+[ ] **R5 — A trigger on an I line is accepted, and LTspice stops on it.** `I1 a 0 PULSE(…) Trigger=V(a)>0.5` and `tripdv=1m` stop with "Unknown parameter", while the same text on V runs. `test_source_functions.py` line 74 pins it as accepted. The reference says all time-dependent sources support a trigger, so keeping it follows the rule used for the DISTOF forms that stop. It has no record, though: add a solver test and a row in `discrepancies.md`.
+
+[ ] **R6 — `set_stimulus` writes a bare LF into a CRLF file.** `set_stimulus("V1", "PULSE(0\n+ 1)")` on a CRLF netlist gives `V1 a 0 PULSE(0\n+ 1)\r\n`. Refuse a line break in the text, which is the simplest fix, or join the lines with the file's line ending as directive text does (§7.2). Add a test.
+
+[ ] **R7 — The I line accepts forms that no decision covers.** `I1 a 0 load PULSE(…)`, `I1 a 0 1 load PULSE(…)`, `I1 a 0 load DC 1 PULSE(…)` and `I1 a 0 1 tbl=(0 0, 1 1)` load and run. T4 approves `load` after a function, and the reference writes `tbl=` with no value. Decision 2 says solver behaviour does not widen the reference, and `discrepancies.md` already refuses `I1 a 0 1 load AC 1` for the reference's order. Refuse these, and add them to the table of forms LTspice runs and the library rejects. `I1 a 0 1 step(…)` and `load` after a function stay.
+
+[ ] **R8 — Accept scale factors before `FILE=` and `REPEAT` (maintainer's decision, 2026-11-04).** `PWL VALUE_SCALE_FACTOR=3 FILE=x.txt` runs with the output scaled to 3, and so does the same factor before `REPEAT`. The library refuses both. The reference lists both factors as "Options" under all four PWL forms, so the library should accept them there. Add a solver test and a golden diff, and update decision 0013, `LT-FUN-006`, `LT-FUN-007` and section 5's "the reference shows neither". Remove the scale-factor half of the `REPEAT` row in `discrepancies.md`, and the matching case in `test_forms_that_the_reference_does_not_show_are_refused`. Factors after the list or after `FILE=` stop LTspice and stay refused.
+
+[ ] **R9 — Documentation.**
+- `ltspice/discrepancies.md` line 23 cites `test_source_functions_run_and_are_unsupported` and `test_source_functions_are_unsupported`, which this branch deletes.
+- `Trigger=V(a) > 0.5`, with blanks, runs on LTspice and the library refuses it. Move it from "Not done" in section 5 to a row in `discrepancies.md` with a test.
+- §5.3 omits `SourceSpec.forever`, which `elements.md` lists.
+- Section 2 decision 7 and T1 say §7.1 is amended, and decision 0013 lists only §5.3 and §7.2. §7.1 already allows it, so correct this list.
+- The README's "Edits" line still names only "source DC and AC values".
+- Decision 0013 should also state that `set_stimulus` and `remove_stimulus` drop a comment inside the function's span, and that a `Trigger=` expression hides parameter references as well as nets (`Trigger={x}` gives no `UNRESOLVED_PARAM`).
+
+Then rerun the full local check set and update section 5.
+
+### Not required
+
+The developer may take these now or leave them. All of them fail loudly with nothing written, or accept a form that does no harm.
+
+- **Messages.** `remove_stimulus` on `V1 a 0 PULSE(0 1) Trigger=V(a)>0` or `V1 a 0 Rser=1 DC 1 PULSE(0 1)` reports a raw parse error. A specific `EditError` would help, as the I line's does. There is also no way to remove a trigger once it is written. `set_stimulus_arg` with a new scale factor name always fails with a parse error, because it inserts after the list; R8 adds forms this applies to.
+- **Bare `DISTOF1`.** `set_stimulus_arg("V1", 0, ".1", function="DISTOF1")` says there is no list to add to, while decision 4 says one past the end appends. `set_stimulus("V1", "DISTOF1 .1")` works.
+- **Comment forms refused.** `(0 0, ; c` followed by `+ 1 1)`, `REPEAT ; c` followed by `+ FOR 2`, `FOR ; c` followed by `+ 2`, and `portnum ; c` followed by `+ 1`. These were not run on a solver.
+- **Repeated names.** `PWL(…) r=0 r=1` loads and stops ngspice. `td=`, `z0=` and `Rser=` repeated load and run. `set_stimulus_arg` edits the first.
+- **Batch order.** `set_stimulus("V1", "DISTOF2 .2")` then `set_stimulus("V1", "SIN(0 1)")`, on a line with neither, is refused, while the reverse order works.
+- **`key=True`** is taken as position 1.

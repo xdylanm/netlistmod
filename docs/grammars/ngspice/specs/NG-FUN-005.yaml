@@ -11,6 +11,7 @@ grammar:
 - pwl_stimulus
 - PWL_KW
 tests:
+- tests/grammar/test_source_functions.py::test_a_gap_before_an_ngspice_named_parameter
 - tests/grammar/test_source_functions.py::test_ngspice_accepts
 - tests/grammar/test_source_functions.py::test_ngspice_named_parameters_belong_to_the_function
 - tests/solver/test_ngspice_source_functions.py::test_pwl_gives_its_waveform

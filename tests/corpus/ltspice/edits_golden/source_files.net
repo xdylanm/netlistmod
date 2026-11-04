@@ -1,0 +1,11 @@
+source functions that read a file
+VF 1 0 PWL file=stimulus.txt
+R1 1 0 1k
+VV 2 0 PWL VALUE_SCALE_FACTOR=3 FILE=stimulus.txt
+R2 2 0 1k
+VW 3 0 wavefile=input.wav chan=0
+R3 3 0 1k
+IW 4 0 wavefile=input.wav chan=0
+R4 4 0 1k
+.tran 1u 10u
+.end

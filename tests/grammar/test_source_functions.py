@@ -414,3 +414,91 @@ def test_comments_between_the_parts_of_an_ltspice_function(line: str) -> None:
     assert source.stimulus is not None
     assert source.trailing_comments
     assert netlist.source.text == _text(line)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "V1 a 0 PWL(0 0 1 1) ; c\n+ r=0",
+        "V1 a 0 PWL(0 0 1 1) r=0 ; c\n+ td=1",
+        "V1 a 0 PWL(0 0 1 1) \\\\\nr=0",
+        "V1 a 0 PWL(0 0 1 1) r=0 \\\\\ntd=1",
+        "I1 a 0 dc 0 external \\\\\nm=2",
+        "I1 a 0 dc 0 external ; c\n+ m=2",
+    ],
+)
+def test_a_gap_before_an_ngspice_named_parameter(line: str) -> None:
+    netlist = _load(line, Dialect.NGSPICE)
+    spec = _source(netlist).stimulus
+    assert spec is not None
+    assert spec.params
+    assert netlist.source.text[spec.span.start : spec.span.end].endswith(line[-3:])
+    assert netlist.source.text == _text(line)
+
+
+def test_a_gap_before_a_wave_channel() -> None:
+    line = "V1 a 0 wavefile=x.wav ; c\n+ chan=0"
+    spec = _source(_load(line, Dialect.LTSPICE)).stimulus
+    assert spec is not None
+    assert [param.name for param in spec.params] == ["wavefile", "chan"]
+
+
+def test_an_i_line_takes_a_wave_channel() -> None:
+    spec = _source(_load("I1 a 0 wavefile=x.wav chan=0", Dialect.LTSPICE)).stimulus
+    assert spec is not None
+    assert [param.name for param in spec.params] == ["wavefile", "chan"]
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "I1 a 0 load PULSE(0 1)",
+        "I1 a 0 1 load PULSE(0 1)",
+        "I1 a 0 load DC 1 PULSE(0 1)",
+        "I1 a 0 1 tbl=(0 0, 1 1)",
+        "I1 a 0 AC 1 tbl=(0 0, 1 1)",
+        "I1 a 0 tbl=(0 0, 1 1) DC 1",
+        "I1 a 0 tbl=(0 0, 1 1) load",
+    ],
+)
+def test_i_line_forms_outside_the_reference_are_refused(line: str) -> None:
+    with pytest.raises(ParseError):
+        _load(line, Dialect.LTSPICE)
+
+
+@pytest.mark.parametrize(
+    "line",
+    ["I1 a 0 1 step(1,2) load", "I1 a 0 PULSE(0 1) load", "I1 a 0 1 PULSE(0 1) load"]
+    + ["I1 a 0 1 load", "I1 a 0 AC 1 load", "I1 a 0 1 AC 1 PULSE(0 1)"],
+)
+def test_i_line_forms_that_stay(line: str) -> None:
+    _load(line, Dialect.LTSPICE)
+
+
+@pytest.mark.parametrize(
+    ("line", "names"),
+    [
+        ("V1 a 0 PWL VALUE_SCALE_FACTOR=3 FILE=x.txt", ["VALUE_SCALE_FACTOR", "FILE"]),
+        (
+            "V1 a 0 PWL TIME_SCALE_FACTOR=2 VALUE_SCALE_FACTOR=3 file=x.txt",
+            ["TIME_SCALE_FACTOR", "VALUE_SCALE_FACTOR", "file"],
+        ),
+        (
+            "V1 a 0 PWL VALUE_SCALE_FACTOR=3 REPEAT FOR 2 (0 0 1u 0) ENDREPEAT",
+            ["VALUE_SCALE_FACTOR", "FOR"],
+        ),
+        (
+            "V1 a 0 PWL VALUE_SCALE_FACTOR=3 REPEAT FOREVER (0 0 1u 0) ENDREPEAT",
+            ["VALUE_SCALE_FACTOR"],
+        ),
+    ],
+)
+def test_scale_factors_stand_before_a_file_or_a_repeat(line: str, names: list[str]) -> None:
+    spec = _source(_load(line, Dialect.LTSPICE)).stimulus
+    assert spec is not None
+    assert [param.name for param in spec.params] == names
+
+
+def test_a_trigger_with_blanks_is_refused() -> None:
+    with pytest.raises(ParseError):
+        _load("V1 a 0 PULSE(0 1) Trigger=V(a) > 0.5", Dialect.LTSPICE)
