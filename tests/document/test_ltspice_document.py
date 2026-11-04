@@ -372,6 +372,12 @@ def test_a_global_node_in_an_instance_stops_ltspice(declaration: str, node: str)
     assert "stops" in netlist.diagnostics[0].message
 
 
+def test_a_node_into_an_instance_of_a_definition_beside_a_lib_block_is_info() -> None:
+    netlist = _netlist("X1 a c s\nR9 x1:n b 1k\n.lib sec\n.endl")
+    found = [d for d in netlist.diagnostics if d.code is DiagnosticCode.NODE_INTO_INSTANCE]
+    assert [d.severity for d in found] == ["info"]
+
+
 def test_a_node_into_an_instance_of_an_included_definition_is_info() -> None:
     netlist = _netlist("X1 a c s\nR9 x1:n b 1k\n.include h.inc")
     assert _instance_nodes(netlist) == [("x1:n", "info")]
