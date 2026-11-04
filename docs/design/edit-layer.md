@@ -188,7 +188,7 @@ All errors derive from `SpiceNetlistError`. `EditError`, `TopologyError` and `To
 | set or add an instance parameter | `set_param`, `set_instance_param` | `test_edit_elements.py`, golden |
 | set an element's model name | `set_model` | `test_edit_elements.py`, golden |
 | add or set a `.param`; edit `.model` parameters | `params.set`, `set_model_param` | `test_edit_statements.py`, golden |
-| edit source stimulus specs (phase 1: DC, AC) | `set_dc`, `set_ac` | `test_edit_elements.py`, golden |
+| edit source stimulus specs | `set_dc`, `set_ac`, `set_stimulus`, `set_stimulus_arg`, `remove_stimulus` | `test_edit_elements.py`, `test_edit_stimulus.py`, golden |
 | `K` coupling value | `set_coupling` | `test_edit_elements.py`, golden |
 | add, replace or remove directives with placement | `directives.add/replace/remove/set`, `Placement` | `test_edit_directives.py`, golden |
 | add an `.include` of a harness file | `add_include` | `test_edit_directives.py`, golden |
@@ -227,6 +227,7 @@ The conventions, verification and placement are the same (decision 0009 item 17)
 - `set_param` also edits V and I parameters, a diode's area (positional, or written `area=`), and a flag's value in place (`off` becomes `off=1`).
 - `set_model` and `remove_value` on an R, C or L line are an `EditError`: LTspice has no such model.
 - `rkm=True` is a `ValueError`; embedded decimals need no option.
+- `set_stimulus` puts a new function before `Rser` and `Cpar`, after the DC and AC parts. Those parameters and the trigger parameters are the line's, so they stay when the function changes. A `set_stimulus_arg` name finds them too.
 - `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused. A whole `.lib` block is accepted on both dialects (decision 0012).
 
 `tests/edits` runs on both dialects, with `tests/support/dialects.py` marking the cases only one dialect reads.

@@ -31,7 +31,6 @@ from netlistmod import (
     VoltageSource,
     parse,
 )
-from netlistmod.grammar.loader import parse_tree
 
 
 def _parse(text: str, *, rkm: bool = False):
@@ -350,65 +349,6 @@ def test_sources_have_dc_and_ac_slots(
 def test_malformed_sources_are_rejected(line: str, column: int) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
-
-
-@pytest.mark.parametrize(
-    ("line", "keyword"),
-    [
-        ("VIN 3 0 PULSE(-1 1 2NS 2NS 2NS 50NS 100NS 5)", "PULSE"),
-        ("VIN 13 2 0.001 AC 1 SIN(0 1 1MEG)", "SIN"),
-        ("ISRC 23 21 AC 0.333 45.0 SFFM(0 1 10K 5 1K)", "SFFM"),
-        ("V1 a 0 exp(0 1)", "EXP"),
-        ("V1 a 0 pwl(0 0 1n 1)", "PWL"),
-        ("V1 a 0 DC 1 am(1 0 1k 10)", "AM"),
-        ("V1 a 0 TRNOISE(1n 1n 0 0)", "TRNOISE"),
-        ("V1 a 0 TRRANDOM(1 1n)", "TRRANDOM"),
-        ("V1 a 0 EXTERNAL", "EXTERNAL"),
-        ("V1 a 0 PORT 1", "PORT"),
-        ("VCARRIER 1 0 DISTOF1 0.1 -90.0", "DISTOF1"),
-        ("VMODULATOR 2 0 DISTOF2 0.01", "DISTOF2"),
-        ("IIN1 1 5 AC 1 DISTOF1 DISTOF2 0.001", "DISTOF1"),
-    ],
-)
-def test_stimulus_functions_and_distof_are_unsupported_at_the_keyword(
-    line: str, keyword: str
-) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(f"title\n{line}\n.end\n")
-    error = captured.value
-    assert error.construct.startswith(f"ngspice {keyword} source")
-    assert (error.line, error.column) == (2, line.upper().index(keyword) + 1)
-
-
-@pytest.mark.parametrize(
-    "lines",
-    [
-        "VIN 3 0 PULSE(-1 1\n+ 2NS 2NS) ; c\n+ 5",
-        "VIN 3 0 \\\\\nPULSE(-1 1 \\\\\n2NS)",
-        "VIN 3 0\n+ PULSE(-1 1 2NS) $ c",
-    ],
-)
-def test_continued_stimulus_is_unsupported_at_the_keyword(lines: str) -> None:
-    text = f"title\n{lines}\n.end\n"
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(text)
-    offset = text.index("PULSE")
-    assert (captured.value.line, captured.value.column) == SourceText(text).position(offset)
-
-
-def test_unsupported_source_does_not_swallow_the_next_statement() -> None:
-    # The stimulus text ends at its line end: at grammar level the next line is still parsed
-    # as its own statement, and a malformed next line is reported there.
-    tree = parse_tree(SourceText("title\nV1 a 0 PULSE(0 1)\nR1 a b 1\n.end\n"), Dialect.NGSPICE)
-    assert [child.data for child in tree.children[1:3]] == ["voltage_source", "resistor"]
-    with pytest.raises(ParseError) as captured:
-        parse_tree(SourceText("title\nV1 a 0 PULSE(0 1)\nR1 a\n.end\n"), Dialect.NGSPICE)
-    assert (captured.value.line, captured.value.column) == (3, 5)
-    # The full parse finds every syntax error before it rejects a recognised form, so the
-    # malformed line 3 is reported, not the unsupported function on line 2.
-    with pytest.raises(ParseError) as full:
-        _parse("title\nV1 a 0 PULSE(0 1)\nR1 a\n.end\n")
-    assert (full.value.line, full.value.column) == (3, 5)
 
 
 # --- D -----------------------------------------------------------------------------------------

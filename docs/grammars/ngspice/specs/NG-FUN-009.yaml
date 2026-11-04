@@ -1,0 +1,15 @@
+id: NG-FUN-009
+dialect: ngspice
+construct: TRRANDOM
+manual_ref: '[ngspice-manual] §4.1.8 "Random voltage source"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- TRRANDOM_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ngspice_accepts
+- tests/solver/test_ngspice_source_functions.py::test_trrandom_runs
+notes: See decision 0013.

@@ -1,0 +1,24 @@
+id: LT-FUN-007
+dialect: ltspice
+construct: PWL REPEAT
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- pwl_stimulus
+- pwl_repeat
+- pwl_endrepeat
+- REPEAT_KW
+- FOR_KW
+- FOREVER_KW
+- ENDREPEAT_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ltspice_repeat_forms
+- tests/solver/test_ltspice_source_functions.py::test_pwl_repeat
+- tests/solver/test_ltspice_source_functions.py::test_a_nested_pwl_repeat_stops_both
+- tests/solver/test_ltspice_source_functions.py::test_forms_that_the_reference_does_not_show_are_refused
+notes: See decision 0013.

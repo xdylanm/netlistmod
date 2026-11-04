@@ -11,11 +11,14 @@
 %import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
 %import .core (diode, subckt_instance, x_node, x_last, x_name, x_param, eol, node, value, param)
 %import .core (r_value, c_value, model, flag)
-%import .core (inductor_ref, dc_spec, dc_keyword, ac_spec, stimulus, charge)
+%import .core (inductor_ref, dc_spec, dc_after, dc_keyword, ac_spec, charge)
+%import .core (_s0, _sd, _sam, _sa, _sdam, _sda, _sf, _sfd, _sfa, _sfam, _sfdam, _sfda, _line_end)
+%import .core (_source_fn, stimulus, pwl_stimulus, fn_param, fn_list, fn_first, fn_arg, FN_PARAM_KW)
 %import .core (SEP, CSEP, EQ, WORD, NUMBER, _MICRO)
 %import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME)
 %import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
-%import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, STIMULUS_KW, Q_KW)
+%import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
+%import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
 %import .core (subckt_def, subckt_header, subckt_port, subckt_item, not_in_subckt, ends_line)
@@ -211,17 +214,79 @@ INDUCTANCE_KW.2: "inductance"i
 %extend x_param: (CSEP | BS_CONT) WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
                | BS_CONT x_param
 
-// Forms recognised only to be rejected: stimulus functions and DISTOF on a source and the charge
-// form of a behavioral capacitor (UnsupportedConstruct), and the HSPICE "params:" keyword on a
-// subcircuit call or definition (ParseError). Their arguments are statement text up to the line end.
-// spec: NG-UNS-001
-%extend stimulus: (CSEP | BS_CONT) STIMULUS_KW rest NL
+// A line may end in distortion inputs, and a V line in RF port parameters, written with a blank or
+// "=" (manual §4.1, §4.1.11). A distortion input's magnitude and phase are optional, and each is a
+// plain value after its keyword. The rules are right-linear, as for the rest of a source line.
+// spec: NG-FUN-001
+%override voltage_source: V_NAME node node _s0{fn_param, _ng_end}
+%override current_source: I_NAME node node _s0{fn_param, _ng_end}
+%override FN_PARAM_KW.2: /(?:r|td|m)(?=[ \t]*=)/i
+%extend fn_param: (CSEP | BS_CONT) FN_PARAM_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+                | BS_CONT fn_param
+%extend stimulus: SEP (AM_KW | TRNOISE_KW | TRRANDOM_KW | SINE_KW) fn_list
+                | (CSEP | BS_CONT) (PULSE_KW | EXP_KW | SFFM_KW | SIN_KW | AM_KW | TRNOISE_KW | TRRANDOM_KW | SINE_KW) fn_list
                 | BS_CONT stimulus
+%extend fn_list: BS_CONT fn_list
+%extend fn_first: BS_CONT fn_first
+%extend fn_arg: BS_CONT (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+              | BS_CONT fn_arg
+
+// A PWL takes r= and td= after its list (manual §4.1.4). fn_param reaches any function, and the
+// transformer reports r=, td= or m= on the wrong one.
+// spec: NG-FUN-005
+%extend pwl_stimulus: (CSEP | BS_CONT) PWL_KW fn_list
+                    | BS_CONT pwl_stimulus
+
+// SINE is not in the manual; ngspice 47 reads it as SIN. The one exception to decision 0002's rule
+// that solver behaviour does not widen the manual (decision 0013).
+// spec: NG-FUN-003
+SINE_KW.2: "sine"i
+
+// spec: NG-FUN-007
+AM_KW.2: "am"i
+
+// spec: NG-FUN-008
+TRNOISE_KW.2: "trnoise"i
+
+// spec: NG-FUN-009
+TRRANDOM_KW.2: "trrandom"i
+
+// EXTERNAL takes no list, and an optional m= (manual §4.1.9).
+// spec: NG-FUN-010
+%extend _source_fn: external_kw
+external_kw: (SEP | CSEP | BS_CONT) EXTERNAL_KW
+           | (SEP | TRAILING_COMMENT | BS_CONT) external_kw
+EXTERNAL_KW.2: "external"i
+
+// spec: NG-FUN-011
+_ng_end: distof1_kw _dm1 | distof2_kw _dm2 | _ng_port
+_dm1: value _dp1 | _dt1
+_dp1: value _dt1 | _dt1
+_dt1: distof2_kw _dm2 | _ng_port
+_dm2: value _dp2 | _ng_port
+_dp2: value _ng_port | _ng_port
+distof1_kw: (SEP | CSEP | BS_CONT) DISTOF1_KW
+          | (SEP | TRAILING_COMMENT | BS_CONT) distof1_kw
+distof2_kw: (SEP | CSEP | BS_CONT) DISTOF2_KW
+          | (SEP | TRAILING_COMMENT | BS_CONT) distof2_kw
+DISTOF1_KW.2: "distof1"i
+DISTOF2_KW.2: "distof2"i
+
+// The transformer reports these on an I line: the manual gives them to VSRC only.
+// spec: NG-FUN-012
+_ng_port: port_param _ng_port | _line_end
+port_param: (SEP | CSEP | BS_CONT) PORT_KW (EQ | SEP) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | BS_CONT) port_param
+PORT_KW.2: /portnum|z0/i
+
+// Forms recognised only to be rejected: the charge form of a behavioral capacitor
+// (UnsupportedConstruct), and the HSPICE "params:" keyword on a subcircuit call or definition
+// (ParseError). Their arguments are statement text up to the line end.
+// spec: NG-UNS-001
 %extend charge: (CSEP | BS_CONT) Q_KW EQ rest NL
               | BS_CONT charge
 params_keyword: (SEP | CSEP | BS_CONT) PARAMS_KW rest NL
               | (SEP | TRAILING_COMMENT | BS_CONT) params_keyword
-%override STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm|am|trnoise|trrandom|external|port|distof1|distof2/i
 PARAMS_KW.2: "params:"i
 
 // A bare expression is recognised (BARE_EXPR, the lowest priority, tried after every value

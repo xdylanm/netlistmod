@@ -20,7 +20,7 @@ and then the library test that pins the library's side.
 | `.end` may be omitted, and text after it is ignored (L10, L19). | `ParseError`: `.end` is required, with only blank lines after it. A deliberate exception (decision 0009 item 4), to revisit after the phase 1 review. | `test_end_may_be_omitted_and_text_after_it_is_ignored`; `test_end_is_required_with_only_blank_lines_after_it` |
 | An expression may stand for a node (`I1 {CONNECT} 0 2m`) or a subcircuit name (`X1 a b {name}`). | `ParseError`: the node list would not be known text, against the topology guarantee (P4). | `test_an_expression_for_a_node_runs_but_the_library_rejects_it`; `test_malformed_subcircuit_calls`; `names_rejects/name_with_brace.cir` |
 | `.step ... list`, `.dc ... list` and `.ac list` take comma-separated values. | Values are separated by blanks; a comma is a `ParseError`. | `test_comma_lists_in_step_run_but_the_library_rejects_them`; `test_comma_lists_in_dc_and_ac_run_but_the_library_rejects_them`; `test_malformed_ac`; `test_malformed_step` |
-| `I` has `tbl=` and `step(...)`; `C` has `Q=`; `L` has `Flux=` and the hysteretic form; V and I have source functions; `.machine`. | `UnsupportedConstruct` in phase 1. | `tests/solver/test_ltspice_validation.py::test_other_forms_run_and_are_unsupported`; `test_source_functions_run_and_are_unsupported`; `test_a_state_machine_runs_and_is_unsupported`; `test_source_functions_are_unsupported`; `test_nonlinear_forms_are_unsupported`; `test_machine_block_is_unsupported` |
+| `C` has `Q=`; `L` has `Flux=` and the hysteretic form; `.machine`. | `UnsupportedConstruct` in phase 1. | `tests/solver/test_ltspice_validation.py::test_other_forms_run_and_are_unsupported`; `test_source_functions_run_and_are_unsupported`; `test_a_state_machine_runs_and_is_unsupported`; `test_source_functions_are_unsupported`; `test_nonlinear_forms_are_unsupported`; `test_machine_block_is_unsupported` |
 
 ## Forms LTspice runs and the library rejects
 
@@ -29,6 +29,10 @@ of the `*_rejects` families.
 
 | LTspice 26.1.1 | Library behaviour | Evidence |
 |---|---|---|
+| `PULSE 0 1 1u`, with no parentheses, runs. | `ParseError`: the reference writes them (decision 0013). | `test_forms_that_run_and_the_library_refuses` |
+| `PWL(file=x.txt)` runs. | `ParseError`: the reference writes `PWL FILE=`. | `test_forms_that_run_and_the_library_refuses` |
+| `PULSE(…) m=2` runs. | `ParseError`: the reference gives V no `m`. | `test_forms_that_run_and_the_library_refuses` |
+| Two `REPEAT` blocks in a row, and scale factors before `REPEAT`, run. | `ParseError`: the reference shows neither. | `test_forms_that_the_reference_does_not_show_are_refused` |
 | Joins a `+` line across comment and blank lines. | The `+` line must follow immediately (`LT-CNT-001`). | `test_a_continuation_across_other_lines_runs_but_the_library_rejects_it`; `test_continuation_must_follow_immediately` |
 | Runs `.print`, `.plot` and `.width`. | `ParseError`: not on the closed list (`LT-DIR-001`). | `test_undocumented_commands_run_but_the_library_rejects_them`; `test_other_dot_commands_are_errors` |
 | Accepts `.opti` (a prefix of `.options`). | `ParseError`. | `test_undocumented_commands_run_but_the_library_rejects_them`; `test_malformed_options` |

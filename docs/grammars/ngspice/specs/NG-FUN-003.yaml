@@ -1,0 +1,17 @@
+id: NG-FUN-003
+dialect: ngspice
+construct: SIN, and SINE
+manual_ref: '[ngspice-manual] §4.1.2 "Sinusoidal"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- SIN_KW
+- SINE_KW
+tests:
+- tests/grammar/test_source_functions.py::test_sine_is_accepted_on_ngspice_as_its_own_name
+- tests/solver/test_ngspice_source_functions.py::test_pulse_and_sin_give_their_waveforms
+- tests/solver/test_ngspice_source_functions.py::test_sine_reads_as_sin
+notes: See decision 0013.

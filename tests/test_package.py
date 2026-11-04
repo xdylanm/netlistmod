@@ -53,6 +53,7 @@ def test_public_exports_and_version() -> None:
         "NumericValue",
         "ParamAssignment",
         "Resistor",
+        "SourceSpec",
         "SubcktInstance",
         "SubcktReference",
         "Value",

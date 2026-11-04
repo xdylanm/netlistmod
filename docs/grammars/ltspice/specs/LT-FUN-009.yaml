@@ -1,0 +1,17 @@
+id: LT-FUN-009
+dialect: ltspice
+construct: I table
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "I — Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- table_stimulus
+- TBL_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ltspice_table_and_step_load
+- tests/solver/test_ltspice_source_functions.py::test_a_table_runs
+notes: See decision 0013.

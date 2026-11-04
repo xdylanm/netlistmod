@@ -1,0 +1,5 @@
+source function golden input
+V1 a 0 DC 1 PULSE(0 1 1n 1n 1n 2n 5n) AC 1
+R1 a 0 1k
+.tran 1n 10n
+.end

@@ -48,6 +48,49 @@ netlistmod.errors.EditError: set_value R22: `1k 2k` does not re-parse as a value
 
 ```
 
+## Edit a source's function, DC and AC parts separately
+
+A V or I line has three separate parts, and each operation changes only its own. `set_stimulus`
+replaces the function, or adds one after the DC and AC parts. `set_dc` and `set_ac` edit those
+parts, and they stay when the function changes.
+
+```python
+>>> from netlistmod import Dialect, Netlist
+>>> source = Netlist.from_text(
+...     "t\nV1 a 0 DC 2 AC 1 SIN(0 1 1k)\nR1 a 0 1k\n.end\n", dialect=Dialect.NGSPICE
+... )
+>>> print(source.set_stimulus("V1", "PULSE(0 5 1u)").text, end="")
+t
+V1 a 0 DC 2 AC 1 PULSE(0 5 1u)
+R1 a 0 1k
+.end
+>>> print(source.set_dc("V1", "3").set_ac("V1", "2").text, end="")
+t
+V1 a 0 DC 3 AC 2 SIN(0 1 1k)
+R1 a 0 1k
+.end
+
+```
+
+`set_stimulus_arg` sets one argument by 0-based position, or by a name the line writes as
+`name=value`, such as a PWL's `td`. A position one past the end appends, and a further one is an
+`EditError`, because the library does not invent the arguments between. Argument counts are not
+checked: that is the solver's job. `remove_stimulus` removes the function and keeps the rest.
+
+```python
+>>> print(source.set_stimulus_arg("V1", 1, "5").set_stimulus_arg("V1", 3, "1u").text, end="")
+t
+V1 a 0 DC 2 AC 1 SIN(0 5 1k 1u)
+R1 a 0 1k
+.end
+>>> print(source.remove_stimulus("V1").text, end="")
+t
+V1 a 0 DC 2 AC 1
+R1 a 0 1k
+.end
+
+```
+
 ## Replace a value with a formula and add the `.param`
 
 `set_formula` writes `{expression}`. `params.set` replaces the value of an existing parameter,

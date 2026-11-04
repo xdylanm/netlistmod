@@ -11,28 +11,19 @@ validated_on:
   version: '47'
   date: '2026-10-31'
 grammar:
-- stimulus
 - charge
 - params_keyword
-- STIMULUS_KW
 - Q_KW
 - PARAMS_KW
 tests:
-- tests/grammar/ngspice/test_elements.py::test_stimulus_functions_and_distof_are_unsupported_at_the_keyword
-- tests/grammar/ngspice/test_elements.py::test_continued_stimulus_is_unsupported_at_the_keyword
-- tests/grammar/ngspice/test_elements.py::test_unsupported_source_does_not_swallow_the_next_statement
 - tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_is_unsupported_at_q
 - tests/grammar/ngspice/test_elements.py::test_malformed_subcircuit_calls_are_rejected
 - tests/roundtrip/test_ngspice_elements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
-- tests/solver/test_ngspice_validation.py::test_source_functions_run_and_the_library_reports_them_unsupported
 - tests/solver/test_ngspice_validation.py::test_the_charge_form_runs_and_the_library_reports_it_unsupported
 - tests/solver/test_ngspice_validation.py::test_params_keyword_on_an_x_line_runs_but_the_library_rejects_it
-notes: 'The source functions PULSE, EXP, SIN, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL and PORT, and
-  DISTOF1/DISTOF2, raise UnsupportedConstruct at the keyword; the charge form q= of a capacitor raises
-  it at q; params: on an X line is a ParseError. Each is a grammar rule whose arguments are statement
+notes: 'The charge form q= of a capacitor raises UnsupportedConstruct at q; params: on an X line is a ParseError. Each is a grammar rule whose arguments are statement
   text up to the end of the (possibly continued) line, so the next line is still its own statement. The
   error is raised by the transformer after the whole source has parsed, so a syntax error anywhere is reported first.
-  ngspice 47 (M7) runs each source function probed (all but EXTERNAL and PORT, which need a shared-library
-  host and an S-parameter analysis), DISTOF1/DISTOF2 and the charge form, so "unsupported", not "invalid",
+  ngspice 47 (M7) runs the charge form, so "unsupported", not "invalid",
   is right.
   It also runs params: on an X line (2.0 V with params: r=2k), which the library rejects (discrepancies.md).'

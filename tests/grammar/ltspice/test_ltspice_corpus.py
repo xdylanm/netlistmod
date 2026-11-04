@@ -18,6 +18,7 @@ from netlistmod import (
     Span,
     SubcktInstance,
     UnsupportedConstruct,
+    VoltageSource,
     parse,
 )
 
@@ -137,11 +138,13 @@ def test_exports_parse_into_the_expected_values() -> None:
     assert not subcircuit.diagnostics[1:]  # .backanno is the only finding
 
 
-def test_the_export_with_a_source_function_is_reported_as_phase_2() -> None:
-    entry = _manifest(EXPORTS)["fixtures"]["half_rectifier.net"]
-    with pytest.raises(UnsupportedConstruct, match="SINE") as captured:
-        parse(SourceText.read(EXPORTS / "half_rectifier.net"), Dialect.LTSPICE)
-    assert (captured.value.line, captured.value.column) == (entry["line"], entry["column"])
+def test_the_export_with_a_source_function_loads() -> None:
+    result = parse(SourceText.read(EXPORTS / "half_rectifier.net"), Dialect.LTSPICE)
+    source = next(item for item in result.items if isinstance(item, VoltageSource))
+    assert source.stimulus is not None
+    assert source.stimulus.name == "SINE"
+    assert [arg.text for arg in source.stimulus.args] == ["0", "1", "60k"]
+    assert [param.name for param in source.params] == ["Rser"]
 
 
 def test_encodings_round_trip() -> None:

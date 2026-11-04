@@ -20,6 +20,16 @@ grammar:
 - resistive_load
 - LOAD_KW
 - I_R_KW
+- _v0
+- _vq
+- _vf
+- trigger_param
+- TRIGGER_KW
+- TRIP_KW
+- TRIGGER_EXPR
+- _iq
+- _if
+- _i_fn
 core_rules:
 - dc_spec
 - dc_keyword

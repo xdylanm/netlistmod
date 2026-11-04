@@ -1,0 +1,15 @@
+id: NG-FUN-007
+dialect: ngspice
+construct: AM
+manual_ref: '[ngspice-manual] §4.1.6 "Amplitude modulated source (AM)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- AM_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ngspice_accepts
+- tests/solver/test_ngspice_source_functions.py::test_am_runs
+notes: See decision 0013.

@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 and M11 are complete, and M12 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 and M11 are complete, and M12 is in progress
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -58,12 +58,12 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **LTspice `.end`** (limit 2): record that it stays required, closing the question decision 0009 left open (section 8, point 3).
 - **Exit:** both limits are closed with tests, and `phase-2-code-changes.md` is archived.
 
-### M12 — Stimulus specs
+### M12 — Stimulus specs ([task list](./m12-tasks.md))
 
 - A typed `SourceSpec` (§5.3) replaces the rejected `stimulus` rule. Each function has named or positional arguments with spans.
-- **ngspice** (manual §4.1): PULSE, SIN, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL and DISTOF1/2.
+- **ngspice** (manual §4.1): PULSE, SIN, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1/2 and the RF port parameters.
 - **LTspice:** PULSE, SINE, EXP, SFFM, PWL with its file and repeat forms, the WAV file form and the trigger parameter; for I, also `tbl=`, `step(...)`, `load` and `R=`.
-- **Edit API:** set a whole stimulus, and set one argument. Decide what setting a stimulus does to an existing DC or AC value, and what happens when a source has none.
+- **Edit API:** set a whole stimulus, set one argument, and remove a stimulus. Setting one leaves DC and AC alone ([decision 0013](../decisions/0013-stimulus-specs.md)).
 - **Exit:** `half_rectifier.net` loads and edits, its solver test passes on LTspice, and each function has a spec entry, golden diff and solver test.
 
 ### M13 — Transistors (Q, M, J, Z)

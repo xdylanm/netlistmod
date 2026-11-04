@@ -89,6 +89,16 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-FUN-001](./specs/LT-FUN-001.yaml) | source functions, shared syntax | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-002](./specs/LT-FUN-002.yaml) | PULSE | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-003](./specs/LT-FUN-003.yaml) | SINE and SIN | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-004](./specs/LT-FUN-004.yaml) | EXP | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-005](./specs/LT-FUN-005.yaml) | SFFM | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-006](./specs/LT-FUN-006.yaml) | PWL with its scale factors and file | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-007](./specs/LT-FUN-007.yaml) | PWL REPEAT | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-008](./specs/LT-FUN-008.yaml) | wave file | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-009](./specs/LT-FUN-009.yaml) | I table | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-010](./specs/LT-FUN-010.yaml) | I step load | validated | ltspice 26.1.1 (2026-11-04) |
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | ltspice 26.1.1 (2026-11-01) |

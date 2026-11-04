@@ -192,6 +192,70 @@ class _Operations(Generic[_R]):
             operations.upsert_target(self._target(), "set_ac", scope, designator),
         )
 
+    def set_stimulus(
+        self, designator: str, text: str, *, scope: ScopePath = (), in_definition: bool = False
+    ) -> _R:
+        """Replace the function of a V or I line, such as ``"PULSE(0 1 1u)"``, or add one after
+        its DC and AC parts. ``set_dc`` and ``set_ac`` edit those parts; this leaves them as they
+        are. ``DISTOF1`` or ``DISTOF2`` text sets that distortion input instead."""
+        return self._submit(
+            operations.set_stimulus(
+                self._target(), designator, text, scope=scope, in_definition=in_definition
+            ),
+            operations.stimulus_target(self._target(), scope, designator, text),
+        )
+
+    def set_stimulus_arg(
+        self,
+        designator: str,
+        key: int | str,
+        value: str,
+        *,
+        function: str | None = None,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Set one argument of a V or I line's function, by 0-based position or written name
+        (``td``, ``Trigger``, ``chan``).
+
+        A position one past the end appends; a further one is an ``EditError``. ``function``
+        names a distortion input (``"DISTOF1"``) instead of the source function.
+        """
+        return self._submit(
+            operations.set_stimulus_arg(
+                self._target(),
+                designator,
+                key,
+                value,
+                function=function,
+                scope=scope,
+                in_definition=in_definition,
+            ),
+            operations.upsert_target(
+                self._target(), "set_stimulus_arg", scope, designator, function or "", str(key)
+            ),
+        )
+
+    def remove_stimulus(
+        self,
+        designator: str,
+        *,
+        function: str | None = None,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Remove the function of a V or I line, or the distortion input ``function`` names. Its
+        DC and AC parts stay."""
+        return self._submit(
+            operations.remove_stimulus(
+                self._target(),
+                designator,
+                function=function,
+                scope=scope,
+                in_definition=in_definition,
+            )
+        )
+
     def set_coupling(
         self, designator: str, value: str, *, scope: ScopePath = (), in_definition: bool = False
     ) -> _R:

@@ -1,0 +1,34 @@
+id: LT-FUN-001
+dialect: ltspice
+construct: source functions, shared syntax
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- stimulus
+- fn_first
+- fn_arg
+core_rules:
+- _source_fn
+- stimulus
+- pwl_stimulus
+- fn_param
+- fn_list
+- fn_first
+- fn_arg
+- FN_PARAM_KW
+- LPAR
+- RPAR
+- rparen
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/grammar/test_source_functions.py::test_both_dialects_refuse
+- tests/grammar/test_source_functions.py::test_a_function_has_typed_arguments_with_spans
+- tests/solver/test_ltspice_source_functions.py::test_a_function_mixes_with_dc_ac_rser_and_cpar
+- tests/solver/test_ltspice_source_functions.py::test_forms_that_run_and_the_library_refuses
+- tests/solver/test_ltspice_source_functions.py::test_forms_that_stop_and_the_library_refuses
+notes: See decision 0013.

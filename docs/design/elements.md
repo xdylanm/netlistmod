@@ -61,7 +61,9 @@ material) and returns one slot. `[x]` is optional and `x*` repeats.
 | `CXXX n+ n- q='expr'` (§3.3.9) | `charge` | raises `UnsupportedConstruct` |
 | `KXXX Lyyy Lzzz [Lwww…] value` (§3.3.12) | `mutual_coupling: K_NAME inductor_ref inductor_ref+ value` | `inductors`, `value` |
 | `VXXX n+ n- [[DC] value] [AC mag [phase]]` (§4.1) | `V_NAME node node dc_spec? (ac_spec value?)? …` | `dc`, `dc_keyword`, `ac` |
-| stimulus function, `DISTOFn` (§4.1) | `stimulus: … STIMULUS_KW rest NL` | raises `UnsupportedConstruct` |
+| source function (§4.1.1–§4.1.9) | `stimulus`, `pwl_stimulus`, `external_kw`, each with `fn_list` and `fn_param` | `stimulus: SourceSpec` (`SourceSpec`: `name`, `name_span`, `args`, `params`, `span`, `forever`) |
+| `DISTOF1`, `DISTOF2` (§4.1) | `distof1_kw`, `distof2_kw` | `distortion: tuple[SourceSpec, ...]` |
+| `portnum`, `z0` (§4.1.11) | `port_param` | `params` |
 | `DXXX n+ n- mname params [off]` (§7.2) | `diode: D_NAME node node model (param \| flag)*` | `model`, `params`, `flags` |
 | `XXXX n1 [n2…] subnam params` (§2.6.3, §2.11.3) | `subckt_instance: X_NAME node (x_node \| x_last)` | `nodes`, `subckt`, `params` |
 | `params:` (HSPICE) | `params_keyword` | raises `ParseError` |

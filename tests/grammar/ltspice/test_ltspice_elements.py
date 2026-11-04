@@ -514,16 +514,6 @@ def test_a_port_cannot_be_zero() -> None:
     assert "cannot be `0`" in str(_reject(".subckt s a 0\n.ends"))
 
 
-@pytest.mark.parametrize(
-    "line",
-    ["V1 a 0 SINE(0 1 1k)", "V1 a 0 sin(0 1 1k)", "V1 a 0 PULSE(0 1)", "V1 a 0 EXP(0 1)"]
-    + ["V1 a 0 SFFM(0 1)", "V1 a 0 PWL(0 0 1 1)", "V1 a 0 wavefile=x.wav", "V1 a 0 1 SINE(0 1 1k)"]
-    + ["I1 a 0 PULSE(0 1)", "I1 a 0 tbl=(0,0,1,1m)", "I1 a 0 1m step(1m,2m)"],
-)
-def test_source_functions_are_unsupported(line: str) -> None:
-    assert "LTspice" in str(_unsupported(line))
-
-
 @pytest.mark.parametrize("line", ["V1 a 0 trnoise 1", "V1 a 0 am 1"])
 def test_ngspice_source_functions_are_not_ltspice_syntax(line: str) -> None:
     _reject(line)

@@ -1,0 +1,28 @@
+id: NG-FUN-001
+dialect: ngspice
+construct: source functions, shared syntax
+manual_ref: '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- voltage_source
+- current_source
+- _source_fn
+- fn_param
+- FN_PARAM_KW
+- stimulus
+- fn_list
+- fn_first
+- fn_arg
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/grammar/test_source_functions.py::test_both_dialects_refuse
+- tests/grammar/test_source_functions.py::test_a_function_stands_before_or_after_dc_and_ac
+- tests/grammar/test_source_functions.py::test_a_function_has_typed_arguments_with_spans
+- tests/solver/test_ngspice_source_functions.py::test_a_function_runs_before_or_after_dc_and_ac
+- tests/solver/test_ngspice_source_functions.py::test_forms_that_run_and_the_library_refuses
+- tests/solver/test_ngspice_source_functions.py::test_forms_that_stop_and_the_library_refuses
+notes: See decision 0013.

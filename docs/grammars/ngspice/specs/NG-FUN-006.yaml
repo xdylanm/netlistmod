@@ -1,0 +1,15 @@
+id: NG-FUN-006
+dialect: ngspice
+construct: SFFM
+manual_ref: '[ngspice-manual] §4.1.5 "Single-Frequency FM"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- SFFM_KW
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/solver/test_ngspice_source_functions.py::test_sffm_gives_its_waveform
+notes: See decision 0013.

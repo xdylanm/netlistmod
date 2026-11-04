@@ -1,0 +1,25 @@
+source functions, every form of the reference that LTspice 26.1.1 runs here
+V1 1 0 PULSE(0 1 1u 1u 1u 2u 5u 3) Rser=1
+R1 1 0 1k
+V2 2 0 SINE(0 1 1k 0 0 0 3) AC 1 Rser=1
+R2 2 0 1k
+V3 3 0 EXP(0 1 1u 1u 5u 1u)
+R3 3 0 1k
+V4 4 0 SFFM(0 1 100k 2 10k)
+R4 4 0 1k
+V5 5 0 PWL TIME_SCALE_FACTOR=2 VALUE_SCALE_FACTOR=3 (0 0 1u 1)
+R5 5 0 1k
+V6 6 0 PWL REPEAT FOR 2 (0 0 1u 1 2u 0) ENDREPEAT
+R6 6 0 1k
+V7 7 0 PWL REPEAT FOREVER (0 0 1u 1 2u 0) ENDREPEAT
+R7 7 0 1k
+V8 8 0 PULSE(0 1 1u 1u 1u 2u 5u) Trigger=V(1)>0.5 tripdv=1m tripdt=1u
+R8 8 0 1k
+I1 9 0 tbl=(0 0, 1 1m)
+R9 9 0 1k
+I2 10 0 1m step(1m,2m)
+R10 10 0 1k
+I3 11 0 PULSE(0 1m 1u 1u 1u 2u 5u) load
+R11 11 0 1k
+.tran 1u 10u
+.end

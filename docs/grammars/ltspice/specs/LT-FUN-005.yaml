@@ -1,0 +1,17 @@
+id: LT-FUN-005
+dialect: ltspice
+construct: SFFM
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar: []
+core_rules:
+- SFFM_KW
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/solver/test_ltspice_source_functions.py::test_sffm_gives_its_waveform
+notes: See decision 0013.

@@ -287,38 +287,10 @@ def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path)
 
 
 @pytest.mark.parametrize(
-    "stimulus",
-    [
-        "PULSE(0 1 1u 1u 1u 2u 5u)",
-        "SINE(0 1 100k)",
-        "EXP(0 1 1u 1u 5u 1u)",
-        "SFFM(0 1 100k 2 10k)",
-        "PWL(0 0 5u 1)",
-    ],
-)
-def test_source_functions_run_and_are_unsupported(
-    solver: Solver, tmp_path: Path, stimulus: str
-) -> None:
-    text = f"probe\nV1 in 0 {stimulus}\nR1 in out 1k\nR2 out 0 1k\n.tran 10u\n.end\n"
-    assert run(solver, tmp_path, text).ok
-    with pytest.raises(UnsupportedConstruct):
-        parse(SourceText(text), Dialect.LTSPICE)
-
-
-def test_the_half_rectifier_export_runs_and_is_unsupported(solver: Solver, tmp_path: Path) -> None:
-    path = CORPUS / "contributed_examples" / "half_rectifier.net"
-    assert run(solver, tmp_path, path).ok
-    with pytest.raises(UnsupportedConstruct):
-        Netlist.load(path, dialect=Dialect.LTSPICE)
-
-
-@pytest.mark.parametrize(
     "line",
     [
         "C1 out 0 Q=1u*x",
         "L1 out 0 Flux=1m*x",
-        "I1 out 0 tbl=(0,0,1,1m)",
-        "I1 out 0 step(1m,2m)",
         "Q1 out in 0 npn\n.model npn NPN",
         "E1 a 0 in 0 2\nR9 a 0 1k",
     ],

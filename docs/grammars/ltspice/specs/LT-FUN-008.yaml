@@ -1,0 +1,20 @@
+id: LT-FUN-008
+dialect: ltspice
+construct: wave file
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- _source_fn
+- wave_stimulus
+- fn_param
+- FN_PARAM_KW
+- WAVEFILE_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ltspice_file_paths_are_text
+- tests/solver/test_ltspice_source_functions.py::test_a_wave_file
+notes: See decision 0013.

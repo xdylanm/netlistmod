@@ -1,0 +1,18 @@
+id: NG-FUN-005
+dialect: ngspice
+construct: PWL with r= and td=
+manual_ref: '[ngspice-manual] §4.1.4 "Piece-Wise Linear"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- pwl_stimulus
+- PWL_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ngspice_accepts
+- tests/grammar/test_source_functions.py::test_ngspice_named_parameters_belong_to_the_function
+- tests/solver/test_ngspice_source_functions.py::test_pwl_gives_its_waveform
+- tests/solver/test_ngspice_source_functions.py::test_pwl_r_and_td
+notes: See decision 0013.

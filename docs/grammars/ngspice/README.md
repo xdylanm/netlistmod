@@ -51,6 +51,18 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-SAV-001](./specs/NG-SAV-001.yaml) | .save output vectors | validated | ngspice 47 (2026-10-31) |
 | [NG-SBD-001](./specs/NG-SBD-001.yaml) | .subckt ... .ends definitions and their bodies | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-SRC-001](./specs/NG-SRC-001.yaml) | independent sources (V, I): DC value and AC magnitude and phase | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-FUN-001](./specs/NG-FUN-001.yaml) | source functions, shared syntax | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-002](./specs/NG-FUN-002.yaml) | PULSE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-003](./specs/NG-FUN-003.yaml) | SIN, and SINE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-004](./specs/NG-FUN-004.yaml) | EXP | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-005](./specs/NG-FUN-005.yaml) | PWL with r= and td= | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-006](./specs/NG-FUN-006.yaml) | SFFM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-007](./specs/NG-FUN-007.yaml) | AM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-008](./specs/NG-FUN-008.yaml) | TRNOISE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-009](./specs/NG-FUN-009.yaml) | TRRANDOM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-010](./specs/NG-FUN-010.yaml) | EXTERNAL | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-011](./specs/NG-FUN-011.yaml) | DISTOF1 and DISTOF2 | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-012](./specs/NG-FUN-012.yaml) | RF port parameters | validated | ngspice 47 (2026-11-04) |
 | [NG-STR-001](./specs/NG-STR-001.yaml) | top-level source structure | validated | ngspice 47 (2026-10-31) |
 | [NG-SUB-001](./specs/NG-SUB-001.yaml) | subcircuit calls (X) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | ngspice 47 (2026-10-30, 2026-10-31) |

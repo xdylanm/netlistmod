@@ -1,0 +1,15 @@
+id: NG-FUN-004
+dialect: ngspice
+construct: EXP
+manual_ref: '[ngspice-manual] §4.1.3 "Exponential"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- EXP_KW
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/solver/test_ngspice_source_functions.py::test_exp_gives_its_waveform
+notes: See decision 0013.

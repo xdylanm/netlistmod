@@ -439,7 +439,6 @@ LTSPICE_RUNS = {
     "elements_rejects/behavioral_charge.cir",
     "elements_rejects/behavioral_flux.cir",
     "elements_rejects/phase_2_letter.cir",
-    "elements_rejects/stimulus_function.cir",
     "statements_rejects/machine_block.cir",
     # Rows of discrepancies.md.
     "elements_rejects/resistor_keyword_value.cir",
