@@ -1,13 +1,13 @@
 # M11 task list — Carried limits and messages
 
-> **Status:** READY FOR REVIEW — T1–T10 are done, with the results in section 5; T11 follows the maintainer's approval
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M11). Governed by [architecture.md](../architecture.md) (§2, §7, §15, §17).
+> **Status:** COMPLETE (2026-11-04) — approved by the maintainer; the results are in section 5
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M11). Governed by [architecture.md](../../../architecture.md) (§2, §7, §15, §17).
 
 ## 1. Scope
 
 M11 settles the two limits where the library accepts input and the result can be wrong, clears the carried message work, and settles LTspice `.end`, so that M12 starts from a clean base.
 
-- **In:** `.lib` blocks (limit 6); settling `directives.add` over a singleton (limit 9); H5–H8 from [phase-2-code-changes.md](./archive/phase-2/phase-2-code-changes.md); recording that LTspice `.end` stays required (limit 2); a decision record for these.
+- **In:** `.lib` blocks (limit 6); settling `directives.add` over a singleton (limit 9); H5–H8 from [phase-2-code-changes.md](./phase-2-code-changes.md); recording that LTspice `.end` stays required (limit 2); a decision record for these.
 - **Not in M11:** new element letters, stimulus specs or edit operations. Opening a library file, or editing inside a `.lib` block, which is a later candidate (decision 1). Refusing combinations of *different* analyses: LTspice stops on `.tran` with `.ac`, but ngspice runs them, and the library does not validate solver inputs.
 
 **Exit:** both limits are closed with tests, and `phase-2-code-changes.md` is archived.
@@ -118,9 +118,11 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 
 ### After the maintainer's approval
 
-[ ] **T11 — Close M11.** Merge on green with "Rebase and merge". Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0012.
+[x] **T11 — Close M11.** Merge on green with "Rebase and merge". Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0012.
 
 ## 5. Results
+
+The commit hashes below are those of the pull request's branch; "Rebase and merge" gives the commits new hashes on `main`.
 
 **Full local run on `26fc680` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4993 passed, 2 skipped, 455 deselected, 9 minutes 55 seconds, coverage 98.93%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (30 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
 
