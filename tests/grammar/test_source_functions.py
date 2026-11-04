@@ -395,3 +395,22 @@ def test_crlf_round_trips() -> None:
     for dialect in (Dialect.NGSPICE, Dialect.LTSPICE):
         text = "t\r\nV1 a 0 PULSE(0 1\r\n+ 1u) AC 1\r\n.end\r\n"
         assert Netlist.from_text(text, dialect=dialect).source.text == text
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "V1 a 0 ; c\n+ wavefile=x.wav",
+        "V1 a 0 PWL ; c\n+ REPEAT FOR 2 (0 0 1u 0) ; d\n+ ENDREPEAT",
+        "V1 a 0 PWL ; c\n+ file=x.txt",
+        "V1 a 0 PWL ; c\n+ TIME_SCALE_FACTOR=2 ; d\n+ (0 0 1u 1)",
+        "I1 a 0 ; c\n+ tbl=(0 0)",
+        "I1 a 0 ; c\n+ step(1)",
+    ],
+)
+def test_comments_between_the_parts_of_an_ltspice_function(line: str) -> None:
+    netlist = _load(line, Dialect.LTSPICE)
+    source = _source(netlist)
+    assert source.stimulus is not None
+    assert source.trailing_comments
+    assert netlist.source.text == _text(line)

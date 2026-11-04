@@ -88,6 +88,10 @@ def test_set_stimulus_arg_by_position(key: int, value: str, after: str) -> None:
     assert _line(_netlist("V1 a 0 PULSE(0 1 1u)").set_stimulus_arg("V1", key, value)) == after
 
 
+def test_an_appended_argument_after_one_argument_uses_a_blank() -> None:
+    assert _line(_netlist("V1 a 0 PULSE(0)").set_stimulus_arg("V1", 1, "1")) == "V1 a 0 PULSE(0 1)"
+
+
 def test_an_appended_argument_matches_a_comma_list() -> None:
     edited = _netlist("V1 a 0 PULSE(0, 1)").set_stimulus_arg("V1", 2, "1u")
     assert _line(edited) == "V1 a 0 PULSE(0, 1, 1u)"
