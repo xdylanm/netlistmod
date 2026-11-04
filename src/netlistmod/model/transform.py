@@ -694,6 +694,9 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         return self._field(children, lambda token: _RParen(_span(token)))
 
     def fn_param(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        if isinstance(inner, _Field):
+            return _Field(inner.node, (*_comment_spans(children), *inner.comments))
         field = self.param(children)
         assert isinstance(field.node, ParamAssignment)
         return _Field(_SpecParam(field.node), field.comments)

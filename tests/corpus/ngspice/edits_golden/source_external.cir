@@ -1,0 +1,5 @@
+source function EXTERNAL
+VX 1 0 dc 0 external m=1
+R1 1 0 1k
+.op
+.end

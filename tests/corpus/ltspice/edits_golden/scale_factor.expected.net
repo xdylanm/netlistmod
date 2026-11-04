@@ -1,0 +1,19 @@
+source functions, one golden case for each
+VE 1 0 EXP(0 1 1u 1u 5u 1u)
+R1 1 0 1k
+VS 2 0 SFFM(0 1 100k 2 10k)
+R2 2 0 1k
+VP 3 0 PWL(0 0 5u 1)
+R3 3 0 1k
+VR 4 0 PWL REPEAT FOR 2 (0 0 1u 1 2u 0) ENDREPEAT
+R4 4 0 1k
+VT 5 0 PWL TIME_SCALE_FACTOR=3 (0 0 1u 1)
+R5 5 0 1k
+VO 6 0 PWL VALUE_SCALE_FACTOR=3 REPEAT FOREVER (0 0 1u 1 2u 0) ENDREPEAT
+R6 6 0 1k
+IT 7 0 tbl=(0 0, 1 1m)
+R7 7 0 1k
+IL 8 0 1m step(1m,2m) load
+R8 8 0 1k
+.tran 1u 10u
+.end

@@ -483,6 +483,8 @@ def set_stimulus(
     (decision 0013). ``DISTOF1`` and ``DISTOF2`` text addresses that distortion input instead."""
     element = _source(netlist, designator, scope, in_definition)
     reason = f"set_stimulus {designator}"
+    if "\n" in text or "\r" in text:
+        raise EditError(f"{reason}: a source function's text must be one line, got {text!r}")
     name = _distortion_name(text)
     current = element.stimulus if name is None else _distortion(element, name)
     if current is not None:
@@ -537,8 +539,8 @@ def remove_stimulus(
     scope: ScopePath = (),
     in_definition: bool = False,
 ) -> list[Edit]:
-    """Remove a source's function, or the distortion input ``function`` names, and the blanks
-    before it. DC and AC parts stay."""
+    """Remove a source's function, or the distortion input ``function`` names, and the separator
+    before it. DC and AC parts and comments outside the function stay."""
     element = _source(netlist, designator, scope, in_definition)
     spec = _stimulus_of(element, function, designator)
     if (
@@ -550,10 +552,33 @@ def remove_stimulus(
         raise EditError(
             f"`{designator}` would have no value, and an LTspice I line needs one; use set_dc first"
         )
-    start = spec.span.start
-    while netlist.source.text[start - 1] in " \t":
-        start -= 1
-    return [Edit(Span(start, spec.span.end), "", f"remove_stimulus {designator}")]
+    return [Edit(_with_separator(netlist, element, spec), "", f"remove_stimulus {designator}")]
+
+
+def _with_separator(
+    netlist: Netlist, element: VoltageSource | CurrentSource, spec: SourceSpec
+) -> Span:
+    """The function's span and the gap before it: blanks, a comma or a continuation. A gap after
+    a comment stays if text follows on the function's line, since that text would join the
+    comment; then the blanks after the function go instead."""
+    text = netlist.source.text
+    before = [
+        span
+        for field in fields(element)
+        if field.name != "span"
+        for span in _spans(getattr(element, field.name))
+        if span.end <= spec.span.start
+    ]
+    previous = max(before, key=lambda span: span.end)
+    line_end = spec.span.end
+    while line_end < len(text) and text[line_end] not in "\r\n":
+        line_end += 1
+    if previous in element.trailing_comments and text[spec.span.end : line_end].strip():
+        end = spec.span.end
+        while text[end] in " \t":
+            end += 1
+        return Span(spec.span.start, end)
+    return Span(previous.end, spec.span.end)
 
 
 def _distortion_name(text: str) -> str | None:

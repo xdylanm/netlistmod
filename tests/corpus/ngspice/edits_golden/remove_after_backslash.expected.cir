@@ -1,0 +1,16 @@
+the separators before a function
+V1 1 0 DC 1, SIN(0 1 1k)
+R1 1 0 1k
+V2 2 0 DC 1
+R2 2 0 1k
+V3 3 0 DC 1
++ PULSE(0 1 1u)
+R3 3 0 1k
+V4 4 0 DC 1 ; kept
++ SIN(0 1 1k) AC 1
+R4 4 0 1k
+V5 5 0 DC 1, DISTOF1 0.1
++ DISTOF2 0.2
+R5 5 0 1k
+.op
+.end

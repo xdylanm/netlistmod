@@ -177,36 +177,35 @@ NONLINEAR_L_KW.3: /flux|hc|bs|br|lm|lg|a|n/i
 // order, and a DC value after the function needs its keyword. The trigger parameters need a
 // function too, and the trigger expression is text, kept and never read (decision 0013).
 //
-// As in core, the rules are right-linear. Here q is what may stand before a function, on a line
-// that may turn out to have none (Rser and Cpar on V, load on I), and p what may stand after one.
-// The states starting _q have seen a q before any DC or AC part, so they require a function; LTspice
-// reads those forms, but only a function's line is documented to mix them.
+// As in core, the rules are right-linear. The states starting _q have seen Rser or Cpar before any
+// DC or AC part, so they require a function; LTspice reads those forms, but only a function's line
+// is documented to mix them.
 // spec: LT-SRC-001
 %override voltage_source: V_NAME node node _v0
-_v0: dc_spec _ld{v_param, _vf, _source_fn}
-   | ac_spec _lam{v_param, _vf, _source_fn}
+_v0: dc_spec _ld
+   | ac_spec _lam
    | _source_fn _sf{_vf, _line_end}
    | v_param _vq
    | _line_end
 _vq: v_param _vq
-   | dc_spec _qd{v_param, _vf, _source_fn}
-   | ac_spec _qam{v_param, _vf, _source_fn}
+   | dc_spec _qd
+   | ac_spec _qam
    | _source_fn _sf{_vf, _line_end}
    | _line_end
 _vf: v_param
    | trigger_param
    | fn_param
-_ld{q, p, f}: ac_spec _ldam{q, p, f} | f _sfd{p, _line_end} | q _ldq{q, p, f} | _line_end
-_ldq{q, p, f}: q _ldq{q, p, f} | f _sfd{p, _line_end} | _line_end
-_ldam{q, p, f}: value _lda{q, p, f} | f _sfda{p, _line_end} | q _lda{q, p, f} | _line_end
-_lda{q, p, f}: f _sfda{p, _line_end} | q _lda{q, p, f} | _line_end
-_lam{q, p, f}: value _la{q, p, f} | f _sfa{p, _line_end} | q _la{q, p, f} | _line_end
-_la{q, p, f}: f _sfa{p, _line_end} | q _la{q, p, f} | _line_end
-_qd{q, p, f}: q _qd{q, p, f} | ac_spec _qdam{q, p, f} | f _sfd{p, _line_end}
-_qdam{q, p, f}: value _qda{q, p, f} | q _qda{q, p, f} | f _sfda{p, _line_end}
-_qda{q, p, f}: q _qda{q, p, f} | f _sfda{p, _line_end}
-_qam{q, p, f}: value _qa{q, p, f} | q _qa{q, p, f} | f _sfa{p, _line_end}
-_qa{q, p, f}: q _qa{q, p, f} | f _sfa{p, _line_end}
+_ld: ac_spec _ldam | _source_fn _sfd{_vf, _line_end} | v_param _ldq | _line_end
+_ldq: v_param _ldq | _source_fn _sfd{_vf, _line_end} | _line_end
+_ldam: value _lda | _source_fn _sfda{_vf, _line_end} | v_param _lda | _line_end
+_lda: _source_fn _sfda{_vf, _line_end} | v_param _lda | _line_end
+_lam: value _la | _source_fn _sfa{_vf, _line_end} | v_param _la | _line_end
+_la: _source_fn _sfa{_vf, _line_end} | v_param _la | _line_end
+_qd: v_param _qd | ac_spec _qdam | _source_fn _sfd{_vf, _line_end}
+_qdam: value _qda | v_param _qda | _source_fn _sfda{_vf, _line_end}
+_qda: v_param _qda | _source_fn _sfda{_vf, _line_end}
+_qam: value _qa | v_param _qa | _source_fn _sfa{_vf, _line_end}
+_qa: v_param _qa | _source_fn _sfa{_vf, _line_end}
 %extend ac_spec: SEP AC_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
 v_param: SEP V_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
        | (SEP | TRAILING_COMMENT) v_param
@@ -219,21 +218,23 @@ TRIP_KW.2: /(?:tripdv|tripdt)(?=[ \t]*=)/i
 TRIGGER_EXPR.2: /[^ \t\r\n;]+/
 
 // I: a value is required ("Missing current value"), or an AC part, or the resistive load R=value.
-// "load" is a flag after the value and the AC part.
+// "load" is a flag after the value and the AC part, or after a function; it cannot stand before
+// one. tbl= is written with no value, and alone (decision 0013).
 // spec: LT-SRC-001
-%override current_source: I_NAME node node dc_spec _ld{load_flag, _if, _i_fn}
-                        | I_NAME node node ac_spec _lam{load_flag, _if, _i_fn}
+%override current_source: I_NAME node node dc_spec _id
+                        | I_NAME node node ac_spec _iam
                         | I_NAME node node resistive_load (ac_spec value?)? (NL | eol)
                         | I_NAME node node _i_fn _sf{_if, _line_end}
-                        | I_NAME node node load_flag _iq
-_iq: load_flag _iq
-   | dc_spec _qd{load_flag, _if, _i_fn}
-   | ac_spec _qam{load_flag, _if, _i_fn}
-   | _i_fn _sf{_if, _line_end}
+                        | I_NAME node node table_stimulus _line_end
+_id: ac_spec _idam | _i_fn _sfd{_if, _line_end} | load_flag _line_end | _line_end
+_idam: value _ida | _i_fn _sfda{_if, _line_end} | load_flag _line_end | _line_end
+_ida: _i_fn _sfda{_if, _line_end} | load_flag _line_end | _line_end
+_iam: value _ia | _i_fn _sfa{_if, _line_end} | load_flag _line_end | _line_end
+_ia: _i_fn _sfa{_if, _line_end} | load_flag _line_end | _line_end
 _if: trigger_param
    | load_flag
+   | fn_param
 _i_fn: _source_fn
-     | table_stimulus
      | step_stimulus
 load_flag: SEP LOAD_KW (EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA))?
          | (SEP | TRAILING_COMMENT) load_flag
@@ -275,10 +276,11 @@ PARAMS_KW.2: "params:"i
 // spec: LT-FUN-003
 SINE_KW.2: "sine"i
 
-// PWL takes its scale factors before the list, or a file, or a repeat. A file's path is never read.
+// PWL takes a list, a file or a repeat, with its scale factors before any of them. A file's path is
+// never read.
 // spec: LT-FUN-006
 %extend pwl_stimulus: SEP PWL_KW pwl_factor+ fn_list
-                    | SEP PWL_KW pwl_file
+                    | SEP PWL_KW pwl_factor* pwl_file
 pwl_factor: SEP PWL_FACTOR_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
           | (SEP | TRAILING_COMMENT) pwl_factor
 pwl_file: SEP PWL_FILE_KW EQ (FILE_PATH | STRING_VALUE)
@@ -288,7 +290,7 @@ PWL_FILE_KW.2: /file(?=[ \t]*=)/i
 FILE_PATH.2: /[^ \t\r\n;"'()=,]+/
 
 // spec: LT-FUN-007
-%extend pwl_stimulus: SEP PWL_KW pwl_repeat fn_list pwl_endrepeat
+%extend pwl_stimulus: SEP PWL_KW pwl_factor* pwl_repeat fn_list pwl_endrepeat
 pwl_repeat: SEP REPEAT_KW SEP FOR_KW SEP (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
           | SEP REPEAT_KW SEP FOREVER_KW
           | (SEP | TRAILING_COMMENT) pwl_repeat

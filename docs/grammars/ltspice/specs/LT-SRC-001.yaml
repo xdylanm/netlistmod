@@ -27,9 +27,24 @@ grammar:
 - TRIGGER_KW
 - TRIP_KW
 - TRIGGER_EXPR
-- _iq
 - _if
 - _i_fn
+- _ld
+- _ldq
+- _ldam
+- _lda
+- _lam
+- _la
+- _qd
+- _qdam
+- _qda
+- _qam
+- _qa
+- _id
+- _idam
+- _ida
+- _iam
+- _ia
 core_rules:
 - dc_spec
 - dc_keyword
@@ -38,6 +53,10 @@ core_rules:
 - DC_KW
 - AC_KW
 tests:
+- tests/grammar/test_source_functions.py::test_i_line_forms_outside_the_reference_are_refused
+- tests/grammar/test_source_functions.py::test_i_line_forms_that_stay
+- tests/solver/test_ltspice_source_functions.py::test_forms_outside_the_reference_that_run_and_the_library_refuses
+- tests/solver/test_ltspice_source_functions.py::test_a_trigger_on_an_i_line_stops_ltspice
 - tests/grammar/ltspice/test_ltspice_elements.py::test_voltage_sources
 - tests/grammar/ltspice/test_ltspice_elements.py::test_voltage_source_forms
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_voltage_sources

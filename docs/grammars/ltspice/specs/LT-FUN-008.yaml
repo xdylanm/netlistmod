@@ -3,6 +3,7 @@ dialect: ltspice
 construct: wave file
 manual_ref:
 - '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "I — Current Source"'
 status: validated
 validated_on:
 - solver: ltspice
@@ -15,6 +16,9 @@ grammar:
 - FN_PARAM_KW
 - WAVEFILE_KW
 tests:
+- tests/grammar/test_source_functions.py::test_an_i_line_takes_a_wave_channel
+- tests/grammar/test_source_functions.py::test_a_gap_before_a_wave_channel
+- tests/solver/test_ltspice_source_functions.py::test_a_wave_file_on_an_i_line
 - tests/grammar/test_source_functions.py::test_ltspice_file_paths_are_text
 - tests/solver/test_ltspice_source_functions.py::test_a_wave_file
 notes: See decision 0013.

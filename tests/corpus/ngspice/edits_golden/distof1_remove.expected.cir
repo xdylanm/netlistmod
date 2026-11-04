@@ -1,0 +1,19 @@
+source functions, one golden case for each
+VE 1 0 EXP(-4 -1 2NS 30NS 60NS 40NS)
+R1 1 0 1k
+VP 2 0 PWL(0 -7 10NS -7 11NS -3) r=0 td=15NS
+R2 2 0 1k
+VS 3 0 SFFM(0 2 20 45 1k)
+R3 3 0 1k
+VA 4 0 AM(0.5 2 1.8 20K 5MEG)
+R4 4 0 1k
+VN 5 0 DC 0 TRNOISE(1m 1u 0 0)
+R5 5 0 1k
+VR 6 0 DC 0 TRRANDOM(1 1u 0 1)
+R6 6 0 1k
+VD 7 0 DC 0 DISTOF2 0.01
+R7 7 0 1k
+VQ 8 0 dc 0 ac 1 portnum 1 z0 100
+R8 8 0 1k
+.op
+.end

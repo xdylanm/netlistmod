@@ -50,7 +50,7 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 ## What it does and does not do
 
 - **Reads** titles, comments, the phase 1 elements, `.param`, `.model`, `.subckt`, the analysis, option and output directives, and LTspice's `.step`, into typed nodes with exact source spans. It answers queries about lines, references, nets and connections.
-- **Edits** values, formulas, instance and model parameters, source DC and AC values, `.param` lines and directives, and adds an `.include`.
+- **Edits** values, formulas, instance and model parameters, source DC and AC values and functions, `.param` lines and directives, and adds an `.include`.
 - **Preserves** other dot-commands verbatim. `.control`, `.if`, `.include` and `.lib` are opaque: their contents are not read.
 - **Never** changes topology (elements, nodes, subcircuit ports), evaluates a value, or launches a solver.
 - **Refuses loudly.** A line outside the grammar is an error, not a guess. Netlists with Q or M devices are rejected until phase 2.

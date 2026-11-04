@@ -241,7 +241,7 @@ class Formula:           text: str; delimiter: str; span: Span   # {Rx*2}, "…"
 @dataclass(frozen=True)
 class ModelReference:    model_name: str; span: Span
 @dataclass(frozen=True)
-class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params: tuple[ParamAssignment]; span: Span
+class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params: tuple[ParamAssignment]; span: Span; forever: bool
                                                             # PULSE(0 1 1u), PWL(...) r=0, wavefile=x.wav
 # BehavioralExpression: required by the end of phase 2
 ```

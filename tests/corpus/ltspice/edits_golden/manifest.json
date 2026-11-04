@@ -40,7 +40,49 @@
     },
     "set_stimulus.expected.net": "a3957356ae8a2db82df3b4b461bea1e6cd2e35e67928c266974d6a30dfadaaa3",
     "set_stimulus_arg.expected.net": "8c35f36133a09089614d78c0fd778bd8fbbcc0aff36e6bb348033d9aeb8ab881",
-    "remove_stimulus.expected.net": "c723f757c221dc644d1bfd1fbe81dd8af2509ab651896a460ab4728de62d7ffb"
+    "remove_stimulus.expected.net": "c723f757c221dc644d1bfd1fbe81dd8af2509ab651896a460ab4728de62d7ffb",
+    "source_forms.net": "cab96a736e674cc9a24512401971904c4a402a733d9388884e04fce2eb2bf07e",
+    "source_files.net": {
+      "sha256": "594f991fc2fd5073f24c8d0aeb0acc6e493509818fff14f6a579ad511f9a567d",
+      "solver": {
+        "skip": "The file it names is not in the corpus; the solver tests generate one."
+      }
+    },
+    "source_separators.net": "285d3bfbf601dd9386f8b0a30d7924480b358c8b2f70c6d9bd0e8533699860de",
+    "exp_arg.expected.net": "ab95b05eea93ff80567a40235cce536b09bcbf89f99f52abda5140cdb893852b",
+    "sffm_arg.expected.net": "62fc7196b4227480593758f2f5ab9264717f124ee024073ee9bab628de943a3a",
+    "pwl_arg.expected.net": "ce0e7ab6fbfd10737e777c5ebf806b28e23d9598cfc83907f86ebb4ce4826ea5",
+    "repeat_count.expected.net": "6e55c2f6a106ac31a29ecf77c34a4ebff0d68cda702d0701842e90772bb3e8a4",
+    "scale_factor.expected.net": "57ed7454570aa29ddafdf77bfbb8618e100bd7c1f9095cb4c5a61a3501640dd2",
+    "scale_factor_before_repeat.expected.net": "c67637c5a49354e404c2d7ba5bd4f856bd10b66abd761e51c6810f87c9441cf3",
+    "table_arg.expected.net": "7ca9fe830da9193abb4ab4c6e366473ac4a42358af5f45b6d35dd18c6bc630b5",
+    "step_arg.expected.net": "cd9a464ad8a7d074854200f3079776a658d272ff20602e697c7a70b41c189b34",
+    "file_path.expected.net": {
+      "sha256": "d47648ffce55d5821501f25315b840268d6dd8a6c567eb6dcfaea1914cdcdd90",
+      "solver": {
+        "skip": "The file it names is not in the corpus; the solver tests generate one."
+      }
+    },
+    "scale_factor_before_file.expected.net": {
+      "sha256": "7bfc96d9fdf1bfcc3b0e63f4cbdd48bd754380a54899716886b082ea251ae96d",
+      "solver": {
+        "skip": "The file it names is not in the corpus; the solver tests generate one."
+      }
+    },
+    "wave_channel.expected.net": {
+      "sha256": "e91659a4a012567874546b8d553c591935d9276713f29b65691358c994ce5a9c",
+      "solver": {
+        "skip": "The file it names is not in the corpus; the solver tests generate one."
+      }
+    },
+    "wave_channel_on_i.expected.net": {
+      "sha256": "f43b0ca418d6d4ba26feb44288fe53aefd85f3c187268974ed1152b30dc5f007",
+      "solver": {
+        "skip": "The file it names is not in the corpus; the solver tests generate one."
+      }
+    },
+    "remove_after_continuation.expected.net": "95e2598c0d4472d86ef2d99e1db5c9c87ff933f52b76855baf807074d72a670b",
+    "remove_after_comment.expected.net": "9aa650ef6c735448bbd5f22436a03347b34aaf302d1561fba6244bd1212823be"
   },
   "cases": {
     "set_value": {
@@ -318,6 +360,170 @@
         ]
       ],
       "expected": "remove_stimulus.expected.net"
+    },
+    "exp_arg": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VE",
+          1,
+          "2"
+        ]
+      ],
+      "expected": "exp_arg.expected.net"
+    },
+    "sffm_arg": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VS",
+          1,
+          "3"
+        ]
+      ],
+      "expected": "sffm_arg.expected.net"
+    },
+    "pwl_arg": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VP",
+          3,
+          "2"
+        ]
+      ],
+      "expected": "pwl_arg.expected.net"
+    },
+    "repeat_count": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VR",
+          "for",
+          "3"
+        ]
+      ],
+      "expected": "repeat_count.expected.net"
+    },
+    "scale_factor": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VT",
+          "time_scale_factor",
+          "3"
+        ]
+      ],
+      "expected": "scale_factor.expected.net"
+    },
+    "scale_factor_before_repeat": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VO",
+          "value_scale_factor",
+          "2"
+        ]
+      ],
+      "expected": "scale_factor_before_repeat.expected.net"
+    },
+    "table_arg": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "IT",
+          3,
+          "2m"
+        ]
+      ],
+      "expected": "table_arg.expected.net"
+    },
+    "step_arg": {
+      "input": "source_forms.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "IL",
+          1,
+          "3m"
+        ]
+      ],
+      "expected": "step_arg.expected.net"
+    },
+    "file_path": {
+      "input": "source_files.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VF",
+          "file",
+          "other.txt"
+        ]
+      ],
+      "expected": "file_path.expected.net"
+    },
+    "scale_factor_before_file": {
+      "input": "source_files.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VV",
+          "value_scale_factor",
+          "2"
+        ]
+      ],
+      "expected": "scale_factor_before_file.expected.net"
+    },
+    "wave_channel": {
+      "input": "source_files.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "VW",
+          "chan",
+          "1"
+        ]
+      ],
+      "expected": "wave_channel.expected.net"
+    },
+    "wave_channel_on_i": {
+      "input": "source_files.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "IW",
+          "chan",
+          "1"
+        ]
+      ],
+      "expected": "wave_channel_on_i.expected.net"
+    },
+    "remove_after_continuation": {
+      "input": "source_separators.net",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V1"
+        ]
+      ],
+      "expected": "remove_after_continuation.expected.net"
+    },
+    "remove_after_comment": {
+      "input": "source_separators.net",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V2"
+        ]
+      ],
+      "expected": "remove_after_comment.expected.net"
     }
   }
 }

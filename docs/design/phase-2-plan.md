@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 and M11 are complete, and M12 is ready for review
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 and M11 are complete, and M12 has changes requested
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -58,7 +58,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **LTspice `.end`** (limit 2): record that it stays required, closing the question decision 0009 left open (section 8, point 3).
 - **Exit:** both limits are closed with tests, and `phase-2-code-changes.md` is archived.
 
-### M12 — Stimulus specs (ready for review; [task list](./m12-tasks.md), [decision 0013](../decisions/0013-stimulus-specs.md))
+### M12 — Stimulus specs (changes requested; [task list](./m12-tasks.md), [decision 0013](../decisions/0013-stimulus-specs.md))
 
 - A typed `SourceSpec` (§5.3) replaces the rejected `stimulus` rule. Each function has named or positional arguments with spans.
 - **ngspice** (manual §4.1): PULSE, SIN, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1/2 and the RF port parameters.
