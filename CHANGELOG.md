@@ -11,6 +11,7 @@
 
 Changes:
 
+- The test suite runs LTspice on a hidden Windows desktop, so that it no longer takes the foreground window on every run. Tests only; the library is unchanged.
 - Source functions now load and edit, as `VoltageSource.stimulus` and `CurrentSource.stimulus`, a typed `SourceSpec` (M12, decision 0013). ngspice: PULSE, SIN, SINE, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1, DISTOF2 and the RF port parameters. LTspice: PULSE, SINE, SIN, EXP, SFFM, PWL with its file, repeat and scale forms, `wavefile=`, the trigger parameters, and on I `tbl=` and `step(...)`. `half_rectifier.net` now loads.
 - Add `set_stimulus`, `set_stimulus_arg` and `remove_stimulus`, in batches too. `set_stimulus` leaves the DC and AC parts alone (M12, decision 0013). `set_param` edits ngspice's `portnum` and `z0`.
 - **Behaviour change:** a `.lib name` … `.endl` block is now an opaque block on both dialects (M11, decision 0012). On ngspice its body no longer counts as topology, so a netlist with one has a different topology signature; on LTspice such a netlist now loads instead of raising `ParseError`. Neither solver runs a block in a netlist. Any other `.lib` line stays an opaque statement.
