@@ -15,5 +15,7 @@ VD 7 0 DC 0 DISTOF1 0.1 -45 DISTOF2 0.01
 R7 7 0 1k
 VQ 8 0 dc 0 ac 1 portnum 1 z0 100
 R8 8 0 1k
+VU 9 0 dc 0 ac 1 portnum=2
+R9 9 0 1k
 .op
 .end

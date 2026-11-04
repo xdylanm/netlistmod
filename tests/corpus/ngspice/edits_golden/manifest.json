@@ -108,7 +108,7 @@
     "set_stimulus.expected.cir": "d2e31cba44de916ec653db77fa1b0548203532b678144f52a53b9dc9e901fba4",
     "set_stimulus_arg.expected.cir": "76f09dd5fa147a26b765e424acdbde76c4b5ef2a14d27497c38454a00b0815aa",
     "remove_stimulus.expected.cir": "881eb5fe1facdd00dd974e0ce54efb2c9027f5eb5af765c9ab70851396341491",
-    "source_forms.cir": "76be5b2291aa76f94d4cb9bf6ae39dae642dad7d20c221402267de72a4dea087",
+    "source_forms.cir": "f88bb08cc63f11b53acfc20036cc9768ec8304e59e992033ef055c206d058f66",
     "source_external.cir": {
       "sha256": "8b56c8f009f1b99f5893bc28be5d481a688b5e1374cee911b4c76c4733e92bc9",
       "solver": {
@@ -116,20 +116,20 @@
       }
     },
     "source_separators.cir": "f0d97620b1e4d28e0ba19884c184e25c1b399b71414f0d1ba18c9239145a628e",
-    "exp_arg.expected.cir": "349f4f2cbc6e4201ff85d411459163d305f186bde86ce8057c33e1b2c2892c82",
-    "pwl_arg.expected.cir": "1526e1c3a60eebfd0cda778044a8cfc9859d5a2f5009b04c441dd8418e091ae5",
-    "pwl_r.expected.cir": "108268f0acb6ef45eab6bcba8ce79a01a49087ae4bde909b594c948793bc3198",
-    "pwl_td.expected.cir": "5b1893a9713e9b236dc60fa24e2716d18b7245696c7ebba7a4c1f69ae3c452de",
-    "pwl_replaced.expected.cir": "30256621998a5d183444a20e9c651b58964aa02d8b4a46b0e84f254e97f87a2d",
-    "sffm_arg.expected.cir": "7ccdb11dec4b8f9d5ce224250fffb9471bef1fc0628b2843b7e1fd6f0b3eef9d",
-    "am_arg.expected.cir": "be200fac5ed26527740258e94ad32b8a61486754c0b0749f4366f310f0ca5547",
-    "trnoise_arg.expected.cir": "ffb8b8a421a43aed3d82fe0e674d9ba0a025ff52c35bcf209c5364b04fdeb823",
-    "trrandom_arg.expected.cir": "6f63a27b15a25c6dd2ec2cac15f5cf79bb858bdcf6bff7aaa69a10977c6db1a7",
-    "distof1_arg.expected.cir": "6a20cd3fcf498ce854fbacd22fd52e49d830b9ce1317bcfef8eab05c28cc2ca4",
-    "distof2_set.expected.cir": "1ab73cb0ed551c554fa8eac6eb4c1cbddca6d55ae77724fcd11b785772cf66f1",
-    "distof1_remove.expected.cir": "5f8434c9cc5199cbb22512f8308deeb858915dd851c5eace27031db8f9697a45",
-    "port_z0.expected.cir": "3d249e6ba9e5ed17ff2fab93d8b807324bd72b7dd4b798a0b34dcf38ddba0445",
-    "port_num.expected.cir": "83438cda7ed77b001340af677145b7f4eb5da0ac7d299f2ed38e39de8e740cd8",
+    "exp_arg.expected.cir": "81b76f9eaac9e5d7d96d37ef76de80b51ffab3b9194ccf26736bda984819e7fc",
+    "pwl_arg.expected.cir": "625aeb2ef28821edefc8c28e99b47d26b35944b6e6d3ef6a06ee07c5fe7a8e3a",
+    "pwl_r.expected.cir": "260430da070489afdecdfee07f0840ec7cdb3d0cfe8c948d277fb18f06e1010e",
+    "pwl_td.expected.cir": "4b606779178e262a67b43e7fc8d95a98023966b26922df8c035db8cba6fbef3a",
+    "pwl_replaced.expected.cir": "b569e94025af0dc22a4ee06b019817582e996060cbbca152b3a13fef3e2d7660",
+    "sffm_arg.expected.cir": "3fb9ebf4073aa840b8e52f746161ddeb9f481745932e96d46a247a75c782d05a",
+    "am_arg.expected.cir": "f84d01be5078eba877ade7954440f7a50473bfa9cc8c503e6f0258a2108a2ae5",
+    "trnoise_arg.expected.cir": "fc7d60327a3cf5f93a35c2faae8ef9763713307892668573990e34dbf48e8693",
+    "trrandom_arg.expected.cir": "46dbf78f6eb8d5677f71a095eb9416a5b08ecde42ef637457119268fb615c5a2",
+    "distof1_arg.expected.cir": "dce3431be670228d51c6b4580cd00e0318e20b7d1db8aaeb7c31d5a066f6648d",
+    "distof2_set.expected.cir": "f1922d47bbbca16c6e311a87c93dd17f64d69a498c0e017c4fd642568a101fc9",
+    "distof1_remove.expected.cir": "6b8c6a2873637c5cb290329dce525baab7af5b82c83c366029c8aec0a1fa516b",
+    "port_z0.expected.cir": "79df6b98de1e9321037646ed1bd91a2bf3a56b4985911cf58547be05a57113e7",
+    "port_num.expected.cir": "d95769e3d7f08c50c4b7352d513cdfe77ab64f4d4190ed6682953f08524874bf",
     "external_m.expected.cir": {
       "sha256": "63e00920b5e473dc4ce1b3f6fdb76116462952709e5852186f491871f9c58cff",
       "solver": {
@@ -673,7 +673,7 @@
           "set_stimulus_arg",
           "VP",
           "r",
-          "11NS"
+          "10NS"
         ]
       ],
       "expected": "pwl_r.expected.cir"
@@ -804,10 +804,21 @@
       "input": "source_forms.cir",
       "steps": [
         [
-          "set_param",
-          "VQ",
-          "portnum",
-          "2"
+          "batch",
+          [
+            [
+              "set_param",
+              "VQ",
+              "portnum",
+              "2"
+            ],
+            [
+              "set_param",
+              "VU",
+              "portnum",
+              "1"
+            ]
+          ]
         ]
       ],
       "expected": "port_num.expected.cir"
