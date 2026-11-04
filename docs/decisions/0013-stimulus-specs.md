@@ -1,8 +1,8 @@
 # 0013 — Stimulus specs
 
-- **Status:** proposed
+- **Status:** accepted (2026-11-04, maintainer; M12 T11)
 - **Date:** 2026-11-04
-- **Context:** Phase 2 replaces the rejected source functions with a typed `SourceSpec` (§5.3, G2). The manual and the LTspice reference each show one order of fields and one form of each function, and both solvers accept more. Probes on ngspice 47 and LTspice 26.1.1 are in [m12-tasks.md](../design/m12-tasks.md) section 3. The maintainer decided these on 2026-11-04.
+- **Context:** Phase 2 replaces the rejected source functions with a typed `SourceSpec` (§5.3, G2). The manual and the LTspice reference each show one order of fields and one form of each function, and both solvers accept more. Probes on ngspice 47 and LTspice 26.1.1 are in [m12-tasks.md](../design/archive/phase-2/m12-tasks.md) section 3. The maintainer decided these on 2026-11-04.
 - **Decision:**
   1. **Field order.** A function may stand before or after the DC and AC parts, with at most one of each, since both solvers read those lines alike. A bare value after a function is refused, as are two functions: there ngspice runs and LTspice stops, and the ngspice readings surprise (the output becomes 0; the last function wins).
   2. **The manual and the reference decide the forms (decision 0002 stands).** Parentheses are required, although both solvers run `PULSE 0 1 1u`; a blank before them is allowed, since the manual writes `trrandom (2 10m 0 1)`. The forms that have no parentheses in the references stay: EXTERNAL, DISTOF1 and DISTOF2, and LTspice's `PWL FILE=` and `PWL REPEAT …`. LTspice's scale factors stand before the list, the file or the repeat (maintainer, 2026-11-04), since the reference lists them as options of all four PWL forms; after any of those they stop LTspice and are refused. On an I line, `load` stands after the value or the function and not before a function, and `tbl=` stands alone, as the reference writes them, although LTspice runs more. A bare parameter name, `PULSE(0 x)`, is refused: ngspice runs it and LTspice stops, it is not in the manual, and the library would not see the reference.
@@ -19,4 +19,3 @@
   - A `set_stimulus` on a PWL with `r=` and `td=` replaces them too, since they are the function's. LTspice's `Rser`, `Cpar` and trigger parameters are the line's and stay.
   - Removing the function of an LTspice I line with no other value is an `EditError`, because the grammar requires a value there.
   - No corpus signature changed. The tree snapshot lost the three rejected files and gained the new accept files.
-  - This record stays `proposed` until the maintainer accepts it when M12 closes.

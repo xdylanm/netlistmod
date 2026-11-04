@@ -1,7 +1,7 @@
 # M12 task list — Stimulus specs
 
-> **Status:** READY FOR REVIEW — T1–T10 and the reviews' R1–R10 are done, with the results in section 5; T11 follows the maintainer's approval
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M12). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
+> **Status:** COMPLETE (2026-11-04) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M12). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
 
 ## 1. Scope
 
@@ -141,9 +141,11 @@ Probes on ngspice 47 and LTspice 26.1.1: about 150 runs in a `.tran`, from a scr
 
 ### After the maintainer's approval
 
-[ ] **T11 — Close M12.** Merge on green with "Rebase and merge". Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0013.
+[x] **T11 — Close M12.** Merge on green with "Rebase and merge". Status `COMPLETE (date)`, `git mv` to `docs/design/archive/phase-2/`, fix links, update the plan and index, and accept decision 0013.
 
 ## 5. Results
+
+The commit hashes below are those of the pull request's branch; "Rebase and merge" gives the commits new hashes on `main`.
 
 **Full local run on `eaf36b1` (T10 and R9, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 5716 passed, 2 skipped, 613 deselected, 15 minutes 11 seconds, coverage 98.98%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (32 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
 
@@ -274,3 +276,13 @@ The developer may take these now or leave them. All of them fail loudly with not
 
 - `V1 a 0 DC 1 ; c` followed by `+ SIN(0 1), AC 1` leaves `+ , AC 1` after `remove_stimulus`. The library loads it and ngspice runs it, so this is only untidy.
 - Section 6's non-required items stay open, as section 5 says. Any that should be fixed need their own task.
+
+## 8. Third review (2026-11-04, `d4a3c2c`): recommended for approval
+
+R10 is done as asked: one row of `ltspice/discrepancies.md` and the four forms in the solver test, with `I1 a 0 tbl=(…) AC 1` added to the grammar test. `d4a3c2c` changes no file in `src/`.
+
+**What the review ran:** `test_ltspice_source_functions.py` with `--require-solver ltspice`, `test_source_functions.py`, `tests/test_docs.py` and `tests/architecture` (877 passed); `ruff check`, `ruff format --check` and the named `mypy --strict`, all clean. CI on `d4a3c2c` is green. The full suite with both solvers was not repeated, because no library code changed since `c3c6778` (section 7).
+
+No change is requested.
+
+**Approved by the maintainer on 2026-11-04.** T11 can start.
