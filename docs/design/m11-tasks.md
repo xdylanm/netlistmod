@@ -1,6 +1,6 @@
 # M11 task list — Carried limits and messages
 
-> **Status:** ACTIVE — approved by the maintainer's decisions in section 2 (2026-11-03)
+> **Status:** READY FOR REVIEW — T1–T10 are done, with the results in section 5; T11 follows the maintainer's approval
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M11). Governed by [architecture.md](../architecture.md) (§2, §7, §15, §17).
 
 ## 1. Scope
@@ -63,7 +63,7 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 
 ## 4. Tasks
 
-[ ] **T1 — Decision record 0012: carried limits.** Status `proposed` until M11 closes. It records the choices of section 2 and:
+[x] **T1 — Decision record 0012: carried limits.** Status `proposed` until M11 closes. It records the choices of section 2 and:
 - LTspice `.end` stays required (limit 2), closing what decision 0009 item 4 left open. Edit placement and the round-trip tests depend on it.
 - The one exception to the plan's compatibility rule: an ngspice netlist with a block keeps parsing, but its signature changes, because the body leaves the topology. No solver ran such a netlist, and no corpus file has one.
 - On LTspice, such a netlist goes from `ParseError` to loading.
@@ -71,9 +71,9 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 - Amendments to decision 0002, to architecture §7.2, §7.8, §17 and §19 decision 10 as needed, and to plan M11's `directives.add` bullet.
 - `directives.add` stays literal (decision 2), closing limit 9.
 
-[ ] **T2 — Pin the compatibility rule.** Before any grammar change, add a test holding the topology signature and digest of every corpus file that parses, so that saved digests stay valid. First check whether `tests/document/test_document_corpus.py` already does this. Later milestones keep the test.
+[x] **T2 — Pin the compatibility rule.** Before any grammar change, add a test holding the topology signature and digest of every corpus file that parses, so that saved digests stay valid. First check whether `tests/document/test_document_corpus.py` already does this. Later milestones keep the test.
 
-[ ] **T3 — Opaque `.lib` blocks (limit 6, decision 1).** Tests first:
+[x] **T3 — Opaque `.lib` blocks (limit 6, decision 1).** Tests first:
 - **Grammar, both dialects:** a block rule like `.if`'s, wherever `.lib` is allowed today. A `.lib` line opens a block only when it has one field and an `.endl` line follows before the next one-field `.lib` line or `.end`. A two-field `.lib` line may stand in the body, because vendor libraries select one section from inside another. This needs a lookahead terminal; add it to the pinned list and to the spec entries.
 - **What stays as it is:**
   - `.lib file section`, and one-field `.lib name` with no `.endl`, stay `OpaqueStatement`.
@@ -85,36 +85,36 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 - **Solver tests, as evidence for the record:** both solvers stop on a block in a netlist. A section in a separate file runs, where ngspice adds its elements, and LTspice imports its models and ignores its elements.
 - **Docs:** `NG-OPA-002`, `LT-OPA-001`, `scoping.md` on both dialects, `edit-layer.md` (which says LTspice refuses blocks) and `docs/usage/`.
 
-[ ] **T4 — `directives.add` stays literal (limit 9, decision 2).** No change to what it writes.
+[x] **T4 — `directives.add` stays literal (limit 9, decision 2).** No change to what it writes.
 - Tests that pin it on both dialects: `add` over each of the five kinds writes a second line, `set` on the result refuses the ambiguity, and `replace` and `remove` work on it.
 - Solver tests for the table in section 3: ngspice gives two plots for two `.ac`, and LTspice stops.
 - State the difference between `add` and `set` in `edit-layer.md`, `docs/usage/editing.md` and the docstrings, including that LTspice stops on a second analysis.
 - Correct the comment on `SINGLETON_DIRECTIVES`.
 
-[ ] **T5 — H5, argument types.** `Index.scope` raises `TypeError` for a `str`, so `scope="ab"` can no longer address nested definitions `a` and `b`. `parse` raises a `TypeError` naming `SourceText`. A test for each, and a positive test that a tuple and a list still work as a scope.
+[x] **T5 — H5, argument types.** `Index.scope` raises `TypeError` for a `str`, so `scope="ab"` can no longer address nested definitions `a` and `b`. `parse` raises a `TypeError` naming `SourceText`. A test for each, and a positive test that a tuple and a list still work as a scope.
 
-[ ] **T6 — H6, the code rename (decision 3).** Rename the `DiagnosticCode` member and value, then update §17, `docs/usage/errors.md`, the manifests and the tests. No behaviour changes: every line that had the old code has the new one.
+[x] **T6 — H6, the code rename (decision 3).** Rename the `DiagnosticCode` member and value, then update §17, `docs/usage/errors.md`, the manifests and the tests. No behaviour changes: every line that had the old code has the new one.
 
-[ ] **T7 — H7, internal references in messages.**
+[x] **T7 — H7, internal references in messages.**
 - Remove `decision NNNN` and `architecture §` from every message a user can see. Where the sentence needs the rule, state the rule.
 - A manual citation names its document, as in "(ngspice manual §2.5)", so that `§` is never ambiguous.
 - Docstrings and comments keep their citations.
 - Add a test in `tests/architecture/` that walks the `raise` and diagnostic message strings under `src/` and fails on an internal citation, so that later milestones' messages start clean and stay clean.
 - Line and column in the `*_rejects` manifests do not move. Update any message assertion that quoted a citation.
 
-[ ] **T8 — H8, models in `.if` blocks (decision 4).**
+[x] **T8 — H8, models in `.if` blocks (decision 4).**
 - A scope with an opaque `.if` or `.lib` block counts the same as one with an `.include`. Rename `has_opaque_include` to say so.
-- Update the call sites and their messages. The third site, the instance-node check at `document/diagnostics.py:244`, should see no change in practice, because `.if` does not exist on LTspice; check that it only applies there.
+- Update the call sites and their messages. The third site, the LTspice instance-node check in `document/diagnostics.py`, follows too: a `.lib` block may define the instance's subcircuit.
 - Tests for a model, a subcircuit and a parameter defined only in `.if` or in a `.lib` block, at the top level and in a subcircuit body, including `set_model` with and without `allow_external`. A `.control` block does not count.
 - A solver test that ngspice resolves a model defined in `.if (1)`.
 - Update `docs/grammars/ngspice/scoping.md`, `docs/usage/errors.md` and §7.8.
 
-[ ] **T9 — Documentation and archive.**
+[x] **T9 — Documentation and archive.**
 - CHANGELOG lines for T3 and T5–T8, marking the behaviour changes and the rename.
 - Update the device and limits text that names limits 2, 6 and 9, and the LTspice `.end` wording in the LTspice grammar docs.
 - `git mv` `phase-2-code-changes.md` to `archive/phase-2/`, marked `COMPLETE`. Fix links, including in the phase 2 plan and index.
 
-[ ] **T10 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice` on Windows, and record it and the green CI run in section 5. Set the status to `READY FOR REVIEW`, and update the plan's M11 heading and the index.
+[x] **T10 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice` on Windows, and record it and the green CI run in section 5. Set the status to `READY FOR REVIEW`, and update the plan's M11 heading and the index.
 
 ### After the maintainer's approval
 
@@ -122,4 +122,28 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 
 ## 5. Results
 
-To be filled in by T10.
+**Full local run on `26fc680` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4993 passed, 2 skipped, 455 deselected, 9 minutes 55 seconds, coverage 98.93%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (30 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
+
+**CI on `26fc680` ([PR 7](https://github.com/xdylanm/netlistmod/pull/7), run 41778186149): all five jobs green,** with no solver found.
+
+| Job | Python | Passed | Skipped | Deselected | Coverage |
+|---|---|---:|---:|---:|---:|
+| Ubuntu | 3.13.18 | 3833 | 1162 | 455 | 98.93% |
+| Ubuntu | 3.14.10 | 3833 | 1162 | 455 | 98.93% |
+| Windows | 3.13.17 | 3832 | 1163 | 455 | 98.93% |
+| Windows | 3.14.10 | 3832 | 1163 | 455 | 98.93% |
+
+The commit that records these results adds one test and changes docs; its run is on the pull request.
+
+**Compatibility rule (T2).** All 153 recorded corpus digests are unchanged. The tree snapshot gained only the two new files, `structure_basic/lib_block.cir` and `edits_golden/add_lib_block.expected.cir`.
+
+**Changes to tests that existed:**
+- `test_review_package_holds_the_generated_spec_coverage` is removed. T3 changed two spec entries, so the archived phase 1 record no longer matches the generated report, which is the end its comment names. Plan M12 no longer lists it.
+- The error names in `_expected_names` leave out `LIB_BLOCK_KW`, so no rejected file's `expected` list changed.
+- `docs/usage/editing.md` examples lost their internal citations, as T7 requires.
+
+**Found while doing T3, not changed:** a `+` line in an `.if` or `.control` body is a `ParseError` on ngspice, because the ignored continuation leaves two text tokens on one logical line. `.lib` blocks accept these lines, since vendor libraries are full of them. Accepting them in `.if` would be a small grammar change of its own.
+
+**A limit of the block rule:** a one-field `.lib name` in a subcircuit body with a stray `.endl` after `.ends` opens a block that swallows `.ends`, so the file fails at load. The lookahead cannot stop at `.ends`, because a section may hold a whole `.subckt`.
+
+**Not done:** no solver has been run on Linux, as in M10.
