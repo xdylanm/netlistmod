@@ -97,7 +97,13 @@
       }
     },
     "value.expected.cir": "88f5a27d5aa014cb39234b3df5a33c5ebec75e1a9bef1aeb5fad8740745577e9",
-    "value_before_model.expected.cir": "8d3cd2ae2aa6992e68f23b41d9d0a43175129c7cc02bd9b2f0015dac292eb768"
+    "value_before_model.expected.cir": "8d3cd2ae2aa6992e68f23b41d9d0a43175129c7cc02bd9b2f0015dac292eb768",
+    "add_lib_block.expected.cir": {
+      "sha256": "f16be5ae0ef2094685cde1e8055276788010a9c233d7547538645370898c7e7d",
+      "solver": {
+        "skip": "Neither solver runs a `.lib` block in a netlist, only in a library file (decision 0012)."
+      }
+    }
   },
   "cases": {
     "value": {
@@ -551,6 +557,20 @@
         ]
       ],
       "expected": "no_final_newline.expected.cir"
+    },
+    "add_lib_block": {
+      "input": "review1_lf.cir",
+      "steps": [
+        [
+          "directives.add",
+          [
+            ".lib extras",
+            "R9 a b 1k",
+            ".endl"
+          ]
+        ]
+      ],
+      "expected": "add_lib_block.expected.cir"
     }
   }
 }

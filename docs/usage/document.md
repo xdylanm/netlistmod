@@ -124,7 +124,7 @@ Diagnostics are data, computed once at load, never raised.
 2 9 PARAM_USED_BEFORE_DEFINITION warning
 4 8 UNRESOLVED_MODEL warning
 5 10 SUBCKT_PORT_MISMATCH warning
-8 1 UNKNOWN_DIRECTIVE_PRESERVED info
+8 1 UNTYPED_DIRECTIVE_PRESERVED info
 >>> broken.diagnostics[1].message
 'model `dm` is not defined (searched: top level)'
 
@@ -152,8 +152,8 @@ True
 
 ## Limits
 
-Elements, models and parameters inside `.if` blocks and `.include`/`.lib` files are not seen
-(§7.8). An unresolved reference in a scope with an `.include` or `.lib` is reported as `info`. A
+Elements, models and parameters inside `.if` and `.lib` blocks and `.include`/`.lib` files are not
+seen (§7.8). An unresolved reference in a scope with any of these is reported as `info`. A
 name defined only inside an `.if` block is reported as a warning, although the solver may see it.
 `references_to_param` does not see `.meas` bodies, unknown dot-commands such as `.func`, or opaque
 items, so an empty answer does not prove that a parameter is unused.

@@ -1,6 +1,6 @@
 id: NG-OPA-002
 dialect: ngspice
-construct: opaque .include and .lib statements
+construct: opaque .include and .lib statements, and .lib blocks
 manual_ref:
   - '[ngspice-manual] §2.8 ".INCLUDE"'
   - '[ngspice-manual] §2.10 ".LIB"'
@@ -19,7 +19,15 @@ grammar:
   - lib_stmt
   - INCLUDE_KW
   - LIB_KW
+  - lib_block
+  - lib_line
+  - LIB_BLOCK_KW
+  - ENDL_KW
 tests:
+  - tests/grammar/test_lib_blocks.py::test_the_body_of_a_block_is_not_topology
+  - tests/grammar/test_lib_blocks.py::test_blocks_do_not_nest
+  - tests/solver/test_decision_0012_probes.py::test_ngspice_stops_on_a_block_in_a_netlist
+  - tests/solver/test_decision_0012_probes.py::test_ngspice_reads_a_section_and_adds_its_elements
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
   - tests/grammar/ngspice/test_structure.py::test_continuations_require_immediate_previous_statement
   - tests/grammar/ngspice/test_structure.py::test_include_and_lib_cannot_be_continued

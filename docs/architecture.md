@@ -330,7 +330,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 | **Topology** | Element line structure: designator, element type, ordered node list; `.subckt` name, ports and body structure; `K` coupling targets; `.global` node declarations ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)) | Read-only |
 | **Properties** | Numeric values, formulas, instance parameters, model name (same model type), `.param` definitions, `.model` parameters, source stimulus specs | Editable (and `.param` addable) |
 | **Directives** | `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.step`, unknown dot-commands | Addable, replaceable, removable |
-| **Opaque** | `.control` blocks, conditional blocks, `.include` / `.lib` statements | Contents untouchable; a whole item may be added, removed or replaced ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md), amendment 1). An `.include` is added with `add_include` (Section 7.9) |
+| **Opaque** | `.control` blocks, conditional blocks, `.lib` blocks, `.include` / `.lib` statements | Contents untouchable; a whole item may be added, removed or replaced ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md), amendment 1). An `.include` is added with `add_include` (Section 7.9) |
 
 ### 7.2 Allowed operations
 
@@ -340,7 +340,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 - Add or set a `.param` (upsert: the effective assignment of the name in the scope is replaced, otherwise a line is added); edit `.model` parameters.
 - Edit source stimulus specifications of existing sources (phase 1: the DC value and the AC magnitude and phase).
 - Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed. Directive text may span several physical lines (a list of lines), joined with the file's line ending.
-- Add, replace or remove a whole opaque item (`.control` or `.if` block, `.include` or `.lib` statement); its contents are never edited.
+- Add, replace or remove a whole opaque item (`.control`, `.if` or `.lib` block, `.include` or `.lib` statement); its contents are never edited.
 - Add an `.include` of a harness file as a directive.
 - Inserted text follows the conventions of decision 0007 (line ending of the preceding line, lowercase dot-command keywords, `name=value`, nothing after `.end`). The API and the slots each operation edits: [docs/design/edit-layer.md](design/edit-layer.md).
 
@@ -379,6 +379,7 @@ The signature is a canonical, hashable, ordered value built from typed nodes, us
 
 - **Expressions can hide connectivity.** A behavioral source formula such as `V(n1)*2` depends on nets not in the element's node list. The library guarantees node-list topology only.
 - **`.include` / `.lib` content is outside the parsed file.** These statements are opaque and never resolved or read. Topology, symbol tables and reference resolution cover the main file only; references to models, subcircuits or params defined in included files are not visible to the library. What an added or removed `.include`/`.lib` changes, and what an added or removed `.if` block contains, is not verified.
+- **`.lib name` … `.endl` blocks are opaque.** Their contents are not read and are not topology ([decision 0012](decisions/0012-carried-limits.md)). Solvers read such a block only from a library file; opening a library file is a later candidate (Section 21).
 - **Conditional blocks are opaque.** Netlists in which `.if`/`.else`/`.endif` changes topology are explicitly out of scope; the topology guarantee does not extend into conditional blocks.
 - **LTspice node names can reach into an instance.** LTspice connects a node named `<instance>:<node>` to that node inside the instance, which the reference does not document. The library keeps it as a net of its own, so the topology view and the signature do not show the join. A `NODE_INTO_INSTANCE` diagnostic flags it ([decision 0009](decisions/0009-ltspice-dialect.md); `docs/grammars/ltspice/names.md` N11).
 - **Replacement text is not validated.** In v1 the caller is responsible for the validity of the text it supplies. The library may take on more validation as the grammar matures.
@@ -624,9 +625,9 @@ SpiceNetlistError
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNKNOWN_DIRECTIVE_PRESERVED`, `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)).
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNTYPED_DIRECTIVE_PRESERVED` ([decision 0012](decisions/0012-carried-limits.md)), `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)).
 
-A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `NODE_INTO_INSTANCE` is info when the definition is in an include, otherwise a warning; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNKNOWN_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
+A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `NODE_INTO_INSTANCE` is info when the definition is in an include, otherwise a warning; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNTYPED_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
 
 ---
 
@@ -693,6 +694,10 @@ Both questions below are resolved by [decision 0007](decisions/0007-edit-lifecyc
    - What is the boundary of an "edit set"?
    - How are two edits to the same span handled (error or last-wins), given that edits MUST NOT overlap?
 2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`EditError`, or `allow_external=True` when an `.include`/`.lib` is in scope).
+
+**Later candidates, not in v1**
+
+- **Library files.** Opening a library file, with no title or `.end`, and editing a model inside a `.lib` section. The caller would choose, because the file cannot tell ([decision 0012](decisions/0012-carried-limits.md)). Decided after using the beta.
 
 **Deferred to design documents and implementation (resolve with tests)**
 

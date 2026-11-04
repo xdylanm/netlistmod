@@ -81,6 +81,16 @@
    "nodes": 25
   }
  },
+ "edits_golden/add_lib_block.expected.cir": {
+  "rkm": {
+   "digest": "ca5b1269ed24e8f29255f942d569823c0aa416510f976682a3391733f9ec10e3",
+   "nodes": 29
+  },
+  "standard": {
+   "digest": "ca5b1269ed24e8f29255f942d569823c0aa416510f976682a3391733f9ec10e3",
+   "nodes": 29
+  }
+ },
  "edits_golden/amp_lf.cir": {
   "rkm": {
    "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
@@ -1429,6 +1439,16 @@
    "error": "ParseError",
    "expected": [],
    "line": 3
+  }
+ },
+ "structure_basic/lib_block.cir": {
+  "rkm": {
+   "digest": "5491511dafa00d7e3f5ad949c1a8f3ca77e0d021dad47e4745407c7f435ab02c",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "5491511dafa00d7e3f5ad949c1a8f3ca77e0d021dad47e4745407c7f435ab02c",
+   "nodes": 28
   }
  },
  "structure_basic/structure_basic.cir": {

@@ -29,6 +29,6 @@ Validated on: ltspice 26.1.1 (2026-11-01)
 
 ## Includes
 
-As for ngspice, the library never reads `.include`/`.lib` files (§7.8). An `UNRESOLVED_*` diagnostic
-whose searched scopes contain one is **info**. LTspice's bundled device libraries are not visible
+As for ngspice, the library never reads `.include`/`.lib` files or `.lib` blocks (§7.8). An
+`UNRESOLVED_*` diagnostic whose searched scopes contain one is **info**. LTspice's bundled device libraries are not visible
 either: a diode naming a bundled model with no `.lib` line gets `UNRESOLVED_MODEL` (warning).

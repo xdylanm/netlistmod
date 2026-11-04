@@ -5,7 +5,7 @@ import io
 import os
 import re
 import tomllib
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Iterator
 from contextlib import redirect_stderr, redirect_stdout
 from importlib.metadata import distribution, entry_points
 from pathlib import Path
@@ -274,6 +274,7 @@ UNCHECKED_TERMINALS = {
             "BS_CONT",
             "COMMENT_LINE",
             "DOT_NAME",
+            "LIB_BLOCK_KW",
             "TEXT",
             "TITLE_ARG",
             "TITLE_TEXT",
@@ -287,6 +288,7 @@ UNCHECKED_TERMINALS = {
             "MODEL_BARE",
             "BRACE_FORMULA",
             "COMMENT_LINE",
+            "LIB_BLOCK_KW",
             "TEXT",
             "TITLE_ARG",
             "TITLE_TEXT",
@@ -338,3 +340,30 @@ def test_gpl_dependency_guard_detects_deliberate_violation(tmp_path: Path) -> No
     )
 
     assert dependencies == ["example-gpl"]
+
+
+# M11 T7: a wheel has no decision records, and a bare section sign does not say whose section.
+_INTERNAL_CITATION = re.compile(r"decision \d|architecture §|(?<!manual )§\d")
+
+
+def _message_strings(path: Path) -> Iterator[tuple[int, str]]:
+    tree = ast.parse(path.read_text(encoding="utf-8"))
+    bare = {
+        id(node.value)
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Expr) and isinstance(node.value, ast.Constant)
+    }
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in bare:
+            yield node.lineno, node.value
+
+
+def test_no_message_cites_an_internal_document() -> None:
+    root = SOURCE
+    found = [
+        f"{path.relative_to(root)}:{line}: {text}"
+        for path in sorted(root.rglob("*.py"))
+        for line, text in _message_strings(path)
+        if _INTERNAL_CITATION.search(text)
+    ]
+    assert not found

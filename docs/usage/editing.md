@@ -44,7 +44,7 @@ the line stay as they were. Text that would not land as one value is rejected:
 >>> netlist.set_value("R22", "1k 2k")
 Traceback (most recent call last):
 ...
-netlistmod.errors.EditError: set_value R22: `1k 2k` does not re-parse as a value (decision 0007 item 8); the text would change more than the intended slot
+netlistmod.errors.EditError: set_value R22: `1k 2k` does not re-parse as a value; the text would change more than the intended slot
 
 ```
 
@@ -77,7 +77,9 @@ R22 out 0 1k
 ## Set up an analysis
 
 `directives.set` replaces the one `.tran`, `.ac`, `.dc`, `.op` or `.temp` line of that kind, or
-adds one before `.end`. Repeatable directives (`.options`, `.save`, `.ic`, …) are added,
+adds one before `.end`. `directives.add` is different: it writes the line it is given even if one of
+its kind exists, because ngspice runs two `.ac` or `.dc` lines and gives a plot for each. LTspice stops
+on a second analysis, and the library does not check for that. Repeatable directives (`.options`, `.save`, `.ic`, …) are added,
 replaced or removed explicitly.
 
 ```python
@@ -151,7 +153,7 @@ on its `X` line.
 >>> amp.set_value("R1", "5k", scope=("amp",))
 Traceback (most recent call last):
 ...
-netlistmod.errors.EditError: scope ('amp',) edits the definition of subcircuit `amp`, which changes every instance of it; pass in_definition=True to confirm, or use set_instance_param on an X line to change one instance (architecture §7.4)
+netlistmod.errors.EditError: scope ('amp',) edits the definition of subcircuit `amp`, which changes every instance of it; pass in_definition=True to confirm, or use set_instance_param on an X line to change one instance
 >>> print(amp.set_value("R1", "5k", scope=("amp",), in_definition=True).text.splitlines()[4])
 R1 a b 5k
 >>> print(amp.set_instance_param("X2", "g", "3").text.splitlines()[2])
@@ -185,7 +187,7 @@ R2 out 0  rmod l=20u w=1u
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's
-line ending. A `.control` or `.if` block, or an `.include`/`.lib` statement, is added, replaced
+line ending. A `.control`, `.if` or `.lib` block, or an `.include`/`.lib` statement, is added, replaced
 or removed whole; its contents are never edited, and what it brings in is not verified.
 
 ```python
@@ -219,7 +221,7 @@ that changes the topology anyway raises `TopologyViolation`; nothing is returned
 >>> netlist.directives.add("R9 out 0 1k")
 Traceback (most recent call last):
 ...
-netlistmod.errors.TopologyError: directives.add: `R9 out 0 1k` is a resistor line (an element), which is topology; only directives and whole opaque items can be added or replaced (architecture §7.3)
+netlistmod.errors.TopologyError: directives.add: `R9 out 0 1k` is a resistor line (an element), which is topology; only directives and whole opaque items can be added or replaced
 >>> from netlistmod import Edit
 >>> node = netlist.element("R22").nodes[0]
 >>> netlist.apply([Edit(node.span, "mid")])

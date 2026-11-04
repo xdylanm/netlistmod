@@ -129,7 +129,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `ENDS_NAME_MISMATCH` | info | the `.ends` name | names differ (case-insensitive) |
 | `DIALECT_GATED_SYNTAX` | info | the value | `notation == "rkm"` |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
-| `UNKNOWN_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
+| `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at

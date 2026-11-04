@@ -153,7 +153,7 @@ def test_the_embedded_decimal_is_not_gated_syntax() -> None:
 
 
 def test_untyped_commands_are_reported_as_preserved() -> None:
-    assert _codes(_netlist(".backanno")) == [(DiagnosticCode.UNKNOWN_DIRECTIVE_PRESERVED, "info")]
+    assert _codes(_netlist(".backanno")) == [(DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED, "info")]
 
 
 def test_a_stepped_parameter_is_defined_by_its_step() -> None:

@@ -122,9 +122,9 @@ class _Operations(Generic[_R]):
 
         The model must resolve from the element's scope with a type allowed for the element
         (R → ``R``, C → ``C``, L → ``L``, D → ``D``), otherwise ``EditError``. An unresolved
-        model is accepted only with ``allow_external=True`` when an ``.include`` or ``.lib``
-        is in a searched scope (decision 0007 item 3). A value written ``r=1k`` takes no
-        model. ngspice uses a given value over the model's geometry; see
+        model is accepted only with ``allow_external=True`` when an ``.include``, ``.lib`` or
+        opaque ``.if`` or ``.lib`` block is in a searched scope (decision 0007 item 3). A value
+        written ``r=1k`` takes no model. ngspice uses a given value over the model's geometry; see
         :meth:`remove_value`. LTspice has no R, C or L model, so there only a D line takes one,
         and an R, C or L line is an ``EditError``.
         """
@@ -313,7 +313,7 @@ class DirectiveEditor(Generic[_R]):
     ``text`` is one physical line, or a sequence of physical lines for a continued statement
     or a block (``[".tran 1u 10m", "+ 0 1u"]``); the lines are joined with the line ending of
     the insertion point. It must parse as exactly one typed directive, unknown dot-command,
-    whole ``.control`` or ``.if`` block, or ``.lib`` statement. An element, ``.subckt`` or
+    whole ``.control``, ``.if`` or ``.lib`` block, or ``.lib`` statement. An element, ``.subckt`` or
     ``.global`` is a ``TopologyError``; an ``.include`` is added with ``add_include``; anything
     else is an ``EditError``. The contents of an opaque item are never edited: it is added,
     replaced or removed whole.
@@ -326,7 +326,8 @@ class DirectiveEditor(Generic[_R]):
         self._operations = operations_
 
     def add(self, text: DirectiveText, placement: Placement = Placement.BEFORE_END) -> _R:
-        """Insert one directive or opaque item (before ``.end`` by default)."""
+        """Insert one directive or opaque item (before ``.end`` by default). The line is written
+        even if one of its kind exists; ``set`` is the upsert (decision 0012)."""
         return self._operations._submit(
             operations.add_directive(self._operations._target(), text, placement)
         )
@@ -339,7 +340,7 @@ class DirectiveEditor(Generic[_R]):
         )
 
     def remove(self, line: Line | object) -> _R:
-        """Remove a whole directive line, ``.control``/``.if`` block or ``.include``/``.lib``
+        """Remove a whole directive line, opaque block or ``.include``/``.lib``
         statement (a ``Line`` or its item). What a removed include defined is not checked
         (architecture §7.8)."""
         return self._operations._submit(

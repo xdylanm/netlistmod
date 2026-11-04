@@ -93,10 +93,7 @@ class EditPlan:
 
 
 def _overlap(first: Edit, second: Edit) -> str:
-    return (
-        f"overlapping edits: {_describe(first)} and {_describe(second)} (architecture §7.5; "
-        "make one edit per span)"
-    )
+    return f"overlapping edits: {_describe(first)} and {_describe(second)}; make one edit per span"
 
 
 def _describe(edit: Edit) -> str:

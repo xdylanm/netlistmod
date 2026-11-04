@@ -58,6 +58,7 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "IF_KW": "`.if`",
     "INCLUDE_KW": "`.include`",
     "LIB_KW": "`.lib`",
+    "ENDL_KW": "`.endl`",
     "TITLE_KW": "`.title`",
     "TITLE_TEXT": "title text",
     "TITLE_ARG": "title text",
@@ -233,7 +234,12 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
 
 def _expected_names(terminals: Iterable[object], dialect: Dialect) -> tuple[str, ...]:
     table = {**_TERMINAL_NAMES, **_DIALECT_TERMINAL_NAMES[dialect]}
-    names = {table.get(str(terminal), str(terminal)) for terminal in terminals}
+    # LIB_BLOCK_KW is a `.lib` whose lookahead found a block, not a thing to ask for by name.
+    names = {
+        table.get(str(terminal), str(terminal))
+        for terminal in terminals
+        if str(terminal) != "LIB_BLOCK_KW"
+    }
     return tuple(sorted(names))
 
 

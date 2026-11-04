@@ -31,7 +31,13 @@
         }
       }
     },
-    "set_model_param.expected.net": "e46ca1a698f0c2995bbec0ebef29602f26c69471e7e52ee71dbdbb26faea46ab"
+    "set_model_param.expected.net": "e46ca1a698f0c2995bbec0ebef29602f26c69471e7e52ee71dbdbb26faea46ab",
+    "add_lib_block.expected.net": {
+      "sha256": "9cd39054fc6cd8d1ab91bc51886907dad46b8b1b5184f6bd08e990d9c8813244",
+      "solver": {
+        "skip": "Neither solver runs a `.lib` block in a netlist, only in a library file (decision 0012)."
+      }
+    }
   },
   "cases": {
     "set_value": {
@@ -257,6 +263,20 @@
         ]
       ],
       "expected": "set_model_param.expected.net"
+    },
+    "add_lib_block": {
+      "input": "r_divider.net",
+      "steps": [
+        [
+          "directives.add",
+          [
+            ".lib extras",
+            "R9 a b 1k",
+            ".endl"
+          ]
+        ]
+      ],
+      "expected": "add_lib_block.expected.net"
     }
   }
 }

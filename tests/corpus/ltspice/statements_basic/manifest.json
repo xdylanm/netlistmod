@@ -15,6 +15,12 @@
     "step_forms.cir": "e9c423137da5674a11aed8afbb06d74f6ff425ae1259e9690ce34242c2599968",
     "subckt_body.cir": "fb3c03f4a6a113589205d7c8887eb263ce9930a8d3e3ac3e13f97eae66cd6dde",
     "tran_forms.cir": "d67eed2b71ec4f045b0eefccc7a2f1145818aacc6c1cb6c6e478416650b8fcce",
-    "tran_full.cir": "4936b3837e07167f740850fdcce4a8d6f7091a8f9e11b0ed1b6c666a769db594"
+    "tran_full.cir": "4936b3837e07167f740850fdcce4a8d6f7091a8f9e11b0ed1b6c666a769db594",
+    "lib_block.cir": {
+      "sha256": "d3be59373fff60e65e3e3591baa3d2156784f869f73f17398f25cc58504ea177",
+      "solver": {
+        "skip": "Neither solver runs a `.lib` block in a netlist, only in a library file (decision 0012)."
+      }
+    }
   }
 }
