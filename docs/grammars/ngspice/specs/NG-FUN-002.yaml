@@ -1,0 +1,15 @@
+id: NG-FUN-002
+dialect: ngspice
+construct: PULSE
+manual_ref: '[ngspice-manual] §4.1.1 "Pulse"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- PULSE_KW
+tests:
+- tests/grammar/test_source_functions.py::test_both_dialects_accept
+- tests/solver/test_ngspice_source_functions.py::test_pulse_and_sin_give_their_waveforms
+notes: See decision 0013.

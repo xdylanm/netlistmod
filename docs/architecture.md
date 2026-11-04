@@ -240,13 +240,16 @@ class NumericValue:      text: str; span: Span; notation: "standard" | "rkm"; so
 class Formula:           text: str; delimiter: str; span: Span   # {Rx*2}, "…", '…'
 @dataclass(frozen=True)
 class ModelReference:    model_name: str; span: Span
-# SourceSpec (DC/AC/PULSE/SIN/...), BehavioralExpression: required by the end of phase 2
+@dataclass(frozen=True)
+class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params: tuple[ParamAssignment]; span: Span
+                                                            # PULSE(0 1 1u), PWL(...) r=0, wavefile=x.wav
+# BehavioralExpression: required by the end of phase 2
 ```
 
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
 - `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
-- `VoltageSource` / `CurrentSource` (phase 1): `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`); full stimulus specs are a typed node to be added before phase 2 completes ([decision 0004](decisions/0004-element-and-value-grammar.md)).
+- `VoltageSource` / `CurrentSource`: `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`), `stimulus: SourceSpec | None`, `distortion: tuple[SourceSpec, ...]` ([decision 0013](decisions/0013-stimulus-specs.md)).
 - Node and value shapes are detailed in [docs/design/elements.md](design/elements.md).
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
 
@@ -338,7 +341,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 - Set or add an instance parameter on an existing element.
 - Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`), which is the type of the current one. An R, C or L line without a model may gain one after its value, and its value may be removed when a model is present (the semiconductor form, where a value overrides the geometry). A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
 - Add or set a `.param` (upsert: the effective assignment of the name in the scope is replaced, otherwise a line is added); edit `.model` parameters.
-- Edit source stimulus specifications of existing sources (phase 1: the DC value and the AC magnitude and phase).
+- Edit source stimulus specifications of existing sources: the DC value, the AC magnitude and phase, and the function, whole or one argument at a time, or remove it ([decision 0013](decisions/0013-stimulus-specs.md)).
 - Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed. Directive text may span several physical lines (a list of lines), joined with the file's line ending.
 - Add, replace or remove a whole opaque item (`.control`, `.if` or `.lib` block, `.include` or `.lib` statement); its contents are never edited.
 - Add an `.include` of a harness file as a directive.

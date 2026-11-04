@@ -1,0 +1,26 @@
+id: LT-FUN-006
+dialect: ltspice
+construct: PWL with its scale factors and file
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "V — Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- pwl_stimulus
+- pwl_factor
+- pwl_file
+- PWL_FACTOR_KW
+- PWL_FILE_KW
+- FILE_PATH
+core_rules:
+- PWL_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ltspice_file_paths_are_text
+- tests/grammar/test_source_functions.py::test_ltspice_scale_factors_and_wave_channel
+- tests/solver/test_ltspice_source_functions.py::test_pwl_gives_its_waveform
+- tests/solver/test_ltspice_source_functions.py::test_pwl_scale_factors
+- tests/solver/test_ltspice_source_functions.py::test_pwl_file
+notes: See decision 0013.

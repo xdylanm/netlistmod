@@ -341,6 +341,16 @@
    "nodes": 105
   }
  },
+ "edits_golden/remove_stimulus.expected.cir": {
+  "rkm": {
+   "digest": "c9d0a6d4553c3a526ee9404d27c7426aea298747644bb94765629a3e0ecf72f7",
+   "nodes": 15
+  },
+  "standard": {
+   "digest": "c9d0a6d4553c3a526ee9404d27c7426aea298747644bb94765629a3e0ecf72f7",
+   "nodes": 15
+  }
+ },
  "edits_golden/review1_lf.cir": {
   "rkm": {
    "digest": "27e85b0fccbb1f1b56124c094721b6c614f16eefaa68d46a6cbf33b1efb13a7a",
@@ -349,6 +359,36 @@
   "standard": {
    "digest": "27e85b0fccbb1f1b56124c094721b6c614f16eefaa68d46a6cbf33b1efb13a7a",
    "nodes": 28
+  }
+ },
+ "edits_golden/set_stimulus.expected.cir": {
+  "rkm": {
+   "digest": "fb9e2216b59d6767843e03471f2b401839a865588b6f0b05eda2ea9ff838803f",
+   "nodes": 19
+  },
+  "standard": {
+   "digest": "fb9e2216b59d6767843e03471f2b401839a865588b6f0b05eda2ea9ff838803f",
+   "nodes": 19
+  }
+ },
+ "edits_golden/set_stimulus_arg.expected.cir": {
+  "rkm": {
+   "digest": "81c0af0a85985e1aef94111de98bc6ebc6f6cddb515b445ffd3c60cdd7788577",
+   "nodes": 23
+  },
+  "standard": {
+   "digest": "81c0af0a85985e1aef94111de98bc6ebc6f6cddb515b445ffd3c60cdd7788577",
+   "nodes": 23
+  }
+ },
+ "edits_golden/source_function.cir": {
+  "rkm": {
+   "digest": "81c0af0a85985e1aef94111de98bc6ebc6f6cddb515b445ffd3c60cdd7788577",
+   "nodes": 23
+  },
+  "standard": {
+   "digest": "81c0af0a85985e1aef94111de98bc6ebc6f6cddb515b445ffd3c60cdd7788577",
+   "nodes": 23
   }
  },
  "edits_golden/sources.expected.cir": {
@@ -421,6 +461,16 @@
    "nodes": 66
   }
  },
+ "elements_basic/source_functions.cir": {
+  "rkm": {
+   "digest": "a409dd6eb9fc354b6fb2e05199c73f0d4428abbf921f09d591710fa0e33def43",
+   "nodes": 179
+  },
+  "standard": {
+   "digest": "a409dd6eb9fc354b6fb2e05199c73f0d4428abbf921f09d591710fa0e33def43",
+   "nodes": 179
+  }
+ },
  "elements_basic/sources_diodes.cir": {
   "rkm": {
    "digest": "67562fd3d66fb2df488c292b9efc1273fa296b1448bcf538a051088cff9041de",
@@ -479,20 +529,6 @@
    "error": "UnsupportedConstruct",
    "expected": [],
    "line": 2
-  }
- },
- "elements_rejects/continued_stimulus.cir": {
-  "rkm": {
-   "column": 3,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 3
-  },
-  "standard": {
-   "column": 3,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 3
   }
  },
  "elements_rejects/coupling_non_inductor.cir": {
@@ -557,20 +593,6 @@
   "standard": {
    "column": 7,
    "error": "ParseError",
-   "expected": [],
-   "line": 2
-  }
- },
- "elements_rejects/distortion_input.cir": {
-  "rkm": {
-   "column": 8,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 2
-  },
-  "standard": {
-   "column": 8,
-   "error": "UnsupportedConstruct",
    "expected": [],
    "line": 2
   }
@@ -771,20 +793,6 @@
   "standard": {
    "column": 10,
    "error": "ParseError",
-   "expected": [],
-   "line": 2
-  }
- },
- "elements_rejects/stimulus_function.cir": {
-  "rkm": {
-   "column": 9,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 2
-  },
-  "standard": {
-   "column": 9,
-   "error": "UnsupportedConstruct",
    "expected": [],
    "line": 2
   }

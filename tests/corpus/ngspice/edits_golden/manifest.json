@@ -103,7 +103,11 @@
       "solver": {
         "skip": "Neither solver runs a `.lib` block in a netlist, only in a library file (decision 0012)."
       }
-    }
+    },
+    "source_function.cir": "fa0c34ff7e3a63e339afd8df552a90baf856c8c1bb4efb5af1f7a81460dc991a",
+    "set_stimulus.expected.cir": "d2e31cba44de916ec653db77fa1b0548203532b678144f52a53b9dc9e901fba4",
+    "set_stimulus_arg.expected.cir": "76f09dd5fa147a26b765e424acdbde76c4b5ef2a14d27497c38454a00b0815aa",
+    "remove_stimulus.expected.cir": "881eb5fe1facdd00dd974e0ce54efb2c9027f5eb5af765c9ab70851396341491"
   },
   "cases": {
     "value": {
@@ -571,6 +575,39 @@
         ]
       ],
       "expected": "add_lib_block.expected.cir"
+    },
+    "set_stimulus": {
+      "input": "source_function.cir",
+      "steps": [
+        [
+          "set_stimulus",
+          "V1",
+          "SIN(0 1 1k)"
+        ]
+      ],
+      "expected": "set_stimulus.expected.cir"
+    },
+    "set_stimulus_arg": {
+      "input": "source_function.cir",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "V1",
+          1,
+          "2"
+        ]
+      ],
+      "expected": "set_stimulus_arg.expected.cir"
+    },
+    "remove_stimulus": {
+      "input": "source_function.cir",
+      "steps": [
+        [
+          "remove_stimulus",
+          "V1"
+        ]
+      ],
+      "expected": "remove_stimulus.expected.cir"
     }
   }
 }

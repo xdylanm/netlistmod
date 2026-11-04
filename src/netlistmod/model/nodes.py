@@ -104,6 +104,25 @@ class Node:
     span: Span
 
 
+@dataclass(frozen=True, slots=True)
+class SourceSpec:
+    """A source function of a V or I line (decision 0013), such as ``PULSE(0 1 1u)``.
+
+    ``name`` is as written. ``args`` holds the values of its list in order, and ``params`` what it
+    writes by name: a PWL's ``r=``, ``td=``, scale factors, ``file=`` and repeat count (``for``), a
+    wave file's ``wavefile=`` and ``chan=``, and EXTERNAL's ``m=``. A file's path is an
+    :class:`Identifier` or a quoted :class:`Formula`, and is never read. ``forever`` marks ``PWL
+    REPEAT FOREVER``. ``span`` runs from the name to the end of the last part.
+    """
+
+    name: str
+    name_span: Span
+    args: tuple[Value, ...]
+    params: tuple[ParamAssignment, ...]
+    span: Span
+    forever: bool = False
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Component:
     """Base of every element line; only its subclasses are produced by the parser.
@@ -161,16 +180,19 @@ class MutualCoupling(Component):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class _IndependentSource(Component):
-    """Fields shared by V and I (phase 1: DC and AC only).
+    """Fields shared by V and I.
 
     ``dc_keyword`` records whether ``DC`` was written before the value. ``flags`` holds an
-    LTspice current source's ``load``.
+    LTspice current source's ``load``. ``stimulus`` is the source function, and ``distortion``
+    holds ngspice's ``DISTOF1`` and ``DISTOF2``.
     """
 
     dc: Value | None
     dc_keyword: bool
     ac: AcSpec | None
     flags: tuple[Flag, ...] = ()
+    stimulus: SourceSpec | None = None
+    distortion: tuple[SourceSpec, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

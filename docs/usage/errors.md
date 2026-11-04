@@ -73,7 +73,7 @@ The dialect has this construct, but the library does not support it yet. It is s
 
 ```
 
-**What to do:** phase 1 supports R, C, L, K, V, I, D and X, with DC and AC sources. Other letters and stimulus functions such as `PULSE` wait for phase 2. There is no way to skip the line.
+**What to do:** the library supports R, C, L, K, V, I, D and X, with DC, AC and source functions. Other letters wait for phase 2. There is no way to skip the line.
 
 ### `EditError`
 

@@ -1,0 +1,18 @@
+id: LT-FUN-010
+dialect: ltspice
+construct: I step load
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "I — Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-04'
+grammar:
+- step_stimulus
+- I_STEP_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ltspice_table_and_step_load
+- tests/solver/test_ltspice_source_functions.py::test_a_step_load_runs
+- tests/solver/test_ltspice_source_functions.py::test_load_after_a_function_runs
+notes: See decision 0013.

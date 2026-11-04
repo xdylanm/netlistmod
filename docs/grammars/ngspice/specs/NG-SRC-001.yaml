@@ -20,6 +20,8 @@ grammar:
 - I_NAME
 - DC_KW
 - AC_KW
+- _line_end
+- dc_after
 tests:
 - tests/grammar/ngspice/test_elements.py::test_sources_have_dc_and_ac_slots
 - tests/grammar/ngspice/test_elements.py::test_malformed_sources_are_rejected

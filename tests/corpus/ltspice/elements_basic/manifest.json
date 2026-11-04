@@ -17,6 +17,7 @@
         "warning": "Missing value, assuming 0V"
       }
     },
-    "subcircuits_coupling.cir": "9a1efc33cb947ea52f9ceddbf1f8cc4eb94c33931fdc382e269fb8dda2c15757"
+    "subcircuits_coupling.cir": "9a1efc33cb947ea52f9ceddbf1f8cc4eb94c33931fdc382e269fb8dda2c15757",
+    "source_functions.cir": "86d345123c01aa111e5d2301a8b0bb253761b47a62209a36cc43d4b02fb13177"
   }
 }

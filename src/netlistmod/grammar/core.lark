@@ -228,14 +228,35 @@ inductor_ref: SEP L_REF
 K_NAME.4: /[Kk]/ _WUNIT*
 L_REF.4: /[Ll]/ _WUNIT*
 
-// Independent sources (phase 1): an optional DC value, with or without the DC keyword, then an
-// optional AC magnitude and phase (a value after the magnitude). A stimulus function or DISTOF
-// ends the line (NG-UNS-001).
+// Independent sources: an optional DC value, with or without the DC keyword, then an optional AC
+// magnitude and phase (a value after the magnitude). A function may stand before or after them,
+// with at most one of each; after a function a DC value needs its keyword (decision 0013).
+//
+// A source line is right-linear: each rule below is one state of what the line has shown so far (D
+// a DC value, A an AC part, F a function; "m" means an AC magnitude was just read, so a plain value
+// is its phase). Nothing reduces until the line ends, so the parser decides at each field's token,
+// as the "gap, then field" comment above explains. p is what may stand after a function, and e is
+// the end of the line; the overlays choose both. Each name starts with "_", so the fields arrive
+// flat in voltage_source and current_source.
 // spec: NG-SRC-001
-voltage_source: V_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus)
-current_source: I_NAME node node dc_spec? (ac_spec value?)? (NL | eol | stimulus)
+voltage_source: V_NAME node node _s0{fn_param, _line_end}
+current_source: I_NAME node node _s0{fn_param, _line_end}
+_s0{p, e}: dc_spec _sd{p, e} | ac_spec _sam{p, e} | _source_fn _sf{p, e} | e
+_sd{p, e}: ac_spec _sdam{p, e} | _source_fn _sfd{p, e} | e
+_sam{p, e}: value _sa{p, e} | _source_fn _sfa{p, e} | e
+_sa{p, e}: _source_fn _sfa{p, e} | e
+_sdam{p, e}: value _sda{p, e} | _source_fn _sfda{p, e} | e
+_sda{p, e}: _source_fn _sfda{p, e} | e
+_sf{p, e}: p _sf{p, e} | dc_after _sfd{p, e} | ac_spec _sfam{p, e} | e
+_sfd{p, e}: p _sfd{p, e} | ac_spec _sfdam{p, e} | e
+_sfa{p, e}: p _sfa{p, e} | dc_after _sfda{p, e} | e
+_sfam{p, e}: value _sfa{p, e} | p _sfa{p, e} | dc_after _sfda{p, e} | e
+_sfdam{p, e}: value _sfda{p, e} | p _sfda{p, e} | e
+_sfda{p, e}: p _sfda{p, e} | e
+_line_end: NL | eol
 dc_spec: dc_keyword value
        | value
+dc_after: dc_keyword value
 dc_keyword: SEP DC_KW
           | (SEP | TRAILING_COMMENT) dc_keyword
 ac_spec: SEP AC_KW value
@@ -262,15 +283,45 @@ x_param: SEP WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
        | (SEP | TRAILING_COMMENT) x_param
 X_NAME.4: /[Xx]/ _WUNIT*
 
-// Forms recognised only to be rejected: source functions and the charge form of a behavioral
-// capacitor (UnsupportedConstruct). Their arguments are statement text up to the line end. Each
-// overlay overrides STIMULUS_KW with its own function names.
-// spec: NG-UNS-001
-stimulus: SEP STIMULUS_KW rest NL
+// A source function: its name, then a parenthesized list of one or more values, separated by blanks
+// or commas (decision 0013). The parentheses are required. An overlay adds its own functions.
+// spec: NG-FUN-001
+_source_fn: stimulus
+          | pwl_stimulus
+fn_param: SEP FN_PARAM_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+        | (SEP | TRAILING_COMMENT) fn_param
+FN_PARAM_KW.2: /r(?=[ \t]*=)/i
+stimulus: SEP (PULSE_KW | EXP_KW | SFFM_KW | SIN_KW) fn_list
         | (SEP | TRAILING_COMMENT) stimulus
+fn_list: LPAR fn_first fn_arg* rparen
+       | (SEP | TRAILING_COMMENT) fn_list
+fn_first: (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+        | (SEP | TRAILING_COMMENT) fn_first
+fn_arg: (SEP | CSEP) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT) fn_arg
+
+// spec: NG-FUN-002
+PULSE_KW.2: "pulse"i
+
+// spec: NG-FUN-003
+SIN_KW.2: "sin"i
+
+// spec: NG-FUN-004
+EXP_KW.2: "exp"i
+
+// spec: NG-FUN-005
+pwl_stimulus: SEP PWL_KW fn_list
+            | (SEP | TRAILING_COMMENT) pwl_stimulus
+PWL_KW.2: "pwl"i
+
+// spec: NG-FUN-006
+SFFM_KW.2: "sffm"i
+
+// Forms recognised only to be rejected: the charge form of a behavioral capacitor
+// (UnsupportedConstruct). Its arguments are statement text up to the line end.
+// spec: NG-UNS-001
 charge: SEP Q_KW EQ rest NL
       | (SEP | TRAILING_COMMENT) charge
-STIMULUS_KW.2: /pulse|exp|sin|pwl|sffm/i
 Q_KW.2: "q"i
 
 // ---------------------------------------------------------------------------------------------

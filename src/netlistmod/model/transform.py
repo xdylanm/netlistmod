@@ -65,6 +65,7 @@ from netlistmod.model.nodes import (
     ParseResult,
     Resistor,
     SaveDirective,
+    SourceSpec,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
@@ -101,7 +102,11 @@ _FORMULA_DELIMITERS: dict[str, Literal["{", "'", '"']] = {
 _RKM_TERMINALS = frozenset({"RKM_R", "RKM_R_MEGA", "RKM_R_MILLI", "RKM_C", "RKM_C_FARAD"})
 _EMBEDDED = "EMBEDDED"  # the LTspice embedded decimal, always LTspice's own reading
 _BARE_FORMULA = "BARE_FORMULA"
-_TEXT_WORD = "WORD"  # the value of mfg, pn or type, the only parameters whose grammar offers it
+# Which function takes each fn_param (ngspice manual §4.1.4, §4.1.9; LTspice reference, WAV File).
+_FN_PARAM_OWNERS = {"r": "pwl", "td": "pwl", "m": "external", "chan": "wavefile"}
+# Text kept as a value and never read: the value of mfg, pn or type, the only parameters whose
+# grammar offers WORD; a file's path; a trigger expression.
+_TEXT_VALUES = frozenset({"WORD", "FILE_PATH", "TRIGGER_EXPR"})
 _MODEL_BARE = "MODEL_BARE"
 _STEP_VARIATIONS = frozenset({"DEC_KW", "OCT_KW", "LIN_KW"})
 # RKM terminals that ngspice reads differently from IEC 60062 (decision 0004).
@@ -223,6 +228,36 @@ class _StepSweep:
     values: tuple[Value, ...]
     listed: bool
     file: Identifier | None
+
+
+@dataclass(frozen=True, slots=True)
+class _FnList:
+    """The list of a source function: its values, where it ends, and its comments."""
+
+    args: tuple[Value, ...]
+    end: int
+    comments: tuple[Span, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _Forever:
+    """``FOREVER`` in a PWL repeat."""
+
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class _SpecParam:
+    """A parameter of the source function before it, not of the line."""
+
+    param: ParamAssignment
+
+
+@dataclass(frozen=True, slots=True)
+class _DistortionHead:
+    """``DISTOF1`` or ``DISTOF2``; the plain values after it are its magnitude and phase."""
+
+    token: Token
 
 
 @dataclass(frozen=True, slots=True)
@@ -481,6 +516,8 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
     c_param = param
     l_param = param
     v_param = param
+    port_param = param
+    trigger_param = param
     d_param = param
     resistive_load = param
 
@@ -561,19 +598,118 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
         keyword = _field_token(children)
         return _Field(_AcMagnitude(inner.node, _span(keyword).start), comments)
 
+    dc_after = dc_spec
+
     def eol(self, children: list[Any]) -> _Eol:
         inner = children[-1]
         if isinstance(inner, _Eol):
             return _Eol(inner.end, (*_comment_spans(children), *inner.comments))
         return _Eol(_end(children), _comment_spans(children))
 
-    # Forms that are recognised only to be rejected (NG-UNS-001).
+    # Source functions (decision 0013).
 
-    def stimulus(self, children: list[Any]) -> NoReturn:
-        keyword = _field_token(children)
-        name = str(keyword).upper()
-        kind = "distortion input" if name.startswith("DISTOF") else "function"
-        raise self._unsupported(keyword, f"{self._dialect.display_name} {name} source {kind}")
+    def stimulus(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        if isinstance(inner, _Field) and isinstance(inner.node, SourceSpec):
+            return _Field(inner.node, (*_comment_spans(children), *inner.comments))
+        name = _field_token(children)
+        args: tuple[Value, ...] = ()
+        params: list[ParamAssignment] = []
+        comments = list(_comment_spans(children))
+        end = _span(name).end
+        forever = False
+        for child in children:
+            if isinstance(child, _FnList):
+                args, end = child.args, child.end
+                comments.extend(child.comments)
+            elif isinstance(child, _Field):
+                comments.extend(child.comments)
+                if isinstance(child.node, ParamAssignment):
+                    params.append(child.node)
+                    end = child.node.span.end
+                elif isinstance(child.node, _Forever):
+                    forever = True
+                    end = child.node.span.end
+                elif isinstance(child.node, _RParen):
+                    end = child.node.span.end
+        return _Field(
+            SourceSpec(
+                str(name), _span(name), args, tuple(params), Span(_span(name).start, end), forever
+            ),
+            tuple(comments),
+        )
+
+    pwl_stimulus = stimulus
+    table_stimulus = stimulus
+    step_stimulus = stimulus
+
+    def wave_stimulus(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        if isinstance(inner, _Field):
+            return _Field(inner.node, (*_comment_spans(children), *inner.comments))
+        name, path = _field_tokens(children)
+        value = self._param_value(path)
+        span = Span(_span(name).start, value.span.end)
+        assignment = ParamAssignment(str(name), value, span, _span(name))
+        return _Field(
+            SourceSpec(str(name), _span(name), (), (assignment,), span), _comment_spans(children)
+        )
+
+    def fn_list(self, children: list[Any]) -> _FnList:
+        inner = children[-1]
+        if isinstance(inner, _FnList):
+            return _FnList(inner.args, inner.end, (*_comment_spans(children), *inner.comments))
+        fields = [child for child in children if isinstance(child, _Field)]
+        close = fields[-1].node
+        assert isinstance(close, _RParen)
+        comments = tuple(comment for field in fields for comment in field.comments)
+        args = tuple(field.node for field in fields[:-1])
+        return _FnList(args, close.span.end, comments)  # type: ignore[arg-type]
+
+    def fn_first(self, children: list[Any]) -> _Field:
+        return self._field(children, self._value)
+
+    fn_arg = fn_first
+
+    def pwl_factor(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    pwl_file = pwl_factor
+
+    def pwl_repeat(self, children: list[Any]) -> _Field:
+        inner = children[-1]
+        if isinstance(inner, _Field):
+            return _Field(inner.node, (*_comment_spans(children), *inner.comments))
+        tokens = _field_tokens(children)
+        if tokens[-1].type == "FOREVER_KW":
+            return _Field(_Forever(_span(tokens[-1])), _comment_spans(children))
+        keyword, value_token = tokens[-2:]
+        value = self._value(value_token)
+        span = Span(_span(keyword).start, value.span.end)
+        return _Field(
+            ParamAssignment(str(keyword), value, span, _span(keyword)), _comment_spans(children)
+        )
+
+    def pwl_endrepeat(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _RParen(_span(token)))
+
+    def fn_param(self, children: list[Any]) -> _Field:
+        field = self.param(children)
+        assert isinstance(field.node, ParamAssignment)
+        return _Field(_SpecParam(field.node), field.comments)
+
+    def external_kw(self, children: list[Any]) -> _Field:
+        return self._field(
+            children,
+            lambda token: SourceSpec(str(token), _span(token), (), (), _span(token)),
+        )
+
+    def distof1_kw(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _DistortionHead(token))
+
+    distof2_kw = distof1_kw
+
+    # Forms that are recognised only to be rejected (NG-UNS-001).
 
     def charge(self, children: list[Any]) -> NoReturn:
         keyword = _field_token(children)
@@ -1183,7 +1319,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def _param_value(self, token: Token) -> Value | Identifier:
         """A parameter value; an LTspice bare word stays a name, never a formula (review R8)."""
-        if token.type == _TEXT_WORD:
+        if token.type in _TEXT_VALUES:
             return Identifier(str(token), _span(token))
         if token.type == _MODEL_BARE:
             raise self._parse_error(
@@ -1233,13 +1369,7 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
 
     def _source_item(self, kind: type[VoltageSource | CurrentSource], element: _Element) -> _Item:
         dc = element.optional(_Dc)
-        magnitude = element.optional(_AcMagnitude)
-        ac = None
-        if magnitude is not None:
-            # A plain value after the AC magnitude is its phase (the grammar allows no other).
-            phase = next(iter(element.values()), None)
-            end = (phase or magnitude.value).span.end
-            ac = AcSpec(magnitude.value, phase, Span(magnitude.start, end))
+        ac, stimulus, distortion = self._source_parts(element, kind)
         return _Item(
             element.end,
             lambda span: kind(
@@ -1248,8 +1378,75 @@ class _NodeBuilder(Transformer[Token, ParseResult]):
                 dc_keyword=dc.keyword if dc is not None else False,
                 ac=ac,
                 flags=element.all(Flag),
+                stimulus=stimulus,
+                distortion=distortion,
             ),
         )
+
+    def _source_parts(
+        self, element: _Element, kind: type[VoltageSource | CurrentSource]
+    ) -> tuple[AcSpec | None, SourceSpec | None, tuple[SourceSpec, ...]]:
+        """A source line's AC part, function and distortion inputs. A plain value belongs to the
+        AC magnitude or distortion keyword before it. A function's named parameter must follow it
+        directly and be one that function takes, and RF port parameters are for V only: fn_param
+        and port_param are one rule wherever a line allows them, so these are checked here."""
+        magnitude: _AcMagnitude | None = None
+        phase: Value | None = None
+        stimulus: SourceSpec | None = None
+        distortion: list[SourceSpec] = []
+        in_ac = False
+        previous: object = None
+        for node in element.fields:
+            if isinstance(node, _AcMagnitude):
+                magnitude, in_ac = node, True
+            elif isinstance(node, _DistortionHead):
+                token = node.token
+                distortion.append(SourceSpec(str(token), _span(token), (), (), _span(token)))
+                in_ac = False
+            elif isinstance(node, NumericValue | Formula):
+                if in_ac:
+                    phase = node
+                else:
+                    last = distortion[-1]
+                    span = Span(last.span.start, node.span.end)
+                    distortion[-1] = replace(last, args=(*last.args, node), span=span)
+            elif isinstance(node, SourceSpec):
+                stimulus, in_ac = node, False
+            elif isinstance(node, _SpecParam):
+                stimulus = self._with_param(stimulus, node.param, previous)
+                in_ac = False
+            elif isinstance(node, ParamAssignment):
+                in_ac = False
+                if self._dialect is Dialect.NGSPICE and kind is CurrentSource:
+                    raise self._error_at(
+                        node.name_span.start, f"`{node.name}` is for a V line (RF port parameters)"
+                    )
+            else:
+                in_ac = False
+            previous = node
+        ac = None
+        if magnitude is not None:
+            end = (phase or magnitude.value).span.end
+            ac = AcSpec(magnitude.value, phase, Span(magnitude.start, end))
+        return ac, stimulus, tuple(distortion)
+
+    def _with_param(
+        self, stimulus: SourceSpec | None, param: ParamAssignment, previous: object
+    ) -> SourceSpec:
+        name = param.name.lower()
+        function = stimulus.name.lower() if stimulus is not None else ""
+        owner = _FN_PARAM_OWNERS[name]
+        if stimulus is None or function != owner:
+            raise self._error_at(
+                param.name_span.start, f"`{param.name}=` applies only to `{owner.upper()}`"
+            )
+        if not isinstance(previous, SourceSpec | _SpecParam):
+            raise self._error_at(
+                param.name_span.start,
+                f"`{param.name}=` must follow `{stimulus.name}` directly",
+            )
+        span = Span(stimulus.span.start, param.span.end)
+        return replace(stimulus, params=(*stimulus.params, param), span=span)
 
     def _parse_error(self, token: Token, reason: str) -> ParseError:
         return self._error_at(_span(token).start, reason)

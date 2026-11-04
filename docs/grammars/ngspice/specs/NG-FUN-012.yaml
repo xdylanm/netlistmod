@@ -1,0 +1,18 @@
+id: NG-FUN-012
+dialect: ngspice
+construct: RF port parameters
+manual_ref: '[ngspice-manual] §4.1.11 "RF Port"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- _ng_port
+- port_param
+- PORT_KW
+tests:
+- tests/grammar/test_source_functions.py::test_rf_port_parameters_are_line_parameters
+- tests/grammar/test_source_functions.py::test_rf_port_after_a_function
+- tests/solver/test_ngspice_source_functions.py::test_rf_port_parameters_run
+notes: See decision 0013.

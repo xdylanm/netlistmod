@@ -1,0 +1,25 @@
+id: NG-FUN-011
+dialect: ngspice
+construct: DISTOF1 and DISTOF2
+manual_ref: '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- _ng_end
+- _dm1
+- _dp1
+- _dt1
+- _dm2
+- _dp2
+- distof1_kw
+- distof2_kw
+- DISTOF1_KW
+- DISTOF2_KW
+tests:
+- tests/grammar/test_source_functions.py::test_distortion_inputs
+- tests/solver/test_ngspice_source_functions.py::test_distortion_inputs_run
+- tests/solver/test_ngspice_source_functions.py::test_manual_distortion_forms_that_stop
+notes: See decision 0013.

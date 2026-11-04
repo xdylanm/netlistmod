@@ -1,0 +1,5 @@
+source function golden input
+V1 a 0 DC 1 AC 1
+R1 a 0 1k
+.tran 1n 10n
+.end

@@ -159,31 +159,6 @@ def test_the_off_flag_on_a_diode_runs(solver: Solver, tmp_path: Path) -> None:
 # NG-UNS-001: recognised but unsupported forms are real ngspice syntax.
 
 
-@pytest.mark.parametrize(
-    "stimulus",
-    [
-        "PULSE(0 1 1u 1u 1u 2u 5u)",
-        "SIN(0 1 100k)",
-        "EXP(0 1 1u 1u 5u 1u)",
-        "PWL(0 0 5u 1)",
-        "SFFM(0 1 100k 2 10k)",
-        "AM(1 0 1k 100k)",
-        "TRNOISE(1m 1u 0 0)",
-        "TRRANDOM(1 1u 0 1)",
-        "DC 0 DISTOF1 0.1",
-        "DC 0 DISTOF2 0.1",
-    ],
-)
-def test_source_functions_run_and_the_library_reports_them_unsupported(
-    solver: Solver, tmp_path: Path, stimulus: str
-) -> None:
-    text = f"probe\nV1 in 0 {stimulus}\nR1 in out 1k\nR2 out 0 1k\n.tran 1u 10u\n.end\n"
-    result = run(solver, tmp_path, text)
-    assert result.ok, result.log
-    assert result.plot("Transient").rows
-    _rejects(text, UnsupportedConstruct)
-
-
 def test_the_charge_form_runs_and_the_library_reports_it_unsupported(
     solver: Solver, tmp_path: Path
 ) -> None:

@@ -1,0 +1,17 @@
+id: NG-FUN-010
+dialect: ngspice
+construct: EXTERNAL
+manual_ref: '[ngspice-manual] §4.1.9 "External voltage or current input"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- _source_fn
+- external_kw
+- EXTERNAL_KW
+tests:
+- tests/grammar/test_source_functions.py::test_external_takes_m
+- tests/solver/test_ngspice_source_functions.py::test_external_is_read_and_stops_this_build
+notes: See decision 0013.

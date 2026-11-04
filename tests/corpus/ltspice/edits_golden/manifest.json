@@ -37,7 +37,10 @@
       "solver": {
         "skip": "Neither solver runs a `.lib` block in a netlist, only in a library file (decision 0012)."
       }
-    }
+    },
+    "set_stimulus.expected.net": "a3957356ae8a2db82df3b4b461bea1e6cd2e35e67928c266974d6a30dfadaaa3",
+    "set_stimulus_arg.expected.net": "8c35f36133a09089614d78c0fd778bd8fbbcc0aff36e6bb348033d9aeb8ab881",
+    "remove_stimulus.expected.net": "c723f757c221dc644d1bfd1fbe81dd8af2509ab651896a460ab4728de62d7ffb"
   },
   "cases": {
     "set_value": {
@@ -277,6 +280,44 @@
         ]
       ],
       "expected": "add_lib_block.expected.net"
+    },
+    "set_stimulus": {
+      "input": "half_rectifier.net",
+      "steps": [
+        [
+          "set_stimulus",
+          "V1",
+          "PULSE(0 1 1u 1u 1u 2u 5u)"
+        ]
+      ],
+      "expected": "set_stimulus.expected.net"
+    },
+    "set_stimulus_arg": {
+      "input": "half_rectifier.net",
+      "steps": [
+        [
+          "set_stimulus_arg",
+          "V1",
+          1,
+          "2"
+        ]
+      ],
+      "expected": "set_stimulus_arg.expected.net"
+    },
+    "remove_stimulus": {
+      "input": "half_rectifier.net",
+      "steps": [
+        [
+          "set_dc",
+          "V1",
+          "1"
+        ],
+        [
+          "remove_stimulus",
+          "V1"
+        ]
+      ],
+      "expected": "remove_stimulus.expected.net"
     }
   }
 }

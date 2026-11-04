@@ -1,0 +1,15 @@
+id: NG-FUN-008
+dialect: ngspice
+construct: TRNOISE
+manual_ref: '[ngspice-manual] §4.1.7 "Transient noise source"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-04'
+grammar:
+- TRNOISE_KW
+tests:
+- tests/grammar/test_source_functions.py::test_ngspice_accepts
+- tests/solver/test_ngspice_source_functions.py::test_trnoise_runs
+notes: See decision 0013.

@@ -56,8 +56,8 @@ The fixtures are in
 - Parts from LTspice's component database carry their data on the line
   (`C1 ... V=10 Irms=2.44949 mfg="KEMET" pn="A700V226M010ATE045" type="Al electrolytic"`), as in
   `LC_filter_mfg_components.asc`. These parse, and `set_param` edits the numeric ones.
-- A source function (`half_rectifier.asc`: `SINE`) exports and runs, but the library reports
-  `UnsupportedConstruct` until phase 2.
+- A source function (`half_rectifier.asc`: `SINE(0 1 60k) Rser=1`) loads as `stimulus`, and
+  `set_stimulus_arg` edits it. `Rser` stays a parameter of the line.
 
 ## Encoding
 

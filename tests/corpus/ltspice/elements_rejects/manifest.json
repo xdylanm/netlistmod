@@ -167,13 +167,6 @@
       "error": "ParseError",
       "note": "the reference's order: AC before Rser"
     },
-    "stimulus_function.cir": {
-      "sha256": "c8c5bc5e9937b49e5fbbe1091202d5d3ed63606ff9da876c81ad8bd6fd797a50",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "source functions are phase 2"
-    },
     "tc_on_inductor.cir": {
       "sha256": "10d7658bf35fe029237383a27e69c777004c2985ba0043e19c292aef71e2b5ed",
       "line": 2,

@@ -35,6 +35,7 @@
       "solver": {
         "harness": "elements_harness.inc"
       }
-    }
+    },
+    "source_functions.cir": "94bc6a5b2dcd94158ec2fab462a88ad5a6499bac66ca453d9cad7636dd4d3f96"
   }
 }

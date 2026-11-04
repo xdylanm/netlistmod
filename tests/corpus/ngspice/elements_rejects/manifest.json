@@ -125,31 +125,10 @@
       "error": "ParseError",
       "note": "braces do not nest"
     },
-    "stimulus_function.cir": {
-      "sha256": "a0916bc4adab7358c5e956eb1d6d01ee945cacc296b1109d21ff2b779084acc3",
-      "line": 2,
-      "column": 9,
-      "error": "UnsupportedConstruct",
-      "note": "unsupported"
-    },
-    "distortion_input.cir": {
-      "sha256": "1d6e2a6d9a1c823fd35e323ad6412ffca25e92ac69156d39a747b3713e9d7333",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "unsupported"
-    },
     "charge_capacitor.cir": {
       "sha256": "59528c01b265d8d8fadaadf4dc299ccd10efb9c8a612204b874d695990c3da7a",
       "line": 2,
       "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "unsupported"
-    },
-    "continued_stimulus.cir": {
-      "sha256": "64d101b21a923c9640ca363ad46d0b74dc87ee9373ad44f0744b55b58ca2b8f6",
-      "line": 3,
-      "column": 3,
       "error": "UnsupportedConstruct",
       "note": "unsupported"
     },

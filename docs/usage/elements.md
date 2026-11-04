@@ -52,8 +52,9 @@ What the parser accepts (details and citations are in
   checked.
 - **K**: two or more inductor names, then the coupling value.
 - **V, I**: an optional DC value (with or without `DC`), then an optional `AC` magnitude and
-  phase. Stimulus functions (`PULSE`, `SIN`, `PWL`, …) and `DISTOF` raise
-  `UnsupportedConstruct` at the keyword.
+  phase, and a source function in `stimulus` (`PULSE`, `SIN`, `PWL`, …), before or after them.
+  `distortion` holds ngspice's `DISTOF1` and `DISTOF2`. A function needs its parentheses, and its
+  arguments are numbers or formulas.
 - **D**: a mandatory model, then parameters and `off`.
 - **X**: one or more nodes, the subcircuit name, then parameters. A double-quoted string is
   allowed as a parameter value. `params:` is rejected.

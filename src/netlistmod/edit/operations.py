@@ -39,6 +39,7 @@ from netlistmod.model.nodes import (
     OpDirective,
     ParamStatement,
     Resistor,
+    SourceSpec,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
@@ -65,6 +66,7 @@ from netlistmod.source import SourceText, Span
 
 _VALUE = SlotCheck((NumericValue, Formula, ValueList, Identifier), "a value")
 _MODEL = SlotCheck((ModelReference,), "a model name")
+_FUNCTION = SlotCheck((SourceSpec,), "a source function")
 _TWO_TERMINAL = (Resistor, Capacitor, Inductor)
 _SOURCES = (VoltageSource, CurrentSource)
 
@@ -85,6 +87,11 @@ SINGLETON_DIRECTIVES: tuple[type[Directive], ...] = (
     OpDirective,
     TempDirective,
 )
+
+_DISTORTION_NAMES = frozenset({"DISTOF1", "DISTOF2"})
+
+# The parameters an ngspice V line takes (RF port, manual §4.1.11).
+_PORT_PARAMS = frozenset({"portnum", "z0"})
 
 # LTspice has no R, C or L .model type, so the semiconductor form does not exist (review R6).
 _NO_LTSPICE_MODEL = "LTspice has no R, C or L model"
@@ -189,6 +196,11 @@ def upsert_target(netlist: Netlist, family: str, scope: ScopePath, *names: str) 
     return UpsertTarget(key, f"{family} {' '.join(names)} in {found.describe()}")
 
 
+def stimulus_target(netlist: Netlist, scope: ScopePath, designator: str, text: str) -> UpsertTarget:
+    """The target of a ``set_stimulus`` that was accepted: the function, or one distortion input."""
+    return upsert_target(netlist, "set_stimulus", scope, designator, _distortion_name(text) or "")
+
+
 def include_target(path: str) -> UpsertTarget:
     """The target of ``add_include``; a path is compared as written, like the statement text
     the operation already compares."""
@@ -253,8 +265,11 @@ def set_param(
     ltspice = netlist.dialect is Dialect.LTSPICE
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
-    takes_params = (*_TWO_TERMINAL, Diode, *(_SOURCES if ltspice else ()))
-    if not isinstance(element, takes_params):
+    takes_params = (*_TWO_TERMINAL, Diode, *_SOURCES)
+    port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
+    if not isinstance(element, takes_params) or (
+        not ltspice and isinstance(element, _SOURCES) and not port
+    ):
         raise EditError(f"`{designator}` is a {_kind(element)} line and takes no parameters")
     if (
         isinstance(element, _TWO_TERMINAL)
@@ -454,6 +469,132 @@ def _source(
     if not isinstance(element, _SOURCES):
         raise EditError(f"`{designator}` is a {_kind(element)} line, not an independent source")
     return element
+
+
+def set_stimulus(
+    netlist: Netlist,
+    designator: str,
+    text: str,
+    *,
+    scope: ScopePath = (),
+    in_definition: bool = False,
+) -> list[Edit]:
+    """Replace a source's function, or add one after its DC and AC parts; they stay as they are
+    (decision 0013). ``DISTOF1`` and ``DISTOF2`` text addresses that distortion input instead."""
+    element = _source(netlist, designator, scope, in_definition)
+    reason = f"set_stimulus {designator}"
+    name = _distortion_name(text)
+    current = element.stimulus if name is None else _distortion(element, name)
+    if current is not None:
+        return [Edit(current.span, text, reason, (_FUNCTION,))]
+    return [_insert(_function_point(element, name), conventions.field(text), reason, _FUNCTION, 1)]
+
+
+def set_stimulus_arg(
+    netlist: Netlist,
+    designator: str,
+    key: int | str,
+    value: str,
+    *,
+    function: str | None = None,
+    scope: ScopePath = (),
+    in_definition: bool = False,
+) -> list[Edit]:
+    """Set one argument of a source's function, by 0-based position or written name.
+
+    A position one past the end appends, and a further one is refused, because filling the gap
+    would mean inventing defaults. A name not yet written is added after the function.
+    ``function`` names a distortion input (``"DISTOF1"``) instead of the source function.
+    """
+    element = _source(netlist, designator, scope, in_definition)
+    reason = f"set_stimulus_arg {designator} {key}"
+    spec = _stimulus_of(element, function, designator)
+    if isinstance(key, str):
+        fold = netlist.scope(scope).fold
+        for param in (*spec.params, *element.params):
+            if fold(param.name) == fold(key):
+                return [Edit(param.value.span, value, reason, (_VALUE,))]
+        text = conventions.field(f"{key}={value}")
+        return [_insert(spec.span.end, text, reason, _VALUE, len(text) - len(value))]
+    if not 0 <= key <= len(spec.args):
+        raise EditError(
+            f"`{spec.name}` of `{designator}` has {len(spec.args)} argument(s), so position {key} "
+            "cannot be set: only an existing position or the next one can"
+        )
+    if key < len(spec.args):
+        return [Edit(spec.args[key].span, value, reason, (_VALUE,))]
+    if not spec.args:
+        raise EditError(f"`{spec.name}` of `{designator}` has no argument list to add to")
+    text = _next_arg(netlist, spec, value)
+    return [_insert(spec.args[-1].span.end, text, reason, _VALUE, len(text) - len(value))]
+
+
+def remove_stimulus(
+    netlist: Netlist,
+    designator: str,
+    *,
+    function: str | None = None,
+    scope: ScopePath = (),
+    in_definition: bool = False,
+) -> list[Edit]:
+    """Remove a source's function, or the distortion input ``function`` names, and the blanks
+    before it. DC and AC parts stay."""
+    element = _source(netlist, designator, scope, in_definition)
+    spec = _stimulus_of(element, function, designator)
+    if (
+        netlist.dialect is Dialect.LTSPICE
+        and isinstance(element, CurrentSource)
+        and element.dc is None
+        and element.ac is None
+    ):
+        raise EditError(
+            f"`{designator}` would have no value, and an LTspice I line needs one; use set_dc first"
+        )
+    start = spec.span.start
+    while netlist.source.text[start - 1] in " \t":
+        start -= 1
+    return [Edit(Span(start, spec.span.end), "", f"remove_stimulus {designator}")]
+
+
+def _distortion_name(text: str) -> str | None:
+    """``DISTOF1`` or ``DISTOF2`` if the caller's function text starts with one."""
+    head = text.lstrip()[:7].upper()
+    return head if head in _DISTORTION_NAMES else None
+
+
+def _distortion(element: VoltageSource | CurrentSource, name: str) -> SourceSpec | None:
+    return next((spec for spec in element.distortion if spec.name.upper() == name), None)
+
+
+def _stimulus_of(
+    element: VoltageSource | CurrentSource, function: str | None, designator: str
+) -> SourceSpec:
+    spec = element.stimulus if function is None else _distortion(element, function.upper())
+    if spec is None:
+        what = "a source function" if function is None else f"`{function}`"
+        raise EditError(f"`{designator}` has no {what}; use set_stimulus to add one")
+    return spec
+
+
+def _function_point(element: VoltageSource | CurrentSource, distortion: str | None) -> int:
+    """Where an added function goes: after the DC and AC parts, and a distortion input after any
+    function, keeping DISTOF1 before DISTOF2."""
+    parts: list[Span] = [element.nodes[-1].span]
+    parts += [part.span for part in (element.dc, element.ac) if part is not None]
+    if distortion is not None:
+        if element.stimulus is not None:
+            parts.append(element.stimulus.span)
+        parts += [spec.span for spec in element.distortion if spec.name.upper() < distortion]
+    return max(span.end for span in parts)
+
+
+def _next_arg(netlist: Netlist, spec: SourceSpec, value: str) -> str:
+    """A new last argument, with a comma if the list's last separator has one."""
+    if len(spec.args) > 1:
+        gap = netlist.source.text[spec.args[-2].span.end : spec.args[-1].span.start]
+        if "," in gap:
+            return f", {value}"
+    return conventions.field(value)
 
 
 def set_coupling(
