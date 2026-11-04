@@ -10,11 +10,14 @@ import shutil
 import subprocess
 import sys
 from collections.abc import Mapping
+from ctypes import wintypes
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
 SolverName = Literal["ngspice", "ltspice"]
+
+_GENERIC_ALL = 0x10000000
 
 
 @dataclass(frozen=True, slots=True)
@@ -249,11 +252,103 @@ def run_ltspice(
     if solver.name != "ltspice":
         raise ValueError(f"Expected LTspice, got {solver.name}")
     switches = ["-netlist"] if export_netlist else ["-b", *(["-ascii"] if ascii_raw else [])]
+    command = [str(solver.path), *switches, str(source)]
+    cwd = source.parent if working_directory is None else working_directory
+    if sys.platform == "win32":
+        return run_on_hidden_desktop(command, cwd=cwd, timeout=timeout)
     return subprocess.run(
-        [str(solver.path), *switches, str(source)],
-        capture_output=True,
-        check=False,
-        cwd=source.parent if working_directory is None else working_directory,
-        text=True,
-        timeout=timeout,
+        command, capture_output=True, check=False, cwd=cwd, text=True, timeout=timeout
     )
+
+
+def run_on_hidden_desktop(
+    command: list[str], *, cwd: Path, timeout: float
+) -> subprocess.CompletedProcess[str]:
+    """Run a program on a desktop nobody is looking at, and wait for it.
+
+    LTspice is a GUI program and takes the foreground window on every run, even with ``-b``, and
+    the usual window flags do not stop it. On its own desktop it cannot, so the suite does not
+    pull focus from what the developer is doing. ``subprocess`` cannot choose a desktop, hence
+    ``CreateProcessW``. Output is not captured: LTspice writes its log to a file. A dialog would
+    be invisible here too, so it ends in ``subprocess.TimeoutExpired``.
+    """
+    if sys.platform != "win32":
+        raise RuntimeError("a hidden desktop is only available on Windows")
+
+    class StartupInfo(ctypes.Structure):
+        _fields_ = [
+            ("cb", wintypes.DWORD),
+            ("reserved", wintypes.LPWSTR),
+            ("desktop", wintypes.LPWSTR),
+            ("title", wintypes.LPWSTR),
+            ("placement", wintypes.DWORD * 7),
+            ("flags", wintypes.DWORD),
+            ("show_window", wintypes.WORD),
+            ("reserved2_size", wintypes.WORD),
+            ("reserved2", ctypes.c_void_p),
+            ("standard_handles", wintypes.HANDLE * 3),
+        ]
+
+    class ProcessInformation(ctypes.Structure):
+        _fields_ = [
+            ("process", wintypes.HANDLE),
+            ("thread", wintypes.HANDLE),
+            ("process_id", wintypes.DWORD),
+            ("thread_id", wintypes.DWORD),
+        ]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.WaitForSingleObject.argtypes = [wintypes.HANDLE, wintypes.DWORD]
+    kernel32.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+    kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+    startup = StartupInfo()
+    startup.cb = ctypes.sizeof(startup)
+    startup.desktop = _hidden_desktop()
+    process = ProcessInformation()
+    created = kernel32.CreateProcessW(
+        None,
+        ctypes.create_unicode_buffer(subprocess.list2cmdline(command)),
+        None,
+        None,
+        False,
+        0,
+        None,
+        str(cwd),
+        ctypes.byref(startup),
+        ctypes.byref(process),
+    )
+    if not created:
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        if kernel32.WaitForSingleObject(process.process, int(timeout * 1000)) != 0:
+            kernel32.TerminateProcess(process.process, 1)
+            kernel32.WaitForSingleObject(process.process, 5000)
+            raise subprocess.TimeoutExpired(command, timeout)
+        code = wintypes.DWORD()
+        kernel32.GetExitCodeProcess(process.process, ctypes.byref(code))
+    finally:
+        kernel32.CloseHandle(process.process)
+        kernel32.CloseHandle(process.thread)
+    return subprocess.CompletedProcess(command, code.value, "", "")
+
+
+@functools.lru_cache(maxsize=1)
+def _hidden_desktop() -> str:
+    """The name of this process's hidden desktop, which lasts as long as the process does."""
+    if sys.platform != "win32":
+        raise RuntimeError("a hidden desktop is only available on Windows")
+    user32 = ctypes.WinDLL("user32", use_last_error=True)
+    user32.CreateDesktopW.restype = wintypes.HANDLE
+    user32.CreateDesktopW.argtypes = [
+        wintypes.LPCWSTR,
+        wintypes.LPCWSTR,
+        ctypes.c_void_p,
+        wintypes.DWORD,
+        wintypes.DWORD,
+        ctypes.c_void_p,
+    ]
+    name = f"netlistmod-tests-{os.getpid()}"
+    if not user32.CreateDesktopW(name, None, None, 0, _GENERIC_ALL, None):
+        raise ctypes.WinError(ctypes.get_last_error())
+    return name

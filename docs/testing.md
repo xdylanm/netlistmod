@@ -64,6 +64,14 @@ only on examples that its change affects. Local runs stay random. If CI fails wh
 passes, look first at the platform and Python version in the job's name; the session header shows
 which solvers were found, and in CI both should say `not found`.
 
+## LTspice and the foreground window
+
+LTspice is a GUI program and takes the foreground window on every run, even with `-b`, so a suite
+of a thousand runs would keep pulling focus from what you are doing. `run_ltspice` therefore starts
+it on a hidden Windows desktop (`run_on_hidden_desktop`). A dialog LTspice opens there, such as a
+first-run prompt, cannot be seen, and the run ends in `subprocess.TimeoutExpired`. If that happens,
+start LTspice once by hand. ngspice has no window and runs as usual.
+
 ## Test tiers
 
 Tests follow architecture §10:

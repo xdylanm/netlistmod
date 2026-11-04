@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 import cmath
+import ctypes
 import math
+import subprocess
+import sys
+import threading
+import time
+from collections.abc import Callable
 from pathlib import Path
 
 import pytest
@@ -11,7 +17,7 @@ import pytest
 from netlistmod import Dialect, Netlist
 from tests.support.ltspice import ac, op, op_steps, run, tran_rows
 from tests.support.raw import sweeps
-from tests.support.solvers import Solver
+from tests.support.solvers import Solver, run_ltspice, run_on_hidden_desktop
 
 pytestmark = pytest.mark.solver("ltspice")
 
@@ -66,3 +72,48 @@ def test_a_netlist_error_is_an_error_line(solver: Solver, tmp_path: Path) -> Non
     assert result.returncode != 0 and not result.ok
     assert len(result.errors) == 1 and "(5): " in result.errors[0]
     assert result.plots == ()
+
+
+def _foreground_changes(run: Callable[[], object]) -> list[int]:
+    """Every foreground window seen while ``run`` runs, polled about once a millisecond."""
+    if sys.platform != "win32":
+        raise RuntimeError("the foreground window is only watched on Windows")
+    user32 = ctypes.WinDLL("user32")
+    seen: list[int] = []
+    done = threading.Event()
+
+    def watch() -> None:
+        last = user32.GetForegroundWindow()
+        while not done.is_set():
+            now = user32.GetForegroundWindow()
+            if now != last:
+                seen.append(now)
+                last = now
+            time.sleep(0.001)
+
+    watcher = threading.Thread(target=watch)
+    watcher.start()
+    try:
+        run()
+    finally:
+        done.set()
+        watcher.join()
+    return seen
+
+
+def test_ltspice_does_not_take_the_foreground(solver: Solver, tmp_path: Path) -> None:
+    netlist = tmp_path / "probe.cir"
+    netlist.write_text("t\nV1 a 0 1\nR1 a 0 1k\n.op\n.end\n", encoding="utf-8")
+    assert _foreground_changes(lambda: run_ltspice(solver, netlist)) == []
+    assert netlist.with_suffix(".log").is_file()
+
+
+def test_the_hidden_desktop_returns_the_exit_code(solver: Solver, tmp_path: Path) -> None:
+    command = [sys.executable, "-c", "raise SystemExit(3)"]
+    assert run_on_hidden_desktop(command, cwd=tmp_path, timeout=30).returncode == 3
+
+
+def test_the_hidden_desktop_stops_a_program_at_the_timeout(solver: Solver, tmp_path: Path) -> None:
+    command = [sys.executable, "-c", "import time; time.sleep(60)"]
+    with pytest.raises(subprocess.TimeoutExpired):
+        run_on_hidden_desktop(command, cwd=tmp_path, timeout=0.5)
