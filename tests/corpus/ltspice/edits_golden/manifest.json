@@ -48,7 +48,7 @@
         "skip": "The file it names is not in the corpus; the solver tests generate one."
       }
     },
-    "source_separators.net": "285d3bfbf601dd9386f8b0a30d7924480b358c8b2f70c6d9bd0e8533699860de",
+    "source_separators.net": "0e95808b6bad5dced9669ff77d2463fd0731953a66ebc174496eb85db428b963",
     "exp_arg.expected.net": "ab95b05eea93ff80567a40235cce536b09bcbf89f99f52abda5140cdb893852b",
     "sffm_arg.expected.net": "62fc7196b4227480593758f2f5ab9264717f124ee024073ee9bab628de943a3a",
     "pwl_arg.expected.net": "ce0e7ab6fbfd10737e777c5ebf806b28e23d9598cfc83907f86ebb4ce4826ea5",
@@ -82,7 +82,7 @@
       }
     },
     "remove_after_continuation.expected.net": "95e2598c0d4472d86ef2d99e1db5c9c87ff933f52b76855baf807074d72a670b",
-    "remove_after_comment.expected.net": "9aa650ef6c735448bbd5f22436a03347b34aaf302d1561fba6244bd1212823be"
+    "remove_after_comment.expected.net": "022514380a0fb75442275f3dafb9bdca352412abc34aaa226fbd097e782dfb52"
   },
   "cases": {
     "set_value": {
