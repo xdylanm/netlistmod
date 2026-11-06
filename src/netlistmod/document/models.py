@@ -11,29 +11,33 @@ import json
 from functools import lru_cache
 from importlib.resources import files
 
+from netlistmod.dialects import Dialect
 from netlistmod.model.nodes import Component
 
 _MODEL_TYPES = "model-types.json"
 
 
-@lru_cache(maxsize=1)
-def _table() -> dict[str, frozenset[str]]:
+@lru_cache(maxsize=None)
+def _table(dialect: Dialect) -> dict[str, frozenset[str]]:
+    """The types of both dialects (``elements``), with a dialect's own types added (decision
+    0014: LTspice's Z also takes an IGBT)."""
     resource = files("netlistmod.document") / _MODEL_TYPES
     parsed = json.loads(resource.read_text(encoding="utf-8"))
     elements = parsed.get("elements") if isinstance(parsed, dict) else None
     if not isinstance(elements, dict):
         raise ValueError("model-types.json must map element class names to model types")
+    extra = parsed.get(dialect.value, {})
     return {
-        str(name): frozenset(str(kind).lower() for kind in kinds)
+        str(name): frozenset(str(kind).lower() for kind in (*kinds, *extra.get(name, ())))
         for name, kinds in elements.items()
     }
 
 
-def allowed_model_types(element: Component) -> frozenset[str]:
-    """The folded model types ``element`` may refer to; empty if it takes no model."""
-    return _table().get(type(element).__name__, frozenset())
+def allowed_model_types(element: Component, dialect: Dialect) -> frozenset[str]:
+    """The folded model types ``element`` may refer to in ``dialect``; empty if it takes none."""
+    return _table(dialect).get(type(element).__name__, frozenset())
 
 
-def model_type_allowed(element: Component, model_type: str) -> bool:
-    """Whether a model of ``model_type`` (as written) fits ``element``."""
-    return model_type.lower() in allowed_model_types(element)
+def model_type_allowed(element: Component, model_type: str, dialect: Dialect) -> bool:
+    """Whether a model of ``model_type`` (as written) fits ``element`` in ``dialect``."""
+    return model_type.lower() in allowed_model_types(element, dialect)

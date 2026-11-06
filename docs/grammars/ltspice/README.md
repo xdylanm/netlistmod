@@ -59,6 +59,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | Entry | Construct | Status | Validated on |
 |---|---|---|---|
 | [LT-ACA-001](./specs/LT-ACA-001.yaml) | .ac | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-BJT-001](./specs/LT-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | validated | ltspice 26.1.1 (2026-11-01) |
@@ -69,12 +70,25 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-END-001](./specs/LT-END-001.yaml) | required final .end | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-FLD-001](./specs/LT-FLD-001.yaml) | field separators | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-FML-001](./specs/LT-FML-001.yaml) | formula expression syntax (reference scan only) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-FUN-001](./specs/LT-FUN-001.yaml) | source functions, shared syntax | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-002](./specs/LT-FUN-002.yaml) | PULSE | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-003](./specs/LT-FUN-003.yaml) | SINE and SIN | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-004](./specs/LT-FUN-004.yaml) | EXP | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-005](./specs/LT-FUN-005.yaml) | SFFM | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-006](./specs/LT-FUN-006.yaml) | PWL with its scale factors and file | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-007](./specs/LT-FUN-007.yaml) | PWL REPEAT | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-008](./specs/LT-FUN-008.yaml) | wave file | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-009](./specs/LT-FUN-009.yaml) | I table | validated | ltspice 26.1.1 (2026-11-04) |
+| [LT-FUN-010](./specs/LT-FUN-010.yaml) | I step load | validated | ltspice 26.1.1 (2026-11-04) |
 | [LT-GLB-001](./specs/LT-GLB-001.yaml) | .global | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-ICN-001](./specs/LT-ICN-001.yaml) | .ic and .nodeset | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-JFT-001](./specs/LT-JFT-001.yaml) | junction FET (J) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | ltspice 26.1.1 (2026-11-01) |
-| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-MES-001](./specs/LT-MES-001.yaml) | MESFET and IGBT (Z) lines | validated | ltspice 26.1.1 (2026-11-05) |
+| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01, 2026-11-05) |
+| [LT-MOS-001](./specs/LT-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NOD-001](./specs/LT-NOD-001.yaml) | node, element and subcircuit names | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-001](./specs/LT-NUM-001.yaml) | numbers | validated | ltspice 26.1.1 (2026-11-01) |
@@ -89,16 +103,6 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | validated | ltspice 26.1.1 (2026-11-01) |
-| [LT-FUN-001](./specs/LT-FUN-001.yaml) | source functions, shared syntax | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-002](./specs/LT-FUN-002.yaml) | PULSE | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-003](./specs/LT-FUN-003.yaml) | SINE and SIN | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-004](./specs/LT-FUN-004.yaml) | EXP | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-005](./specs/LT-FUN-005.yaml) | SFFM | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-006](./specs/LT-FUN-006.yaml) | PWL with its scale factors and file | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-007](./specs/LT-FUN-007.yaml) | PWL REPEAT | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-008](./specs/LT-FUN-008.yaml) | wave file | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-009](./specs/LT-FUN-009.yaml) | I table | validated | ltspice 26.1.1 (2026-11-04) |
-| [LT-FUN-010](./specs/LT-FUN-010.yaml) | I step load | validated | ltspice 26.1.1 (2026-11-04) |
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | ltspice 26.1.1 (2026-11-01) |
@@ -108,3 +112,4 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-UNS-001](./specs/LT-UNS-001.yaml) | recognised but unsupported forms | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-VAL-001](./specs/LT-VAL-001.yaml) | brace and quoted expressions | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-XTR-001](./specs/LT-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ltspice 26.1.1 (2026-11-05) |

@@ -1,0 +1,24 @@
+id: LT-XTR-001
+dialect: ltspice
+construct: shared transistor line shape (Q, M, J, Z)
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Element Overview"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-05'
+grammar:
+- body_line
+- t_area
+- FIELD_EMBEDDED
+- ic_param
+- _lt_value
+- IC_PARAM_KW
+- IC_COMMA
+tests:
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_the_model_is_the_last_name
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_a_model_name_cannot_be_a_keyword
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_ic_takes_a_comma_list
+- tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes
+notes: 'Decision 0014 items 1 to 5, as NG-XTR-001. An embedded decimal (1n5) is an area only where no name may follow: Q1 c b e s 2N3904 reads 2N3904 as the model. A model named with a plain number, which LTspice runs, is refused (item 4).'

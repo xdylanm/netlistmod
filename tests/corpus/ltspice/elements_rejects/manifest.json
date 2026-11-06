@@ -126,7 +126,7 @@
       "note": "N is not an LTspice letter"
     },
     "phase_2_letter.cir": {
-      "sha256": "b60be86ad14b5c9529398eb6a7db7efb985302537ab2c5658719bc48075c8c94",
+      "sha256": "cb686db84bc07f5b74af9629d098166563c45e8cb5dcf921055abb1b2a33969b",
       "line": 2,
       "column": 1,
       "error": "UnsupportedConstruct",

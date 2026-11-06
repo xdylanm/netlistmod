@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from netlistmod import Diagnostic, DiagnosticCode, Netlist
+from netlistmod import Diagnostic, DiagnosticCode, Dialect, Netlist
 from tests.support.dialects import current_dialect
 
 C = DiagnosticCode
@@ -81,6 +81,38 @@ def _codes(body: str, **options: bool) -> list[tuple[DiagnosticCode, str, str]]:
 )
 def test_behaviour_table(body: str, expected: list[tuple[DiagnosticCode, str, str]]) -> None:
     assert _codes(body) == expected
+
+
+# Decision 0014 item 8: the model types of Q, M, J and Z.
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        ("Q1 c b e qn\n.model qn NPN\nQ2 c b e qp\n.model qp pnp", []),
+        ("M1 d g s b mn\n.model mn NMOS\nM2 d g s mv\n.model mv VDMOS pchan", []),
+        ("M1 d g s b mp\n.model mp PMOS", []),
+        ("J1 d g s jn\n.model jn NJF\nJ2 d g s jp\n.model jp PJF", []),
+        ("Z1 d g s zn\n.model zn NMF\nZ2 d g s zp\n.model zp PMF", []),
+        ("M1 d g s b qm\n.model qm PNP", [(C.MODEL_TYPE_MISMATCH, "warning", "qm")]),
+        ("Q1 c b e mn\n.model mn NMOS", [(C.MODEL_TYPE_MISMATCH, "warning", "mn")]),
+        ("J1 d g s zn\n.model zn NMF", [(C.MODEL_TYPE_MISMATCH, "warning", "zn")]),
+        ("D1 a 0 jn\n.model jn NJF", [(C.MODEL_TYPE_MISMATCH, "warning", "jn")]),
+        ("Q1 c b e 2N3904", [(C.UNRESOLVED_MODEL, "warning", "2N3904")]),
+        ("M1 d g s b nm\n.include jellybean.lib", [(C.UNRESOLVED_MODEL, "info", "nm")]),
+    ],
+)
+def test_transistor_model_types(body: str, expected: list[tuple[DiagnosticCode, str, str]]) -> None:
+    assert _codes(body) == expected
+
+
+def test_an_igbt_model_fits_z_only_in_ltspice() -> None:
+    codes = _codes("Z1 c g e zi\n.model zi NIGBT\nZ2 c g e zp\n.model zp pigbt")
+    if current_dialect() is Dialect.LTSPICE:
+        assert codes == []
+    else:
+        assert codes == [
+            (C.MODEL_TYPE_MISMATCH, "warning", "zi"),
+            (C.MODEL_TYPE_MISMATCH, "warning", "zp"),
+        ]
 
 
 @pytest.mark.ngspice_only

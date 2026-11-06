@@ -1,0 +1,20 @@
+id: LT-MES-001
+dialect: ltspice
+construct: MESFET and IGBT (Z) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Z — MESFET and IGBT"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-05'
+grammar:
+- mesfet
+- z_param
+- Z_PARAM_KW
+- Z_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_each_letter_takes_its_own_parameters
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_the_model_is_the_last_name
+- tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes
+notes: 'Exactly 3 nodes, the model, a positional area, then m=, temp= and off. The model may be NMF, PMF, NIGBT or PIGBT.'

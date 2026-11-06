@@ -17,14 +17,14 @@ until its scheduled grammar milestone. The table is checked against
 | G | planned | 2 | M14, M15 |
 | H | planned | 2 | M14, M15 |
 | I | supported | 1 | M3 |
-| J | planned | 2 | M13 |
+| J | supported | 2 | M13 |
 | K | supported | 1 | M3 |
 | L | supported | 1 | M3 |
-| M | planned | 2 | M13 |
+| M | supported | 2 | M13 |
 | N | planned | 2 | M17 |
 | O | planned | 2 | M16 |
 | P | planned | 2 | M16 |
-| Q | planned | 2 | M13 |
+| Q | supported | 2 | M13 |
 | R | supported | 1 | M3 |
 | S | planned | 2 | M14 |
 | T | planned | 2 | M16 |
@@ -33,7 +33,7 @@ until its scheduled grammar milestone. The table is checked against
 | W | planned | 2 | M14 |
 | X | supported | 1 | M3 |
 | Y | planned | 2 | M16 |
-| Z | planned | 2 | M13 |
+| Z | supported | 2 | M13 |
 
 The milestones are those of the [phase 2 plan](../../design/phase-2-plan.md). E, F, G and H have
 linear forms in M14 and nonlinear forms in M15. U is a URC line in M16 and a digital primitive in

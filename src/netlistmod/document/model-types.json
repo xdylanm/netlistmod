@@ -1,9 +1,40 @@
 {
-  "source": "ngspice manual §2.5 \".MODEL Device Models\" (Table 2.3, model types), §3.3.2 \"Semiconductor Resistors\", §3.3.7 \"Semiconductor Capacitors\", §3.3.10 \"Inductors\", §7.2 \"Junction Diodes\"; decision 0007 item 3",
+  "source": "ngspice manual \u00a72.5 \".MODEL Device Models\" (Table 2.3, model types), \u00a73.3.2 \"Semiconductor Resistors\", \u00a73.3.7 \"Semiconductor Capacitors\", \u00a73.3.10 \"Inductors\", \u00a77.2 \"Junction Diodes\"; decision 0007 item 3; \u00a77.3, \u00a77.4, \u00a77.5, \u00a77.6 and the LTspice reference for Q, J, M and Z (decision 0014)",
   "elements": {
-    "Resistor": ["R"],
-    "Capacitor": ["C"],
-    "Inductor": ["L"],
-    "Diode": ["D"]
+    "Resistor": [
+      "R"
+    ],
+    "Capacitor": [
+      "C"
+    ],
+    "Inductor": [
+      "L"
+    ],
+    "Diode": [
+      "D"
+    ],
+    "BipolarTransistor": [
+      "NPN",
+      "PNP"
+    ],
+    "Mosfet": [
+      "NMOS",
+      "PMOS",
+      "VDMOS"
+    ],
+    "Jfet": [
+      "NJF",
+      "PJF"
+    ],
+    "Mesfet": [
+      "NMF",
+      "PMF"
+    ]
+  },
+  "ltspice": {
+    "Mesfet": [
+      "NIGBT",
+      "PIGBT"
+    ]
   }
 }

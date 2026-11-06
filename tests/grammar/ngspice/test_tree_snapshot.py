@@ -11,7 +11,8 @@ being reported as an unsupported letter. 15 rejected files changed: 14 lost thos
 node or position changed. M11 added ``structure_basic/lib_block.cir`` and
 ``edits_golden/add_lib_block.expected.cir``, and no other entry changed. M12 removed the three
 rejected source function files, added the new accept files and golden files, and changed no other
-entry.
+entry. M13 added the ``kicad_transistors`` family; 17 rejected files gained the four transistor
+letters among their expected terminals, and no node, position or error class changed.
 """
 
 from __future__ import annotations

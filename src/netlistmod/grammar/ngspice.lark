@@ -18,9 +18,11 @@
 %import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME)
 %import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
+%import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
+%import .core (model_flag, model_flag_first, model_text, PCHAN_KW, NCHAN_KW, DOTTED_VALUE)
 %import .core (subckt_def, subckt_header, subckt_port, subckt_item, not_in_subckt, ends_line)
 %import .core (SUBCKT_KW, ENDS_KW, ZERO_PORT)
 %import .core (tran_stmt, uic, TRAN_KW, UIC_KW, ac_stmt, ac_variation, DOT_AC_KW, DEC_KW)
@@ -311,10 +313,64 @@ BARE_EXPR.1: /(?:[^ \t\r\n;$\\\/'"{}]|\/[^ \t\r\n;$\\\/'"{}])+/
 // spec: NG-DIO-001
 %override D_NAME.4: /[Dd]/ _NG_UNIT*
 
+// spec: NG-XTR-001
+%extend body_line: bjt
+                 | mosfet
+                 | jfet
+                 | mesfet
+%extend t_name: (CSEP | BS_CONT) WORD
+              | BS_CONT t_name
+%extend t_number: (CSEP | BS_CONT) FIELD_NUMBER
+                | BS_CONT t_number
+%extend t_area: (CSEP | BS_CONT) (FIELD_NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+              | BS_CONT t_area
+ic_param: (SEP | CSEP | BS_CONT) IC_PARAM_KW EQ _ic_value (IC_COMMA _ic_value)*
+        | (SEP | TRAILING_COMMENT | BS_CONT) ic_param
+_ic_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA
+IC_PARAM_KW.3: /ic(?=[ \t]*=)/i
+// A comma before another value of the list; a comma before a name separates the next field.
+IC_COMMA.12: /[ \t]*,[ \t]*(?=[-+.0-9{'])/
+
+// Q: 3 to 5 nodes (substrate, then VBIC's junction temperature node); the area is named, as
+// area=, areab= and areac= (§7.3.1).
+// spec: NG-BJT-001
+bjt: Q_NAME node node node t_name _ng_ttail
+   | Q_NAME node node node (t_name | t_number) t_name _ng_ttail
+   | Q_NAME node node node (t_name | t_number) (t_name | t_number) t_name _ng_ttail
+_ng_ttail: (param | ic_param | flag)* (NL | eol)
+%override Q_NAME.4: /[Qq]/ _NG_UNIT*
+
+// M: 3 to 5 nodes (VDMOS 3, MOSFET 4, VDMOS with its thermal nodes 5); VDMOS's thermal flag
+// (§7.6.1, §7.6.3).
+// spec: NG-MOS-001
+mosfet: M_NAME node node node t_name _ng_mtail
+      | M_NAME node node node (t_name | t_number) t_name _ng_mtail
+      | M_NAME node node node (t_name | t_number) (t_name | t_number) t_name _ng_mtail
+_ng_mtail: (param | ic_param | flag | thermal_flag)* (NL | eol)
+thermal_flag: (SEP | CSEP | BS_CONT) THERMAL_KW
+            | (SEP | TRAILING_COMMENT | BS_CONT) thermal_flag
+THERMAL_KW.2: "thermal"i
+%override M_NAME.4: /[Mm]/ _NG_UNIT*
+
+// J: 3 nodes, then a positional area (§7.4.1).
+// spec: NG-JFT-001
+jfet: J_NAME node node node t_name t_area? _ng_ttail
+%override J_NAME.4: /[Jj]/ _NG_UNIT*
+
+// Z: 3 nodes, then a positional area (§7.5.1).
+// spec: NG-MES-001
+mesfet: Z_NAME node node node t_name t_area? _ng_ttail
+%override Z_NAME.4: /[Zz]/ _NG_UNIT*
+
 // spec: NG-MOD-001
 %extend model_paren: BS_CONT model_paren
 %extend model_param_first: BS_CONT model_param_first
 %extend rparen: BS_CONT rparen
+%extend model_flag: (CSEP | BS_CONT) (PCHAN_KW | NCHAN_KW)
+                  | BS_CONT model_flag
+%extend model_flag_first: BS_CONT model_flag_first
+%extend model_text: (CSEP | BS_CONT) WORD EQ DOTTED_VALUE
+                  | BS_CONT model_text
 
 // "params:" is rejected as on an X line.
 // spec: NG-SBD-001

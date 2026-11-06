@@ -111,7 +111,7 @@ def test_blank_lines_after_end_are_valid(dialect: Dialect) -> None:
 
 
 @pytest.mark.parametrize("dialect", _BOTH)
-@pytest.mark.parametrize("after", ["Q1 a b c m\n", "hello world\n"])
+@pytest.mark.parametrize("after", ["T1 a b c m\n", "hello world\n"])
 def test_a_planned_letter_after_end_says_the_netlist_ends_there(
     dialect: Dialect, after: str
 ) -> None:
@@ -123,7 +123,7 @@ def test_a_planned_letter_after_end_says_the_netlist_ends_there(
 @pytest.mark.parametrize("dialect", _BOTH)
 def test_a_planned_letter_before_end_stays_an_unsupported_construct(dialect: Dialect) -> None:
     with pytest.raises(UnsupportedConstruct):
-        parse(SourceText("t\nQ1 a b c m\n.end\n"), dialect)
+        parse(SourceText("t\nT1 a b c m\n.end\n"), dialect)
 
 
 def test_end_inside_a_subcircuit_keeps_its_own_message() -> None:

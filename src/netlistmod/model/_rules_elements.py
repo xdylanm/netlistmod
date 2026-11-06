@@ -18,14 +18,19 @@ from netlistmod.model._tree import (
     _field_tokens,
     _Item,
     _KeywordValue,
+    _Name,
     _ParamsMarker,
     _span,
     _XRest,
 )
 from netlistmod.model.nodes import (
+    BipolarTransistor,
     Capacitor,
     Diode,
     Inductor,
+    Jfet,
+    Mesfet,
+    Mosfet,
     MutualCoupling,
     Node,
     Resistor,
@@ -41,6 +46,32 @@ from netlistmod.model.values import (
     ValueList,
 )
 from netlistmod.source import Span
+
+_DIGITS = frozenset("0123456789")
+_LETTERS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZµ")
+
+
+def _reads_as_number(text: str) -> bool:
+    """Whether ``text`` is core.lark's FIELD_NUMBER: a number, then letters only (``2``, ``1k``)."""
+    i = 1 if text[:1] in ("+", "-") else 0
+    start = i
+    while i < len(text) and text[i] in _DIGITS:
+        i += 1
+    digits = i - start
+    if i < len(text) and text[i] == ".":
+        i += 1
+        while i < len(text) and text[i] in _DIGITS:
+            i += 1
+            digits += 1
+    if digits == 0:
+        return False
+    if i < len(text) and text[i] in "eE":
+        j = i + 1 + (text[i + 1 : i + 2] in ("+", "-"))
+        if j < len(text) and text[j] in _DIGITS:
+            i = j
+            while i < len(text) and text[i] in _DIGITS:
+                i += 1
+    return all(char in _LETTERS for char in text[i:])
 
 
 class ElementsRules(_Rules):
@@ -199,6 +230,86 @@ class ElementsRules(_Rules):
                 **_common(element, span), model=model, flags=element.all(Flag), area=area
             ),
         )
+
+    # Transistors (decision 0014).
+
+    def t_name(self, children: list[Any]) -> _Field:
+        return self._field(children, _Name)
+
+    t_number = t_name
+
+    def t_area(self, children: list[Any]) -> _Field:
+        return self._field(children, self._value)
+
+    def ic_param(self, children: list[Any]) -> _Field:
+        # IC_COMMA carries the blanks around the comma, so it is a separator, not a value.
+        return self.tc_param(
+            [c for c in children if not (isinstance(c, Token) and c.type == "IC_COMMA")]
+        )
+
+    def q_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    m_param = q_param
+    j_param = q_param
+    z_param = q_param
+
+    def thermal_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    def bjt(self, children: list[Any]) -> _Item:
+        return self._transistor(BipolarTransistor, _Element(children))
+
+    def mosfet(self, children: list[Any]) -> _Item:
+        return self._transistor(Mosfet, _Element(children))
+
+    def jfet(self, children: list[Any]) -> _Item:
+        return self._transistor(Jfet, _Element(children))
+
+    def mesfet(self, children: list[Any]) -> _Item:
+        return self._transistor(Mesfet, _Element(children))
+
+    def _transistor(
+        self, kind: type[BipolarTransistor | Mosfet | Jfet | Mesfet], element: _Element
+    ) -> _Item:
+        names = element.all(_Name)
+        self._check_model_name(kind, names[-1].token)
+        nodes = (
+            *element.all(Node),
+            *(Node(str(name.token), _span(name.token)) for name in names[:-1]),
+        )
+        model = ModelReference(str(names[-1].token), _span(names[-1].token))
+        area = next(iter(element.values()), None)
+        return _Item(
+            element.end,
+            lambda span: kind(
+                **_common(element, span, nodes=nodes),
+                model=model,
+                flags=element.all(Flag),
+                area=area,
+            ),
+        )
+
+    def _check_model_name(self, kind: type, token: Token) -> None:
+        """Refuse a model name the grammar could only lex as a name (decision 0014, items 1 and 4).
+
+        Where only a name may follow, the lexer reads ``2`` or ``off`` as a name, so the grammar
+        cannot refuse them as the model; both solvers would look the name up instead.
+        """
+        text = str(token)
+        if _reads_as_number(text):
+            raise self._parse_error(
+                token,
+                f"`{text}` is in the model's place (the last name before any area, flag or "
+                "parameter), and a model name cannot be a number",
+            )
+        keywords = {"off", "thermal"} if kind is Mosfet else {"off"}
+        if text.lower() in keywords:
+            raise self._parse_error(
+                token,
+                f"`{text}` is in the model's place (the last name before any area, flag or "
+                f"parameter), and a model name cannot be the keyword `{text.lower()}`",
+            )
 
     def subckt_instance(self, children: list[Any]) -> _Item:
         element = _Element(children)

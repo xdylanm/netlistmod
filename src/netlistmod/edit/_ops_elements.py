@@ -179,9 +179,10 @@ def set_model(
     key = chain[0].fold(model)
     definition = next((found.models[key][0] for found in chain if key in found.models), None)
     if definition is not None:
-        if not model_type_allowed(element, definition.model_type):
+        if not model_type_allowed(element, definition.model_type, netlist.dialect):
             allowed = ", ".join(
-                f"`{kind.upper()}`" for kind in sorted(allowed_model_types(element))
+                f"`{kind.upper()}`"
+                for kind in sorted(allowed_model_types(element, netlist.dialect))
             )
             raise EditError(
                 f"model `{model}` has type `{definition.model_type}`, but `{designator}` "

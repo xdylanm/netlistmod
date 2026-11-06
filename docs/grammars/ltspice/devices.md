@@ -17,12 +17,12 @@ phase 2. The table is checked against
 | G | planned | 2 | M14, M15 |
 | H | planned | 2 | M14, M15 |
 | I | supported | 1 | M8 |
-| J | planned | 2 | M13 |
+| J | supported | 2 | M13 |
 | K | supported | 1 | M8 |
 | L | supported | 1 | M8 |
-| M | planned | 2 | M13 |
+| M | supported | 2 | M13 |
 | O | planned | 2 | M16 |
-| Q | planned | 2 | M13 |
+| Q | supported | 2 | M13 |
 | R | supported | 1 | M8 |
 | S | planned | 2 | M14 |
 | T | planned | 2 | M16 |
@@ -30,7 +30,7 @@ phase 2. The table is checked against
 | V | supported | 1 | M8 |
 | W | planned | 2 | M14 |
 | X | supported | 1 | M8 |
-| Z | planned | 2 | M13 |
+| Z | supported | 2 | M13 |
 | & | planned | 2 | M17 |
 | @ | planned | 2 | M17 |
 

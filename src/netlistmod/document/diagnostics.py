@@ -156,9 +156,11 @@ def _reference_findings(
         reference.kind == "model"
         and isinstance(target, ModelStatement)
         and isinstance(owner, Component)
-        and not model_type_allowed(owner, target.model_type)
+        and not model_type_allowed(owner, target.model_type, index.dialect)
     ):
-        allowed = ", ".join(f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner)))
+        allowed = ", ".join(
+            f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner, index.dialect))
+        )
         cited = " (ngspice manual §2.5)" if index.dialect is Dialect.NGSPICE else ""
         findings.append(
             (

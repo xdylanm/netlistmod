@@ -218,6 +218,40 @@ class Diode(Component):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class _Transistor(Component):
+    """Fields shared by Q, M, J and Z (decision 0014).
+
+    ``nodes`` are the nodes as written: an omitted substrate is not added, although ngspice
+    grounds it (§7.8). ``area`` is a positional area (J and Z, and an LTspice Q); a named
+    ``area=`` is a parameter. ``flags`` holds ``off`` and, on an ngspice VDMOS, ``thermal``.
+    """
+
+    model: ModelReference
+    flags: tuple[Flag, ...]
+    area: Value | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BipolarTransistor(_Transistor):
+    """A ``Q`` line."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Mosfet(_Transistor):
+    """An ``M`` line, a MOSFET or a VDMOS."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Jfet(_Transistor):
+    """A ``J`` line."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Mesfet(_Transistor):
+    """A ``Z`` line: a MESFET, or on LTspice an IGBT."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SubcktInstance(Component):
     """An ``X`` line: its nodes, the subcircuit name and the parameter overrides."""
 
@@ -253,7 +287,8 @@ class ModelStatement(_DotCommand):
     ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
     ``open_paren_span`` and ``close_paren_span`` cover the ``(`` and ``)`` tokens of a
     parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (M6).
-    ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``.
+    ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``. ``flags`` holds a
+    bare ``pchan`` or ``nchan`` (decision 0014).
     """
 
     name: str
@@ -265,6 +300,7 @@ class ModelStatement(_DotCommand):
     open_paren_span: Span | None = None
     close_paren_span: Span | None = None
     ako: ModelReference | None = None
+    flags: tuple[Flag, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -516,6 +552,10 @@ BodyItem: TypeAlias = (
     | VoltageSource
     | CurrentSource
     | Diode
+    | BipolarTransistor
+    | Mosfet
+    | Jfet
+    | Mesfet
     | SubcktInstance
 )
 """An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
