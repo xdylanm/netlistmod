@@ -1,6 +1,6 @@
 # M14 task list — Linear dependent sources and switches (E, F, G, H, S, W)
 
-> **Status:** ACTIVE — the maintainer accepted the decisions in section 2 (2026-11-06)
+> **Status:** READY FOR REVIEW — the maintainer accepted the decisions in section 2 (2026-11-06); T1 to T11 done, results in section 5
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M14). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §7.3, §7.7, §10).
 
 ## 1. Scope
@@ -189,7 +189,7 @@ Each changes one thing from one of your files, named in a comment on its second 
 - `docs/design/elements.md`, `docs/usage/elements.md` and `editing.md`, `edit-layer.md` and `document-layer.md` (the new code).
 - `docs/usage/errors.md`, both `discrepancies.md` (decisions 4 to 8), the README, CHANGELOG and the architecture amendments.
 
-[ ] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
+[x] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
 
 ### After the maintainer's approval
 
@@ -197,4 +197,26 @@ Each changes one thing from one of your files, named in a comment on its second 
 
 ## 5. Results
 
-To be filled in by T11.
+**Pull request:** [xdylanm/netlistmod#11](https://github.com/xdylanm/netlistmod/pull/11), branch `m14-controlled-sources`.
+
+**Full local run** at `037dd37` (2026-11-06; Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`):
+- ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean.
+- pytest: 6,882 passed, 2 skipped, coverage 98.48%, in 16 min 30 s.
+- Every accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep. The two `diag_*` files are skipped there, with the manifest's reason.
+- The signature snapshot is unchanged.
+
+**The first full run** at `ae3c1f1` found four things, fixed in `037dd37`:
+- `test_ltspice_discrepancies.py` did not list `elements_rejects/s_on_off.cir`, which LTspice runs.
+- `test_ltspice_validation.py` still had a linear E as an unsupported form; that case now uses E's `value=`.
+- `test_ngspice_solver_document.py` ran the deliberately broken `document_basic/control_source.cir`.
+- pre-commit's end-of-file hook added the missing final newline to `docs/grammars/ngspice/discrepancies.md`.
+
+**CI** on #11 at `037dd37` is green on all five jobs.
+
+**Design points worth reviewing:**
+1. **Nonlinear keywords.** Each is recognised only where its dialect writes it: after the output nodes, and on LTspice's E and G also after the control nodes. A lookahead on `=`, `(` or `{` keeps a node named `value` or `poly` a node. The constructs are named "nonlinear dependent source form (…)".
+2. **`CONTROL_SOURCE_MISMATCH`** cites the one section that applies to the letter: manual §4.2.3 (F), §4.2.4 (H) or §3.3.15 (W), or the LTspice reference. It is the last code in `DiagnosticCode`, so the order of other diagnostics is unchanged.
+3. **`document_basic/control_source.cir` is a new fixture,** rather than a line added to `every_diagnostic.cir`, because changing that file would change a digest in the signature snapshot.
+4. **LTspice's `E1 out,0 vx 0 2` runs and is refused,** as a comma between nodes is on every LTspice letter (decision 0009); `discrepancies.md` records it.
+5. **The `ON_KW` keyword is `on` alone.** It is offered only in the switch-state position, so a node named `on` elsewhere is unaffected.
+6. **`set_switch_state(…, None)` on a line with no state** returns no edit, so removing is idempotent, as the property test checks.
