@@ -79,11 +79,33 @@ def test_controlling_sources_and_switch_models_are_checked(
     assert _codes(_netlist(body)) == expected
 
 
-def test_a_mismatch_says_what_each_solver_does() -> None:
-    (diagnostic,) = _netlist("R1 a 0 1k\nF1 0 o R1 2").diagnostics
-    assert "`F1` is controlled by `R1`, a resistor" in diagnostic.message
-    also = "an E, H or L" if is_ltspice() else "an E or H source"
-    assert f"also reads {also} here and stops on other elements" in diagnostic.message
+_SOLVER = {"ngspice": "ngspice 47", "ltspice": "LTspice 26.1.1"}
+
+
+@pytest.mark.parametrize(
+    ("body", "name", "phrase", "runs"),
+    [
+        ("R1 a 0 1k\nF1 0 o R1 2", "R1", "a resistor", False),
+        ("E1 b 0 a 0 1\nF1 0 o E1 2", "E1", "a voltage-controlled voltage source", True),
+        ("H9 b 0 Vs 1k\nVs a 0 0\nF1 0 o H9 2", "H9", "a current-controlled voltage source", True),
+        ("I1 a 0 1m\nF1 0 o I1 2", "I1", "a current source", False),
+        ("L1 a 0 1u\nF1 0 o L1 2", "L1", "an inductor", None),
+    ],
+)
+def test_a_mismatch_says_what_the_solver_does_with_this_source(
+    body: str, name: str, phrase: str, runs: bool | None
+) -> None:
+    (diagnostic,) = _netlist(body).diagnostics
+    assert diagnostic.code is C.CONTROL_SOURCE_MISMATCH
+    assert f"`F1` is controlled by `{name}`, {phrase}," in diagnostic.message
+    assert "names an independent voltage source (`V`)" in diagnostic.message
+    if runs is None:  # an L: LTspice runs it, ngspice stops
+        runs = is_ltspice()
+    solver = _SOLVER[current_dialect().value]
+    outcome = (
+        f"{solver} runs it, with the current through `{name}`" if runs else f"{solver} stops on it"
+    )
+    assert diagnostic.message.endswith(outcome)
 
 
 @pytest.mark.ltspice_only

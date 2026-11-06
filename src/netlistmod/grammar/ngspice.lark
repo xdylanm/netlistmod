@@ -392,24 +392,39 @@ cc_form: (SEP | CSEP | BS_CONT) CC_FORM_KW rest NL
        | (SEP | TRAILING_COMMENT | BS_CONT) cc_form
 VC_FORM_KW.3: /(?:vol|cur|value)[ \t]*(?==)|table[ \t]*(?=[{'])/i
 CC_FORM_KW.3: /poly[ \t]*(?=\()/i
+// Gain forms that ngspice runs and the library refuses, recognised only so that each gets its own
+// message (decision 0015 item 6): gain= in the gain's place, and a second value after the gain.
+gain_keyword: (SEP | CSEP | BS_CONT) GAIN_KW rest NL
+            | (SEP | TRAILING_COMMENT | BS_CONT) gain_keyword
+second_value: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA) rest NL
+            | (SEP | TRAILING_COMMENT | BS_CONT) second_value
+GAIN_KW.3: /gain[ \t]*(?==)/i
 
 // spec: NG-VCV-001
 vcvs: E_NAME node node node node value (NL | eol)
+    | E_NAME node node node node value second_value
+    | E_NAME node node node node gain_keyword
     | E_NAME node node nonlinear_form
 %override E_NAME.4: /[Ee]/ _NG_UNIT*
 
 // spec: NG-VCC-001
 vccs: G_NAME node node node node value ctl_m? (NL | eol)
+    | G_NAME node node node node value second_value
+    | G_NAME node node node node gain_keyword
     | G_NAME node node nonlinear_form
 %override G_NAME.4: /[Gg]/ _NG_UNIT*
 
 // spec: NG-CCC-001
 cccs: F_NAME node node ctl_ref value ctl_m? (NL | eol)
+    | F_NAME node node ctl_ref value second_value
+    | F_NAME node node ctl_ref gain_keyword
     | F_NAME node node cc_form
 %override F_NAME.4: /[Ff]/ _NG_UNIT*
 
 // spec: NG-CCV-001
 ccvs: H_NAME node node ctl_ref value (NL | eol)
+    | H_NAME node node ctl_ref value second_value
+    | H_NAME node node ctl_ref gain_keyword
     | H_NAME node node cc_form
 %override H_NAME.4: /[Hh]/ _NG_UNIT*
 

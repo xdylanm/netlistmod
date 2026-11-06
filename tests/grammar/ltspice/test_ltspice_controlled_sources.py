@@ -141,3 +141,23 @@ def test_every_file_of_the_family_loads_and_round_trips(path: Path) -> None:
     netlist = Netlist.load(path, dialect=Dialect.LTSPICE)
     assert netlist.to_bytes() == path.read_bytes()
     assert netlist.lines.find_all((ControlledSource, Switch))
+
+
+# Review R1: each refused gain form names the form, at the offending token.
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("E1 out 0 vx 0 gain=2", 15, "`gain=` is not a form of the LTspice reference"),
+        ("F1 a 0 Vs gain=2", 11, "write the gain positionally"),
+        ("E1 out 0 vx 0 2 3", 17, "`3` is a second value: a dependent source takes one gain"),
+        ("H1 a 0 Vs 1k 2k2", 14, "`2k2` is a second value"),
+        ("E1 OUT N002 VX 0 E", 18, "`E` is not a gain: the gain is not set"),
+        ("G1 OUT 0 VX VX2 G", 17, "`G` is not a gain: the gain is not set"),
+        ("F1 OUT 0 V1 F", 13, "`F` is not a gain"),
+        ("H1 OUT 0 V1 H", 13, "`H` is not a gain"),
+    ],
+)
+def test_refused_gain_forms_name_the_form(line: str, column: int, reason: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert reason in error.reason

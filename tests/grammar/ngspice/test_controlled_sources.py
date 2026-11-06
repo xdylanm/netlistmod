@@ -171,3 +171,23 @@ def test_the_nonlinear_forms_are_unsupported(line: str, form: str) -> None:
         parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
     assert (captured.value.line, captured.value.column) == (2, 8)
     assert captured.value.construct == f"ngspice nonlinear dependent source form ({form})"
+
+
+# Review R1: each refused gain form that a solver runs names the form, at the offending token.
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("E1 out 0 vx 0 gain=2", 15, "`gain=` is not a form of the ngspice manual §4.2"),
+        ("G1 a 0 b 0 gain = 1m", 12, "`gain=` is not a form of the ngspice manual §4.2"),
+        ("F1 a 0 Vs gain=2", 11, "write the gain positionally"),
+        ("H1 a 0 Vs gain=1k", 11, "write the gain positionally"),
+        ("E1 out 0 vx 0 2 3", 17, "`3` is a second value: a dependent source takes one gain"),
+        ("G1 a 0 b 0 1m 2m", 15, "`2m` is a second value"),
+        ("F1 a 0 Vs 2 {k}", 13, "`{k}` is a second value"),
+        ("H1 a 0 Vs 1k 2k", 14, "`2k` is a second value"),
+    ],
+)
+def test_refused_gain_forms_name_the_form(line: str, column: int, reason: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert reason in error.reason

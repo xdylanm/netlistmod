@@ -15,7 +15,10 @@ entry. M13 added the ``kicad_transistors`` family; 17 rejected files gained the 
 letters among their expected terminals, and no node, position or error class changed. M14 added
 the ``controlled_sources`` family, the controlled-source golden files, five ``elements_rejects``
 files and ``document_basic/control_source.cir``; the same 17 rejected files gained the six new
-letters among their expected terminals. No other entry changed.
+letters among their expected terminals. No other entry changed. M14 review R1 changed two:
+``elements_rejects/e_two_values.cir`` now has its own reason and no expected terminals, and
+``elements_rejects/e_m.cir`` lists the value terminals of a second gain; positions and error
+classes are the same.
 """
 
 from __future__ import annotations

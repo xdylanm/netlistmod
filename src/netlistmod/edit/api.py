@@ -52,10 +52,11 @@ class _Operations(Generic[_R]):
         self, designator: str, value: str, *, scope: ScopePath = (), in_definition: bool = False
     ) -> _R:
         """Set the value of an R, C or L line (adding it after the nodes when the line has
-        only a model), or replace the DC value of a V or I line.
+        only a model), replace the DC value of a V or I line, or replace the gain of an E, F,
+        G or H line.
 
         ``value`` is written as given into exactly the value's span (for ``r=1k``, only
-        ``1k``). ``EditError`` for a line without a value slot (D, X; K: use
+        ``1k``). ``EditError`` for a line without a value slot (D, Q, M, J, Z, S, W, X; K: use
         :meth:`set_coupling`) or a source without a DC value (use :meth:`set_dc`).
         """
         return self._submit(
@@ -93,13 +94,17 @@ class _Operations(Generic[_R]):
         scope: ScopePath = (),
         in_definition: bool = False,
     ) -> _R:
-        """Set an instance parameter of an R, C, L or D line, or of an LTspice V or I line, or
-        add ``name=value`` after the line's last field. On LTspice a flag takes its value in
-        place (``noiseless`` → ``noiseless=1``).
+        """Set an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an ngspice F
+        or G line, or a parameter of an LTspice V or I line, or add ``name=value`` after the
+        line's last field. On LTspice a flag takes its value in place (``noiseless`` →
+        ``noiseless=1``).
 
-        A name that is the line's value keyword (``r``, ``resistance``, …) sets the value when
-        it is written that way, otherwise ``EditError`` (use :meth:`set_value`). A repeated
-        parameter is an ``EditError``; an X line takes :meth:`set_instance_param`.
+        ``area`` goes in the positional slot where the dialect writes one (J and Z, and an
+        LTspice D or Q), unless the line already writes ``area=``. A name that is the line's
+        value keyword (``r``, ``resistance``, …) sets the value when it is written that way,
+        otherwise ``EditError`` (use :meth:`set_value`). E, H, S and W, and on LTspice F and G,
+        take no parameter. A repeated parameter is an ``EditError``; an X line takes
+        :meth:`set_instance_param`.
         """
         return self._submit(
             operations.set_param(
@@ -117,11 +122,13 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
         allow_external: bool = False,
     ) -> _R:
-        """Replace the model name of an R, C, L or D line, or add one after the value of an
-        R, C or L line that has none (``R1 a b 1k`` → ``R1 a b 1k rmod``).
+        """Replace the model name of an R, C, L, D, Q, M, J, Z, S or W line, or add one after the
+        value of an R, C or L line that has none (``R1 a b 1k`` → ``R1 a b 1k rmod``).
 
         The model must resolve from the element's scope with a type allowed for the element
-        (R → ``R``, C → ``C``, L → ``L``, D → ``D``), otherwise ``EditError``. An unresolved
+        (R → ``R``, C → ``C``, L → ``L``, D → ``D``, Q → ``NPN`` or ``PNP``, M → ``NMOS``,
+        ``PMOS`` or ``VDMOS``, J → ``NJF`` or ``PJF``, Z → ``NMF`` or ``PMF`` and on LTspice
+        ``NIGBT`` or ``PIGBT``, S → ``SW``, W → ``CSW``), otherwise ``EditError``. An unresolved
         model is accepted only with ``allow_external=True`` when an ``.include``, ``.lib`` or
         opaque ``.if`` or ``.lib`` block is in a searched scope (decision 0007 item 3). A value
         written ``r=1k`` takes no model. ngspice uses a given value over the model's geometry; see
