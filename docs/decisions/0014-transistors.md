@@ -1,8 +1,8 @@
 # 0014 — Transistors
 
-- **Status:** proposed (M13; accepted when M13 closes)
+- **Status:** accepted (2026-11-06, maintainer; M13 T13)
 - **Date:** 2026-11-05
-- **Context:** M13 adds the transistor letters Q, M, J and Z on both dialects. A transistor line has a variable number of nodes before its model, and neither solver decides where the nodes end by syntax: both look up which names are defined models. Probes on ngspice 47 and LTspice 26.1.1 are in [m13-tasks.md](../design/m13-tasks.md) section 3. The maintainer accepted these on 2026-11-05.
+- **Context:** M13 adds the transistor letters Q, M, J and Z on both dialects. A transistor line has a variable number of nodes before its model, and neither solver decides where the nodes end by syntax: both look up which names are defined models. Probes on ngspice 47 and LTspice 26.1.1 are in [m13-tasks.md](../design/archive/phase-2/m13-tasks.md) section 3. The maintainer accepted these on 2026-11-05.
 - **Decision:**
   1. **The boundary rule.** The model is the last name before the first area value, flag, parameter or the end of the line. The grammar spells out the name sequences each letter's node counts allow, so the parser classifies a name once it sees what follows it, as for an X line. A field written as a number is a node before the model and an area after it. Where only a name may follow, the lexer reads a number or the keyword `off` (or `thermal` on an ngspice M) as a name; the transformer refuses it as the model at its token (P13). For `Q1 c b e qm s` the rule takes `s` as the model, as ngspice does; LTspice stops.
   2. **Node counts by letter and dialect, without looking at the model's type.** Q takes 3 to 5 nodes on ngspice (substrate, then VBIC's junction temperature node) and 3 or 4 on LTspice. M takes 3 to 5 on ngspice (VDMOS 3, MOSFET 4, VDMOS with `thermal` 5) and 3 or 4 on LTspice. J and Z take exactly 3. A count that is wrong for a model, such as a 3-node NMOS line, parses and stops the solver.

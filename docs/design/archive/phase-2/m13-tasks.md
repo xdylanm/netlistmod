@@ -1,7 +1,7 @@
 # M13 task list — Transistors (Q, M, J, Z)
 
-> **Status:** READY FOR REVIEW — review round 1 changes R1 to R8 are made (report in 6.4). T1 to T12 done (results in section 5); section 2 records the maintainer's decisions (2026-11-05).
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M13). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10).
+> **Status:** COMPLETE (2026-11-06) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 and 7
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M13). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10).
 
 ## 1. Scope
 
@@ -155,7 +155,7 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 
 ### After the maintainer's approval
 
-[ ] **T13 — Close M13.** Merge on green, archive this list, accept decision 0014, and update the plan and index.
+[x] **T13 — Close M13.** Merge on green, archive this list, accept decision 0014, and update the plan and index.
 
 [ ] **T14 — Maintainer checkpoint (plan M13).** Hands-on use with real transistor netlists, and a decision on whether the order of M14 to M19 should change.
 
@@ -281,3 +281,38 @@ R1 to R8 are made in one commit, `1f09e40`.
 **CI** on #10 at `1f09e40` is green on all five jobs.
 
 Nothing is archived: T13 follows approval.
+
+## 7. Review round 2 (2026-11-06, `32d13e0`) — no further changes required
+
+### 7.1 Outcome
+
+R1 to R8 are made as 6.4 reports. Nothing else is required, and M13 is ready for the maintainer's approval (T13 and T14).
+- **Checks:**
+  - pytest: 6,334 passed, 2 skipped, coverage 98.58%, in 15 min 37 s, with ngspice 47 and LTspice 26.1.1 from `.env`.
+  - ruff, ruff format and `mypy src` are clean.
+  - CI on #10 is green on all five jobs.
+- **R1:**
+  - The LTspice "cannot judge" row names both readings, the extra net and the `UNRESOLVED_MODEL` signal.
+  - The grammar test pins the library's reading, and the `q-embedded-area-after-model` probe pins LTspice's.
+- **R2:**
+  - The three added `bjt` alternatives exist only to reach the refusal, and the grammar comment says so.
+  - The transformer check is safe because only an ngspice Q puts a `FIELD_NUMBER` name last.
+  - All five forms in the new test give one message, with the column at the number.
+  - The 3-node `Q1 c b e 2` and `Q1 c b e off` keep their messages.
+  - The solver test shows that ngspice runs each refused form.
+- **R3:**
+  - `MODEL_TYPE_MISMATCH` and the edit errors share `ELEMENT_NAMES` in `model/nodes.py`.
+  - The article is right for every name ("an inductor", "a MOSFET").
+- **R4:** `Transistor` is public and exported. `index.py` and the probe tests use it, and the architecture names it.
+- **R5:** §7.8 now covers the 3-node Q only, and says why M is not affected.
+- **R6:** decision 0014 item 6, section 2 decision 6, the XTR spec entries and the LTspice grammar comment say where `ic=` is accepted.
+- **R7:** `model-types.json` is back to literal `§` and one-line lists. The `source` sentence now names §7.3 to §7.7.
+- **R8:** `tests/document/test_transistor_topology.py` covers:
+  - the doubled source;
+  - a 3-node Q with no ground connection, including its signature entry;
+  - the 5-node ngspice Q.
+
+### 7.2 Noted, no change required
+
+- In `__all__` (`src/netlistmod/__init__.py`) and in `tests/test_package.py`, `"Transistor"` sits between `"SubcktInstance"` and `"SubcktReference"`. The lists are not strictly sorted, so this is cosmetic. Move it in a later change if the lists are ever sorted.
+- The R2 message names a plain number only (`area=2`). A formula after the model, such as `Q1 c b e qm {a}`, still gets the general parse error. That is acceptable: the form is rare, and the error is still at the right token.
