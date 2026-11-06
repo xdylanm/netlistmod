@@ -49,7 +49,7 @@ from netlistmod.model.nodes import (
     SubcktDefinition,
     SubcktInstance,
     TopLevelItem,
-    _Transistor,
+    Transistor,
 )
 from netlistmod.model.values import Formula, ParamAssignment
 from netlistmod.source import SourceText, Span
@@ -293,7 +293,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         if isinstance(item, SubcktDefinition):
             continue  # its header and body belong to the nested scope
         if (
-            isinstance(item, Resistor | Capacitor | Inductor | Diode | _Transistor)
+            isinstance(item, Resistor | Capacitor | Inductor | Diode | Transistor)
             and item.model is not None
         ):
             found = _lookup(scope, "models", item.model.model_name)

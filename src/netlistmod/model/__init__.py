@@ -46,6 +46,7 @@ from netlistmod.model.nodes import (
     TitleDirective,
     TopLevelItem,
     TranDirective,
+    Transistor,
     UnknownDirective,
     VoltageSource,
 )
@@ -112,6 +113,7 @@ __all__ = [
     "SubcktDefinition",
     "SourceSpec",
     "SubcktInstance",
+    "Transistor",
     "SubcktReference",
     "TempDirective",
     "Title",

@@ -68,3 +68,13 @@ def test_an_ltspice_mosfet_has_no_area() -> None:
 def test_a_model_that_reads_as_a_name_cannot_be_written_as_a_number() -> None:
     with pytest.raises(EditError):
         _netlist("Q1 c b e qn").set_model("Q1", "2", allow_external=True)
+
+
+@pytest.mark.parametrize(
+    ("line", "kind"),
+    [("Q1 c b e qn", "bipolar transistor"), ("Z1 d g s zn", "MESFET"), ("M1 d g s b mn", "MOSFET")],
+)
+def test_edit_errors_name_the_element_kind(line: str, kind: str) -> None:
+    designator = line.split()[0]
+    with pytest.raises(EditError, match=f"`{designator}` is a {kind} line and has no value slot"):
+        _netlist(line).set_value(designator, "1")

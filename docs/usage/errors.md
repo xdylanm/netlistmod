@@ -41,9 +41,14 @@ The text does not match the dialect's grammar. The library does not guess: it st
 
 ```
 
-`reason` adds a sentence where the library can say more. A line that ends before its fields do says so, and `expected` then leaves out separators and comments, which would not help. Text after `.end` is told that the netlist ends there.
+`reason` adds a sentence where the library can say more. A line that ends before its fields do says so, and `expected` then leaves out separators and comments, which would not help. Text after `.end` is told that the netlist ends there. Some forms that a solver runs and the library refuses on purpose name the form to write instead, such as a positional area on an ngspice Q ([decision 0014](../decisions/0014-transistors.md) item 5).
 
 ```python
+>>> try:
+...     parse(SourceText("title\nQ1 c b e qm 2\n.end\n"), Dialect.NGSPICE)
+... except ParseError as error:
+...     print(error.column, error.reason)
+13 `2` after the model is a positional area, and an ngspice Q writes its area as `area=2`
 >>> try:
 ...     parse(SourceText("title\nR1 a 0\n.end\n"), Dialect.NGSPICE)
 ... except ParseError as error:

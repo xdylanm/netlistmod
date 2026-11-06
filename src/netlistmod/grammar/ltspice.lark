@@ -249,7 +249,7 @@ I_R_KW.2: "r"i
 
 // Transistors (decision 0014). Q takes 3 or 4 nodes and a positional area; M takes 3 or 4 nodes;
 // J and Z take 3 nodes and a positional area. Each letter has the reference's closed parameter
-// list, and off. A comma list for IC= may have a blank after the comma.
+// list, and off. Only M takes IC=, a comma list that may have a blank after the comma.
 // spec: LT-XTR-001
 %extend body_line: bjt
                  | mosfet

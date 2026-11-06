@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from netlistmod import BipolarTransistor, Dialect, Jfet, Mesfet, Mosfet, Netlist
+from netlistmod import Dialect, Netlist, Transistor
 from tests.support.dialects import current_dialect
 
 Operation = Callable[[Netlist], Netlist]
@@ -140,6 +140,5 @@ def test_generated_transistor_lines_round_trip(case: tuple[str, list[_Line]]) ->
     text, lines = case
     netlist = Netlist.from_text(text, dialect=current_dialect())
     assert netlist.to_bytes() == text.encode("utf-8")
-    kinds = (BipolarTransistor, Mosfet, Jfet, Mesfet)
-    transistors = [line.item for line in netlist.lines if isinstance(line.item, kinds)]
+    transistors = [line.item for line in netlist.lines if isinstance(line.item, Transistor)]
     assert [len(item.nodes) for item in transistors] == [line.nodes for line in lines]

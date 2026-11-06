@@ -11,16 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from netlistmod import (
-    BipolarTransistor,
-    Dialect,
-    Jfet,
-    Mesfet,
-    Mosfet,
-    ParseError,
-    SourceText,
-    parse,
-)
+from netlistmod import Dialect, ParseError, SourceText, Transistor, parse
 from tests.support.ltspice import run
 from tests.support.solvers import Solver
 
@@ -38,7 +29,6 @@ _J = "probe\nV1 d 0 5\nV2 g 0 -1\nRS s 0 100\nRB b 0 1\n{model}{line}\n.op\n.end
 _QM = ".model qm NPN\n"
 _NM = ".model nm NMOS(VTO=1 KP=1m)\n"
 _VD = ".model vd VDMOS(VTO=2 KP=0.3)\n"
-_KINDS = (BipolarTransistor, Mosfet, Jfet, Mesfet)
 
 
 def _reading(text: str) -> tuple[list[str], str, str | None] | None:
@@ -47,7 +37,7 @@ def _reading(text: str) -> tuple[list[str], str, str | None] | None:
         items = parse(SourceText(text), Dialect.LTSPICE).items
     except ParseError:
         return None
-    item = next(item for item in items if isinstance(item, _KINDS))
+    item = next(item for item in items if isinstance(item, Transistor))
     area = item.area.text if item.area is not None else None
     return [node.name for node in item.nodes], item.model.model_name, area
 
@@ -92,6 +82,13 @@ _PROBES = {
         (["c", "b", "e"], "2N3904", "2"),
     ),
     "q-number-model": (_Q.format(model=".model 2 NPN\n", line="Q1 c b e 2"), True, None),
+    # Review R1: LTspice runs this with qm as the model and 1n5 as its area; the library reads
+    # 1n5 as the model and qm as a fourth node (discrepancies.md).
+    "q-embedded-area-after-model": (
+        _Q.format(model=_QM, line="Q1 c b e qm 1n5"),
+        True,
+        (["c", "b", "e", "qm"], "1n5", None),
+    ),
     "q-model-then-name": (
         _Q.format(model=_QM, line="Q1 c b e qm s"),
         False,

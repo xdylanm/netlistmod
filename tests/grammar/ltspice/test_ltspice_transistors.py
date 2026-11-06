@@ -57,6 +57,8 @@ def _slice(line: str, span: Span) -> str:
         ("Q1 c b e s 2N3904", ["c", "b", "e", "s"], "2N3904", None),
         ("Q1 c b e 2N3904 2", ["c", "b", "e"], "2N3904", "2"),
         ("Q1 c b e s qm 1n5", ["c", "b", "e", "s"], "qm", "1n5"),
+        # Review R1: LTspice reads qm as the model and 1n5 as the area; see discrepancies.md.
+        ("Q1 c b e qm 1n5", ["c", "b", "e", "qm"], "1n5", None),
         ("M1 d g s b nm", ["d", "g", "s", "b"], "nm", None),
         ("M1 d g s vd", ["d", "g", "s"], "vd", None),
         ("MQ8 d g OUT OUT 2N7000_OJ", ["d", "g", "OUT", "OUT"], "2N7000_OJ", None),

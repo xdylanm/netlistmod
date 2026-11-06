@@ -23,6 +23,7 @@ from netlistmod.model.nodes import (
     SubcktDefinition,
     SubcktInstance,
     UnknownDirective,
+    element_phrase,
 )
 from netlistmod.model.values import NumericValue
 from netlistmod.source import SourceText, Span
@@ -167,7 +168,7 @@ def _reference_findings(
                 DiagnosticCode.MODEL_TYPE_MISMATCH,
                 "warning",
                 f"`{owner.designator}` refers to model `{target.name}` of type "
-                f"`{target.model_type}`, but a {type(owner).__name__.lower()} takes a model of "
+                f"`{target.model_type}`, but {element_phrase(owner)} takes a model of "
                 f"type {allowed}{cited}",
                 reference.span,
             )

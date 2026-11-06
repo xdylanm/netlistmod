@@ -10,16 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from netlistmod import (
-    BipolarTransistor,
-    Dialect,
-    Jfet,
-    Mesfet,
-    Mosfet,
-    ParseError,
-    SourceText,
-    parse,
-)
+from netlistmod import Dialect, ParseError, SourceText, Transistor, parse
 from tests.support.ngspice import run
 from tests.support.solvers import Solver
 
@@ -45,11 +36,9 @@ def _reading(text: str) -> tuple[list[str], str] | None:
         items = parse(SourceText(text), Dialect.NGSPICE).items
     except ParseError:
         return None
-    item = next(item for item in items if isinstance(item, _KINDS))
+    item = next(item for item in items if isinstance(item, Transistor))
     return [node.name for node in item.nodes], item.model.model_name
 
-
-_KINDS = (BipolarTransistor, Mosfet, Jfet, Mesfet)
 
 # (circuit, ngspice runs it, the library's reading or None for a refusal)
 _PROBES = {
@@ -162,11 +151,16 @@ def test_transistor_probes(solver: Solver, tmp_path: Path, case: str) -> None:
     assert _reading(text) == reading
 
 
-def test_a_positional_area_on_q_runs_and_is_refused(solver: Solver, tmp_path: Path) -> None:
-    # Decision 5: the manual shows only area=, so the library refuses what ngspice also runs.
-    text = _Q.format(model=_QM, line="Q1 c b e qm 2")
+@pytest.mark.parametrize("line", ["Q1 c b e qm 2", "Q1 c b e s qm 2", "Q1 c b e qm 2 off"])
+def test_a_positional_area_on_q_runs_and_is_refused(
+    solver: Solver, tmp_path: Path, line: str
+) -> None:
+    # Decision 5: the manual shows only area=, so the library refuses what ngspice also runs,
+    # with one message for each form (review R2).
+    text = _Q.format(model=_QM, line=line)
     assert run(solver, tmp_path, text).ok
-    assert _reading(text) is None
+    with pytest.raises(ParseError, match="an ngspice Q writes its area as `area=2`"):
+        parse(SourceText(text), Dialect.NGSPICE)
 
 
 def test_an_igbt_model_is_not_an_ngspice_type(solver: Solver, tmp_path: Path) -> None:

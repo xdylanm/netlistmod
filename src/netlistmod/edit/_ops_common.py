@@ -18,7 +18,6 @@ from netlistmod.model.nodes import (
     Component,
     CurrentSource,
     DcDirective,
-    Diode,
     Directive,
     End,
     GlobalDirective,
@@ -27,7 +26,6 @@ from netlistmod.model.nodes import (
     Mesfet,
     ModelStatement,
     Mosfet,
-    MutualCoupling,
     OpaqueBlock,
     OpaqueStatement,
     OpDirective,
@@ -35,13 +33,13 @@ from netlistmod.model.nodes import (
     Resistor,
     SourceSpec,
     SubcktDefinition,
-    SubcktInstance,
     TempDirective,
     Title,
     TitleDirective,
     TranDirective,
     UnknownDirective,
     VoltageSource,
+    element_name,
 )
 from netlistmod.model.values import (
     Formula,
@@ -142,22 +140,6 @@ def _element(netlist: Netlist, designator: str, scope: ScopePath, in_definition:
     return elements[0]
 
 
-_ELEMENT_NAMES: dict[type[Component], str] = {
-    Resistor: "resistor",
-    Capacitor: "capacitor",
-    Inductor: "inductor",
-    MutualCoupling: "coupling",
-    VoltageSource: "voltage source",
-    CurrentSource: "current source",
-    Diode: "diode",
-    BipolarTransistor: "bipolar transistor",
-    Mosfet: "MOSFET",
-    Jfet: "JFET",
-    Mesfet: "MESFET",
-    SubcktInstance: "subcircuit call",
-}
-
-
 _ITEM_NAMES: dict[type, str] = {
     SubcktDefinition: "subcircuit definition",
     GlobalDirective: "`.global` line",
@@ -172,7 +154,7 @@ _ITEM_NAMES: dict[type, str] = {
 
 
 def _kind(element: Component) -> str:
-    return _ELEMENT_NAMES.get(type(element), type(element).__name__)
+    return element_name(element)
 
 
 def resolve_line(netlist: Netlist, target: Line | object) -> Line:

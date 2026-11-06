@@ -218,10 +218,10 @@ class Diode(Component):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class _Transistor(Component):
+class Transistor(Component):
     """Fields shared by Q, M, J and Z (decision 0014).
 
-    ``nodes`` are the nodes as written: an omitted substrate is not added, although ngspice
+    ``nodes`` are the nodes as written: a 3-node Q's substrate is not added, although ngspice
     grounds it (§7.8). ``area`` is a positional area (J and Z, and an LTspice Q); a named
     ``area=`` is a parameter. ``flags`` holds ``off`` and, on an ngspice VDMOS, ``thermal``.
     """
@@ -232,22 +232,22 @@ class _Transistor(Component):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class BipolarTransistor(_Transistor):
+class BipolarTransistor(Transistor):
     """A ``Q`` line."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Mosfet(_Transistor):
+class Mosfet(Transistor):
     """An ``M`` line, a MOSFET or a VDMOS."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Jfet(_Transistor):
+class Jfet(Transistor):
     """A ``J`` line."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
-class Mesfet(_Transistor):
+class Mesfet(Transistor):
     """A ``Z`` line: a MESFET, or on LTspice an IGBT."""
 
 
@@ -590,3 +590,31 @@ class ParseResult:
 
     items: tuple[TopLevelItem, ...]
     dialect: Dialect
+
+
+# What messages call each element (review R3): the edit errors and MODEL_TYPE_MISMATCH.
+ELEMENT_NAMES: dict[type[Component], str] = {
+    Resistor: "resistor",
+    Capacitor: "capacitor",
+    Inductor: "inductor",
+    MutualCoupling: "coupling",
+    VoltageSource: "voltage source",
+    CurrentSource: "current source",
+    Diode: "diode",
+    BipolarTransistor: "bipolar transistor",
+    Mosfet: "MOSFET",
+    Jfet: "JFET",
+    Mesfet: "MESFET",
+    SubcktInstance: "subcircuit call",
+}
+
+
+def element_name(element: Component) -> str:
+    """The name messages use for ``element``'s kind, such as ``"bipolar transistor"``."""
+    return ELEMENT_NAMES.get(type(element), type(element).__name__)
+
+
+def element_phrase(element: Component) -> str:
+    """:func:`element_name` with its article: ``"an inductor"``, ``"a MOSFET"``."""
+    name = element_name(element)
+    return f"{'an' if name[0] in 'aeiou' else 'a'} {name}"

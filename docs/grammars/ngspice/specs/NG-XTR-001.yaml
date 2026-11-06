@@ -24,4 +24,4 @@ tests:
 - tests/grammar/ngspice/test_transistors.py::test_ic_takes_a_comma_list
 - tests/grammar/ngspice/test_transistors.py::test_continued_transistor_lines_join
 - tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
-notes: 'Decision 0014 items 1 to 5. The fixed nodes, then names, the last of which is the model; a field written as a number is a node before the model. Where only a name may follow, a number or the keyword off (thermal on M) is refused as the model at its token. ic= takes a comma list, with or without a blank after the comma.'
+notes: 'Decision 0014 items 1 to 5. The fixed nodes, then names, the last of which is the model; a field written as a number is a node before the model. Where only a name may follow, a number or the keyword off (thermal on M) is refused as the model at its token. ic= takes a comma list on every letter, with or without a blank after the comma.'

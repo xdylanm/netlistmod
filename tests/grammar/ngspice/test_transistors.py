@@ -152,8 +152,6 @@ def test_j_and_z_take_a_positional_area(line: str) -> None:
         ("J1 d g s b jm", 14),  # four nodes
         ("Z1 d g s b zm", 14),
         ("Q1 c b e 2", 11),  # a number as the model
-        ("Q1 c b e qm 2", 14),  # a positional area on Q
-        ("Q1 c b e 2N3904 2", 18),
         ("J1 d g s jm 2 x", 16),  # a name after the area
     ],
 )
@@ -162,11 +160,30 @@ def test_malformed_transistor_lines_are_rejected(line: str, column: int) -> None
     assert (error.line, error.column) == (2, column)
 
 
+# Review R2: every positional area on a Q gets one message, at the number.
+@pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        ("Q1 c b e qm 2", 13),
+        ("Q1 c b e s qm 2", 15),
+        ("Q1 c b e qm 2 off", 13),
+        ("Q1 c b e 2N3904 2", 17),
+        ("Q1 c b e s tj qm 2 temp=30", 18),
+    ],
+)
+def test_a_positional_area_on_q_says_to_write_area_equals(line: str, column: int) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert error.reason == (
+        "`2` after the model is a positional area, and an ngspice Q writes its area as `area=2`"
+    )
+
+
 @pytest.mark.parametrize(
     ("line", "column", "word"),
     [
-        ("Q1 c b e s qm 2", 15, "2"),
-        ("Q1 c b e qm 2 off", 15, "off"),
+        ("Q1 c b e off", 10, "off"),
+        ("Q1 c b e 2 off", 12, "off"),
         ("M1 d g s 2 thermal", 12, "thermal"),
     ],
 )
