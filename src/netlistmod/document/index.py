@@ -307,6 +307,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
             )
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
+        # A new chain on purpose: a W line needs both its model reference above and this one.
         if isinstance(item, Cccs | Ccvs | CurrentSwitch):
             # The controlling source, in the element's own scope only (decision 0015 item 4).
             references.append(

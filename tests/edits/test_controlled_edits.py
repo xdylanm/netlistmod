@@ -8,7 +8,7 @@ import pytest
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from netlistmod import Edit, EditError, Netlist, TopologyViolation
+from netlistmod import Dialect, Edit, EditError, Netlist, TopologyViolation
 from tests.support.dialects import current_dialect
 
 _CIRCUIT = (
@@ -117,26 +117,29 @@ def test_a_changed_control_is_a_topology_violation(designator: str, field: int, 
         netlist.apply([Edit(span, text, f"rewire {designator}")])
 
 
-_EDITS = st.sampled_from(
-    [
-        lambda n: n.set_value("E1", "4"),
-        lambda n: n.set_formula("G1", "gm"),
-        lambda n: n.set_value("F1", "5"),
-        lambda n: n.set_value("H1", "2k"),
-        lambda n: n.set_model("S1", "s2"),
-        lambda n: n.set_switch_state("S1", "on"),
-        lambda n: n.set_switch_state("S1", None),
-        lambda n: n.set_switch_state("W1", "off"),
-        lambda n: n.set_switch_state("W1", None),
-    ]
-)
+_EDITS: list[Callable[[Netlist], Netlist]] = [
+    lambda n: n.set_value("E1", "4"),
+    lambda n: n.set_formula("G1", "gm"),
+    lambda n: n.set_value("F1", "5"),
+    lambda n: n.set_value("H1", "2k"),
+    lambda n: n.set_model("S1", "s2"),
+    lambda n: n.set_switch_state("S1", "on"),
+    lambda n: n.set_switch_state("S1", None),
+    lambda n: n.set_switch_state("W1", "off"),
+    lambda n: n.set_switch_state("W1", None),
+]
+# m= on F and G is ngspice's only (review R5); LTspice refuses it.
+_NGSPICE_EDITS: list[Callable[[Netlist], Netlist]] = [
+    lambda n: n.set_param("G1", "m", "2"),
+    lambda n: n.set_param("F1", "m", "3"),
+]
 
 
 @settings(max_examples=60, deadline=None)
-@given(st.lists(_EDITS, min_size=1, max_size=6))
-def test_no_sequence_of_edits_changes_the_signature(
-    steps: list[Callable[[Netlist], Netlist]],
-) -> None:
+@given(st.data())
+def test_no_sequence_of_edits_changes_the_signature(data: st.DataObject) -> None:
+    edits = _EDITS + (_NGSPICE_EDITS if current_dialect() is Dialect.NGSPICE else [])
+    steps = data.draw(st.lists(st.sampled_from(edits), min_size=1, max_size=6))
     netlist = _netlist()
     signature = netlist.signature()
     for step in steps:

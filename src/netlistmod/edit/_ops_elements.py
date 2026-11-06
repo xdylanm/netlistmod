@@ -53,8 +53,9 @@ def set_value(
     in_definition: bool = False,
     reason: str = "",
 ) -> list[Edit]:
-    """Replace the value of an R, C or L line, or add one after the nodes; or replace a
-    source's DC value (never adding one or a ``DC`` keyword)."""
+    """Replace the value of an R, C or L line, or add one after the nodes; replace a source's
+    DC value (never adding one or a ``DC`` keyword); or replace the gain of an E, F, G or H
+    line (decision 0015 item 10)."""
     element = _element(netlist, designator, scope, in_definition)
     reason = reason or f"set_value {designator}"
     if isinstance(element, _TWO_TERMINAL):
@@ -82,9 +83,10 @@ def set_param(
     scope: ScopePath = (),
     in_definition: bool = False,
 ) -> list[Edit]:
-    """Set or add an instance parameter of an R, C, L, D, Q, M, J or Z line, or of an LTspice V
-    or I line. ``area`` goes in the positional slot where the dialect writes one (decision 0014
-    item 5), unless the line already writes ``area=``."""
+    """Set or add an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an
+    ngspice F or G line (decision 0015 item 7), or a parameter of an LTspice V or I line.
+    ``area`` goes in the positional slot where the dialect writes one (decision 0014 item 5),
+    unless the line already writes ``area=``."""
     element = _element(netlist, designator, scope, in_definition)
     reason = f"set_param {designator} {name}"
     found_fold = netlist.scope(scope).fold
@@ -186,8 +188,9 @@ def set_model(
     in_definition: bool = False,
     allow_external: bool = False,
 ) -> list[Edit]:
-    """Replace the model name of an R, C, L, D, Q, M, J or Z line, or add one after the value of
-    an R, C or L line that has none (decision 0007 item 3; review round 1; decision 0014)."""
+    """Replace the model name of an R, C, L, D, Q, M, J, Z, S or W line, or add one after the
+    value of an R, C or L line that has none (decision 0007 item 3; review round 1; decisions
+    0014 and 0015: S takes an SW model and W a CSW model)."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS, Switch)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")

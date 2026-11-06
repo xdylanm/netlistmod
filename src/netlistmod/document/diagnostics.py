@@ -21,11 +21,13 @@ from netlistmod.model.nodes import (
     Component,
     CurrentSwitch,
     GlobalDirective,
+    Inductor,
     ModelStatement,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
     UnknownDirective,
+    Vcvs,
     VoltageSource,
     element_phrase,
 )
@@ -198,7 +200,8 @@ def _reference_findings(
                 "warning",
                 f"`{owner.designator}` is controlled by `{reference.name}`, "
                 f"{element_phrase(target)}, but the {_reference_for(owner, index.dialect)} "
-                f"names a voltage source; {_CONTROL_RULE[index.dialect]}",
+                f"names an independent voltage source (`V`); "
+                f"{_control_outcome(target, reference.name, index.dialect)}",
                 reference.span,
             )
         )
@@ -230,10 +233,17 @@ def _reference_for(owner: Component, dialect: Dialect) -> str:
     return f"ngspice manual §{_MANUAL_SECTION[type(owner)]}"
 
 
-_CONTROL_RULE: dict[Dialect, str] = {
-    Dialect.NGSPICE: "ngspice 47 also reads an E or H source here and stops on other elements",
-    Dialect.LTSPICE: "LTspice 26.1.1 also reads an E, H or L here and stops on other elements",
+_CONTROL_RUNS: dict[Dialect, tuple[type, ...]] = {
+    Dialect.NGSPICE: (Vcvs, Ccvs),
+    Dialect.LTSPICE: (Vcvs, Ccvs, Inductor),
 }
+
+
+def _control_outcome(target: Component, name: str, dialect: Dialect) -> str:
+    """What the dialect's solver does with this controlling source (review R2)."""
+    if isinstance(target, _CONTROL_RUNS[dialect]):
+        return f"{_SOLVER[dialect]} runs it, with the current through `{name}`"
+    return f"{_SOLVER[dialect]} stops on it"
 
 
 def _control_into_instance(index: Index, scope: Scope, reference: Reference) -> str | None:

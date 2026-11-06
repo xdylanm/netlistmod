@@ -1180,9 +1180,13 @@
    "column": 23,
    "error": "ParseError",
    "expected": [
+    "`'expression'`",
+    "`,` field separator",
     "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
     "end of line",
     "field separator",
+    "number",
     "trailing comment (`;`, `$` or `//`)"
    ],
    "line": 13
@@ -1191,9 +1195,13 @@
    "column": 23,
    "error": "ParseError",
    "expected": [
+    "`'expression'`",
+    "`,` field separator",
     "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
     "end of line",
     "field separator",
+    "number",
     "trailing comment (`;`, `$` or `//`)"
    ],
    "line": 13
@@ -1217,23 +1225,13 @@
   "rkm": {
    "column": 23,
    "error": "ParseError",
-   "expected": [
-    "`\\\\` continuation onto a line of statement text",
-    "end of line",
-    "field separator",
-    "trailing comment (`;`, `$` or `//`)"
-   ],
+   "expected": [],
    "line": 13
   },
   "standard": {
    "column": 23,
    "error": "ParseError",
-   "expected": [
-    "`\\\\` continuation onto a line of statement text",
-    "end of line",
-    "field separator",
-    "trailing comment (`;`, `$` or `//`)"
-   ],
+   "expected": [],
    "line": 13
   }
  },

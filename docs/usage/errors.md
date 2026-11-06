@@ -41,7 +41,7 @@ The text does not match the dialect's grammar. The library does not guess: it st
 
 ```
 
-`reason` adds a sentence where the library can say more. A line that ends before its fields do says so, and `expected` then leaves out separators and comments, which would not help. Text after `.end` is told that the netlist ends there. Some forms that a solver runs and the library refuses on purpose name the form to write instead, such as a positional area on an ngspice Q ([decision 0014](../decisions/0014-transistors.md) item 5).
+`reason` adds a sentence where the library can say more. A line that ends before its fields do says so, and `expected` then leaves out separators and comments, which would not help. Text after `.end` is told that the netlist ends there. Some forms that a solver runs and the library refuses on purpose name the form to write instead, such as a positional area on an ngspice Q ([decision 0014](../decisions/0014-transistors.md) item 5) or `gain=` on a dependent source ([decision 0015](../decisions/0015-controlled-sources.md) item 6).
 
 ```python
 >>> try:
@@ -49,6 +49,11 @@ The text does not match the dialect's grammar. The library does not guess: it st
 ... except ParseError as error:
 ...     print(error.column, error.reason)
 13 `2` after the model is a positional area, and an ngspice Q writes its area as `area=2`
+>>> try:
+...     parse(SourceText("title\nE1 out 0 in 0 gain=2\n.end\n"), Dialect.NGSPICE)
+... except ParseError as error:
+...     print(error.column, error.reason)
+15 `gain=` is not a form of the ngspice manual §4.2: write the gain positionally, as the value after the nodes (`E1 out 0 in 0 2`) or after the controlling source (`F1 out 0 Vs 2`)
 >>> try:
 ...     parse(SourceText("title\nR1 a 0\n.end\n"), Dialect.NGSPICE)
 ... except ParseError as error:
@@ -356,7 +361,7 @@ LTspice only. A node named `<instance>:<node>` connects to that node inside the 
 
 ### `CONTROL_SOURCE_MISMATCH`
 
-An F, H or W line names a controlling source that exists but is not a voltage source. The ngspice manual and the LTspice reference name a voltage source; both solvers also read an E or H there (LTspice an L too) and stop on anything else ([decision 0015](../decisions/0015-controlled-sources.md) item 5). A warning.
+An F, H or W line names a controlling source that exists but is not a voltage source. The ngspice manual and the LTspice reference name a voltage source; both solvers also read an E or H there (LTspice an L too) and stop on anything else, and the message says which applies to the source named ([decision 0015](../decisions/0015-controlled-sources.md) item 5). A warning.
 
 ```python
 >>> report("t\nR1 a 0 1k\nF1 0 b R1 2\nR2 b 0 1k\n.end\n")

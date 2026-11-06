@@ -96,6 +96,23 @@ _PROBES = {
     "w-off": (_CW + "W1 out in Vs cm off", True, "CurrentSwitch out,in Vs cm"),
     "w-none": (_CW + "W1 out in Vs cm", True, "CurrentSwitch out,in Vs cm"),
     "w-ctrl-r": (_CW + "W1 out in R4 cm", False, "CurrentSwitch out,in R4 cm"),
+    # Review R3: the remaining rows of section 3.1.
+    "s-csw-model": (_CW + "S1 out in vx 0 cm", False, "VoltageSwitch out,in,vx,0 - cm"),
+    "w-sw-model": (_SW + "W1 out in Vs sm", False, "CurrentSwitch out,in Vs sm"),
+    "f-into-instance-dot": (
+        ".subckt sub a\nVq a b 0\nRq b 0 1k\n.ends\nX1 vx sub\nF1 0 out X1.Vq 2",
+        False,
+        "Cccs 0,out X1.Vq 2",
+    ),
+}
+
+# The diagnostic a probe's reading carries, where it has one: (code, severity, at).
+_DIAGNOSED = {
+    "s-csw-model": ("MODEL_TYPE_MISMATCH", "warning", "cm"),
+    "w-sw-model": ("MODEL_TYPE_MISMATCH", "warning", "sm"),
+    "f-into-instance-dot": ("UNRESOLVED_ELEMENT", "warning", "X1.Vq"),
+    "f-ctrl-r": ("CONTROL_SOURCE_MISMATCH", "warning", "R4"),
+    "f-ctrl-missing": ("UNRESOLVED_ELEMENT", "warning", "Vnope"),
 }
 
 
@@ -105,6 +122,10 @@ def test_controlled_source_probes(solver: Solver, tmp_path: Path, case: str) -> 
     text = _BASE.format(line=line)
     assert run(solver, tmp_path, text).ok is ngspice_runs
     assert _reading(text) == reading
+    if case in _DIAGNOSED:
+        netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
+        found = [(d.code.value, d.severity, netlist.slice(d.span)) for d in netlist.diagnostics]
+        assert found == [_DIAGNOSED[case]]
 
 
 def _out(solver: Solver, folder: Path, line: str) -> float:

@@ -315,24 +315,38 @@ ctl_form: SEP CTL_FORM_KW rest NL
         | (SEP | TRAILING_COMMENT) ctl_form
 OUT_FORM_KW.3: /value[ \t]*(?==)|poly[ \t]*(?=\()/i
 CTL_FORM_KW.3: /(?:table|laplace)[ \t]*(?==)/i
+// Gain forms recognised only so that each gets its own message (decision 0015 item 6): gain=, which
+// LTspice runs; a second value; and a word in the gain's place, which LTspice writes for a symbol
+// whose value was never set.
+gain_keyword: SEP GAIN_KW rest NL
+            | (SEP | TRAILING_COMMENT) gain_keyword
+second_value: SEP (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA) rest NL
+            | (SEP | TRAILING_COMMENT) second_value
+unset_gain: SEP WORD rest NL
+          | (SEP | TRAILING_COMMENT) unset_gain
+GAIN_KW.3: /gain[ \t]*(?==)/i
 
 // spec: LT-VCV-001
 vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
+    | E_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | E_NAME node node nonlinear_form
 %override E_NAME.4: /[Ee]/ _LT_CHAR*
 
 // spec: LT-VCC-001
 vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
+    | G_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | G_NAME node node nonlinear_form
 %override G_NAME.4: /[Gg]/ _LT_CHAR*
 
 // spec: LT-CCC-001
 cccs: F_NAME node node ctl_ref value (NL | eol)
+    | F_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | F_NAME node node nonlinear_form
 %override F_NAME.4: /[Ff]/ _LT_CHAR*
 
 // spec: LT-CCV-001
 ccvs: H_NAME node node ctl_ref value (NL | eol)
+    | H_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | H_NAME node node nonlinear_form
 %override H_NAME.4: /[Hh]/ _LT_CHAR*
 

@@ -101,6 +101,18 @@ _PROBES = {
     "w-off": (_CW + "W1 out in Vs cm off", True, "CurrentSwitch out,in Vs cm"),
     "w-none": (_CW + "W1 out in Vs cm", True, "CurrentSwitch out,in Vs cm"),
     "w-ctrl-r": (_CW + "W1 out in R4 cm", False, "CurrentSwitch out,in R4 cm"),
+    # Review R3: the remaining rows of section 3.1.
+    "s-csw-model": (_CW + "S1 out in vx 0 cm", False, "VoltageSwitch out,in,vx,0 - cm"),
+    "w-sw-model": (_SW + "W1 out in Vs sm", False, "CurrentSwitch out,in Vs sm"),
+}
+
+# The diagnostic a probe's reading carries, where it has one: (code, severity, at).
+_DIAGNOSED = {
+    "s-csw-model": ("MODEL_TYPE_MISMATCH", "warning", "cm"),
+    "w-sw-model": ("MODEL_TYPE_MISMATCH", "warning", "sm"),
+    "f-into-instance": ("UNRESOLVED_ELEMENT", "info", "X1:Vq"),
+    "f-ctrl-l": ("CONTROL_SOURCE_MISMATCH", "warning", "L9"),
+    "f-ctrl-missing": ("UNRESOLVED_ELEMENT", "warning", "Vnope"),
 }
 
 
@@ -110,6 +122,14 @@ def test_controlled_source_probes(solver: Solver, tmp_path: Path, case: str) -> 
     text = _BASE.format(line=line)
     assert run(solver, tmp_path, text).ok is ltspice_runs
     assert _reading(text) == reading
+    if case in _DIAGNOSED:
+        netlist = Netlist.from_text(text, dialect=Dialect.LTSPICE)
+        found = [
+            (d.code.value, d.severity, netlist.slice(d.span))
+            for d in netlist.diagnostics
+            if d.code.value != "UNTYPED_DIRECTIVE_PRESERVED"
+        ]
+        assert found == [_DIAGNOSED[case]]
 
 
 def _out(solver: Solver, folder: Path, line: str) -> float:

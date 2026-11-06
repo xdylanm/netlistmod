@@ -1,6 +1,6 @@
 # M14 task list — Linear dependent sources and switches (E, F, G, H, S, W)
 
-> **Status:** READY FOR REVIEW — the maintainer accepted the decisions in section 2 (2026-11-06); T1 to T11 done, results in section 5
+> **Status:** ACTIVE — review round 1 (section 6) requires changes R1 to R5 before M14 can close. T1 to T11 done (results in section 5); section 2 records the maintainer's decisions (2026-11-06).
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M14). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §7.3, §7.7, §10).
 
 ## 1. Scope
@@ -220,3 +220,63 @@ Each changes one thing from one of your files, named in a comment on its second 
 4. **LTspice's `E1 out,0 vx 0 2` runs and is refused,** as a comma between nodes is on every LTspice letter (decision 0009); `discrepancies.md` records it.
 5. **The `ON_KW` keyword is `on` alone.** It is offered only in the switch-state position, so a node named `on` elsewhere is unaffected.
 6. **`set_switch_state(…, None)` on a line with no state** returns no edit, so removing is idempotent, as the property test checks.
+
+## 6. Review round 1 (2026-11-06, `c74c941`)
+
+### 6.1 Outcome
+
+M14 is accepted once the changes below are made. The design holds up on review:
+- **Checks:** pytest 6,882 passed, 2 skipped, coverage 98.48%, in 16 min 50 s, with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`). ruff, ruff format and `mypy src` are clean. CI on #11 is green on all five jobs.
+- **Grammar:** each letter spells out its own line on each overlay, and the nonlinear keywords are recognised only where the dialect writes them. The `=`, `(` and `{` lookaheads keep a node named `value`, `table` or `on` a node (`E1 out 0 value 0 2` loads with four nodes).
+- **Topology:** control nodes are ordinary `nodes`, so the signature and the net queries needed no new code. The `control` entry is added beside the element's entry, and the signature snapshot is unchanged.
+- **Edits:** the goldens cover each letter on both dialects, and the negative test covers every control node and controlling source.
+- **Probes by hand** (ngspice and LTspice dialects):
+  - `gain=2`, a missing gain, two values, LTspice's unset `E` and `m=` on E and H are refused at the right column; `m=` on an ngspice G and F loads.
+  - `F1 … R1 2`, `F1 … E1 2` and `F1 … X1 2` give `CONTROL_SOURCE_MISMATCH`; `X1:Vq` is info only when `X1` is an instance of the scope; an F in a subcircuit does not see a top-level `Vs`, even with an `.include` at the top level.
+  - S with a CSW model and W with an SW model give `MODEL_TYPE_MISMATCH`, and `set_model` refuses them.
+  - `set_switch_state` replaces, adds and removes the state, keeps a trailing comment, and replaces LTspice's `off=1` whole. A raw edit of a control node, a controlling source or the case of its name (`Vs` → `VS`) is a `TopologyViolation`.
+
+### 6.2 Required changes
+
+[ ] **R1 — One clear message for each refused gain form that a solver runs.** Decision 6 refuses them, and today each gets only the generic list of expected tokens:
+
+| Line | Solvers | Message today |
+|---|---|---|
+| `E1 out 0 vx 0 gain=2` | both run it | "Expected: `'expression'`, `,` field separator, …" (column 15) |
+| `E1 out 0 vx 0 2 3` | ngspice runs it | "Expected: `\` continuation …, end of line, …" (column 17) |
+| `E1 out 0 vx 0 E` | both stop (LTspice's export of an unset gain) | "Expected: `'expression'`, `{expression}`, …" (column 15) |
+
+- **Change:** `gain=` should say that the gain is written positionally (`E1 … 2`), citing decision 0015 item 6. A second value should say that a dependent source takes one gain. On LTspice, a word in the gain's place should say that the gain is not set, as LTspice writes it for a symbol whose value was never set. Keep the column at the offending token, on all four letters (E, F, G, H).
+- **Tests:** assert the wording in `test_malformed_lines_are_rejected` (or a new test beside it) in both `test_controlled_sources.py` files. Show the `gain=` message in `docs/usage/errors.md`.
+- The other refusals (`m=` on E or H, three nodes, no gain) keep their messages.
+
+[ ] **R2 — Make `CONTROL_SOURCE_MISMATCH` name the V and the outcome for this target.**
+- Today: "`F1` is controlled by `E1`, a voltage-controlled voltage source, but the ngspice manual §4.2.3 names a voltage source; ngspice 47 also reads an E or H source here and stops on other elements".
+- A VCVS *is* a voltage source in plain words, so the first half reads as a contradiction. The second half lists both outcomes and leaves the reader to work out which applies.
+- **Change:** say "an independent voltage source (`V`)", and state the solver's outcome for this target only: for an E or H (and on LTspice an L) that the solver runs it; otherwise that the solver stops on it. Keep the code, the severity and the cited section.
+- **Tests:** `test_a_mismatch_says_what_each_solver_does` covers one target that runs and one that stops, on both dialects. Update the example in `docs/usage/errors.md` and the row in `document-layer.md` if the wording there changes.
+
+[ ] **R3 — Pin the remaining rows of section 3.1 in the probe tests.**
+- "S with a CSW model, W with an SW model" (both solvers stop) has no solver probe, although decision 8 and the `MODEL_TYPE_MISMATCH` behaviour rest on it.
+- "F controlled by `X1.Vq`" on ngspice (stops) has no probe; LTspice's `X1:Vq` does (`f-into-instance`).
+- **Change:** add `s-csw-model` and `w-sw-model` to both `test_*_controlled_probes.py` files, with the library's reading (loads, with `MODEL_TYPE_MISMATCH`), and `f-into-instance-dot` to the ngspice file (loads, with `UNRESOLVED_ELEMENT` as a warning). If the reading helper cannot show the diagnostic, assert it in the test.
+
+[ ] **R4 — Bring the public edit docstrings up to date.**
+- In `edit/api.py`, `set_value` names only R, C, L, V and I; `set_param` names R, C, L and D and the LTspice V and I; `set_model` names R, C, L and D, and its type list stops at D. The `set_param` and `set_model` docstrings were already behind since M13 (Q, M, J, Z).
+- In `edit/_ops_elements.py`, the `set_value`, `set_param` and `set_model` docstrings do not name the M14 letters.
+- **Change:** make each docstring name the letters that `docs/design/edit-layer.md` lists for the operation (the gain of E, F, G and H; `m=` on an ngspice F or G; S → `SW`, W → `CSW`). No code change.
+
+[ ] **R5 — Cover `set_param` in the signature property test.**
+- `_EDITS` in `tests/edits/test_controlled_edits.py` samples every operation of decision 10 except `set_param` with `m=`.
+- **Change:** add `set_param("G1", "m", …)` and `set_param("F1", "m", …)`, sampled on ngspice only (LTspice refuses them, as `test_ltspice_takes_no_m_on_f_or_g` shows).
+
+### 6.3 Noted, no change required
+
+- In `document/index.py` `_collect`, the new `if isinstance(item, Cccs | Ccvs | CurrentSwitch)` splits the old `if`/`elif` chain in two. It is correct: a W needs both its model and its control reference, and K, `.dc`, `.save`, `.ic`, `.step` and `.model … ako` still reach their branches. A one-line comment saying the split is deliberate would help the next reader.
+- In `model/__init__.py`, the eight new names sit after `"Transistor"` in `__all__`, out of order. Cosmetic, as for M13.
+- Section 2 decision 14 says "with the import contract updated". The contract is per layer, so no change was needed; T12 can reword it when 0015 is accepted.
+- A change in the case of a controlling source (`Vs` → `VS`) is a `TopologyViolation`. This follows §7.7's exact-text rule, as for nodes.
+
+### 6.4 Exit for this round
+
+Make R1 to R5. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and append a short report as 6.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).

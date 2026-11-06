@@ -131,7 +131,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
-| `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message says what each solver does with it (decision 0015 item 5) |
+| `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
 the model name) was added by M6 ([edit-layer.md](./edit-layer.md) §6). It was **deferred** to
