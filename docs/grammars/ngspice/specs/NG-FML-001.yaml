@@ -44,6 +44,9 @@ grammar:
 - BACKSLASH
 - POWER
 - BANG
+- CONT
+- LBRACE
+- RBRACE
 tests:
 - tests/grammar/ngspice/test_formula.py::test_bare_identifiers_are_parameter_names
 - tests/grammar/ngspice/test_formula.py::test_calls_and_accessors_are_not_parameters

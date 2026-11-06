@@ -2,7 +2,7 @@
   "@": {"status": "planned", "phase": 2, "milestone": "M17"},
   "&": {"status": "planned", "phase": 2, "milestone": "M17"},
   "A": {"status": "planned", "phase": 2, "milestone": "M17"},
-  "B": {"status": "planned", "phase": 2, "milestone": "M15"},
+  "B": {"status": "supported", "phase": 2, "milestone": "M15"},
   "C": {"status": "supported", "phase": 1, "milestone": "M8"},
   "D": {"status": "supported", "phase": 1, "milestone": "M8"},
   "E": {"status": "supported", "phase": 2, "milestone": "M14, M15"},

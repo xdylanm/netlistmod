@@ -36,8 +36,10 @@ MANUAL_REF = re.compile(
     r'\[([a-z0-9][a-z0-9-]*)\] (?:§\d+(?:\.\d+)*|[A-Z][A-Z0-9-]*\.md) "([^"\r\n]+)"'
 )
 REFERENCE_KEY = re.compile(r"^## \[([a-z0-9][a-z0-9-]*)\]\s*$", re.MULTILINE)
-# Section numbers cited before F1 that do not exist in the manual edition in references.md.
-STALE_CITATION = re.compile(r"§§|manual, §|§5\.1\.1|§5\.2\.[1-4]")
+# The citation forms F1 replaced. F1 also rejected §5.1.1 and §5.2.1 to §5.2.4, which phase 1
+# cited for sections of chapter 2; in the edition in references.md they are the B source and the
+# E source forms, which M15 cites, so they are no longer rejected.
+STALE_CITATION = re.compile(r"§§|manual, §")
 CITATION_SCAN = [ROOT / "docs" / "decisions", ROOT / "docs" / "grammars", ROOT / "src"]
 
 
@@ -640,7 +642,7 @@ def test_manual_reference_check_requires_references_file(tmp_path: Path) -> None
 
 @pytest.mark.parametrize(
     "text",
-    ["ngspice manual §5.2.4", "§§2.4.3 and 2.4.4", "ngspice manual, §2.4.4", "§5.1.1"],
+    ["§§2.4.3 and 2.4.4", "ngspice manual, §2.4.4"],
 )
 def test_stale_citation_check_rejects_replaced_forms(tmp_path: Path, text: str) -> None:
     (tmp_path / "note.md").write_text(f"ok line\nSee {text}.\n", encoding="utf-8")

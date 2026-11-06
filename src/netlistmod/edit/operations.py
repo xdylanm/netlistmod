@@ -10,6 +10,7 @@ import them from."""
 
 from __future__ import annotations
 
+from netlistmod.edit._ops_behavioral import set_expression
 from netlistmod.edit._ops_common import (
     DirectiveText,
     UpsertTarget,
@@ -61,6 +62,7 @@ __all__ = [
     "set_coupling",
     "set_dc",
     "set_directive",
+    "set_expression",
     "set_instance_param",
     "set_model",
     "set_model_param",

@@ -77,7 +77,8 @@
       "note": "Variant: and(2), an XSPICE form (manual 5.2.7).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_formula.cir": {
       "sha256": "91ee418f308ee7eaa3b54772e6406db229fa7fbf21df441f4940956588e0481a",
@@ -88,35 +89,40 @@
       "note": "Variant: FREQ, an XSPICE form (manual 5.2.6).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_poly.cir": {
       "sha256": "3d0a6ee30a18c443b66843618cb145f70753f781a140887802f1182dc1832468",
       "note": "Variant: POLY(1) (manual 5.5.1).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_poly2.cir": {
       "sha256": "9ba6751e1008c8baabf7e27ffbee8f7ca6f96977e5214588d0a6a6a13012f43d",
       "note": "Variant: POLY(2), one node pair twice (manual 5.5.1).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_table.cir": {
       "sha256": "ecfe8f97074e04db458b529f70ba34cc4db24003e9459bc6e254f793b7405223",
       "note": "Variant: TABLE {expression} = pairs (manual 5.2.3).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_table_nodes.cir": {
       "sha256": "b877894ee2de763a7aff86ba3962f2dfcb3bd185e91127074077ed82074e93e0",
       "note": "Variant: the four-node TABLE form (manual 5.2.3).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_esource_value.cir": {
       "sha256": "9d56d64b1d6dbeaa531623b03fd2c61fd6d9a4721b496664c5c1ee75effeced3",
@@ -143,7 +149,8 @@
       "note": "Variant: POLY(1) (manual 5.5.2).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_fsource_subckt.cir": {
       "sha256": "d625a9e43edf4bb2e42a3e46dd331d8c7e23a97691d026f5292382d8492a9b25",
@@ -166,14 +173,16 @@
       "note": "Variant: POLY(1) (manual 5.5.1).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_gsource_table.cir": {
       "sha256": "a7da021385baa8d22cae45b918a9bb90108d42883b28753206d2da75bee4fe1f",
       "note": "Variant: TABLE (manual 5.3.3).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_gsource_value.cir": {
       "sha256": "35d3913e6d01270eeaa3983639c5799219f90db9daf28619f6d85788e35f3529",
@@ -188,7 +197,8 @@
       "note": "Variant: POLY(1) (manual 5.5.2).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "test_hsource_sense_later.cir": {
       "sha256": "e0f4d27f8ddc7f0dbc74626ecde11e79df3202b9f8936eb64bc1d305c1b17b0d",

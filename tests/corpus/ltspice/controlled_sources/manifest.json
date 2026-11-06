@@ -27,7 +27,8 @@
       "note": "Variant: B with laplace=, window= and nfft=.",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_bsource_power.cir": {
       "sha256": "b2608b9db57291f4b8a7b62632f8a2bee250184649bbca2b7efc1bba90de38f0",
@@ -70,28 +71,32 @@
       "note": "Variant: Laplace=.",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_esource_poly.cir": {
       "sha256": "357c8cc78f026375c887daf9ead8c24564363920dbe270f0359840e7590059d0",
       "note": "Variant: POLY(1).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_esource_poly_paren.cir": {
       "sha256": "e4fc6d4c95b9374dccd902e48679ce6e1c62fe86a620b6c0270b3103b368fcf0",
       "note": "Variant: POLY(1) with the control pair in parentheses.",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_esource_table.cir": {
       "sha256": "f5ebefcb6fa8488ed0003982f1c4facebe3d8fc4fea6ecc7d7b9d15e59a6bdef",
       "note": "Variant: table=.",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_esource_value.cir": {
       "sha256": "4a8ee88484f3f9fb94385f8897dd6c3dab4b72e9045e4bdb00db5f2d09bc7cb9",
@@ -146,7 +151,8 @@
       "note": "Variant: POLY(1).",
       "solver": {
         "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      }
+      },
+      "pending": "M15b"
     },
     "lt_test_inductor_flux.cir": {
       "sha256": "b909dfeba76b20dd82f2ead9734eaba6b3a33be82e09f7a4468a6accebd2f960",

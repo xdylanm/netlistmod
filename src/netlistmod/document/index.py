@@ -29,16 +29,19 @@ from typing import Literal, TypeVar
 
 from netlistmod.dialects import Dialect
 from netlistmod.document.lines import Line, Lines, ScopePath
-from netlistmod.document.names import fold
+from netlistmod.document.names import fold, is_automatic_global, is_ground, net_name
 from netlistmod.grammar.formula import parse_formula
 from netlistmod.model.nodes import (
+    BehavioralSource,
     Capacitor,
     Cccs,
     Ccvs,
     Component,
+    ControlledSource,
     CurrentSwitch,
     DcDirective,
     Diode,
+    GlobalDirective,
     IcDirective,
     Inductor,
     ModelStatement,
@@ -60,7 +63,7 @@ from netlistmod.source import SourceText, Span
 
 _T = TypeVar("_T")
 
-ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element"]
+ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node"]
 """What a reference names: a ``.model``, a ``.subckt``, a parameter, a subcircuit default
 (an ``X`` line's ``name=value``) or an element (``K`` inductor, ``.dc`` source,
 ``.save i(src)``)."""
@@ -308,7 +311,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
         # A new chain on purpose: a W line needs both its model reference above and this one.
-        if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+        if isinstance(item, Cccs | Ccvs | CurrentSwitch) and item.control is not None:
             # The controlling source, in the element's own scope only (decision 0015 item 4).
             references.append(
                 _element_reference(scope, item, item.control.designator, item.control.span)
@@ -417,9 +420,21 @@ def _formula_references(
         tokens = parse_formula(formula.text, scope.dialect)
         # A bare LTspice expression has no delimiter in front of its text.
         text_start = formula.span.start + (1 if formula.delimiter else 0)
+        context = _context_words(owner, formula, scope.dialect)
         for token in tokens or ():
+            if token.kind in ("node", "source"):
+                # What the expression reads (decision 0016 item 6): a net, or an element.
+                start = text_start + token.start
+                read = Span(start, start + len(token.text))
+                if token.kind == "source":
+                    references.append(_element_reference(scope, owner, token.text, read))
+                else:
+                    references.append(_node_reference(scope, owner, token.text, read))
+                continue
             if token.kind not in ("parameter", "reserved"):
                 continue
+            if token.text.lower() in context:
+                continue  # the simulation's own variable, which no definition masks
             start = text_start + token.start
             span = Span(start, start + len(token.text))
             found = _lookup(scope, "params", token.text)
@@ -442,6 +457,51 @@ def _formula_references(
                 assert isinstance(first, ParamAssignment)
                 if first.name_span.start > span.start:
                     late.append(reference)
+
+
+def _node_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:
+    """A net an expression reads: resolved when ground, global, a port or an element's node in
+    the scope; the target is the first node or port that names it."""
+    return Reference("node", name, span, scope.path, owner, _net_node(scope, name))
+
+
+def _net_node(scope: Scope, name: str) -> object | None:
+    dialect = scope.dialect
+    if is_ground(name, dialect) or is_automatic_global(name, dialect):
+        return name
+    key = net_name(name, dialect)
+    nodes = [*(scope.definition.ports if scope.definition is not None else ())]
+    for line in scope.lines:
+        if isinstance(line.item, Component):
+            nodes.extend(line.item.nodes)
+    root = scope
+    while root.parent is not None:
+        root = root.parent
+    for line in root.lines:
+        if isinstance(line.item, GlobalDirective):
+            nodes.extend(line.item.nodes)
+    return next((node for node in nodes if net_name(node.name, dialect) == key), None)
+
+
+def _context_words(owner: object, formula: Formula, dialect: Dialect) -> frozenset[str]:
+    """The words an LTspice expression gives a meaning of its own (decision 0016 item 5).
+
+    ``time`` in a B expression or a ``value=`` form, and ``x`` (the device's voltage or current)
+    in C's ``Q=`` and L's ``Flux=``, read the simulation; a ``.param`` of the same name does not
+    mask them there (m8-tasks 13.2). ngspice's ``time``, ``temper`` and ``hertz`` are reserved
+    words everywhere already.
+    """
+    if dialect is not Dialect.LTSPICE:
+        return frozenset()
+    if formula is getattr(owner, "charge", None) or formula is getattr(owner, "flux", None):
+        return _DEVICE_WORDS
+    if isinstance(owner, BehavioralSource | ControlledSource) and formula is owner.expression:
+        return _EXPRESSION_WORDS
+    return frozenset()
+
+
+_EXPRESSION_WORDS = frozenset({"time"})
+_DEVICE_WORDS = frozenset({"time", "x"})
 
 
 def walk_nodes(node: object, kind: type[_T], *, bodies: bool) -> Iterator[_T]:

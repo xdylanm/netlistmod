@@ -11,7 +11,7 @@
 %import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
 %import .core (diode, subckt_instance, x_node, x_last, x_name, x_param, eol, node, value, param)
 %import .core (r_value, c_value, model, flag)
-%import .core (inductor_ref, dc_spec, dc_after, dc_keyword, ac_spec, charge)
+%import .core (inductor_ref, dc_spec, dc_after, dc_keyword, ac_spec, c_charge)
 %import .core (_s0, _sd, _sam, _sa, _sdam, _sda, _sf, _sfd, _sfa, _sfam, _sfdam, _sfda, _line_end)
 %import .core (_source_fn, stimulus, pwl_stimulus, fn_param, fn_list, fn_first, fn_arg, FN_PARAM_KW)
 %import .core (SEP, CSEP, EQ, WORD, NUMBER, _MICRO)
@@ -20,6 +20,7 @@
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
 %import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
 %import .core (ctl_ref, sw_state, ON_KW, E_NAME, G_NAME, F_NAME, H_NAME, S_NAME, W_NAME)
+%import .core (B_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
@@ -282,12 +283,13 @@ port_param: (SEP | CSEP | BS_CONT) PORT_KW (EQ | SEP) (NUMBER | BRACE_FORMULA | 
           | (SEP | TRAILING_COMMENT | BS_CONT) port_param
 PORT_KW.2: /portnum|z0/i
 
-// Forms recognised only to be rejected: the charge form of a behavioral capacitor
-// (UnsupportedConstruct), and the HSPICE "params:" keyword on a subcircuit call or definition
-// (ParseError). Their arguments are statement text up to the line end.
+// spec: NG-CAP-001
+%extend c_charge: (CSEP | BS_CONT) Q_KW EQ
+                | BS_CONT c_charge
+
+// A form recognised only to be rejected: the HSPICE "params:" keyword on a subcircuit call or
+// definition (ParseError). Its arguments are statement text up to the line end.
 // spec: NG-UNS-001
-%extend charge: (CSEP | BS_CONT) Q_KW EQ rest NL
-              | BS_CONT charge
 params_keyword: (SEP | CSEP | BS_CONT) PARAMS_KW rest NL
               | (SEP | TRAILING_COMMENT | BS_CONT) params_keyword
 PARAMS_KW.2: "params:"i
@@ -369,9 +371,9 @@ mesfet: Z_NAME node node node t_name t_area? _ng_ttail
 %override Z_NAME.4: /[Zz]/ _NG_UNIT*
 
 // Linear dependent sources and switches (§4.2, §3.3.15; decision 0015). The gain is one value;
-// F and G take m= (§4.2.1, §4.2.3), E and H nothing. The nonlinear forms of §5 (vol=, cur=,
-// VALUE, TABLE, POLY) are recognised after the output nodes only to be reported as unsupported
-// (M15); their text runs to the line end.
+// F and G take m= (§4.2.1, §4.2.3), E and H nothing. The nonlinear forms of §5 that M15b adds
+// (TABLE, POLY, FREQ, AND/OR/NAND/NOR) are recognised after the output nodes only to be reported
+// as unsupported; their text runs to the line end.
 // spec: NG-CTL-001
 %extend body_line: vcvs
                  | vccs
@@ -390,7 +392,7 @@ nonlinear_form: (SEP | CSEP | BS_CONT) (VC_FORM_KW | CC_FORM_KW) rest NL
               | (SEP | TRAILING_COMMENT | BS_CONT) nonlinear_form
 cc_form: (SEP | CSEP | BS_CONT) CC_FORM_KW rest NL
        | (SEP | TRAILING_COMMENT | BS_CONT) cc_form
-VC_FORM_KW.3: /(?:vol|cur|value)[ \t]*(?==)|table[ \t]*(?=[{'])/i
+VC_FORM_KW.3: /table[ \t]*(?=[{'=(])|freq[ \t]*(?=[{'])|(?:and|or|nand|nor)(?=\()/i
 CC_FORM_KW.3: /poly[ \t]*(?=\()/i
 // Gain forms that ngspice runs and the library refuses, recognised only so that each gets its own
 // message (decision 0015 item 6): gain= in the gain's place, and a second value after the gain.
@@ -400,10 +402,29 @@ second_value: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA) re
             | (SEP | TRAILING_COMMENT | BS_CONT) second_value
 GAIN_KW.3: /gain[ \t]*(?==)/i
 
+// spec: NG-NLS-001
+// The expression forms (decision 0016 item 3): E vol= and G cur= (quotes or braces, §5.2.1, §5.3.1),
+// and value on both, whose = is optional (§5.2.2, §5.3.2). TABLE, POLY, FREQ and AND/OR/NAND/NOR
+// stay recognised only to be reported as unsupported until M15b, as is E's four-node TABLE.
+e_form: (SEP | CSEP | BS_CONT) E_FORM_KW EQ?
+      | (SEP | TRAILING_COMMENT | BS_CONT) e_form
+g_form: (SEP | CSEP | BS_CONT) G_FORM_KW EQ?
+      | (SEP | TRAILING_COMMENT | BS_CONT) g_form
+table_form: (SEP | CSEP | BS_CONT) TABLE4_KW rest NL
+          | (SEP | TRAILING_COMMENT | BS_CONT) table_form
+E_FORM_KW.3: /vol(?=[ \t]*=)|value[ \t]*(?=[={'])/i
+G_FORM_KW.3: /cur(?=[ \t]*=)|value[ \t]*(?=[={'])/i
+TABLE4_KW.3: /table[ \t]*(?==)/i
+// A bare expression there stops ngspice; recognised only so that it gets its own message.
+bare_expression: B_PIECE rest NL
+
 // spec: NG-VCV-001
 vcvs: E_NAME node node node node value (NL | eol)
     | E_NAME node node node node value second_value
     | E_NAME node node node node gain_keyword
+    | E_NAME node node node node table_form
+    | E_NAME node node e_form (BRACE_FORMULA | QUOTE_FORMULA) (NL | eol)
+    | E_NAME node node e_form bare_expression
     | E_NAME node node nonlinear_form
 %override E_NAME.4: /[Ee]/ _NG_UNIT*
 
@@ -411,6 +432,9 @@ vcvs: E_NAME node node node node value (NL | eol)
 vccs: G_NAME node node node node value ctl_m? (NL | eol)
     | G_NAME node node node node value second_value
     | G_NAME node node node node gain_keyword
+    | G_NAME node node node node table_form
+    | G_NAME node node g_form (BRACE_FORMULA | QUOTE_FORMULA) ctl_m? (NL | eol)
+    | G_NAME node node g_form bare_expression
     | G_NAME node node nonlinear_form
 %override G_NAME.4: /[Gg]/ _NG_UNIT*
 
@@ -436,6 +460,35 @@ vswitch: S_NAME node node node node model sw_state? (NL | eol)
 // spec: NG-SWC-001
 cswitch: W_NAME node node ctl_ref model sw_state? (NL | eol)
 %override W_NAME.4: /[Ww]/ _NG_UNIT*
+
+// B: v= or i=, then an expression, then tc1=, tc2=, temp= and dtemp= (§5.1.1; decision 0016
+// item 2). A bare expression may hold blanks and + continuations: each physical line's part is
+// one B_PIECE, which stops before a trailing parameter (or a second quantity, so that it is
+// refused), a comment or the line end, and gives way to a brace or quoted formula that is the
+// whole field. r= is LTspice's and stops ngspice.
+// spec: NG-BEH-001
+%extend body_line: behavioral
+behavioral: B_NAME node node b_quantity (BRACE_FORMULA | QUOTE_FORMULA) _b_tail
+          | B_NAME node node b_quantity B_PIECE _b_more
+          | B_NAME node node b_lt_quantity
+b_quantity: (SEP | CSEP | BS_CONT) B_QUANTITY_KW EQ
+          | (SEP | TRAILING_COMMENT | BS_CONT) b_quantity
+_b_more: _b_tail
+       | SEP B_PIECE _b_more
+_b_tail: b_param* ((NL | eol) | b_second_quantity)
+// Forms that stop ngspice, recognised only so that each gets its own message: a second quantity,
+// and LTspice's r= and p=.
+b_second_quantity: (SEP | CSEP | BS_CONT) B_QUANTITY_KW rest NL
+                 | (SEP | TRAILING_COMMENT | BS_CONT) b_second_quantity
+b_lt_quantity: (SEP | CSEP | BS_CONT) B_LT_QUANTITY_KW rest NL
+             | (SEP | TRAILING_COMMENT | BS_CONT) b_lt_quantity
+B_LT_QUANTITY_KW.3: /[rp](?=[ \t]*=)/i
+b_param: (SEP | CSEP | BS_CONT) B_PARAM_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | BS_CONT) b_param
+B_QUANTITY_KW.3: /[vi](?=[ \t]*=)/i
+B_PARAM_KW.3: /(?:tc1|tc2|temp|dtemp)(?=[ \t]*=)/i
+B_PIECE.4: /(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?!(?:\{[^{}\r\n]*\}|'[^'\r\n]*')[ \t]*(?:\r?\n|$|[;$]|\/\/|[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)))(?:(?:[^ \t\r\n;$'\"\/\\]|\/(?!\/)|\\(?!\\\r?\n))|[ \t]+(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?=(?:[^ \t\r\n;$'\"\/\\]|\/(?!\/)|\\(?!\\\r?\n))))+/i
+%override B_NAME.4: /[Bb]/ _NG_UNIT*
 
 // spec: NG-MOD-001
 %extend model_paren: BS_CONT model_paren

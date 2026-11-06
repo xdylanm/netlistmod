@@ -8,9 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
-grammar: []
-core_rules:
-- charge
+grammar:
+- b_laplace
+- B_LAPLACE_KW
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_ngspice_source_functions_are_not_ltspice_syntax
 - tests/grammar/ltspice/test_ltspice_elements.py::test_phase_2_letters_are_unsupported
@@ -18,4 +18,5 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_ngspice_source_functions_stop_ltspice
 - tests/solver/test_ltspice_validation.py::test_letters_that_are_not_ltspice_letters_stop_both
 - tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
-notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms (value=, POLY, and on E and G table= and Laplace=) raise UnsupportedConstruct at their keyword until M15 (decision 0015 item 9).'
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_laplace_on_b_is_m15b
+notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms that M15b adds (POLY, and on E and G table= and Laplace=), and B''s laplace=, raise UnsupportedConstruct at their keyword (decision 0016 item 9).'

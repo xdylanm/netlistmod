@@ -1,0 +1,39 @@
+id: NG-BEH-001
+dialect: ngspice
+construct: behavioral source (B) lines
+manual_ref:
+- '[ngspice-manual] §5.1 "Bxxxx: Nonlinear dependent source (ASRC)"'
+- '[ngspice-manual] §5.1.1 "Syntax and usage"'
+- '[ngspice-manual] §5.1.4 "Piecewise Linear Function: pwl"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- body_line
+- B_NAME
+- behavioral
+- b_quantity
+- _b_more
+- _b_tail
+- b_second_quantity
+- b_lt_quantity
+- B_LT_QUANTITY_KW
+- b_param
+- B_QUANTITY_KW
+- B_PARAM_KW
+- B_PIECE
+tests:
+- tests/grammar/ngspice/test_behavioral.py::test_a_b_line_has_a_quantity_and_an_expression
+- tests/grammar/ngspice/test_behavioral.py::test_a_bare_expression_runs_over_a_continuation
+- tests/grammar/ngspice/test_behavioral.py::test_malformed_b_lines_are_refused
+- tests/document/test_expression_reads.py::test_expression_reads_lists_nets_and_sources
+- tests/document/test_expression_reads.py::test_braces_inside_a_bare_expression_are_read
+- tests/edits/test_behavioral_edits.py::test_set_expression_on_ngspice
+- tests/solver/test_ngspice_behavioral_probes.py::test_behavioral_probes
+- tests/solver/test_ngspice_behavioral_probes.py::test_an_edited_expression_moves_the_result
+notes: 'Decision 0016. Two nodes, v= or i=, one expression, then tc1=, tc2=, temp= and dtemp=. The
+  expression is in braces, in quotes, or bare; a bare one may hold blanks and + continuations and
+  runs to the line end or the first trailing parameter (item 2). A second quantity, no expression,
+  and LTspice''s r= and p= stop ngspice 47 and are refused with their own message.'

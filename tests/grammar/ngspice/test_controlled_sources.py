@@ -156,12 +156,10 @@ def test_malformed_lines_are_rejected(line: str, column: int) -> None:
 @pytest.mark.parametrize(
     ("line", "form"),
     [
-        ("E1 a 0 VALUE={2*V(b)}", "value"),
-        ("E1 a 0 vol='2*V(b)'", "vol"),
-        ("G1 a 0 cur={V(b)}", "cur"),
         ("E1 a 0 POLY(1) b 0 0 2", "poly"),
         ("E1 a 0 TABLE {V(b)} = (0,0) (1,2)", "table"),
-        ("G1 a 0 value = {V(b)}", "value"),
+        ("E1 a 0 FREQ {V(b)}= DB (1, 0, 0)", "freq"),
+        ("E1 a 0 and(2) b 0 b 0 (0.5, 0) (2.8, 3.3)", "and"),
         ("F1 a 0 POLY(1) V1 0 2", "poly"),
         ("H1 a 0 poly (1) V1 0 2", "poly"),
     ],

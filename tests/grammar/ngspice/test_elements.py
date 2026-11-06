@@ -27,7 +27,6 @@ from netlistmod import (
     Span,
     SubcktInstance,
     SubcktReference,
-    UnsupportedConstruct,
     VoltageSource,
     parse,
 )
@@ -254,12 +253,13 @@ def test_malformed_capacitor_and_inductor_lines_are_rejected(line: str, column: 
         ("C1 a b\n+ q='x' ; c", 3),
     ],
 )
-def test_charge_form_of_a_capacitor_is_unsupported_at_q(line: str, column: int) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(f"title\n{line}\n.end\n")
-    error = captured.value
-    assert error.construct == "ngspice behavioral capacitor charge form (q=)"
-    assert (error.line, error.column) == (2 + line.count("\n"), column)
+def test_charge_form_of_a_capacitor_loads(line: str, column: int) -> None:
+    # M15 (decision 0016 item 4): the charge form loads, with its expression in charge.
+    capacitor = _parse(f"title\n{line}\n.end\n").items[1]
+    assert isinstance(capacitor, Capacitor)
+    assert capacitor.value is None and capacitor.charge is not None
+    start = f"title\n{line}".index("'", column - 1)
+    assert capacitor.charge.span.start == start
 
 
 # --- K -----------------------------------------------------------------------------------------

@@ -17,8 +17,9 @@ import hashlib
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass, field
+from typing import Literal
 
-from netlistmod.document.index import Index, Scope
+from netlistmod.document.index import Index, Scope, walk_nodes
 from netlistmod.document.lines import ScopePath
 from netlistmod.document.names import GROUND, is_automatic_global, is_ground, net_name
 from netlistmod.model.nodes import (
@@ -32,6 +33,8 @@ from netlistmod.model.nodes import (
     SubcktDefinition,
     SubcktInstance,
 )
+from netlistmod.model.values import Formula
+from netlistmod.source import Span
 
 SignatureEntry = tuple[object, ...]
 
@@ -51,6 +54,22 @@ class Net:
     scope: ScopePath
     spellings: tuple[str, ...] = field(compare=False)
     global_: bool = field(compare=False)
+
+
+@dataclass(frozen=True, slots=True)
+class ExpressionRead:
+    """A net or an element that an element's expression reads (decision 0016 item 6).
+
+    ``kind`` is ``"node"`` for each name in ``V(a)`` or ``V(a,b)``, and ``"source"`` for the name
+    in ``I(Vx)``. ``span`` covers the name as written. ``target`` is the ``Net`` or the element,
+    or ``None`` if nothing in the element's scope has that name. The reads are not topology: the
+    signature leaves them out (architecture §7.8).
+    """
+
+    kind: Literal["node", "source"]
+    name: str
+    span: Span
+    target: Net | Component | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -134,6 +153,33 @@ class TopologyView:
             for element in _components(found)
             if any(self._key(found, node.name) == key for node in element.nodes)
         )
+
+    def expression_reads(
+        self, designator: str, scope: ScopePath = ()
+    ) -> tuple[ExpressionRead, ...]:
+        """The nets and elements an element's expressions read, in source order; empty for an
+        element with no expression. ``KeyError`` if there is no such element."""
+        found = self._index.scope(scope)
+        elements = found.elements.get(found.fold(designator))
+        if not elements:
+            raise KeyError(f"no element {designator!r} in {found.describe()}")
+        element = elements[0]
+        formulas = [formula.span for formula in walk_nodes(element, Formula, bodies=False)]
+        reads: list[ExpressionRead] = []
+        for reference in self._index.references:
+            if reference.owner is not element or reference.kind not in ("node", "element"):
+                continue
+            if not any(span.start <= reference.span.start < span.end for span in formulas):
+                continue  # a controlling source, not an expression's read
+            if reference.kind == "node":
+                net = None
+                if reference.target is not None:
+                    net = self._nets.get(self._key(found, reference.name))
+                reads.append(ExpressionRead("node", reference.name, reference.span, net))
+            else:
+                target = reference.target if isinstance(reference.target, Component) else None
+                reads.append(ExpressionRead("source", reference.name, reference.span, target))
+        return tuple(sorted(reads, key=lambda read: read.span.start))
 
     def connections(self, designator: str, scope: ScopePath = ()) -> tuple[Connection, ...]:
         """The terminals of one element (a ``K`` line has none); ``KeyError`` if absent."""
@@ -223,6 +269,6 @@ def _signature_entries(scope: Scope, entries: list[SignatureEntry]) -> None:
         elif isinstance(item, Component):
             nodes = tuple(node.name for node in item.nodes)
             entries.append(("element", scope.display, item.designator, type(item).__name__, nodes))
-            if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+            if isinstance(item, Cccs | Ccvs | CurrentSwitch) and item.control is not None:
                 # A controlling source is topology but not a net (decision 0015 item 3).
                 entries.append(("control", scope.display, item.designator, item.control.designator))

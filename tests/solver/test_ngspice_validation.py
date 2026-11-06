@@ -23,7 +23,6 @@ from netlistmod import (
     Resistor,
     SourceText,
     UnknownDirective,
-    UnsupportedConstruct,
     parse,
 )
 from tests.support.ngspice import STUBS, run
@@ -159,13 +158,13 @@ def test_the_off_flag_on_a_diode_runs(solver: Solver, tmp_path: Path) -> None:
 # NG-UNS-001: recognised but unsupported forms are real ngspice syntax.
 
 
-def test_the_charge_form_runs_and_the_library_reports_it_unsupported(
-    solver: Solver, tmp_path: Path
-) -> None:
+def test_the_charge_form_runs_and_loads(solver: Solver, tmp_path: Path) -> None:
+    # M15 (decision 0016 item 4): no longer unsupported.
     text = "probe\nV1 in 0 DC 3\nR1 in out 1k\nC1 out 0 q={1n*v(out)}\n.tran 1u 10u\n.end\n"
     result = run(solver, tmp_path, text)
     assert result.ok, result.log
-    _rejects(text, UnsupportedConstruct)
+    capacitor = Netlist.from_text(text, dialect=Dialect.NGSPICE).element("C1")
+    assert getattr(capacitor, "charge").text == "1n*v(out)"
 
 
 def test_params_keyword_on_an_x_line_runs_but_the_library_rejects_it(

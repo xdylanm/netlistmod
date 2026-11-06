@@ -95,9 +95,9 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
     ) -> _R:
         """Set an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an ngspice F
-        or G line, or a parameter of an LTspice V or I line, or add ``name=value`` after the
-        line's last field. On LTspice a flag takes its value in place (``noiseless`` →
-        ``noiseless=1``).
+        or G line, a parameter of a B line (``tc1=``, ``ic=``, ``Rpar=``, ...) or of an LTspice V
+        or I line, or add ``name=value`` after the line's last field. On LTspice a flag takes its
+        value in place (``noiseless`` → ``noiseless=1``).
 
         ``area`` goes in the positional slot where the dialect writes one (J and Z, and an
         LTspice D or Q), unless the line already writes ``area=``. A name that is the line's
@@ -144,6 +144,30 @@ class _Operations(Generic[_R]):
                 in_definition=in_definition,
                 allow_external=allow_external,
             )
+        )
+
+    def set_expression(
+        self,
+        designator: str,
+        text: str,
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Replace the text of a line's expression, keeping its delimiters (braces, quotes or
+        none) as written (decision 0016 item 7).
+
+        It covers a B line, the expression forms of E, F, G and H (``vol=``, ``cur=``,
+        ``value``), a C line's charge (``q=``, LTspice ``Q=``), an LTspice L line's ``Flux=``,
+        and an R, C or L value written as a formula. The quantity (``V=``) and the form are not
+        changed; trailing parameters use :meth:`set_param`. ``EditError`` for a line with no
+        expression (a gain: use :meth:`set_value`; a number: use :meth:`set_formula`).
+        """
+        return self._submit(
+            operations.set_expression(
+                self._target(), designator, text, scope=scope, in_definition=in_definition
+            ),
+            operations.upsert_target(self._target(), "set_expression", scope, designator),
         )
 
     def set_switch_state(

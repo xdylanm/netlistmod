@@ -26,6 +26,7 @@ from netlistmod.edit._ops_common import (
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
+    BehavioralSource,
     BipolarTransistor,
     Cccs,
     ControlledSource,
@@ -68,6 +69,10 @@ def set_value(
             raise EditError(f"`{designator}` has no DC value to replace; use set_dc to add one")
         return [Edit(element.dc.span, value, reason, (_VALUE,))]
     if isinstance(element, ControlledSource):
+        if element.value is None:
+            raise EditError(
+                f"`{designator}` is written as an expression (`{element.form}`); use set_expression"
+            )
         return [Edit(element.value.span, value, reason, (_VALUE,))]
     if isinstance(element, MutualCoupling):
         raise EditError(f"`{designator}` is a coupling; use set_coupling to set its value")
@@ -100,7 +105,7 @@ def set_param(
             only = "" if ltspice else "; on ngspice only F and G take `m=`"
             raise EditError(f"`{designator}` takes no parameter `{name}`{only}")
         return _assign(element.params, element, name, value, reason, folded=found_fold)
-    takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES)
+    takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES, BehavioralSource)
     port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
     if not isinstance(element, takes_params) or (
         not ltspice and isinstance(element, _SOURCES) and not port

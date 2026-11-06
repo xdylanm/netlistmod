@@ -13,19 +13,26 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
 grammar:
 - capacitor
 - c_keyword_value
 - C_NAME
 - C_KW
 - CAPACITANCE_KW
+- c_charge
+- Q_KW
 tests:
 - tests/grammar/ngspice/test_elements.py::test_capacitor_forms
 - tests/grammar/ngspice/test_elements.py::test_keyword_value_forms_fill_the_value_slot
 - tests/grammar/ngspice/test_elements.py::test_malformed_capacitor_and_inductor_lines_are_rejected
-- tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_is_unsupported_at_q
+- tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_loads
+- tests/grammar/ngspice/test_behavioral.py::test_the_charge_form_of_c
+- tests/solver/test_ngspice_behavioral_probes.py::test_the_charge_form_runs_and_loads
 - tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
 - tests/solver/test_ngspice_solver_elements.py::test_rc_filter_is_at_minus_3_db_at_its_corner
 notes: 'Same shape as R with c= / capacitance=; a value or a model is required (§3.3.7: without a value,
-  the capacitance comes from mname). The charge form q=''expr'' is recognised and raises UnsupportedConstruct
-  at q (phase 2 BehavioralExpression).'
+  the capacitance comes from mname). The charge form q=''expr'' or q={expr} loads with value None and the
+  expression in charge (decision 0016 item 4).'

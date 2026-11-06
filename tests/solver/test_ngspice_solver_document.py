@@ -300,7 +300,7 @@ def test_library_nets_match_the_ngspice_node_list(
 
 def test_document_basic_circuits_run(solver: Solver, tmp_path: Path) -> None:
     for path in sorted((CORPUS / "document_basic").glob("*.cir")):
-        if path.name in {"every_diagnostic.cir", "control_source.cir"}:
+        if path.name in {"every_diagnostic.cir", "control_source.cir", "node_read.cir"}:
             continue  # deliberately broken: diagnostics that stop ngspice (the manifest says why)
         netlist = Netlist.load(path, dialect=Dialect.NGSPICE)
         assert all(ref.target is not None for ref in netlist.references), path.name

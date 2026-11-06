@@ -226,7 +226,7 @@ A name in a formula that no visible `.param` or default defines. Severity as for
 
 ### `UNRESOLVED_ELEMENT`
 
-A `K` inductor, a `.dc` source or a `.save i(...)` that names no element of its scope. Severity as for `UNRESOLVED_MODEL`.
+A `K` inductor, a `.dc` source, a `.save i(...)`, or an `i(...)` in a behavioural expression, that names no element of its scope. Severity as for `UNRESOLVED_MODEL`.
 
 ```python
 >>> report("t\n.dc V9 0 1 0.1\n.end\n")
@@ -370,3 +370,15 @@ An F, H or W line names a controlling source that exists but is not a voltage so
 ```
 
 **What to do:** sense the current with a 0 V voltage source in series with the element, and name that source.
+
+### `UNRESOLVED_NODE`
+
+A behavioural expression reads a node, as `v(a)` or `v(a,b)`, that no element of its scope connects to and that is not ground, a `.global` node or a subcircuit port. ngspice reports a singular matrix and LTspice "No such node". A warning, or `info` where the scope has an `.include`, `.lib` or opaque block ([decision 0016](../decisions/0016-behavioral-expressions.md) item 6).
+
+```python
+>>> report("t\nR1 a 0 1k\nB1 b 0 V=2*v(nonode)\nR2 b 0 1k\n.end\n")
+3 14 UNRESOLVED_NODE warning
+
+```
+
+**What to do:** correct the node name. Inside a subcircuit, a top-level net is not visible: pass it in as a port, or make it `.global`. `Netlist.expression_reads` lists what an expression reads.

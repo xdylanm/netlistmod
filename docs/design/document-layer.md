@@ -36,6 +36,7 @@ every `scope=` argument accepts any case.
 | `topology` | `TopologyView` | |
 | `nets`, `elements_on_net`, `connections`, `ports`, `signature` | delegate to `topology` | |
 | `diagnostics` | `tuple[Diagnostic, ...]` | computed once at load |
+| `expression_reads(designator, scope=())` | `-> tuple[ExpressionRead, ...]` | delegates to `topology`; section 8 |
 
 ### `Line`, `Lines`
 
@@ -57,7 +58,7 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 ### `Reference`
 
 `Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is one of
-`"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`. `span` covers the name as written,
+`"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`. `span` covers the name as written,
 `owner` is the item holding it, `target` the resolved node or `None`. Deviation from task 3.2:
 `owner` is added (M6 needs the item to edit).
 
@@ -67,7 +68,8 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 | `subckt` | X subcircuit name | `SubcktDefinition` |
 | `subckt_param` | X `name=value` (the name) | the definition's default `ParamAssignment`, or `None` (not diagnosed: ngspice 47 ignores an unknown one) |
 | `param` | a bare identifier in a `{…}` or `'…'` formula anywhere (values, parameters, `.param`, `.model`, defaults, X parameters, directive arguments) | the `ParamAssignment` (last in its scope) |
-| `element` | K inductors; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources | `Component` |
+| `element` | K inductors; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources; `i(src)` in a behavioural expression | `Component` |
+| `node` | each name in `v(a)` or `v(a,b)` in a behavioural expression | `Net`, or `None` |
 
 ### `TopologyView`
 
@@ -79,6 +81,7 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 | `connections(designator, scope=()) -> tuple[Connection, ...]` | `K` has none; `KeyError` |
 | `ports(subckt, scope=()) -> tuple[Net, ...]` | definition resolved like an X line; nets of the definition's scope |
 | `signature() -> TopologySignature` | section 3 |
+| `expression_reads(designator, scope=()) -> tuple[ExpressionRead, ...]` | section 8; `KeyError` |
 
 `Net(name, scope, spellings, global_)`: `name` folded (`"0"` for ground); `scope` `()` for a
 shared net (ground or `.global`, `global_=True`), else the definition scope; `spellings` as
@@ -131,6 +134,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
+| `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
 | `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
@@ -162,3 +166,21 @@ The API and the signature encoding are the same; `$G_*` nodes count as global. W
 - **Formula scan:** the overlay `formula_ltspice.lark`, whose reserved words are only LTspice's built-in values, and a definition in scope masks them. A bare `.param` expression has no delimiter, so its offsets start at `span.start`.
 - **`PARAM_USED_BEFORE_DEFINITION`** and **`DUPLICATE_DEFINITION`** follow the solver: for `.param`, the latter is a warning, because LTspice stops at a repeated definition.
 - **`DIALECT_GATED_SYNTAX`** and **`RKM_SOLVER_MISMATCH`** are not used.
+
+## 8. Expression reads (M15, decision 0016)
+
+`expression_reads(designator, scope=())` returns the reads of the element's expressions in
+source order: B's expression, an expression form of E, F, G or H, C's charge, L's flux, and an
+R, C or L formula value. `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
+name in `v(a)` or `v(a,b)`) or `"source"` (`i(Vx)`); `span` covers the name; `target` is the
+`Net` or the `Component`, or `None`. An element without an expression reads nothing; F's
+controlling source is topology (section 3), not a read.
+
+A node read resolves in the element's own scope, through ground, `.global` nodes and the
+subcircuit's ports: a top-level net is not visible from inside a subcircuit, as for both
+solvers. A source read resolves as an element reference. The reads never enter the signature.
+
+The formula scan (section 5) reads, inside an expression, `{...}` within a bare expression,
+`+` continuations and LTspice's `~`. The words an expression gives a meaning to are not
+parameters there: LTspice's `time` in B and `value=`, and `x` in `Q=` and `Flux=`. LTspice's
+`time` elsewhere is still a name.

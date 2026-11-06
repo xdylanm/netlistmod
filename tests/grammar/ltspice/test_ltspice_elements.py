@@ -522,11 +522,13 @@ def test_ngspice_source_functions_are_not_ltspice_syntax(line: str) -> None:
 @pytest.mark.parametrize(
     "line", ["C1 a 0 Q=1u*x", "L1 a 0 Flux=1m*x", "L1 a 0 Hc=16 Bs=.44 Br=.1 A=1 Lm=1 Lg=1 N=1"]
 )
-def test_nonlinear_forms_are_unsupported(line: str) -> None:
-    assert "LTspice" in str(_unsupported(line))
+def test_nonlinear_forms_load(line: str) -> None:
+    # M15 (decision 0016 item 4): no longer unsupported.
+    element = _element(line)
+    assert element.value is None
 
 
-@pytest.mark.parametrize("letter", list("ABOTU@&"))
+@pytest.mark.parametrize("letter", list("AOTU@&"))
 def test_phase_2_letters_are_unsupported(letter: str) -> None:
     error = _unsupported(f"{letter}1 a b c")
     assert f"LTspice {letter} device" in str(error)
@@ -544,7 +546,8 @@ def test_the_device_matrix_matches_its_document() -> None:
         (ROOT / "src/netlistmod/grammar/ltspice-devices.json").read_text(encoding="utf-8")
     )
     assert matrix == packaged
-    assert {k for k, v in matrix.items() if v["status"] == "supported"} == set("RCLVIDXKQMJZEFGHSW")
+    supported = {k for k, v in matrix.items() if v["status"] == "supported"}
+    assert supported == set("RCLVIDXKQMJZEFGHSWB")
 
 
 def test_param_assignment_spans_slice_back() -> None:

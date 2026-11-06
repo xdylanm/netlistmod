@@ -27,20 +27,6 @@
       "error": "ParseError",
       "note": "a bare name is a model in LTspice, and R takes none"
     },
-    "behavioral_charge.cir": {
-      "sha256": "a839847a28d965811a31fb07bea41a75d84ed2d3f51ded38433510bfa0ab5bb6",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "charge form"
-    },
-    "behavioral_flux.cir": {
-      "sha256": "b0bd1b8265595eea958d0484aa510516f95b3f0779667010f0c75e706a36a34c",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "flux form"
-    },
     "comma_between_nodes.cir": {
       "sha256": "fb33ff21550d8b305db5338b30144b6e793234a886a8ca1d8523161ca1989456",
       "line": 2,
@@ -103,13 +89,6 @@
       "column": 1,
       "error": "UnsupportedConstruct",
       "note": "planned for phase 2"
-    },
-    "hysteretic_core.cir": {
-      "sha256": "3fe1f692437eed949949b9d02375bb54a7157b00d0e97ae8323552903c027ea0",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "hysteretic core form"
     },
     "misspelt_parameter.cir": {
       "sha256": "1157f726629652b1bea81ae69a04a7cc56fb9a0f635f526614c5cd7454254405",
@@ -233,7 +212,7 @@
     "e_vol.cir": {
       "sha256": "1b1f6dd559ae45f8678cf511f73f83a46724f5054ad7390420a670e3e2d1baa9",
       "line": 4,
-      "column": 17,
+      "column": 16,
       "error": "ParseError",
       "note": "ngspice's vol=; LTspice stops (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
     },

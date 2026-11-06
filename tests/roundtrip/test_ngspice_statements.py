@@ -31,16 +31,12 @@ from netlistmod import (
     UnsupportedConstruct,
     parse,
 )
+from tests.support.corpus import accept_files
 
 CORPUS_ROOT = Path(__file__).parents[1] / "corpus" / "ngspice"
 REJECT_CORPUS = CORPUS_ROOT / "statements_rejects"
 # RKM values occur only in the KiCad corpus; standard notation parses the same with rkm=True.
-ALL_ACCEPT = sorted(
-    path
-    for family in CORPUS_ROOT.iterdir()
-    if family.is_dir() and not family.name.endswith("_rejects")
-    for path in family.glob("*.cir")
-)
+ALL_ACCEPT = accept_files(CORPUS_ROOT)
 
 
 def _assert_tiling(items: tuple[Any, ...], start: int, end: int) -> None:

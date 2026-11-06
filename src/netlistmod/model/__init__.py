@@ -2,6 +2,7 @@
 
 from netlistmod.model.nodes import (
     AcDirective,
+    BehavioralSource,
     BipolarTransistor,
     BlankLine,
     BodyItem,
@@ -83,6 +84,7 @@ __all__ = [
     "CurrentSource",
     "DcDirective",
     "DcSweep",
+    "BehavioralSource",
     "BipolarTransistor",
     "Diode",
     "Jfet",

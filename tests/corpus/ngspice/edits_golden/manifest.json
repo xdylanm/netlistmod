@@ -155,7 +155,12 @@
     "controlled_switch_state.expected.cir": "f9700adb5bf24e984983032cf66fcda16a577b3bed153ce7c3cbae2dfa2c29cf",
     "controlled_switch_state_removed.expected.cir": "32bebb5f31bb3ea014111b5d8719b5c4b0bfb3a7a33d23adb1adc0c00f6afa23",
     "controlled_batch.expected.cir": "00a80d82e3cae0850f7fa9d06ac18d5efce7755c3db2760e878fca8f1868b910",
-    "controlled_m.expected.cir": "9885f49037ec85ccf7242b334e45ebfffe208514e1dd62ec7a16cea712fe88f8"
+    "controlled_m.expected.cir": "9885f49037ec85ccf7242b334e45ebfffe208514e1dd62ec7a16cea712fe88f8",
+    "behavioral_sources.cir": "cf9fb2cbae231d3c812cd537060e9006a161cc48ebf546935805106981ee6926",
+    "behavioral_expression.expected.cir": "d3ed82039aa7ddec0bf1359a32dcbd4833ed2b1836eaf9cf86cb3eda67384e60",
+    "behavioral_forms.expected.cir": "ee5a57298800665acff8e2ebd45d2a7bbbd309f16fce2cab3953f73291e240be",
+    "behavioral_param.expected.cir": "ed88570d7e7acc2aa846e3521a19d7cb138e8a14ab1219a044a4d34d49ea4e52",
+    "behavioral_batch.expected.cir": "2821655e3eb0d55461bab4fe9072d7afb797e3ed85aab8667a7091252942384e"
   },
   "cases": {
     "value": {
@@ -1128,6 +1133,98 @@
         ]
       ],
       "expected": "controlled_m.expected.cir"
+    },
+    "behavioral_expression": {
+      "input": "behavioral_sources.cir",
+      "steps": [
+        [
+          "set_expression",
+          "B1",
+          "3 * v(vx)"
+        ],
+        [
+          "set_expression",
+          "B2",
+          "2m*v(vx)"
+        ],
+        [
+          "set_expression",
+          "B3",
+          "v(vx) > 1 ? 2 : 0"
+        ]
+      ],
+      "expected": "behavioral_expression.expected.cir"
+    },
+    "behavioral_forms": {
+      "input": "behavioral_sources.cir",
+      "steps": [
+        [
+          "set_expression",
+          "E1",
+          "3*v(vx)"
+        ],
+        [
+          "set_expression",
+          "G1",
+          "2m*v(vx)"
+        ],
+        [
+          "set_expression",
+          "C1",
+          "2n*v(vx)"
+        ],
+        [
+          "set_expression",
+          "R9",
+          "3k"
+        ]
+      ],
+      "expected": "behavioral_forms.expected.cir"
+    },
+    "behavioral_param": {
+      "input": "behavioral_sources.cir",
+      "steps": [
+        [
+          "set_param",
+          "B1",
+          "tc1",
+          "1m"
+        ],
+        [
+          "set_param",
+          "G1",
+          "m",
+          "3"
+        ]
+      ],
+      "expected": "behavioral_param.expected.cir"
+    },
+    "behavioral_batch": {
+      "input": "behavioral_sources.cir",
+      "steps": [
+        [
+          "batch",
+          [
+            [
+              "set_expression",
+              "B1",
+              "k*v(vs)"
+            ],
+            [
+              "set_param",
+              "B2",
+              "tc1",
+              "0"
+            ],
+            [
+              "set_expression",
+              "E1",
+              "v(vx)+1"
+            ]
+          ]
+        ]
+      ],
+      "expected": "behavioral_batch.expected.cir"
     }
   }
 }

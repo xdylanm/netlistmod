@@ -9,7 +9,7 @@ phase 2. The table is checked against
 | Letter | Status | Phase | Milestone |
 |---|---|---:|---|
 | A | planned | 2 | M17 |
-| B | planned | 2 | M15 |
+| B | supported | 2 | M15 |
 | C | supported | 1 | M8 |
 | D | supported | 1 | M8 |
 | E | supported | 2 | M14, M15 |

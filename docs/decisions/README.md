@@ -18,3 +18,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0013 — Stimulus specs](0013-stimulus-specs.md)
 - [0014 — Transistors](0014-transistors.md)
 - [0015 — Linear dependent sources and switches](0015-controlled-sources.md)
+- [0016 — Behavioural expressions](0016-behavioral-expressions.md)

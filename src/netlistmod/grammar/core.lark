@@ -214,7 +214,7 @@ R_NAME.4: /[Rr]/ _WUNIT*
 
 // spec: NG-CAP-001
 capacitor: C_NAME node node c_value param* (NL | eol)
-         | C_NAME node node charge
+         | C_NAME node node c_charge (BRACE_FORMULA | QUOTE_FORMULA) param* (NL | eol)
 C_NAME.4: /[Cc]/ _WUNIT*
 
 // spec: NG-IND-001
@@ -327,6 +327,12 @@ S_NAME.4: /[Ss]/ _WUNIT*
 // spec: NG-SWC-001
 W_NAME.4: /[Ww]/ _WUNIT*
 
+// Behavioural sources (decision 0016). Each overlay spells out its B line: a quantity, then an
+// expression in braces, in quotes, or bare (a run of pieces that ends before the line's trailing
+// parameters), then those parameters.
+// spec: NG-BEH-001
+B_NAME.4: /[Bb]/ _WUNIT*
+
 // A subcircuit call: one or more nodes, the subcircuit name, then parameters. The name list is
 // right-recursive (x_node, x_last), so a name is classified only once the parser has seen what
 // follows it; x_name is the gap and name both share.
@@ -374,11 +380,11 @@ PWL_KW.2: "pwl"i
 // spec: NG-FUN-006
 SFFM_KW.2: "sffm"i
 
-// Forms recognised only to be rejected: the charge form of a behavioral capacitor
-// (UnsupportedConstruct). Its arguments are statement text up to the line end.
-// spec: NG-UNS-001
-charge: SEP Q_KW EQ rest NL
-      | (SEP | TRAILING_COMMENT) charge
+// The charge form of a behavioural capacitor: q= and an expression in quotes or braces, then
+// parameters (§3.3.9; decision 0016 item 4).
+// spec: NG-CAP-001
+c_charge: SEP Q_KW EQ
+        | (SEP | TRAILING_COMMENT) c_charge
 Q_KW.2: "q"i
 
 // ---------------------------------------------------------------------------------------------

@@ -4,7 +4,7 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-10-31",
-  "notes": "Small circuits whose expected query results are written out here: 'nets' maps a scope path (subcircuit names joined by '/', '' for the top level) to [net name, net scope] in first-use order; 'connections' maps each top-level element to the nets of its terminals; 'references' lists [kind, name, scope, resolved] in source order; 'diagnostics' lists [code, severity, line, column] in source order. Expected values were checked by hand against names.md and scoping.md. LF, CRLF (diode_clamp.cir) and a missing final newline (coupled.cir). every_diagnostic.cir parses with rkm=True and is not run in ngspice (it is deliberately broken), nor is control_source.cir (M14: an F line controlled by a resistor); the others run in ngspice 47.",
+  "notes": "Small circuits whose expected query results are written out here: 'nets' maps a scope path (subcircuit names joined by '/', '' for the top level) to [net name, net scope] in first-use order; 'connections' maps each top-level element to the nets of its terminals; 'references' lists [kind, name, scope, resolved] in source order; 'diagnostics' lists [code, severity, line, column] in source order. Expected values were checked by hand against names.md and scoping.md. LF, CRLF (diode_clamp.cir) and a missing final newline (coupled.cir). every_diagnostic.cir parses with rkm=True and is not run in ngspice (it is deliberately broken), nor are control_source.cir (M14: an F line controlled by a resistor) and node_read.cir (M15: a B line reading a net nothing connects to); the others run in ngspice 47.",
   "fixtures": {
     "control_source.cir": {
       "sha256": "5ff13baa32cf2a986c546715d13d6632075bc8ad2042d32925612ddfc3789376",
@@ -761,6 +761,76 @@
           9
         ]
       ]
+    },
+    "node_read.cir": {
+      "sha256": "1f83f1c13ba508bbf8df63867094d88291000e72c75fa3f51f8c88f188ca5b3f",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "a",
+            ""
+          ],
+          [
+            "b",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "a"
+        ],
+        "R2": [
+          "a",
+          "0"
+        ],
+        "B1": [
+          "b",
+          "0"
+        ],
+        "R3": [
+          "b",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "node",
+          "a",
+          "",
+          true
+        ],
+        [
+          "node",
+          "nonode",
+          "",
+          false
+        ]
+      ],
+      "diagnostics": [
+        [
+          "UNRESOLVED_NODE",
+          "warning",
+          5,
+          19
+        ]
+      ],
+      "solver": {
+        "skip": "deliberately broken (M15): B1 reads v(nonode), and ngspice 47 reports a singular matrix (decision 0016 item 6)"
+      }
     },
     "rc_filter.cir": {
       "sha256": "38780b7b2e66e5c7d825c99357fc163cde59bbd12c3bf0f65e422b7f6bd76b4b",

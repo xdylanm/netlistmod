@@ -149,37 +149,37 @@ The M15b files are written now, so that one review confirms their provenance. Th
 
 ## 4. Tasks (M15)
 
-[ ] **T1 — Decision record 0016.** Status `proposed` until M15 closes. It records section 2, with the amendments of decision 10.
+[x] **T1 — Decision record 0016.** Status `proposed` until M15 closes. It records section 2, with the amendments of decision 10.
 
-[ ] **T2 — Commit the corpus first.** Both families' new files and manifests (the M15b files skipped with their reason), the rejects with line, column and error, and the solver sweeps. Each later task makes some files pass.
+[x] **T2 — Commit the corpus first.** Both families' new files and manifests (the M15b files skipped with their reason), the rejects with line, column and error, and the solver sweeps. Each later task makes some files pass.
 
-[ ] **T3 — Expressions in the grammar (decision 2).** The bare-expression terminal per dialect and element, with its trailing parameters. Tests first:
+[x] **T3 — Expressions in the grammar (decision 2).** The bare-expression terminal per dialect and element, with its trailing parameters. Tests first:
 - an expression with blanks and continuations, and with a trailing parameter;
 - a quoted or braced expression;
 - the refusals of decision 9.
 
-[ ] **T4 — B on both dialects (decision 3).** `BehavioralSource`, with the quantity, the expression and the parameter lists of each dialect.
+[x] **T4 — B on both dialects (decision 3).** `BehavioralSource`, with the quantity, the expression and the parameter lists of each dialect.
 - **Negative tests:** two quantities, none, ngspice `r=`.
 - **Solver tests:** each B probe of section 3.1, and a test that the output moves with the expression.
 - **Spec entries:** `NG-BEH-001` and `LT-BEH-001`. The device matrices show B as `supported`.
 
-[ ] **T5 — The expression forms of E, F, G and H, and behavioural C and L (decisions 3 and 4).** ngspice `vol=`, `cur=` and `value`; LTspice `value=`. Then ngspice C `q=`, and LTspice C `Q=`, L `Flux=` and the hysteretic L. The `UnsupportedConstruct` refusals of these forms go, and the M15b forms keep theirs. Spec entries `NG-NLS-001` and `LT-NLS-001`, and updates to the C and L entries.
+[x] **T5 — The expression forms of E, F, G and H, and behavioural C and L (decisions 3 and 4).** ngspice `vol=`, `cur=` and `value`; LTspice `value=`. Then ngspice C `q=`, and LTspice C `Q=`, L `Flux=` and the hysteretic L. The `UnsupportedConstruct` refusals of these forms go, and the M15b forms keep theirs. Spec entries `NG-NLS-001` and `LT-NLS-001`, and updates to the C and L entries.
 
-[ ] **T6 — The formula scan (decision 5).** The expression context, with braces, `~`, and the context words. Tests show:
+[x] **T6 — The formula scan (decision 5).** The expression context, with braces, `~`, and the context words. Tests show:
 - `V(1) < {Vlow} ? {Vlow} : V(1)` gives `Vlow`;
 - LTspice's `time` in B is not a reference, while `{time}` in a `.param` still is;
 - `x` in `Q=` is not a reference.
 
-[ ] **T7 — The query and diagnostics (decision 6).** `expression_reads`, `UNRESOLVED_NODE`, and `UNRESOLVED_ELEMENT` for `I()`, with document-layer tests and the LTspice `X1:Vq` info.
+[x] **T7 — The query and diagnostics (decision 6).** `expression_reads`, `UNRESOLVED_NODE`, and `UNRESOLVED_ELEMENT` for `I()`, with document-layer tests and the LTspice `X1:Vq` info.
 
-[ ] **T8 — Edits (decision 7).**
+[x] **T8 — Edits (decision 7).**
 - `set_expression` on every expression slot, and `set_param` on the trailing parameters.
 - Golden diffs for each form on both dialects, and property tests that no expression edit changes the signature.
 - Solver tests that an edited expression moves the result.
 
-[ ] **T9 — Corpus and snapshots.** Every M15 accept file loads, round-trips and runs in its sweep. The tree snapshot gains the new files, and the signature snapshot does not change.
+[x] **T9 — Corpus and snapshots.** Every M15 accept file loads, round-trips and runs in its sweep. The tree snapshot gains the new files, and the signature snapshot does not change.
 
-[ ] **T10 — Documentation.**
+[x] **T10 — Documentation.**
 - `docs/design/elements.md`, `docs/usage/elements.md` and `editing.md` (a B example), `edit-layer.md`, `document-layer.md`, `errors.md`;
 - both `discrepancies.md`, the README, CHANGELOG and the architecture amendments.
 
