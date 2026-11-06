@@ -443,6 +443,7 @@ LTSPICE_RUNS = {
     # Rows of discrepancies.md.
     "elements_rejects/resistor_keyword_value.cir",
     "elements_rejects/source_after_ac.cir",
+    "elements_rejects/s_on_off.cir",
     "statements_rejects/ic_resistor_current.cir",
     "statements_rejects/meas_sp_body.cir",
     "statements_rejects/model_bare_expression.cir",
