@@ -14,7 +14,7 @@
   constructors return `Self`, so `Netlist.load(...)` builds the editable class.
 - Package layout (architecture §4): `plan.py` (`Edit`, `EditPlan`, `SlotCheck`, `apply_edits`),
   `conventions.py` (decision 0007 item 4), `placement.py` (`Placement`, `insertion_point`),
-  `verify.py` (`apply_plan` and the checks), `operations.py` (one plan builder per operation)
+  `verify.py` (`apply_plan` and the checks), `operations.py` (one plan builder per operation, kept by family in `_ops_*.py` since M13 and imported from `operations.py`)
   and `api.py` (`Netlist`, `Batch`, `ParamTable`, `DirectiveEditor`). `operations.py` is an
   addition to the layout of task 3.1: it keeps the plan builders apart from the classes that
   expose them.

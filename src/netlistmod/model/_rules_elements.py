@@ -1,0 +1,261 @@
+"""Rules for element fields and the element lines of every letter but V and I."""
+
+from __future__ import annotations
+
+from typing import Any, NoReturn
+
+from lark import Token
+
+from netlistmod.model._rules_base import _Rules
+from netlistmod.model._tree import (
+    _comment_spans,
+    _common,
+    _Element,
+    _end,
+    _Eol,
+    _Field,
+    _field_token,
+    _field_tokens,
+    _Item,
+    _KeywordValue,
+    _ParamsMarker,
+    _span,
+    _XRest,
+)
+from netlistmod.model.nodes import (
+    Capacitor,
+    Diode,
+    Inductor,
+    MutualCoupling,
+    Node,
+    Resistor,
+    SubcktInstance,
+)
+from netlistmod.model.values import (
+    ElementReference,
+    Flag,
+    ModelReference,
+    ParamAssignment,
+    SubcktReference,
+    Value,
+    ValueList,
+)
+from netlistmod.source import Span
+
+
+class ElementsRules(_Rules):
+    """Rules for element fields and the element lines of every letter but V and I."""
+
+    def node(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: Node(str(token), _span(token)))
+
+    def r_value(self, children: list[Any]) -> _Field:
+        return self._field(children, self._value)
+
+    c_value = r_value
+
+    value = r_value
+
+    def param(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> ParamAssignment:
+            # [gap] WORD EQ value: the value is the last token.
+            value = self._param_value(children[-1])
+            name_span = _span(name)
+            return ParamAssignment(
+                str(name), value, Span(name_span.start, value.span.end), name_span
+            )
+
+        return self._field(children, build)
+
+    x_param = param
+
+    r_param = param
+
+    c_param = param
+
+    l_param = param
+
+    v_param = param
+
+    port_param = param
+
+    trigger_param = param
+
+    d_param = param
+
+    resistive_load = param
+
+    def tc_param(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> ParamAssignment:
+            # [gap] TC_KW EQ value (CSEP value)*: every token after the name is a value.
+            values = tuple(self._value(token) for token in _field_tokens(children)[1:])
+            name_span = _span(name)
+            span = Span(values[0].span.start, values[-1].span.end)
+            return ParamAssignment(
+                str(name),
+                ValueList(self._source.text[span.start : span.end], values, span),
+                Span(name_span.start, span.end),
+                name_span,
+            )
+
+        return self._field(children, build)
+
+    def params_marker(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _ParamsMarker())
+
+    def load_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    noiseless_flag = load_flag
+
+    def model(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: ModelReference(str(token), _span(token)))
+
+    def flag(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> Flag:
+            # [gap] keyword, or (LTspice) [gap] keyword EQ value.
+            tokens = _field_tokens(children)
+            if len(tokens) == 1:
+                return Flag(str(name), _span(name))
+            value = self._value(tokens[-1])
+            return Flag(str(name), Span(_span(name).start, value.span.end), value)
+
+        return self._field(children, build)
+
+    def inductor_ref(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: ElementReference(str(token), _span(token)))
+
+    def x_name(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def r_keyword_value(self, children: list[Any]) -> _Field:
+        def build(keyword: Token) -> _KeywordValue:
+            return _KeywordValue(str(keyword), self._value(children[-1]))
+
+        return self._field(children, build)
+
+    c_keyword_value = r_keyword_value
+
+    l_keyword_value = r_keyword_value
+
+    def eol(self, children: list[Any]) -> _Eol:
+        inner = children[-1]
+        if isinstance(inner, _Eol):
+            return _Eol(inner.end, (*_comment_spans(children), *inner.comments))
+        return _Eol(_end(children), _comment_spans(children))
+
+    def charge(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        construct = f"{self._dialect.display_name} behavioral capacitor charge form (q=)"
+        raise self._unsupported(keyword, construct)
+
+    def params_keyword(self, children: list[Any]) -> NoReturn:
+        raise self._parse_error(
+            _field_token(children),
+            "`params:` is not ngspice syntax for subcircuit parameters; write them as "
+            "name=value without `params:`",
+        )
+
+    def bare_name(self, children: list[Any]) -> NoReturn:
+        name = _field_token(children)
+        raise self._parse_error(
+            name,
+            f"`{name}` is not an LTspice value: LTspice reads a bare name as a model, and R, C "
+            "and L take no model. Write a number or a brace expression (`{...}`)",
+        )
+
+    def nonlinear_inductor(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        raise self._unsupported(keyword, f"LTspice nonlinear inductor form ({keyword}=)")
+
+    def resistor(self, children: list[Any]) -> _Item:
+        return self._two_terminal(Resistor, _Element(children))
+
+    def capacitor(self, children: list[Any]) -> _Item:
+        return self._two_terminal(Capacitor, _Element(children))
+
+    def inductor(self, children: list[Any]) -> _Item:
+        return self._two_terminal(Inductor, _Element(children))
+
+    def mutual_coupling(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        value = element.values()[0]
+        return _Item(
+            element.end,
+            lambda span: MutualCoupling(
+                **_common(element, span, nodes=()),
+                inductors=element.all(ElementReference),
+                value=value,
+            ),
+        )
+
+    def diode(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        model = element.all(ModelReference)[0]
+        area = next(iter(element.values()), None)
+        return _Item(
+            element.end,
+            lambda span: Diode(
+                **_common(element, span), model=model, flags=element.all(Flag), area=area
+            ),
+        )
+
+    def subckt_instance(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        rest = element.all(_XRest)[0]
+        nodes = (*element.all(Node), *rest.nodes)
+        return _Item(
+            element.end,
+            lambda span: SubcktInstance(
+                **_common(element, span, nodes=nodes, params=rest.params),
+                subckt=rest.subckt,
+            ),
+        )
+
+    def x_node(self, children: list[Any]) -> _XRest:
+        name: _Field = children[0]
+        assert isinstance(name.node, Token)
+        rest: _XRest = children[-1]
+        return _XRest(
+            (Node(str(name.node), _span(name.node)), *rest.nodes),
+            rest.subckt,
+            rest.params,
+            (*name.comments, *rest.comments),
+            rest.end,
+        )
+
+    def x_last(self, children: list[Any]) -> _XRest:
+        element = _Element([None, *children])
+        name = element.fields[0]
+        assert isinstance(name, Token)
+        subckt = SubcktReference(str(name), _span(name))
+        return _XRest((), subckt, element.all(ParamAssignment), element.comments, element.end)
+
+    model_param_first = param
+
+    uic = flag
+
+    step_value = r_value
+
+    def _two_terminal(
+        self, kind: type[Resistor | Capacitor | Inductor], element: _Element
+    ) -> _Item:
+        keyword_value = element.optional(_KeywordValue)
+        value: Value | None
+        keyword: str | None
+        if keyword_value is not None:
+            value, keyword = keyword_value.value, keyword_value.keyword
+        else:
+            value = next(iter(element.values()), None)
+            keyword = None
+        model = element.optional(ModelReference)
+        return _Item(
+            element.end,
+            lambda span: kind(
+                **_common(element, span),
+                value=value,
+                value_keyword=keyword,
+                model=model,
+                flags=element.all(Flag),
+            ),
+        )
