@@ -23,8 +23,11 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-ACA-001](./specs/NG-ACA-001.yaml) | .ac small-signal analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-BJT-001](./specs/NG-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-CCC-001](./specs/NG-CCC-001.yaml) | current-controlled current source (F) lines | validated | ngspice 47 (2026-11-06) |
+| [NG-CCV-001](./specs/NG-CCV-001.yaml) | current-controlled voltage source (H) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-CTL-001](./specs/NG-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | ngspice 47 (2026-11-06) |
 | [NG-DCA-001](./specs/NG-DCA-001.yaml) | .dc transfer function | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-DIO-001](./specs/NG-DIO-001.yaml) | junction diode (D) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-DIR-001](./specs/NG-DIR-001.yaml) | unknown dot-commands and stray block terminators | validated | ngspice 47 (2026-10-31) |
@@ -69,10 +72,14 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-SRC-001](./specs/NG-SRC-001.yaml) | independent sources (V, I): DC value and AC magnitude and phase | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-STR-001](./specs/NG-STR-001.yaml) | top-level source structure | validated | ngspice 47 (2026-10-31) |
 | [NG-SUB-001](./specs/NG-SUB-001.yaml) | subcircuit calls (X) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-SWC-001](./specs/NG-SWC-001.yaml) | current-controlled switch (W) lines | validated | ngspice 47 (2026-11-06) |
+| [NG-SWV-001](./specs/NG-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TRN-001](./specs/NG-TRN-001.yaml) | .tran transient analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TTL-001](./specs/NG-TTL-001.yaml) | implicit first-line title and explicit .title | validated | ngspice 47 (2026-10-22, 2026-10-31) |
 | [NG-TXT-001](./specs/NG-TXT-001.yaml) | free text, quoted and braced segments, and trailing comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-UNS-001](./specs/NG-UNS-001.yaml) | recognised but unsupported element forms | validated | ngspice 47 (2026-10-31) |
 | [NG-VAL-001](./specs/NG-VAL-001.yaml) | brace and quoted expressions, and string parameter values | validated | ngspice 47 (2026-10-31) |
+| [NG-VCC-001](./specs/NG-VCC-001.yaml) | voltage-controlled current source (G) lines | validated | ngspice 47 (2026-11-06) |
+| [NG-VCV-001](./specs/NG-VCV-001.yaml) | voltage-controlled voltage source (E) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-XTR-001](./specs/NG-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ngspice 47 (2026-11-05) |

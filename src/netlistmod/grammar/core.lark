@@ -298,6 +298,35 @@ J_NAME.4: /[Jj]/ _WUNIT*
 // spec: NG-MES-001
 Z_NAME.4: /[Zz]/ _WUNIT*
 
+// Linear dependent sources and switches (decision 0015). E, G and S write four nodes, the output
+// pair then the control pair; F, H and W write two nodes and a controlling source (ctl_ref), a
+// reference like K's inductors. A switch's initial state is one keyword. Each overlay spells out
+// its own lines, and the nonlinear keywords it recognises only to report them as unsupported.
+// spec: NG-CTL-001
+ctl_ref: SEP WORD
+       | (SEP | TRAILING_COMMENT) ctl_ref
+sw_state: SEP (ON_KW | OFF_KW)
+        | (SEP | TRAILING_COMMENT) sw_state
+ON_KW.2: "on"i
+
+// spec: NG-VCV-001
+E_NAME.4: /[Ee]/ _WUNIT*
+
+// spec: NG-VCC-001
+G_NAME.4: /[Gg]/ _WUNIT*
+
+// spec: NG-CCC-001
+F_NAME.4: /[Ff]/ _WUNIT*
+
+// spec: NG-CCV-001
+H_NAME.4: /[Hh]/ _WUNIT*
+
+// spec: NG-SWV-001
+S_NAME.4: /[Ss]/ _WUNIT*
+
+// spec: NG-SWC-001
+W_NAME.4: /[Ww]/ _WUNIT*
+
 // A subcircuit call: one or more nodes, the subcircuit name, then parameters. The name list is
 // right-recursive (x_node, x_last), so a name is classified only once the parser has seen what
 // follows it; x_name is the gap and name both share.

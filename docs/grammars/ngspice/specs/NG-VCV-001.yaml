@@ -1,0 +1,20 @@
+id: NG-VCV-001
+dialect: ngspice
+construct: voltage-controlled voltage source (E) lines
+manual_ref:
+- '[ngspice-manual] §4.2.2 "Exxxx: Linear Voltage-Controlled Voltage Sources (VCVS)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- E_NAME
+- vcvs
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_e_and_g_have_four_nodes_and_a_gain
+- tests/grammar/ngspice/test_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ngspice_controlled_probes.py::test_each_gain_takes_effect
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes and one gain, a number or a formula. A missing gain, a second value, a word, gain= and m= are refused (decision 0015 items 6 and 7); ngspice 47 runs gain= and a second value.'

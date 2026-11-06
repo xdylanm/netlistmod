@@ -19,6 +19,7 @@
 %import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
 %import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
+%import .core (ctl_ref, sw_state, ON_KW, E_NAME, G_NAME, F_NAME, H_NAME, S_NAME, W_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
@@ -366,6 +367,60 @@ jfet: J_NAME node node node t_name t_area? _ng_ttail
 // spec: NG-MES-001
 mesfet: Z_NAME node node node t_name t_area? _ng_ttail
 %override Z_NAME.4: /[Zz]/ _NG_UNIT*
+
+// Linear dependent sources and switches (§4.2, §3.3.15; decision 0015). The gain is one value;
+// F and G take m= (§4.2.1, §4.2.3), E and H nothing. The nonlinear forms of §5 (vol=, cur=,
+// VALUE, TABLE, POLY) are recognised after the output nodes only to be reported as unsupported
+// (M15); their text runs to the line end.
+// spec: NG-CTL-001
+%extend body_line: vcvs
+                 | vccs
+                 | cccs
+                 | ccvs
+                 | vswitch
+                 | cswitch
+%extend ctl_ref: (CSEP | BS_CONT) WORD
+               | BS_CONT ctl_ref
+%extend sw_state: (CSEP | BS_CONT) (ON_KW | OFF_KW)
+                | BS_CONT sw_state
+ctl_m: (SEP | CSEP | BS_CONT) CTL_M_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT | BS_CONT) ctl_m
+CTL_M_KW.3: /m(?=[ \t]*=)/i
+nonlinear_form: (SEP | CSEP | BS_CONT) (VC_FORM_KW | CC_FORM_KW) rest NL
+              | (SEP | TRAILING_COMMENT | BS_CONT) nonlinear_form
+cc_form: (SEP | CSEP | BS_CONT) CC_FORM_KW rest NL
+       | (SEP | TRAILING_COMMENT | BS_CONT) cc_form
+VC_FORM_KW.3: /(?:vol|cur|value)[ \t]*(?==)|table[ \t]*(?=[{'])/i
+CC_FORM_KW.3: /poly[ \t]*(?=\()/i
+
+// spec: NG-VCV-001
+vcvs: E_NAME node node node node value (NL | eol)
+    | E_NAME node node nonlinear_form
+%override E_NAME.4: /[Ee]/ _NG_UNIT*
+
+// spec: NG-VCC-001
+vccs: G_NAME node node node node value ctl_m? (NL | eol)
+    | G_NAME node node nonlinear_form
+%override G_NAME.4: /[Gg]/ _NG_UNIT*
+
+// spec: NG-CCC-001
+cccs: F_NAME node node ctl_ref value ctl_m? (NL | eol)
+    | F_NAME node node cc_form
+%override F_NAME.4: /[Ff]/ _NG_UNIT*
+
+// spec: NG-CCV-001
+ccvs: H_NAME node node ctl_ref value (NL | eol)
+    | H_NAME node node cc_form
+%override H_NAME.4: /[Hh]/ _NG_UNIT*
+
+// S: four nodes, the model, then ON or OFF (§3.3.15).
+// spec: NG-SWV-001
+vswitch: S_NAME node node node node model sw_state? (NL | eol)
+%override S_NAME.4: /[Ss]/ _NG_UNIT*
+
+// spec: NG-SWC-001
+cswitch: W_NAME node node ctl_ref model sw_state? (NL | eol)
+%override W_NAME.4: /[Ww]/ _NG_UNIT*
 
 // spec: NG-MOD-001
 %extend model_paren: BS_CONT model_paren

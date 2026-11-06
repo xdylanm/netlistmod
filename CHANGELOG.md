@@ -11,6 +11,9 @@
 
 Changes:
 
+- E, F, G, H, S and W now load and edit on both dialects, as `Vcvs`, `Vccs`, `Cccs`, `Ccvs`, `VoltageSwitch` and `CurrentSwitch` (M14, decision 0015). Control nodes are nodes, and F, H and W name their controlling source in `control`; both are in the topology signature, so an edit cannot rewire a control. A controlling source is found in its own scope only, with `UNRESOLVED_ELEMENT` and the new `CONTROL_SOURCE_MISMATCH`. S and W take SW and CSW models. The nonlinear forms (`VALUE`, `TABLE`, `POLY`, `value=`, `table=`, `Laplace=`, `vol=`, `cur=`) stay unsupported until M15.
+- Add `set_switch_state`; `set_value` and `set_formula` set a dependent source's gain, and `set_param` its `m=` on an ngspice F or G (M14).
+- Add the `controlled_sources` corpus families (M14).
 - Q, M, J and Z now load and edit on both dialects, as `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet` (M13, decision 0014). The model is the last name before any area, flag or parameter; ngspice takes 3 to 5 nodes on Q and M, LTspice 3 or 4, and J and Z take 3. The nodes are those written, so an omitted substrate is not added. A model named with a plain number or `off` is a `ParseError`. `set_model`, `set_param` (with `area` positional on J and Z, and on an LTspice Q) and `set_model_param` cover them, and `MODEL_TYPE_MISMATCH` knows their model types, with NIGBT and PIGBT on LTspice's Z only.
 - `.model` takes a bare `pchan` or `nchan` (`ModelStatement.flags`) and a dotted value such as `version=3.3.0`, kept as an `Identifier` (M13). Real BSIM files and `jellybean.lib`'s `BS250_OJ` need them.
 - Add the `kicad_transistors` and `ltspice_transistors` corpus families. A corpus manifest's `solver` field may name `external` files, such as `jellybean.lib` from `OPENJELLYBEAN_LIB`, which the solver sweeps copy in or skip (decision 0014 item 10).

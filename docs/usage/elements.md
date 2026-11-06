@@ -95,6 +95,39 @@ the last name before any area, flag or parameter, so the names in between are no
 - **`.model`:** a bare `pchan` or `nchan` is in `flags`, and a dotted value such as
   `version=3.3.0` is an `Identifier`, never a number.
 
+## Dependent sources and switches
+
+E, G, F and H lines become `Vcvs`, `Vccs`, `Cccs` and `Ccvs` (subclasses of
+`ControlledSource`), and S and W lines `VoltageSwitch` and `CurrentSwitch` (subclasses of
+`Switch`) ([decision 0015](../decisions/0015-controlled-sources.md)). A control is topology: E,
+G and S list their control nodes after the output nodes, and F, H and W name their controlling
+source in `control`.
+
+```python
+>>> source = SourceText(
+...     "t\n"
+...     "E1 out 0 in 0 2\n"
+...     "F1 0 out Vsense 3 m=2\n"
+...     "S1 out 0 in 0 sm OFF\n"
+...     ".model sm SW vt=0.5\n"
+...     ".end\n"
+... )
+>>> _, e1, f1, s1, *_ = parse(source, Dialect.NGSPICE).items
+>>> [node.name for node in e1.control_nodes], e1.value.text
+(['in', '0'], '2')
+>>> f1.control.designator, f1.value.text, f1.params[0].name
+('Vsense', '3', 'm')
+>>> s1.model.model_name, s1.flags[0].name
+('sm', 'OFF')
+
+```
+
+- **Gain:** one value, a number or a formula. `gain=2` and a second value are refused.
+- **`m=`:** on F and G only.
+- **Switches:** the model is mandatory; the state is `on`, `off` or absent, never both.
+- **Controlling source:** found in the line's own scope only. One that is missing gives `UNRESOLVED_ELEMENT`, and one that is not a voltage source gives `CONTROL_SOURCE_MISMATCH`.
+- **Nonlinear forms:** `VALUE`, `TABLE`, `POLY`, `vol=` and `cur=` raise `UnsupportedConstruct` until a later milestone.
+
 The charge form `C… q='expr'` and every element letter that is not supported yet raise
 `UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
 excerpt and expected tokens.
@@ -126,6 +159,7 @@ The nodes are the same. These forms differ ([decision 0009](../decisions/0009-lt
 ```
 
 - The embedded decimal needs no option, and `M` is milli.
+- E, F, G, H, S and W take no parameter. A switch's state may take a value (`off=1`). A controlling source inside an instance (`X1:Vq`), which LTspice reads, is kept as text and reported as info, and `value=`, `POLY`, `table=` and `Laplace=` are unsupported.
 - Q and M take 3 or 4 nodes, and Q a positional area. Each transistor letter has the reference's
   closed parameter list: Q `temp`; M `L W AD AS PD PS NRD NRS m temp IC`; J `temp`; Z `m temp`;
   and `off`. M has no `thermal` flag, and Z's model may be an IGBT (`NIGBT`, `PIGBT`):

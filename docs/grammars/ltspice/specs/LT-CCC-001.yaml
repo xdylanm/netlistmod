@@ -1,0 +1,19 @@
+id: LT-CCC-001
+dialect: ltspice
+construct: current-dependent current source (F) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "F — Current-Dependent Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- cccs
+- F_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_f_and_h_have_a_controlling_source
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Two nodes, the controlling source and one gain. LTspice also runs an E, H or L as the source, which gets CONTROL_SOURCE_MISMATCH.'

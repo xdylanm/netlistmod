@@ -16,13 +16,17 @@ from netlistmod.document.index import Index, Reference, Scope, definition_scope,
 from netlistmod.document.models import allowed_model_types, model_type_allowed
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground
 from netlistmod.model.nodes import (
+    Cccs,
+    Ccvs,
     Component,
+    CurrentSwitch,
     GlobalDirective,
     ModelStatement,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
     UnknownDirective,
+    VoltageSource,
     element_phrase,
 )
 from netlistmod.model.values import NumericValue
@@ -48,6 +52,7 @@ class DiagnosticCode(StrEnum):
     RKM_SOLVER_MISMATCH = "RKM_SOLVER_MISMATCH"
     UNTYPED_DIRECTIVE_PRESERVED = "UNTYPED_DIRECTIVE_PRESERVED"
     NODE_INTO_INSTANCE = "NODE_INTO_INSTANCE"
+    CONTROL_SOURCE_MISMATCH = "CONTROL_SOURCE_MISMATCH"
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,7 +138,14 @@ def _reference_findings(
         where = ", ".join(candidate.describe() for candidate in searched)
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
-        if any(candidate.may_define_elsewhere for candidate in searched):
+        into = _control_into_instance(index, scope, reference)
+        if into is not None:
+            severity = "info"
+            message += (
+                f"; it names a source inside instance `{into}`, which {_SOLVER[index.dialect]} "
+                "reads and the library does not resolve"
+            )
+        elif any(candidate.may_define_elsewhere for candidate in searched):
             severity = "info"
             message += (
                 "; it may be defined in an `.include` or `.lib` file or an opaque block, which "
@@ -174,6 +186,23 @@ def _reference_findings(
             )
         )
     if (
+        reference.kind == "element"
+        and isinstance(owner, Cccs | Ccvs | CurrentSwitch)
+        and target is not None
+        and isinstance(target, Component)
+        and not isinstance(target, VoltageSource)
+    ):
+        findings.append(
+            (
+                DiagnosticCode.CONTROL_SOURCE_MISMATCH,
+                "warning",
+                f"`{owner.designator}` is controlled by `{reference.name}`, "
+                f"{element_phrase(target)}, but the {_reference_for(owner, index.dialect)} "
+                f"names a voltage source; {_CONTROL_RULE[index.dialect]}",
+                reference.span,
+            )
+        )
+    if (
         reference.kind == "subckt"
         and isinstance(reference.target, SubcktDefinition)
         and isinstance(owner, SubcktInstance)
@@ -189,6 +218,35 @@ def _reference_findings(
             )
         )
     return findings
+
+
+# What each solver does with a controlling source that is not a V (decision 0015 item 5).
+_MANUAL_SECTION: dict[type, str] = {Cccs: "4.2.3", Ccvs: "4.2.4", CurrentSwitch: "3.3.15"}
+
+
+def _reference_for(owner: Component, dialect: Dialect) -> str:
+    if dialect is Dialect.LTSPICE:
+        return "LTspice reference"
+    return f"ngspice manual §{_MANUAL_SECTION[type(owner)]}"
+
+
+_CONTROL_RULE: dict[Dialect, str] = {
+    Dialect.NGSPICE: "ngspice 47 also reads an E or H source here and stops on other elements",
+    Dialect.LTSPICE: "LTspice 26.1.1 also reads an E, H or L here and stops on other elements",
+}
+
+
+def _control_into_instance(index: Index, scope: Scope, reference: Reference) -> str | None:
+    """The instance an LTspice controlling source ``X1:Vq`` reaches into, if it is one."""
+    if index.dialect is not Dialect.LTSPICE or not isinstance(
+        reference.owner, Cccs | Ccvs | CurrentSwitch
+    ):
+        return None
+    head, colon, _ = reference.name.partition(":")
+    if not colon:
+        return None
+    instance = next(iter(scope.elements.get(scope.fold(head), ())), None)
+    return head if isinstance(instance, SubcktInstance) else None
 
 
 def _instance_node_findings(

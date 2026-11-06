@@ -1,5 +1,5 @@
 {
-  "source": "ngspice manual §2.5 \".MODEL Device Models\" (Table 2.3, model types), §3.3.2 \"Semiconductor Resistors\", §3.3.7 \"Semiconductor Capacitors\", §3.3.10 \"Inductors\", §7.2 \"Junction Diodes\"; decision 0007 item 3; §7.3 \"BJT\", §7.4 \"JFETs\", §7.5 \"MESFETs\", §7.6 \"MOSFETs\", §7.7 \"Power MOSFET model (VDMOS)\" and the LTspice reference for Q, J, M and Z (decision 0014)",
+  "source": "ngspice manual §2.5 \".MODEL Device Models\" (Table 2.3, model types), §3.3.2 \"Semiconductor Resistors\", §3.3.7 \"Semiconductor Capacitors\", §3.3.10 \"Inductors\", §7.2 \"Junction Diodes\"; decision 0007 item 3; §7.3 \"BJT\", §7.4 \"JFETs\", §7.5 \"MESFETs\", §7.6 \"MOSFETs\", §7.7 \"Power MOSFET model (VDMOS)\" and the LTspice reference for Q, J, M and Z (decision 0014); §3.3.16 \"Switch Model (SW/CSW)\" and the reference for S and W (decision 0015)",
   "elements": {
     "Resistor": ["R"],
     "Capacitor": ["C"],
@@ -8,7 +8,9 @@
     "BipolarTransistor": ["NPN", "PNP"],
     "Mosfet": ["NMOS", "PMOS", "VDMOS"],
     "Jfet": ["NJF", "PJF"],
-    "Mesfet": ["NMF", "PMF"]
+    "Mesfet": ["NMF", "PMF"],
+    "VoltageSwitch": ["SW"],
+    "CurrentSwitch": ["CSW"]
   },
   "ltspice": {
     "Mesfet": ["NIGBT", "PIGBT"]

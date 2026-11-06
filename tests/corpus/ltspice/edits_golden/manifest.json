@@ -1,6 +1,6 @@
 {
   "family": "edits_golden",
-  "origin": "Authored in this repository for the M8 and M9 golden-diff edit tests; the inputs are the exports in contributed_examples, and diode.net and transistors.net (M13) written here",
+  "origin": "Authored in this repository for the M8 and M9 golden-diff edit tests; the inputs are the exports in contributed_examples, and diode.net, transistors.net (M13) and controlled_sources.net (M14) written here",
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-01",
@@ -90,7 +90,13 @@
     "vdmos_model_param_transistors.expected.net": "9f478f05361abd4069095c8ef3d2090badd54b65040f3b5efcc549dd22648fac",
     "jfet_area_transistors.expected.net": "df69af08c5e656140d74b4ef5ae54040cea4d8b224a1793ed847cc30b20309f6",
     "mesfet_area_transistors.expected.net": "a6c8442e8b92e2857699fc9b1c3bd1b680cfcaf6fbedb8c91a3e789561761e1d",
-    "batch_transistors.expected.net": "1d3f6809ea71e993efbd3aa981ca811920463f35d869afec29682b99e4740e12"
+    "batch_transistors.expected.net": "1d3f6809ea71e993efbd3aa981ca811920463f35d869afec29682b99e4740e12",
+    "controlled_sources.net": "c3a597683ce0bced9c603faef418d406e567ec4069dd4c7b03a29e36f87f85f1",
+    "controlled_gain.expected.net": "ff6a6c4c17c5e662c760437d16bfecb73d624c9d84e44089d4b2e3f581fbc45a",
+    "controlled_switch_model.expected.net": "76db50083123dd062416732c23cbc4f8a0e2dee75929233662d195d22839f11a",
+    "controlled_switch_state.expected.net": "f9700adb5bf24e984983032cf66fcda16a577b3bed153ce7c3cbae2dfa2c29cf",
+    "controlled_switch_state_removed.expected.net": "32bebb5f31bb3ea014111b5d8719b5c4b0bfb3a7a33d23adb1adc0c00f6afa23",
+    "controlled_batch.expected.net": "00a80d82e3cae0850f7fa9d06ac18d5efce7755c3db2760e878fca8f1868b910"
   },
   "cases": {
     "set_value": {
@@ -655,6 +661,91 @@
         ]
       ],
       "expected": "batch_transistors.expected.net"
+    },
+    "controlled_gain": {
+      "input": "controlled_sources.net",
+      "steps": [
+        [
+          "set_value",
+          "E1",
+          "3"
+        ],
+        [
+          "set_formula",
+          "H1",
+          "k*1k"
+        ]
+      ],
+      "expected": "controlled_gain.expected.net"
+    },
+    "controlled_switch_model": {
+      "input": "controlled_sources.net",
+      "steps": [
+        [
+          "set_model",
+          "S1",
+          "s2"
+        ]
+      ],
+      "expected": "controlled_switch_model.expected.net"
+    },
+    "controlled_switch_state": {
+      "input": "controlled_sources.net",
+      "steps": [
+        [
+          "set_switch_state",
+          "S1",
+          "on"
+        ],
+        [
+          "set_switch_state",
+          "W1",
+          "off"
+        ]
+      ],
+      "expected": "controlled_switch_state.expected.net"
+    },
+    "controlled_switch_state_removed": {
+      "input": "controlled_sources.net",
+      "steps": [
+        [
+          "set_switch_state",
+          "S1",
+          null
+        ]
+      ],
+      "expected": "controlled_switch_state_removed.expected.net"
+    },
+    "controlled_batch": {
+      "input": "controlled_sources.net",
+      "steps": [
+        [
+          "batch",
+          [
+            [
+              "set_value",
+              "G1",
+              "2m"
+            ],
+            [
+              "set_value",
+              "F1",
+              "3"
+            ],
+            [
+              "set_model",
+              "S1",
+              "s2"
+            ],
+            [
+              "set_switch_state",
+              "W1",
+              "on"
+            ]
+          ]
+        ]
+      ],
+      "expected": "controlled_batch.expected.net"
     }
   }
 }

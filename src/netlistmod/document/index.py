@@ -33,7 +33,10 @@ from netlistmod.document.names import fold
 from netlistmod.grammar.formula import parse_formula
 from netlistmod.model.nodes import (
     Capacitor,
+    Cccs,
+    Ccvs,
     Component,
+    CurrentSwitch,
     DcDirective,
     Diode,
     IcDirective,
@@ -48,6 +51,7 @@ from netlistmod.model.nodes import (
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
+    Switch,
     TopLevelItem,
     Transistor,
 )
@@ -293,7 +297,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         if isinstance(item, SubcktDefinition):
             continue  # its header and body belong to the nested scope
         if (
-            isinstance(item, Resistor | Capacitor | Inductor | Diode | Transistor)
+            isinstance(item, Resistor | Capacitor | Inductor | Diode | Transistor | Switch)
             and item.model is not None
         ):
             found = _lookup(scope, "models", item.model.model_name)
@@ -303,6 +307,11 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
             )
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
+        if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+            # The controlling source, in the element's own scope only (decision 0015 item 4).
+            references.append(
+                _element_reference(scope, item, item.control.designator, item.control.span)
+            )
         elif isinstance(item, MutualCoupling):
             for inductor in item.inductors:
                 references.append(

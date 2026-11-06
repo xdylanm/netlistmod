@@ -16,6 +16,7 @@ from netlistmod.edit._ops_common import (
     include_target,
     upsert_target,
 )
+from netlistmod.edit._ops_controlled import set_switch_state
 from netlistmod.edit._ops_directives import (
     add_directive,
     add_include,
@@ -67,6 +68,7 @@ __all__ = [
     "set_param_statement",
     "set_stimulus",
     "set_stimulus_arg",
+    "set_switch_state",
     "set_value",
     "stimulus_target",
     "upsert_target",

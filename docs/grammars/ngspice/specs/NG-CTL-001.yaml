@@ -1,0 +1,29 @@
+id: NG-CTL-001
+dialect: ngspice
+construct: shared shape of the linear dependent sources and switches
+manual_ref:
+- '[ngspice-manual] §4.2 "Linear Dependent Sources"'
+- '[ngspice-manual] §3.3.15 "Switches"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- body_line
+- ctl_ref
+- sw_state
+- ON_KW
+- ctl_m
+- CTL_M_KW
+- nonlinear_form
+- cc_form
+- VC_FORM_KW
+- CC_FORM_KW
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_continuations_join_the_line
+- tests/grammar/ngspice/test_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
+- tests/document/test_controlled_topology.py::test_control_nodes_are_connections
+- tests/document/test_controlled_topology.py::test_the_signature_holds_each_controlling_source
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+notes: 'Decision 0015. E, G and S write four nodes, the output pair then the control pair; F, H and W two nodes and a controlling source, an element reference resolved in its own scope. The nonlinear forms of §5 (vol=, cur=, VALUE, TABLE, POLY) are UnsupportedConstruct after the output nodes until M15.'

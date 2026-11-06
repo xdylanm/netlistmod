@@ -256,6 +256,27 @@ netlistmod.errors.EditError: model `jn` has type `NJF`, but `Q1` takes a model o
 
 ```
 
+## Edit a dependent source or a switch
+
+The gain of E, F, G and H is the value, and `set_switch_state` sets or removes a switch's
+initial state ([decision 0015](../decisions/0015-controlled-sources.md)). A control node or a
+controlling source cannot be edited: any change to one is a `TopologyViolation`.
+
+```python
+>>> amp = Netlist.from_text(
+...     "t\nV1 in 0 2\nVs in a 0\nR1 a 0 1k\nH1 out 0 Vs 1k\nR2 out 0 1k\n"
+...     ".model sm SW\nS1 out 0 a 0 sm\n.op\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> with amp.batch() as batch:
+...     batch.set_formula("H1", "2*rt")
+...     batch.set_switch_state("S1", "off")
+>>> print("\n".join(line for line in batch.result.text.splitlines() if line[:2] in ("H1", "S1")))
+H1 out 0 Vs {2*rt}
+S1 out 0 a 0 sm off
+
+```
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's

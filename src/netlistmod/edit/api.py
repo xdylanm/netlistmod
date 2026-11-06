@@ -139,6 +139,27 @@ class _Operations(Generic[_R]):
             )
         )
 
+    def set_switch_state(
+        self,
+        designator: str,
+        state: str | None,
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Set the initial state of an S or W line to ``"on"`` or ``"off"``, or remove it with
+        ``None`` (decision 0015 item 10).
+
+        An existing state is replaced; a new one goes right after the model, and removing takes
+        the gap before it too. ``EditError`` for any other line or any other state.
+        """
+        return self._submit(
+            operations.set_switch_state(
+                self._target(), designator, state, scope=scope, in_definition=in_definition
+            ),
+            operations.upsert_target(self._target(), "set_switch_state", scope, designator),
+        )
+
     def remove_value(
         self, designator: str, *, scope: ScopePath = (), in_definition: bool = False
     ) -> _R:

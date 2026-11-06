@@ -50,10 +50,12 @@ unknown scope, an unknown designator and a repeated designator are `EditError`s.
 | Method | Applies to | Slot edited (sub-span) | Insertion when absent | Errors (`EditError` unless noted) |
 |---|---|---|---|---|
 | `set_value(d, value)` | R, C, L | `value.span` (for `r=1k`: `1k`) | after the last node: ` value` | D, X: no value slot; K: use `set_coupling` |
+| | E, F, G, H | `value.span` (the gain) | — (the gain is mandatory) | — |
 | | V, I | `dc.span` | — (replace only; never adds `DC`) | no DC value: use `set_dc` |
 | `set_formula(d, expr)` | as `set_value` | as `set_value`, text `{expr}` | as `set_value` | as `set_value` |
-| `set_param(d, name, value)` | R, C, L, D, Q, M, J, Z | `params[i].value.span`; `area` on J and Z edits or adds the positional `area.span` (right after the model) unless the line writes `area=`, and on an ngspice Q it is a parameter; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value` | X: use `set_instance_param`; V, I, K: no parameters; value keyword on a positional value: use `set_value`; repeated name |
-| `set_model(d, model, allow_external=False)` | R, C, L, D, Q, M, J, Z | `model.span` | R, C, L without a model: after the value: ` model` | model type not allowed for the letter (table in `document/model-types.json`); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; a value written `r=1k` (that form takes no model) |
+| `set_param(d, name, value)` | R, C, L, D, Q, M, J, Z; `m=` on an ngspice F or G | `params[i].value.span`; `area` on J and Z edits or adds the positional `area.span` (right after the model) unless the line writes `area=`, and on an ngspice Q it is a parameter; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value` | X: use `set_instance_param`; V, I, K: no parameters; value keyword on a positional value: use `set_value`; repeated name |
+| `set_model(d, model, allow_external=False)` | R, C, L, D, Q, M, J, Z, S, W | `model.span` | R, C, L without a model: after the value: ` model` | model type not allowed for the letter (table in `document/model-types.json`); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; a value written `r=1k` (that form takes no model) |
+| `set_switch_state(d, state)` | S, W | `flags[0].span`, with an LTspice value (`off=1`) | after the model: ` on` or ` off`; `None` removes the state and the gap before it | not a switch; a state other than `on`, `off` or `None` (decision 0015 item 10) |
 | `remove_value(d)` | R, C, L with a model | deletes `value.span` (the separator before it stays) | — | no value; no model (the line would have neither); not R, C or L |
 | `set_dc(d, value)` | V, I | `dc.span` | after the last node: ` DC value` | not a source |
 | `set_ac(d, mag, phase=None)` | V, I | `ac.magnitude.span`, and `ac.phase.span` when `phase` is given | after the DC part (or nodes): ` AC mag [phase]`; a missing phase after the magnitude: ` phase` | not a source |
@@ -212,9 +214,10 @@ Other tests: `test_edit_plan.py` (T1, with a Hypothesis reference splice), `test
 
 ## 6. `MODEL_TYPE_MISMATCH`
 
-A warning at the model name of an R, C, L, D, Q, M, J or Z line whose model resolves (decision
-0006 rules) to a `.model` with a type not allowed for the element: R → `R`, C → `C`, L → `L`,
-D → `D`, Q → `NPN`/`PNP`, M → `NMOS`/`PMOS`/`VDMOS`, J → `NJF`/`PJF`, Z → `NMF`/`PMF`, compared
+A warning at the model name of an R, C, L, D, Q, M, J, Z, S or W line whose model resolves
+(decision 0006 rules) to a `.model` with a type not allowed for the element: R → `R`, C → `C`,
+L → `L`, D → `D`, Q → `NPN`/`PNP`, M → `NMOS`/`PMOS`/`VDMOS`, J → `NJF`/`PJF`, Z → `NMF`/`PMF`,
+S → `SW`, W → `CSW` (decision 0015 item 8), compared
 case-insensitively ([ngspice-manual] §2.5 Table 2.3; §3.3.2, §3.3.7, §3.3.10, §7.2 to §7.7). On
 LTspice Z also takes `NIGBT` and `PIGBT` (decision 0014 item 8). The table is data,
 `src/netlistmod/document/model-types.json`, with a section per dialect, read by
@@ -230,6 +233,7 @@ The conventions, verification and placement are the same (decision 0009 item 17)
 - `set_model_param` after a bare `pchan` or `nchan` adds the parameter after the flag, as on ngspice.
 - `set_model` and `remove_value` on an R, C or L line are an `EditError`: LTspice has no such model.
 - `rkm=True` is a `ValueError`; embedded decimals need no option.
+- `set_param` on E, F, G, H, S or W is an `EditError`: none of them takes a parameter (decision 0015 item 7).
 - `set_stimulus` puts a new function before `Rser` and `Cpar`, after the DC and AC parts. Those parameters and the trigger parameters are the line's, so they stay when the function changes. A `set_stimulus_arg` name finds them too.
 - `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused. A whole `.lib` block is accepted on both dialects (decision 0012).
 

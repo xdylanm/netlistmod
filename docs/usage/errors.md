@@ -71,14 +71,14 @@ The dialect has this construct, but the library does not support it yet. It is s
 ```python
 >>> from netlistmod import UnsupportedConstruct
 >>> try:
-...     parse(SourceText("title\nE1 out 0 in 0 2\n.end\n"), Dialect.NGSPICE)
+...     parse(SourceText("title\nT1 a 0 b 0 z0=50 td=1n\n.end\n"), Dialect.NGSPICE)
 ... except UnsupportedConstruct as error:
 ...     print(error.line, error.column)
 2 1
 
 ```
 
-**What to do:** the library supports R, C, L, K, V, I, D, X and the transistors Q, M, J and Z, with DC, AC and source functions. Other letters wait for later phase 2 milestones. There is no way to skip the line.
+**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, and the linear forms of E, F, G, H, S and W, with DC, AC and source functions. Other letters, and the nonlinear forms of E, F, G and H, wait for later phase 2 milestones. There is no way to skip the line.
 
 ### `EditError`
 
@@ -353,3 +353,15 @@ LTspice only. A node named `<instance>:<node>` connects to that node inside the 
 ```
 
 **What to do:** remember that `nets` and `connections` do not show this join. Edits are not affected.
+
+### `CONTROL_SOURCE_MISMATCH`
+
+An F, H or W line names a controlling source that exists but is not a voltage source. The ngspice manual and the LTspice reference name a voltage source; both solvers also read an E or H there (LTspice an L too) and stop on anything else ([decision 0015](../decisions/0015-controlled-sources.md) item 5). A warning.
+
+```python
+>>> report("t\nR1 a 0 1k\nF1 0 b R1 2\nR2 b 0 1k\n.end\n")
+3 8 CONTROL_SOURCE_MISMATCH warning
+
+```
+
+**What to do:** sense the current with a 0 V voltage source in series with the element, and name that source.

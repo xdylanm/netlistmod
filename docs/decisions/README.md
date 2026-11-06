@@ -17,3 +17,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0012 — Carried limits from phase 1](0012-carried-limits.md)
 - [0013 — Stimulus specs](0013-stimulus-specs.md)
 - [0014 — Transistors](0014-transistors.md)
+- [0015 — Linear dependent sources and switches](0015-controlled-sources.md)

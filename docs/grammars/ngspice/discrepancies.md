@@ -190,3 +190,16 @@ Decision 0014 items 1 to 6. Each row is a case of `tests/solver/test_ngspice_tra
 | A 5-node Q runs only with a VBIC model, and a 3-node M only with VDMOS. | Node counts are checked per letter, not per model type: those lines load (decision 0014 item 2). | `q-5-nodes-gummel-poon`, `m-3-nodes-nmos` |
 | `temp=` stops on a `level=8` MOSFET, although §7.6.1 lists it. | Loads: the grammar cannot know the level. | `test_temp_on_a_bsim_line_loads_and_stops_ngspice` |
 | `.model zi NIGBT` stops: "Unknown model type nigbt". | Loads, and `MODEL_TYPE_MISMATCH` on a Z line that names it (decision 0014 item 8). | `test_an_igbt_model_is_not_an_ngspice_type` |
+
+## Dependent source and switch observations (ngspice 47, 2026-11-06; M14)
+
+Decision 0015 items 4 to 8. Each row is a case of `tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes`.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Runs `E1 out 0 vx 0 gain=2`; manual chapter 27 lists `gain` as a device parameter, and §4.2 writes the gain positionally. | `ParseError` at `gain` (decision 0015 item 6, decision 0002). | `e-gain-keyword` |
+| Runs `E1 out 0 vx 0 2 3`, with an output that matches neither value. | `ParseError` at the second value. | `e-two-values`; `elements_rejects/e_two_values.cir` |
+| Runs `S1 … sm on off` and `off on`; the last keyword sets the state. | `ParseError` at the second keyword (decision 0015 item 8). | `s-on-off`; `elements_rejects/s_on_off.cir` |
+| Runs an F, H or W controlled by an E or an H (they have a branch current); §4.2.3 and §4.2.4 name a voltage source. | Loads, with `CONTROL_SOURCE_MISMATCH` (decision 0015 item 5). | `f-ctrl-e`, `f-ctrl-h` |
+| Crashes (exit code 0xC0000005) on `E1 … GND` with no gain in a KiCad netlist, after "not enough parameters". | `ParseError` at the line's end. | `elements_rejects/e_no_value.cir` |
+

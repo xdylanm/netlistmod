@@ -22,6 +22,7 @@
 %import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
 %import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
+%import .core (ctl_ref, sw_state, ON_KW, E_NAME, G_NAME, F_NAME, H_NAME, S_NAME, W_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
@@ -294,6 +295,54 @@ z_param: SEP Z_PARAM_KW EQ _lt_value
        | (SEP | TRAILING_COMMENT) z_param
 Z_PARAM_KW.3: /(?:temp|m)(?=[ \t]*=)/i
 %override Z_NAME.4: /[Zz]/ _LT_CHAR*
+
+// Linear dependent sources and switches (reference E, G, H, F, S, W; decision 0015). The gain is
+// one value, and none of the six takes a parameter. A switch's state may take a value, as other
+// LTspice flags may. The other forms are recognised only to be reported as unsupported (M15):
+// value= and POLY after the output nodes, and on E and G table= and Laplace= after the control
+// nodes; their text runs to the line end.
+// spec: LT-CTL-001
+%extend body_line: vcvs
+                 | vccs
+                 | cccs
+                 | ccvs
+                 | vswitch
+                 | cswitch
+%extend sw_state: SEP (ON_KW | OFF_KW) EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+nonlinear_form: SEP OUT_FORM_KW rest NL
+              | (SEP | TRAILING_COMMENT) nonlinear_form
+ctl_form: SEP CTL_FORM_KW rest NL
+        | (SEP | TRAILING_COMMENT) ctl_form
+OUT_FORM_KW.3: /value[ \t]*(?==)|poly[ \t]*(?=\()/i
+CTL_FORM_KW.3: /(?:table|laplace)[ \t]*(?==)/i
+
+// spec: LT-VCV-001
+vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
+    | E_NAME node node nonlinear_form
+%override E_NAME.4: /[Ee]/ _LT_CHAR*
+
+// spec: LT-VCC-001
+vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
+    | G_NAME node node nonlinear_form
+%override G_NAME.4: /[Gg]/ _LT_CHAR*
+
+// spec: LT-CCC-001
+cccs: F_NAME node node ctl_ref value (NL | eol)
+    | F_NAME node node nonlinear_form
+%override F_NAME.4: /[Ff]/ _LT_CHAR*
+
+// spec: LT-CCV-001
+ccvs: H_NAME node node ctl_ref value (NL | eol)
+    | H_NAME node node nonlinear_form
+%override H_NAME.4: /[Hh]/ _LT_CHAR*
+
+// spec: LT-SWV-001
+vswitch: S_NAME node node node node model sw_state? (NL | eol)
+%override S_NAME.4: /[Ss]/ _LT_CHAR*
+
+// spec: LT-SWC-001
+cswitch: W_NAME node node ctl_ref model sw_state? (NL | eol)
+%override W_NAME.4: /[Ww]/ _LT_CHAR*
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold

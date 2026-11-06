@@ -1,4 +1,184 @@
 {
+ "controlled_sources/diag_f_ctrl_missing.cir": {
+  "rkm": {
+   "digest": "ed4d0c8b29f4a9a758804043ca6fd0d3633b0c93a953eb03a84b708cf94b0226",
+   "nodes": 29
+  },
+  "standard": {
+   "digest": "ed4d0c8b29f4a9a758804043ca6fd0d3633b0c93a953eb03a84b708cf94b0226",
+   "nodes": 29
+  }
+ },
+ "controlled_sources/diag_w_ctrl_resistor.cir": {
+  "rkm": {
+   "digest": "96716dcaccf9d7eebec11f8dbc55a656ea24a9a789654bb40a3e8b073a0a110a",
+   "nodes": 43
+  },
+  "standard": {
+   "digest": "96716dcaccf9d7eebec11f8dbc55a656ea24a9a789654bb40a3e8b073a0a110a",
+   "nodes": 43
+  }
+ },
+ "controlled_sources/test_cascade.cir": {
+  "rkm": {
+   "digest": "cabe71d80fc4096c721a30eede5a26fede329043f69164c820fe67901396d9cc",
+   "nodes": 97
+  },
+  "standard": {
+   "digest": "cabe71d80fc4096c721a30eede5a26fede329043f69164c820fe67901396d9cc",
+   "nodes": 97
+  }
+ },
+ "controlled_sources/test_esource.cir": {
+  "rkm": {
+   "digest": "59c6d0d3a7e894eac99eed4a3b92adc7899b5a3c3a75093ededc2106f2bacdc9",
+   "nodes": 30
+  },
+  "standard": {
+   "digest": "59c6d0d3a7e894eac99eed4a3b92adc7899b5a3c3a75093ededc2106f2bacdc9",
+   "nodes": 30
+  }
+ },
+ "controlled_sources/test_esource_formula.cir": {
+  "rkm": {
+   "digest": "555faa635c51e9c5b85404ab34ad32e1cec1a394e7561ab31a55a910009f5731",
+   "nodes": 34
+  },
+  "standard": {
+   "digest": "555faa635c51e9c5b85404ab34ad32e1cec1a394e7561ab31a55a910009f5731",
+   "nodes": 34
+  }
+ },
+ "controlled_sources/test_fsource.cir": {
+  "rkm": {
+   "digest": "7415705d6da4eb678e9e9d91a6c77281dd201e9f73fb66a337a8abccf2df2304",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "7415705d6da4eb678e9e9d91a6c77281dd201e9f73fb66a337a8abccf2df2304",
+   "nodes": 28
+  }
+ },
+ "controlled_sources/test_fsource_m.cir": {
+  "rkm": {
+   "digest": "7fb41c411f8517ab7cc27169144691dfac90fa30e9218fcdef2bfa0cbeb819ab",
+   "nodes": 31
+  },
+  "standard": {
+   "digest": "7fb41c411f8517ab7cc27169144691dfac90fa30e9218fcdef2bfa0cbeb819ab",
+   "nodes": 31
+  }
+ },
+ "controlled_sources/test_fsource_subckt.cir": {
+  "rkm": {
+   "digest": "be04bcffb8262d5e37a8ff1dd40d4377f93136616bdbb48135c3bba55eb11de6",
+   "nodes": 41
+  },
+  "standard": {
+   "digest": "be04bcffb8262d5e37a8ff1dd40d4377f93136616bdbb48135c3bba55eb11de6",
+   "nodes": 41
+  }
+ },
+ "controlled_sources/test_gsource.cir": {
+  "rkm": {
+   "digest": "7ba5c70a22bb9b9b20ddafa1cf4e2cfadbd5dad725107f433756dfd70416c8a5",
+   "nodes": 34
+  },
+  "standard": {
+   "digest": "7ba5c70a22bb9b9b20ddafa1cf4e2cfadbd5dad725107f433756dfd70416c8a5",
+   "nodes": 34
+  }
+ },
+ "controlled_sources/test_gsource_m.cir": {
+  "rkm": {
+   "digest": "433552e0988cd9d1ded8ec78e0d898af3ad696beddfc03d45381bc94cad0fa9f",
+   "nodes": 37
+  },
+  "standard": {
+   "digest": "433552e0988cd9d1ded8ec78e0d898af3ad696beddfc03d45381bc94cad0fa9f",
+   "nodes": 37
+  }
+ },
+ "controlled_sources/test_hsource.cir": {
+  "rkm": {
+   "digest": "712b3e05407fd6a414a46c8f9af65faf97f872c0731976cf406d6e3ea7aa78c9",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "712b3e05407fd6a414a46c8f9af65faf97f872c0731976cf406d6e3ea7aa78c9",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_hsource_sense_later.cir": {
+  "rkm": {
+   "digest": "635c4d3079ed5c2fc04d6487fceeee1d70333a7c251ab6fb9f4c1362dee2e166",
+   "nodes": 30
+  },
+  "standard": {
+   "digest": "635c4d3079ed5c2fc04d6487fceeee1d70333a7c251ab6fb9f4c1362dee2e166",
+   "nodes": 30
+  }
+ },
+ "controlled_sources/test_iswitch.cir": {
+  "rkm": {
+   "digest": "8c4d1b6aa99791c5f6a3ea7c39c674a2df7bf63b59cb85d3a949b8b6069af728",
+   "nodes": 42
+  },
+  "standard": {
+   "digest": "8c4d1b6aa99791c5f6a3ea7c39c674a2df7bf63b59cb85d3a949b8b6069af728",
+   "nodes": 42
+  }
+ },
+ "controlled_sources/test_iswitch_off.cir": {
+  "rkm": {
+   "digest": "f389b7e00857cb25f99d7a9b4a7a63bf6cd6890d0a1e351c0c27915647596822",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "f389b7e00857cb25f99d7a9b4a7a63bf6cd6890d0a1e351c0c27915647596822",
+   "nodes": 44
+  }
+ },
+ "controlled_sources/test_vswitch.cir": {
+  "rkm": {
+   "digest": "bf956e39d2856070791e12080279921c2abfbd550a7191abd6d349cc544efd84",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "bf956e39d2856070791e12080279921c2abfbd550a7191abd6d349cc544efd84",
+   "nodes": 44
+  }
+ },
+ "controlled_sources/test_vswitch_no_state.cir": {
+  "rkm": {
+   "digest": "c15b0d07a23476e7a4931e8fc3f762885242867cb1799d6e4e32d3b88b21f708",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "c15b0d07a23476e7a4931e8fc3f762885242867cb1799d6e4e32d3b88b21f708",
+   "nodes": 44
+  }
+ },
+ "controlled_sources/test_vswitch_on.cir": {
+  "rkm": {
+   "digest": "d673e5d214cf510941378794e973110a63c24f14c001ec8fb26a92f3b3584ab6",
+   "nodes": 45
+  },
+  "standard": {
+   "digest": "d673e5d214cf510941378794e973110a63c24f14c001ec8fb26a92f3b3584ab6",
+   "nodes": 45
+  }
+ },
+ "document_basic/control_source.cir": {
+  "rkm": {
+   "digest": "672f4cfac3e250431d8c3bed442dc5da35b3a008c172055c8dd3571d670837ed",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "672f4cfac3e250431d8c3bed442dc5da35b3a008c172055c8dd3571d670837ed",
+   "nodes": 24
+  }
+ },
  "document_basic/coupled.cir": {
   "rkm": {
    "digest": "69a6a5bde8fbce79744c0ccc624db6a79edd04218eaf26f56f8a1ee3f765cf36",
@@ -169,6 +349,76 @@
   "standard": {
    "digest": "08ac883136725dcfc58013ece8460e267fdcde1c12b672be18ce9a086a6f38a7",
    "nodes": 28
+  }
+ },
+ "edits_golden/controlled_batch.expected.cir": {
+  "rkm": {
+   "digest": "62e9e6dcf32253a364547b1badbc147b5ad348077a0bc1b8e11e6b35b49eccc9",
+   "nodes": 106
+  },
+  "standard": {
+   "digest": "62e9e6dcf32253a364547b1badbc147b5ad348077a0bc1b8e11e6b35b49eccc9",
+   "nodes": 106
+  }
+ },
+ "edits_golden/controlled_gain.expected.cir": {
+  "rkm": {
+   "digest": "0137a8522db96378bd1f3e73d7fb6f8c5ae97a719ebba5355f01024a65cd3245",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "0137a8522db96378bd1f3e73d7fb6f8c5ae97a719ebba5355f01024a65cd3245",
+   "nodes": 105
+  }
+ },
+ "edits_golden/controlled_m.expected.cir": {
+  "rkm": {
+   "digest": "812e8beb1adc8fe51b9b58ef0d7b6430ac54d8a135386197cd331b625bff9199",
+   "nodes": 109
+  },
+  "standard": {
+   "digest": "812e8beb1adc8fe51b9b58ef0d7b6430ac54d8a135386197cd331b625bff9199",
+   "nodes": 109
+  }
+ },
+ "edits_golden/controlled_sources.cir": {
+  "rkm": {
+   "digest": "f749de0ce570ee0b8ec7cf61ea5af31453cd8bd6ac6522a67bfd2ccb78018864",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "f749de0ce570ee0b8ec7cf61ea5af31453cd8bd6ac6522a67bfd2ccb78018864",
+   "nodes": 105
+  }
+ },
+ "edits_golden/controlled_switch_model.expected.cir": {
+  "rkm": {
+   "digest": "f749de0ce570ee0b8ec7cf61ea5af31453cd8bd6ac6522a67bfd2ccb78018864",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "f749de0ce570ee0b8ec7cf61ea5af31453cd8bd6ac6522a67bfd2ccb78018864",
+   "nodes": 105
+  }
+ },
+ "edits_golden/controlled_switch_state.expected.cir": {
+  "rkm": {
+   "digest": "52a241e0fe197e7b3f669c8c689d9ffa6a838daa9ea427cfa756d60ea0f75ddd",
+   "nodes": 106
+  },
+  "standard": {
+   "digest": "52a241e0fe197e7b3f669c8c689d9ffa6a838daa9ea427cfa756d60ea0f75ddd",
+   "nodes": 106
+  }
+ },
+ "edits_golden/controlled_switch_state_removed.expected.cir": {
+  "rkm": {
+   "digest": "582ae76dbf142b5dea0a14a88cadea08b575c56e7e91ed2e64c307b88f41af76",
+   "nodes": 104
+  },
+  "standard": {
+   "digest": "582ae76dbf142b5dea0a14a88cadea08b575c56e7e91ed2e64c307b88f41af76",
+   "nodes": 104
   }
  },
  "edits_golden/coupling.expected.cir": {
@@ -925,6 +1175,68 @@
    "line": 2
   }
  },
+ "elements_rejects/e_m.cir": {
+  "rkm": {
+   "column": 23,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  },
+  "standard": {
+   "column": 23,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_no_value.cir": {
+  "rkm": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_two_values.cir": {
+  "rkm": {
+   "column": 23,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  },
+  "standard": {
+   "column": 23,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  }
+ },
  "elements_rejects/missing_node.cir": {
   "rkm": {
    "column": 5,
@@ -1077,6 +1389,44 @@
    "error": "ParseError",
    "expected": [],
    "line": 2
+  }
+ },
+ "elements_rejects/s_no_model.cir": {
+  "rkm": {
+   "column": 20,
+   "error": "ParseError",
+   "expected": [],
+   "line": 17
+  },
+  "standard": {
+   "column": 20,
+   "error": "ParseError",
+   "expected": [],
+   "line": 17
+  }
+ },
+ "elements_rejects/s_on_off.cir": {
+  "rkm": {
+   "column": 29,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 17
+  },
+  "standard": {
+   "column": 29,
+   "error": "ParseError",
+   "expected": [
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 17
   }
  },
  "elements_rejects/source_ac_without_magnitude.cir": {
@@ -1900,13 +2250,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   },
@@ -1944,13 +2300,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   }
@@ -2092,13 +2454,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 4
   },
@@ -2116,13 +2484,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 4
   }
@@ -2178,13 +2552,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 4
   },
@@ -2202,13 +2582,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 4
   }
@@ -2228,13 +2614,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   },
@@ -2252,13 +2644,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   }
@@ -2278,13 +2676,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   },
@@ -2302,13 +2706,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   }
@@ -2345,13 +2755,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2368,13 +2784,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2411,13 +2833,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2434,13 +2862,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2495,13 +2929,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2518,13 +2958,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2543,13 +2989,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2566,13 +3018,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2628,13 +3086,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   },
@@ -2652,13 +3116,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   }
@@ -2678,13 +3148,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   },
@@ -2702,13 +3178,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 3
   }
@@ -2767,13 +3249,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2812,13 +3300,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2855,13 +3349,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2878,13 +3378,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2903,13 +3409,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2926,13 +3438,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2951,13 +3469,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -2974,13 +3498,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -2999,13 +3529,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   },
@@ -3022,13 +3558,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 2
   }
@@ -3086,13 +3628,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 1
   },
@@ -3130,13 +3678,19 @@
     "comment line (`*`)",
     "coupling (`K`)",
     "current source (`I`)",
+    "current-controlled current source (`F`)",
+    "current-controlled switch (`W`)",
+    "current-controlled voltage source (`H`)",
     "diode (`D`)",
     "dot-command",
     "end of line",
     "inductor (`L`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
-    "voltage source (`V`)"
+    "voltage source (`V`)",
+    "voltage-controlled current source (`G`)",
+    "voltage-controlled switch (`S`)",
+    "voltage-controlled voltage source (`E`)"
    ],
    "line": 1
   }

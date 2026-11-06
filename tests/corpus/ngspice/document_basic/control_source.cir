@@ -1,0 +1,8 @@
+controlled source diagnostics
+V1 in 0 2
+R1 in a 1k
+R2 a 0 1k
+F1 0 b R2 2
+R3 b 0 1k
+.op
+.end

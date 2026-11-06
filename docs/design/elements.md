@@ -35,6 +35,8 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
 | `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
 | `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (subclasses of `Transistor`, for `isinstance`) | `model: ModelReference`, `flags: tuple[Flag, ...]` (`off`, and an ngspice VDMOS's `thermal`), `area: Value \| None` (a positional area: J and Z, and an LTspice Q); `nodes` are the nodes as written (decision 0014) |
+| `Vcvs` (E), `Vccs` (G), `Cccs` (F), `Ccvs` (H), subclasses of `ControlledSource` | `value: Value` (the gain); `nodes` of E and G are the output pair then the control pair, with a `control_nodes` property; F and H have two `nodes` and `control: ElementReference`, the controlling source; `params` holds ngspice's `m=` on F and G (decision 0015) |
+| `VoltageSwitch` (S), `CurrentSwitch` (W), subclasses of `Switch` | `model: ModelReference`, `flags: tuple[Flag, ...]` (`on` or `off`); S has four `nodes` and `control_nodes`, W two `nodes` and `control: ElementReference` |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
 Deviation from task 3.1: `AcSpec.magnitude` is required, because the manual requires ACMAG
@@ -46,7 +48,9 @@ after `AC` (§4.1).
 letters · `NG-NUM-003` RKM · `NG-NUM-004` `µ` · `NG-VAL-001` formulas · `NG-PAR-001`
 parameters, models, flags · `NG-RES-001` · `NG-CAP-001` · `NG-IND-001` · `NG-MUT-001` ·
 `NG-SRC-001` · `NG-DIO-001` · `NG-SUB-001` · `NG-UNS-001` unsupported forms · `NG-XTR-001` the
-transistor line shape · `NG-BJT-001` · `NG-MOS-001` · `NG-JFT-001` · `NG-MES-001` (M13). Every grammar
+transistor line shape · `NG-BJT-001` · `NG-MOS-001` · `NG-JFT-001` · `NG-MES-001` (M13) · `NG-CTL-001`
+the shape of the dependent sources and switches · `NG-VCV-001` · `NG-VCC-001` · `NG-CCC-001` ·
+`NG-CCV-001` · `NG-SWV-001` · `NG-SWC-001` (M14). Every grammar
 definition, including `_` sub-terminals, carries a `// spec:` marker.
 
 ## 3. Element grammar (field by field)
@@ -70,6 +74,9 @@ material) and returns one slot. `[x]` is optional and `x*` repeats.
 | `QXXX nc nb ne [ns [tj]] mname params [off]` (§7.3.1) | `bjt: Q_NAME node node node` then 1 to 3 `t_name`/`t_number`, the last a `t_name`, then `_ng_ttail` | `nodes`, `model`, `params`, `flags` |
 | `MXXX nd ng ns [nb [tc]] mname params [off] [thermal]` (§7.6.1, §7.7) | `mosfet: M_NAME node node node` then as `bjt`, then `_ng_mtail` | `nodes`, `model`, `params`, `flags` |
 | `JXXX nd ng ns mname [area] params [off]` (§7.4.1), `ZXXX` (§7.5.1) | `jfet`, `mesfet: …_NAME node node node t_name t_area? _ng_ttail` | `nodes`, `model`, `area`, `params`, `flags` |
+| `EXXX n+ n- nc+ nc- value`, `GXXX … value <m=val>` (§4.2.2, §4.2.1) | `vcvs`, `vccs: …_NAME node node node node value`, then `ctl_m` on G; or `…_NAME node node nonlinear_form` (unsupported) | `nodes`, `value`, `params` |
+| `FXXX n+ n- vnam value <m=val>`, `HXXX n+ n- vnam value` (§4.2.3, §4.2.4) | `cccs`, `ccvs: …_NAME node node ctl_ref value`, then `ctl_m` on F; or `cc_form` (POLY, unsupported) | `nodes`, `control`, `value`, `params` |
+| `SXXX n+ n- nc+ nc- model <ON|OFF>`, `WXXX n+ n- vnam model <ON|OFF>` (§3.3.15) | `vswitch`, `cswitch`, with `sw_state` | `nodes`, `control` (W), `model`, `flags` |
 | `XXXX n1 [n2…] subnam params` (§2.6.3, §2.11.3) | `subckt_instance: X_NAME node (x_node \| x_last)` | `nodes`, `subckt`, `params` |
 | `params:` (HSPICE) | `params_keyword` | raises `ParseError` |
 
@@ -95,11 +102,12 @@ An element line ends with `NL`, or with `eol` (blanks, comments or continuations
 
 The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 6, 7 and 9, and the syntax facts in [docs/grammars/ltspice/](../grammars/ltspice/README.md). The shapes above serve both dialects. What differs:
 
-- **Spec IDs:** `LT-FLD-001`, `LT-NOD-001`, `LT-NUM-001` to `LT-NUM-004`, `LT-VAL-001`, `LT-RES-001`, `LT-CAP-001`, `LT-IND-001`, `LT-MUT-001`, `LT-SRC-001`, `LT-DIO-001`, `LT-SUB-001`, `LT-UNS-001`, and for M13 `LT-XTR-001`, `LT-BJT-001`, `LT-MOS-001`, `LT-JFT-001`, `LT-MES-001`.
+- **Spec IDs:** `LT-FLD-001`, `LT-NOD-001`, `LT-NUM-001` to `LT-NUM-004`, `LT-VAL-001`, `LT-RES-001`, `LT-CAP-001`, `LT-IND-001`, `LT-MUT-001`, `LT-SRC-001`, `LT-DIO-001`, `LT-SUB-001`, `LT-UNS-001`, and for M13 `LT-XTR-001`, `LT-BJT-001`, `LT-MOS-001`, `LT-JFT-001`, `LT-MES-001`, and for M14 `LT-CTL-001`, `LT-VCV-001`, `LT-VCC-001`, `LT-CCC-001`, `LT-CCV-001`, `LT-SWV-001`, `LT-SWC-001`.
 - **R, C, L:** no model form and no keyword form, so `model` and `value_keyword` are `None`. The parameter names of each letter are a closed list.
 - **V, I:** `params` holds `Rser` and `Cpar` on V, and `R=` on I. `flags` holds I's `load`.
 - **D:** `area` is the positional area; `area=` written out is a parameter.
 - **Q, M, J, Z:** Q and M take 3 or 4 nodes, J and Z exactly 3. Q, J and Z take a positional `area`. Each letter's parameter names are a closed list (decision 0014 item 6), and M has no `thermal` flag. An embedded decimal such as `1n5` is an area only where no further name may follow.
+- **E, F, G, H, S, W:** no parameter on any of the six. A switch's state may take a value (`off=1`). value= and POLY after the output nodes, and table= and Laplace= after E's and G's control nodes, are unsupported (M15).
 - **X:** open parameter names, with or without `params:`.
 - **K:** three or more inductors, as in ngspice.
 - **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.
