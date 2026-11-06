@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10, M11 and M12 are complete, and M13 is in progress
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M13 are complete, and M14 is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -66,7 +66,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Edit API:** set a whole stimulus, set one argument, and remove a stimulus. Setting one leaves DC and AC alone ([decision 0013](../decisions/0013-stimulus-specs.md)).
 - **Exit:** `half_rectifier.net` loads and edits, its solver test passes on LTspice, and each function has a spec entry, golden diff and solver test.
 
-### M13 — Transistors (Q, M, J, Z) ([task list](./m13-tasks.md))
+### M13 — Transistors (Q, M, J, Z) (complete; [task list](./archive/phase-2/m13-tasks.md), [decision 0014](../decisions/0014-transistors.md))
 
 - The node and model boundary rule of section 3, point 1, as a decision record before the grammar.
 - Typed nodes, instance parameters, flags (`off`), positional area and `ic=`. Extend `model-types.json` (Q → NPN, PNP; M → NMOS, PMOS, and LTspice's VDMOS form; J → NJF, PJF; Z → NMF, PMF, and LTspice's IGBT form).
