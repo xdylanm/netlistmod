@@ -1,8 +1,8 @@
 # 0015 — Linear dependent sources and switches
 
-- **Status:** proposed (M14; accepted when M14 closes)
+- **Status:** accepted (2026-11-06, maintainer; M14 T12)
 - **Date:** 2026-11-06
-- **Context:** M14 adds the linear dependent sources E, F, G and H and the switches S and W on both dialects. Their controls are topology (phase 2 plan, section 3, point 2): an edit that rewired a control path would otherwise pass verification. Probes on ngspice 47 and LTspice 26.1.1 are in [m14-tasks.md](../design/m14-tasks.md) section 3. The maintainer accepted these on 2026-11-06.
+- **Context:** M14 adds the linear dependent sources E, F, G and H and the switches S and W on both dialects. Their controls are topology (phase 2 plan, section 3, point 2): an edit that rewired a control path would otherwise pass verification. Probes on ngspice 47 and LTspice 26.1.1 are in [m14-tasks.md](../design/archive/phase-2/m14-tasks.md) section 3. The maintainer accepted these on 2026-11-06.
 - **Decision:**
   1. **Node classes.** `Vcvs` (E), `Vccs` (G), `Cccs` (F), `Ccvs` (H), `VoltageSwitch` (S) and `CurrentSwitch` (W), with the public bases `ControlledSource` (E, F, G, H) and `Switch` (S, W).
   2. **Control nodes are nodes.** E, G and S have four `nodes`, the output pair then the control pair, with a `control_nodes` property for the last two. So the signature and every net query include them.
