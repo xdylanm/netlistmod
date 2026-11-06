@@ -4,8 +4,72 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-10-31",
-  "notes": "Small circuits whose expected query results are written out here: 'nets' maps a scope path (subcircuit names joined by '/', '' for the top level) to [net name, net scope] in first-use order; 'connections' maps each top-level element to the nets of its terminals; 'references' lists [kind, name, scope, resolved] in source order; 'diagnostics' lists [code, severity, line, column] in source order. Expected values were checked by hand against names.md and scoping.md. LF, CRLF (diode_clamp.cir) and a missing final newline (coupled.cir). every_diagnostic.cir parses with rkm=True and is not run in ngspice (it is deliberately broken); the others run in ngspice 47.",
+  "notes": "Small circuits whose expected query results are written out here: 'nets' maps a scope path (subcircuit names joined by '/', '' for the top level) to [net name, net scope] in first-use order; 'connections' maps each top-level element to the nets of its terminals; 'references' lists [kind, name, scope, resolved] in source order; 'diagnostics' lists [code, severity, line, column] in source order. Expected values were checked by hand against names.md and scoping.md. LF, CRLF (diode_clamp.cir) and a missing final newline (coupled.cir). every_diagnostic.cir parses with rkm=True and is not run in ngspice (it is deliberately broken), nor is control_source.cir (M14: an F line controlled by a resistor); the others run in ngspice 47.",
   "fixtures": {
+    "control_source.cir": {
+      "sha256": "5ff13baa32cf2a986c546715d13d6632075bc8ad2042d32925612ddfc3789376",
+      "nets": {
+        "": [
+          [
+            "in",
+            ""
+          ],
+          [
+            "0",
+            ""
+          ],
+          [
+            "a",
+            ""
+          ],
+          [
+            "b",
+            ""
+          ]
+        ]
+      },
+      "connections": {
+        "V1": [
+          "in",
+          "0"
+        ],
+        "R1": [
+          "in",
+          "a"
+        ],
+        "R2": [
+          "a",
+          "0"
+        ],
+        "F1": [
+          "0",
+          "b"
+        ],
+        "R3": [
+          "b",
+          "0"
+        ]
+      },
+      "references": [
+        [
+          "element",
+          "R2",
+          "",
+          true
+        ]
+      ],
+      "diagnostics": [
+        [
+          "CONTROL_SOURCE_MISMATCH",
+          "warning",
+          5,
+          8
+        ]
+      ],
+      "solver": {
+        "skip": "deliberately broken (M14): F1 is controlled by a resistor, which stops ngspice 47 (decision 0015 item 5)"
+      }
+    },
     "coupled.cir": {
       "sha256": "3472bf2a4cbf48afef2e4ce21166648a05d8fae32891d6b3f12fa65ea1fcaa34",
       "nets": {

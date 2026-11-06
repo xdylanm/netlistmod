@@ -1,0 +1,18 @@
+id: LT-SWC-001
+dialect: ltspice
+construct: current-controlled switch (W) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "W — Current-Controlled Switch"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- cswitch
+- W_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_switches_take_a_model_and_an_optional_state
+- tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Two nodes, the controlling source, a CSW model, then on or off.'

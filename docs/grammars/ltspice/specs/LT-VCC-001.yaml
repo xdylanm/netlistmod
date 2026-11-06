@@ -1,0 +1,19 @@
+id: LT-VCC-001
+dialect: ltspice
+construct: voltage-dependent current source (G) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "G — Voltage-Dependent Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- vccs
+- G_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_e_and_g_have_four_nodes_and_a_gain
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Four nodes and one gain; m= stops LTspice and is refused.'

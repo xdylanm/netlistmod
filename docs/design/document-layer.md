@@ -121,7 +121,7 @@ separators=(",", ":"))` encoded as UTF-8.
 
 | Code | Severity | Span | When |
 |---|---|---|---|
-| `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT` | warning; info if a searched scope has `.include`/`.lib` | the name | reference not found; the message lists the scopes searched |
+| `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT` | warning; info if a searched scope has `.include`/`.lib`, or for an LTspice controlling source inside an instance (`X1:Vq`) | the name | reference not found; the message lists the scopes searched. An element reference (K's inductors, a controlling source of F, H or W) is searched in its own scope only |
 | `DUPLICATE_DEFINITION` | info (`.param`), warning (`.model`, `.subckt`) | the repeated name | a name defined again in one scope (defaults count as parameters) |
 | `DUPLICATE_ELEMENT` | warning | the repeated designator | case-insensitive |
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
@@ -131,6 +131,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
+| `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message says what each solver does with it (decision 0015 item 5) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
 the model name) was added by M6 ([edit-layer.md](./edit-layer.md) §6). It was **deferred** to

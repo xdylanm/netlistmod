@@ -12,10 +12,10 @@ until its scheduled grammar milestone. The table is checked against
 | B | planned | 2 | M15 |
 | C | supported | 1 | M3 |
 | D | supported | 1 | M3 |
-| E | planned | 2 | M14, M15 |
-| F | planned | 2 | M14, M15 |
-| G | planned | 2 | M14, M15 |
-| H | planned | 2 | M14, M15 |
+| E | supported | 2 | M14, M15 |
+| F | supported | 2 | M14, M15 |
+| G | supported | 2 | M14, M15 |
+| H | supported | 2 | M14, M15 |
 | I | supported | 1 | M3 |
 | J | supported | 2 | M13 |
 | K | supported | 1 | M3 |
@@ -26,11 +26,11 @@ until its scheduled grammar milestone. The table is checked against
 | P | planned | 2 | M16 |
 | Q | supported | 2 | M13 |
 | R | supported | 1 | M3 |
-| S | planned | 2 | M14 |
+| S | supported | 2 | M14 |
 | T | planned | 2 | M16 |
 | U | planned | 2 | M16, M17 |
 | V | supported | 1 | M3 |
-| W | planned | 2 | M14 |
+| W | supported | 2 | M14 |
 | X | supported | 1 | M3 |
 | Y | planned | 2 | M16 |
 | Z | supported | 2 | M13 |

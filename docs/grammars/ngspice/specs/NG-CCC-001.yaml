@@ -1,0 +1,20 @@
+id: NG-CCC-001
+dialect: ngspice
+construct: current-controlled current source (F) lines
+manual_ref:
+- '[ngspice-manual] §4.2.3 "Fxxxx: Linear Current-Controlled Current Sources (CCCS)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- F_NAME
+- cccs
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_f_and_h_have_two_nodes_and_a_controlling_source
+- tests/grammar/ngspice/test_controlled_sources.py::test_f_and_g_take_m
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ngspice_controlled_probes.py::test_m_doubles_the_output
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Two nodes, the controlling source, one gain, then m= (§4.2.3). The source is found in the line''s own scope, in any case and anywhere in it; one that is not a V gets CONTROL_SOURCE_MISMATCH (ngspice 47 also runs an E or H).'

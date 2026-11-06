@@ -1,0 +1,20 @@
+id: NG-VCC-001
+dialect: ngspice
+construct: voltage-controlled current source (G) lines
+manual_ref:
+- '[ngspice-manual] §4.2.1 "Gxxxx: Linear Voltage-Controlled Current Sources (VCCS)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- G_NAME
+- vccs
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_e_and_g_have_four_nodes_and_a_gain
+- tests/grammar/ngspice/test_controlled_sources.py::test_f_and_g_take_m
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ngspice_controlled_probes.py::test_m_doubles_the_output
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes, one gain, then m= (§4.2.1); no other parameter.'

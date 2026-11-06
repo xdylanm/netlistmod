@@ -27,11 +27,15 @@ from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     BipolarTransistor,
+    Cccs,
+    ControlledSource,
     Diode,
     Jfet,
     Mesfet,
     MutualCoupling,
     SubcktInstance,
+    Switch,
+    Vccs,
     VoltageSource,
 )
 from netlistmod.model.values import (
@@ -62,6 +66,8 @@ def set_value(
         if element.dc is None:
             raise EditError(f"`{designator}` has no DC value to replace; use set_dc to add one")
         return [Edit(element.dc.span, value, reason, (_VALUE,))]
+    if isinstance(element, ControlledSource):
+        return [Edit(element.value.span, value, reason, (_VALUE,))]
     if isinstance(element, MutualCoupling):
         raise EditError(f"`{designator}` is a coupling; use set_coupling to set its value")
     raise EditError(f"`{designator}` is a {_kind(element)} line and has no value slot")
@@ -86,6 +92,12 @@ def set_param(
     ltspice = netlist.dialect is Dialect.LTSPICE
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
+    if isinstance(element, ControlledSource | Switch):
+        # Only an ngspice F or G takes a parameter, m= (decision 0015 item 7).
+        if ltspice or not isinstance(element, Cccs | Vccs) or folded != found_fold("m"):
+            only = "" if ltspice else "; on ngspice only F and G take `m=`"
+            raise EditError(f"`{designator}` takes no parameter `{name}`{only}")
+        return _assign(element.params, element, name, value, reason, folded=found_fold)
     takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES)
     port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
     if not isinstance(element, takes_params) or (
@@ -177,7 +189,7 @@ def set_model(
     """Replace the model name of an R, C, L, D, Q, M, J or Z line, or add one after the value of
     an R, C or L line that has none (decision 0007 item 3; review round 1; decision 0014)."""
     element = _element(netlist, designator, scope, in_definition)
-    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS)):
+    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS, Switch)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
     if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")

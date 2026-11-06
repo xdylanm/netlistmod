@@ -17,4 +17,5 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_other_forms_run_and_are_unsupported
 - tests/solver/test_ltspice_validation.py::test_ngspice_source_functions_stop_ltspice
 - tests/solver/test_ltspice_validation.py::test_letters_that_are_not_ltspice_letters_stop_both
-notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes.'
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
+notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms (value=, POLY, and on E and G table= and Laplace=) raise UnsupportedConstruct at their keyword until M15 (decision 0015 item 9).'

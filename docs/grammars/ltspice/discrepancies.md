@@ -12,6 +12,8 @@ and then the library test that pins the library's side.
 | LTspice 26.1.1 | Library behaviour | Evidence |
 |---|---|---|
 | A node named `<instance>:<node>` is connected to that node inside the instance (`names.md` N11). Undocumented, and no export writes it. | A separate net, so the topology view is wrong for it. `NODE_INTO_INSTANCE` says so. A known limit (architecture §7.8). | `tests/solver/test_ltspice_solver_document.py::test_a_node_into_an_instance_is_joined_and_flagged`; `test_other_names_with_a_colon_are_ordinary_nodes` |
+| Runs an F, H or W controlled by an E, an H or an L; the reference names a voltage source. | Loads, with `CONTROL_SOURCE_MISMATCH` (decision 0015 item 5). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`f-ctrl-e`, `f-ctrl-h`, `f-ctrl-l`) |
+| Runs `F1 0 out X1:Vq 2`, controlled by a source inside instance `X1`. | Keeps the name as text and reports `UNRESOLVED_ELEMENT` as info; the controlling source is not resolved (a known limit, architecture §7.8; decision 0015 item 4). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`f-into-instance`); `controlled_sources/lt_test_hsource_ctrl_into_instance.cir` |
 
 ## Exceptions to the reference
 
@@ -66,6 +68,9 @@ of the `*_rejects` families.
 | Accepts `{{x}}` and `.param a$b=1`. | `ParseError`. | `test_nested_braces_and_a_dollar_in_a_param_run_but_the_library_rejects_them`; `numbers.md` |
 | Accepts a port named `0`. | `ParseError`, as for ngspice. | `test_a_port_named_0_runs_but_the_library_rejects_it`; `test_a_port_cannot_be_zero` |
 | Reads BOM-less UTF-16LE and Latin-1 by itself (reference, Text Encoding). | BOM-less UTF-16LE is not detected, because it needs a heuristic (P5): the caller decodes it and names the encoding. Bytes that are not UTF-8 are tried as `cp1252` before Latin-1; the two differ on 0x80–0x9F (decision 0001). | `test_encodings_ltspice_reads_by_itself`; `test_encodings_round_trip` |
+| Runs `E1 out 0 vx 0 gain=2`; the reference writes the gain positionally. | `ParseError` at `gain` (decision 0015 item 6). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`e-gain-keyword`) |
+| Runs `S1 … sm on off`; the last keyword sets the state. | `ParseError` at the second keyword (decision 0015 item 8). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`s-on-off`); `elements_rejects/s_on_off.cir` |
+| Runs `E1 out,0 vx 0 2`, a comma between E's output nodes, but stops on `F1 0,out Vs 2`. | `ParseError` for both: a comma is not a node separator on any LTspice letter (decision 0009). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`e-comma`, `f-comma`) |
 
 ## Forms the library accepts and LTspice rejects
 

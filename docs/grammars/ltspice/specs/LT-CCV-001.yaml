@@ -1,0 +1,19 @@
+id: LT-CCV-001
+dialect: ltspice
+construct: current-dependent voltage source (H) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "H — Current-Dependent Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- ccvs
+- H_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_f_and_h_have_a_controlling_source
+- tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ltspice_controlled_probes.py::test_each_gain_takes_effect
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Two nodes, the controlling source and one gain.'

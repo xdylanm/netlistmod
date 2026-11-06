@@ -1,0 +1,20 @@
+id: LT-SWV-001
+dialect: ltspice
+construct: voltage-controlled switch (S) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "S — Voltage-Controlled Switch"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- vswitch
+- S_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_switches_take_a_model_and_an_optional_state
+- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ltspice_controlled_probes.py::test_the_state_sets_a_switch_inside_its_hysteresis
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Four nodes, an SW model, then on or off, which may take a value (off=1). Both states together are refused although LTspice runs them and the last wins.'

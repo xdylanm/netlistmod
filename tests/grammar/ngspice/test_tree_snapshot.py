@@ -12,7 +12,10 @@ node or position changed. M11 added ``structure_basic/lib_block.cir`` and
 ``edits_golden/add_lib_block.expected.cir``, and no other entry changed. M12 removed the three
 rejected source function files, added the new accept files and golden files, and changed no other
 entry. M13 added the ``kicad_transistors`` family; 17 rejected files gained the four transistor
-letters among their expected terminals, and no node, position or error class changed.
+letters among their expected terminals, and no node, position or error class changed. M14 added
+the ``controlled_sources`` family, the controlled-source golden files, five ``elements_rejects``
+files and ``document_basic/control_source.cir``; the same 17 rejected files gained the six new
+letters among their expected terminals. No other entry changed.
 """
 
 from __future__ import annotations

@@ -1,0 +1,20 @@
+id: NG-SWC-001
+dialect: ngspice
+construct: current-controlled switch (W) lines
+manual_ref:
+- '[ngspice-manual] §3.3.15 "Switches"'
+- '[ngspice-manual] §3.3.16 "Switch Model (SW/CSW)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- W_NAME
+- cswitch
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_switches_take_a_model_and_an_optional_state
+- tests/grammar/ngspice/test_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Two nodes, the controlling source, a mandatory CSW model, then ON or OFF.'

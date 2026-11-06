@@ -22,7 +22,10 @@ from netlistmod.document.index import Index, Scope
 from netlistmod.document.lines import ScopePath
 from netlistmod.document.names import GROUND, is_automatic_global, is_ground, net_name
 from netlistmod.model.nodes import (
+    Cccs,
+    Ccvs,
     Component,
+    CurrentSwitch,
     GlobalDirective,
     MutualCoupling,
     Node,
@@ -66,7 +69,8 @@ class TopologySignature:
 
     Entries hold the exact text of every topology token: each element's scope, designator,
     type and ordered nodes; each definition's name and ordered ports; each ``X`` line's nodes
-    and subcircuit name; each ``K`` line's inductors; and the ``.global`` node set.
+    and subcircuit name; each ``K`` line's inductors; each F, H and W line's controlling
+    source; and the ``.global`` node set.
     """
 
     entries: tuple[SignatureEntry, ...]
@@ -219,3 +223,6 @@ def _signature_entries(scope: Scope, entries: list[SignatureEntry]) -> None:
         elif isinstance(item, Component):
             nodes = tuple(node.name for node in item.nodes)
             entries.append(("element", scope.display, item.designator, type(item).__name__, nodes))
+            if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+                # A controlling source is topology but not a net (decision 0015 item 3).
+                entries.append(("control", scope.display, item.designator, item.control.designator))

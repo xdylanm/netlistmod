@@ -1,0 +1,22 @@
+id: NG-SWV-001
+dialect: ngspice
+construct: voltage-controlled switch (S) lines
+manual_ref:
+- '[ngspice-manual] §3.3.15 "Switches"'
+- '[ngspice-manual] §3.3.16 "Switch Model (SW/CSW)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-06'
+grammar:
+- S_NAME
+- vswitch
+tests:
+- tests/grammar/ngspice/test_controlled_sources.py::test_switches_take_a_model_and_an_optional_state
+- tests/grammar/ngspice/test_controlled_sources.py::test_a_model_named_off_is_the_model
+- tests/grammar/ngspice/test_controlled_sources.py::test_malformed_lines_are_rejected
+- tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
+- tests/solver/test_ngspice_controlled_probes.py::test_the_state_sets_a_switch_inside_its_hysteresis
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes, a mandatory SW model, then ON or OFF in any case. Both states together are refused although ngspice 47 runs them and the last wins (decision 0015 item 8).'

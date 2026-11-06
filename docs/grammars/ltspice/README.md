@@ -61,9 +61,12 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-ACA-001](./specs/LT-ACA-001.yaml) | .ac | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-BJT-001](./specs/LT-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-CCC-001](./specs/LT-CCC-001.yaml) | current-dependent current source (F) lines | validated | ltspice 26.1.1 (2026-11-06) |
+| [LT-CCV-001](./specs/LT-CCV-001.yaml) | current-dependent voltage source (H) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-CTL-001](./specs/LT-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-DCA-001](./specs/LT-DCA-001.yaml) | .dc | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-DIO-001](./specs/LT-DIO-001.yaml) | diode (D) lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-DIR-001](./specs/LT-DIR-001.yaml) | closed list of dot-commands | validated | ltspice 26.1.1 (2026-11-01) |
@@ -106,10 +109,14 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-SWC-001](./specs/LT-SWC-001.yaml) | current-controlled switch (W) lines | validated | ltspice 26.1.1 (2026-11-06) |
+| [LT-SWV-001](./specs/LT-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-TRN-001](./specs/LT-TRN-001.yaml) | .tran | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-TTL-001](./specs/LT-TTL-001.yaml) | implicit first-line title and .title | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-UNS-001](./specs/LT-UNS-001.yaml) | recognised but unsupported forms | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-VAL-001](./specs/LT-VAL-001.yaml) | brace and quoted expressions | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-VCC-001](./specs/LT-VCC-001.yaml) | voltage-dependent current source (G) lines | validated | ltspice 26.1.1 (2026-11-06) |
+| [LT-VCV-001](./specs/LT-VCV-001.yaml) | voltage-dependent voltage source (E) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-XTR-001](./specs/LT-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ltspice 26.1.1 (2026-11-05) |

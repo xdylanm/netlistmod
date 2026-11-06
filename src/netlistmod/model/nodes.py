@@ -252,6 +252,76 @@ class Mesfet(Transistor):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class ControlledSource(Component):
+    """Fields shared by the linear dependent sources E, F, G and H (decision 0015).
+
+    ``value`` is the gain: a voltage gain, transconductance, current gain or transresistance.
+    ``params`` holds ngspice's ``m=`` on F and G.
+    """
+
+    value: Value
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Vcvs(ControlledSource):
+    """An ``E`` line. ``nodes`` are the output pair, then the control pair."""
+
+    @property
+    def control_nodes(self) -> tuple[Node, ...]:
+        """The positive and negative control nodes."""
+        return self.nodes[2:]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Vccs(ControlledSource):
+    """A ``G`` line. ``nodes`` are the output pair, then the control pair."""
+
+    @property
+    def control_nodes(self) -> tuple[Node, ...]:
+        """The positive and negative control nodes."""
+        return self.nodes[2:]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Cccs(ControlledSource):
+    """An ``F`` line. ``control`` names the source whose current controls it."""
+
+    control: ElementReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Ccvs(ControlledSource):
+    """An ``H`` line. ``control`` names the source whose current controls it."""
+
+    control: ElementReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class Switch(Component):
+    """Fields shared by S and W (decision 0015): the model and the initial state in ``flags``."""
+
+    model: ModelReference
+    flags: tuple[Flag, ...]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class VoltageSwitch(Switch):
+    """An ``S`` line. ``nodes`` are the switch pair, then the control pair."""
+
+    @property
+    def control_nodes(self) -> tuple[Node, ...]:
+        """The positive and negative control nodes."""
+        return self.nodes[2:]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CurrentSwitch(Switch):
+    """A ``W`` line. ``control`` names the source whose current controls it."""
+
+    control: ElementReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class SubcktInstance(Component):
     """An ``X`` line: its nodes, the subcircuit name and the parameter overrides."""
 
@@ -556,6 +626,12 @@ BodyItem: TypeAlias = (
     | Mosfet
     | Jfet
     | Mesfet
+    | Vcvs
+    | Vccs
+    | Cccs
+    | Ccvs
+    | VoltageSwitch
+    | CurrentSwitch
     | SubcktInstance
 )
 """An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
@@ -605,6 +681,12 @@ ELEMENT_NAMES: dict[type[Component], str] = {
     Mosfet: "MOSFET",
     Jfet: "JFET",
     Mesfet: "MESFET",
+    Vcvs: "voltage-controlled voltage source",
+    Vccs: "voltage-controlled current source",
+    Cccs: "current-controlled current source",
+    Ccvs: "current-controlled voltage source",
+    VoltageSwitch: "voltage-controlled switch",
+    CurrentSwitch: "current-controlled switch",
     SubcktInstance: "subcircuit call",
 }
 
