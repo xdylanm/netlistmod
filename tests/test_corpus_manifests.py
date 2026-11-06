@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -58,7 +59,9 @@ def test_every_accept_fixture_runs_in_ltspice_or_has_a_reason() -> None:
     fields = solver_fields()
     assert {path.parent.name for path in fields} == families
     for path, field in fields.items():
-        assert set(field) <= {"skip", "stubs", "harness", "warning"}, path
+        assert set(field) <= {"skip", "stubs", "harness", "warning", "external"}, path
+        for variable in field.get("external", {}).values():
+            assert re.fullmatch(r"[A-Z][A-Z0-9_]*", variable), f"{path}: {variable!r}"
         if "skip" in field:
             assert set(field) == {"skip"} and len(field["skip"]) > 20, path
         for stub in [*field.get("stubs", {}).values(), *filter(None, [field.get("harness")])]:
@@ -67,7 +70,9 @@ def test_every_accept_fixture_runs_in_ltspice_or_has_a_reason() -> None:
 
 def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
     """Decision 0008: a fixture's optional ``solver`` field is ``{"skip": reason}``, or names
-    stub files for its includes (``stubs``) and an included harness (``harness``)."""
+    stub files for its includes (``stubs``), an included harness (``harness``), and files from
+    outside the repository that its includes name, each by an environment variable
+    (``external``)."""
     families = sorted(
         family.name
         for family in NGSPICE.iterdir()
@@ -79,7 +84,9 @@ def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
     fields = solver_fields()
     assert {path.parent.name for path in fields} == set(families)
     for path, field in fields.items():
-        assert set(field) <= {"skip", "stubs", "harness"}, path
+        assert set(field) <= {"skip", "stubs", "harness", "external"}, path
+        for variable in field.get("external", {}).values():
+            assert re.fullmatch(r"[A-Z][A-Z0-9_]*", variable), f"{path}: {variable!r}"
         if "skip" in field:
             assert set(field) == {"skip"} and isinstance(field["skip"], str), path
             assert len(field["skip"]) > 20, f"give the reason: {path}"

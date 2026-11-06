@@ -1,0 +1,22 @@
+.title KiCad schematic
+.include "jellybean.lib"
+.tran 500n 12m
+.control
+  run
+  wrdata output_snh.txt v(/IN) v(/TRIG) v(/OUT)
+.endc
+V4 /IN GND DC 0 SIN( 0 5 220 0 0 0 ) AC 1  
+XU1 /BUF_IN /BUF_IN /IN Net-_U1C-V-_ /SAMPLED Net-_U1B--_ Net-_U1B--_ Net-_U1C-V+_ TL072_OJ
+R4 Net-_D1-K_ /TRIG 100
+R1 Net-_D1-A_ /BUF_IN 1Meg
+R2 GND /IN 1Meg
+V3 /TRIG GND PULSE( -10 10 0 2u 2u 500u 3m ) 
+R3 /OUT Net-_U1B--_ 1k
+V2 GND Net-_U1C-V-_ DC 12 
+V1 Net-_U1C-V+_ GND DC 12 
+C2 Net-_U1C-V+_ GND 100n
+C3 GND Net-_U1C-V-_ 100n
+C1 /SAMPLED GND 100n
+JQ1 /BUF_IN Net-_D1-A_ /SAMPLED J113_OJ area=2
+D1 Net-_D1-A_ Net-_D1-K_ 1N4148_OJ
+.end

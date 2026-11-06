@@ -1,0 +1,192 @@
+{
+  "family": "ltspice_transistors",
+  "origin": "LTspice versions of the kicad_transistors circuits: schematics drawn by the maintainer or written from the KiCad netlists and reviewed by the maintainer, LTspice 26.1.1's -netlist exports of them, and variants of the exports, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-05",
+  "notes": "Exported by LTspice 26.1.1 with -netlist, with Default Devices and Default Libraries off; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's first line says what it changes. Most files include jellybean.lib from openjellybean 0.5.0 (https://github.com/xdylanm/openjellybean, MIT), which is not copied here: the solver sweep runs them when OPENJELLYBEAN_LIB names that file. The local_models and subckt variants carry copied openjellybean model blocks with their notice.",
+  "fixtures": {
+    ".gitignore": {
+      "sha256": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
+      "note": "Keeps LTspice run output out, as in contributed_examples (decision 0009)."
+    },
+    "bjt_emitter_follower.asc": {
+      "sha256": "ee9054a455260e3d4fee3a3b431c545ec6304fe63e799b3ed4e45eed2349c335",
+      "note": "Written from the KiCad netlist by the developer, then redrawn by the maintainer."
+    },
+    "bjt_emitter_follower.net": {
+      "sha256": "3f63be17b1e0d5f71bb8aa2e7dc1ae8e382a84f2d8269e0386a786d6c478afd9",
+      "note": "LTspice 26.1.1's -netlist export of bjt_emitter_follower.asc.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_2n3904.cir": {
+      "sha256": "546cd43a46179a669c394e744b8adc24aced9ea5e7562631925d11711f9e409d",
+      "note": "bjt_emitter_follower.net with model names that start with a digit; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_lib.cir": {
+      "sha256": "aef798eb9e05a8ea189fe8518f4ec3825bd86d7752c4a038e1c61b1139225838",
+      "note": "bjt_emitter_follower.net with a one-field .lib in place of the .include; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_local_models.cir": {
+      "sha256": "39748f746c688bb9144d87ea1460be2eefb6396dcdc73f011e5207b3f8cd04c5",
+      "note": "bjt_emitter_follower.net with its models copied from openjellybean 0.5.0; derived by the developer."
+    },
+    "bjt_emitter_follower_off_temp.cir": {
+      "sha256": "2aa38fdf781f7b50eee17ca34f5f9d0a24cac772814505b89b50ffd936fd4524",
+      "note": "bjt_emitter_follower.net with off and temp=; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_positional_area.cir": {
+      "sha256": "cb98f77cf04116c19f8c49ca46d8c5a056d12de9746bf19f931ac424f608b2ce",
+      "note": "bjt_emitter_follower.net with a positional area on each BJT; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_subckt.cir": {
+      "sha256": "b5784c8a19d27ead7b9614bdbc4939a2f73800812433e5a6d858300faf1a4d94",
+      "note": "bjt_emitter_follower.net with the transistors and their models in a .subckt; derived by the developer."
+    },
+    "bjt_emitter_follower_substrate.cir": {
+      "sha256": "c9aa9c42d6f278598f9fcccc99da477fc0cd9477802c237d1fd4aeec7bdaa7cc",
+      "note": "bjt_emitter_follower.net with the PNP substrate on the supply; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_three_nodes.cir": {
+      "sha256": "1fdbb3e60b9242409d5aa9dbcacc621b3853b85f93a4f0be2fccf75175730b44",
+      "note": "bjt_emitter_follower.net with 3-node BJTs, as written by hand; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_discrete_xor.asc": {
+      "sha256": "ec3a29d2ec214677c4ce997f12bb22c97b8f7d995bcbffd583ba902e89752cd3",
+      "note": "Written from the KiCad netlist by the developer, with a label on each pin; reviewed by the maintainer."
+    },
+    "cmos_discrete_xor.net": {
+      "sha256": "0b19f9a3c7f4dc383fa3146268f292723d4614d48b933a223333c9129ae3feb8",
+      "note": "LTspice 26.1.1's -netlist export of cmos_discrete_xor.asc.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_discrete_xor_local_models.cir": {
+      "sha256": "8a38a2df05834a4382c10e3299e34907dc31f8f5246fa6e1c523b6fc31ebf2bc",
+      "note": "cmos_discrete_xor.net with its models copied from openjellybean 0.5.0, BS250_OJ with pchan; derived by the developer."
+    },
+    "cmos_discrete_xor_m_off.cir": {
+      "sha256": "8583693e2a28cc955bb44cee18224a65e5ed820c82c9e0dca3833ef6e7673b61",
+      "note": "cmos_discrete_xor.net with VDMOS m= and off; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_discrete_xor_three_nodes.cir": {
+      "sha256": "e70a03495bbc68de5d6048b8cb1766a0f619d38910d3e3f28aa0222e8a464278",
+      "note": "cmos_discrete_xor.net with 3-node VDMOS lines, the reference's form; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_xor.asc": {
+      "sha256": "2d9393125e05dfe2db27d32a1f373f88a66b15fa476608a0c077529ace8ae908",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: the KiCad cmos_xor, with the inverter on B."
+    },
+    "cmos_xor.net": {
+      "sha256": "9a4178d2946377eba138425ca26fc9f8c560725f128877e9a25e8648250f937a",
+      "note": "LTspice 26.1.1's -netlist export of cmos_xor.asc."
+    },
+    "cmos_xor_continued.cir": {
+      "sha256": "e8cca3eac7165fb86beff94274440c82eced830b51656d9303c4e8511380569f",
+      "note": "cmos_xor.net with the parameters on + continuation lines; derived by the developer."
+    },
+    "cmos_xor_geometry.cir": {
+      "sha256": "9beca199357935a901128ac1f0cc776677ab738ff4d427aa9cf964a5eb1d2c55",
+      "note": "cmos_xor.net with ad, as, pd and ps; derived by the developer."
+    },
+    "cmos_xor_geometry_upper.cir": {
+      "sha256": "ab515eb1cc7c6e5acb8a11f555e55abe37bbab6b6e18fe04c4ab252427551ca0",
+      "note": "cmos_xor.net with upper-case names and values, nrd and nrs; derived by the developer."
+    },
+    "cmos_xor_off_ic.cir": {
+      "sha256": "9f0dc5d08915d184a9cdd58bf548e27581d857ddf096c3e3e9755d7e3c933738",
+      "note": "cmos_xor.net with off, and IC=vds,vgs,vbs with uic; derived by the developer."
+    },
+    "edges.asc": {
+      "sha256": "0176f9212387e6b809980dc6d5949b1990be831594ba7a777f9f764a5c12330d",
+      "note": "Written from the KiCad netlist by the developer, with a label on each pin; reviewed by the maintainer."
+    },
+    "edges.net": {
+      "sha256": "51715243cf471d2aea5530641b105ba8687133f972c87f9d10e148de6d1d53c2",
+      "note": "LTspice 26.1.1's -netlist export of edges.asc.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold.asc": {
+      "sha256": "d1c58c65d30f494e5fbf477dc66527da60423f107b29fc5c24908c1f5251717b",
+      "note": "Written from the KiCad netlist by the developer, with a label on each pin; reviewed by the maintainer."
+    },
+    "sample_and_hold.net": {
+      "sha256": "a01875611b877cb5c28807b7255b55b1c750959a27a3d06f2c7f1d7c539fc91e",
+      "note": "LTspice 26.1.1's -netlist export of sample_and_hold.asc.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_jfet_area_off_temp.cir": {
+      "sha256": "be327cd5c8f27114f2666e4e12d9f838bd8112593ffc46baf4ed78e4842514c9",
+      "note": "sample_and_hold.net with a positional JFET area, off and temp=; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_pjf.cir": {
+      "sha256": "b59a0ccda63e4691324bf2dad55d9dcab4d6ccd9c9d516a2346f597954690bba",
+      "note": "sample_and_hold.net with a P-channel JFET and the diode reversed; derived by the developer.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    }
+  }
+}
