@@ -1,0 +1,4 @@
+# LTspice run output: never committed (M8 decision 2). The normalised .net exports are fixtures.
+*.raw
+*.log
+*.plt

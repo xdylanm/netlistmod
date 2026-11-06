@@ -138,6 +138,41 @@
       "column": 1,
       "error": "UnsupportedConstruct",
       "note": "unsupported letter"
+    },
+    "e_two_values.cir": {
+      "sha256": "5d0a772799ba571579880b52bc456a59ee54d6b98aad3e6fde01c5f5950bc5eb",
+      "line": 13,
+      "column": 23,
+      "error": "ParseError",
+      "note": "E takes one gain; ngspice 47 runs a second value with an output that matches neither, LTspice stops (decision 0015 item 6). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "e_no_value.cir": {
+      "sha256": "9053cfcbb0685795be5636c2e211c24f49b345786eb61585305ed50098a81203",
+      "line": 13,
+      "column": 18,
+      "error": "ParseError",
+      "note": "E needs a gain; both stop, and ngspice 47 can crash (decision 0015 item 6). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "e_m.cir": {
+      "sha256": "d47c724dafb79b299568c86169d74e5862e9b41b2cb5b1079629ce893745e781",
+      "line": 13,
+      "column": 23,
+      "error": "ParseError",
+      "note": "m= is not an E parameter; both stop (decision 0015 item 7). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "s_on_off.cir": {
+      "sha256": "a30c92df54c0a18a68568a778401c7f76a3b11f753c2364407961a44d9d67a6f",
+      "line": 17,
+      "column": 29,
+      "error": "ParseError",
+      "note": "on and off together; both solvers run it and the last wins (decision 0015 item 8). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "s_no_model.cir": {
+      "sha256": "1e47ab421ac15360d745b324e81282494b3b17d17e87a449732f5fc795a8164a",
+      "line": 17,
+      "column": 20,
+      "error": "ParseError",
+      "note": "S needs a model; both stop (decision 0015 item 8). Written for M14 from the maintainer's controlled_sources examples."
     }
   }
 }

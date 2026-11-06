@@ -34,6 +34,7 @@ FAMILIES = (
     "document_basic",
     "edits_golden",
     "kicad_transistors",
+    "controlled_sources",
 )
 
 

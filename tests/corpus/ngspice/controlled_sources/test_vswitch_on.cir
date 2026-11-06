@@ -1,0 +1,19 @@
+.title KiCad schematic
+* variant: the initial state is ON (manual 3.3.15)
+.model __S1 SW
++           vt=0.9
++           vh=0.3
++           ron=1
++           roff=1Meg
+.dc V1 0 3 0.5
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+R5 Net-_R5-Pad1_ /VX 1k
+V1 Net-_R5-Pad1_ GND DC 2 
+V2 Net-_R1-Pad2_ GND DC 4
+R6 /VX GND 1k
+S1 /OUT GND /VX GND __S1 ON
+R1 /OUT Net-_R1-Pad2_ 1k
+.end
