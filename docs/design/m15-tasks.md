@@ -1,6 +1,6 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** ACTIVE — the maintainer accepted the decisions in section 2 (2026-11-06)
+> **Status:** READY FOR REVIEW — T1 to T11 done (2026-11-06); the maintainer accepted the decisions in section 2 on 2026-11-06
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
@@ -183,7 +183,7 @@ The M15b files are written now, so that one review confirms their provenance. Th
 - `docs/design/elements.md`, `docs/usage/elements.md` and `editing.md` (a B example), `edit-layer.md`, `document-layer.md`, `errors.md`;
 - both `discrepancies.md`, the README, CHANGELOG and the architecture amendments.
 
-[ ] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
+[x] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
 
 ### After the maintainer's approval
 
@@ -191,4 +191,23 @@ The M15b files are written now, so that one review confirms their provenance. Th
 
 ## 5. Results
 
-To be filled in by T11.
+**Pull request:** [xdylanm/netlistmod#12](https://github.com/xdylanm/netlistmod/pull/12), branch `m15-behavioral`.
+
+**Full local run** at `77df2c7` (2026-11-06; Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`):
+- ruff, ruff format, mypy (src and the strict test set) and the import contract are clean.
+- pytest: 7,360 passed, 2 skipped, coverage 98.55%, in 18 min 20 s.
+- Every M15 accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep; the M15b files are skipped there, marked `pending` in their manifests.
+- The signature snapshot is unchanged.
+- pre-commit's end-of-file hook removed an extra blank line at the end of `docs/grammars/ngspice/discrepancies.md`; that was the only finding, and CI's lint job failed on the same line. The fix is in the commit that sets this status.
+
+**CI** on #12 at `77df2c7`: the four test jobs (Linux and Windows, Python 3.13 and 3.14) passed; "Lint and types" failed on that end-of-file line only.
+
+**Design points worth reviewing:**
+1. **`Rpar=` on a `V=` or `P=` B source is refused on LTspice,** with its own message. Found while probing: LTspice stops on it ("only allowed for behavioral current sources"), and the reference lists `Rpar=` for `I=` only. It runs on `R=`, which loads. Decision 0016 item 9 records it; section 2 did not.
+2. **`vprx=` on a `V=` B source is accepted:** LTspice runs it, though the reference shows it for `P=` only (an observed parameter, as for other LTspice lists). The LTspice `discrepancies.md` records it.
+3. **The stale-citation check is narrowed.** It rejected §5.1.1 and §5.2.1 to §5.2.4, numbers phase 1 had cited for chapter-2 sections. In the edition in `references.md` they are the B and E source sections that M15 cites, so `tests/architecture/test_spec_coverage.py` no longer rejects them; `§§` and `manual, §` are still rejected.
+4. **A bare expression ends before any blank that is followed by a name and `=`** (not `==`), not only before the element's own parameters. An unknown parameter such as `tc1=` on an LTspice B is then refused instead of being read into the expression, and `set_expression` refuses new text that would end early.
+5. **The expression forms of E and G sit under a new marker, NG-NLS-001 and LT-NLS-001,** and B's `laplace=` under LT-UNS-001, so each spec entry lists the rules it covers.
+6. **The tree snapshot:** the same 17 rejected files list "behavioral source (`B`)" among their expected terminals. The M15 terminals got readable names in `grammar/loader.py`, so that the list does not show `B_NAME`.
+7. **`document_basic/node_read.cir` is a new fixture** for `UNRESOLVED_NODE`, rather than a line in an existing file, so that no digest in the signature snapshot changes (the M14 lesson).
+8. **Two M14 probe tests changed:** their `value=` rows now expect the line to load, and an LTspice validation test uses the M15b forms (POLY, `Laplace=`, B `laplace=`) instead of `Q=`, `Flux=` and `value=`.

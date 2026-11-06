@@ -214,4 +214,3 @@ Decision 0016 items 2 and 9. Each row is a case of `tests/solver/test_ngspice_be
 | Stops on `E1 out 0 LAPLACE {v(vx)} {2}`; the manual says ngspice does not offer it (§5.2.5). | `ParseError`. | `e-laplace`; `elements_rejects/e_laplace.cir` |
 | Runs TABLE, POLY and FREQ on E and G, and POLY on F and H. | `UnsupportedConstruct` until M15b. | `e-table`, `e-poly`, `e-freq` |
 | Reports a singular matrix for `v(nonode)` in a B expression. | Loads, with `UNRESOLVED_NODE` (decision 0016 item 6). | `document_basic/node_read.cir` |
-
