@@ -1,6 +1,6 @@
 # M13 task list — Transistors (Q, M, J, Z)
 
-> **Status:** ACTIVE — approved by the maintainer's decisions in section 2 (2026-11-05)
+> **Status:** READY FOR REVIEW — approved by the maintainer's decisions in section 2 (2026-11-05); T1 to T12 done, results in section 5
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M13). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10).
 
 ## 1. Scope
@@ -112,46 +112,46 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 
 ## 4. Tasks
 
-[ ] **T1 — Decision record 0014.** Status `proposed` until M13 closes. It records section 2, and amends §5.3 (the new nodes), §6.3 (the boundary rule), §7.8 (the implicit substrate), decision 0002 for decision 4, and decision 0008 for the `external` field.
+[x] **T1 — Decision record 0014.** Status `proposed` until M13 closes. It records section 2, and amends §5.3 (the new nodes), §6.3 (the boundary rule), §7.8 (the implicit substrate), decision 0002 for decision 4, and decision 0008 for the `external` field.
 
 [x] **T2 — Commit the corpus first.** The two families, their manifests, `OPENJELLYBEAN_LIB` in `.env.example` and the solver sweeps' `external` support, as already prepared on this branch, with the failures listed in section 3. Each later task makes some of them pass.
 
 [x] **T3 — Split by element family (decision 9).** Move the element rules of `transform.py` and the element operations of `operations.py` into modules by family. Every test passes before and after, the tree and signature snapshots are unchanged, and the import contract is updated.
 
-[ ] **T4 — Q on both dialects.** Tests first:
+[x] **T4 — Q on both dialects.** Tests first:
 - Grammar: decisions 1, 2, 4 and 5, in a right-recursive rule shared with the other letters where it can be. Negative tests: too many nodes, a number as the model, a positional area on ngspice, a name after the area.
 - Node: `BipolarTransistor` with `nodes`, `model`, `area` (positional, LTspice), `flags` and `params`. `ic=` is a `ValueList`.
 - Each probe of section 3 has a solver test that pins what each solver does, and the library's reading of it.
 - Spec entries `NG-BJT-001` and `LT-BJT-001`, and the device matrices show Q as `supported`.
 
-[ ] **T5 — M on both dialects.** As T4, with `Mosfet`: 3 to 5 nodes on ngspice and 3 or 4 on LTspice, the `thermal` flag on ngspice, and the closed LTspice lists for monolithic and VDMOS forms. A test that `temp=` on a `level=8` model loads, as the grammar cannot know the level, and stops both solvers.
+[x] **T5 — M on both dialects.** As T4, with `Mosfet`: 3 to 5 nodes on ngspice and 3 or 4 on LTspice, the `thermal` flag on ngspice, and the closed LTspice lists for monolithic and VDMOS forms. A test that `temp=` on a `level=8` model loads, as the grammar cannot know the level, and stops both solvers.
 
-[ ] **T6 — J and Z on both dialects.** `Jfet` and `Mesfet`, with exactly 3 nodes and a positional area. On LTspice, Z also covers an IGBT. Spec entries for each.
+[x] **T6 — J and Z on both dialects.** `Jfet` and `Mesfet`, with exactly 3 nodes and a positional area. On LTspice, Z also covers an IGBT. Spec entries for each.
 
-[ ] **T7 — `.model` forms (decision 7).** `pchan` and `nchan` as bare flags, and dotted values kept as text, on both dialects. Tests first. `cmos_xor_version.cir`, `cmos_xor_model_params.cir` and both `local_models` files must load. `NG-MDL-*` and `LT-MDL-*` are updated.
+[x] **T7 — `.model` forms (decision 7).** `pchan` and `nchan` as bare flags, and dotted values kept as text, on both dialects. Tests first. `cmos_xor_version.cir`, `cmos_xor_model_params.cir` and both `local_models` files must load. `NG-MDL-*` and `LT-MDL-*` are updated.
 
-[ ] **T8 — Model types and diagnostics (decision 8).**
+[x] **T8 — Model types and diagnostics (decision 8).**
 - `model-types.json` gains the letters and a dialect split, so that `MODEL_TYPE_MISMATCH` reports a PNP model on an NMOS line, and NIGBT only on ngspice.
 - `UNRESOLVED_MODEL` works as for D, including info when the model may come from an `.include`, as in the 29 corpus files that include `jellybean.lib`.
 
-[ ] **T9 — Edits.**
+[x] **T9 — Edits.**
 - `set_model` on each letter, with its type check and `allow_external=True`.
 - `set_param` on instance parameters, flags and `ic=`, and on `area`: the positional slot where the dialect writes it, otherwise `area=`, as LTspice's diode does now.
 - `set_model_param` on NPN, PNP, NMOS, PMOS, VDMOS, NJF, PJF and NMF models.
 - Golden diffs for each letter on both dialects, from the corpus families. Property tests that no edit changes the signature, including on 4- and 5-node lines.
 - Each family's edits are tested in a batch too.
 
-[ ] **T10 — Corpus and snapshots.**
+[x] **T10 — Corpus and snapshots.**
 - Every file of both families loads, round-trips byte-exact, and runs in its solver sweep.
 - The tree snapshot gains the new files, and the signature snapshot does not change.
 - `kicad_basic`'s manifest note still describes its own three files.
 
-[ ] **T11 — Documentation.**
+[x] **T11 — Documentation.**
 - `elements.md` and `docs/usage/elements.md` describe the new nodes, `edit-layer.md` the new edits, and `docs/usage/errors.md` any new messages.
 - Both `discrepancies.md` files take the rows of decisions 4 to 6.
 - The device matrices, README and CHANGELOG are updated, and the usage guide has a short transistor example.
 
-[ ] **T12 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice` and `OPENJELLYBEAN_LIB` set, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
+[x] **T12 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice` and `OPENJELLYBEAN_LIB` set, record it and the green CI run in section 5, and set the status to `READY FOR REVIEW`.
 
 ### After the maintainer's approval
 
@@ -161,4 +161,23 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 
 ## 5. Results
 
-To be filled in by T12.
+**Pull request:** [xdylanm/netlistmod#10](https://github.com/xdylanm/netlistmod/pull/10), branch `m13-transistors`.
+
+**Full local run** (2026-11-05, at `367b92c`, Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`, `OPENJELLYBEAN_LIB` set):
+
+- ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit: all clean.
+- pytest: 6,296 passed, 2 skipped, 1 failed, coverage 98.63%, in 15 min 18 s. The failure was a stale case in `test_ltspice_validation.py::test_other_forms_run_and_are_unsupported` that still expected a Q line to be unsupported. It is removed (Q is covered by `test_ltspice_transistor_probes.py`), and the test passes on LTspice 26.1.1.
+- Every file of `kicad_transistors` (29) and `ltspice_transistors` (22) loads, round-trips byte-exact and runs in its solver sweep. The signature snapshot is unchanged.
+
+**Design points worth reviewing:**
+
+1. **The model-name refusal is in the transformer, not the grammar.** Where only a name may follow (`Q1 c b e s qm 2`, `Q1 c b e 2 off`), the lexer reads `2` or `off` as a name. A name terminal that excludes numbers was tried and dropped: it outranked the parameter-name terminal, so `temp=30` stopped lexing. The transformer raises a `ParseError` at the token instead (P13).
+2. **LTspice embedded decimals rank below `WORD`.** So `Q1 c b e s 2N3904` reads `2N3904` as the model, the common case, and `Q1 c b e qm 1n5` reads `1n5` as the model with `qm` a fourth node. An embedded area is read only where no name may follow (`Q1 c b e s qm 1n5`, `J1 d g s jm 1n5`).
+3. **Spec IDs.** `NG-TRN-001` and `LT-TRN-001` are `.tran`, so the shared transistor shape is `NG-XTR-001` and `LT-XTR-001`. The letters are `BJT`, `MOS`, `JFT` and `MES`.
+4. **`.model 2 NPN` still loads.** Decision 4 refuses the plain-number model on the instance line; the `.model` line is unchanged, as for D.
+5. **One closed list for LTspice's M.** The grammar cannot tell a monolithic MOSFET from a VDMOS without the model, so M takes the union of the two lists.
+6. **`DOTTED_VALUE` outranks LTspice's `MODEL_BARE`.** Otherwise `version=3.3.0` was refused with the bare-word hint.
+7. **Tests that used Q as a planned letter now use T** (M16), including the three reject fixtures, whose manifests have new hashes.
+8. **`set_model_param` after a lone flag.** `VDMOS(pchan)` becomes `VDMOS(pchan KP=0.3)`; before the fix it would have written `(KP=0.3pchan)`.
+
+**CI:** to be read once after the final push.

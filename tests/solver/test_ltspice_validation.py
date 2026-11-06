@@ -291,7 +291,6 @@ def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path)
     [
         "C1 out 0 Q=1u*x",
         "L1 out 0 Flux=1m*x",
-        "Q1 out in 0 npn\n.model npn NPN",
         "E1 a 0 in 0 2\nR9 a 0 1k",
     ],
 )
