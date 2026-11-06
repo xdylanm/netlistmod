@@ -291,7 +291,7 @@ def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path)
     [
         "C1 out 0 Q=1u*x",
         "L1 out 0 Flux=1m*x",
-        "E1 a 0 in 0 2\nR9 a 0 1k",
+        "E1 a 0 value={2*V(in)}\nR9 a 0 1k",
     ],
 )
 def test_other_forms_run_and_are_unsupported(solver: Solver, tmp_path: Path, line: str) -> None:

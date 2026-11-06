@@ -202,4 +202,3 @@ Decision 0015 items 4 to 8. Each row is a case of `tests/solver/test_ngspice_con
 | Runs `S1 … sm on off` and `off on`; the last keyword sets the state. | `ParseError` at the second keyword (decision 0015 item 8). | `s-on-off`; `elements_rejects/s_on_off.cir` |
 | Runs an F, H or W controlled by an E or an H (they have a branch current); §4.2.3 and §4.2.4 name a voltage source. | Loads, with `CONTROL_SOURCE_MISMATCH` (decision 0015 item 5). | `f-ctrl-e`, `f-ctrl-h` |
 | Crashes (exit code 0xC0000005) on `E1 … GND` with no gain in a KiCad netlist, after "not enough parameters". | `ParseError` at the line's end. | `elements_rejects/e_no_value.cir` |
-
