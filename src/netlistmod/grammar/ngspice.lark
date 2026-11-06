@@ -332,11 +332,16 @@ IC_PARAM_KW.3: /ic(?=[ \t]*=)/i
 IC_COMMA.12: /[ \t]*,[ \t]*(?=[-+.0-9{'])/
 
 // Q: 3 to 5 nodes (substrate, then VBIC's junction temperature node); the area is named, as
-// area=, areab= and areac= (§7.3.1).
+// area=, areab= and areac= (§7.3.1). The last three alternatives read a number after the model,
+// a positional area that ngspice 47 runs, only so that the transformer refuses it with one
+// message (decision 0014 item 5; review R2).
 // spec: NG-BJT-001
 bjt: Q_NAME node node node t_name _ng_ttail
    | Q_NAME node node node (t_name | t_number) t_name _ng_ttail
    | Q_NAME node node node (t_name | t_number) (t_name | t_number) t_name _ng_ttail
+   | Q_NAME node node node t_name t_number _ng_ttail
+   | Q_NAME node node node (t_name | t_number) t_name t_number _ng_ttail
+   | Q_NAME node node node (t_name | t_number) (t_name | t_number) t_name t_number _ng_ttail
 _ng_ttail: (param | ic_param | flag)* (NL | eol)
 %override Q_NAME.4: /[Qq]/ _NG_UNIT*
 

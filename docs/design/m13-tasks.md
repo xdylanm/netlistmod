@@ -1,6 +1,6 @@
 # M13 task list — Transistors (Q, M, J, Z)
 
-> **Status:** READY FOR REVIEW — approved by the maintainer's decisions in section 2 (2026-11-05); T1 to T12 done, results in section 5
+> **Status:** ACTIVE — review round 1 (section 6) requires changes R1 to R8 before M13 can close. T1 to T12 done (results in section 5); section 2 records the maintainer's decisions (2026-11-05).
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M13). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10).
 
 ## 1. Scope
@@ -58,7 +58,7 @@ The maintainer accepted each recommendation, based on the probes in section 3. "
    - **ngspice:** open names, as R, C, L and D have now. Two keyword flags: `off`, and VDMOS's `thermal`.
    - **LTspice:** closed lists per letter, each the reference's, as decision 0009 item 7 did for phase 1. That is: Q `temp`; monolithic M `m L W AD AS PD PS NRD NRS IC temp`; VDMOS `L W M m IC temp`; J `temp`; Z `m temp`; and `off` on all.
    - Forms LTspice runs beyond those lists, such as `area=` on Q and `IC=` or `m=` on J, are refused and recorded.
-   - **Both dialects:** `ic=` takes a comma list, with or without a blank after the comma (`IC=0.6, 5.0` is the manual's own example).
+   - **Where `ic=` is accepted:** on every ngspice transistor, and on LTspice's M only, since the closed lists for Q, J and Z leave it out. It takes a comma list, with or without a blank after the comma (`IC=0.6, 5.0` is the manual's own example; review R6).
 7. **`.model` forms.**
    - `pchan` and `nchan` are accepted as bare flags in any `.model` parameter list. The manual writes `.model m VDMOS <Pchan> <parameters>`, and LTspice reads the same.
    - A dotted value such as `version=3.3.0` is kept as text, never as a number, because it is not one.
@@ -181,3 +181,70 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 8. **`set_model_param` after a lone flag.** `VDMOS(pchan)` becomes `VDMOS(pchan KP=0.3)`; before the fix it would have written `(KP=0.3pchan)`.
 
 **CI:** to be read once after the final push.
+
+## 6. Review round 1 (2026-11-05, `48b497c`)
+
+### 6.1 Outcome
+
+M13 is accepted once the changes below are made. The design holds up on review:
+- **Checks:** pytest 6,296 passed, 2 skipped, coverage 98.63%, in 15 min 33 s, with ngspice 47 and LTspice 26.1.1 from `.env`. ruff, ruff format and `mypy src` are clean. CI on #10 is green on all five jobs.
+- **Grammar:** the grammar decides the boundary rule, as for X (P13). The number and keyword refusals in the transformer are limited to the positions where only a name may follow.
+- **Split (T3):** the tree and signature snapshots are unchanged.
+- **Edits:** the goldens and property tests cover each letter and every node count.
+- **Probes by hand:**
+  - nodes, model and area for 3- to 5-node lines;
+  - `off` and `thermal` in the model's place;
+  - `MODEL_TYPE_MISMATCH` for NIGBT on ngspice only;
+  - `elements_on_net("OUT")` on `MQ8 d g OUT OUT nm`, which lists `MQ8` once.
+
+### 6.2 Required changes
+
+[ ] **R1 — Record the LTspice reading of `Q1 c b e qm 1n5`.**
+- The library loads it as a 4-node Q with model `1n5`, so `qm` is a net. LTspice reads `qm` as the model and `1n5` as an area of 1.5n.
+- The only signal is `UNRESOLVED_MODEL`, and that is info when the scope has an `.include`.
+- The grammar cannot decide this, because `2N3904` is also an embedded decimal (design point 2 in section 5). No code change is required.
+- **Change:** add a row to the "cannot judge" table of `docs/grammars/ltspice/discrepancies.md`. Name the reading, the topology difference and the evidence. If no test pins the reading yet, add one beside the `Q1 c b e s qm 1n5` case in `tests/grammar/ltspice/test_ltspice_transistors.py`, and name it as the evidence.
+
+[ ] **R2 — One clear message for a positional area on an ngspice Q.** Decision 5 refuses the form, and ngspice 47 runs it, so users coming from ngspice will write it. Today one mistake gets three messages, and none of them names the cause:
+
+| Line | Message today |
+|---|---|
+| `Q1 c b e qm 2` | "this line ends too early" (column 14) |
+| `Q1 c b e s qm 2` | "`2` is in the model's place …" |
+| `Q1 c b e qm 2 off` | "`off` is in the model's place …" |
+
+- **Change:** each of these should say that an ngspice Q writes its area as `area=` (decision 0014 item 5). Keep the column at the offending token.
+- **Tests:** assert the wording in `tests/grammar/ngspice/test_transistors.py` (`test_malformed_transistor_lines_are_rejected` and `test_a_model_name_cannot_be_a_number_or_a_keyword`). Update `docs/usage/errors.md` if the message is new.
+- A plain number or keyword as the model on a 3-node line (`Q1 c b e 2`, `Q1 c b e off`) keeps its current message.
+
+[ ] **R3 — Readable element names in `MODEL_TYPE_MISMATCH`.**
+- `diagnostics.py:170` writes `type(owner).__name__.lower()`. The result is "a bipolartransistor takes a model of type `NPN`, `PNP`", "a mosfet" and "a mesfet".
+- **Change:** move `_ELEMENT_NAMES` from `edit/_ops_common.py` to the model layer (it serves both layers; the import contract must still hold), and use it in the edit errors and in the diagnostic.
+- **Tests:** add a test that asserts the message for at least Q and Z.
+
+[ ] **R4 — No private import across layers.**
+- `document/index.py` imports `_Transistor` from `model.nodes`.
+- **Change:** either make the base class public (for example `Transistor`, exported, which is also useful to callers for `isinstance`), or use a tuple of the four classes. If it becomes public, update the architecture's element table and `docs/usage/elements.md`.
+
+[ ] **R5 — Fix architecture §7.8's implicit-substrate line.**
+- It says "(and a MOSFET line without a bulk node)". Section 3 shows that a 3-node NMOS line stops ngspice. Only VDMOS writes 3 nodes, and it has no bulk.
+- **Change:** limit the sentence to the 3-node Q. Check that decision 0014 item 3 and `docs/design/elements.md` say the same.
+
+[ ] **R6 — State where `ic=` is accepted.**
+- Decision 0014 item 6, and decision 6 in section 2, say "on both dialects `ic=` takes a comma list". On LTspice only M takes `IC=`; the closed lists for Q, J and Z exclude it.
+- **Change:** say so in both places, and check the LTspice spec entries and `docs/usage/elements.md` against it.
+
+[ ] **R7 — Restore `model-types.json`'s formatting.**
+- The file was rewritten with `§` escapes and one item per line.
+- **Change:** write `§` literally and keep each list on one line, as before, so that the diff shows only the new entries. No change in content.
+
+[ ] **R8 — Pin decision 3 in the document layer.**
+- No document-layer test shows that transistor nodes reach the topology as written.
+- **Change:** add tests to `tests/document/test_topology.py` (or beside it) for:
+  - `MQ8 d g OUT OUT nm`: `elements_on_net("OUT")` lists `MQ8` once, and the line connects to `OUT` twice;
+  - a 3-node Q: no ground connection is added;
+  - a 5-node ngspice Q: all five nets are listed.
+
+### 6.3 Exit for this round
+
+Make R1 to R8. Run the full check set with `--require-solver ngspice --require-solver ltspice` and `OPENJELLYBEAN_LIB` set, read CI once after the push, and append a short report as 6.4. Then set the status to `READY FOR REVIEW`. **Do not archive** (T13 follows approval).

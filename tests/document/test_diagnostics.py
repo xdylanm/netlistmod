@@ -104,6 +104,22 @@ def test_transistor_model_types(body: str, expected: list[tuple[DiagnosticCode, 
     assert _codes(body) == expected
 
 
+@pytest.mark.parametrize(
+    ("body", "phrase"),
+    [
+        ("Q1 c b e mn\n.model mn NMOS", "a bipolar transistor takes a model of type `NPN`, `PNP`"),
+        ("Z1 d g s qn\n.model qn NPN", "a MESFET takes a model of type"),
+        ("M1 d g s b qn\n.model qn NPN", "a MOSFET takes a model of type `NMOS`, `PMOS`, `VDMOS`"),
+        ("J1 d g s qn\n.model qn NPN", "a JFET takes a model of type `NJF`, `PJF`"),
+        ("D1 a 0 qn\n.model qn NPN", "a diode takes a model of type `D`"),
+    ],
+)
+def test_a_type_mismatch_names_the_element_kind(body: str, phrase: str) -> None:
+    (diagnostic,) = _netlist(body).diagnostics
+    assert diagnostic.code is C.MODEL_TYPE_MISMATCH
+    assert phrase in diagnostic.message
+
+
 def test_an_igbt_model_fits_z_only_in_ltspice() -> None:
     codes = _codes("Z1 c g e zi\n.model zi NIGBT\nZ2 c g e zp\n.model zp pigbt")
     if current_dialect() is Dialect.LTSPICE:

@@ -73,6 +73,7 @@ Syntax the library cannot judge from the netlist's form, or chooses not to.
 
 | LTspice 26.1.1 | Library behaviour | Evidence |
 |---|---|---|
+| Runs `Q1 c b e qm 1n5` with `qm` as the model and `1n5` as an area of 1.5n. | Loads a 4-node Q with model `1n5`, so `qm` is a net: the topology view and the signature show a connection that LTspice does not make. The grammar cannot tell `1n5` from a model name such as `2N3904`, which is also an embedded decimal (decision 0014 item 5). The only signal is `UNRESOLVED_MODEL` for `1n5`, which is info when the scope has an `.include`. Write the area as `1.5n`. | `tests/grammar/ltspice/test_ltspice_transistors.py::test_the_model_is_the_last_name`; `tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes` (`q-embedded-area-after-model`) |
 | `Q1 c b e qm s` stops: `s` is not a model. | Loads with `s` as the model and `qm` as a fourth node, the boundary rule (decision 0014 item 1), as ngspice reads it. | `tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes` (`q-model-then-name`) |
 | A 3-node M stops with an NMOS model; only VDMOS has 3 nodes. | Loads: node counts are per letter, not per model type (decision 0014 item 2). | `tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes` (`m-3-nodes-nmos`) |
 | `temp=` stops on a `level=8` MOSFET, although the reference lists it for M. | Loads: the grammar cannot know the level. | `tests/solver/test_ltspice_transistor_probes.py::test_temp_on_a_bsim_line_loads_and_stops_ltspice` |

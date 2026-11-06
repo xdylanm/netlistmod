@@ -34,7 +34,7 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`; `nodes == ()` |
 | `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
 | `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
-| `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` | `model: ModelReference`, `flags: tuple[Flag, ...]` (`off`, and an ngspice VDMOS's `thermal`), `area: Value \| None` (a positional area: J and Z, and an LTspice Q); `nodes` are the nodes as written (decision 0014) |
+| `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (subclasses of `Transistor`, for `isinstance`) | `model: ModelReference`, `flags: tuple[Flag, ...]` (`off`, and an ngspice VDMOS's `thermal`), `area: Value \| None` (a positional area: J and Z, and an LTspice Q); `nodes` are the nodes as written (decision 0014) |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
 Deviation from task 3.1: `AcSpec.magnitude` is required, because the manual requires ACMAG

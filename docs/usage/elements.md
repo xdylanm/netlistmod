@@ -61,8 +61,8 @@ What the parser accepts (details and citations are in
 
 ## Transistors
 
-Q, M, J and Z lines become `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet`
-([decision 0014](../decisions/0014-transistors.md)). After the three fixed nodes, the model is
+Q, M, J and Z lines become `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet`, subclasses of
+`Transistor`, which holds the fields they share ([decision 0014](../decisions/0014-transistors.md)). After the three fixed nodes, the model is
 the last name before any area, flag or parameter, so the names in between are nodes:
 
 ```python

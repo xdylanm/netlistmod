@@ -16,8 +16,9 @@ tests:
 - tests/grammar/ngspice/test_transistors.py::test_each_letter_has_its_own_node
 - tests/grammar/ngspice/test_transistors.py::test_flags_and_open_parameters_follow_the_model
 - tests/grammar/ngspice/test_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/grammar/ngspice/test_transistors.py::test_a_positional_area_on_q_says_to_write_area_equals
 - tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
 - tests/solver/test_ngspice_transistor_probes.py::test_a_positional_area_on_q_runs_and_is_refused
 - tests/solver/test_ngspice_transistor_probes.py::test_area_scales_the_collector_current
 - tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
-notes: '3 to 5 nodes (substrate, then VBIC''s junction temperature node), the model, then open parameters and off. The area is named only (area=, areab=, areac=): a positional area, which ngspice 47 runs, is refused (decision 0014 item 5, decision 0002).'
+notes: '3 to 5 nodes (substrate, then VBIC''s junction temperature node), the model, then open parameters and off. The area is named only (area=, areab=, areac=): a positional area, which ngspice 47 runs, is refused with a message naming area= (decision 0014 item 5, decision 0002; review R2).'

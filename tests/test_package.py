@@ -59,6 +59,7 @@ def test_public_exports_and_version() -> None:
         "Resistor",
         "SourceSpec",
         "SubcktInstance",
+        "Transistor",
         "SubcktReference",
         "Value",
         "VoltageSource",

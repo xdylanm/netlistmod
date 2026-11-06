@@ -225,7 +225,7 @@ repo/
 
 | Family | Examples | Notes |
 |---|---|---|
-| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
+| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (base `Transistor`), `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
 | Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
 | Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/statements.md](design/statements.md). |
 | Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
@@ -251,7 +251,7 @@ class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params:
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
 - `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
-- `BipolarTransistor` / `Mosfet` / `Jfet` / `Mesfet`: `model: ModelReference` (mandatory), `area: NumericValue | Formula | None` (a positional area), `flags`; `nodes` are the nodes as written ([decision 0014](decisions/0014-transistors.md)).
+- `BipolarTransistor` / `Mosfet` / `Jfet` / `Mesfet`, subclasses of `Transistor`: `model: ModelReference` (mandatory), `area: NumericValue | Formula | None` (a positional area), `flags`; `nodes` are the nodes as written ([decision 0014](decisions/0014-transistors.md)).
 - `VoltageSource` / `CurrentSource`: `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`), `stimulus: SourceSpec | None`, `distortion: tuple[SourceSpec, ...]` ([decision 0013](decisions/0013-stimulus-specs.md)).
 - Node and value shapes are detailed in [docs/design/elements.md](design/elements.md).
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
@@ -389,7 +389,7 @@ The signature is a canonical, hashable, ordered value built from typed nodes, us
 - **`.lib name` … `.endl` blocks are opaque.** Their contents are not read and are not topology ([decision 0012](decisions/0012-carried-limits.md)). Solvers read such a block only from a library file; opening a library file is a later candidate (Section 21).
 - **Conditional blocks are opaque.** Netlists in which `.if`/`.else`/`.endif` changes topology are explicitly out of scope; the topology guarantee does not extend into conditional blocks.
 - **LTspice node names can reach into an instance.** LTspice connects a node named `<instance>:<node>` to that node inside the instance, which the reference does not document. The library keeps it as a net of its own, so the topology view and the signature do not show the join. A `NODE_INTO_INSTANCE` diagnostic flags it ([decision 0009](decisions/0009-ltspice-dialect.md); `docs/grammars/ltspice/names.md` N11).
-- **An omitted transistor substrate is implicit.** A 3-node Q (and a MOSFET line without a bulk node) connects its substrate to ground in ngspice. The signature and the topology view record only the written nodes ([decision 0014](decisions/0014-transistors.md)).
+- **An omitted transistor substrate is implicit.** A 3-node Q connects its substrate to ground in ngspice ("When unspecified, ground is used"). A MOSFET is not affected: a 3-node M is a VDMOS, which has no bulk, and a 3-node NMOS or PMOS line stops ngspice. The signature and the topology view record only the written nodes ([decision 0014](decisions/0014-transistors.md)).
 - **Replacement text is not validated.** In v1 the caller is responsible for the validity of the text it supplies. The library may take on more validation as the grammar matures.
 
 ### 7.9 Test harnesses

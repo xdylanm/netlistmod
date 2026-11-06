@@ -273,7 +273,15 @@ class ElementsRules(_Rules):
         self, kind: type[BipolarTransistor | Mosfet | Jfet | Mesfet], element: _Element
     ) -> _Item:
         names = element.all(_Name)
-        self._check_model_name(kind, names[-1].token)
+        last = names[-1].token
+        if last.type == "FIELD_NUMBER":
+            # Only an ngspice Q has a number after its model in the tree (review R2).
+            raise self._parse_error(
+                last,
+                f"`{last}` after the model is a positional area, and an ngspice Q writes its "
+                f"area as `area={last}`",
+            )
+        self._check_model_name(kind, last)
         nodes = (
             *element.all(Node),
             *(Node(str(name.token), _span(name.token)) for name in names[:-1]),
