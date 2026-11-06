@@ -1,0 +1,18 @@
+.title KiCad schematic
+* variant: F inside a subcircuit, controlled by a source of its own body
+.op
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+.param K=2.2
+R1 /OUT GND 1k
+X1 /VX /OUT mirror
+V1 Net-_R5-Pad1_ GND DC 2 
+R5 Net-_R5-Pad1_ /VX 1k
+.subckt mirror in out
+Vsense in sense 0
+Rs sense 0 1k
+F1 out 0 Vsense {K}
+.ends
+.end

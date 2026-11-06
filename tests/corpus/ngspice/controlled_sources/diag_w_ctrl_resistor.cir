@@ -1,0 +1,18 @@
+.title KiCad schematic
+* loads with a diagnostic: the controlling source is a resistor; both stop
+.model __W1 CSW
++           it=0.9e-3
++           ron=1
+.dc V1 0 3 0.5
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+R5 Net-_R5-Pad1_ /VX 1k
+V1 Net-_R5-Pad1_ GND DC 2 
+V2 Net-_R1-Pad2_ GND DC 4
+Vsense /VX vxi 0
+R6 vxi GND 1k
+W1 /OUT GND R6 __W1
+R1 /OUT Net-_R1-Pad2_ 1k
+.end

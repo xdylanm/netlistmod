@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M13 are complete, and M14 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M13 are complete, and M14 is in progress
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -74,7 +74,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Exit:** the milestone's spec entries are validated on both solvers, property tests cover the new elements, and the signature's compatibility test passes.
 - **Maintainer checkpoint:** hands-on use with your own transistor netlists. Most real circuits should now load, so this is the best time to change the order of what follows.
 
-### M14 — Linear dependent sources and switches (E, F, G, H, S, W)
+### M14 — Linear dependent sources and switches (E, F, G, H, S, W) ([task list](./m14-tasks.md))
 
 - Linear forms, with controlling references per section 3, point 2: E and G control nodes in the signature and net queries; F, H and W source names resolved, and covered by the signature, with a diagnostic when unresolved.
 - S and W models (SW, CSW) with `on` and `off`.

@@ -1,0 +1,84 @@
+{
+  "family": "controlled_sources",
+  "origin": "KiCad schematics by the maintainer, exported for ngspice, and variants of them made for M14, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-06",
+  "notes": "Linear dependent sources and switches for M14. A variant's second line says what it changes. The intentional failures are in elements_rejects. Provenance confirmed by the maintainer, 2026-11-06.",
+  "fixtures": {
+    "diag_f_ctrl_missing.cir": {
+      "sha256": "c41ab6a5beb583101ba5be10bfe1bb499fde5fbe42d430a8509fa608b10aa8bb",
+      "note": "Loads with UNRESOLVED_ELEMENT: no source Vmissing.",
+      "solver": {
+        "skip": "ngspice 47 stops: unknown controlling source vmissing (decision 0015 item 4)."
+      }
+    },
+    "diag_w_ctrl_resistor.cir": {
+      "sha256": "745bbdb776e18e2f44fbad206188e019ef64c0cafa0434d24cca8829abe900ef",
+      "note": "Loads with CONTROL_SOURCE_MISMATCH: W's controlling source is a resistor.",
+      "solver": {
+        "skip": "ngspice 47 stops: unknown controlling source r6 (decision 0015 item 5)."
+      }
+    },
+    "test_cascade.cir": {
+      "sha256": "6ca8255967bcef9de56c2e88420690f45572cbd1ba454969c728c0a93700c7c0",
+      "note": "Variant: all six letters in one circuit; F, H and W sense one source."
+    },
+    "test_esource.cir": {
+      "sha256": "3c2bf9975908735c55b1457ccd30e78ac58a1e434e6c7014fe236f85357c253e",
+      "note": "E: a VCVS of gain 2.2 into a divider (KiCad)."
+    },
+    "test_esource_formula.cir": {
+      "sha256": "91ee418f308ee7eaa3b54772e6406db229fa7fbf21df441f4940956588e0481a",
+      "note": "Variant: the gain is a formula."
+    },
+    "test_fsource.cir": {
+      "sha256": "fc750898ae3ea0be662633c1d8dc7c57c206a0e55bafcf8df62bc88942b8cc21",
+      "note": "F: a CCCS sensing V1, gain {K} (KiCad)."
+    },
+    "test_fsource_m.cir": {
+      "sha256": "242f287649077609e2139f7ae8f6d237c3cee38a5369ad65e44f8e1af5ffc9aa",
+      "note": "Variant: half the gain with m=2."
+    },
+    "test_fsource_subckt.cir": {
+      "sha256": "d625a9e43edf4bb2e42a3e46dd331d8c7e23a97691d026f5292382d8492a9b25",
+      "note": "Variant: F inside a subcircuit, controlled by a source of its own body."
+    },
+    "test_gsource.cir": {
+      "sha256": "666993a37aa9aceba979ae30f3501bdff248e9e52c489e03148169bc03c0fb03",
+      "note": "G: a VCCS between two dividers (KiCad)."
+    },
+    "test_gsource_m.cir": {
+      "sha256": "88a7a6d98f931b095cbafc61e8d73a2868b771963671e2e0beb3a56f52c2e39f",
+      "note": "Variant: half the transconductance with m=2."
+    },
+    "test_hsource.cir": {
+      "sha256": "1f7871bc3f7f5819381f3614657f14499923e45d9c0ae6eb578c72fe7d55427e",
+      "note": "H: a CCVS sensing V1 (KiCad)."
+    },
+    "test_hsource_sense_later.cir": {
+      "sha256": "e0f4d27f8ddc7f0dbc74626ecde11e79df3202b9f8936eb64bc1d305c1b17b0d",
+      "note": "Variant: the controlling source is a 0 V sense source written after H."
+    },
+    "test_iswitch.cir": {
+      "sha256": "00edd1bd5b4de2cff098568447426add386317dfd1b7cfcb5a33f21f72850c17",
+      "note": "W: a CSW switch sensing Vsense, swept with .dc (KiCad)."
+    },
+    "test_iswitch_off.cir": {
+      "sha256": "41640bf15b290714b806ee2c5fe3d06f6b6392ee8e9bfdce61bbd87b7daa54e6",
+      "note": "Variant: the initial state is OFF."
+    },
+    "test_vswitch.cir": {
+      "sha256": "ade43c3edc148756e06a12e13b19b2166b89986ffde945cf4e9de57fe732f7d5",
+      "note": "S: an SW switch with off, swept with .dc (KiCad)."
+    },
+    "test_vswitch_no_state.cir": {
+      "sha256": "db29d79f688248317e625a7401dc0e47cf66968649826dab7395b58c304006ec",
+      "note": "Variant: no initial state."
+    },
+    "test_vswitch_on.cir": {
+      "sha256": "27febc44bd13a3de56c9c5a60b781ab8bd2d46c0b4955b13d90c81fdec7ed6fd",
+      "note": "Variant: the initial state is ON."
+    }
+  }
+}

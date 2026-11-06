@@ -34,6 +34,7 @@ FAMILIES = (
     "names_basic",
     "statements_basic",
     "ltspice_transistors",
+    "controlled_sources",
 )
 _NETLISTS = {".cir", ".net"}
 

@@ -1,0 +1,86 @@
+{
+  "family": "controlled_sources",
+  "origin": "LTspice schematics by the maintainer, LTspice 26.1.1's -netlist exports of them, and variants of the exports made for M14, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-06",
+  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's second line says what it changes. The intentional failures are in elements_rejects. Provenance confirmed by the maintainer, 2026-11-06.",
+  "fixtures": {
+    ".gitignore": {
+      "sha256": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
+      "note": "Keeps LTspice run output out, as in ltspice_transistors (decision 0009)."
+    },
+    "lt_test_esource.asc": {
+      "sha256": "8d4bd20784e3098c5e0db7364449a0452f97a3cd049b9fedec5dae02b62e4390",
+      "note": "E: a VCVS of gain 2.2 (schematic by the maintainer)."
+    },
+    "lt_test_esource.net": {
+      "sha256": "115f6b6ef3ec83029611060950895062d457021fc9ed37616b2b945baaa711cc",
+      "note": "LTspice 26.1.1's export of lt_test_esource.asc."
+    },
+    "lt_test_fsource.asc": {
+      "sha256": "35a3d49c32ffdcce13f5a42e55809d24dd64cfba27604d2cb824c6a8e4c8d334",
+      "note": "F: a CCCS sensing V1 (schematic by the maintainer)."
+    },
+    "lt_test_fsource.net": {
+      "sha256": "3370feec499c16203ca25ad8d6d38c1edae78dbdc5ff07c820271c3372508d32",
+      "note": "LTspice 26.1.1's export of lt_test_fsource.asc."
+    },
+    "lt_test_fsource_ctrl_e.cir": {
+      "sha256": "9ee3bbf538c124d543a560d598962fc7f2e72663a267d6524da6d8656266469f",
+      "note": "Variant: the controlling source is an E; loads with CONTROL_SOURCE_MISMATCH, and LTspice runs it."
+    },
+    "lt_test_gsource.asc": {
+      "sha256": "d94a7da0b8b52d4630a31750ea225f995db79bcd5da0076d9d9424d7dd2e9e65",
+      "note": "G: a VCCS between two dividers (schematic by the maintainer)."
+    },
+    "lt_test_gsource.net": {
+      "sha256": "925ffd3a6f6a256fbe1a82f44120beb8a9c4969d0567e7afc95e894780701716",
+      "note": "LTspice 26.1.1's export of lt_test_gsource.asc."
+    },
+    "lt_test_gsource_formula.cir": {
+      "sha256": "336b5d0ff3111d61c7c3b9a69f7a44c33145a7792d01197842425c5f7642cf50",
+      "note": "Variant: the transconductance is a formula."
+    },
+    "lt_test_hsource.asc": {
+      "sha256": "1cb2bfea63c5d6e707ab404465019de6e8eacfd0622fd65953a32cd0383bae8b",
+      "note": "H: a CCVS sensing V1 (schematic by the maintainer)."
+    },
+    "lt_test_hsource.net": {
+      "sha256": "5e6347dfbca55a9856030dc3a6a60b74ae81a3c05d28e717172fac6d85777918",
+      "note": "LTspice 26.1.1's export of lt_test_hsource.asc."
+    },
+    "lt_test_hsource_ctrl_into_instance.cir": {
+      "sha256": "73d37bd12a69407dd7f519d4557b3f572c6ea15de9121cb36bf91db657148bd7",
+      "note": "Variant: the controlling source is X1:Vq, inside an instance; LTspice runs it, and the library reports UNRESOLVED_ELEMENT as info."
+    },
+    "lt_test_iswitch.asc": {
+      "sha256": "3d91a878ed77580d6a6c96a5ad78ff85e19751aef2de4274a45b721812eb30a6",
+      "note": "W: a CSW switch (schematic by the maintainer)."
+    },
+    "lt_test_iswitch.net": {
+      "sha256": "4cf793c19e875033ef45efa1fc6665732ac691e05fa5632c8a3eed86e18b5ea2",
+      "note": "LTspice 26.1.1's export of lt_test_iswitch.asc."
+    },
+    "lt_test_iswitch_off.cir": {
+      "sha256": "3259a09a281ebd6132604aa6f8ea096d978eb76c1e0e51f3582b71d91769c42b",
+      "note": "Variant: the initial state is off."
+    },
+    "lt_test_vswitch.asc": {
+      "sha256": "4580c70619705abeea9921c58a774d1dc545d3c732c36585c8cfdc2bafb0361d",
+      "note": "S: an SW switch with off (schematic by the maintainer)."
+    },
+    "lt_test_vswitch.net": {
+      "sha256": "65ab8e053e2168334d5b44be20a705f9fc923497a4986ae23f7c348f76a95491",
+      "note": "LTspice 26.1.1's export of lt_test_vswitch.asc."
+    },
+    "lt_test_vswitch_off_value.cir": {
+      "sha256": "3328ad2d9fbaa91c23db04dd81344951769234f6b294f80ba54fb3ba408f004b",
+      "note": "Variant: off=1, a flag with a value."
+    },
+    "lt_test_vswitch_on.cir": {
+      "sha256": "7ddc39136b34fb5570427f49d1f5ff90dc25133ed8e972eb3f58a012141c194b",
+      "note": "Variant: the initial state is on."
+    }
+  }
+}

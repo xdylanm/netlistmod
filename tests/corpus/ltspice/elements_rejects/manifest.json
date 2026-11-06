@@ -194,6 +194,27 @@
       "column": 11,
       "error": "ParseError",
       "note": "closed parameter list"
+    },
+    "unset_gain.net": {
+      "sha256": "2dbc397929eea75b19b719d4cf6fa77cd98f1d422a78e17f33a20d6eadcceaa5",
+      "line": 3,
+      "column": 18,
+      "error": "ParseError",
+      "note": "LTspice's export of an E symbol whose gain was never set; LTspice stops with Unknown parameter (decision 0015 items 6 and 12). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "f_m.cir": {
+      "sha256": "66b7adb72f4d5836e6106efd9db6b37b72674af9e4131145e10c4ae5636afb8d",
+      "line": 8,
+      "column": 17,
+      "error": "ParseError",
+      "note": "m= is not an LTspice F parameter; LTspice stops (decision 0015 item 7). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "s_on_off.cir": {
+      "sha256": "e5a9fd8abd43c3d4af185033a651a752adb329b52c86eddb7017f8386a151e6b",
+      "line": 8,
+      "column": 27,
+      "error": "ParseError",
+      "note": "on and off together; LTspice runs it and the last wins (decision 0015 item 8). Written for M14 from the maintainer's controlled_sources examples."
     }
   }
 }
