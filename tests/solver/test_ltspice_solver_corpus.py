@@ -18,7 +18,7 @@ import pytest
 
 from netlistmod import Dialect, Netlist
 from tests.support.ltspice import Run, run
-from tests.support.solvers import Solver
+from tests.support.solvers import Solver, copy_external_files
 
 pytestmark = pytest.mark.solver("ltspice")
 
@@ -33,6 +33,7 @@ FAMILIES = (
     "m0_export_candidate",
     "names_basic",
     "statements_basic",
+    "ltspice_transistors",
 )
 _NETLISTS = {".cir", ".net"}
 
@@ -65,6 +66,7 @@ RUNNABLE = [
 
 
 def _run(solver: Solver, folder: Path, path: Path, field: dict[str, Any]) -> Run:
+    copy_external_files(folder, field)
     netlist = Netlist.load(path, dialect=Dialect.LTSPICE)
     harness = field.get("harness")
     result = run(

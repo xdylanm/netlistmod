@@ -1,0 +1,34 @@
+.title KiCad schematic
+.op
+.tran 100n 30u
+V2 /IN GND DC 2.5 SIN( 2.5 1 100k 0 0 0 ) AC 1  
+R1 /IN Net-_Q2-B_ 10k
+XF1 Net-_Q2-B_ Net-_Q1-C_ /OUT follower
+V1 Net-_Q1-C_ GND DC 5 
+.control
+  run
+  wrdata output_follower.txt v(/IN) v(/OUT)
+.endc
+.subckt follower in vcc out
+* BC547B_OJ: copied from openjellybean 0.5.0 (https://github.com/xdylanm/openjellybean), MIT;
+* Copyright (c) 2026 openjellybean contributors.
+.model BC547B_OJ NPN(IS=1.8e-14 NF=1 BF=330 VAF=65 IKF=0.12 ISE=5e-14 NE=1.5
++ BR=4 NR=1 VAR=20 IKR=0.1 ISC=1e-13 NC=2
++ RB=40 RE=0.4 RC=1.2
++ CJE=10p VJE=0.7 MJE=0.33 CJC=4p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.45n XTF=2 VTF=10 ITF=0.1 TR=50n
++ EG=1.11 XTI=3 XTB=1.5)
+* BC557B_OJ: copied from openjellybean 0.5.0 (https://github.com/xdylanm/openjellybean), MIT;
+* Copyright (c) 2026 openjellybean contributors.
+.model BC557B_OJ PNP(IS=1.8e-14 NF=1 BF=330 VAF=40 IKF=0.1 ISE=5e-14 NE=1.5
++ BR=6 NR=1 VAR=15 IKR=0.08 ISC=1e-13 NC=2
++ RB=40 RE=0.6 RC=1.2
++ CJE=12p VJE=0.7 MJE=0.33 CJC=7p VJC=0.6 MJC=0.33 FC=0.5
++ TF=0.95n XTF=2 VTF=10 ITF=0.1 TR=60n
++ EG=1.11 XTI=3 XTB=1.5)
+R2 b vcc 1k
+Q2 0 in b BC557B_OJ
+Q1 vcc b out BC547B_OJ
+R3 0 out 1k
+.ends follower
+.end

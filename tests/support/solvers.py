@@ -205,6 +205,22 @@ def discover_solver(
     return None
 
 
+def copy_external_files(folder: Path, field: Mapping[str, object]) -> None:
+    """Copy each file a corpus fixture includes from outside the repository, such as
+    openjellybean's jellybean.lib, from the path its environment variable names (the manifest's
+    ``external`` field). Skip the test if the variable does not name a file."""
+    import pytest
+
+    external = field.get("external", {})
+    assert isinstance(external, Mapping)
+    for include, variable in external.items():
+        source = os.environ.get(str(variable))
+        if not source or not Path(source).is_file():
+            pytest.skip(f"{variable} does not name a file; set it in .env to run this fixture")
+        folder.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(source, folder / str(include))
+
+
 def run_ngspice(
     solver: Solver,
     netlist: Path,

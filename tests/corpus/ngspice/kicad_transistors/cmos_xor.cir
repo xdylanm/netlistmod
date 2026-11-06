@@ -1,0 +1,24 @@
+.title KiCad schematic
+.model __Q7 NMOS level=8
+.model __Q2 PMOS level=8
+.model __Q5 PMOS level=8
+.model __Q1 NMOS level=8
+.model __Q4 NMOS level=8
+.model __Q3 PMOS level=8
+.tran 1n 4u
+.control
+  run
+  wrdata output_xor.txt v(/A) v(/B) v(/OUT)
+.endc
+MQ7 Net-_Q1-G_ /A GND GND __Q7 l=1u w=10u m=2
+V1 VCC GND DC 3.3 
+MQ2 Net-_Q1-G_ /A VCC VCC __Q2 l=1u w=10u m=2
+MQ5 /OUT /A /B VCC __Q5 l=1u w=10u m=2
+R2 GND /OUT 100k
+C1 /OUT GND 22p
+MQ1 /OUT Net-_Q1-G_ /B GND __Q1 l=1u w=10u m=2
+MQ4 /OUT /B Net-_Q1-G_ GND __Q4 l=1u w=10u m=2
+MQ3 /OUT /B /A VCC __Q3 l=1u w=10u m=2
+V2 /A GND PULSE( 0 3.3 2n 2n 2n 250n 500n ) 
+V3 /B GND PULSE( 0 3.3 2n 2n 2n 500n 1u ) 
+.end

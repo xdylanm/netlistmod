@@ -19,7 +19,7 @@ import pytest
 
 from netlistmod import Dialect, Netlist
 from tests.support.ngspice import STUBS, Run, run, without_date
-from tests.support.solvers import Solver
+from tests.support.solvers import Solver, copy_external_files
 
 pytestmark = pytest.mark.solver("ngspice")
 
@@ -33,6 +33,7 @@ FAMILIES = (
     "statements_basic",
     "document_basic",
     "edits_golden",
+    "kicad_transistors",
 )
 
 
@@ -58,6 +59,7 @@ RUNNABLE = [
 
 def _run(solver: Solver, folder: Path, path: Path, field: dict[str, Any]) -> Run:
     # RKM values occur only in the KiCad corpus; standard notation parses the same with rkm=True.
+    copy_external_files(folder, field)
     netlist = Netlist.load(path, dialect=Dialect.NGSPICE, rkm=True)
     harness = field.get("harness")
     result = run(

@@ -1,0 +1,24 @@
+.title KiCad schematic
+.include "jellybean.lib"
+.tran 1n 4u
+.control
+  run
+  wrdata output_xor.txt v(/A) v(/B) v(/OUT)
+.endc
+MQ8 Net-_Q4-D_ Net-_Q1-D_ /OUT 2N7000_OJ
+MQ4 Net-_Q4-D_ Net-_Q1-D_ /B 2N7000_OJ
+MQ2 Net-_Q1-D_ /A Net-_Q2-S_ BS250_OJ
+MQ3 /B /A Net-_Q3-S_ BS250_OJ
+MQ7 /OUT /A Net-_Q3-S_ BS250_OJ
+R1 Net-_Q2-S_ Net-_R1-Pad2_ 10
+V1 Net-_R1-Pad2_ GND DC 5 
+MQ1 Net-_Q1-D_ /A GND 2N7000_OJ
+MQ9 Net-_Q5-D_ /B /A BS250_OJ
+MQ5 Net-_Q5-D_ /B /OUT BS250_OJ
+V2 /A GND PULSE( 0 5 2n 20n 20n 250n 500n ) 
+V3 /B GND PULSE( 0 5 2n 20n 20n 500n 1u ) 
+C1 /OUT GND 220p
+MQ6 /OUT /B Net-_Q10-S_ 2N7000_OJ
+R2 GND /OUT 100k
+MQ10 Net-_Q1-D_ /B Net-_Q10-S_ 2N7000_OJ
+.end

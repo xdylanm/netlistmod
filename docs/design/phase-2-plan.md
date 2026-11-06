@@ -66,7 +66,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Edit API:** set a whole stimulus, set one argument, and remove a stimulus. Setting one leaves DC and AC alone ([decision 0013](../decisions/0013-stimulus-specs.md)).
 - **Exit:** `half_rectifier.net` loads and edits, its solver test passes on LTspice, and each function has a spec entry, golden diff and solver test.
 
-### M13 — Transistors (Q, M, J, Z)
+### M13 — Transistors (Q, M, J, Z) ([task list](./m13-tasks.md))
 
 - The node and model boundary rule of section 3, point 1, as a decision record before the grammar.
 - Typed nodes, instance parameters, flags (`off`), positional area and `ic=`. Extend `model-types.json` (Q → NPN, PNP; M → NMOS, PMOS, and LTspice's VDMOS form; J → NJF, PJF; Z → NMF, PMF, and LTspice's IGBT form).

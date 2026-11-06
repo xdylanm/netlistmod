@@ -1,0 +1,201 @@
+{
+  "family": "kicad_transistors",
+  "origin": "KiCad schematics by the maintainer, exported for ngspice, and variants of them made for M13, each changing one form; mesfet_common_source.cir is authored",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-05",
+  "notes": "Q, M, J and Z devices for M13. Most files include jellybean.lib from openjellybean 0.5.0 (https://github.com/xdylanm/openjellybean, MIT), which is not copied here: the solver sweep runs them when OPENJELLYBEAN_LIB names that file. Three files carry copied openjellybean model blocks with their notice. Provenance confirmed by the maintainer, 2026-11-05.",
+  "fixtures": {
+    "bjt_emitter_follower.cir": {
+      "sha256": "b5d61125bf497f454ae5403be57ea5787bc40f2a14be6fdf160aeb486132cb59",
+      "note": "Offset-compensated emitter follower: an NPN and a PNP from jellybean.lib.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_discrete_xor.cir": {
+      "sha256": "3e54b80ddc1b3cbefdddb53db254f34abd9ca47f1c80a490ed904da4c0cc94cf",
+      "note": "XOR from discrete VDMOS parts, N and P, from jellybean.lib.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_xor.cir": {
+      "sha256": "dfce8f17b35019a1f62b174c3f1bc033c9b89f16a1ecdfd669c4d2bb453a6cbb",
+      "note": "CMOS XOR: 4-node NMOS and PMOS, level=8 models and l=, w=, m=."
+    },
+    "edges.cir": {
+      "sha256": "d182057dfce1950087b772a9517cb865fd1b171882ef0bae3805594367a8ec54",
+      "note": "Edge detector: op-amps and a potentiometer from jellybean.lib, NPNs and diodes.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold.cir": {
+      "sha256": "5a9af8c77dc06c38cc580b8fc8e2e0e84c4f6fc2c35aec7e5dd2c2070ca352f3",
+      "note": "Sample and hold: a JFET switch and an op-amp from jellybean.lib.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "cmos_xor_geometry.cir": {
+      "sha256": "46b7ada62011b059df626933cde0df09d9d04b6c6eeae288d9899467b022f712",
+      "note": "cmos_xor.cir with ad, as, pd and ps."
+    },
+    "cmos_xor_geometry_upper.cir": {
+      "sha256": "babdb3b1a9fc176037cf33483af733057eaf8a5bb329ada004702ac5a7e665c1",
+      "note": "cmos_xor.cir with upper-case names and values, nrd and nrs."
+    },
+    "cmos_xor_continued.cir": {
+      "sha256": "28cf58de24092874a637bd09f762f036bc3f33d4892b4bf881fdde384d6ddd82",
+      "note": "cmos_xor.cir with the parameters on + continuation lines."
+    },
+    "cmos_xor_off.cir": {
+      "sha256": "e47323f53f3a6014d5197c318b54d1cdeac6c8008681191b4a49e3e84ce95c95",
+      "note": "cmos_xor.cir with off on one MOSFET."
+    },
+    "cmos_xor_ic.cir": {
+      "sha256": "b494efe25839d0c9045b44e9161ec2cdfbe2f53d746a9d231992aee1f44914cc",
+      "note": "cmos_xor.cir with ic=vds,vgs,vbs and uic."
+    },
+    "cmos_xor_version.cir": {
+      "sha256": "c977daf7d452ca7ae2869c405aac098986917834177521f878622de34a6d7e81",
+      "note": "cmos_xor.cir with version=3.3.0 on the level 8 models."
+    },
+    "cmos_xor_model_params.cir": {
+      "sha256": "2d261447213bfbbc9b754781c55b31d934e11efeefa073267087b65b67b429c3",
+      "note": "cmos_xor.cir with model parameters in parentheses, continued."
+    },
+    "cmos_xor_level1_temp.cir": {
+      "sha256": "a6305ca72ffc3af8a53f479e1ea9c6ea07ea5acc4c48a0d2e8ecce73dbf3cc5f",
+      "note": "cmos_xor.cir with level 1 models and temp=, which stops ngspice on level 8."
+    },
+    "bjt_emitter_follower_substrate.cir": {
+      "sha256": "caaffea6a617db4d8c7a8ce25877b9b9066c6151ab2120a3b500ff011c1157bc",
+      "note": "bjt_emitter_follower.cir with a substrate node on each BJT.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_area.cir": {
+      "sha256": "ad91729d8dacefa07c537e8b7352226c2c29e35766b5924ce03e659add0654df",
+      "note": "bjt_emitter_follower.cir with area=, areab= and areac=.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_off_ic.cir": {
+      "sha256": "ff11236f737bd1827cdbfffa4fd5d4f665ff8f5f23ceac541dbe6796cca33b28",
+      "note": "bjt_emitter_follower.cir with off on Q2 and IC=0.6, 2.5 on Q1, and uic.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_temp.cir": {
+      "sha256": "82ecdb0bd6b6be0fc7f89c3d539d0c8a38a60a185009cb49417f34bec43dd4ef",
+      "note": "bjt_emitter_follower.cir with temp=, dtemp= and m=.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_local_models.cir": {
+      "sha256": "10191f382a2e4804fcb0ddb1ab435dfd907205b5a45e69322f66415646335486",
+      "note": "bjt_emitter_follower.cir with its models copied from openjellybean 0.5.0."
+    },
+    "bjt_emitter_follower_vbic_tj.cir": {
+      "sha256": "4b87ce0d98276e58928bcd1b32e6fe1675339cbe86ad13aa153fb4857d6f46de",
+      "note": "bjt_emitter_follower.cir with VBIC (level=4) models and a junction temperature node."
+    },
+    "bjt_emitter_follower_2n3904.cir": {
+      "sha256": "6d6254ed031ee06df3b3503248d81902936323940d80a4b85d6546444ca8adfc",
+      "note": "bjt_emitter_follower.cir with model names that start with a digit.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_node_like_model.cir": {
+      "sha256": "fa637904f3129ed4b6a3a8a74486a91c15c74dcd4f6d207c54ae79276eb5ba39",
+      "note": "bjt_emitter_follower.cir with a node named like a model.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "bjt_emitter_follower_subckt.cir": {
+      "sha256": "ab5be15ddf30370c9eb845c546788a879c4bd5f2b6ef47ffb6eabd9af05ba972",
+      "note": "bjt_emitter_follower.cir with the transistors and their models in a .subckt."
+    },
+    "cmos_discrete_xor_local_models.cir": {
+      "sha256": "b292ec6293d48dd79bd93590a5b589f6ea3109d7420dacc9128d94d3d2f72eb7",
+      "note": "cmos_discrete_xor.cir with its models copied from openjellybean 0.5.0, BS250_OJ with pchan."
+    },
+    "cmos_discrete_xor_m_off.cir": {
+      "sha256": "ae6c071868a59e3e53b73ea265d8a561a48ffd030716b217d40b76685818d365",
+      "note": "cmos_discrete_xor.cir with VDMOS m= and off.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_jfet_area_off.cir": {
+      "sha256": "c6bffc979674e0d98b61d3883b589af69d8a40ecead89b1c00bd92394e07a08f",
+      "note": "sample_and_hold.cir with a positional JFET area and off.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_jfet_ic_temp.cir": {
+      "sha256": "c0639a4046244b008d3e3549aa0e08fe647c16490d7c34d39644b025e96fb1ce",
+      "note": "sample_and_hold.cir with JFET ic= and temp=, and uic.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_pjf.cir": {
+      "sha256": "383e66d1881d41b85c8708ac990a3d9fe7a13beea76eb4ba1b71e1e2e63ce520",
+      "note": "sample_and_hold.cir with a P-channel JFET and the diode reversed.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "sample_and_hold_jfet_named_area.cir": {
+      "sha256": "40cac8c37bb32d5ba19ff49c9a64f15f1d528430acb7b3b5e3c935428b23c027",
+      "note": "sample_and_hold.cir with area= by name, which runs but the manual does not show.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "mesfet_common_source.cir": {
+      "sha256": "aeee761946687e6afab69baf67675b55263b57210cfac1bd4e2ad769bdce3f9b",
+      "note": "MESFET (NMF) common-source stage with positional area, off and ic=; authored, not from KiCad."
+    }
+  }
+}
