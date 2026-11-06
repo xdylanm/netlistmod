@@ -155,37 +155,37 @@ Each changes one thing from one of your files, named in a comment on its second 
 
 ## 4. Tasks
 
-[ ] **T1 — Decision record 0015.** Status `proposed` until M14 closes. It records section 2, with the amendments of decision 13.
+[x] **T1 — Decision record 0015.** Status `proposed` until M14 closes. It records section 2, with the amendments of decision 13.
 
-[ ] **T2 — Commit the corpus first.** The two families with their manifests, and the rejects in `elements_rejects`. Then the solver sweeps (`test_ngspice_corpus.py`, `test_ltspice_solver_corpus.py`) and the tree snapshot docstring name the new family. Every file fails at its first E, F, G, H, S or W line, and each later task makes some of them pass.
+[x] **T2 — Commit the corpus first.** The two families with their manifests, and the rejects in `elements_rejects`. Then the solver sweeps (`test_ngspice_corpus.py`, `test_ltspice_solver_corpus.py`) and the tree snapshot docstring name the new family. Every file fails at its first E, F, G, H, S or W line, and each later task makes some of them pass.
 
-[ ] **T3 — E and G on both dialects.** Tests first:
+[x] **T3 — E and G on both dialects.** Tests first:
 - **Grammar:** four nodes and one gain (decision 6). Negative tests: three nodes, no gain, two values, a word, and `gain=`. On ngspice, G takes `m=` and E does not.
 - **Node:** `Vcvs` and `Vccs`, with `control_nodes`.
 - **Solver tests:** each probe of section 3.1 for E and G, pinning what each solver does and the library's reading. A test that the gain takes effect.
 - **Spec entries:** `NG-VCV-001`, `NG-VCC-001`, `LT-VCV-001` and `LT-VCC-001`, and the shared shape, `NG-CTL-001` and `LT-CTL-001`.
 
-[ ] **T4 — F and H on both dialects.** As T3, with `Cccs` and `Ccvs`, and `control: ElementReference`. On ngspice, F takes `m=` and H does not. Spec entries `NG-CCC-001`, `NG-CCV-001`, `LT-CCC-001` and `LT-CCV-001`.
+[x] **T4 — F and H on both dialects.** As T3, with `Cccs` and `Ccvs`, and `control: ElementReference`. On ngspice, F takes `m=` and H does not. Spec entries `NG-CCC-001`, `NG-CCV-001`, `LT-CCC-001` and `LT-CCV-001`.
 
-[ ] **T5 — S and W on both dialects.** `VoltageSwitch` and `CurrentSwitch`, with the model, the state flag and the refusals of decision 8. A test that the state takes effect inside the hysteresis loop. Spec entries `NG-SWV-001`, `NG-SWC-001`, `LT-SWV-001` and `LT-SWC-001`.
+[x] **T5 — S and W on both dialects.** `VoltageSwitch` and `CurrentSwitch`, with the model, the state flag and the refusals of decision 8. A test that the state takes effect inside the hysteresis loop. Spec entries `NG-SWV-001`, `NG-SWC-001`, `LT-SWV-001` and `LT-SWC-001`.
 
-[ ] **T6 — The nonlinear forms stay unsupported (decision 9).** Each keyword is a positioned `UnsupportedConstruct` on both dialects, and ngspice's `Laplace=` is a `ParseError`. `NG-UNS-001` and `LT-UNS-001` are updated, and so are the device matrices and `devices.md`.
+[x] **T6 — The nonlinear forms stay unsupported (decision 9).** Each keyword is a positioned `UnsupportedConstruct` on both dialects, and ngspice's `Laplace=` is a `ParseError`. `NG-UNS-001` and `LT-UNS-001` are updated, and so are the device matrices and `devices.md`.
 
-[ ] **T7 — Document layer (decisions 3 to 5, 8).**
+[x] **T7 — Document layer (decisions 3 to 5, 8).**
 - **References:** controlling sources join the index as element references, resolved in their scope, with `UNRESOLVED_ELEMENT` and `CONTROL_SOURCE_MISMATCH`.
 - **Topology:** the signature's `control` entry. Tests show that E, G and S control nodes appear in `nets()`, `elements_on_net` and `connections`.
 - **Model types:** `model-types.json` gains SW and CSW.
 - **LTspice:** the `X1:Vq` info.
 
-[ ] **T8 — Edits (decision 10).**
+[x] **T8 — Edits (decision 10).**
 - `set_value`, `set_formula` and `set_param` (`m=`) on the gain letters; `set_model` and `set_switch_state` on the switches.
 - Golden diffs for each letter on both dialects, from `test_cascade.cir` and an LTspice counterpart.
 - Property tests that no edit changes the signature.
 - **The exit's negative test:** a raw `EditPlan` that changes any control node of E, G or S, or the controlling source of F, H or W, raises `TopologyViolation`.
 
-[ ] **T9 — Corpus and snapshots.** Every accept file of both families loads, round-trips byte-exact and runs in its solver sweep. The tree snapshot gains the new files, and the signature snapshot does not change.
+[x] **T9 — Corpus and snapshots.** Every accept file of both families loads, round-trips byte-exact and runs in its solver sweep. The tree snapshot gains the new files, and the signature snapshot does not change.
 
-[ ] **T10 — Documentation.**
+[x] **T10 — Documentation.**
 - `docs/design/elements.md`, `docs/usage/elements.md` and `editing.md`, `edit-layer.md` and `document-layer.md` (the new code).
 - `docs/usage/errors.md`, both `discrepancies.md` (decisions 4 to 8), the README, CHANGELOG and the architecture amendments.
 
