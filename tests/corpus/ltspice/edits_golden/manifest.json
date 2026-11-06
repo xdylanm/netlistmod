@@ -1,6 +1,6 @@
 {
   "family": "edits_golden",
-  "origin": "Authored in this repository for the M8 and M9 golden-diff edit tests; the inputs are the exports in contributed_examples, and diode.net written here",
+  "origin": "Authored in this repository for the M8 and M9 golden-diff edit tests; the inputs are the exports in contributed_examples, and diode.net and transistors.net (M13) written here",
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-01",
@@ -82,7 +82,15 @@
       }
     },
     "remove_after_continuation.expected.net": "95e2598c0d4472d86ef2d99e1db5c9c87ff933f52b76855baf807074d72a670b",
-    "remove_after_comment.expected.net": "022514380a0fb75442275f3dafb9bdca352412abc34aaa226fbd097e782dfb52"
+    "remove_after_comment.expected.net": "022514380a0fb75442275f3dafb9bdca352412abc34aaa226fbd097e782dfb52",
+    "transistors.net": "c2ea6153458b6caa78b404d6d8c6362812f7e1a7f02b480078072017880364ba",
+    "set_model_transistors.expected.net": "58208cf813a3d35809d2fa78060e1fb3714fb8d23ce663a35cd41809d5b337ca",
+    "bjt_area_transistors.expected.net": "fddcf0fddc56456b379e053f30ef7c56c3da24bb33043094deb193a2eeb3afe6",
+    "mosfet_params_transistors.expected.net": "999aaeaf20fb10f0aebd181decc2531012359748b4ce83972cfe6c922165477e",
+    "vdmos_model_param_transistors.expected.net": "9f478f05361abd4069095c8ef3d2090badd54b65040f3b5efcc549dd22648fac",
+    "jfet_area_transistors.expected.net": "df69af08c5e656140d74b4ef5ae54040cea4d8b224a1793ed847cc30b20309f6",
+    "mesfet_area_transistors.expected.net": "a6c8442e8b92e2857699fc9b1c3bd1b680cfcaf6fbedb8c91a3e789561761e1d",
+    "batch_transistors.expected.net": "1d3f6809ea71e993efbd3aa981ca811920463f35d869afec29682b99e4740e12"
   },
   "cases": {
     "set_value": {
@@ -524,6 +532,129 @@
         ]
       ],
       "expected": "remove_after_comment.expected.net"
+    },
+    "transistor_set_model": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_model",
+          "Q1",
+          "qp"
+        ]
+      ],
+      "expected": "set_model_transistors.expected.net"
+    },
+    "transistor_bjt_area": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_param",
+          "Q1",
+          "area",
+          "2"
+        ]
+      ],
+      "expected": "bjt_area_transistors.expected.net"
+    },
+    "transistor_mosfet_params": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_param",
+          "M1",
+          "W",
+          "8u"
+        ],
+        [
+          "set_param",
+          "M1",
+          "m",
+          "2"
+        ]
+      ],
+      "expected": "mosfet_params_transistors.expected.net"
+    },
+    "transistor_vdmos_model_param": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_model_param",
+          "vd",
+          "VTO",
+          "-2"
+        ],
+        [
+          "set_model_param",
+          "vd",
+          "KP",
+          "0.3"
+        ]
+      ],
+      "expected": "vdmos_model_param_transistors.expected.net"
+    },
+    "transistor_jfet_area": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_param",
+          "J1",
+          "area",
+          "3"
+        ],
+        [
+          "set_param",
+          "J1",
+          "temp",
+          "30"
+        ]
+      ],
+      "expected": "jfet_area_transistors.expected.net"
+    },
+    "transistor_mesfet_area": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "set_param",
+          "Z1",
+          "area",
+          "2"
+        ]
+      ],
+      "expected": "mesfet_area_transistors.expected.net"
+    },
+    "transistor_batch": {
+      "input": "transistors.net",
+      "steps": [
+        [
+          "batch",
+          [
+            [
+              "set_model",
+              "Q1",
+              "qp"
+            ],
+            [
+              "set_param",
+              "M2",
+              "m",
+              "2"
+            ],
+            [
+              "set_param",
+              "Z1",
+              "area",
+              "2"
+            ],
+            [
+              "set_model_param",
+              "jm",
+              "BETA",
+              "2m"
+            ]
+          ]
+        ]
+      ],
+      "expected": "batch_transistors.expected.net"
     }
   }
 }

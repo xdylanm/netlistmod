@@ -11,6 +11,7 @@ from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     AcDirective,
+    BipolarTransistor,
     BlankLine,
     Capacitor,
     CommentLine,
@@ -22,7 +23,10 @@ from netlistmod.model.nodes import (
     End,
     GlobalDirective,
     Inductor,
+    Jfet,
+    Mesfet,
     ModelStatement,
+    Mosfet,
     MutualCoupling,
     OpaqueBlock,
     OpaqueStatement,
@@ -58,6 +62,9 @@ _FUNCTION = SlotCheck((SourceSpec,), "a source function")
 
 
 _TWO_TERMINAL = (Resistor, Capacitor, Inductor)
+
+
+_TRANSISTORS = (BipolarTransistor, Mosfet, Jfet, Mesfet)
 
 
 _SOURCES = (VoltageSource, CurrentSource)
@@ -143,6 +150,10 @@ _ELEMENT_NAMES: dict[type[Component], str] = {
     VoltageSource: "voltage source",
     CurrentSource: "current source",
     Diode: "diode",
+    BipolarTransistor: "bipolar transistor",
+    Mosfet: "MOSFET",
+    Jfet: "JFET",
+    Mesfet: "MESFET",
     SubcktInstance: "subcircuit call",
 }
 
