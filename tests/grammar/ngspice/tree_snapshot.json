@@ -121,6 +121,26 @@
    "nodes": 107
   }
  },
+ "edits_golden/batch_transistors.expected.cir": {
+  "rkm": {
+   "digest": "3db1fa3c6a9063be522f980dbb1e6b44197dc0582252908254e864ca20120ac5",
+   "nodes": 98
+  },
+  "standard": {
+   "digest": "3db1fa3c6a9063be522f980dbb1e6b44197dc0582252908254e864ca20120ac5",
+   "nodes": 98
+  }
+ },
+ "edits_golden/bjt_area_transistors.expected.cir": {
+  "rkm": {
+   "digest": "01bf55a2185a68efc842b36f81cbbb2b0454e4f636640554cf630d2157b62d55",
+   "nodes": 97
+  },
+  "standard": {
+   "digest": "01bf55a2185a68efc842b36f81cbbb2b0454e4f636640554cf630d2157b62d55",
+   "nodes": 97
+  }
+ },
  "edits_golden/body.expected.cir": {
   "rkm": {
    "digest": "9461761d5898c497ec875d95253c87986c557e0a093c2d2ae7c47ac2545fb670",
@@ -281,6 +301,16 @@
    "nodes": 102
   }
  },
+ "edits_golden/jfet_area_transistors.expected.cir": {
+  "rkm": {
+   "digest": "5d223d7ee8c4d2ffa7ef6c37452797c691f4ef6b9c1ed13b1ad61f405fe849ba",
+   "nodes": 97
+  },
+  "standard": {
+   "digest": "5d223d7ee8c4d2ffa7ef6c37452797c691f4ef6b9c1ed13b1ad61f405fe849ba",
+   "nodes": 97
+  }
+ },
  "edits_golden/keyword_value_with_tabs.expected.cir": {
   "rkm": {
    "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
@@ -289,6 +319,16 @@
   "standard": {
    "digest": "7c6f9d63a4d1dc0514309e05a994d9af73e271d1d6b34e8094112ee0870f2986",
    "nodes": 102
+  }
+ },
+ "edits_golden/mesfet_area_transistors.expected.cir": {
+  "rkm": {
+   "digest": "1801a6124628f48275eff5945b882e7a902eff5c6f332db963013aca99d05c29",
+   "nodes": 96
+  },
+  "standard": {
+   "digest": "1801a6124628f48275eff5945b882e7a902eff5c6f332db963013aca99d05c29",
+   "nodes": 96
   }
  },
  "edits_golden/mixed_eol.cir": {
@@ -339,6 +379,16 @@
   "standard": {
    "digest": "fd94c9a8eda3d116ea5caa7eed70bb0a9482f1006510e32509d96e86cbef401b",
    "nodes": 32
+  }
+ },
+ "edits_golden/mosfet_params_transistors.expected.cir": {
+  "rkm": {
+   "digest": "15e52ceca06207d99ba3a4154c398b6f8aa1ce325d5358fb9b141b38eeafbc70",
+   "nodes": 97
+  },
+  "standard": {
+   "digest": "15e52ceca06207d99ba3a4154c398b6f8aa1ce325d5358fb9b141b38eeafbc70",
+   "nodes": 97
   }
  },
  "edits_golden/no_final_newline.cir": {
@@ -531,6 +581,16 @@
    "nodes": 28
   }
  },
+ "edits_golden/set_model_transistors.expected.cir": {
+  "rkm": {
+   "digest": "6bf18cceb1485c2e4974252127dd4f3d6cb518e55d168c3f4b0dbadd1df1d2ad",
+   "nodes": 95
+  },
+  "standard": {
+   "digest": "6bf18cceb1485c2e4974252127dd4f3d6cb518e55d168c3f4b0dbadd1df1d2ad",
+   "nodes": 95
+  }
+ },
  "edits_golden/set_stimulus.expected.cir": {
   "rkm": {
    "digest": "fb9e2216b59d6767843e03471f2b401839a865588b6f0b05eda2ea9ff838803f",
@@ -621,6 +681,16 @@
    "nodes": 28
   }
  },
+ "edits_golden/transistors.cir": {
+  "rkm": {
+   "digest": "6bf18cceb1485c2e4974252127dd4f3d6cb518e55d168c3f4b0dbadd1df1d2ad",
+   "nodes": 95
+  },
+  "standard": {
+   "digest": "6bf18cceb1485c2e4974252127dd4f3d6cb518e55d168c3f4b0dbadd1df1d2ad",
+   "nodes": 95
+  }
+ },
  "edits_golden/trnoise_arg.expected.cir": {
   "rkm": {
    "digest": "ea093c7dbad1fea824ca8a52a6c1b756c2675b288dfa1e593875c7603506b6af",
@@ -659,6 +729,16 @@
   "standard": {
    "digest": "b358dd2a8ffa2cca362a93f61694596bf27323e09bf7769c7c6b146ac03471a3",
    "nodes": 103
+  }
+ },
+ "edits_golden/vdmos_model_param_transistors.expected.cir": {
+  "rkm": {
+   "digest": "9fb3ea97092ab7f655924083515eaf64b84f87c73ebd9ffb218a1fd679a22b1c",
+   "nodes": 99
+  },
+  "standard": {
+   "digest": "9fb3ea97092ab7f655924083515eaf64b84f87c73ebd9ffb218a1fd679a22b1c",
+   "nodes": 99
   }
  },
  "elements_basic/capacitors_inductors.cir": {

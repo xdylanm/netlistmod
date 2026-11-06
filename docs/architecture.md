@@ -225,7 +225,7 @@ repo/
 
 | Family | Examples | Notes |
 |---|---|---|
-| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
+| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
 | Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
 | Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/statements.md](design/statements.md). |
 | Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
@@ -251,6 +251,7 @@ class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params:
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
 - `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
 - `Diode`: `model: ModelReference` (mandatory), no numeric value.
+- `BipolarTransistor` / `Mosfet` / `Jfet` / `Mesfet`: `model: ModelReference` (mandatory), `area: NumericValue | Formula | None` (a positional area), `flags`; `nodes` are the nodes as written ([decision 0014](decisions/0014-transistors.md)).
 - `VoltageSource` / `CurrentSource`: `dc: NumericValue | Formula | None`, `dc_keyword: bool`, `ac: AcSpec | None` (`AcSpec(magnitude, phase, span)`), `stimulus: SourceSpec | None`, `distortion: tuple[SourceSpec, ...]` ([decision 0013](decisions/0013-stimulus-specs.md)).
 - Node and value shapes are detailed in [docs/design/elements.md](design/elements.md).
 - The type of a slot is the basis of edit validation: `set_value` on a `ModelReference` slot is an `EditError`.
@@ -293,6 +294,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 | 11 | Transformer methods for rules with adjacent optional slots MUST dispatch on node *type*, not position. | Positions shift when slots are absent. |
 | 12 | Terminal priorities are used deliberately and commented in the grammar. Keywords share the priority of the generic name terminal so Lark re-types an exact match; block-scoped name terminals keep block terminators out of the top-level name. | Lark only collision-checks terminals of equal priority, so an accidental priority gap hides a conflict. |
 | 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\r?\n)`); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md)). |
+| 14 | On a transistor line the model is the last name before the first area, flag or parameter; the overlay spells out the name sequences each letter's node counts allow. A field written as a number is a node before the model and an area after it, and a number or a flag keyword in the model's place is refused at its token. | Both solvers decide by looking up defined models, which the library cannot do for included files; syntax stays in the grammar (P13). See [decision 0014](decisions/0014-transistors.md). |
 
 ### 6.4 Numeric literals
 
@@ -341,7 +343,7 @@ A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device 
 
 - Set a numeric value, or replace it with a formula or parameter reference (`R1 a b 10k` → `R1 a b {Rx}`).
 - Set or add an instance parameter on an existing element.
-- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`), which is the type of the current one. An R, C or L line without a model may gain one after its value, and its value may be removed when a model is present (the semiconductor form, where a value overrides the geometry). A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
+- Set an element's model name. The new model MUST resolve (via the symbol table) and MUST have the model type allowed for the element letter (R → `R`, C → `C`, L → `L`, D → `D`, Q → `NPN`/`PNP`, M → `NMOS`/`PMOS`/`VDMOS`, J → `NJF`/`PJF`, Z → `NMF`/`PMF`, and on LTspice also `NIGBT`/`PIGBT`; [decision 0014](decisions/0014-transistors.md)). An R, C or L line without a model may gain one after its value, and its value may be removed when a model is present (the semiconductor form, where a value overrides the geometry). A model that does not resolve is an `EditError`, unless the caller passes `allow_external=True` and a searched scope has an opaque `.include`/`.lib`; the edit is then made with the usual `UNRESOLVED_MODEL` info diagnostic ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
 - Add or set a `.param` (upsert: the effective assignment of the name in the scope is replaced, otherwise a line is added); edit `.model` parameters.
 - Edit source stimulus specifications of existing sources: the DC value, the AC magnitude and phase, and the function, whole or one argument at a time, or remove it ([decision 0013](decisions/0013-stimulus-specs.md)).
 - Add, replace or remove directives, with a placement strategy (`Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `before(line)`, `after(line)`). `directives.set` upserts the singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`); the repeatable kinds are added, replaced or removed. Directive text may span several physical lines (a list of lines), joined with the file's line ending.
@@ -387,6 +389,7 @@ The signature is a canonical, hashable, ordered value built from typed nodes, us
 - **`.lib name` … `.endl` blocks are opaque.** Their contents are not read and are not topology ([decision 0012](decisions/0012-carried-limits.md)). Solvers read such a block only from a library file; opening a library file is a later candidate (Section 21).
 - **Conditional blocks are opaque.** Netlists in which `.if`/`.else`/`.endif` changes topology are explicitly out of scope; the topology guarantee does not extend into conditional blocks.
 - **LTspice node names can reach into an instance.** LTspice connects a node named `<instance>:<node>` to that node inside the instance, which the reference does not document. The library keeps it as a net of its own, so the topology view and the signature do not show the join. A `NODE_INTO_INSTANCE` diagnostic flags it ([decision 0009](decisions/0009-ltspice-dialect.md); `docs/grammars/ltspice/names.md` N11).
+- **An omitted transistor substrate is implicit.** A 3-node Q (and a MOSFET line without a bulk node) connects its substrate to ground in ngspice. The signature and the topology view record only the written nodes ([decision 0014](decisions/0014-transistors.md)).
 - **Replacement text is not validated.** In v1 the caller is responsible for the validity of the text it supplies. The library may take on more validation as the grammar matures.
 
 ### 7.9 Test harnesses

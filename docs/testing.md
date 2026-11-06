@@ -14,7 +14,10 @@ Edit `.env` to set `NGSPICE_EXE` and `LTSPICE_EXE` to local executable paths.
 Quote values that contain special characters; forward slashes work in Windows
 paths and avoid dotenv backslash escaping. `.env` is ignored by Git and is not
 needed when a solver is available on `PATH` or in a standard install location.
-Never put credentials in this file.
+Never put credentials in this file. `OPENJELLYBEAN_LIB`, optional, is the path of
+openjellybean's `jellybean.lib`: corpus files whose manifest names it under
+`solver.external` include it, and their solver runs skip with the variable's name when it is
+unset (decision 0014 item 10).
 
 The project's `uv` and dev tools are in `.venv` and may not be on `PATH`. In that case start from
 the venv's interpreter (`.venv/bin/python` on Linux), and read each `uv run` below this way:
