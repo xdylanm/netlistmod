@@ -1,0 +1,19 @@
+.title KiCad schematic
+* variant: behavioural R, C (c= and q=) and L (manual 3.3.4, 3.3.9, 3.3.13)
+.op
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+R1 /OUT GND 1k
+R5 Net-_R5-Pad1_ /VX 1k
+V1 Net-_R5-Pad1_ GND DC 2 
+R6 /VX GND 1k
+B1 /OUT GND v={2*v(/VX)}
+R9 /OUT r9 R='1k*(1+0*v(/VX))'
+R10 r9 GND 1k
+C9 /OUT GND c='1n*(1+v(/VX))'
+C10 /OUT GND q='1n*v(/OUT)'
+L9 /OUT l9 L='1m*(1+0*v(/VX))'
+R11 l9 GND 1k
+.end

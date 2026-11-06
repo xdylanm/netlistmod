@@ -4,7 +4,7 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-06",
-  "notes": "Linear dependent sources and switches for M14. A variant's second line says what it changes. The intentional failures are in elements_rejects. Provenance confirmed by the maintainer, 2026-11-06.",
+  "notes": "Linear dependent sources and switches for M14. A variant's second line says what it changes. The intentional failures are in elements_rejects. M15 added B and the nonlinear forms, with variants written from these files; the files of M15b's forms are skipped by the solver sweep until then. Provenance confirmed by the maintainer, 2026-11-06.",
   "fixtures": {
     "diag_f_ctrl_missing.cir": {
       "sha256": "c41ab6a5beb583101ba5be10bfe1bb499fde5fbe42d430a8509fa608b10aa8bb",
@@ -20,6 +20,50 @@
         "skip": "ngspice 47 stops: unknown controlling source r6 (decision 0015 item 5)."
       }
     },
+    "test_behavioral_rcl.cir": {
+      "sha256": "9053d32ebb576951ab4d9a9b2879467752e1bcfe92fbde6b8d563a77b4320046",
+      "note": "Variant: behavioural R, C (c= and q=) and L (manual 3.3.4, 3.3.9, 3.3.13)."
+    },
+    "test_bsource.cir": {
+      "sha256": "e49934f62cc01d4d53f83db910d26286211eb773dd553f1804a0e9f11afbf765",
+      "note": "B: a behavioural voltage source, v={2*v(/VX)} (KiCad, by the maintainer)."
+    },
+    "test_bsource_bare.cir": {
+      "sha256": "35ac07f0094d4e76d6e6f9093bb2926183f71f8474691c4f8c6794d40767533f",
+      "note": "Variant: a bare expression with blanks, then tc1= (manual 5.1)."
+    },
+    "test_bsource_continued.cir": {
+      "sha256": "9eaf7b5e8bb33e8c54612a13942010ad2253cca214aed2bbfe40a4ce4142bb59",
+      "note": "Variant: the expression continues on a + line."
+    },
+    "test_bsource_current.cir": {
+      "sha256": "0a8e47f65d57e24641daf51fb4c5e82fadf6b277c7ec1b6a46bd5cc8a9f7ca89",
+      "note": "Variant: a current source, i=."
+    },
+    "test_bsource_param.cir": {
+      "sha256": "787abfe39a948bad2b0a1b7f075121ca47794b3a27bb7dd8b7becda409af4cb4",
+      "note": "Variant: a parameter in braces inside a bare expression."
+    },
+    "test_bsource_pwl.cir": {
+      "sha256": "5f2c242e3f5b0256d514c7052b18e450768c2eed209e43a6243045ca5a7a2502",
+      "note": "Variant: the pwl function (manual 5.1.4)."
+    },
+    "test_bsource_quoted.cir": {
+      "sha256": "d8af2f48e508cce6ce4bd355ae223711d34e3ee962fd0f187371a392c9bcb818",
+      "note": "Variant: a quoted expression."
+    },
+    "test_bsource_sense.cir": {
+      "sha256": "58074078700492824f54767f88c15b51f33f8c6169fd14ae80acb706196e05bb",
+      "note": "Variant: the current through V1."
+    },
+    "test_bsource_special.cir": {
+      "sha256": "7561361ad5707f303c7245fa0b7ed9ff35ff860fc270b48e414a3f69d767b68d",
+      "note": "Variant: the special variables time, temper and hertz (manual 5.1.2)."
+    },
+    "test_bsource_ternary.cir": {
+      "sha256": "bfb2101b0f2699e4bcd01f02870e04883bf141c771263fcae927d09a9b647386",
+      "note": "Variant: a ternary."
+    },
     "test_cascade.cir": {
       "sha256": "6ca8255967bcef9de56c2e88420690f45572cbd1ba454969c728c0a93700c7c0",
       "note": "Variant: all six letters in one circuit; F, H and W sense one source."
@@ -28,9 +72,63 @@
       "sha256": "3c2bf9975908735c55b1457ccd30e78ac58a1e434e6c7014fe236f85357c253e",
       "note": "E: a VCVS of gain 2.2 into a divider (KiCad)."
     },
+    "test_esource_and.cir": {
+      "sha256": "345442e453aacaff78e3b73532690abd5fb8a19da19966b2138ae136c55194c7",
+      "note": "Variant: and(2), an XSPICE form (manual 5.2.7).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
     "test_esource_formula.cir": {
       "sha256": "91ee418f308ee7eaa3b54772e6406db229fa7fbf21df441f4940956588e0481a",
       "note": "Variant: the gain is a formula."
+    },
+    "test_esource_freq.cir": {
+      "sha256": "6b8fff11e78e101b27d1cc7281c02680775fc326efbaeae5cf121ace326e21de",
+      "note": "Variant: FREQ, an XSPICE form (manual 5.2.6).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_esource_poly.cir": {
+      "sha256": "3d0a6ee30a18c443b66843618cb145f70753f781a140887802f1182dc1832468",
+      "note": "Variant: POLY(1) (manual 5.5.1).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_esource_poly2.cir": {
+      "sha256": "9ba6751e1008c8baabf7e27ffbee8f7ca6f96977e5214588d0a6a6a13012f43d",
+      "note": "Variant: POLY(2), one node pair twice (manual 5.5.1).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_esource_table.cir": {
+      "sha256": "ecfe8f97074e04db458b529f70ba34cc4db24003e9459bc6e254f793b7405223",
+      "note": "Variant: TABLE {expression} = pairs (manual 5.2.3).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_esource_table_nodes.cir": {
+      "sha256": "b877894ee2de763a7aff86ba3962f2dfcb3bd185e91127074077ed82074e93e0",
+      "note": "Variant: the four-node TABLE form (manual 5.2.3).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_esource_value.cir": {
+      "sha256": "9d56d64b1d6dbeaa531623b03fd2c61fd6d9a4721b496664c5c1ee75effeced3",
+      "note": "Variant: value= (manual 5.2.2)."
+    },
+    "test_esource_value_no_equals.cir": {
+      "sha256": "80d6e89cbdea256ab9e5d0dc8085c5e5dc4da71649ab89fa426a0064dbf886f1",
+      "note": "Variant: value without = (manual 5.2.2)."
+    },
+    "test_esource_vol.cir": {
+      "sha256": "5acfc06c965396b7c11c498fbded55cfc7e3f8bfffb7af01023825d254e4656c",
+      "note": "Variant: vol= (manual 5.2.1)."
     },
     "test_fsource.cir": {
       "sha256": "fc750898ae3ea0be662633c1d8dc7c57c206a0e55bafcf8df62bc88942b8cc21",
@@ -40,6 +138,13 @@
       "sha256": "242f287649077609e2139f7ae8f6d237c3cee38a5369ad65e44f8e1af5ffc9aa",
       "note": "Variant: half the gain with m=2."
     },
+    "test_fsource_poly.cir": {
+      "sha256": "243eccbd4509becc1e7c7a731ccc3897ff8c9359272766e84bf69f33e68bfc01",
+      "note": "Variant: POLY(1) (manual 5.5.2).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
     "test_fsource_subckt.cir": {
       "sha256": "d625a9e43edf4bb2e42a3e46dd331d8c7e23a97691d026f5292382d8492a9b25",
       "note": "Variant: F inside a subcircuit, controlled by a source of its own body."
@@ -48,13 +153,42 @@
       "sha256": "666993a37aa9aceba979ae30f3501bdff248e9e52c489e03148169bc03c0fb03",
       "note": "G: a VCCS between two dividers (KiCad)."
     },
+    "test_gsource_cur.cir": {
+      "sha256": "7f0f1a802ea188b7d4fd8cf0cfa8bc4f0a477925f8b985c1238968e3b0939d62",
+      "note": "Variant: cur= with m= (manual 5.3.1)."
+    },
     "test_gsource_m.cir": {
       "sha256": "88a7a6d98f931b095cbafc61e8d73a2868b771963671e2e0beb3a56f52c2e39f",
       "note": "Variant: half the transconductance with m=2."
     },
+    "test_gsource_poly.cir": {
+      "sha256": "39f01c369da8048a5732497cec1d6a51cc6602606bc0a5e0a87293c25655d9f2",
+      "note": "Variant: POLY(1) (manual 5.5.1).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_gsource_table.cir": {
+      "sha256": "a7da021385baa8d22cae45b918a9bb90108d42883b28753206d2da75bee4fe1f",
+      "note": "Variant: TABLE (manual 5.3.3).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "test_gsource_value.cir": {
+      "sha256": "35d3913e6d01270eeaa3983639c5799219f90db9daf28619f6d85788e35f3529",
+      "note": "Variant: value= (manual 5.3.2)."
+    },
     "test_hsource.cir": {
       "sha256": "1f7871bc3f7f5819381f3614657f14499923e45d9c0ae6eb578c72fe7d55427e",
       "note": "H: a CCVS sensing V1 (KiCad)."
+    },
+    "test_hsource_poly.cir": {
+      "sha256": "f9a3417da50b007a7b63700810193fdced235162da8c4600fc664423c57a110f",
+      "note": "Variant: POLY(1) (manual 5.5.2).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
     },
     "test_hsource_sense_later.cir": {
       "sha256": "e0f4d27f8ddc7f0dbc74626ecde11e79df3202b9f8936eb64bc1d305c1b17b0d",

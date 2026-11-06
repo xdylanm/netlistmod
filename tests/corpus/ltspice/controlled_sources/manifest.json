@@ -4,11 +4,58 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-06",
-  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's second line says what it changes. The intentional failures are in elements_rejects. Provenance confirmed by the maintainer, 2026-11-06.",
+  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's second line says what it changes. The intentional failures are in elements_rejects. M15 added B and the nonlinear forms, with variants written from these files; the files of M15b's forms are skipped by the solver sweep until then. Provenance confirmed by the maintainer, 2026-11-06.",
   "fixtures": {
     ".gitignore": {
       "sha256": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
       "note": "Keeps LTspice run output out, as in ltspice_transistors (decision 0009)."
+    },
+    "lt_test_bsource.cir": {
+      "sha256": "d838edfdc8ac41fd79ac517c4a7524eb8ddef09ab5e3d6de2e842b40e8820e9d",
+      "note": "Variant: B with V=, written from the F export."
+    },
+    "lt_test_bsource_braces.cir": {
+      "sha256": "cf61b92e8f113b2ce59d7cd16075cdca3267cf9e8b30b9e3781af9ec201b9f89",
+      "note": "Variant: B with a brace expression."
+    },
+    "lt_test_bsource_current.cir": {
+      "sha256": "e5bbaa6d6d66c0928a918fa0ef68f44811f820091c1b3ce5549bef3e02b256b2",
+      "note": "Variant: B with I= and Rpar=."
+    },
+    "lt_test_bsource_laplace.cir": {
+      "sha256": "964374d59ba0698bbd53bf863177624919255e50024888243d4f087f7791202a",
+      "note": "Variant: B with laplace=, window= and nfft=.",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_bsource_power.cir": {
+      "sha256": "b2608b9db57291f4b8a7b62632f8a2bee250184649bbca2b7efc1bba90de38f0",
+      "note": "Variant: B with P= and vprx=."
+    },
+    "lt_test_bsource_resistor.cir": {
+      "sha256": "14074bfdc452160768376ca54f603d2561989e17e6d8ffd9e2b830388561c817",
+      "note": "Variant: B with R=."
+    },
+    "lt_test_bsource_sense.cir": {
+      "sha256": "45c0526c3df92ad088b90ef0739daec15fb25deca404233f75030dfa508a3806",
+      "note": "Variant: B reading the current through V1."
+    },
+    "lt_test_bsource_spaces.cir": {
+      "sha256": "12ec7ab446287325230784c1e8e79c88c70b7da07a77d258f01b214b1c261fdc",
+      "note": "Variant: B with blanks in the expression."
+    },
+    "lt_test_bsource_time.cir": {
+      "sha256": "8ba6aad943c855ddd465dc59847f63626d89ee52fe7618d82ce289e07fbd8934",
+      "note": "Variant: B reading time."
+    },
+    "lt_test_bsource_trip.cir": {
+      "sha256": "09263fea5436db274a224e3576e5b3e29feef175fe5632963775b410d17d7759",
+      "note": "Variant: B with ic=, tripdv= and tripdt=."
+    },
+    "lt_test_capacitor_charge.cir": {
+      "sha256": "3ed772dc20c7746948409684b94007264cf4bdf3db9ed13fc4ab4b6913ff8ca8",
+      "note": "Variant: a C with Q= (x is its voltage)."
     },
     "lt_test_esource.asc": {
       "sha256": "8d4bd20784e3098c5e0db7364449a0452f97a3cd049b9fedec5dae02b62e4390",
@@ -17,6 +64,38 @@
     "lt_test_esource.net": {
       "sha256": "115f6b6ef3ec83029611060950895062d457021fc9ed37616b2b945baaa711cc",
       "note": "LTspice 26.1.1's export of lt_test_esource.asc."
+    },
+    "lt_test_esource_laplace.cir": {
+      "sha256": "94d44037e066fe1202652106e097bfed732153fe57afc741e41eab8dba985101",
+      "note": "Variant: Laplace=.",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_esource_poly.cir": {
+      "sha256": "357c8cc78f026375c887daf9ead8c24564363920dbe270f0359840e7590059d0",
+      "note": "Variant: POLY(1).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_esource_poly_paren.cir": {
+      "sha256": "e4fc6d4c95b9374dccd902e48679ce6e1c62fe86a620b6c0270b3103b368fcf0",
+      "note": "Variant: POLY(1) with the control pair in parentheses.",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_esource_table.cir": {
+      "sha256": "f5ebefcb6fa8488ed0003982f1c4facebe3d8fc4fea6ecc7d7b9d15e59a6bdef",
+      "note": "Variant: table=.",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_esource_value.cir": {
+      "sha256": "4a8ee88484f3f9fb94385f8897dd6c3dab4b72e9045e4bdb00db5f2d09bc7cb9",
+      "note": "Variant: value=."
     },
     "lt_test_fsource.asc": {
       "sha256": "35a3d49c32ffdcce13f5a42e55809d24dd64cfba27604d2cb824c6a8e4c8d334",
@@ -30,6 +109,10 @@
       "sha256": "9ee3bbf538c124d543a560d598962fc7f2e72663a267d6524da6d8656266469f",
       "note": "Variant: the controlling source is an E; loads with CONTROL_SOURCE_MISMATCH, and LTspice runs it."
     },
+    "lt_test_fsource_value.cir": {
+      "sha256": "ef85d76390b5a107ec330b0da706e102181715b62b5af3d336bed913edb8a910",
+      "note": "Variant: value=."
+    },
     "lt_test_gsource.asc": {
       "sha256": "d94a7da0b8b52d4630a31750ea225f995db79bcd5da0076d9d9424d7dd2e9e65",
       "note": "G: a VCCS between two dividers (schematic by the maintainer)."
@@ -42,6 +125,10 @@
       "sha256": "336b5d0ff3111d61c7c3b9a69f7a44c33145a7792d01197842425c5f7642cf50",
       "note": "Variant: the transconductance is a formula."
     },
+    "lt_test_gsource_value.cir": {
+      "sha256": "84ce2a000938ecb359020bbb1329a67384c5585949b1998a6af3dbde11a517bd",
+      "note": "Variant: value=."
+    },
     "lt_test_hsource.asc": {
       "sha256": "1cb2bfea63c5d6e707ab404465019de6e8eacfd0622fd65953a32cd0383bae8b",
       "note": "H: a CCVS sensing V1 (schematic by the maintainer)."
@@ -53,6 +140,21 @@
     "lt_test_hsource_ctrl_into_instance.cir": {
       "sha256": "73d37bd12a69407dd7f519d4557b3f572c6ea15de9121cb36bf91db657148bd7",
       "note": "Variant: the controlling source is X1:Vq, inside an instance; LTspice runs it, and the library reports UNRESOLVED_ELEMENT as info."
+    },
+    "lt_test_hsource_poly.cir": {
+      "sha256": "d8f68fa29412005c542c114dfaed20b33181aa4376d43316ed3f3966ca451249",
+      "note": "Variant: POLY(1).",
+      "solver": {
+        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
+      }
+    },
+    "lt_test_inductor_flux.cir": {
+      "sha256": "b909dfeba76b20dd82f2ead9734eaba6b3a33be82e09f7a4468a6accebd2f960",
+      "note": "Variant: an L with Flux= (x is its current)."
+    },
+    "lt_test_inductor_hysteretic.cir": {
+      "sha256": "7eb2e264d0afda96fcf780e321ee3b0e581d4eec5fc33b9a2d405c0ae528dad3",
+      "note": "Variant: an L with the hysteretic core model."
     },
     "lt_test_iswitch.asc": {
       "sha256": "3d91a878ed77580d6a6c96a5ad78ff85e19751aef2de4274a45b721812eb30a6",

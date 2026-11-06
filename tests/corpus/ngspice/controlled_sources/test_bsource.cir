@@ -1,0 +1,12 @@
+.title KiCad schematic
+.op
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+R1 /OUT GND 1k
+R5 Net-_R5-Pad1_ /VX 1k
+V1 Net-_R5-Pad1_ GND DC 2 
+R6 /VX GND 1k
+B1 /OUT GND v={2*v(/VX)}
+.end

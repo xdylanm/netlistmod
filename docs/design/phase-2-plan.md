@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M14 are complete, and M15 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M14 are complete, and M15 is in progress
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -80,7 +80,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - S and W models (SW, CSW) with `on` and `off`.
 - **Exit:** a negative test shows that any change to a control node or controlling source is a `TopologyViolation`.
 
-### M15 — Behavioural forms (B, and nonlinear E, F, G, H)
+### M15 — Behavioural forms (B, and nonlinear E, F, G, H) ([task list](./m15-tasks.md); split into M15 and M15b, decision 1)
 
 - **B:** ngspice forms (manual §5.1); LTspice `V=`, `I=`, `R=` and `P=` with their parameters.
 - **E and G:** ngspice `vol=`, `cur=`, `VALUE`, `TABLE` and POLY (§5.2–§5.5); LTspice `table=`, `Laplace=`, `value=` and POLY. POLY control nodes are topology.
@@ -88,6 +88,13 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Formula grammar:** add `V()`, `I()` and the special variables (`time`, `temper`, `hertz`) per dialect, so that parameter scans do not report them. This closes the `time` note carried from M8. It stays a scan, not an evaluator (non-goal 6).
 - **Edit API:** set an expression, table or polynomial coefficients. Add a read-only query for the nets and sources an expression reads (section 8, point 1).
 - **Exit:** every form has golden diffs and solver tests showing results move as expected.
+- **Split (maintainer, 2026-11-06):** M15 holds B, the expression forms of E, F, G and H, C `Q=` and L `Flux=` and the hysteretic L, the formula scan, the expression edit and the query. M15b holds the rest.
+
+### M15b — Tables, polynomials and transfer functions
+
+- TABLE and `table=`, POLY on E, F, G and H (its control nodes and sources are topology, counted from the dimension), `Laplace=` on E, G and LTspice's B, and ngspice's FREQ and AND, OR, NAND and NOR (manual §5.2.6, §5.2.7).
+- **Edit API:** set a table's points and a polynomial's coefficients.
+- **Exit:** as M15.
 
 ### M16 — Transmission lines (T, O, U as URC, Y, P)
 
@@ -124,7 +131,8 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 | M12 | V, I stimulus forms | V, I stimulus forms |
 | M13 | Q, M, J, Z | Q, M, J, Z |
 | M14 | E, F, G, H (linear), S, W | E, F, G, H (linear), S, W |
-| M15 | B; E, F, G, H (nonlinear) | B; E, F, G, H (nonlinear); C and L forms |
+| M15 | B; E, F, G, H (expressions); C `q=` | B; E, F, G, H (`value=`); C `Q=`, L `Flux=` and hysteretic |
+| M15b | E, F, G, H (TABLE, POLY, FREQ, AND/OR) | E, F, G, H (`table=`, `Laplace=`, POLY); B `laplace=` |
 | M16 | T, O, U (URC), Y, P | T, O, U |
 | M17 | A, N, U (digital) | A, `@`, `&` |
 
