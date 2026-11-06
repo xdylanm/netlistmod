@@ -184,6 +184,7 @@ repo/
       values.py              # NumericValue, Formula, ModelReference, ...
       nodes.py               # Component subclasses, statements
       transform.py           # Lark Transformer
+      _tree.py, _rules_*.py  # its shared parts, and its rules by family (M13, decision 0014)
     document/
       document.py            # Netlist
       lines.py               # Line, Lines (ordered, searchable)
@@ -196,6 +197,7 @@ repo/
       plan.py                # Edit, EditPlan, apply_edits
       api.py                 # restricted public editing operations
       operations.py          # one plan builder per operation
+      _ops_*.py              # the builders by family; operations.py re-exports them
       placement.py           # directive placement strategies
       verify.py              # write-time verification
       conventions.py         # text conventions of inserted lines (decision 0007)

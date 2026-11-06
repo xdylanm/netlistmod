@@ -1,6 +1,6 @@
 # M13 task list — Transistors (Q, M, J, Z)
 
-> **Status:** READY — approved by the maintainer's decisions in section 2 (2026-11-05); not started
+> **Status:** ACTIVE — approved by the maintainer's decisions in section 2 (2026-11-05)
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M13). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10).
 
 ## 1. Scope
@@ -114,9 +114,9 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 
 [ ] **T1 — Decision record 0014.** Status `proposed` until M13 closes. It records section 2, and amends §5.3 (the new nodes), §6.3 (the boundary rule), §7.8 (the implicit substrate), decision 0002 for decision 4, and decision 0008 for the `external` field.
 
-[ ] **T2 — Commit the corpus first.** The two families, their manifests, `OPENJELLYBEAN_LIB` in `.env.example` and the solver sweeps' `external` support, as already prepared on this branch, with the failures listed in section 3. Each later task makes some of them pass.
+[x] **T2 — Commit the corpus first.** The two families, their manifests, `OPENJELLYBEAN_LIB` in `.env.example` and the solver sweeps' `external` support, as already prepared on this branch, with the failures listed in section 3. Each later task makes some of them pass.
 
-[ ] **T3 — Split by element family (decision 9).** Move the element rules of `transform.py` and the element operations of `operations.py` into modules by family. Every test passes before and after, the tree and signature snapshots are unchanged, and the import contract is updated.
+[x] **T3 — Split by element family (decision 9).** Move the element rules of `transform.py` and the element operations of `operations.py` into modules by family. Every test passes before and after, the tree and signature snapshots are unchanged, and the import contract is updated.
 
 [ ] **T4 — Q on both dialects.** Tests first:
 - Grammar: decisions 1, 2, 4 and 5, in a right-recursive rule shared with the other letters where it can be. Negative tests: too many nodes, a number as the model, a positional area on ngspice, a name after the area.
