@@ -1,7 +1,7 @@
 # M14 task list — Linear dependent sources and switches (E, F, G, H, S, W)
 
-> **Status:** READY FOR REVIEW — review round 1 changes R1 to R5 are made (report in 6.5). T1 to T11 done (results in section 5); section 2 records the maintainer's decisions (2026-11-06).
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M14). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.1, §7.2, §7.3, §7.7, §10).
+> **Status:** COMPLETE (2026-11-06) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 and 7
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M14). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.1, §7.2, §7.3, §7.7, §10).
 
 ## 1. Scope
 
@@ -92,7 +92,7 @@ The maintainer accepted all fourteen recommendations on 2026-11-06, confirming t
 13. **One decision record, 0015.**
     - It records this section.
     - It amends §5.2 and §5.3 (the new nodes), §7.7 (the `control` entry), §7.8 (references into an instance), and decision 0006 (the new diagnostic).
-14. **Element rules and operations go in new family modules,** `model/_rules_controlled.py` and `edit/_ops_controlled.py` (P12), with the import contract updated.
+14. **Element rules and operations go in new family modules,** `model/_rules_controlled.py` and `edit/_ops_controlled.py` (P12). The import contract is per layer, so it needed no change (reworded at T12, as 6.3 notes).
 
 ## 3. Starting point (2026-11-06, `8d23e14`, branch `m14-controlled-sources`)
 
@@ -193,7 +193,7 @@ Each changes one thing from one of your files, named in a comment on its second 
 
 ### After the maintainer's approval
 
-[ ] **T12 — Close M14.** Archive this list, accept decision 0015, and update the plan and index.
+[x] **T12 — Close M14.** Archive this list, accept decision 0015, and update the plan and index.
 
 ## 5. Results
 
@@ -318,3 +318,37 @@ R1 to R5 are made in one commit, `ce9573e`.
 **CI** on #11 at `ce9573e` is green on all five jobs.
 
 Nothing is archived: T12 follows approval.
+
+## 7. Review round 2 (2026-11-06, `39e9d6f`) — no further changes required
+
+### 7.1 Outcome
+
+R1 to R5 are made as 6.5 reports. Nothing else is required, and M14 is ready for the maintainer's approval (T12).
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 6,910 passed, 2 skipped, 1 failed, coverage 98.49%, in 27 min 28 s. The failure is `test_every_corpus_family_has_a_manifest_and_matching_hashes`, because `ltspice/controlled_sources/lt_test_esource.net` was deleted from the working tree during the run, at about 12:46. No test writes to the corpus, since the solver tests copy fixtures into `tmp_path`. On a clean checkout of `39e9d6f` the manifest tests pass (3 passed), so this is not a code failure. The 6,910 passing tests include every M14 test.
+  - ruff, ruff format and `mypy src` are clean.
+  - CI on #11 is green on all five jobs.
+- **R1:**
+  - Each refused gain form gets its own message at the offending token, on all four letters and both dialects: `gain=` (column 15 on `E1 out 0 vx 0 gain=2`), a second value (column 17 on `E1 out 0 vx 0 2 3`), and LTspice's unset `E` (column 15).
+  - The added alternatives exist only to reach the refusals, and the grammar comments say so. The strict grammars build.
+  - `m=` on E or H, three nodes and a missing gain keep their messages.
+  - By hand on LTspice 26.1.1, a bare parameter name in the gain's place (`E1 … k` with `.param k=2`) also stops ("Unknown parameter"), and `{k}` runs. So refusing a word there is right, and the message's advice (a number or a `{...}` expression) fits that case too.
+- **R2:** the message names "an independent voltage source (`V`)" and gives the outcome for the target only. `_CONTROL_RUNS` matches section 3.1: E and H on both dialects, and L on LTspice. The new test covers R, I, E, H and L on both dialects.
+- **R3:** `s-csw-model`, `w-sw-model` and ngspice's `f-into-instance-dot` are probed, and both solvers stop on each. `_DIAGNOSED` asserts the library's diagnostic for each of them and for three earlier rows.
+- **R4:** the `set_value`, `set_param` and `set_model` docstrings in `api.py` and `_ops_elements.py` agree with `edit-layer.md`, including the Q, M, J and Z entries that were missing since M13.
+- **R5:** the property test samples `set_param` with `m=` on an ngspice G and F.
+- **6.3:** `_collect` has the comment.
+
+### 7.2 The two points the report raises
+
+1. **The `gain=` message cites the manual, not decision 0015.**
+   - **Accepted.** R1 was wrong to ask for the citation: `test_no_message_cites_an_internal_document` in `tests/architecture/test_contracts.py` has refused internal citations in messages since M11 T7, because a wheel ships without the decision records.
+   - Citing manual §4.2 (or the LTspice reference) in the message, and the decision in the grammar comments and `errors.md`, follows that rule and matches what `CONTROL_SOURCE_MISMATCH` and M13's area message already do.
+2. **The tree snapshot changes for two reject files.**
+   - **Accepted.** The positions and error classes are unchanged, and the snapshot docstring records both entries.
+   - `e_two_values.cir` now has its own reason, which is the point of R1.
+   - `e_m.cir` (`E1 /OUT a /VX GND 2.2 m=2`) now lists a number and the formula forms among its expected tokens. These are what the parser can shift there now, because of the `second_value` alternative. Read literally, they suggest writing a second gain, which would itself be refused. That is a small cost: the column is still at `m`, both solvers stop on the line, and no message names `m=` on E or H today. If the list ever misleads users, the fix is to give `m=` on E and H a message of its own ("ngspice takes `m=` on F and G only"), as R1 did for `gain=`. That is not needed for M14.
+
+### 7.3 Noted, no change required
+
+- The LTspice unset-gain message says that "the gain is not set" for any word in the gain's place, including a parameter name such as `k`. LTspice stops on both, and the advice to write `{k}` applies to both, so the wording is acceptable. A later change could add "if it names a parameter, write `{k}`".
