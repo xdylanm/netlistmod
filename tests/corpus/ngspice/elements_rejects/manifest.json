@@ -173,6 +173,48 @@
       "column": 20,
       "error": "ParseError",
       "note": "S needs a model; both stop (decision 0015 item 8). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "b_v_and_i.cir": {
+      "sha256": "e6bd4a7593eea82d096fdb1a7715519a34d2206049e1d18ec3a674516b6b1796",
+      "line": 12,
+      "column": 26,
+      "error": "ParseError",
+      "note": "A B source takes one of v= and i=; ngspice stops (decision 0016 item 3). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "b_no_expression.cir": {
+      "sha256": "2e5e4d0ce97bd0bbaaea450d4efe487d422b7a105e53224bd8d4a3540a415001",
+      "line": 12,
+      "column": 12,
+      "error": "ParseError",
+      "note": "A B source needs v= or i=; ngspice stops. Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "b_r.cir": {
+      "sha256": "bb20a5b9157a8e62be172b036afdef6a4b4697da6a699e71cf25313fe4a382b0",
+      "line": 12,
+      "column": 13,
+      "error": "ParseError",
+      "note": "r= is LTspice's; ngspice stops (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_vol_bare.cir": {
+      "sha256": "7ec9f2706016f6d399f463263a009dd2c9cede2f783f69810fdb71786b3d82f6",
+      "line": 13,
+      "column": 15,
+      "error": "ParseError",
+      "note": "vol= needs quotes or braces (manual 5.2.1); ngspice stops (decision 0016 item 2). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_laplace.cir": {
+      "sha256": "500fcd046f72069be04e09b64e541c3232547b108856a0bd571d1d324183273d",
+      "line": 13,
+      "column": 19,
+      "error": "ParseError",
+      "note": "LAPLACE, which ngspice does not offer (manual 5.2.5); ngspice stops (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_poly_too_few.cir": {
+      "sha256": "d96b36b524e5e289365f5d58f5cc87403d99ca1c64f4720c96021e76f38fceee",
+      "line": 13,
+      "column": 11,
+      "error": "UnsupportedConstruct",
+      "note": "POLY(2) with one node pair; ngspice stops. POLY is M15b's, which makes this a ParseError (decision 0016 item 8). Written for M15 from the maintainer's controlled_sources examples."
     }
   }
 }

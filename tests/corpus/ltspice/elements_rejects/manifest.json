@@ -215,6 +215,34 @@
       "column": 27,
       "error": "ParseError",
       "note": "on and off together; LTspice runs it and the last wins (decision 0015 item 8). Written for M14 from the maintainer's controlled_sources examples."
+    },
+    "b_v_and_i.cir": {
+      "sha256": "094ffae2958702cb8211e5c64aa39df83ca6279244c4248c09d7e6c29b9f9df5",
+      "line": 8,
+      "column": 20,
+      "error": "ParseError",
+      "note": "A B source takes one of V=, I=, R= and P=; LTspice stops (decision 0016 item 3). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "b_no_expression.cir": {
+      "sha256": "3d33ef3fee49e18cc99591602ce24f821d9158a13ac240e66d3fc3f023f13c5f",
+      "line": 8,
+      "column": 9,
+      "error": "ParseError",
+      "note": "A B source needs V=, I=, R= or P=; LTspice stops. Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_vol.cir": {
+      "sha256": "1b1f6dd559ae45f8678cf511f73f83a46724f5054ad7390420a670e3e2d1baa9",
+      "line": 4,
+      "column": 17,
+      "error": "ParseError",
+      "note": "ngspice's vol=; LTspice stops (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_table_braces.cir": {
+      "sha256": "38073308bbbb800f34d00a483b00566571af424bd80d320f1f7e46af07ce6f51",
+      "line": 4,
+      "column": 19,
+      "error": "ParseError",
+      "note": "ngspice's TABLE form, which LTspice runs but its reference does not show (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
     }
   }
 }
