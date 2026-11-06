@@ -22,16 +22,11 @@ from netlistmod import (
     Title,
 )
 from netlistmod.document import fold, is_ground, net_name
+from tests.support.corpus import accept_files
 from tests.support.dialects import current_dialect
 
 CORPUS = Path(__file__).parents[1] / "corpus" / "ngspice"
-ACCEPT_FILES = sorted(
-    path
-    for family in CORPUS.iterdir()
-    if family.is_dir() and not family.name.endswith("_rejects")
-    for path in family.iterdir()
-    if path.suffix == ".cir"
-)
+ACCEPT_FILES = accept_files(CORPUS)
 
 TEXT = (
     "divider\n"

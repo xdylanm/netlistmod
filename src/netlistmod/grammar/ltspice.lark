@@ -14,7 +14,7 @@
 %import .core (resistor, capacitor, inductor, mutual_coupling, voltage_source, current_source)
 %import .core (diode, subckt_instance, x_node, x_last, x_name, x_param, eol, node, value, param)
 %import .core (r_value, c_value, model, flag)
-%import .core (inductor_ref, dc_spec, dc_after, dc_keyword, ac_spec, charge)
+%import .core (inductor_ref, dc_spec, dc_after, dc_keyword, ac_spec, c_charge)
 %import .core (_sf, _sfd, _sfa, _sfam, _sfdam, _sfda, _line_end)
 %import .core (_source_fn, stimulus, pwl_stimulus, fn_param, fn_list, fn_first, fn_arg, FN_PARAM_KW)
 %import .core (SEP, CSEP, EQ, WORD, NUMBER)
@@ -23,6 +23,7 @@
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
 %import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
 %import .core (ctl_ref, sw_state, ON_KW, E_NAME, G_NAME, F_NAME, H_NAME, S_NAME, W_NAME)
+%import .core (B_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
@@ -154,7 +155,8 @@ NOISELESS_KW.2: "noiseless"i
 
 // spec: LT-CAP-001
 %override capacitor: C_NAME node node c_value (c_param | noiseless_flag)* (NL | eol)
-                   | C_NAME node node charge
+                   | C_NAME node node c_charge (BRACE_FORMULA | QUOTE_FORMULA) _c_tail
+                   | C_NAME node node c_charge B_PIECE _c_more
                    | C_NAME node node bare_name
 %extend c_value: SEP EMBEDDED
 c_param: SEP C_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
@@ -162,21 +164,30 @@ c_param: SEP C_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
        | (SEP | TRAILING_COMMENT) c_param
 C_PARAM_KW.2: /(?:ic|rser|lser|rpar|cpar|rlshunt|temp|irms|v|m)(?=[ \t]*=)/i
 C_TEXT_KW.2: /(?:mfg|pn|type)(?=[ \t]*=)/i
+// Q= takes an expression in braces, in quotes, or bare (as B's), then the capacitor's parameters
+// (reference C; decision 0016 item 4). x in it is the voltage across the capacitor.
+_c_tail: (c_param | noiseless_flag)* (NL | eol)
+_c_more: _c_tail
+       | SEP B_PIECE _c_more
 
-// The behavioral (Flux=) and hysteretic core (Hc= ...) forms are recognised only to be reported as
-// unsupported; their other parameters are statement text.
+// Flux= takes an expression, as Q= does (x in it is the inductor's current); the hysteretic core
+// takes the reference's closed list of parameters and no value (decision 0016 item 4).
 // spec: LT-IND-001
 %override inductor: L_NAME node node value (l_param | noiseless_flag)* (NL | eol)
-                  | L_NAME node node nonlinear_inductor
+                  | L_NAME node node l_flux _x_expression
+                  | L_NAME node node hysteretic_param+ (NL | eol)
                   | L_NAME node node bare_name
+l_flux: SEP FLUX_KW EQ
+      | (SEP | TRAILING_COMMENT) l_flux
+hysteretic_param: SEP HYSTERETIC_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+                | (SEP | TRAILING_COMMENT) hysteretic_param
+FLUX_KW.3: /flux(?=[ \t]*=)/i
+HYSTERETIC_KW.3: /(?:hc|bs|br|lm|lg|a|n)(?=[ \t]*=)/i
 l_param: SEP L_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
        | SEP L_TEXT_KW EQ (STRING_VALUE | WORD)
        | (SEP | TRAILING_COMMENT) l_param
-nonlinear_inductor: SEP NONLINEAR_L_KW EQ rest NL
-                  | (SEP | TRAILING_COMMENT) nonlinear_inductor
 L_PARAM_KW.2: /(?:ic|rser|rpar|cpar|temp|tc1|tc2|ipk|m)(?=[ \t]*=)/i
 L_TEXT_KW.2: /(?:mfg|pn)(?=[ \t]*=)/i
-NONLINEAR_L_KW.3: /flux|hc|bs|br|lm|lg|a|n/i
 
 // V: value, then AC with or without "=", then Rser and Cpar. With a function, these mix in any
 // order, and a DC value after the function needs its keyword. The trigger parameters need a
@@ -298,9 +309,9 @@ Z_PARAM_KW.3: /(?:temp|m)(?=[ \t]*=)/i
 
 // Linear dependent sources and switches (reference E, G, H, F, S, W; decision 0015). The gain is
 // one value, and none of the six takes a parameter. A switch's state may take a value, as other
-// LTspice flags may. The other forms are recognised only to be reported as unsupported (M15):
-// value= and POLY after the output nodes, and on E and G table= and Laplace= after the control
-// nodes; their text runs to the line end.
+// LTspice flags may. The forms M15b adds are recognised only to be reported as unsupported: POLY
+// after the output nodes, and on E and G table= and Laplace= after the control nodes; their text
+// runs to the line end.
 // spec: LT-CTL-001
 %extend body_line: vcvs
                  | vccs
@@ -313,7 +324,7 @@ nonlinear_form: SEP OUT_FORM_KW rest NL
               | (SEP | TRAILING_COMMENT) nonlinear_form
 ctl_form: SEP CTL_FORM_KW rest NL
         | (SEP | TRAILING_COMMENT) ctl_form
-OUT_FORM_KW.3: /value[ \t]*(?==)|poly[ \t]*(?=\()/i
+OUT_FORM_KW.3: /poly[ \t]*(?=\()/i
 CTL_FORM_KW.3: /(?:table|laplace)[ \t]*(?==)/i
 // Gain forms recognised only so that each gets its own message (decision 0015 item 6): gain=, which
 // LTspice runs; a second value; and a word in the gain's place, which LTspice writes for a symbol
@@ -326,27 +337,43 @@ unset_gain: SEP WORD rest NL
           | (SEP | TRAILING_COMMENT) unset_gain
 GAIN_KW.3: /gain[ \t]*(?==)/i
 
+// spec: LT-NLS-001
+// value= on E, F, G and H (decision 0016 item 3): an expression in braces, in quotes, or bare, as
+// for B (its pieces stop before a name and "="). POLY, table= and Laplace= stay recognised only
+// to be reported as unsupported until M15b.
+value_form: SEP VALUE_FORM_KW EQ
+          | (SEP | TRAILING_COMMENT) value_form
+_x_expression: (BRACE_FORMULA | QUOTE_FORMULA) (NL | eol)
+             | B_PIECE _x_more
+_x_more: (NL | eol)
+       | SEP B_PIECE _x_more
+VALUE_FORM_KW.3: /value(?=[ \t]*=)/i
+
 // spec: LT-VCV-001
 vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
     | E_NAME node node node node (value second_value | gain_keyword | unset_gain)
+    | E_NAME node node value_form _x_expression
     | E_NAME node node nonlinear_form
 %override E_NAME.4: /[Ee]/ _LT_CHAR*
 
 // spec: LT-VCC-001
 vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
     | G_NAME node node node node (value second_value | gain_keyword | unset_gain)
+    | G_NAME node node value_form _x_expression
     | G_NAME node node nonlinear_form
 %override G_NAME.4: /[Gg]/ _LT_CHAR*
 
 // spec: LT-CCC-001
 cccs: F_NAME node node ctl_ref value (NL | eol)
     | F_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
+    | F_NAME node node value_form _x_expression
     | F_NAME node node nonlinear_form
 %override F_NAME.4: /[Ff]/ _LT_CHAR*
 
 // spec: LT-CCV-001
 ccvs: H_NAME node node ctl_ref value (NL | eol)
     | H_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
+    | H_NAME node node value_form _x_expression
     | H_NAME node node nonlinear_form
 %override H_NAME.4: /[Hh]/ _LT_CHAR*
 
@@ -357,6 +384,34 @@ vswitch: S_NAME node node node node model sw_state? (NL | eol)
 // spec: LT-SWC-001
 cswitch: W_NAME node node ctl_ref model sw_state? (NL | eol)
 %override W_NAME.4: /[Ww]/ _LT_CHAR*
+
+// B: V=, I=, R= or P=, then an expression, then ic=, tripdv=, tripdt=, Rpar= and vprx= (reference
+// B; decision 0016 item 2). A bare expression may hold blanks and + continuations, as for ngspice.
+// laplace= follows (LT-UNS-001).
+// spec: LT-BEH-001
+%extend body_line: behavioral
+behavioral: B_NAME node node b_quantity (BRACE_FORMULA | QUOTE_FORMULA) _b_tail
+          | B_NAME node node b_quantity B_PIECE _b_more
+b_quantity: SEP B_QUANTITY_KW EQ
+          | (SEP | TRAILING_COMMENT) b_quantity
+_b_more: _b_tail
+       | SEP B_PIECE _b_more
+_b_tail: b_param* ((NL | eol) | b_laplace | b_second_quantity)
+// A second quantity stops LTspice; recognised only so that it gets its own message.
+b_second_quantity: SEP B_QUANTITY_KW rest NL
+                 | (SEP | TRAILING_COMMENT) b_second_quantity
+b_param: SEP B_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT) b_param
+B_QUANTITY_KW.3: /[virp](?=[ \t]*=)/i
+B_PARAM_KW.3: /(?:ic|tripdv|tripdt|rpar|vprx)(?=[ \t]*=)/i
+B_PIECE.4: /(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?!(?:\{[^{}\r\n]*\}|'[^'\r\n]*')[ \t]*(?:\r?\n|$|;|\$ |[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)))(?:(?:[^ \t\r\n;'\"$]|\$(?! ))|[ \t]+(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?=(?:[^ \t\r\n;'\"$]|\$(?! ))))+/i
+%override B_NAME.4: /[Bb]/ _LT_CHAR*
+// B's laplace= (with window=, nfft= and mtol=) is M15b's: recognised only to be reported as
+// unsupported, with its text to the line end.
+// spec: LT-UNS-001
+b_laplace: SEP B_LAPLACE_KW rest NL
+         | (SEP | TRAILING_COMMENT) b_laplace
+B_LAPLACE_KW.3: /laplace[ \t]*(?==)/i
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold

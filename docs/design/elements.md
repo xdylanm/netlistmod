@@ -30,12 +30,13 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 
 | Node | Extra fields |
 |---|---|
-| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`) |
+| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`); `Capacitor.charge` and `Inductor.flux`: `Formula \| None`, the behavioural forms (ngspice `q=`, LTspice `Q=` and `Flux=`), with `value` `None`; LTspice's hysteretic L has no value and its core parameters in `params` (decision 0016 item 4) |
 | `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`; `nodes == ()` |
 | `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
 | `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
 | `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (subclasses of `Transistor`, for `isinstance`) | `model: ModelReference`, `flags: tuple[Flag, ...]` (`off`, and an ngspice VDMOS's `thermal`), `area: Value \| None` (a positional area: J and Z, and an LTspice Q); `nodes` are the nodes as written (decision 0014) |
-| `Vcvs` (E), `Vccs` (G), `Cccs` (F), `Ccvs` (H), subclasses of `ControlledSource` | `value: Value` (the gain); `nodes` of E and G are the output pair then the control pair, with a `control_nodes` property; F and H have two `nodes` and `control: ElementReference`, the controlling source; `params` holds ngspice's `m=` on F and G (decision 0015) |
+| `Vcvs` (E), `Vccs` (G), `Cccs` (F), `Ccvs` (H), subclasses of `ControlledSource` | `value: Value` (the gain); `nodes` of E and G are the output pair then the control pair, with a `control_nodes` property; F and H have two `nodes` and `control: ElementReference`, the controlling source; `params` holds ngspice's `m=` on F and G (decision 0015). The expression forms (ngspice `vol=`, `cur=`, `value`; LTspice `value=`) have `value` `None`, `expression: Formula` and `form` (the keyword, lower case); F and H then have `control` `None` (decision 0016 item 3) |
+| `BehavioralSource` (B) | `quantity: str` (`"v"`, `"i"`, and on LTspice `"r"` or `"p"`), `expression: Formula`; `params` holds the trailing parameters (ngspice `tc1=`, `tc2=`, `temp=`, `dtemp=`; LTspice `ic=`, `tripdv=`, `tripdt=`, `Rpar=`, `vprx=`) (decision 0016) |
 | `VoltageSwitch` (S), `CurrentSwitch` (W), subclasses of `Switch` | `model: ModelReference`, `flags: tuple[Flag, ...]` (`on` or `off`); S has four `nodes` and `control_nodes`, W two `nodes` and `control: ElementReference` |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
@@ -112,3 +113,16 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 
 - **K:** three or more inductors, as in ngspice.
 - **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.
 - **Separators:** no comma separator and no `\\` continuation; see the comment rules in decision 0009 item 9.
+
+## Behavioural expressions (M15, decision 0016)
+
+An expression is a `Formula`. In quotes or braces it has that `delimiter` and its `text` is
+inside them; bare, `delimiter` is `""` and the span covers the text as written, blanks and `+`
+continuations included. A bare expression ends at the line end or before the first blank that
+is followed by a name and `=` (not `==`), so a trailing parameter ends it and an unknown one is
+refused. In the grammar a bare expression is one `B_PIECE` per physical line (P13).
+
+Refused with their own message: two quantities on one B line, a B line with no expression,
+ngspice's `r=` and `p=` on B, a bare expression after ngspice's `vol=` or `cur=`, and on LTspice
+`Rpar=` on a `V=` or `P=` B, ngspice's `vol=` and its `TABLE {...} =`. The M15b forms (TABLE,
+POLY, Laplace, FREQ and AND/OR/NAND/NOR) are `UnsupportedConstruct`.

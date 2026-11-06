@@ -21,8 +21,9 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | Entry | Construct | Status | Validated on |
 |---|---|---|---|
 | [NG-ACA-001](./specs/NG-ACA-001.yaml) | .ac small-signal analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-BEH-001](./specs/NG-BEH-001.yaml) | behavioral source (B) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-BJT-001](./specs/NG-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ngspice 47 (2026-11-05) |
-| [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-06) |
 | [NG-CCC-001](./specs/NG-CCC-001.yaml) | current-controlled current source (F) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-CCV-001](./specs/NG-CCV-001.yaml) | current-controlled voltage source (H) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -55,6 +56,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05) |
 | [NG-MOS-001](./specs/NG-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-MUT-001](./specs/NG-MUT-001.yaml) | mutual coupling (K) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-NLS-001](./specs/NG-NLS-001.yaml) | expression forms of the dependent sources (E vol= and value, G cur= and value) | validated | ngspice 47 (2026-11-06) |
 | [NG-NOD-001](./specs/NG-NOD-001.yaml) | node, model, subcircuit and parameter names | validated | ngspice 47 (2026-10-31) |
 | [NG-NUM-001](./specs/NG-NUM-001.yaml) | numbers: sign, mantissa, exponent and scale factor | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NUM-002](./specs/NG-NUM-002.yaml) | letters following a number | validated | ngspice 47 (2026-10-30, 2026-10-31) |

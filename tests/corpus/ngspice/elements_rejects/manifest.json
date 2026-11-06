@@ -125,13 +125,6 @@
       "error": "ParseError",
       "note": "braces do not nest"
     },
-    "charge_capacitor.cir": {
-      "sha256": "59528c01b265d8d8fadaadf4dc299ccd10efb9c8a612204b874d695990c3da7a",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "unsupported"
-    },
     "phase_2_letter.cir": {
       "sha256": "15169e53df9d92ca97eb96a967033fe598d4228af9ea616d590556d8c446da68",
       "line": 2,

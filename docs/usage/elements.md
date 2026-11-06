@@ -126,9 +126,41 @@ source in `control`.
 - **`m=`:** on F and G only.
 - **Switches:** the model is mandatory; the state is `on`, `off` or absent, never both.
 - **Controlling source:** found in the line's own scope only. One that is missing gives `UNRESOLVED_ELEMENT`, and one that is not a voltage source gives `CONTROL_SOURCE_MISMATCH`.
-- **Nonlinear forms:** `VALUE`, `TABLE`, `POLY`, `vol=` and `cur=` raise `UnsupportedConstruct` until a later milestone.
+- **Expression forms:** E `vol=` and G `cur=` (in quotes or braces), and `value` on both, load
+  with `value` `None`, the expression in `expression` and the keyword in `form`.
+- **Nonlinear forms:** `TABLE`, `POLY`, `FREQ` and `AND`/`OR`/`NAND`/`NOR` raise
+  `UnsupportedConstruct` until a later milestone.
 
-The charge form `C… q='expr'` and every element letter that is not supported yet raise
+## Behavioural sources and expressions
+
+A B line becomes a `BehavioralSource`, with its `quantity` and `expression`
+([decision 0016](../decisions/0016-behavioral-expressions.md)). The expression may be in braces,
+in quotes, or bare; a bare one runs to the line end or the first trailing parameter, and may
+hold blanks and continuations. A capacitor's charge form `q=` is in `charge`.
+
+```python
+>>> source = SourceText(
+...     "t\n"
+...     "B1 out 0 V = 2 * v(in) tc1=1m\n"
+...     "B2 0 out i={1m*v(in)}\n"
+...     "C1 in 0 q='1n*v(in)'\n"
+...     ".end\n"
+... )
+>>> _, b1, b2, c1, *_ = parse(source, Dialect.NGSPICE).items
+>>> b1.quantity, b1.expression.text, b1.expression.delimiter, b1.params[0].name
+('v', '2 * v(in)', '', 'tc1')
+>>> b2.quantity, b2.expression.text, b2.expression.delimiter
+('i', '1m*v(in)', '{')
+>>> c1.value, c1.charge.text
+(None, '1n*v(in)')
+
+```
+
+- **One quantity:** `v=` or `i=` (on LTspice also `R=` and `P=`); two, or none, are refused.
+- **What an expression reads** is not topology: `Netlist.expression_reads` lists it, and a
+  node no element connects to gives `UNRESOLVED_NODE`.
+
+Every element letter that is not supported yet raises
 `UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
 excerpt and expected tokens.
 

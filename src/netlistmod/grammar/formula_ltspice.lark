@@ -6,12 +6,16 @@
 %import .formula (start, ternary, or_expr, and_expr, comparison, sum, product, power, unary, atom)
 %import .formula (WS, NUMBER, STRING, IDENT, VOLTAGE_OPEN, CURRENT_OPEN, NAME, LPAR, RPAR, COMMA)
 %import .formula (QUESTION, COLON, OROR, ANDAND, COMPARE, PLUS, MINUS, STAR, SLASH, PERCENT)
-%import .formula (BACKSLASH, POWER, BANG)
+%import .formula (BACKSLASH, POWER, BANG, LBRACE, RBRACE, CONT)
 
 %ignore WS
+%ignore CONT
 
 // spec: LT-FML-001
 %extend or_expr: or_expr SINGLE_OR and_expr
 %extend and_expr: and_expr SINGLE_AND comparison
 SINGLE_OR: "|"
 SINGLE_AND: "&"
+// LTspice's logical NOT in behavioural expressions (reference B, Supported Operators).
+%extend unary: TILDE unary
+TILDE: "~"

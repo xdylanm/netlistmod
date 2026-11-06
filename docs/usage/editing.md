@@ -277,6 +277,28 @@ S1 out 0 a 0 sm off
 
 ```
 
+## Edit a behavioural expression
+
+`set_expression` replaces the text of an expression and keeps its delimiters: braces, quotes
+or none ([decision 0016](../decisions/0016-behavioral-expressions.md)). It works on B, the
+expression forms of E, F, G and H, a capacitor's charge, an inductor's flux and an R, C or L
+formula value. The quantity (`V=`, `I=`) and the form (`vol=`, `value`) cannot be changed, and
+the trailing parameters use `set_param`. What the expression reads is not topology, so the
+signature does not change.
+
+```python
+>>> behavioural = Netlist.from_text(
+...     "t\nV1 in 0 1\nR1 in 0 1k\nB1 out 0 V = 2 * v(in) tc1=0\nR2 out 0 1k\n.op\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> edited = behavioural.set_expression("B1", "3 * v(in)").set_param("B1", "tc1", "1m")
+>>> print(next(line for line in edited.text.splitlines() if line.startswith("B1")))
+B1 out 0 V = 3 * v(in) tc1=1m
+>>> [(read.kind, read.name) for read in edited.expression_reads("B1")]
+[('node', 'in')]
+
+```
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's

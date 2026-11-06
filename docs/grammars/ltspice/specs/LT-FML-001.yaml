@@ -13,6 +13,8 @@ grammar:
 - and_expr
 - SINGLE_OR
 - SINGLE_AND
+- unary
+- TILDE
 core_rules:
 - atom
 - IDENT

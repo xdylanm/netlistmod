@@ -18,7 +18,11 @@ files and ``document_basic/control_source.cir``; the same 17 rejected files gain
 letters among their expected terminals. No other entry changed. M14 review R1 changed two:
 ``elements_rejects/e_two_values.cir`` now has its own reason and no expected terminals, and
 ``elements_rejects/e_m.cir`` lists the value terminals of a second gain; positions and error
-classes are the same.
+classes are the same. M15 added the behavioural ``controlled_sources`` files (the M15b ones
+among them, as rejected files), the behavioural golden files, six ``elements_rejects`` files and
+``document_basic/node_read.cir``, and removed ``elements_rejects/charge_capacitor.cir``, which
+now loads. The same 17 rejected files gained the B letter among their expected terminals; no
+other entry changed.
 """
 
 from __future__ import annotations

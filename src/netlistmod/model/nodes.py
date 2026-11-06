@@ -10,6 +10,7 @@ from netlistmod.model.values import (
     AcSpec,
     ElementReference,
     Flag,
+    Formula,
     Identifier,
     ModelReference,
     ParamAssignment,
@@ -162,12 +163,18 @@ class Resistor(_TwoTerminal):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Capacitor(_TwoTerminal):
-    """A ``C`` line."""
+    """A ``C`` line. ``charge`` is the expression of the charge form (ngspice ``q=``, LTspice
+    ``Q=``; decision 0016), and ``value`` is then ``None``."""
+
+    charge: Formula | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Inductor(_TwoTerminal):
-    """An ``L`` line."""
+    """An ``L`` line. ``flux`` is the expression of LTspice's ``Flux=`` form (decision 0016), and
+    ``value`` is then ``None``; LTspice's hysteretic core has no value and its parameters."""
+
+    flux: Formula | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -253,13 +260,17 @@ class Mesfet(Transistor):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ControlledSource(Component):
-    """Fields shared by the linear dependent sources E, F, G and H (decision 0015).
+    """Fields shared by the dependent sources E, F, G and H (decisions 0015 and 0016).
 
-    ``value`` is the gain: a voltage gain, transconductance, current gain or transresistance.
-    ``params`` holds ngspice's ``m=`` on F and G.
+    A linear line has ``value``, the gain: a voltage gain, transconductance, current gain or
+    transresistance. An expression line has ``expression`` instead, and ``form``, its keyword in
+    lower case (``"vol"``, ``"cur"`` or ``"value"``); exactly one of ``value`` and
+    ``expression`` is set. ``params`` holds ngspice's ``m=`` on F and G (and G's expression form).
     """
 
-    value: Value
+    value: Value | None = None
+    expression: Formula | None = None
+    form: str | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -284,16 +295,18 @@ class Vccs(ControlledSource):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Cccs(ControlledSource):
-    """An ``F`` line. ``control`` names the source whose current controls it."""
+    """An ``F`` line. ``control`` names the source whose current controls it; an LTspice
+    ``value=`` line names none (its expression reads the currents)."""
 
-    control: ElementReference
+    control: ElementReference | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Ccvs(ControlledSource):
-    """An ``H`` line. ``control`` names the source whose current controls it."""
+    """An ``H`` line. ``control`` names the source whose current controls it; an LTspice
+    ``value=`` line names none (its expression reads the currents)."""
 
-    control: ElementReference
+    control: ElementReference | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -319,6 +332,20 @@ class CurrentSwitch(Switch):
     """A ``W`` line. ``control`` names the source whose current controls it."""
 
     control: ElementReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class BehavioralSource(Component):
+    """A ``B`` line (decision 0016).
+
+    ``quantity`` is the keyword in lower case: ``"v"`` or ``"i"``, and on LTspice also ``"r"`` or
+    ``"p"``. ``expression`` is the formula, with ``delimiter`` ``""`` when it is written bare; a
+    bare expression's text runs across its continuation lines as written. ``params`` holds the
+    trailing parameters (ngspice ``tc1=`` …, LTspice ``ic=`` …).
+    """
+
+    quantity: str
+    expression: Formula
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -632,6 +659,7 @@ BodyItem: TypeAlias = (
     | Ccvs
     | VoltageSwitch
     | CurrentSwitch
+    | BehavioralSource
     | SubcktInstance
 )
 """An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
@@ -687,6 +715,7 @@ ELEMENT_NAMES: dict[type[Component], str] = {
     Ccvs: "current-controlled voltage source",
     VoltageSwitch: "voltage-controlled switch",
     CurrentSwitch: "current-controlled switch",
+    BehavioralSource: "behavioral source",
     SubcktInstance: "subcircuit call",
 }
 

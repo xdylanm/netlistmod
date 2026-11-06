@@ -59,8 +59,9 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | Entry | Construct | Status | Validated on |
 |---|---|---|---|
 | [LT-ACA-001](./specs/LT-ACA-001.yaml) | .ac | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-BEH-001](./specs/LT-BEH-001.yaml) | behavioral source (B) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-BJT-001](./specs/LT-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ltspice 26.1.1 (2026-11-05) |
-| [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | ltspice 26.1.1 (2026-11-01, 2026-11-06) |
 | [LT-CCC-001](./specs/LT-CCC-001.yaml) | current-dependent current source (F) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-CCV-001](./specs/LT-CCV-001.yaml) | current-dependent voltage source (H) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | ltspice 26.1.1 (2026-11-01) |
@@ -85,7 +86,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-FUN-010](./specs/LT-FUN-010.yaml) | I step load | validated | ltspice 26.1.1 (2026-11-04) |
 | [LT-GLB-001](./specs/LT-GLB-001.yaml) | .global | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-ICN-001](./specs/LT-ICN-001.yaml) | .ic and .nodeset | validated | ltspice 26.1.1 (2026-11-01) |
-| [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | validated | ltspice 26.1.1 (2026-11-01, 2026-11-06) |
 | [LT-JFT-001](./specs/LT-JFT-001.yaml) | junction FET (J) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | ltspice 26.1.1 (2026-11-01) |
@@ -93,6 +94,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01, 2026-11-05) |
 | [LT-MOS-001](./specs/LT-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-NLS-001](./specs/LT-NLS-001.yaml) | expression forms of the dependent sources (value= on E, F, G and H) | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-NOD-001](./specs/LT-NOD-001.yaml) | node, element and subcircuit names | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-001](./specs/LT-NUM-001.yaml) | numbers | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | validated | ltspice 26.1.1 (2026-11-01) |

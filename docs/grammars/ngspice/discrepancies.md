@@ -202,3 +202,16 @@ Decision 0015 items 4 to 8. Each row is a case of `tests/solver/test_ngspice_con
 | Runs `S1 … sm on off` and `off on`; the last keyword sets the state. | `ParseError` at the second keyword (decision 0015 item 8). | `s-on-off`; `elements_rejects/s_on_off.cir` |
 | Runs an F, H or W controlled by an E or an H (they have a branch current); §4.2.3 and §4.2.4 name a voltage source. | Loads, with `CONTROL_SOURCE_MISMATCH` (decision 0015 item 5). | `f-ctrl-e`, `f-ctrl-h` |
 | Crashes (exit code 0xC0000005) on `E1 … GND` with no gain in a KiCad netlist, after "not enough parameters". | `ParseError` at the line's end. | `elements_rejects/e_no_value.cir` |
+
+## Behavioural observations (ngspice 47, 2026-11-06; M15)
+
+Decision 0016 items 2 and 9. Each row is a case of `tests/solver/test_ngspice_behavioral_probes.py::test_behavioral_probes`.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Stops on B `R=1k` and `P=4m` ("unknown parameter"); they are LTspice forms. | `ParseError` at the keyword, which says so. | `b-r`, `b-p`; `elements_rejects/b_r.cir` |
+| Stops on `E1 out 0 vol=2*v(vx)`, a bare expression after `vol=`; the manual writes quotes or braces. | `ParseError` at the expression (decision 0002). | `e-vol-bare`; `elements_rejects/e_vol_bare.cir` |
+| Stops on `E1 out 0 LAPLACE {v(vx)} {2}`; the manual says ngspice does not offer it (§5.2.5). | `ParseError`. | `e-laplace`; `elements_rejects/e_laplace.cir` |
+| Runs TABLE, POLY and FREQ on E and G, and POLY on F and H. | `UnsupportedConstruct` until M15b. | `e-table`, `e-poly`, `e-freq` |
+| Reports a singular matrix for `v(nonode)` in a B expression. | Loads, with `UNRESOLVED_NODE` (decision 0016 item 6). | `document_basic/node_read.cir` |
+

@@ -32,6 +32,7 @@ from lark.exceptions import VisitError
 from netlistmod.dialects import Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
 from netlistmod.grammar.loader import parse_tree
+from netlistmod.model._rules_behavioral import BehavioralRules
 from netlistmod.model._rules_controlled import ControlledRules
 from netlistmod.model._rules_sources import SourcesRules
 from netlistmod.model._rules_statements import StatementsRules
@@ -43,7 +44,12 @@ from netlistmod.source import SourceText
 
 
 class _NodeBuilder(
-    StructureRules, SourcesRules, ControlledRules, StatementsRules, Transformer[Token, ParseResult]
+    StructureRules,
+    SourcesRules,
+    ControlledRules,
+    BehavioralRules,
+    StatementsRules,
+    Transformer[Token, ParseResult],
 ):
     """Build nodes for one parse; every grammar rule has exactly one method."""
 

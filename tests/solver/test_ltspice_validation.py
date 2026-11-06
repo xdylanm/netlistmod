@@ -289,9 +289,10 @@ def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path)
 @pytest.mark.parametrize(
     "line",
     [
-        "C1 out 0 Q=1u*x",
-        "L1 out 0 Flux=1m*x",
-        "E1 a 0 value={2*V(in)}\nR9 a 0 1k",
+        # Q=, Flux= and value= load since M15; these are M15b's.
+        "E1 a 0 POLY(1) in 0 0 2\nR9 a 0 1k",
+        "E1 a 0 in 0 Laplace=1/(1+s)\nR9 a 0 1k",
+        "B1 a 0 V=V(in) laplace=1/(1+s)\nR9 a 0 1k",
     ],
 )
 def test_other_forms_run_and_are_unsupported(solver: Solver, tmp_path: Path, line: str) -> None:

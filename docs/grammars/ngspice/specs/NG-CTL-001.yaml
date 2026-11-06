@@ -30,4 +30,4 @@ tests:
 - tests/document/test_controlled_topology.py::test_the_signature_holds_each_controlling_source
 - tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
 - tests/grammar/ngspice/test_controlled_sources.py::test_refused_gain_forms_name_the_form
-notes: 'Decision 0015. E, G and S write four nodes, the output pair then the control pair; F, H and W two nodes and a controlling source, an element reference resolved in its own scope. The nonlinear forms of §5 (vol=, cur=, VALUE, TABLE, POLY) are UnsupportedConstruct after the output nodes until M15.'
+notes: 'Decision 0015. E, G and S write four nodes, the output pair then the control pair; F, H and W two nodes and a controlling source, an element reference resolved in its own scope. The expression forms of §5 are NG-NLS-001 (M15); TABLE, POLY, FREQ and AND/OR/NAND/NOR are UnsupportedConstruct after the output nodes until M15b.'

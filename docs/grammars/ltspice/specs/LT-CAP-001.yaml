@@ -9,23 +9,29 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
 grammar:
 - capacitor
 - c_value
 - c_param
 - C_PARAM_KW
 - C_TEXT_KW
+- _c_tail
+- _c_more
 core_rules:
 - C_NAME
 - Q_KW
-- charge
+- c_charge
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_capacitor_parameters
 - tests/grammar/ltspice/test_ltspice_elements.py::test_database_text_parameters
 - tests/grammar/ltspice/test_ltspice_elements.py::test_other_parameters_are_rejected
-- tests/grammar/ltspice/test_ltspice_elements.py::test_nonlinear_forms_are_unsupported
+- tests/grammar/ltspice/test_ltspice_elements.py::test_nonlinear_forms_load
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_the_charge_form_of_c
 - tests/solver/test_ltspice_validation.py::test_capacitor_parameters_run
 - tests/solver/test_ltspice_validation.py::test_capacitor_parameters_take_effect
 - tests/solver/test_ltspice_validation.py::test_malformed_capacitor_lines_stop_both
 - tests/solver/test_ltspice_edit_results.py::test_set_param_rser_on_a_capacitor
-notes: 'Value, then ic, Rser, Lser, Rpar, Cpar, m, RLshunt, temp. Observed (section 11.3 rule 3): V and Irms, mfg, pn and type, which take a quoted string or a bare word (settled by probe; review R1), and the noiseless flag, with or without a value (reviews R9, R10). Q= is unsupported in phase 1. ic= also holds the capacitor at that voltage in an operating point.'
+notes: 'Value, then ic, Rser, Lser, Rpar, Cpar, m, RLshunt, temp. Observed (section 11.3 rule 3): V and Irms, mfg, pn and type, which take a quoted string or a bare word (settled by probe; review R1), and the noiseless flag, with or without a value (reviews R9, R10). Q= (bare, or in braces or quotes) loads with value None and the expression in charge, where x is the voltage across the capacitor (decision 0016 item 4). ic= also holds the capacitor at that voltage in an operating point.'

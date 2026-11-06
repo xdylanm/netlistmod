@@ -519,7 +519,7 @@ def test_stray_block_closers_are_rejected(closer: str) -> None:
     assert captured.value.excerpt == closer + "\n^"
 
 
-PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDXQMJZEFGHSW"))
+PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDXQMJZEFGHSWB"))
 
 
 @pytest.mark.parametrize("letter", PHASE_2_LETTERS)

@@ -26,4 +26,4 @@ tests:
 - tests/document/test_controlled_topology.py::test_a_source_inside_an_instance_is_info_on_ltspice
 - tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
 - tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_refused_gain_forms_name_the_form
-notes: 'Decision 0015, as NG-CTL-001. value= and POLY after the output nodes, and table= and Laplace= after E''s and G''s control nodes, are UnsupportedConstruct until M15. A controlling source inside an instance (X1:Vq), which LTspice runs, is kept as text and reported as info.'
+notes: 'Decision 0015, as NG-CTL-001. value= is LT-NLS-001 (M15). POLY after the output nodes, and table= and Laplace= after E''s and G''s control nodes, are UnsupportedConstruct until M15b. A controlling source inside an instance (X1:Vq), which LTspice runs, is kept as text and reported as info.'

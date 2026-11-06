@@ -1,0 +1,8 @@
+expression reads
+V1 in 0 2
+R1 in a 1k
+R2 a 0 1k
+B1 b 0 V=2*v(a)+v(nonode)
+R3 b 0 1k
+.op
+.end

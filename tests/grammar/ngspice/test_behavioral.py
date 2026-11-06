@@ -1,0 +1,186 @@
+"""ngspice behavioural forms: B, the expression forms of E and G, and C's charge (M15, 0016)."""
+
+from __future__ import annotations
+
+from typing import Any
+
+import pytest
+
+from netlistmod import (
+    BehavioralSource,
+    Capacitor,
+    Dialect,
+    ParseError,
+    SourceText,
+    Span,
+    UnsupportedConstruct,
+    Vccs,
+    Vcvs,
+    parse,
+)
+
+
+def _element(line: str) -> Any:
+    text = f"title\n{line}\n.end\n"
+    result = parse(SourceText(text), Dialect.NGSPICE)
+    assert len(result.items) == 3, result.items
+    item = result.items[1]
+    assert item.span == Span(6, 6 + len(line) + 1)
+    return item
+
+
+def _slice(line: str, span: Span) -> str:
+    return f"title\n{line}"[span.start : span.end]
+
+
+def _reject(line: str) -> ParseError:
+    with pytest.raises(ParseError) as captured:
+        parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
+    return captured.value
+
+
+@pytest.mark.parametrize(
+    ("line", "quantity", "text", "delimiter", "params"),
+    [
+        ("B1 0 1 I=cos(v(1))+sin(v(2))", "i", "cos(v(1))+sin(v(2))", "", []),
+        (
+            "B2 0 1 V=ln(cos(log(v(1,2)^2)))-v(3)^4+v(2)^v(1)",
+            "v",
+            "ln(cos(log(v(1,2)^2)))-v(3)^4+v(2)^v(1)",
+            "",
+            [],
+        ),
+        ("B3 3 4 I=17", "i", "17", "", []),
+        ("B1 out 0 V = 2 * v(vx)", "v", "2 * v(vx)", "", []),
+        ("B1 out 0 v={2*v(vx)}", "v", "2*v(vx)", "{", []),
+        ("B1 out 0 v='2*v(vx)'", "v", "2*v(vx)", "'", []),
+        ("B1 out 0 V={k}*v(vx)", "v", "{k}*v(vx)", "", []),
+        ("B1 out 0 V = 2 * v(vx) tc1=0 tc2=1m", "v", "2 * v(vx)", "", ["tc1", "tc2"]),
+        ("B1 out 0 v={2} temp=30 dtemp=1", "v", "2", "{", ["temp", "dtemp"]),
+        ("B1 out 0 V = v(a) == 1 ? 2 : 0", "v", "v(a) == 1 ? 2 : 0", "", []),
+        (
+            "Blimit b 0 V = pwl(v(1), -4,0, -2,2, 2,4, 4,5, 6,5)",
+            "v",
+            "pwl(v(1), -4,0, -2,2, 2,4, 4,5, 6,5)",
+            "",
+            [],
+        ),
+    ],
+)
+def test_a_b_line_has_a_quantity_and_an_expression(
+    line: str, quantity: str, text: str, delimiter: str, params: list[str]
+) -> None:
+    # The manual's own examples (§5.1.1, §5.1.4), and the forms of decision 0016 item 2.
+    item = _element(line)
+    assert isinstance(item, BehavioralSource)
+    assert (item.quantity, item.expression.text, item.expression.delimiter) == (
+        quantity,
+        text,
+        delimiter,
+    )
+    assert (
+        _slice(line, item.expression.span)
+        == f"{delimiter}{text}{'}' if delimiter == '{' else delimiter}"
+    )
+    assert [param.name for param in item.params] == params
+    assert len(item.nodes) == 2
+
+
+def test_a_bare_expression_runs_over_a_continuation() -> None:
+    text = "t\nB5 2 0 V = V(1) < {Vlow} ? {Vlow} :\n+ V(1) > {Vhigh} ? {Vhigh} : V(1)\n.end\n"
+    item = parse(SourceText(text), Dialect.NGSPICE).items[1]
+    assert item.expression.text == "V(1) < {Vlow} ? {Vlow} :\n+ V(1) > {Vhigh} ? {Vhigh} : V(1)"
+    assert text[item.expression.span.start : item.expression.span.end] == item.expression.text
+
+
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("B1 out 0 V=2 I=1m", 14, "`I=` is a second quantity: a B source takes one"),
+        ("B1 out 0 v={2*v(vx)} i={1m}", 22, "`i=` is a second quantity"),
+        ("B1 out 0 r={2k}", 10, "`r=` is an LTspice form: an ngspice B source takes `v=` or `i=`"),
+        ("B1 out 0 p=1m", 10, "`p=` is an LTspice form"),
+        ("B1 out 0", 9, "this line ends too early"),
+    ],
+)
+def test_malformed_b_lines_are_refused(line: str, column: int, reason: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert reason in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "kind", "form", "text", "params"),
+    [
+        ("E41 4 0 vol = '2*V(3)*V(3)-Offs'", Vcvs, "vol", "2*V(3)*V(3)-Offs", []),
+        ("E1 out 0 vol={2*v(vx)}", Vcvs, "vol", "2*v(vx)", []),
+        ("E41 4 0 value = {V(3)*V(3)-Offs}", Vcvs, "value", "V(3)*V(3)-Offs", []),
+        ("E1 out 0 value {2*v(vx)}", Vcvs, "value", "2*v(vx)", []),
+        ("G51 55 225 cur = 'V(3)*V(3)-Offs' m=2", Vccs, "cur", "V(3)*V(3)-Offs", ["m"]),
+        ("G51 55 225 value = 'V(3)*V(3)-Offs'", Vccs, "value", "V(3)*V(3)-Offs", []),
+    ],
+)
+def test_the_expression_forms_of_e_and_g(
+    line: str, kind: type, form: str, text: str, params: list[str]
+) -> None:
+    # The manual's own examples (§5.2.1, §5.2.2, §5.3.1, §5.3.2); value takes = or not.
+    item = _element(line)
+    assert type(item) is kind
+    assert (item.form, item.expression.text, item.value) == (form, text, None)
+    assert [node.name for node in item.nodes] == line.split()[1:3]
+    assert [param.name for param in item.params] == params
+
+
+def test_a_node_named_value_is_a_node() -> None:
+    item = _element("E1 out 0 value 0 2")
+    assert [node.name for node in item.nodes] == ["out", "0", "value", "0"]
+    assert item.value.text == "2"
+
+
+@pytest.mark.parametrize(
+    ("line", "column"),
+    [("E1 out 0 vol=2*v(vx)", 14), ("G1 0 out cur=2m*v(vx)", 14)],
+)
+def test_a_bare_expression_after_vol_or_cur_is_refused(line: str, column: int) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert "only in quotes or braces (ngspice manual §5.2.1)" in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "column", "form"),
+    [
+        ("E1 out 0 TABLE {v(vx)} = (0,0) (1,2)", 10, "table"),
+        ("E1 out 0 vx 0 TABLE = (0, 0, 1, 2)", 15, "table"),
+        ("G1 0 out TABLE {v(vx)} = (0,0) (1,2m)", 10, "table"),
+        ("E1 out 0 POLY(1) vx 0 0 2", 10, "poly"),
+        ("F1 out 0 POLY(1) Vs 0 2", 10, "poly"),
+        ("E1 out 0 FREQ {v(vx)}= DB (1, 0, 0)", 10, "freq"),
+        ("E1 out 0 nand(2) vx 0 vx 0 (0.5, 0) (2.8, 3.3)", 10, "nand"),
+    ],
+)
+def test_the_m15b_forms_stay_unsupported(line: str, column: int, form: str) -> None:
+    with pytest.raises(UnsupportedConstruct) as captured:
+        parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
+    assert (captured.value.line, captured.value.column) == (2, column)
+    assert captured.value.construct == f"ngspice nonlinear dependent source form ({form})"
+
+
+def test_laplace_stays_a_parse_error() -> None:
+    # The manual says ngspice does not offer LAPLACE (§5.2.5), and ngspice stops.
+    error = _reject("E1 out 0 LAPLACE {v(vx)} {2}")
+    assert (error.line, error.column) == (2, 18)
+
+
+@pytest.mark.parametrize(
+    ("line", "text", "params"),
+    [
+        ("C1 a b q = '1u*(4*atan(V(a,b)/4)*2+V(a,b))/3'", "1u*(4*atan(V(a,b)/4)*2+V(a,b))/3", []),
+        ("C1 cc 0 q={1n*v(cc)} tc1=-1e-03", "1n*v(cc)", ["tc1"]),
+    ],
+)
+def test_the_charge_form_of_c(line: str, text: str, params: list[str]) -> None:
+    item = _element(line)
+    assert isinstance(item, Capacitor)
+    assert (item.value, item.charge.text) == (None, text)
+    assert [param.name for param in item.params] == params

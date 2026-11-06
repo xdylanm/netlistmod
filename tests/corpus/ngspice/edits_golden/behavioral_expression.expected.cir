@@ -1,0 +1,21 @@
+behavioural edits (M15)
+V1 in 0 2
+R1 in vx 1k
+R2 vx 0 2k
+Vs vx vs 0 ; sense
+R3 vs 0 1k
+.param k=2
+B1 bo 0 V = 3 * v(vx) tc1=0 ; bare
+R4 bo 0 1k
+B2 bi 0 i={2m*v(vx)}
+R5 bi 0 1k
+B3 bc 0 V = v(vx) > 1 ? 2 : 0
+R6 bc 0 1k
+E1 eo 0 vol='2*v(vx)'
+R7 eo 0 1k
+G1 0 go value {1m*v(vx)} m=2
+R8 go 0 1k
+C1 vx 0 q='1n*v(vx)'
+R9 vx 0 R='2k*(1+0*v(vx))'
+.op
+.end

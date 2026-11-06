@@ -1,0 +1,22 @@
+behavioural edits (M15)
+V1 in 0 2
+R1 in vx 1k
+R2 vx 0 2k
+Vs vx vs 0 ; sense
+R3 vs 0 1k
+.param k=2
+B1 bo 0 V=k*V(vx) ic=0 ; bare
+R4 bo 0 1k
+B2 bi 0 I={1m*V(vx)} Rpar=1Meg
+R5 bi 0 1k
+B3 br bo R = 1k +
++ V(vx)
+E1 eo 0 value={2*V(vx)}
+R7 eo 0 1k
+F1 0 fo value={2*I(Vs)}
+R8 fo 0 1k
+C1 vx 0 Q=1n*x
+L1 vx ln Flux=1m*tanh(5*x)
+R9 ln 0 1k
+.op
+.end

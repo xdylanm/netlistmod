@@ -11,6 +11,9 @@
 // "!", "#" or "%" as part of a name in an expression (scoping.md), so they are not name characters.
 
 %ignore WS
+// A bare behavioural expression may run over + continuation lines and hold {param} groups inside
+// (manual 5.1; decision 0016 item 5), so both are read here.
+%ignore CONT
 
 // spec: NG-FML-001
 ?start: ternary
@@ -41,6 +44,7 @@
      | VOLTAGE_OPEN NAME (COMMA NAME)? RPAR     -> voltage
      | CURRENT_OPEN NAME RPAR                   -> current
      | LPAR ternary RPAR
+     | LBRACE ternary RBRACE
 
 // spec: NG-FML-001
 WS: /[ \t]+/
@@ -49,8 +53,11 @@ STRING: /"[^"]*"/
 IDENT.2: /[A-Za-z][A-Za-z0-9_\[\]]*/
 VOLTAGE_OPEN.3: /(?:v|vr|vi|vm|vp|vdb)\(/i
 CURRENT_OPEN.3: /i\(/i
-NAME: /[^ \t(),]+/
+NAME: /[^ \t\r\n(),]+/
 LPAR: "("
+LBRACE: "{"
+RBRACE: "}"
+CONT: /\r?\n[ \t]*\+/
 RPAR: ")"
 COMMA: ","
 QUESTION: "?"

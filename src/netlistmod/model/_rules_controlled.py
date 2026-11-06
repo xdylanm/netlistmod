@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, NoReturn
+
+from lark import Token
 
 from netlistmod.dialects import Dialect
 from netlistmod.model._rules_elements import ElementsRules
@@ -16,6 +19,13 @@ from netlistmod.model.nodes import (
     VoltageSwitch,
 )
 from netlistmod.model.values import ElementReference, Flag, ModelReference
+
+
+@dataclass(frozen=True, slots=True)
+class _Form:
+    """The keyword of an expression form of E, F, G or H."""
+
+    token: Token
 
 
 class ControlledRules(ElementsRules):
@@ -72,16 +82,16 @@ class ControlledRules(ElementsRules):
         )
 
     def vcvs(self, children: list[Any]) -> _Item:
-        return self._voltage_controlled(Vcvs, _Element(children))
+        return self._voltage_controlled(Vcvs, _Element(children), children)
 
     def vccs(self, children: list[Any]) -> _Item:
-        return self._voltage_controlled(Vccs, _Element(children))
+        return self._voltage_controlled(Vccs, _Element(children), children)
 
     def cccs(self, children: list[Any]) -> _Item:
-        return self._current_controlled(Cccs, _Element(children))
+        return self._current_controlled(Cccs, _Element(children), children)
 
     def ccvs(self, children: list[Any]) -> _Item:
-        return self._current_controlled(Ccvs, _Element(children))
+        return self._current_controlled(Ccvs, _Element(children), children)
 
     def vswitch(self, children: list[Any]) -> _Item:
         element = _Element(children)
@@ -104,14 +114,43 @@ class ControlledRules(ElementsRules):
             ),
         )
 
-    def _voltage_controlled(self, kind: type[Vcvs | Vccs], element: _Element) -> _Item:
-        value = element.values()[0]
-        return _Item(element.end, lambda span: kind(**_common(element, span), value=value))
+    # The expression forms (decision 0016 item 3): ngspice E vol=, G cur= and value; LTspice value=.
 
-    def _current_controlled(self, kind: type[Cccs | Ccvs], element: _Element) -> _Item:
-        value = element.values()[0]
-        control = element.all(ElementReference)[0]
+    def e_form(self, children: list[Any]) -> _Field:
+        return self._field(children, _Form)
+
+    g_form = e_form
+    value_form = e_form
+
+    table_form = nonlinear_form
+
+    def bare_expression(self, children: list[Any]) -> NoReturn:
+        piece = _field_token(children)
+        raise self._parse_error(
+            piece,
+            f"`{piece}`: ngspice reads the expression of `vol=`, `cur=` and `value` only in "
+            "quotes or braces (ngspice manual §5.2.1); write `{...}` or `'...'`",
+        )
+
+    def _voltage_controlled(
+        self, kind: type[Vcvs | Vccs], element: _Element, children: list[Any]
+    ) -> _Item:
+        fields = self._gain_or_expression(element, children)
+        return _Item(element.end, lambda span: kind(**_common(element, span), **fields))
+
+    def _current_controlled(
+        self, kind: type[Cccs | Ccvs], element: _Element, children: list[Any]
+    ) -> _Item:
+        fields = self._gain_or_expression(element, children)
+        control = element.optional(ElementReference)
         return _Item(
             element.end,
-            lambda span: kind(**_common(element, span), value=value, control=control),
+            lambda span: kind(**_common(element, span), control=control, **fields),
         )
+
+    def _gain_or_expression(self, element: _Element, children: list[Any]) -> dict[str, Any]:
+        form = element.optional(_Form)
+        if form is None:
+            return {"value": element.values()[0]}
+        keyword = str(form.token).strip().lower()
+        return {"expression": self._expression(children), "form": keyword}

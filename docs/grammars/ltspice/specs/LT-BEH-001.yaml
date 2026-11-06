@@ -1,0 +1,37 @@
+id: LT-BEH-001
+dialect: ltspice
+construct: behavioral source (B) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "B — Behavioral Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- body_line
+- behavioral
+- b_quantity
+- _b_more
+- _b_tail
+- b_second_quantity
+- b_param
+- B_QUANTITY_KW
+- B_PARAM_KW
+- B_PIECE
+- B_NAME
+core_rules:
+- B_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_a_b_line_has_a_quantity_and_an_expression
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_malformed_b_lines_are_refused
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_laplace_on_b_is_m15b
+- tests/document/test_expression_reads.py::test_ltspice_time_and_x_are_the_simulation_s_in_an_expression
+- tests/document/test_expression_reads.py::test_a_source_inside_an_instance_is_info
+- tests/edits/test_behavioral_edits.py::test_set_expression_on_ltspice
+- tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes
+- tests/solver/test_ltspice_behavioral_probes.py::test_an_edited_expression_moves_the_result
+notes: 'Decision 0016. Two nodes, V=, I=, R= or P=, one expression, then ic=, tripdv=, tripdt=, Rpar=
+  and vprx=. A bare expression is read as for ngspice, with LTspice''s ~ operator. laplace= (with
+  window=, nfft= and mtol=) is UnsupportedConstruct until M15b. time in the expression is the
+  simulation time, not a parameter.'

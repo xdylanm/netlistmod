@@ -1,0 +1,26 @@
+id: LT-NLS-001
+dialect: ltspice
+construct: expression forms of the dependent sources (value= on E, F, G and H)
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "E — Voltage-Dependent Voltage Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "F — Current-Dependent Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-06'
+grammar:
+- value_form
+- _x_expression
+- _x_more
+- VALUE_FORM_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_value_on_e_to_h
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_ngspice_forms_are_refused_on_ltspice
+- tests/document/test_expression_reads.py::test_value_forms_read_their_sources
+- tests/edits/test_behavioral_edits.py::test_set_expression_on_ltspice
+- tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes
+notes: 'Decision 0016 item 3. value= after the output nodes, with an expression in braces, quotes or
+  bare; F and H have no controlling source then. ngspice''s vol= stops LTspice and is refused, and
+  ngspice''s TABLE {...} =, which LTspice runs but its reference does not show, is refused
+  (discrepancies.md). POLY, table= and Laplace= stay UnsupportedConstruct until M15b.'

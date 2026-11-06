@@ -47,7 +47,11 @@ def _reading(text: str) -> str:
     control = getattr(item, "control", None)
     parts = [type(item).__name__, ",".join(node.name for node in item.nodes)]
     parts.append(control.designator if control is not None else "-")
-    parts.append(item.value.text if isinstance(item, ControlledSource) else item.model.model_name)
+    if isinstance(item, ControlledSource):
+        gain = item.value if item.value is not None else item.expression
+        parts.append(getattr(gain, "text", ""))
+    else:
+        parts.append(item.model.model_name)
     return " ".join(parts)
 
 
@@ -63,7 +67,7 @@ _PROBES = {
     "e-m": ("E1 out 0 vx 0 2 m=2", False, "refused"),
     "e-three-nodes": ("E1 out 0 vx 2", False, "refused"),
     "e-comma": ("E1 out,0 vx 0 2", True, "refused"),
-    "e-value": ("E1 out 0 value={2*V(vx)}", True, "unsupported"),
+    "e-value": ("E1 out 0 value={2*V(vx)}", True, "Vcvs out,0 - 2*V(vx)"),  # M15
     "e-poly": ("E1 out 0 POLY(1) vx 0 0 2", True, "unsupported"),
     "e-laplace": ("E1 out 0 vx 0 Laplace=2", True, "unsupported"),
     "g-gain": ("G1 0 out vx 0 2m", True, "Vccs 0,out,vx,0 - 2m"),

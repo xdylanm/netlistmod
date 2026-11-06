@@ -9,18 +9,14 @@ from typing import Any
 import pytest
 
 from netlistmod import DiagnosticCode, Dialect, Netlist
+from tests.support.corpus import accept_files
 
 pytestmark = pytest.mark.ngspice_only
 
 CORPUS_ROOT = Path(__file__).parents[1] / "corpus" / "ngspice"
 FAMILY = CORPUS_ROOT / "document_basic"
 MANIFEST: dict[str, Any] = json.loads((FAMILY / "manifest.json").read_text(encoding="utf-8"))
-ACCEPT_FILES = sorted(
-    path
-    for family in CORPUS_ROOT.iterdir()
-    if family.is_dir() and not family.name.endswith("_rejects")
-    for path in family.glob("*.cir")
-)
+ACCEPT_FILES = accept_files(CORPUS_ROOT)
 _UNRESOLVED = {
     "model": DiagnosticCode.UNRESOLVED_MODEL,
     "subckt": DiagnosticCode.UNRESOLVED_SUBCKT,

@@ -96,7 +96,12 @@
     "controlled_switch_model.expected.net": "76db50083123dd062416732c23cbc4f8a0e2dee75929233662d195d22839f11a",
     "controlled_switch_state.expected.net": "f9700adb5bf24e984983032cf66fcda16a577b3bed153ce7c3cbae2dfa2c29cf",
     "controlled_switch_state_removed.expected.net": "32bebb5f31bb3ea014111b5d8719b5c4b0bfb3a7a33d23adb1adc0c00f6afa23",
-    "controlled_batch.expected.net": "00a80d82e3cae0850f7fa9d06ac18d5efce7755c3db2760e878fca8f1868b910"
+    "controlled_batch.expected.net": "00a80d82e3cae0850f7fa9d06ac18d5efce7755c3db2760e878fca8f1868b910",
+    "behavioral_sources.net": "9e2ca1f84f3789d43b2e9e84a4b443cc3c06c03e2a8a80ecf3146b772e73fa3e",
+    "behavioral_expression.expected.net": "98d7bed7230ccbe3a383547a9cbfb8075e6e21d13b679aef3259b671becd475b",
+    "behavioral_forms.expected.net": "d4fd5ca8a0584e1060e2816f0900d7d1ecffd4c3b10b04759726d6522a053408",
+    "behavioral_param.expected.net": "f87ba66857c6d62860b661098b227af9709050aa66511c081368cd8445810924",
+    "behavioral_batch.expected.net": "ff15167bec6999b47bc1fdc345f1c5386eea710ff67114daf9f9a50574ac0b96"
   },
   "cases": {
     "set_value": {
@@ -746,6 +751,98 @@
         ]
       ],
       "expected": "controlled_batch.expected.net"
+    },
+    "behavioral_expression": {
+      "input": "behavioral_sources.net",
+      "steps": [
+        [
+          "set_expression",
+          "B1",
+          "3*V(vx)"
+        ],
+        [
+          "set_expression",
+          "B2",
+          "2m*V(vx)"
+        ],
+        [
+          "set_expression",
+          "B3",
+          "2k"
+        ]
+      ],
+      "expected": "behavioral_expression.expected.net"
+    },
+    "behavioral_forms": {
+      "input": "behavioral_sources.net",
+      "steps": [
+        [
+          "set_expression",
+          "E1",
+          "3*V(vx)"
+        ],
+        [
+          "set_expression",
+          "F1",
+          "3*I(Vs)"
+        ],
+        [
+          "set_expression",
+          "C1",
+          "2n*x"
+        ],
+        [
+          "set_expression",
+          "L1",
+          "2m*tanh(5*x)"
+        ]
+      ],
+      "expected": "behavioral_forms.expected.net"
+    },
+    "behavioral_param": {
+      "input": "behavioral_sources.net",
+      "steps": [
+        [
+          "set_param",
+          "B1",
+          "ic",
+          "1"
+        ],
+        [
+          "set_param",
+          "B2",
+          "Rpar",
+          "2Meg"
+        ]
+      ],
+      "expected": "behavioral_param.expected.net"
+    },
+    "behavioral_batch": {
+      "input": "behavioral_sources.net",
+      "steps": [
+        [
+          "batch",
+          [
+            [
+              "set_expression",
+              "B1",
+              "k*V(vs)"
+            ],
+            [
+              "set_param",
+              "B2",
+              "Rpar",
+              "10Meg"
+            ],
+            [
+              "set_expression",
+              "E1",
+              "V(vx)+1"
+            ]
+          ]
+        ]
+      ],
+      "expected": "behavioral_batch.expected.net"
     }
   }
 }

@@ -71,6 +71,8 @@ of the `*_rejects` families.
 | Runs `E1 out 0 vx 0 gain=2`; the reference writes the gain positionally. | `ParseError` at `gain` (decision 0015 item 6). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`e-gain-keyword`) |
 | Runs `S1 … sm on off`; the last keyword sets the state. | `ParseError` at the second keyword (decision 0015 item 8). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`s-on-off`); `elements_rejects/s_on_off.cir` |
 | Runs `E1 out,0 vx 0 2`, a comma between E's output nodes, but stops on `F1 0,out Vs 2`. | `ParseError` for both: a comma is not a node separator on any LTspice letter (decision 0009). | `tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes` (`e-comma`, `f-comma`) |
+| Runs `E1 out 0 TABLE {V(vx)} = (0,0) (1,2)`, ngspice's TABLE form; the reference writes `table=` after the control nodes. | `ParseError` at the expression (decision 0016 item 9). | `tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes` (`e-table-braces`); `elements_rejects/e_table_braces.cir` |
+| Runs `vprx=` on a `V=` B source; the reference lists it for `P=` only. | Accepted, as an observed parameter (section 11.3 rule 3). | `tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes` (`b-v-vprx`) |
 
 ## Forms the library accepts and LTspice rejects
 

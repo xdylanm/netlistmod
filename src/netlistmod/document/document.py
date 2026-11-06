@@ -18,6 +18,7 @@ from netlistmod.document.index import Index, Reference, Scope
 from netlistmod.document.lines import Lines, ScopePath
 from netlistmod.document.topology import (
     Connection,
+    ExpressionRead,
     Net,
     TopologySignature,
     TopologyView,
@@ -226,6 +227,13 @@ class Netlist:
     def connections(self, designator: str, scope: ScopePath = ()) -> tuple[Connection, ...]:
         """The terminals of one element and their nets."""
         return self._topology.connections(designator, scope)
+
+    def expression_reads(
+        self, designator: str, scope: ScopePath = ()
+    ) -> tuple[ExpressionRead, ...]:
+        """The nets and sources an element's expressions read (``V(a)``, ``I(Vx)``), which its
+        node list does not show; see :class:`ExpressionRead` (decision 0016 item 6)."""
+        return self._topology.expression_reads(designator, scope)
 
     def ports(self, subckt: str, scope: ScopePath = ()) -> tuple[Net, ...]:
         """The port nets of a subcircuit definition visible from ``scope``."""

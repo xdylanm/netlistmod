@@ -436,8 +436,6 @@ _ADDED = (
 )
 LTSPICE_RUNS = {
     # Unsupported in phase 1.
-    "elements_rejects/behavioral_charge.cir",
-    "elements_rejects/behavioral_flux.cir",
     "elements_rejects/phase_2_letter.cir",
     "statements_rejects/machine_block.cir",
     # Rows of discrepancies.md.

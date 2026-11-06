@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, NoReturn
 
 from lark import Token
@@ -39,6 +40,7 @@ from netlistmod.model.nodes import (
 from netlistmod.model.values import (
     ElementReference,
     Flag,
+    Formula,
     ModelReference,
     ParamAssignment,
     SubcktReference,
@@ -72,6 +74,18 @@ def _reads_as_number(text: str) -> bool:
             while i < len(text) and text[i] in _DIGITS:
                 i += 1
     return all(char in _LETTERS for char in text[i:])
+
+
+# The tokens an expression is written with: a brace or quoted formula, or the pieces of a bare
+# expression, one per physical line (decision 0016 item 2).
+_EXPRESSION_TOKENS = frozenset({"BRACE_FORMULA", "QUOTE_FORMULA", "B_PIECE"})
+
+
+@dataclass(frozen=True, slots=True)
+class _Charge:
+    """The keyword of a C charge form (q=, Q=) or of LTspice's L Flux=."""
+
+    token: Token
 
 
 class ElementsRules(_Rules):
@@ -175,10 +189,14 @@ class ElementsRules(_Rules):
             return _Eol(inner.end, (*_comment_spans(children), *inner.comments))
         return _Eol(_end(children), _comment_spans(children))
 
-    def charge(self, children: list[Any]) -> NoReturn:
-        keyword = _field_token(children)
-        construct = f"{self._dialect.display_name} behavioral capacitor charge form (q=)"
-        raise self._unsupported(keyword, construct)
+    def c_charge(self, children: list[Any]) -> _Field:
+        return self._field(children, _Charge)
+
+    def l_flux(self, children: list[Any]) -> _Field:
+        return self._field(children, _Charge)
+
+    def hysteretic_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
 
     def params_keyword(self, children: list[Any]) -> NoReturn:
         raise self._parse_error(
@@ -195,18 +213,20 @@ class ElementsRules(_Rules):
             "and L take no model. Write a number or a brace expression (`{...}`)",
         )
 
-    def nonlinear_inductor(self, children: list[Any]) -> NoReturn:
-        keyword = _field_token(children)
-        raise self._unsupported(keyword, f"LTspice nonlinear inductor form ({keyword}=)")
-
     def resistor(self, children: list[Any]) -> _Item:
         return self._two_terminal(Resistor, _Element(children))
 
     def capacitor(self, children: list[Any]) -> _Item:
-        return self._two_terminal(Capacitor, _Element(children))
+        element = _Element(children)
+        if element.optional(_Charge) is None:
+            return self._two_terminal(Capacitor, element)
+        return self._two_terminal(Capacitor, element, charge=self._expression(children))
 
     def inductor(self, children: list[Any]) -> _Item:
-        return self._two_terminal(Inductor, _Element(children))
+        element = _Element(children)
+        if element.optional(_Charge) is None:
+            return self._two_terminal(Inductor, element)
+        return self._two_terminal(Inductor, element, flux=self._expression(children))
 
     def mutual_coupling(self, children: list[Any]) -> _Item:
         element = _Element(children)
@@ -319,6 +339,17 @@ class ElementsRules(_Rules):
                 f"parameter), and a model name cannot be the keyword `{text.lower()}`",
             )
 
+    def _expression(self, children: list[Any]) -> Formula:
+        """An expression written directly in a rule: a delimited formula, or a bare one over
+        its pieces, whose text runs across their continuation lines as written."""
+        tokens = [c for c in children if isinstance(c, Token) and c.type in _EXPRESSION_TOKENS]
+        if tokens[0].type != "B_PIECE":
+            value = self._value(tokens[0])
+            assert isinstance(value, Formula)
+            return value
+        span = Span(_span(tokens[0]).start, _span(tokens[-1]).end)
+        return Formula(self._source.text[span.start : span.end], "", span)
+
     def subckt_instance(self, children: list[Any]) -> _Item:
         element = _Element(children)
         rest = element.all(_XRest)[0]
@@ -357,7 +388,7 @@ class ElementsRules(_Rules):
     step_value = r_value
 
     def _two_terminal(
-        self, kind: type[Resistor | Capacitor | Inductor], element: _Element
+        self, kind: type[Resistor | Capacitor | Inductor], element: _Element, **extra: Any
     ) -> _Item:
         keyword_value = element.optional(_KeywordValue)
         value: Value | None
@@ -376,5 +407,6 @@ class ElementsRules(_Rules):
                 value_keyword=keyword,
                 model=model,
                 flags=element.all(Flag),
+                **extra,
             ),
         )

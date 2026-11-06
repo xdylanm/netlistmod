@@ -272,6 +272,7 @@ UNCHECKED_TERMINALS = {
         {
             "BLOCK_TEXT",
             "BS_CONT",
+            "B_PIECE",
             "COMMENT_LINE",
             "DOT_NAME",
             "LIB_BLOCK_KW",
@@ -285,6 +286,7 @@ UNCHECKED_TERMINALS = {
         {
             "BARE_FORMULA",
             "BLOCK_TEXT",
+            "B_PIECE",
             "MODEL_BARE",
             "BRACE_FORMULA",
             "COMMENT_LINE",

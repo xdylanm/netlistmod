@@ -55,6 +55,7 @@ class DiagnosticCode(StrEnum):
     UNTYPED_DIRECTIVE_PRESERVED = "UNTYPED_DIRECTIVE_PRESERVED"
     NODE_INTO_INSTANCE = "NODE_INTO_INSTANCE"
     CONTROL_SOURCE_MISMATCH = "CONTROL_SOURCE_MISMATCH"
+    UNRESOLVED_NODE = "UNRESOLVED_NODE"
 
 
 @dataclass(frozen=True, slots=True)
@@ -74,6 +75,7 @@ _UNRESOLVED: dict[str, tuple[DiagnosticCode, str]] = {
     "subckt": (DiagnosticCode.UNRESOLVED_SUBCKT, "subcircuit"),
     "param": (DiagnosticCode.UNRESOLVED_PARAM, "parameter"),
     "element": (DiagnosticCode.UNRESOLVED_ELEMENT, "element"),
+    "node": (DiagnosticCode.UNRESOLVED_NODE, "node"),
 }
 _ORDER = {code: position for position, code in enumerate(DiagnosticCode)}
 # The solver version whose behaviour a message states (validated_on of the rule tables).
@@ -136,7 +138,7 @@ def _reference_findings(
     scope = index.scope(reference.scope)
     if reference.target is None and reference.kind in _UNRESOLVED:
         code, noun = _UNRESOLVED[reference.kind]
-        searched = (scope,) if reference.kind == "element" else tuple(scope.chain())
+        searched = (scope,) if reference.kind in ("element", "node") else tuple(scope.chain())
         where = ", ".join(candidate.describe() for candidate in searched)
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
@@ -190,6 +192,8 @@ def _reference_findings(
     if (
         reference.kind == "element"
         and isinstance(owner, Cccs | Ccvs | CurrentSwitch)
+        and owner.control is not None
+        and reference.span == owner.control.span
         and target is not None
         and isinstance(target, Component)
         and not isinstance(target, VoltageSource)
@@ -248,9 +252,7 @@ def _control_outcome(target: Component, name: str, dialect: Dialect) -> str:
 
 def _control_into_instance(index: Index, scope: Scope, reference: Reference) -> str | None:
     """The instance an LTspice controlling source ``X1:Vq`` reaches into, if it is one."""
-    if index.dialect is not Dialect.LTSPICE or not isinstance(
-        reference.owner, Cccs | Ccvs | CurrentSwitch
-    ):
+    if index.dialect is not Dialect.LTSPICE or reference.kind != "element":
         return None
     head, colon, _ = reference.name.partition(":")
     if not colon:

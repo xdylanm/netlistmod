@@ -19,6 +19,116 @@
    "nodes": 43
   }
  },
+ "controlled_sources/test_behavioral_rcl.cir": {
+  "rkm": {
+   "digest": "92dbabe648ce66bdc8a93420f298623090f5551483683b6721600e5ea66e9810",
+   "nodes": 49
+  },
+  "standard": {
+   "digest": "92dbabe648ce66bdc8a93420f298623090f5551483683b6721600e5ea66e9810",
+   "nodes": 49
+  }
+ },
+ "controlled_sources/test_bsource.cir": {
+  "rkm": {
+   "digest": "d1554e323633fa1d438c1e9e797796a4e89a0f1f532b4f6dafb5f1b920c57a8f",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "d1554e323633fa1d438c1e9e797796a4e89a0f1f532b4f6dafb5f1b920c57a8f",
+   "nodes": 24
+  }
+ },
+ "controlled_sources/test_bsource_bare.cir": {
+  "rkm": {
+   "digest": "88a304288bfce001b13fba2c8616fedcdef5faa4941a37910619585dfeff61a6",
+   "nodes": 27
+  },
+  "standard": {
+   "digest": "88a304288bfce001b13fba2c8616fedcdef5faa4941a37910619585dfeff61a6",
+   "nodes": 27
+  }
+ },
+ "controlled_sources/test_bsource_continued.cir": {
+  "rkm": {
+   "digest": "b55338029bde021483a1589c9e5c5bee5f412671ffcb9b4331487986b008c2f0",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "b55338029bde021483a1589c9e5c5bee5f412671ffcb9b4331487986b008c2f0",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_current.cir": {
+  "rkm": {
+   "digest": "ba50cc8becb063d4cc7d60c5abafeaac02f0def29b81328bc07cd9e1a81fba79",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "ba50cc8becb063d4cc7d60c5abafeaac02f0def29b81328bc07cd9e1a81fba79",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_param.cir": {
+  "rkm": {
+   "digest": "a07dfd135318eb447a4278a2d0116bf83b87712c379510211012ceff0249d58b",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "a07dfd135318eb447a4278a2d0116bf83b87712c379510211012ceff0249d58b",
+   "nodes": 28
+  }
+ },
+ "controlled_sources/test_bsource_pwl.cir": {
+  "rkm": {
+   "digest": "14575e724372a867dab6ed58f39f8b627f5d2a5ea8e96c07082b8f7af45ba608",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "14575e724372a867dab6ed58f39f8b627f5d2a5ea8e96c07082b8f7af45ba608",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_quoted.cir": {
+  "rkm": {
+   "digest": "7ecb929feed559fb003421e5a590b9b8ea9aa0fc6acbd23659380e80978b3c7e",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "7ecb929feed559fb003421e5a590b9b8ea9aa0fc6acbd23659380e80978b3c7e",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_sense.cir": {
+  "rkm": {
+   "digest": "108a0eb077f5960869eb3ce79855f57c6d698373174e2a1153e0026cf6af6667",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "108a0eb077f5960869eb3ce79855f57c6d698373174e2a1153e0026cf6af6667",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_special.cir": {
+  "rkm": {
+   "digest": "b832701257cccd71ed663921fd950d06ddce917cabd991064937fb61b7b15e1b",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "b832701257cccd71ed663921fd950d06ddce917cabd991064937fb61b7b15e1b",
+   "nodes": 25
+  }
+ },
+ "controlled_sources/test_bsource_ternary.cir": {
+  "rkm": {
+   "digest": "e9562ed0cbe6b6f77045c90c02daae4483a891f1020bb7f78a8edd8fc41a4f62",
+   "nodes": 25
+  },
+  "standard": {
+   "digest": "e9562ed0cbe6b6f77045c90c02daae4483a891f1020bb7f78a8edd8fc41a4f62",
+   "nodes": 25
+  }
+ },
  "controlled_sources/test_cascade.cir": {
   "rkm": {
    "digest": "cabe71d80fc4096c721a30eede5a26fede329043f69164c820fe67901396d9cc",
@@ -39,6 +149,20 @@
    "nodes": 30
   }
  },
+ "controlled_sources/test_esource_and.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
  "controlled_sources/test_esource_formula.cir": {
   "rkm": {
    "digest": "555faa635c51e9c5b85404ab34ad32e1cec1a394e7561ab31a55a910009f5731",
@@ -47,6 +171,106 @@
   "standard": {
    "digest": "555faa635c51e9c5b85404ab34ad32e1cec1a394e7561ab31a55a910009f5731",
    "nodes": 34
+  }
+ },
+ "controlled_sources/test_esource_freq.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "controlled_sources/test_esource_poly.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "controlled_sources/test_esource_poly2.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "controlled_sources/test_esource_table.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "controlled_sources/test_esource_table_nodes.cir": {
+  "rkm": {
+   "column": 19,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 19,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "controlled_sources/test_esource_value.cir": {
+  "rkm": {
+   "digest": "e0b908ec153e22655854b3786f57ffe7365184dbc88c38b5a53b7ed79cc9fdf9",
+   "nodes": 29
+  },
+  "standard": {
+   "digest": "e0b908ec153e22655854b3786f57ffe7365184dbc88c38b5a53b7ed79cc9fdf9",
+   "nodes": 29
+  }
+ },
+ "controlled_sources/test_esource_value_no_equals.cir": {
+  "rkm": {
+   "digest": "45bf2498484018a7f5fe84fb46c76dcbc220794a48350fb3c58e298716915740",
+   "nodes": 29
+  },
+  "standard": {
+   "digest": "45bf2498484018a7f5fe84fb46c76dcbc220794a48350fb3c58e298716915740",
+   "nodes": 29
+  }
+ },
+ "controlled_sources/test_esource_vol.cir": {
+  "rkm": {
+   "digest": "10fe610a487fe535d59cfe8cf2a0db7103a027e11ac548e7938a3263e8856b14",
+   "nodes": 29
+  },
+  "standard": {
+   "digest": "10fe610a487fe535d59cfe8cf2a0db7103a027e11ac548e7938a3263e8856b14",
+   "nodes": 29
   }
  },
  "controlled_sources/test_fsource.cir": {
@@ -69,6 +293,20 @@
    "nodes": 31
   }
  },
+ "controlled_sources/test_fsource_poly.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 10
+  },
+  "standard": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 10
+  }
+ },
  "controlled_sources/test_fsource_subckt.cir": {
   "rkm": {
    "digest": "be04bcffb8262d5e37a8ff1dd40d4377f93136616bdbb48135c3bba55eb11de6",
@@ -89,6 +327,16 @@
    "nodes": 34
   }
  },
+ "controlled_sources/test_gsource_cur.cir": {
+  "rkm": {
+   "digest": "70dcc98c2e4f0f23a964cd4dbbcd7f6ea8f0a0a1bae4ad13519a4d65c23fbf9b",
+   "nodes": 35
+  },
+  "standard": {
+   "digest": "70dcc98c2e4f0f23a964cd4dbbcd7f6ea8f0a0a1bae4ad13519a4d65c23fbf9b",
+   "nodes": 35
+  }
+ },
  "controlled_sources/test_gsource_m.cir": {
   "rkm": {
    "digest": "433552e0988cd9d1ded8ec78e0d898af3ad696beddfc03d45381bc94cad0fa9f",
@@ -99,6 +347,44 @@
    "nodes": 37
   }
  },
+ "controlled_sources/test_gsource_poly.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
+  },
+  "standard": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
+  }
+ },
+ "controlled_sources/test_gsource_table.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
+  },
+  "standard": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
+  }
+ },
+ "controlled_sources/test_gsource_value.cir": {
+  "rkm": {
+   "digest": "c0a37c0086eeff02fbec2e8dff06c2f92f8da1038d2f51f6a6e21f007a81d343",
+   "nodes": 33
+  },
+  "standard": {
+   "digest": "c0a37c0086eeff02fbec2e8dff06c2f92f8da1038d2f51f6a6e21f007a81d343",
+   "nodes": 33
+  }
+ },
  "controlled_sources/test_hsource.cir": {
   "rkm": {
    "digest": "712b3e05407fd6a414a46c8f9af65faf97f872c0731976cf406d6e3ea7aa78c9",
@@ -107,6 +393,20 @@
   "standard": {
    "digest": "712b3e05407fd6a414a46c8f9af65faf97f872c0731976cf406d6e3ea7aa78c9",
    "nodes": 25
+  }
+ },
+ "controlled_sources/test_hsource_poly.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
+  },
+  "standard": {
+   "column": 13,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 9
   }
  },
  "controlled_sources/test_hsource_sense_later.cir": {
@@ -251,6 +551,16 @@
    "nodes": 45
   }
  },
+ "document_basic/node_read.cir": {
+  "rkm": {
+   "digest": "b35cfc10646eea20fb2f381908f6c187b68f14dfb37cb3b577f22cd5ec3de7d0",
+   "nodes": 23
+  },
+  "standard": {
+   "digest": "b35cfc10646eea20fb2f381908f6c187b68f14dfb37cb3b577f22cd5ec3de7d0",
+   "nodes": 23
+  }
+ },
  "document_basic/rc_filter.cir": {
   "rkm": {
    "digest": "6deb6f69ede7c94e7ab03b927458e990093ccadd578ee3527ecd92daa5013737",
@@ -309,6 +619,56 @@
   "standard": {
    "digest": "3db1fa3c6a9063be522f980dbb1e6b44197dc0582252908254e864ca20120ac5",
    "nodes": 98
+  }
+ },
+ "edits_golden/behavioral_batch.expected.cir": {
+  "rkm": {
+   "digest": "24af47d50351daef776c80c24e40c7c235ccc7b8abb73a8406073fd707223852",
+   "nodes": 80
+  },
+  "standard": {
+   "digest": "24af47d50351daef776c80c24e40c7c235ccc7b8abb73a8406073fd707223852",
+   "nodes": 80
+  }
+ },
+ "edits_golden/behavioral_expression.expected.cir": {
+  "rkm": {
+   "digest": "73d69e4fa66765be9db20a5b95abcfd3dbc46f95398b2fd40b475c72a9a88a42",
+   "nodes": 78
+  },
+  "standard": {
+   "digest": "73d69e4fa66765be9db20a5b95abcfd3dbc46f95398b2fd40b475c72a9a88a42",
+   "nodes": 78
+  }
+ },
+ "edits_golden/behavioral_forms.expected.cir": {
+  "rkm": {
+   "digest": "50d12cbe882b8de707183d280b9ce3bf242971e4a0558115a23012b4dbf9ea58",
+   "nodes": 78
+  },
+  "standard": {
+   "digest": "50d12cbe882b8de707183d280b9ce3bf242971e4a0558115a23012b4dbf9ea58",
+   "nodes": 78
+  }
+ },
+ "edits_golden/behavioral_param.expected.cir": {
+  "rkm": {
+   "digest": "e552393d23a9255f24d75c56577c46ff18999e237020faeebaebb118ec5b7080",
+   "nodes": 78
+  },
+  "standard": {
+   "digest": "e552393d23a9255f24d75c56577c46ff18999e237020faeebaebb118ec5b7080",
+   "nodes": 78
+  }
+ },
+ "edits_golden/behavioral_sources.cir": {
+  "rkm": {
+   "digest": "cb6865179fbcb2f3c3a563ffdfa637900e3b24ddbf1c4a1e4b8106ccbc510e25",
+   "nodes": 78
+  },
+  "standard": {
+   "digest": "cb6865179fbcb2f3c3a563ffdfa637900e3b24ddbf1c4a1e4b8106ccbc510e25",
+   "nodes": 78
   }
  },
  "edits_golden/bjt_area_transistors.expected.cir": {
@@ -1051,6 +1411,48 @@
    "nodes": 25
   }
  },
+ "elements_rejects/b_no_expression.cir": {
+  "rkm": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  },
+  "standard": {
+   "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  }
+ },
+ "elements_rejects/b_r.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  }
+ },
+ "elements_rejects/b_v_and_i.cir": {
+  "rkm": {
+   "column": 26,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  },
+  "standard": {
+   "column": 26,
+   "error": "ParseError",
+   "expected": [],
+   "line": 12
+  }
+ },
  "elements_rejects/bare_formula.cir": {
   "rkm": {
    "column": 11,
@@ -1074,20 +1476,6 @@
     "field separator",
     "trailing comment (`;`, `$` or `//`)"
    ],
-   "line": 2
-  }
- },
- "elements_rejects/charge_capacitor.cir": {
-  "rkm": {
-   "column": 8,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 2
-  },
-  "standard": {
-   "column": 8,
-   "error": "UnsupportedConstruct",
-   "expected": [],
    "line": 2
   }
  },
@@ -1175,6 +1563,32 @@
    "line": 2
   }
  },
+ "elements_rejects/e_laplace.cir": {
+  "rkm": {
+   "column": 19,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "name",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  },
+  "standard": {
+   "column": 19,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "name",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  }
+ },
  "elements_rejects/e_m.cir": {
   "rkm": {
    "column": 23,
@@ -1221,6 +1635,20 @@
    "line": 13
   }
  },
+ "elements_rejects/e_poly_too_few.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 11,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 13
+  }
+ },
  "elements_rejects/e_two_values.cir": {
   "rkm": {
    "column": 23,
@@ -1230,6 +1658,20 @@
   },
   "standard": {
    "column": 23,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_vol_bare.cir": {
+  "rkm": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 15,
    "error": "ParseError",
    "expected": [],
    "line": 13
@@ -2243,6 +2685,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2293,6 +2736,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2447,6 +2891,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2477,6 +2922,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2545,6 +2991,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2575,6 +3022,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2607,6 +3055,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2637,6 +3086,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2669,6 +3119,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2699,6 +3150,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2748,6 +3200,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2777,6 +3230,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2826,6 +3280,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2855,6 +3310,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2922,6 +3378,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2951,6 +3408,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -2982,6 +3440,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3011,6 +3470,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3079,6 +3539,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3109,6 +3570,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3141,6 +3603,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3171,6 +3634,7 @@
     "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3242,6 +3706,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3293,6 +3758,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3342,6 +3808,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3371,6 +3838,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3402,6 +3870,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3431,6 +3900,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3462,6 +3932,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3491,6 +3962,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3522,6 +3994,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3551,6 +4024,7 @@
     "MESFET (`Z`)",
     "MOSFET (`M`)",
     "`.title`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3621,6 +4095,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
@@ -3671,6 +4146,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",

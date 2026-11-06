@@ -3,7 +3,6 @@ dialect: ngspice
 construct: recognised but unsupported element forms
 manual_ref:
 - '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
-- '[ngspice-manual] §3.3.9 "Capacitors, dependent on expressions (behavioral capacitor)"'
 - '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
 status: validated
 validated_on:
@@ -11,15 +10,11 @@ validated_on:
   version: '47'
   date: '2026-10-31'
 grammar:
-- charge
 - params_keyword
-- Q_KW
 - PARAMS_KW
 tests:
-- tests/grammar/ngspice/test_elements.py::test_charge_form_of_a_capacitor_is_unsupported_at_q
 - tests/grammar/ngspice/test_elements.py::test_malformed_subcircuit_calls_are_rejected
 - tests/roundtrip/test_ngspice_elements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
-- tests/solver/test_ngspice_validation.py::test_the_charge_form_runs_and_the_library_reports_it_unsupported
 - tests/solver/test_ngspice_validation.py::test_params_keyword_on_an_x_line_runs_but_the_library_rejects_it
 - tests/grammar/ngspice/test_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
-notes: 'The charge form q= of a capacitor raises UnsupportedConstruct at q; params: on an X line is a ParseError. Each is a grammar rule whose arguments are statement text up to the end of the (possibly continued) line, so the next line is still its own statement. The error is raised by the transformer after the whole source has parsed, so a syntax error anywhere is reported first. ngspice 47 (M7) runs the charge form, so "unsupported", not "invalid", is right. It also runs params: on an X line (2.0 V with params: r=2k), which the library rejects (discrepancies.md). The nonlinear dependent source forms (vol=, cur=, VALUE, TABLE, POLY) raise UnsupportedConstruct at their keyword until M15 (decision 0015 item 9).'
+notes: 'params: on an X line is a ParseError. It is a grammar rule whose arguments are statement text up to the end of the (possibly continued) line, so the next line is still its own statement. The error is raised by the transformer after the whole source has parsed, so a syntax error anywhere is reported first. ngspice 47 runs params: on an X line (2.0 V with params: r=2k), which the library rejects (discrepancies.md). The charge form of a capacitor loads since M15 (NG-CAP-001). The nonlinear dependent source forms that M15b adds (TABLE, POLY, FREQ, AND/OR/NAND/NOR) raise UnsupportedConstruct at their keyword (decision 0016 item 9).'

@@ -10,20 +10,19 @@ import pytest
 from netlistmod import (
     Cccs,
     Ccvs,
-    ControlledSource,
     CurrentSwitch,
     Dialect,
     Netlist,
     ParseError,
     SourceText,
     Span,
-    Switch,
     UnsupportedConstruct,
     Vccs,
     Vcvs,
     VoltageSwitch,
     parse,
 )
+from tests.support.corpus import accept_files
 
 
 def _element(line: str) -> Any:
@@ -114,11 +113,9 @@ def test_malformed_lines_are_rejected(line: str, column: int) -> None:
 @pytest.mark.parametrize(
     ("line", "column", "form"),
     [
-        ("E1 a 0 value={2*V(b)}", 8, "value"),
         ("E1 a 0 POLY(1) b 0 0 2", 8, "poly"),
         ("E1 a 0 b 0 table=(0,0,1,2)", 12, "table"),
         ("G1 a 0 b 0 Laplace=1/(1+s)", 12, "laplace"),
-        ("F1 a 0 value={I(V1)}", 8, "value"),
         ("H1 a 0 POLY(1) V1 0 2", 8, "poly"),
     ],
 )
@@ -134,13 +131,12 @@ _FAMILY = Path(__file__).parents[2] / "corpus" / "ltspice" / "controlled_sources
 
 @pytest.mark.parametrize(
     "path",
-    sorted(p for p in _FAMILY.iterdir() if p.suffix in {".net", ".cir"}),
+    [p for p in accept_files(_FAMILY.parent, (".net", ".cir")) if p.parent == _FAMILY],
     ids=lambda path: path.name,
 )
 def test_every_file_of_the_family_loads_and_round_trips(path: Path) -> None:
     netlist = Netlist.load(path, dialect=Dialect.LTSPICE)
     assert netlist.to_bytes() == path.read_bytes()
-    assert netlist.lines.find_all((ControlledSource, Switch))
 
 
 # Review R1: each refused gain form names the form, at the offending token.
