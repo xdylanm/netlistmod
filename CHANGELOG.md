@@ -11,6 +11,10 @@
 
 Changes:
 
+- Q, M, J and Z now load and edit on both dialects, as `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet` (M13, decision 0014). The model is the last name before any area, flag or parameter; ngspice takes 3 to 5 nodes on Q and M, LTspice 3 or 4, and J and Z take 3. The nodes are those written, so an omitted substrate is not added. A model named with a plain number or `off` is a `ParseError`. `set_model`, `set_param` (with `area` positional on J and Z, and on an LTspice Q) and `set_model_param` cover them, and `MODEL_TYPE_MISMATCH` knows their model types, with NIGBT and PIGBT on LTspice's Z only.
+- `.model` takes a bare `pchan` or `nchan` (`ModelStatement.flags`) and a dotted value such as `version=3.3.0`, kept as an `Identifier` (M13). Real BSIM files and `jellybean.lib`'s `BS250_OJ` need them.
+- Add the `kicad_transistors` and `ltspice_transistors` corpus families. A corpus manifest's `solver` field may name `external` files, such as `jellybean.lib` from `OPENJELLYBEAN_LIB`, which the solver sweeps copy in or skip (decision 0014 item 10).
+- The transformer and the edit operations are split by element family (`model/_rules_*.py`, `edit/_ops_*.py`), with no change in behaviour (M13).
 - The test suite runs LTspice on a hidden Windows desktop, so that it no longer takes the foreground window on every run. Tests only; the library is unchanged.
 - Source functions now load and edit, as `VoltageSource.stimulus` and `CurrentSource.stimulus`, a typed `SourceSpec` (M12, decision 0013). ngspice: PULSE, SIN, SINE, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1, DISTOF2 and the RF port parameters. LTspice: PULSE, SINE, SIN, EXP, SFFM, PWL with its file, repeat and scale forms, `wavefile=`, the trigger parameters, and on I `tbl=` and `step(...)`. `half_rectifier.net` now loads.
 - Add `set_stimulus`, `set_stimulus_arg` and `remove_stimulus`, in batches too. `set_stimulus` leaves the DC and AC parts alone (M12, decision 0013). `set_param` edits ngspice's `portnum` and `z0`.

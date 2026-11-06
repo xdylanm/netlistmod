@@ -1,8 +1,8 @@
 # Parsing element lines
 
-This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser turns the phase 1 element lines into typed nodes: `Resistor`,
-`Capacitor`, `Inductor`, `MutualCoupling`, `VoltageSource`, `CurrentSource`, `Diode` and
-`SubcktInstance`, all subclasses of `Component`. Each node keeps the text of every value and
+This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser turns element lines into typed nodes: `Resistor`,
+`Capacitor`, `Inductor`, `MutualCoupling`, `VoltageSource`, `CurrentSource`, `Diode`,
+`BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` and `SubcktInstance`, all subclasses of `Component`. Each node keeps the text of every value and
 a span for every field. The library never evaluates a value.
 
 ```python
@@ -59,7 +59,43 @@ What the parser accepts (details and citations are in
 - **X**: one or more nodes, the subcircuit name, then parameters. A double-quoted string is
   allowed as a parameter value. `params:` is rejected.
 
-The charge form `C… q='expr'` and every element letter outside the phase 1 set raise
+## Transistors
+
+Q, M, J and Z lines become `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet`
+([decision 0014](../decisions/0014-transistors.md)). After the three fixed nodes, the model is
+the last name before any area, flag or parameter, so the names in between are nodes:
+
+```python
+>>> source = SourceText(
+...     "t\n"
+...     "Q1 c b e s qn off area=2\n"
+...     "M1 d g s tj tc vd thermal\n"
+...     "J1 d g s jn 2\n"
+...     ".model qn NPN\n"
+...     ".model vd VDMOS pchan\n"
+...     ".model jn NJF\n"
+...     ".end\n"
+... )
+>>> _, q1, m1, j1, *_ = parse(source, Dialect.NGSPICE).items
+>>> [node.name for node in q1.nodes], q1.model.model_name, q1.flags[0].name, q1.params[0].name
+(['c', 'b', 'e', 's'], 'qn', 'off', 'area')
+>>> len(m1.nodes), m1.model.model_name, m1.flags[0].name
+(5, 'vd', 'thermal')
+>>> j1.area.text
+'2'
+
+```
+
+- **Nodes:** Q and M take 3 to 5, J and Z exactly 3. The count is not checked against the
+  model's type, so a 3-node NMOS line loads and ngspice stops on it. A node that is not written,
+  such as a BJT's substrate, is not added: ngspice grounds it, and the topology lists what the
+  line writes.
+- **Area:** J and Z take it positionally (`area`), and Q only as `area=`, `areab=` or `areac=`.
+- **Model:** a model named with a plain number, or the keyword `off`, is a `ParseError` at it.
+- **`.model`:** a bare `pchan` or `nchan` is in `flags`, and a dotted value such as
+  `version=3.3.0` is an `Identifier`, never a number.
+
+The charge form `C… q='expr'` and every element letter that is not supported yet raise
 `UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
 excerpt and expected tokens.
 
@@ -90,6 +126,20 @@ The nodes are the same. These forms differ ([decision 0009](../decisions/0009-lt
 ```
 
 - The embedded decimal needs no option, and `M` is milli.
+- Q and M take 3 or 4 nodes, and Q a positional area. Each transistor letter has the reference's
+  closed parameter list: Q `temp`; M `L W AD AS PD PS NRD NRS m temp IC`; J `temp`; Z `m temp`;
+  and `off`. M has no `thermal` flag, and Z's model may be an IGBT (`NIGBT`, `PIGBT`):
+
+```python
+>>> _, q1, z1, *_ = parse(
+...     SourceText("t\nQ1 c b e 0 qn 2 temp=30\nZ1 c g e zi\n.model zi NIGBT\n.end\n"),
+...     Dialect.LTSPICE,
+... ).items
+>>> [node.name for node in q1.nodes], q1.area.text, z1.model.model_name
+(['c', 'b', 'e', '0'], '2', 'zi')
+
+```
+
 - Each letter's parameter names are a closed list, so a misspelt `Rsr=1` fails at load.
 - R, C and L have no model form and no keyword form:
 

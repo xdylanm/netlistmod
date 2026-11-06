@@ -176,3 +176,17 @@ assignment and a repeated `.model`/`.subckt` the first; an unknown X parameter i
 inside a definition is local (`x1.mid`) unless it is ground, a port or `.global`. For every
 `statements_basic`, `elements_basic` and `document_basic` file, the library's top-level nets are
 ngspice's node list (`test_library_nets_match_the_ngspice_node_list`).
+
+## Transistor observations (ngspice 47, 2026-11-05; M13)
+
+Decision 0014 items 1 to 6. Each row is a case of `tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes` unless named.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Runs `Q1 c b e qm 2`, a positional area on a BJT; the manual shows only `area=`. | `ParseError`: the area of an ngspice Q is named (decision 0014 item 5, decision 0002). | `test_a_positional_area_on_q_runs_and_is_refused` |
+| `Q1 c b e off qm` stops: "can't find model 'off'". | `off` before the model is a node, as LTspice reads it (decision 0014 item 4). | `q-node-named-off` |
+| `Q1 c b e qm s` stops: "can't find model 's'". | Agrees on the reading: `s` is the model and `qm` a fourth node (the boundary rule). | `q-model-then-name` |
+| `.model 2 NPN` with `Q1 c b e 2` stops: "can't find model 'e'". | `ParseError`: a model named with a plain number is refused (decision 0014 item 4). | `q-number-model` |
+| A 5-node Q runs only with a VBIC model, and a 3-node M only with VDMOS. | Node counts are checked per letter, not per model type: those lines load (decision 0014 item 2). | `q-5-nodes-gummel-poon`, `m-3-nodes-nmos` |
+| `temp=` stops on a `level=8` MOSFET, although §7.6.1 lists it. | Loads: the grammar cannot know the level. | `test_temp_on_a_bsim_line_loads_and_stops_ngspice` |
+| `.model zi NIGBT` stops: "Unknown model type nigbt". | Loads, and `MODEL_TYPE_MISMATCH` on a Z line that names it (decision 0014 item 8). | `test_an_igbt_model_is_not_an_ngspice_type` |

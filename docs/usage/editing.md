@@ -227,6 +227,35 @@ R2 out 0  rmod l=20u w=1u
 
 `set_model_param` also fills empty parentheses: `.model dz d()` becomes `.model dz d(n=1.5)`.
 
+## Edit a transistor
+
+`set_model` checks the new model's type against the letter (an NPN or PNP for Q), and
+`set_param` writes `area` where the dialect writes it: positionally for J and Z, as `area=` on
+an ngspice Q ([decision 0014](../decisions/0014-transistors.md)).
+
+```python
+>>> amp = Netlist.from_text(
+...     "t\nV1 c 0 5\nV2 b 0 0.7\nQ1 c b 0 qn\nJ1 c b 0 jn\n"
+...     ".model qn NPN\n.model qp PNP\n.model jn NJF\n.op\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> with amp.batch() as batch:
+...     batch.set_model("Q1", "qp")
+...     batch.set_param("Q1", "area", "2")
+...     batch.set_param("J1", "area", "3")
+...     batch.set_model_param("jn", "beta", "2m")
+>>> print("\n".join(batch.result.text.splitlines()[3:7]))
+Q1 c b 0 qp area=2
+J1 c b 0 jn 3
+.model qn NPN
+.model qp PNP
+>>> amp.set_model("Q1", "jn")
+Traceback (most recent call last):
+  ...
+netlistmod.errors.EditError: model `jn` has type `NJF`, but `Q1` takes a model of type `NPN`, `PNP`
+
+```
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's
