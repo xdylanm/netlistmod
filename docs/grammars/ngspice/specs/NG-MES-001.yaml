@@ -1,0 +1,19 @@
+id: NG-MES-001
+dialect: ngspice
+construct: MESFET (Z) lines
+manual_ref:
+- '[ngspice-manual] §7.5.1 "MESFET devices"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-05'
+grammar:
+- Z_NAME
+- mesfet
+tests:
+- tests/grammar/ngspice/test_transistors.py::test_j_and_z_take_a_positional_area
+- tests/grammar/ngspice/test_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ngspice_transistor_probes.py::test_an_igbt_model_is_not_an_ngspice_type
+notes: 'Exactly 3 nodes, the model, a positional area, then open parameters and off. An NIGBT model loads and is reported as a type mismatch; ngspice 47 has no such type.'

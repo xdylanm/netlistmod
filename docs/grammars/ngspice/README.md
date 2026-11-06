@@ -21,6 +21,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | Entry | Construct | Status | Validated on |
 |---|---|---|---|
 | [NG-ACA-001](./specs/NG-ACA-001.yaml) | .ac small-signal analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-BJT-001](./specs/NG-BJT-001.yaml) | bipolar transistor (Q) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -30,11 +31,26 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-END-001](./specs/NG-END-001.yaml) | required final .end statement | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-FLD-001](./specs/NG-FLD-001.yaml) | element field separators: blanks, one comma, = with blanks, continuation | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-FML-001](./specs/NG-FML-001.yaml) | Formula expression syntax (reference scan only) | validated | ngspice 47 (2026-10-31) |
+| [NG-FUN-001](./specs/NG-FUN-001.yaml) | source functions, shared syntax | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-002](./specs/NG-FUN-002.yaml) | PULSE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-003](./specs/NG-FUN-003.yaml) | SIN, and SINE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-004](./specs/NG-FUN-004.yaml) | EXP | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-005](./specs/NG-FUN-005.yaml) | PWL with r= and td= | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-006](./specs/NG-FUN-006.yaml) | SFFM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-007](./specs/NG-FUN-007.yaml) | AM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-008](./specs/NG-FUN-008.yaml) | TRNOISE | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-009](./specs/NG-FUN-009.yaml) | TRRANDOM | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-010](./specs/NG-FUN-010.yaml) | EXTERNAL | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-011](./specs/NG-FUN-011.yaml) | DISTOF1 and DISTOF2 | validated | ngspice 47 (2026-11-04) |
+| [NG-FUN-012](./specs/NG-FUN-012.yaml) | RF port parameters | validated | ngspice 47 (2026-11-04) |
 | [NG-GLB-001](./specs/NG-GLB-001.yaml) | .global node declarations | validated | ngspice 47 (2026-10-31) |
 | [NG-ICN-001](./specs/NG-ICN-001.yaml) | .ic and .nodeset | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-IND-001](./specs/NG-IND-001.yaml) | inductor (L) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-JFT-001](./specs/NG-JFT-001.yaml) | junction FET (J) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-MEA-001](./specs/NG-MEA-001.yaml) | .meas / .measure (shallow) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-MES-001](./specs/NG-MES-001.yaml) | MESFET (Z) lines | validated | ngspice 47 (2026-11-05) |
+| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05) |
+| [NG-MOS-001](./specs/NG-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-MUT-001](./specs/NG-MUT-001.yaml) | mutual coupling (K) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NOD-001](./specs/NG-NOD-001.yaml) | node, model, subcircuit and parameter names | validated | ngspice 47 (2026-10-31) |
 | [NG-NUM-001](./specs/NG-NUM-001.yaml) | numbers: sign, mantissa, exponent and scale factor | validated | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -51,18 +67,6 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-SAV-001](./specs/NG-SAV-001.yaml) | .save output vectors | validated | ngspice 47 (2026-10-31) |
 | [NG-SBD-001](./specs/NG-SBD-001.yaml) | .subckt ... .ends definitions and their bodies | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-SRC-001](./specs/NG-SRC-001.yaml) | independent sources (V, I): DC value and AC magnitude and phase | validated | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-FUN-001](./specs/NG-FUN-001.yaml) | source functions, shared syntax | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-002](./specs/NG-FUN-002.yaml) | PULSE | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-003](./specs/NG-FUN-003.yaml) | SIN, and SINE | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-004](./specs/NG-FUN-004.yaml) | EXP | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-005](./specs/NG-FUN-005.yaml) | PWL with r= and td= | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-006](./specs/NG-FUN-006.yaml) | SFFM | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-007](./specs/NG-FUN-007.yaml) | AM | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-008](./specs/NG-FUN-008.yaml) | TRNOISE | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-009](./specs/NG-FUN-009.yaml) | TRRANDOM | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-010](./specs/NG-FUN-010.yaml) | EXTERNAL | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-011](./specs/NG-FUN-011.yaml) | DISTOF1 and DISTOF2 | validated | ngspice 47 (2026-11-04) |
-| [NG-FUN-012](./specs/NG-FUN-012.yaml) | RF port parameters | validated | ngspice 47 (2026-11-04) |
 | [NG-STR-001](./specs/NG-STR-001.yaml) | top-level source structure | validated | ngspice 47 (2026-10-31) |
 | [NG-SUB-001](./specs/NG-SUB-001.yaml) | subcircuit calls (X) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -71,3 +75,4 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-TXT-001](./specs/NG-TXT-001.yaml) | free text, quoted and braced segments, and trailing comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-UNS-001](./specs/NG-UNS-001.yaml) | recognised but unsupported element forms | validated | ngspice 47 (2026-10-31) |
 | [NG-VAL-001](./specs/NG-VAL-001.yaml) | brace and quoted expressions, and string parameter values | validated | ngspice 47 (2026-10-31) |
+| [NG-XTR-001](./specs/NG-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ngspice 47 (2026-11-05) |

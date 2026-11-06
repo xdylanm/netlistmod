@@ -1,0 +1,19 @@
+id: NG-JFT-001
+dialect: ngspice
+construct: junction FET (J) lines
+manual_ref:
+- '[ngspice-manual] §7.4.1 "Junction Field-Effect Transistors (JFETs)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-05'
+grammar:
+- J_NAME
+- jfet
+tests:
+- tests/grammar/ngspice/test_transistors.py::test_j_and_z_take_a_positional_area
+- tests/grammar/ngspice/test_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Exactly 3 nodes, the model, a positional area, then open parameters and off.'

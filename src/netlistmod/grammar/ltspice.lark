@@ -21,9 +21,11 @@
 %import .core (BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, OFF_KW, R_NAME)
 %import .core (C_NAME, L_NAME, K_NAME, L_REF, V_NAME)
 %import .core (I_NAME, DC_KW, AC_KW, D_NAME, X_NAME, Q_KW)
+%import .core (t_name, t_number, t_area, FIELD_NUMBER, Q_NAME, M_NAME, J_NAME, Z_NAME)
 %import .core (PULSE_KW, EXP_KW, SFFM_KW, SIN_KW, PWL_KW)
 %import .core (param_stmt, param_def, param_value, PARAM_KW, PARAM_NAME)
 %import .core (model_stmt, model_paren, model_param_first, rparen, MODEL_KW, LPAR, RPAR)
+%import .core (model_flag, model_flag_first, model_text, PCHAN_KW, NCHAN_KW, DOTTED_VALUE)
 %import .core (subckt_def, subckt_header, subckt_port, subckt_item, not_in_subckt, ends_line)
 %import .core (SUBCKT_KW, ENDS_KW, ZERO_PORT)
 %import .core (tran_stmt, uic, TRAN_KW, UIC_KW, ac_stmt, ac_variation, DOT_AC_KW, DEC_KW)
@@ -117,8 +119,10 @@ EMBEDDED.4: /[0-9]+(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+/i
                          | MODEL_TEXT_KW EQ (STRING_VALUE | WORD)
 MODEL_TEXT_KW.3: /(?:mfg|type)(?=[ \t]*=)/i
 MODEL_BARE.5: /(?![+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[+-]?[0-9]+)?(?:[^\W\d_]*|(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+)(?:[ \t\r\n,)]|$))[^ \t\r\n=(),{}'"|;]+/i
-%extend model_stmt: MODEL_KW x_name model_ako x_name param* (NL | eol)
+%extend model_stmt: MODEL_KW x_name model_ako x_name (param | model_flag | model_text)* (NL | eol)
                   | MODEL_KW x_name model_ako x_name model_paren (NL | eol)
+%extend model_flag: CSEP (PCHAN_KW | NCHAN_KW)
+%extend model_text: CSEP WORD EQ DOTTED_VALUE
 model_ako: SEP AKO_REF
          | (SEP | TRAILING_COMMENT) model_ako
 AKO_REF.3: /ako:[^ \t\r\n=(),{}'"|;]+/i
@@ -242,6 +246,54 @@ resistive_load: SEP I_R_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA
               | (SEP | TRAILING_COMMENT) resistive_load
 LOAD_KW.2: "load"i
 I_R_KW.2: "r"i
+
+// Transistors (decision 0014). Q takes 3 or 4 nodes and a positional area; M takes 3 or 4 nodes;
+// J and Z take 3 nodes and a positional area. Each letter has the reference's closed parameter
+// list, and off. A comma list for IC= may have a blank after the comma.
+// spec: LT-XTR-001
+%extend body_line: bjt
+                 | mosfet
+                 | jfet
+                 | mesfet
+%extend t_area: SEP FIELD_EMBEDDED
+// An embedded decimal that ends the field, so a model name such as 2N7000_OJ stays a name. It is
+// below WORD, so where a name may also follow (Q1 c b e s 2N3904), the field is a name.
+FIELD_EMBEDDED.1: /[0-9]+(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+(?![^ \t\r\n;])/i
+ic_param: SEP IC_PARAM_KW EQ _lt_value (IC_COMMA _lt_value)*
+        | (SEP | TRAILING_COMMENT) ic_param
+_lt_value: NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA
+IC_PARAM_KW.3: /ic(?=[ \t]*=)/i
+IC_COMMA.12: /[ \t]*,[ \t]*(?=[-+.0-9{'])/
+
+// spec: LT-BJT-001
+bjt: Q_NAME node node node t_name t_area? (q_param | flag)* (NL | eol)
+   | Q_NAME node node node (t_name | t_number) t_name t_area? (q_param | flag)* (NL | eol)
+q_param: SEP Q_PARAM_KW EQ _lt_value
+       | (SEP | TRAILING_COMMENT) q_param
+Q_PARAM_KW.3: /temp(?=[ \t]*=)/i
+%override Q_NAME.4: /[Qq]/ _LT_CHAR*
+
+// spec: LT-MOS-001
+mosfet: M_NAME node node node t_name (m_param | ic_param | flag)* (NL | eol)
+      | M_NAME node node node (t_name | t_number) t_name (m_param | ic_param | flag)* (NL | eol)
+m_param: SEP M_PARAM_KW EQ _lt_value
+       | (SEP | TRAILING_COMMENT) m_param
+M_PARAM_KW.3: /(?:nrd|nrs|ad|as|pd|ps|temp|l|w|m)(?=[ \t]*=)/i
+%override M_NAME.4: /[Mm]/ _LT_CHAR*
+
+// spec: LT-JFT-001
+jfet: J_NAME node node node t_name t_area? (j_param | flag)* (NL | eol)
+j_param: SEP J_PARAM_KW EQ _lt_value
+       | (SEP | TRAILING_COMMENT) j_param
+J_PARAM_KW.3: /temp(?=[ \t]*=)/i
+%override J_NAME.4: /[Jj]/ _LT_CHAR*
+
+// spec: LT-MES-001
+mesfet: Z_NAME node node node t_name t_area? (z_param | flag)* (NL | eol)
+z_param: SEP Z_PARAM_KW EQ _lt_value
+       | (SEP | TRAILING_COMMENT) z_param
+Z_PARAM_KW.3: /(?:temp|m)(?=[ \t]*=)/i
+%override Z_NAME.4: /[Zz]/ _LT_CHAR*
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold

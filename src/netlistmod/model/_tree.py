@@ -13,6 +13,7 @@ from netlistmod.model.nodes import (
     TopLevelItem,
 )
 from netlistmod.model.values import (
+    Flag,
     Formula,
     Identifier,
     ModelReference,
@@ -37,7 +38,7 @@ _BARE_FORMULA = "BARE_FORMULA"
 _FN_PARAM_OWNERS = {"r": "pwl", "td": "pwl", "m": "external", "chan": "wavefile"}
 # Text kept as a value and never read: the value of mfg, pn or type, the only parameters whose
 # grammar offers WORD; a file's path; a trigger expression.
-_TEXT_VALUES = frozenset({"WORD", "FILE_PATH", "TRIGGER_EXPR"})
+_TEXT_VALUES = frozenset({"WORD", "FILE_PATH", "TRIGGER_EXPR", "DOTTED_VALUE"})
 _MODEL_BARE = "MODEL_BARE"
 _STEP_VARIATIONS = frozenset({"DEC_KW", "OCT_KW", "LIN_KW"})
 # RKM terminals that ngspice reads differently from IEC 60062 (decision 0004).
@@ -192,6 +193,13 @@ class _DistortionHead:
 
 
 @dataclass(frozen=True, slots=True)
+class _Name:
+    """A name on a transistor line, a node or the model: the last one is the model."""
+
+    token: Token
+
+
+@dataclass(frozen=True, slots=True)
 class _Eol:
     end: int
     comments: tuple[Span, ...]
@@ -220,6 +228,7 @@ class _ModelParams:
     params: tuple[ParamAssignment, ...]
     open_span: Span
     close_span: Span
+    flags: tuple[Flag, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

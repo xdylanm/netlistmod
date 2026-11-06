@@ -12,6 +12,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-05'
 grammar:
 - model_stmt
 - model_paren
@@ -20,6 +23,12 @@ grammar:
 - MODEL_KW
 - LPAR
 - RPAR
+- model_flag
+- model_flag_first
+- model_text
+- PCHAN_KW
+- NCHAN_KW
+- DOTTED_VALUE
 tests:
 - tests/grammar/ngspice/test_statements.py::test_model_statement_fields_and_spans
 - tests/grammar/ngspice/test_statements.py::test_malformed_model_statements_are_rejected
@@ -31,10 +40,7 @@ tests:
 - tests/roundtrip/test_ngspice_statements.py::test_every_sub_span_slices_back_to_its_text
 - tests/roundtrip/test_ngspice_statements.py::test_rejection_corpus_reports_manifest_positions_and_kinds
 - tests/solver/test_ngspice_solver_statements.py::test_accept_corpus_runs_in_ngspice
-notes: '.model name type, then name=value parameters, in parentheses (§2.5) or not (§3.2.2), separated
-  by blanks, one comma or continuations; inside parentheses the first one may follow ( directly. The type
-  is any name, recorded as written (XSPICE types are not in Table 2.3; models are not validated, non-goal
-  8). Values are numbers or formulas. Settled: D() is accepted (§2.5: unspecified parameters take defaults;
-  ngspice 47 accepts it); an unclosed ( is reported at the opener; a parameter without a value is rejected
-  (§2.5 shows pname=pval; ngspice 47 accepts it: discrepancy); a repeated parameter is accepted as syntax;
-  nothing may follow the closing parenthesis.'
+- tests/grammar/ngspice/test_transistors.py::test_a_model_may_carry_a_channel_flag
+- tests/grammar/ngspice/test_transistors.py::test_a_dotted_model_value_is_text
+- tests/solver/test_ngspice_transistor_probes.py::test_a_dotted_model_value_runs
+notes: '.model name type, then name=value parameters, in parentheses (§2.5) or not (§3.2.2), separated by blanks, one comma or continuations; inside parentheses the first one may follow ( directly. The type is any name, recorded as written (XSPICE types are not in Table 2.3; models are not validated, non-goal 8). Values are numbers or formulas. Settled: D() is accepted (§2.5: unspecified parameters take defaults; ngspice 47 accepts it); an unclosed ( is reported at the opener; a parameter without a value is rejected (§2.5 shows pname=pval; ngspice 47 accepts it: discrepancy); a repeated parameter is accepted as syntax; nothing may follow the closing parenthesis. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7).'

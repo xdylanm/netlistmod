@@ -56,7 +56,7 @@ class _Rules:
             return Formula(text, _FORMULA_DELIMITERS[token.type], span)
         if token.type == _BARE_FORMULA:
             return Formula(str(token), "", _span(token))
-        if token.type == _EMBEDDED:
+        if token.type in (_EMBEDDED, "FIELD_EMBEDDED"):
             return NumericValue(str(token), _span(token), "rkm")
         if token.type in _RKM_TERMINALS:
             return self._rkm_value(token)

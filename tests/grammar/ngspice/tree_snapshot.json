@@ -1123,6 +1123,296 @@
    "nodes": 217
   }
  },
+ "kicad_transistors/bjt_emitter_follower.cir": {
+  "rkm": {
+   "digest": "a6495032055b2b894f91ae05a4900d5d622b7b2c28b4886e84a3118a19221805",
+   "nodes": 47
+  },
+  "standard": {
+   "digest": "a6495032055b2b894f91ae05a4900d5d622b7b2c28b4886e84a3118a19221805",
+   "nodes": 47
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_2n3904.cir": {
+  "rkm": {
+   "digest": "a6495032055b2b894f91ae05a4900d5d622b7b2c28b4886e84a3118a19221805",
+   "nodes": 47
+  },
+  "standard": {
+   "digest": "a6495032055b2b894f91ae05a4900d5d622b7b2c28b4886e84a3118a19221805",
+   "nodes": 47
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_area.cir": {
+  "rkm": {
+   "digest": "257e5d5fa64ca1e974cfece19a6508b39ae768078e3d67eecc91e90d4d3ecdcf",
+   "nodes": 55
+  },
+  "standard": {
+   "digest": "257e5d5fa64ca1e974cfece19a6508b39ae768078e3d67eecc91e90d4d3ecdcf",
+   "nodes": 55
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_local_models.cir": {
+  "rkm": {
+   "digest": "247bcac41e89651c9bd01f9ba5b28d1fd5bf4c8a80c766ed4d7e5c10879b1cff",
+   "nodes": 176
+  },
+  "standard": {
+   "digest": "247bcac41e89651c9bd01f9ba5b28d1fd5bf4c8a80c766ed4d7e5c10879b1cff",
+   "nodes": 176
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_node_like_model.cir": {
+  "rkm": {
+   "digest": "8d474135ea12d866fa467047cb11935c0a9346246442e56b3d1034934ddd2288",
+   "nodes": 47
+  },
+  "standard": {
+   "digest": "8d474135ea12d866fa467047cb11935c0a9346246442e56b3d1034934ddd2288",
+   "nodes": 47
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_off_ic.cir": {
+  "rkm": {
+   "digest": "d3a5fa6cfae9626d3c59adef299f990f6d78626195c72ed198cfbf9c7b03d171",
+   "nodes": 53
+  },
+  "standard": {
+   "digest": "d3a5fa6cfae9626d3c59adef299f990f6d78626195c72ed198cfbf9c7b03d171",
+   "nodes": 53
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_subckt.cir": {
+  "rkm": {
+   "digest": "28013b40967653171b3d3c5bd70908921ca6a375ddb3c311b1eecd7ea3e18f7d",
+   "nodes": 186
+  },
+  "standard": {
+   "digest": "28013b40967653171b3d3c5bd70908921ca6a375ddb3c311b1eecd7ea3e18f7d",
+   "nodes": 186
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_substrate.cir": {
+  "rkm": {
+   "digest": "3b94b9896e38343c438db87d1c8173fbdbdc7ef0b550ac73d2ae45e4235e4d93",
+   "nodes": 49
+  },
+  "standard": {
+   "digest": "3b94b9896e38343c438db87d1c8173fbdbdc7ef0b550ac73d2ae45e4235e4d93",
+   "nodes": 49
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_temp.cir": {
+  "rkm": {
+   "digest": "a17204f444f11480e325f0e1090b423cb58f2df36af1535e573d02c3debc6374",
+   "nodes": 53
+  },
+  "standard": {
+   "digest": "a17204f444f11480e325f0e1090b423cb58f2df36af1535e573d02c3debc6374",
+   "nodes": 53
+  }
+ },
+ "kicad_transistors/bjt_emitter_follower_vbic_tj.cir": {
+  "rkm": {
+   "digest": "d8bc916fc34d6f52514c5fe441ca45fc788aba0f51f67399cd6d02a6d982b79a",
+   "nodes": 59
+  },
+  "standard": {
+   "digest": "d8bc916fc34d6f52514c5fe441ca45fc788aba0f51f67399cd6d02a6d982b79a",
+   "nodes": 59
+  }
+ },
+ "kicad_transistors/cmos_discrete_xor.cir": {
+  "rkm": {
+   "digest": "9ffe9fff4c3ffebb0d04f0a1c47d86428182551bd53c8c4130f1ee6a5f934ec2",
+   "nodes": 95
+  },
+  "standard": {
+   "digest": "9ffe9fff4c3ffebb0d04f0a1c47d86428182551bd53c8c4130f1ee6a5f934ec2",
+   "nodes": 95
+  }
+ },
+ "kicad_transistors/cmos_discrete_xor_local_models.cir": {
+  "rkm": {
+   "digest": "926ea9d1bb075f7934adcff07bc4dab65a6532836043c9bd6de4b5b54e049b11",
+   "nodes": 177
+  },
+  "standard": {
+   "digest": "926ea9d1bb075f7934adcff07bc4dab65a6532836043c9bd6de4b5b54e049b11",
+   "nodes": 177
+  }
+ },
+ "kicad_transistors/cmos_discrete_xor_m_off.cir": {
+  "rkm": {
+   "digest": "4b7f8f78245f1afe677c714848af75654ebf24c2c127f567070bb5cbb30e0088",
+   "nodes": 98
+  },
+  "standard": {
+   "digest": "4b7f8f78245f1afe677c714848af75654ebf24c2c127f567070bb5cbb30e0088",
+   "nodes": 98
+  }
+ },
+ "kicad_transistors/cmos_xor.cir": {
+  "rkm": {
+   "digest": "b8cf336bf6ef570138598c274981619414fec49e49f30c1f63a52dfa651438c6",
+   "nodes": 130
+  },
+  "standard": {
+   "digest": "b8cf336bf6ef570138598c274981619414fec49e49f30c1f63a52dfa651438c6",
+   "nodes": 130
+  }
+ },
+ "kicad_transistors/cmos_xor_continued.cir": {
+  "rkm": {
+   "digest": "beb7d24690d68725fae4839ecfc3f6bd23d4c69e6640ef2c0c469be034491d6d",
+   "nodes": 130
+  },
+  "standard": {
+   "digest": "beb7d24690d68725fae4839ecfc3f6bd23d4c69e6640ef2c0c469be034491d6d",
+   "nodes": 130
+  }
+ },
+ "kicad_transistors/cmos_xor_geometry.cir": {
+  "rkm": {
+   "digest": "1855271f2a72d08ba6aa14d1104f40c6f44a5c0a1690f67a07abaa9df3b355f7",
+   "nodes": 178
+  },
+  "standard": {
+   "digest": "1855271f2a72d08ba6aa14d1104f40c6f44a5c0a1690f67a07abaa9df3b355f7",
+   "nodes": 178
+  }
+ },
+ "kicad_transistors/cmos_xor_geometry_upper.cir": {
+  "rkm": {
+   "digest": "f7bb69dad459669638ceef6747563430e0d539eb33aa8f4f6769e23f4613fe48",
+   "nodes": 202
+  },
+  "standard": {
+   "digest": "f7bb69dad459669638ceef6747563430e0d539eb33aa8f4f6769e23f4613fe48",
+   "nodes": 202
+  }
+ },
+ "kicad_transistors/cmos_xor_ic.cir": {
+  "rkm": {
+   "digest": "a18d68da7c77f05cdf516cf0b7f3f63dff26ad1876a48e41a70e70f3cc9f3795",
+   "nodes": 136
+  },
+  "standard": {
+   "digest": "a18d68da7c77f05cdf516cf0b7f3f63dff26ad1876a48e41a70e70f3cc9f3795",
+   "nodes": 136
+  }
+ },
+ "kicad_transistors/cmos_xor_level1_temp.cir": {
+  "rkm": {
+   "digest": "a66183fb33a17c952d6ac829d0b5426b909f5bf15a481e5670c9aea4730d70d2",
+   "nodes": 166
+  },
+  "standard": {
+   "digest": "a66183fb33a17c952d6ac829d0b5426b909f5bf15a481e5670c9aea4730d70d2",
+   "nodes": 166
+  }
+ },
+ "kicad_transistors/cmos_xor_model_params.cir": {
+  "rkm": {
+   "digest": "a93a1e8ac3b72a0e9dcb3b448216360e30dc5403b6f88b46677e06f648d115c7",
+   "nodes": 166
+  },
+  "standard": {
+   "digest": "a93a1e8ac3b72a0e9dcb3b448216360e30dc5403b6f88b46677e06f648d115c7",
+   "nodes": 166
+  }
+ },
+ "kicad_transistors/cmos_xor_off.cir": {
+  "rkm": {
+   "digest": "bb47df473a421f9a4544c6c76a175373fd92e530a7b9709a7ac34ae0bd0925ee",
+   "nodes": 131
+  },
+  "standard": {
+   "digest": "bb47df473a421f9a4544c6c76a175373fd92e530a7b9709a7ac34ae0bd0925ee",
+   "nodes": 131
+  }
+ },
+ "kicad_transistors/cmos_xor_version.cir": {
+  "rkm": {
+   "digest": "e173962f449dad9775688de486c96b5fc2d00e1e9e5cf645bd79ef8593a870b6",
+   "nodes": 142
+  },
+  "standard": {
+   "digest": "e173962f449dad9775688de486c96b5fc2d00e1e9e5cf645bd79ef8593a870b6",
+   "nodes": 142
+  }
+ },
+ "kicad_transistors/edges.cir": {
+  "rkm": {
+   "digest": "984a2230387961b43160b04bd945fb5adb52031e05c608f3edae00d5771463e4",
+   "nodes": 269
+  },
+  "standard": {
+   "digest": "984a2230387961b43160b04bd945fb5adb52031e05c608f3edae00d5771463e4",
+   "nodes": 269
+  }
+ },
+ "kicad_transistors/mesfet_common_source.cir": {
+  "rkm": {
+   "digest": "2bb8782d08f8ff37f1073cf5774c84c634be27a78ae0b8cf27d57e4fab216c88",
+   "nodes": 58
+  },
+  "standard": {
+   "digest": "2bb8782d08f8ff37f1073cf5774c84c634be27a78ae0b8cf27d57e4fab216c88",
+   "nodes": 58
+  }
+ },
+ "kicad_transistors/sample_and_hold.cir": {
+  "rkm": {
+   "digest": "026881aa9c44f250a2800416544586575605dded8338b68e50a25df6a154bc25",
+   "nodes": 86
+  },
+  "standard": {
+   "digest": "026881aa9c44f250a2800416544586575605dded8338b68e50a25df6a154bc25",
+   "nodes": 86
+  }
+ },
+ "kicad_transistors/sample_and_hold_jfet_area_off.cir": {
+  "rkm": {
+   "digest": "1006972737dcb4e8d534c4589987f34ddb342f3426af17327781c5c79eee87a6",
+   "nodes": 88
+  },
+  "standard": {
+   "digest": "1006972737dcb4e8d534c4589987f34ddb342f3426af17327781c5c79eee87a6",
+   "nodes": 88
+  }
+ },
+ "kicad_transistors/sample_and_hold_jfet_ic_temp.cir": {
+  "rkm": {
+   "digest": "64db6dba32e33be8abf06aac81c1a9eec388402f5d970156d7adff39900b2f51",
+   "nodes": 93
+  },
+  "standard": {
+   "digest": "64db6dba32e33be8abf06aac81c1a9eec388402f5d970156d7adff39900b2f51",
+   "nodes": 93
+  }
+ },
+ "kicad_transistors/sample_and_hold_jfet_named_area.cir": {
+  "rkm": {
+   "digest": "04a27358368bdf666edf1da0eb763170fb2f16f8d929ac3e8ffa1a108881d10f",
+   "nodes": 88
+  },
+  "standard": {
+   "digest": "04a27358368bdf666edf1da0eb763170fb2f16f8d929ac3e8ffa1a108881d10f",
+   "nodes": 88
+  }
+ },
+ "kicad_transistors/sample_and_hold_pjf.cir": {
+  "rkm": {
+   "digest": "703700531a93f50bb6d64330bcb273c6ca317769067b5f397a6ddb4e98f85452",
+   "nodes": 86
+  },
+  "standard": {
+   "digest": "703700531a93f50bb6d64330bcb273c6ca317769067b5f397a6ddb4e98f85452",
+   "nodes": 86
+  }
+ },
  "statements_basic/analyses.cir": {
   "rkm": {
    "digest": "e330ac3df71f63eadc84dcbb0ffa99ff36fc5c7d1a35e443489f3a6677a6a61f",
@@ -1500,6 +1790,9 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -1522,6 +1815,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1540,6 +1834,9 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -1562,6 +1859,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1704,8 +2002,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1724,8 +2026,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1782,8 +2088,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1802,8 +2112,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1824,8 +2138,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1844,8 +2162,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1866,8 +2188,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1886,8 +2212,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1926,7 +2256,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1945,7 +2279,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -1984,7 +2322,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2003,7 +2345,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2060,7 +2406,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2079,7 +2429,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2100,7 +2454,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2119,7 +2477,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2176,8 +2538,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2196,8 +2562,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2218,8 +2588,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2238,8 +2612,12 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ends`",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2278,6 +2656,9 @@
    "column": 16,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2301,6 +2682,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2319,6 +2701,9 @@
    "column": 16,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2342,6 +2727,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2380,7 +2766,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2399,7 +2789,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2420,7 +2814,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2439,7 +2837,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2460,7 +2862,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2479,7 +2885,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2500,7 +2910,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2519,7 +2933,11 @@
    "column": 1,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.title`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2558,6 +2976,9 @@
    "column": 8,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2580,6 +3001,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",
@@ -2598,6 +3020,9 @@
    "column": 8,
    "error": "ParseError",
    "expected": [
+    "JFET (`J`)",
+    "MESFET (`Z`)",
+    "MOSFET (`M`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2620,6 +3045,7 @@
     "`.temp`",
     "`.title`",
     "`.tran`",
+    "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
     "coupling (`K`)",

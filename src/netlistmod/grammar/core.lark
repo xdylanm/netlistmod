@@ -270,6 +270,34 @@ AC_KW.2: "ac"i
 diode: D_NAME node node model (param | flag)* (NL | eol)
 D_NAME.4: /[Dd]/ _WUNIT*
 
+// Transistor lines (decision 0014): fixed nodes, then names, the last of which is the model, then
+// an area where the dialect writes one positionally, then parameters and flags. Each overlay's
+// element rule spells out the name sequences its node counts allow, so the parser classifies a
+// name only once it sees what follows it, as for X. A field written as a number is a node before
+// the model and the area after it; a model is never a number. FIELD_NUMBER is a number that ends
+// the field, so a model name such as 2N3904 stays a name. Where only a name may follow, a number
+// is lexed as a WORD; the transformer refuses it as the model at its token.
+// spec: NG-XTR-001
+t_name: SEP WORD
+      | (SEP | TRAILING_COMMENT) t_name
+t_number: SEP FIELD_NUMBER
+        | (SEP | TRAILING_COMMENT) t_number
+t_area: SEP (FIELD_NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT) t_area
+FIELD_NUMBER.4: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:[A-Za-z]|µ)*(?![^ \t\r\n;$,)])/
+
+// spec: NG-BJT-001
+Q_NAME.4: /[Qq]/ _WUNIT*
+
+// spec: NG-MOS-001
+M_NAME.4: /[Mm]/ _WUNIT*
+
+// spec: NG-JFT-001
+J_NAME.4: /[Jj]/ _WUNIT*
+
+// spec: NG-MES-001
+Z_NAME.4: /[Zz]/ _WUNIT*
+
 // A subcircuit call: one or more nodes, the subcircuit name, then parameters. The name list is
 // right-recursive (x_node, x_last), so a name is classified only once the parser has seen what
 // follows it; x_name is the gap and name both share.
@@ -348,12 +376,26 @@ PARAM_NAME.2: /[A-Za-z][A-Za-z0-9_#]*/
 // "(" directly. LPAR and RPAR are valid only here and in v(...) (NG-ICN-001); a parenthesis
 // anywhere else is still a syntax error.
 // spec: NG-MOD-001
-model_stmt: MODEL_KW x_name x_name param* (NL | eol)
+model_stmt: MODEL_KW x_name x_name (param | model_flag | model_text)* (NL | eol)
           | MODEL_KW x_name x_name model_paren (NL | eol)
-model_paren: LPAR (model_param_first param*)? rparen
+model_paren: LPAR ((model_param_first | model_flag_first) (param | model_flag | model_text)*)? rparen
            | (SEP | TRAILING_COMMENT) model_paren
-model_param_first: WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+model_param_first: WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | DOTTED_VALUE)
                  | (SEP | TRAILING_COMMENT) model_param_first
+
+// A VDMOS model's channel is a bare flag (§7.6.3: `.model mname VDMOS <Pchan> <parameters>`), and
+// a version such as `version=3.3.0` is a dotted value, kept as text because it is not a number
+// (decision 0014).
+// spec: NG-MOD-001
+model_flag: SEP (PCHAN_KW | NCHAN_KW)
+          | (SEP | TRAILING_COMMENT) model_flag
+model_flag_first: PCHAN_KW | NCHAN_KW
+                | (SEP | TRAILING_COMMENT) model_flag_first
+model_text: SEP WORD EQ DOTTED_VALUE
+          | (SEP | TRAILING_COMMENT) model_text
+PCHAN_KW.2: "pchan"i
+NCHAN_KW.2: "nchan"i
+DOTTED_VALUE.6: /[0-9]+(?:\.[0-9]+){2,}/
 rparen: RPAR
       | (SEP | TRAILING_COMMENT) rparen
 MODEL_KW.4: ".model"i

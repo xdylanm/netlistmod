@@ -526,7 +526,7 @@ def test_nonlinear_forms_are_unsupported(line: str) -> None:
     assert "LTspice" in str(_unsupported(line))
 
 
-@pytest.mark.parametrize("letter", list("ABEFGHJMOQSTUWZ@&"))
+@pytest.mark.parametrize("letter", list("ABEFGHOSTUW@&"))
 def test_phase_2_letters_are_unsupported(letter: str) -> None:
     error = _unsupported(f"{letter}1 a b c")
     assert f"LTspice {letter} device" in str(error)
@@ -544,7 +544,7 @@ def test_the_device_matrix_matches_its_document() -> None:
         (ROOT / "src/netlistmod/grammar/ltspice-devices.json").read_text(encoding="utf-8")
     )
     assert matrix == packaged
-    assert {k for k, v in matrix.items() if v["status"] == "supported"} == set("RCLVIDXK")
+    assert {k for k, v in matrix.items() if v["status"] == "supported"} == set("RCLVIDXKQMJZ")
 
 
 def test_param_assignment_spans_slice_back() -> None:

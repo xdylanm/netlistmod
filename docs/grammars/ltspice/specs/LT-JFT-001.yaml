@@ -1,0 +1,21 @@
+id: LT-JFT-001
+dialect: ltspice
+construct: junction FET (J) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "J — JFET"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-05'
+grammar:
+- jfet
+- j_param
+- J_PARAM_KW
+- J_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_the_model_is_the_last_name
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Exactly 3 nodes, the model, a positional area, then temp= and off. area=, m= and ic=, which LTspice runs, are refused (decision 0014 item 6).'

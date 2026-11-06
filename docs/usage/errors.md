@@ -66,14 +66,14 @@ The dialect has this construct, but the library does not support it yet. It is s
 ```python
 >>> from netlistmod import UnsupportedConstruct
 >>> try:
-...     parse(SourceText("title\nQ1 c b e npn\n.end\n"), Dialect.NGSPICE)
+...     parse(SourceText("title\nE1 out 0 in 0 2\n.end\n"), Dialect.NGSPICE)
 ... except UnsupportedConstruct as error:
 ...     print(error.line, error.column)
 2 1
 
 ```
 
-**What to do:** the library supports R, C, L, K, V, I, D and X, with DC, AC and source functions. Other letters wait for phase 2. There is no way to skip the line.
+**What to do:** the library supports R, C, L, K, V, I, D, X and the transistors Q, M, J and Z, with DC, AC and source functions. Other letters wait for later phase 2 milestones. There is no way to skip the line.
 
 ### `EditError`
 

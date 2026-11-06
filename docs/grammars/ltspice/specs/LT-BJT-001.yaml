@@ -1,0 +1,23 @@
+id: LT-BJT-001
+dialect: ltspice
+construct: bipolar transistor (Q) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "Q — Bipolar Transistor"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-05'
+grammar:
+- bjt
+- q_param
+- Q_PARAM_KW
+- Q_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_each_letter_has_its_own_node
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_each_letter_takes_its_own_parameters
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ltspice_transistor_probes.py::test_area_scales_the_collector_current
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: '3 or 4 nodes, the model, a positional area, then temp= and off. area= and ic=, which LTspice runs, are refused (decision 0014 item 6).'

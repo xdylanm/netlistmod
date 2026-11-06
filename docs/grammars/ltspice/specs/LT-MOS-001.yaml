@@ -1,0 +1,23 @@
+id: LT-MOS-001
+dialect: ltspice
+construct: MOSFET and VDMOS (M) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "M — MOSFET"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-05'
+grammar:
+- mosfet
+- m_param
+- M_PARAM_KW
+- M_NAME
+tests:
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_the_model_is_the_last_name
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_each_letter_takes_its_own_parameters
+- tests/grammar/ltspice/test_ltspice_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ltspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ltspice_transistor_probes.py::test_temp_on_a_bsim_line_loads_and_stops_ltspice
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: '3 or 4 nodes, the model, then L W AD AS PD PS NRD NRS m temp IC= and off, one list for the monolithic and VDMOS forms. No thermal flag.'

@@ -248,11 +248,11 @@ def test_backslashes_that_do_not_end_a_statement_line_are_text(
     assert isinstance(result.items[2], End)
 
 
-@pytest.mark.parametrize("continued", ["Q1 c b \\\\\ne npn", "Q1 c b\n+ e npn"])
+@pytest.mark.parametrize("continued", ["T1 a 0 \\\\\nb 0 z0=50", "T1 a 0\n+ b 0 z0=50"])
 def test_continued_element_line_is_reported_at_its_first_line(continued: str) -> None:
     with pytest.raises(UnsupportedConstruct) as captured:
         _parse(f"title\n{continued}\n.end\n")
-    assert captured.value.construct == "ngspice Q device"
+    assert captured.value.construct == "ngspice T device"
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
@@ -519,7 +519,7 @@ def test_stray_block_closers_are_rejected(closer: str) -> None:
     assert captured.value.excerpt == closer + "\n^"
 
 
-PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDX"))
+PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDXQMJZ"))
 
 
 @pytest.mark.parametrize("letter", PHASE_2_LETTERS)
@@ -543,10 +543,10 @@ def test_unknown_letter_is_parse_error_and_device_matrix_is_complete() -> None:
 def test_device_letter_with_error_status_remains_parse_error() -> None:
     with patch(
         "netlistmod.grammar.loader.device_matrix",
-        return_value={"Q": {"status": "error"}},
+        return_value={"T": {"status": "error"}},
     ):
         with pytest.raises(ParseError) as captured:
-            _parse("title\nQ1 a b 1k\n.end\n")
+            _parse("title\nT1 a b 1k\n.end\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 

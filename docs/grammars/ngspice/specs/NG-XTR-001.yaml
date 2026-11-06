@@ -1,0 +1,27 @@
+id: NG-XTR-001
+dialect: ngspice
+construct: shared transistor line shape (Q, M, J, Z)
+manual_ref:
+- '[ngspice-manual] §7.1 "Instance lines and .model lines"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-05'
+grammar:
+- body_line
+- t_name
+- t_number
+- t_area
+- FIELD_NUMBER
+- ic_param
+- _ic_value
+- IC_PARAM_KW
+- IC_COMMA
+tests:
+- tests/grammar/ngspice/test_transistors.py::test_the_model_is_the_last_name
+- tests/grammar/ngspice/test_transistors.py::test_a_model_name_cannot_be_a_number_or_a_keyword
+- tests/grammar/ngspice/test_transistors.py::test_ic_takes_a_comma_list
+- tests/grammar/ngspice/test_transistors.py::test_continued_transistor_lines_join
+- tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
+notes: 'Decision 0014 items 1 to 5. The fixed nodes, then names, the last of which is the model; a field written as a number is a node before the model. Where only a name may follow, a number or the keyword off (thermal on M) is refused as the model at its token. ic= takes a comma list, with or without a blank after the comma.'

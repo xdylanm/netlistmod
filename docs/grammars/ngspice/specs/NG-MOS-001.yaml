@@ -1,0 +1,25 @@
+id: NG-MOS-001
+dialect: ngspice
+construct: MOSFET and VDMOS (M) lines
+manual_ref:
+- '[ngspice-manual] §7.6.1 "MOSFET devices"'
+- '[ngspice-manual] §7.7 "Power MOSFET model (VDMOS)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-05'
+grammar:
+- M_NAME
+- mosfet
+- _ng_mtail
+- thermal_flag
+- THERMAL_KW
+tests:
+- tests/grammar/ngspice/test_transistors.py::test_the_model_is_the_last_name
+- tests/grammar/ngspice/test_transistors.py::test_thermal_is_a_vdmos_flag
+- tests/grammar/ngspice/test_transistors.py::test_malformed_transistor_lines_are_rejected
+- tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
+- tests/solver/test_ngspice_transistor_probes.py::test_temp_on_a_bsim_line_loads_and_stops_ngspice
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: '3 to 5 nodes (VDMOS 3, MOSFET 4, VDMOS with thermal 5), not checked against the model''s type: a 3-node NMOS line loads and stops ngspice. Open parameters, off and thermal.'

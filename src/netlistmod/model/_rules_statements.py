@@ -7,7 +7,7 @@ from typing import Any, Literal, NoReturn
 from lark import Token, v_args
 from lark.tree import Meta
 
-from netlistmod.model._rules_base import _Rules
+from netlistmod.model._rules_elements import ElementsRules
 from netlistmod.model._tree import (
     _BARE_EXPRESSION,
     _RESERVED_PARAMS,
@@ -74,7 +74,7 @@ from netlistmod.model.values import (
 from netlistmod.source import Span
 
 
-class StatementsRules(_Rules):
+class StatementsRules(ElementsRules):
     """Rules for typed statements and dot-commands (decision 0005)."""
 
     def param_stmt(self, children: list[Any]) -> _Item:
@@ -127,6 +127,7 @@ class StatementsRules(_Rules):
         ako = element.optional(ModelReference)
         paren = element.optional(_ModelParams)
         params = paren.params if paren is not None else element.all(ParamAssignment)
+        flags = paren.flags if paren is not None else element.all(Flag)
         return _Item(
             element.end,
             lambda span: ModelStatement(
@@ -140,6 +141,7 @@ class StatementsRules(_Rules):
                 open_paren_span=paren.open_span if paren is not None else None,
                 close_paren_span=paren.close_span if paren is not None else None,
                 ako=ako,
+                flags=flags,
             ),
         )
 
@@ -151,9 +153,18 @@ class StatementsRules(_Rules):
             # A gap before the parenthesis: the list is the nested field.
             return _Field(inner, comments)
         params = tuple(f.node for f in fields if isinstance(f.node, ParamAssignment))
+        flags = tuple(f.node for f in fields if isinstance(f.node, Flag))
         assert isinstance(inner, _RParen)  # the grammar ends the list with rparen
         open_paren = next(c for c in children if isinstance(c, Token) and c.type == "LPAR")
-        return _Field(_ModelParams(params, _span(open_paren), inner.span), comments)
+        return _Field(_ModelParams(params, _span(open_paren), inner.span, flags), comments)
+
+    def model_flag(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: Flag(str(token), _span(token)))
+
+    model_flag_first = model_flag
+
+    def model_text(self, children: list[Any]) -> _Field:
+        return self.param(children)
 
     def rparen(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: _RParen(_span(token)))
