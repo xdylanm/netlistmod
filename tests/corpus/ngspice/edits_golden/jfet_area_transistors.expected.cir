@@ -1,0 +1,25 @@
+transistor edits (M13)
+V1 vcc 0 5
+V2 b 0 0.7
+RC vcc c 1k
+Q1 c b 0 qn ; driver
+VG g 0 3
+RD vcc d 1k
+M1 d g 0 0 nm L=2u
++ W=4u
+RD2 vcc d2 1k
+M2 d2 g 0 vd
+VJ jg 0 -0.5
+RJ js 0 1k
+J1 vcc jg js jm 3 temp=30
+VZ zg 0 0
+RZ zs 0 1k
+Z1 vcc zg zs zm
+.model qn NPN(IS=1e-16 BF=100)
+.model qp PNP
+.model nm NMOS(VTO=1 KP=1m)
+.model vd VDMOS(pchan)
+.model jm NJF(VTO=-2 BETA=1m)
+.model zm NMF(VTO=-1)
+.op
+.end

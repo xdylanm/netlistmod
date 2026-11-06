@@ -14,6 +14,7 @@ from netlistmod.edit._ops_common import (
     _PORT_PARAMS,
     _POSITIONAL_AREA,
     _SOURCES,
+    _TRANSISTORS,
     _TWO_TERMINAL,
     _VALUE,
     _VALUE_KEYWORDS,
@@ -25,7 +26,10 @@ from netlistmod.edit._ops_common import (
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
+    BipolarTransistor,
     Diode,
+    Jfet,
+    Mesfet,
     MutualCoupling,
     SubcktInstance,
     VoltageSource,
@@ -72,7 +76,9 @@ def set_param(
     scope: ScopePath = (),
     in_definition: bool = False,
 ) -> list[Edit]:
-    """Set or add an instance parameter of an R, C, L or D line, or of an LTspice V or I line."""
+    """Set or add an instance parameter of an R, C, L, D, Q, M, J or Z line, or of an LTspice V
+    or I line. ``area`` goes in the positional slot where the dialect writes one (decision 0014
+    item 5), unless the line already writes ``area=``."""
     element = _element(netlist, designator, scope, in_definition)
     reason = f"set_param {designator} {name}"
     found_fold = netlist.scope(scope).fold
@@ -80,7 +86,7 @@ def set_param(
     ltspice = netlist.dialect is Dialect.LTSPICE
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
-    takes_params = (*_TWO_TERMINAL, Diode, *_SOURCES)
+    takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES)
     port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
     if not isinstance(element, takes_params) or (
         not ltspice and isinstance(element, _SOURCES) and not port
@@ -104,8 +110,13 @@ def set_param(
                 return [Edit(flag.value.span, value, reason, (_VALUE,))]
             text = f"={value}"
             return [_insert(flag.span.end, text, reason, _VALUE, 1)]
-    if isinstance(element, Diode) and ltspice and folded == _POSITIONAL_AREA:
-        # LTspice's area is positional, right after the model, unless it is written `area=`.
+    # The area is positional, right after the model, unless it is written `area=`: LTspice's D
+    # and Q, and J and Z on both dialects. An ngspice D and Q write `area=` only.
+    if (
+        isinstance(element, Diode | BipolarTransistor | Jfet | Mesfet)
+        and folded == _POSITIONAL_AREA
+        and (ltspice or isinstance(element, Jfet | Mesfet))
+    ):
         if any(found_fold(param.name) == folded for param in element.params):
             return _assign(element.params, element, name, value, reason, folded=found_fold)
         if element.area is not None:
@@ -163,14 +174,18 @@ def set_model(
     in_definition: bool = False,
     allow_external: bool = False,
 ) -> list[Edit]:
-    """Replace the model name of an R, C, L or D line, or add one after the value of an R, C
-    or L line that has none (decision 0007 item 3; review round 1)."""
+    """Replace the model name of an R, C, L, D, Q, M, J or Z line, or add one after the value of
+    an R, C or L line that has none (decision 0007 item 3; review round 1; decision 0014)."""
     element = _element(netlist, designator, scope, in_definition)
-    if not isinstance(element, (*_TWO_TERMINAL, Diode)):
+    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
     if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
-    if element.model is None and element.value_keyword is not None:
+    if (
+        isinstance(element, _TWO_TERMINAL)
+        and element.model is None
+        and element.value_keyword is not None
+    ):
         raise EditError(
             f"`{designator}` writes its value as `{element.value_keyword}=…`, a form that takes "
             "no model; use set_value to write a positional value first"

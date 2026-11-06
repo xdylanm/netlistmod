@@ -70,6 +70,10 @@ def set_model_param(
     if statement.params:
         after = statement.params[-1].span.end  # inside the parentheses, if any
         return _assign(statement.params, statement, name, value, reason, after, folded=found.fold)
+    if statement.flags:
+        # Only a flag, `(pchan)` or `vdmos pchan`: the parameter goes after the last one.
+        after = statement.flags[-1].span.end
+        return _assign((), statement, name, value, reason, after, folded=found.fold)
     if statement.open_paren_span is not None:
         # Empty parentheses: `d()` -> `d(n=1.5)`, right after the `(` token.
         text = conventions.assignment(name, value)
