@@ -1,6 +1,6 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** READY FOR REVIEW — review round 1 changes R1 to R5 made (2026-11-06); the maintainer accepted the decisions in section 2 on 2026-11-06
+> **Status:** ACTIVE — review round 2 (section 7) requires change R6 before M15 can close. R1 to R5 of round 1 are made (section 6.5); section 2 records the maintainer's decisions (2026-11-06).
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
@@ -315,3 +315,50 @@ R1 to R5 are made in `7084360`.
   - The reference shows no parameters on `Flux=` or the hysteretic core. So `Rser=` on them stays refused, with probes `l-flux-rser` and `l-hysteretic-rser` and a row in "Forms LTspice runs and the library rejects".
   - ngspice's stop on `B1 out 0 V=2*v(vx)$c` is a row in the ngspice `discrepancies.md` (probe `b-dollar`). The library still reads `$c` as a comment, as on every line.
 - **6.3:** the `formula.lark` comment is added. The `__all__` order is left as it is: those lists are grouped by hand, not sorted. Architecture §5.3's `| None` waits for T12, as noted.
+
+## 7. Review round 2 (2026-11-06, `cf8051b`)
+
+### 7.1 Outcome
+
+R1, R3, R4 and R5 are made as 6.5 reports. R2 is right for the third field of every letter on both dialects. On ngspice, though, `value` is the keyword in every node position of E and G, not only in the third. That is R6 below, the only change left.
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,410 passed, 2 skipped, coverage 98.54%, in 18 min 30 s. This matches 6.5.
+  - ruff, ruff format and `mypy src` are clean.
+  - CI on #12 at `cf8051b` is green on all five jobs.
+- **R1 (probed on both solvers):**
+  - ngspice `v(x1.n)` and LTspice `V(X1:n)` are info, and both solvers run them (`v(out)` = 0.5).
+  - ngspice `i(v.x1.vq)` is info, and ngspice runs it.
+  - `i(x1.vq)` stays a warning, and ngspice stops on it.
+  - `v(x9.n)`, where `x9` is not an instance, stays a warning, and ngspice stops on it.
+  - `_into_instance` names every case in its docstring, which also covers 6.3's point.
+- **R2:** `E1 out 0 value 0 2` (ngspice) and `G1 0 out value 0 1m` (LTspice) are refused at `value` with the new message, and both solvers stop on them. ngspice runs `F1 0 out value 2` as a linear F, so leaving ngspice F and H unchanged is right. LTspice reads F and H as the value form, so refusing them there is right too, and a good catch.
+- **R3:** the `SlotCheck.delimiter` check is in `verify.py`, so the write-time check makes the refusal for every caller of `set_expression`. The message names both directions.
+- **R4:** `OPEN_FORMULA` gives the new message at the brace or quote for `value={…`, `vol='…`, `cur='…` (with `m=` after it) and B's `V={…` and `V='…`. ngspice runs each of them. A quoted expression followed by `; it's` still loads, so the terminal does not reach into a trailing comment. A bare expression over a `+` line still loads. The ngspice `discrepancies.md` has the row.
+- **R5:** the LTspice discrepancies and README rows are current. The `Flux=` and hysteretic `Rser=` row cites the probes, and the reference shows no parameters there, so refusing them follows P5. The `$c` row is in the ngspice `discrepancies.md`.
+
+### 7.2 Required change
+
+[ ] **R6 — On ngspice, `value` is the keyword in every node position of E and G.**
+
+| Line, with a net `value` (`Rv value 0 1k`) | ngspice 47 | Library at `cf8051b` |
+|---|---|---|
+| `E1 value 0 vx 0 2` | stops: "mal formed E source instance: e1  vol= 0 vx 0 2" | loads |
+| `E1 out value vx 0 2` | stops (`vol=` in the second field) | loads |
+| `E1 out 0 vx value 2` | stops (`vol=` in the fourth field) | loads |
+| `E1 out 0 vx VALUE 2` | stops (any case) | loads |
+| `G1 0 value vx 0 1m`, `G1 0 out vx value 1m` | stop: "mal formed G source instance … `cur=` …" | load |
+| `H1 value 0 Vs 1k`, `R5 out value 1k` | run | load (right) |
+
+- ngspice replaces the word `value` with `vol=` (E) or `cur=` (G) wherever it stands on the line. So R2's refusal covers only one of the four node positions.
+- 6.5 says that "a `value` in the control-node place" stays a name. That holds for LTspice: `E1 out 0 vx value 2` and `G1 0 out vx value 1m` run there, and `E1 out value vx 0 2` runs too. On ngspice it does not hold, and `test_other_words_there_are_names` does not test it.
+- **Change:** on ngspice only, refuse a node written `value` (any case) on an E or G line, in any of the four positions, at that node. Use R2's message or one like it ("ngspice reads `value` on an E or G line as the keyword of the expression form; give the net another name"). This can be a check in the transformer's `_voltage_controlled`, since it is one word in a closed set of positions. Leave LTspice, F, H and the other letters as they are.
+- **Tests:** a parametrized refusal over the five ngspice lines above, with columns, in `tests/grammar/ngspice/test_behavioral.py`. A test that the same lines load on LTspice. Solver probes in `test_ngspice_behavioral_probes.py` for the first three rows, showing that ngspice stops. Extend the decision 0016 item 9 sentence and the ngspice `discrepancies.md` row, if R2 added one.
+
+### 7.3 Noted, no change required
+
+- `_is_expression_read` finds the formula by the reference's offset into `expression`, `charge`, `flux` or `value`. That is enough for ngspice's `v.x1.vq` form, which only an `i()` read can write.
+- The `__all__` order and architecture §5.3's `| None` stay as 6.5 says; T12 picks up the second.
+
+### 7.4 Exit for this round
+
+Make R6. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 7.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).

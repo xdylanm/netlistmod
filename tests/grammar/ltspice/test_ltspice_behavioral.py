@@ -117,6 +117,22 @@ def test_value_after_the_output_nodes_is_the_keyword(line: str) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("line", "names"),
+    [
+        ("E1 value 0 vx 0 2", ["value", "0", "vx", "0"]),
+        ("E1 out value vx 0 2", ["out", "value", "vx", "0"]),
+        ("E1 out 0 vx value 2", ["out", "0", "vx", "value"]),
+        ("E1 out 0 vx VALUE 2", ["out", "0", "vx", "VALUE"]),
+        ("G1 0 value vx 0 1m", ["0", "value", "vx", "0"]),
+        ("G1 0 out vx value 1m", ["0", "out", "vx", "value"]),
+    ],
+)
+def test_a_net_named_value_in_another_node_position_is_a_node(line: str, names: list[str]) -> None:
+    # LTspice runs these: only the third field is the keyword there (review R6).
+    assert [node.name for node in _element(line).nodes] == names
+
+
 def test_ngspice_forms_are_refused_on_ltspice() -> None:
     assert _reject("E1 out 0 vol='2*V(vx)'").column == 13
     # LTspice runs ngspice's TABLE form, which its reference does not show (decision 0016 item 9).

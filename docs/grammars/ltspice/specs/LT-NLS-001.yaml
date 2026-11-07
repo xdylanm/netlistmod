@@ -20,6 +20,7 @@ tests:
 - tests/grammar/ltspice/test_ltspice_behavioral.py::test_value_on_e_to_h
 - tests/grammar/ltspice/test_ltspice_behavioral.py::test_ngspice_forms_are_refused_on_ltspice
 - tests/grammar/ltspice/test_ltspice_behavioral.py::test_value_after_the_output_nodes_is_the_keyword
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_a_net_named_value_in_another_node_position_is_a_node
 - tests/document/test_expression_reads.py::test_value_forms_read_their_sources
 - tests/edits/test_behavioral_edits.py::test_set_expression_on_ltspice
 - tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes
