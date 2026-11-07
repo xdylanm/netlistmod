@@ -1,6 +1,6 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** READY FOR REVIEW — T1 to T11 done (2026-11-06); the maintainer accepted the decisions in section 2 on 2026-11-06
+> **Status:** ACTIVE — review round 1 (section 6) requires changes R1 to R5 before M15 can close. T1 to T11 done (results in section 5); section 2 records the maintainer's decisions (2026-11-06).
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
@@ -211,3 +211,84 @@ The M15b files are written now, so that one review confirms their provenance. Th
 6. **The tree snapshot:** the same 17 rejected files list "behavioral source (`B`)" among their expected terminals. The M15 terminals got readable names in `grammar/loader.py`, so that the list does not show `B_NAME`.
 7. **`document_basic/node_read.cir` is a new fixture** for `UNRESOLVED_NODE`, rather than a line in an existing file, so that no digest in the signature snapshot changes (the M14 lesson).
 8. **Two M14 probe tests changed:** their `value=` rows now expect the line to load, and an LTspice validation test uses the M15b forms (POLY, `Laplace=`, B `laplace=`) instead of `Q=`, `Flux=` and `value=`.
+
+## 6. Review round 1 (2026-11-06, `32c0b3e`)
+
+### 6.1 Outcome
+
+M15 goes back for changes R1 to R5. Most of the design holds up on review:
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,360 passed, 2 skipped, coverage 98.55%, in 18 min 32 s. This matches section 5.
+  - ruff, ruff format and `mypy src` are clean.
+  - CI on #12 at `32c0b3e` is green on all five jobs.
+- **Grammar:**
+  - The bare expression ends where decision 2 says. By hand on ngspice: `>=`, `<=`, `!=` and `==` stay inside it, and `;` and `$ ` end it. `tc1=` after a brace, quoted or bare expression is a parameter, and a `+` continuation stays inside a bare expression with `tc1=` after it. `{k} * v(vx)` is a bare expression, and `{k}` alone is a braced one.
+  - `m=` on an ngspice B and `tc1=` on an LTspice B are refused at the parameter. So are a bare `vol=` and `cur=`, and `Rpar=` on an LTspice `V=` B, each with its own message.
+  - A node named `vol` or `cur` stays a node, and ngspice runs that line.
+- **Nodes:** `Vcvs`, `Vccs`, `Cccs` and `Ccvs` keep their classes, and `form`, `expression` and `value` are set as decision 3 says. LTspice's F and H `value=` have `control=None`, as the decision record (item 3) states. The hysteretic L loads its seven parameters with no value.
+- **Formula scan:** `v(vx) < {k} ? {k} : v(vx)` gives `k`, and `~` reads on LTspice. `time` in an LTspice B, and `x` and `time` in `Q=`, give no references. `{time}` in an R value with `.param time=3` stays a parameter.
+- **Query and diagnostics (probed on both solvers):**
+  - A subcircuit's B that reads a top-level net gets `UNRESOLVED_NODE`, and both solvers stop on it. A `.global` net resolves.
+  - A read in a scope with an `.include` is info.
+  - `i(R1)` on ngspice loads with no diagnostic, and ngspice runs it, as decision 6 says.
+- **Edits:** `set_expression` keeps the delimiter for ordinary text. It refuses ` tc2=1` and `; x` inside a bare expression, an empty expression, and a quote inside a quoted one. `set_value` on an expression form names `set_expression`.
+- **Section 5's design points 1 to 8:** accepted. Point 4 (any blank followed by `name=` ends a bare expression) is the right default: it turns a misspelt parameter into an error instead of a silent change to the expression.
+
+### 6.2 Required changes
+
+[x] **R1 — A read into a subcircuit instance is not an unresolved node.**
+
+| Line (with `X1 vx sub`, and `sub` holding `R1 a n 1k`, `R2 n 0 1k`) | Solver | Library today |
+|---|---|---|
+| ngspice `B1 out 0 V=v(x1.n)` | runs, `v(out)` = 0.5 | `UNRESOLVED_NODE` warning |
+| LTspice `B1 out 0 V=V(X1:n)` | runs, `v(out)` = 0.5 | `UNRESOLVED_NODE` warning |
+| ngspice `B1 out 0 V=1k*i(v.x1.vq)` (with `Vq` in `sub`) | runs | `UNRESOLVED_ELEMENT` warning |
+| ngspice `B1 out 0 V=1k*i(x1.vq)` | stops, "unknown controlling source v_x1.vq" | `UNRESOLVED_ELEMENT` warning (right) |
+
+- Reading a node inside a subcircuit is a common way to probe it, so a warning here is a false positive. Decision 6 already makes LTspice's `I(X1:Vq)` info for this reason.
+- **Change:** a node read whose first part names an instance of the scope (ngspice `x1.n`, LTspice `X1:n`) is info, as a known limit, in the same way `I(X1:Vq)` is. Its `ExpressionRead.target` stays `None`. Either make ngspice's `i(v.x1.vq)` info too, or record in the ngspice `discrepancies.md` why it stays a warning.
+- **Tests:** document-layer tests for each row, and solver probes for the first three rows in `test_*_behavioral_probes.py`. Amend decision 0016 item 6 and the `UNRESOLVED_NODE` entry in `errors.md`.
+
+[x] **R2 — `value` after the output nodes of E or G is the keyword on both solvers.**
+- `E1 out 0 value 0 2` and `G1 0 out value 0 1m`, with a net `value` (`Rv value 0 1k`), stop both solvers:
+  - ngspice: "mal formed E source instance: e1 out 0 vol= 0 2" (G: `cur=`);
+  - LTspice: "Unknown parameter".
+- The library loads each as a linear source with the control node `value`, and `test_a_node_named_value_is_a_node` (`tests/grammar/ngspice/test_behavioral.py`) asserts this. M14's review accepted it from the grammar alone (m14-tasks 6.1), and no solver probe backed it.
+- `vol` and `cur` in that place are nodes on ngspice, and ngspice runs them; they need no change.
+- **Change:** on both dialects, refuse a word `value` after the output nodes of E and G, with its own message at `value`: "`value` here is the keyword of the expression form, and ngspice/LTspice read it so". Probe F and H in the same place (`F1 out 0 value 2`, where `value` names a V) and treat them the same way if a solver stops.
+- **Tests:** replace `test_a_node_named_value_is_a_node` with the refusal, on both dialects. Add the lines to both probe files and a reject file to each `elements_rejects` family, and record the change in decision 0016 item 9.
+
+[x] **R3 — `set_expression` may change the delimiter.**
+- `B2 out2 0 V={2*v(vx)}`:
+  - `set_expression("B2", "3}")` writes `V={3}}`;
+  - `"a{b}"` writes `V={a{b}}`;
+  - `"1+{k}"` writes `V={1+{k}}`.
+- Each loads as a bare expression with `delimiter=""`. The slot check finds a `Formula` over the whole replacement, so it passes, though the docstring and decision 7 promise to keep the delimiters.
+- A bare slot given `{k}` becomes a braced formula (`delimiter="{"`). This is the same change in the other direction.
+- **Change:** refuse the edit when the re-read formula's delimiter is not the original one. For example, give `SlotCheck` the expected delimiter, or check it in `set_expression`. Say in the message that the text closes the delimiter early. If a bare slot should accept a whole `{…}` instead, decide that and write it in decision 0016 item 7 and the docstring.
+- **Tests:** add these three cases and the bare-slot case to `tests/edits/test_behavioral_edits.py`, on both dialects.
+
+[x] **R4 — Give a delimited expression over a `+` continuation an honest refusal.**
+- ngspice runs `E1 out 0 value={2*` / `+ v(vx)}` (2.0), `E1 out 0 vol='2*` / `+ v(vx)'` and `B1 out 0 V='2*` / `+ v(vx)'` (2.0). The library refuses all three.
+- That matches the existing limit for every formula (`R7 out 0 {1k*` / `+ 2}` is refused too), so refusing is fine. But the `value` case gets the `bare_expression` message: "ngspice reads the expression of `vol=`, `cur=` and `value` only in quotes or braces; write `{...}` or `'...'`". The user already wrote braces. The other two cases get the generic list of expected tokens.
+- **Change:** `bare_expression` must not take a field that opens with `{` or `'`. Give an unclosed brace or quote on its physical line one message: "a braced or quoted expression must close on its line; join the lines, or write the expression bare (B only)". Record in the ngspice `discrepancies.md` that ngspice runs these and the library refuses them.
+- **Tests:** the three lines, with their message and column, in `tests/grammar/ngspice/test_behavioral.py`, and solver probes showing that ngspice runs them.
+
+[x] **R5 — Bring the LTspice grammar docs up to date, and record what the probes found.**
+- `docs/grammars/ltspice/discrepancies.md`, "Forms LTspice runs that the library rejects", still says "`C` has `Q=`; `L` has `Flux=` and the hysteretic form; `.machine`. `UnsupportedConstruct` in phase 1". It also cites `test_nonlinear_forms_are_unsupported`, which no longer exists. Keep `.machine` only, and check the evidence names.
+- `docs/grammars/ltspice/README.md` (row C, L) still says "`Q=`, `Flux=`, `Hc=` unsupported".
+- LTspice 26.1.1 runs `L1 out 0 Flux=1m*tanh(5*x) Rser=1` and the hysteretic L with `Rser=1`. The library refuses both, though `Q=` takes the capacitor's parameters.
+  - If the reference lists parameters for these forms, accept them.
+  - If it does not, add a row to "Forms LTspice runs that the library rejects", with a probe.
+- ngspice stops on `B1 out 0 V=2*v(vx)$c`, and the library loads it as the expression `2*v(vx)` and a comment. ngspice runs `R7 out 0 1k$c`. Add a row to the ngspice `discrepancies.md` ("Forms the library accepts and ngspice rejects"), with a probe, or refuse it.
+
+### 6.3 Noted, no change required
+
+- Architecture §5.3 still writes `ControlledSource`'s `value: NumericValue | Formula`, before the sentence that makes it `None` for the expression forms. Write `| None` when T12 accepts decision 0016.
+- `_control_into_instance` (`document/diagnostics.py`) now applies to every LTspice element reference, not only to controlling sources. So a `K` line's `X1:L2` or a `.save I(X1:R1)` is info too. That is consistent with §7.8, but say so in the function's docstring.
+- `BehavioralSource` and `ExpressionRead` are out of order in the two `__all__` lists. This is cosmetic, as in M13 and M14.
+- The `formula.lark` change (`%ignore CONT`, `{…}` as an atom) applies to every formula, not only to expressions. No formula outside an expression can hold a continuation or a nested brace today, so nothing changes. A comment there would help the next reader.
+
+### 6.4 Exit for this round
+
+Make R1 to R5. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).

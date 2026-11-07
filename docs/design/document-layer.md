@@ -134,7 +134,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
-| `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
+| `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block, or for a node inside an instance of the scope (ngspice `x1.n`, LTspice `X1:n`) | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
 | `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at

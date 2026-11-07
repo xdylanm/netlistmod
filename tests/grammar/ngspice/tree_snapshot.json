@@ -1663,6 +1663,20 @@
    "line": 13
   }
  },
+ "elements_rejects/e_value_node.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [],
+   "line": 14
+  },
+  "standard": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [],
+   "line": 14
+  }
+ },
  "elements_rejects/e_vol_bare.cir": {
   "rkm": {
    "column": 15,

@@ -373,7 +373,7 @@ An F, H or W line names a controlling source that exists but is not a voltage so
 
 ### `UNRESOLVED_NODE`
 
-A behavioural expression reads a node, as `v(a)` or `v(a,b)`, that no element of its scope connects to and that is not ground, a `.global` node or a subcircuit port. ngspice reports a singular matrix and LTspice "No such node". A warning, or `info` where the scope has an `.include`, `.lib` or opaque block ([decision 0016](../decisions/0016-behavioral-expressions.md) item 6).
+A behavioural expression reads a node, as `v(a)` or `v(a,b)`, that no element of its scope connects to and that is not ground, a `.global` node or a subcircuit port. ngspice reports a singular matrix and LTspice "No such node". A warning, or `info` where the scope has an `.include`, `.lib` or opaque block, or where the name reaches into a subcircuit instance of the scope (ngspice `v(x1.n)`, LTspice `V(X1:n)`), which both solvers read and the library does not resolve ([decision 0016](../decisions/0016-behavioral-expressions.md) item 6).
 
 ```python
 >>> report("t\nR1 a 0 1k\nB1 b 0 V=2*v(nonode)\nR2 b 0 1k\n.end\n")

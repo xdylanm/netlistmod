@@ -22,7 +22,8 @@ classes are the same. M15 added the behavioural ``controlled_sources`` files (th
 among them, as rejected files), the behavioural golden files, six ``elements_rejects`` files and
 ``document_basic/node_read.cir``, and removed ``elements_rejects/charge_capacitor.cir``, which
 now loads. The same 17 rejected files gained the B letter among their expected terminals; no
-other entry changed.
+other entry changed. M15 review R2 added ``elements_rejects/e_value_node.cir``, and no other
+entry changed.
 """
 
 from __future__ import annotations

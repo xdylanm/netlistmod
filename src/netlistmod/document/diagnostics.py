@@ -31,7 +31,7 @@ from netlistmod.model.nodes import (
     VoltageSource,
     element_phrase,
 )
-from netlistmod.model.values import NumericValue
+from netlistmod.model.values import Formula, NumericValue
 from netlistmod.source import SourceText, Span
 
 Severity = Literal["warning", "info"]
@@ -142,11 +142,12 @@ def _reference_findings(
         where = ", ".join(candidate.describe() for candidate in searched)
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
-        into = _control_into_instance(index, scope, reference)
+        into = _into_instance(index, scope, reference)
         if into is not None:
             severity = "info"
+            what = "a node" if reference.kind == "node" else "a source"
             message += (
-                f"; it names a source inside instance `{into}`, which {_SOLVER[index.dialect]} "
+                f"; it names {what} inside instance `{into}`, which {_SOLVER[index.dialect]} "
                 "reads and the library does not resolve"
             )
         elif any(candidate.may_define_elsewhere for candidate in searched):
@@ -250,15 +251,53 @@ def _control_outcome(target: Component, name: str, dialect: Dialect) -> str:
     return f"{_SOLVER[dialect]} stops on it"
 
 
-def _control_into_instance(index: Index, scope: Scope, reference: Reference) -> str | None:
-    """The instance an LTspice controlling source ``X1:Vq`` reaches into, if it is one."""
-    if index.dialect is not Dialect.LTSPICE or reference.kind != "element":
+def _into_instance(index: Index, scope: Scope, reference: Reference) -> str | None:
+    """The instance of the scope that an unresolved name reaches into, if it names one.
+
+    Both solvers read such a name and the library keeps it as text, a known limit (§7.8;
+    decision 0016 item 6):
+
+    - LTspice: ``X1:Vq`` for any element reference (a controlling source, an ``I()`` read, a
+      ``K`` inductor, a ``.save I(...)``), and ``X1:n`` for a node an expression reads;
+    - ngspice: ``x1.n`` for a node an expression reads, and ``v.x1.vq`` (the device letter, the
+      instance, the name) for a source it reads. ngspice stops on ``i(x1.vq)``, so that one
+      stays a warning.
+    """
+    if reference.kind not in ("element", "node"):
         return None
-    head, colon, _ = reference.name.partition(":")
-    if not colon:
-        return None
+    if index.dialect is Dialect.LTSPICE:
+        head, colon, _ = reference.name.partition(":")
+        if not colon:
+            return None
+    elif reference.kind == "node":
+        head, dot, _ = reference.name.partition(".")
+        if not dot:
+            return None
+    else:
+        parts = reference.name.split(".")
+        if len(parts) < 3 or len(parts[0]) != 1 or reference.owner is None:
+            return None
+        if not _is_expression_read(reference):
+            return None
+        head = parts[1]
     instance = next(iter(scope.elements.get(scope.fold(head), ())), None)
     return head if isinstance(instance, SubcktInstance) else None
+
+
+def _is_expression_read(reference: Reference) -> bool:
+    """Whether an element reference is an ``i()`` read in a behavioural expression."""
+    owner = reference.owner
+    formulas = [
+        getattr(owner, "expression", None),
+        getattr(owner, "charge", None),
+        getattr(owner, "flux", None),
+        getattr(owner, "value", None),
+    ]
+    return any(
+        isinstance(formula, Formula)
+        and formula.span.start <= reference.span.start < formula.span.end
+        for formula in formulas
+    )
 
 
 def _instance_node_findings(

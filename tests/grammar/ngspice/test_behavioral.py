@@ -131,10 +131,26 @@ def test_the_expression_forms_of_e_and_g(
     assert [param.name for param in item.params] == params
 
 
-def test_a_node_named_value_is_a_node() -> None:
-    item = _element("E1 out 0 value 0 2")
-    assert [node.name for node in item.nodes] == ["out", "0", "value", "0"]
-    assert item.value.text == "2"
+@pytest.mark.parametrize("line", ["E1 out 0 value 0 2", "G1 0 out value 0 1m"])
+def test_value_after_the_output_nodes_is_the_keyword(line: str) -> None:
+    # ngspice stops: "mal formed E source instance: e1 out 0 vol= 0 2" (review R2).
+    error = _reject(line)
+    assert (error.line, error.column) == (2, 10)
+    assert "`value` here is the keyword of the expression form, and ngspice reads it so" in (
+        error.reason
+    )
+
+
+@pytest.mark.parametrize(
+    ("line", "names"),
+    [
+        ("F1 0 out value 2", ["0", "out"]),  # ngspice reads `value` as the controlling source
+        ("E1 out 0 vol 0 2", ["out", "0", "vol", "0"]),
+        ("E1 out 0 values 0 2", ["out", "0", "values", "0"]),
+    ],
+)
+def test_other_words_there_are_names(line: str, names: list[str]) -> None:
+    assert [node.name for node in _element(line).nodes] == names
 
 
 @pytest.mark.parametrize(
@@ -164,6 +180,25 @@ def test_the_m15b_forms_stay_unsupported(line: str, column: int, form: str) -> N
         parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
     assert (captured.value.line, captured.value.column) == (2, column)
     assert captured.value.construct == f"ngspice nonlinear dependent source form ({form})"
+
+
+@pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        ("E1 out 0 value={2*\n+ v(vx)}", 16),
+        ("E1 out 0 vol='2*\n+ v(vx)'", 14),
+        ("B1 out 0 V='2*\n+ v(vx)'", 12),
+        ("B1 out 0 V={2*\n+ v(vx)} tc1=0", 12),
+    ],
+)
+def test_a_delimited_expression_over_a_continuation_is_refused(line: str, column: int) -> None:
+    # ngspice joins the lines and runs these (review R4); every formula closes on its line here.
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert error.reason == (
+        "a braced or quoted expression must close on its line; join the lines, or write the "
+        "expression bare (B only)"
+    )
 
 
 def test_laplace_stays_a_parse_error() -> None:

@@ -222,6 +222,20 @@
       "column": 19,
       "error": "ParseError",
       "note": "ngspice's TABLE form, which LTspice runs but its reference does not show (decision 0016 item 9). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_value_node.cir": {
+      "sha256": "959ca80e9abc2de5bd14343e3ae5e7d4a8519d8eefa2838e060f82ce10ae91ce",
+      "line": 4,
+      "column": 13,
+      "error": "ParseError",
+      "note": "value after E's output nodes is the expression form's keyword, not a node; LTspice stops (decision 0016 item 9). Written for M15 review R2 from the maintainer's controlled_sources examples."
+    },
+    "f_value_source.cir": {
+      "sha256": "8b08f3e0a14db45542bca6f4755858cce1c5c6f2911759ec3d16f01e83494c02",
+      "line": 9,
+      "column": 10,
+      "error": "ParseError",
+      "note": "value after F's output nodes is the expression form's keyword, not the controlling source; LTspice runs it as value=2.2 (decision 0016 item 9). Written for M15 review R2 from the maintainer's controlled_sources examples."
     }
   }
 }

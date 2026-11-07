@@ -213,4 +213,7 @@ Decision 0016 items 2 and 9. Each row is a case of `tests/solver/test_ngspice_be
 | Stops on `E1 out 0 vol=2*v(vx)`, a bare expression after `vol=`; the manual writes quotes or braces. | `ParseError` at the expression (decision 0002). | `e-vol-bare`; `elements_rejects/e_vol_bare.cir` |
 | Stops on `E1 out 0 LAPLACE {v(vx)} {2}`; the manual says ngspice does not offer it (§5.2.5). | `ParseError`. | `e-laplace`; `elements_rejects/e_laplace.cir` |
 | Runs TABLE, POLY and FREQ on E and G, and POLY on F and H. | `UnsupportedConstruct` until M15b. | `e-table`, `e-poly`, `e-freq` |
+| Runs `E1 out 0 value={2*` / `+ v(vx)}`, `vol='2*` / `+ v(vx)'` and `B1 out 0 V='2*` / `+ v(vx)'`, joining the lines. | `ParseError` at the brace or quote: a braced or quoted expression must close on its line, as every formula must (review R4). | `e-value-continued`, `e-vol-continued`, `b-quoted-continued` |
+| Stops on `B1 out 0 V=2*v(vx)$c`: the `$c` is part of the expression (it runs `R7 out 0 1k$c`). | Loads, with the expression `2*v(vx)` and a trailing comment `$c`, as for every line. | `b-dollar` |
+| Stops on `E1 out 0 value 0 2` and `G1 0 out value 0 1m`: `value` is the keyword there ("mal formed E source instance"); it runs F and H with a source named `value`. | `ParseError` at `value` on E and G (review R2; decision 0016 item 9). | `e-value-node`, `g-value-node`, `f-value-source`; `elements_rejects/e_value_node.cir` |
 | Reports a singular matrix for `v(nonode)` in a B expression. | Loads, with `UNRESOLVED_NODE` (decision 0016 item 6). | `document_basic/node_read.cir` |

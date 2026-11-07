@@ -112,6 +112,8 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "E_FORM_KW": "`vol=` or `value`",
     "G_FORM_KW": "`cur=` or `value`",
     "VALUE_FORM_KW": "`value=`",
+    "VALUE_WORD_KW": "`value`",
+    "OPEN_FORMULA": "unclosed expression",
     "TABLE4_KW": "nonlinear source form",
     "B_NAME": "behavioral source (`B`)",
     "B_QUANTITY_KW": "behavioral source quantity",

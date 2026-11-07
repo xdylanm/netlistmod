@@ -132,6 +132,24 @@ class ControlledRules(ElementsRules):
             "quotes or braces (ngspice manual §5.2.1); write `{...}` or `'...'`",
         )
 
+    def unclosed_expression(self, children: list[Any]) -> NoReturn:
+        opening = next(child for child in children if isinstance(child, Token))
+        raise self._parse_error(
+            opening,
+            "a braced or quoted expression must close on its line; join the lines, or write the "
+            "expression bare (B only)",
+        )
+
+    def value_word(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        solver = "ngspice" if self._dialect is Dialect.NGSPICE else "LTspice"
+        raise self._parse_error(
+            keyword,
+            f"`{keyword}` here is the keyword of the expression form, and {solver} reads it so; "
+            "write the expression after `value=` in braces, or give the net or source another "
+            "name",
+        )
+
     def _voltage_controlled(
         self, kind: type[Vcvs | Vccs], element: _Element, children: list[Any]
     ) -> _Item:

@@ -15,7 +15,6 @@ from netlistmod.model.nodes import (
 )
 from netlistmod.model.values import Formula
 
-_EXPRESSION = SlotCheck((Formula,), "an expression")
 _CLOSING = {"{": "}", "'": "'", "": ""}
 
 
@@ -32,12 +31,15 @@ def set_expression(
 
     The expression is a B line's, the expression form of an E, F, G or H line, a C line's
     charge (``q=``, ``Q=``), an LTspice L line's ``Flux=``, or an R, C or L value written as a
-    formula. The quantity (``V=``) and the form (``vol=``) are not changed.
+    formula. The quantity (``V=``) and the form (``vol=``) are not changed. Text that would
+    change the delimiter is refused: a brace or quote that closes it early, or a whole
+    ``{...}`` or ``'...'`` in place of a bare expression.
     """
     element = _element(netlist, designator, scope, in_definition)
     formula = _expression_of(element, designator)
     replacement = f"{formula.delimiter}{text}{_CLOSING[formula.delimiter]}"
-    return [Edit(formula.span, replacement, f"set_expression {designator}", (_EXPRESSION,))]
+    slot = SlotCheck((Formula,), "an expression", delimiter=formula.delimiter)
+    return [Edit(formula.span, replacement, f"set_expression {designator}", (slot,))]
 
 
 def _expression_of(element: Component, designator: str) -> Formula:

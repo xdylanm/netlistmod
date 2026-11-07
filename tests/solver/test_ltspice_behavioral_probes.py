@@ -76,6 +76,17 @@ _PROBES = {
     "b-none": ("B1 out 0", False, "refused"),
     "b-tc1": ("B1 out 0 V=2*V(vx) tc1=0", False, "refused"),
     "b-laplace": ("B1 out 0 V=2*V(vx) laplace=1/(1+s/1k)", True, "unsupported"),
+    # Review R1: a read of a node inside an instance of sub.
+    "b-into-node": (
+        ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n" + "B1 out 0 V=V(X1:n)",
+        True,
+        "B v V(X1:n)",
+    ),
+    # Review R2: LTspice reads `value` there as the keyword, on all four letters.
+    "e-value-node": ("Rv value 0 1k\nE1 out 0 value 0 2", False, "refused"),
+    "g-value-node": ("Rv value 0 1k\nG1 0 out value 0 1m", False, "refused"),
+    "f-value-source": ("value vx vq 0\nRq vq 0 1k\nF1 0 out value 2", True, "refused"),
+    "h-value-source": ("value vx vq 0\nRq vq 0 1k\nH1 out 0 value 1k", True, "refused"),
     "e-value": ("E1 out 0 value={2*V(vx)}", True, "Vcvs value 2*V(vx)"),
     "e-value-bare": ("E1 out 0 value=2*V(vx)", True, "Vcvs value 2*V(vx)"),
     "g-value": ("G1 0 out value={2m*V(vx)}", True, "Vccs value 2m*V(vx)"),
@@ -89,6 +100,14 @@ _PROBES = {
     "c-charge": ("C9 out 0 Q=1u*x ic=0 m=2", True, "C Q 1u*x"),
     "c-charge-braces": ("C9 out 0 Q={1u*x}", True, "C Q 1u*x"),
     "l-flux": ("L9 out n9 Flux=1m*tanh(5*x)\nR9 n9 0 1k", True, "L 1m*tanh(5*x) "),
+    # Review R5: LTspice runs Rser= on the Flux= and hysteretic forms; the reference shows none.
+    "l-flux-rser": ("L9 out n9 Flux=1m*tanh(5*x) Rser=1\nR9 n9 0 1k", True, "refused"),
+    "l-hysteretic-rser": (
+        "L9 out n9 Hc=16 Bs=.44 Br=.10 A=0.0000251 Lm=0.0198 Lg=0.0006858 N=1000 Rser=1\n"
+        "R9 n9 0 1k",
+        True,
+        "refused",
+    ),
     "l-hysteretic": (
         "L9 out n9 Hc=16 Bs=.44 Br=.10 A=0.0000251 Lm=0.0198 Lg=0.0006858 N=1000\nR9 n9 0 1k",
         True,
