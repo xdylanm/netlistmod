@@ -1,6 +1,6 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** ACTIVE — review round 1 (section 6) requires changes R1 to R5 before M15 can close. T1 to T11 done (results in section 5); section 2 records the maintainer's decisions (2026-11-06).
+> **Status:** READY FOR REVIEW — review round 1 changes R1 to R5 made (2026-11-06); the maintainer accepted the decisions in section 2 on 2026-11-06
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
@@ -292,3 +292,26 @@ M15 goes back for changes R1 to R5. Most of the design holds up on review:
 ### 6.4 Exit for this round
 
 Make R1 to R5. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 6.5 Report (round 1, `7084360`)
+
+R1 to R5 are made in `7084360`.
+
+**Checks:**
+- Full local run at `7084360` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,410 passed, 2 skipped, coverage 98.54%, in 18 min 41 s.
+- CI on #12 at `7084360` is green on all five jobs.
+- The signature snapshot is unchanged. The tree snapshot adds `elements_rejects/e_value_node.cir` only.
+
+**Changes:**
+- **R1:** a node or source read whose first part names an instance of the scope is info, with `target` `None`: ngspice `v(x1.n)` and `i(v.x1.vq)` (the letter, the instance, the name), LTspice `V(X1:n)`, as `I(X1:Vq)` already was. `i(x1.vq)`, which ngspice stops on, stays a warning, and so does a name whose first part is not an instance. The function is `_into_instance` in `document/diagnostics.py`, and its docstring now lists every reference it applies to (6.3). Tests: `test_an_ngspice_read_into_an_instance_is_info` (four rows) and `test_an_ltspice_read_into_an_instance_is_info`; probes `b-into-node`, `b-into-source` and `b-into-source-short` (ngspice) and `b-into-node` (LTspice). Decision 0016 item 6, `errors.md` and `document-layer.md` say so.
+- **R2:** `value` and a blank after the output nodes is refused at `value` with "`value` here is the keyword of the expression form, and ngspice/LTspice reads it so; …". Probing F and H with a source named `value` found:
+  - ngspice runs `F1 0 out value 2` and `H1 out 0 value 1k` as linear sources, so ngspice F and H are unchanged;
+  - LTspice runs them as the expression form: `F1 0 out value 3` gives 3 kV on a 1k load, a constant 3 A. The library would have read a controlling source, so LTspice F and H are refused too.
+  - `vol`, `values` and a `value` in the control-node place stay names (`test_other_words_there_are_names`). New rejects: ngspice and LTspice `e_value_node.cir` and LTspice `f_value_source.cir` (which LTspice runs, so it is in `LTSPICE_RUNS`). Decision 0016 item 9 and both `discrepancies.md` record it.
+- **R3:** `SlotCheck` gains an optional `delimiter`, and the write-time slot check refuses a re-read formula with another one. The message says that the new text closes the delimiter early, or that a whole `{...}` or `'...'` would make a bare expression a delimited one. The four cases are in `test_set_expression_keeps_the_delimiter` on both dialects, with a quote case on ngspice. Decision 0016 item 7 and the docstring say so.
+- **R4:** a new terminal, `OPEN_FORMULA`, is an opening brace or quote with no closing one on its physical line, and runs over the `+` lines after it. After ngspice's `vol=`, `cur=`, `value` and B's quantity it gives "a braced or quoted expression must close on its line; join the lines, or write the expression bare (B only)" at the brace or quote. `bare_expression` no longer takes such a field. This also refuses `B1 out 0 V={2*` / `+ v(vx)}`, which loaded before as a bare expression holding braces. Tests: `test_a_delimited_expression_over_a_continuation_is_refused` (four lines with columns); probes `e-value-continued`, `e-vol-continued` and `b-quoted-continued` show that ngspice runs them. The ngspice `discrepancies.md` records it.
+- **R5:**
+  - The LTspice "Exceptions to the reference" row keeps `.machine` with its two tests. A new row lists the M15b forms with the current test names. README row C, L is current.
+  - The reference shows no parameters on `Flux=` or the hysteretic core. So `Rser=` on them stays refused, with probes `l-flux-rser` and `l-hysteretic-rser` and a row in "Forms LTspice runs and the library rejects".
+  - ngspice's stop on `B1 out 0 V=2*v(vx)$c` is a row in the ngspice `discrepancies.md` (probe `b-dollar`). The library still reads `$c` as a comment, as on every line.
+- **6.3:** the `formula.lark` comment is added. The `__all__` order is left as it is: those lists are grouped by hand, not sorted. Architecture §5.3's `| None` waits for T12, as noted.
