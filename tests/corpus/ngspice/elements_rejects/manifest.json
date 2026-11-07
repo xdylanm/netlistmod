@@ -208,6 +208,13 @@
       "column": 11,
       "error": "UnsupportedConstruct",
       "note": "POLY(2) with one node pair; ngspice stops. POLY is M15b's, which makes this a ParseError (decision 0016 item 8). Written for M15 from the maintainer's controlled_sources examples."
+    },
+    "e_value_node.cir": {
+      "sha256": "0ed79875e9bb67d2e6d6612a8b2cccb90761b8f857e9e50c26b3031ac672ec40",
+      "line": 14,
+      "column": 11,
+      "error": "ParseError",
+      "note": "value after E's output nodes is the expression form's keyword, not a node; ngspice stops (decision 0016 item 9). Written for M15 review R2 from the maintainer's controlled_sources examples."
     }
   }
 }

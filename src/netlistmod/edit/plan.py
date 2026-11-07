@@ -21,12 +21,15 @@ class SlotCheck:
     ``start`` and ``end`` are offsets into :attr:`Edit.text` (``end=None`` for its end); the
     write-time check (decision 0007 item 8, step 5) looks for a node of one of ``kinds`` whose
     span is exactly that part of the new text. ``description`` names the slot in messages.
+    ``delimiter``, when set, is the delimiter that node must have (a ``Formula``'s ``{``,
+    ``'`` or none), so that new text cannot close the delimiter early or add one.
     """
 
     kinds: tuple[type, ...]
     description: str
     start: int = 0
     end: int | None = None
+    delimiter: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

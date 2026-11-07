@@ -102,6 +102,38 @@ def test_a_source_inside_an_instance_is_info() -> None:
     assert _codes(netlist) == [(C.UNRESOLVED_ELEMENT, "info", "X1:Vq")]
 
 
+_SUB = ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n"
+
+
+@pytest.mark.ngspice_only
+@pytest.mark.parametrize(
+    ("line", "expected"),
+    [
+        ("B1 out 0 V=v(x1.n)", (C.UNRESOLVED_NODE, "info", "x1.n")),
+        ("B1 out 0 V=1k*i(v.x1.vq)", (C.UNRESOLVED_ELEMENT, "info", "v.x1.vq")),
+        # ngspice stops on it: "unknown controlling source v_x1.vq".
+        ("B1 out 0 V=1k*i(x1.vq)", (C.UNRESOLVED_ELEMENT, "warning", "x1.vq")),
+        ("B1 out 0 V=v(y1.n)", (C.UNRESOLVED_NODE, "warning", "y1.n")),  # no instance y1
+    ],
+)
+def test_an_ngspice_read_into_an_instance_is_info(
+    line: str, expected: tuple[DiagnosticCode, str, str]
+) -> None:
+    netlist = _netlist(_SUB + "R3 out 0 1k\n" + line)
+    assert _codes(netlist) == [expected]
+    assert [read.target for read in netlist.expression_reads("B1")] == [None]
+    if expected[1] == "info":
+        assert "inside instance `x1`" in netlist.diagnostics[0].message
+
+
+@pytest.mark.ltspice_only
+def test_an_ltspice_read_into_an_instance_is_info() -> None:
+    netlist = _netlist(_SUB + "R3 out 0 1k\nB1 out 0 V=V(X1:n)")
+    assert _codes(netlist) == [(C.UNRESOLVED_NODE, "info", "X1:n")]
+    assert "names a node inside instance `X1`" in netlist.diagnostics[0].message
+    assert [read.target for read in netlist.expression_reads("B1")] == [None]
+
+
 def test_value_forms_read_their_sources() -> None:
     body = (
         "V1 a 0 1\nVs a b 0\nR1 b 0 1k\nF1 0 o value={2*I(Vs)}\nR2 o 0 1k"

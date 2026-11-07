@@ -41,7 +41,9 @@ def _reading(text: str) -> str:
     item = netlist.lines.find_all((BehavioralSource, ControlledSource), recursive=True)[-1].item
     if isinstance(item, BehavioralSource):
         return f"B {item.quantity} {item.expression.text}"
-    assert isinstance(item, ControlledSource) and item.expression is not None
+    assert isinstance(item, ControlledSource)
+    if item.expression is None:
+        return "linear"
     return f"{type(item).__name__} {item.form} {item.expression.text}"
 
 
@@ -60,9 +62,38 @@ _PROBES = {
     "b-none": ("B1 out 0", False, "refused"),
     "b-r": ("B1 out 0 R=1k", False, "refused"),
     "b-p": ("B1 out 0 P=4m", False, "refused"),
+    # Review R5: a $ right after a bare expression is part of it to ngspice, which stops.
+    "b-dollar": ("B1 out 0 V=2*v(vx)$c", False, "B v 2*v(vx)"),
     "b-time": ("B1 out 0 V=2+time", True, "B v 2+time"),
     "b-ternary": ("B1 out 0 V = v(vx) > 0.5 ? 2 : 0", True, "B v v(vx) > 0.5 ? 2 : 0"),
     "b-pwl": ("B1 out 0 V = pwl(v(vx), 0,0, 1,2, 2,4)", True, "B v pwl(v(vx), 0,0, 1,2, 2,4)"),
+    # Review R1: reads into an instance of sub (Vq, then a divider to n).
+    "b-into-node": (
+        ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n" + "B1 out 0 V=v(x1.n)",
+        True,
+        "B v v(x1.n)",
+    ),
+    "b-into-source": (
+        ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n"
+        + "B1 out 0 V=1k*i(v.x1.vq)",
+        True,
+        "B v 1k*i(v.x1.vq)",
+    ),
+    "b-into-source-short": (
+        ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n"
+        + "B1 out 0 V=1k*i(x1.vq)",
+        False,
+        "B v 1k*i(x1.vq)",
+    ),
+    # Review R2: `value` after the output nodes is the keyword, to ngspice too.
+    "e-value-node": ("Rv value 0 1k\nE1 out 0 value 0 2", False, "refused"),
+    "g-value-node": ("Rv value 0 1k\nG1 0 out value 0 1m", False, "refused"),
+    "f-value-source": ("value vx vq 0\nRq vq 0 1k\nF1 0 out value 2", True, "linear"),
+    "h-value-source": ("value vx vq 0\nRq vq 0 1k\nH1 out 0 value 1k", True, "linear"),
+    # Review R4: ngspice joins a braced or quoted expression over a + line; the library refuses.
+    "e-value-continued": ("E1 out 0 value={2*\n+ v(vx)}", True, "refused"),
+    "e-vol-continued": ("E1 out 0 vol='2*\n+ v(vx)'", True, "refused"),
+    "b-quoted-continued": ("B1 out 0 V='2*\n+ v(vx)'", True, "refused"),
     "e-vol-quotes": ("E1 out 0 vol='2*v(vx)'", True, "Vcvs vol 2*v(vx)"),
     "e-vol-braces": ("E1 out 0 vol={2*v(vx)}", True, "Vcvs vol 2*v(vx)"),
     "e-vol-bare": ("E1 out 0 vol=2*v(vx)", False, "refused"),

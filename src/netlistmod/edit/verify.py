@@ -140,8 +140,14 @@ def check_slots(text: str, result: ParseResult, plan: EditPlan) -> None:
         for slot in edit.slots:
             end = len(edit.text) if slot.end is None else slot.end
             span = Span(start + slot.start, start + end)
-            if not any(isinstance(node, slot.kinds) for node in nodes.get(span, ())):
-                raise EditError(_slot_message(edit, text[span.start : span.end], slot.description))
+            found = [node for node in nodes.get(span, ()) if isinstance(node, slot.kinds)]
+            written = text[span.start : span.end]
+            if not found:
+                raise EditError(_slot_message(edit, written, slot.description))
+            if slot.delimiter is not None and all(
+                getattr(node, "delimiter", None) != slot.delimiter for node in found
+            ):
+                raise EditError(_delimiter_message(edit, written, slot.delimiter))
         shift += len(edit.text) - edit.span.length
 
 
@@ -151,6 +157,18 @@ def _slot_message(edit: Edit, written: str, description: str) -> str:
         f"{reason}`{written}` does not re-parse as {description}; the text would change more "
         "than the intended slot"
     )
+
+
+def _delimiter_message(edit: Edit, written: str, delimiter: str) -> str:
+    reason = f"{edit.reason}: " if edit.reason else ""
+    if delimiter:
+        why = f"the new text closes the `{delimiter}` early, so the expression would end there"
+    else:
+        why = (
+            "the new text is a whole `{...}` or `'...'`, which would make the bare expression a "
+            "delimited one"
+        )
+    return f"{reason}`{written}` does not keep the expression's delimiter: {why}"
 
 
 def _spanned(node: object) -> Iterator[tuple[object, Span]]:

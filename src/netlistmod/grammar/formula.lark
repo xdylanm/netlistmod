@@ -13,6 +13,8 @@
 %ignore WS
 // A bare behavioural expression may run over + continuation lines and hold {param} groups inside
 // (manual 5.1; decision 0016 item 5), so both are read here.
+// The continuation and the brace atom are for behavioural expressions (M15); no other formula
+// holds a continuation or a nested brace, so they change nothing elsewhere.
 %ignore CONT
 
 // spec: NG-FML-001

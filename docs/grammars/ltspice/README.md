@@ -28,7 +28,7 @@ only syntax facts about LTspice: never its raw files, logs, or timing or perform
 | Names | [SYNTAX] Node Naming | no | own character set, Unicode fold, `$G_*` |
 | Numbers | [SYNTAX] Engineering Multipliers | standard form | embedded decimal in every slot, any trailing letters |
 | R | [ELEMENTS] R | value, formula | `tc` list, closed list; no model or keyword form |
-| C, L | [ELEMENTS] C, L | value, formula | closed lists; `Q=`, `Flux=`, `Hc=` unsupported |
+| C, L | [ELEMENTS] C, L | value, formula; C `Q=`, L `Flux=` and the hysteretic core (M15) | closed lists; no parameters on `Flux=` or the hysteretic core |
 | V, I | [ELEMENTS] V, I | DC, AC | `AC=`, `Rser`, `Cpar`, `load`, `R=` |
 | D | [ELEMENTS] D | model | positional area, closed list |
 | X, `.subckt` | [ELEMENTS] X, [COMMANDS] .SUBCKT | yes | `params:` accepted |

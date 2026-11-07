@@ -90,6 +90,27 @@ def test_a_bare_expression_that_does_not_land_is_refused() -> None:
         _netlist().set_expression("B1", "2 * v(a) tc2=1")
 
 
+@pytest.mark.parametrize(
+    ("designator", "text", "message"),
+    [
+        ("B2", "3}", "closes the `{` early"),
+        ("B2", "a{b}", "closes the `{` early"),
+        ("B2", "1+{k}", "closes the `{` early"),
+        ("B1", "{k}", "would make the bare expression a delimited one"),
+    ],
+)
+def test_set_expression_keeps_the_delimiter(designator: str, text: str, message: str) -> None:
+    # Review R3: each of these re-reads with another delimiter.
+    with pytest.raises(EditError, match=message):
+        _netlist().set_expression(designator, text)
+
+
+@pytest.mark.ngspice_only
+def test_a_quote_that_closes_a_quoted_expression_is_refused() -> None:
+    with pytest.raises(EditError):
+        _netlist().set_expression("E1", "2'+'1")
+
+
 def test_set_param_edits_the_trailing_parameters() -> None:
     netlist = _netlist()
     name = "tc1" if current_dialect() is Dialect.NGSPICE else "ic"

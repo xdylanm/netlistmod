@@ -103,6 +103,20 @@ def test_value_on_e_to_h(line: str, kind: type) -> None:
     assert "V(vx)" in item.expression.text or "I(Vs)" in item.expression.text
 
 
+@pytest.mark.parametrize(
+    "line",
+    ["E1 out 0 value 0 2", "G1 0 out value 0 1m", "F1 0 out value 2", "H1 out 0 value 1k"],
+)
+def test_value_after_the_output_nodes_is_the_keyword(line: str) -> None:
+    # LTspice stops on E and G ("Unknown parameter") and reads F1 0 out value 2 as value=2
+    # (review R2).
+    error = _reject(line)
+    assert (error.line, error.column) == (2, 10)
+    assert "`value` here is the keyword of the expression form, and LTspice reads it so" in (
+        error.reason
+    )
+
+
 def test_ngspice_forms_are_refused_on_ltspice() -> None:
     assert _reject("E1 out 0 vol='2*V(vx)'").column == 13
     # LTspice runs ngspice's TABLE form, which its reference does not show (decision 0016 item 9).

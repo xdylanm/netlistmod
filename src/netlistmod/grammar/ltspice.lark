@@ -348,11 +348,18 @@ _x_expression: (BRACE_FORMULA | QUOTE_FORMULA) (NL | eol)
 _x_more: (NL | eol)
        | SEP B_PIECE _x_more
 VALUE_FORM_KW.3: /value(?=[ \t]*=)/i
+// `value` and a blank after the output nodes is the keyword to LTspice: it stops on E and G
+// ("Unknown parameter") and reads F and H as the value form. Recognised only so that it gets
+// its own message.
+value_word: SEP VALUE_WORD_KW rest NL
+          | (SEP | TRAILING_COMMENT) value_word
+VALUE_WORD_KW.3: /value(?=[ \t]+[^ \t\r\n={'])/i
 
 // spec: LT-VCV-001
 vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
     | E_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | E_NAME node node value_form _x_expression
+    | E_NAME node node value_word
     | E_NAME node node nonlinear_form
 %override E_NAME.4: /[Ee]/ _LT_CHAR*
 
@@ -360,6 +367,7 @@ vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
 vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
     | G_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | G_NAME node node value_form _x_expression
+    | G_NAME node node value_word
     | G_NAME node node nonlinear_form
 %override G_NAME.4: /[Gg]/ _LT_CHAR*
 
@@ -367,6 +375,7 @@ vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
 cccs: F_NAME node node ctl_ref value (NL | eol)
     | F_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | F_NAME node node value_form _x_expression
+    | F_NAME node node value_word
     | F_NAME node node nonlinear_form
 %override F_NAME.4: /[Ff]/ _LT_CHAR*
 
@@ -374,6 +383,7 @@ cccs: F_NAME node node ctl_ref value (NL | eol)
 ccvs: H_NAME node node ctl_ref value (NL | eol)
     | H_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | H_NAME node node value_form _x_expression
+    | H_NAME node node value_word
     | H_NAME node node nonlinear_form
 %override H_NAME.4: /[Hh]/ _LT_CHAR*
 
