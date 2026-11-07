@@ -1,7 +1,7 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** READY FOR REVIEW — review round 2 change R6 made (2026-11-06); R1 to R5 of round 1 are made (section 6.5); section 2 records the maintainer's decisions (2026-11-06).
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
+> **Status:** COMPLETE (2026-11-06) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M15). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
 
@@ -187,7 +187,7 @@ The M15b files are written now, so that one review confirms their provenance. Th
 
 ### After the maintainer's approval
 
-[ ] **T12 — Close M15.** Archive this list, accept decision 0016, and update the plan and index. Then write the M15b task list from decisions 1, 7, 8 and 9 and the M15b files of section 3.3.
+[x] **T12 — Close M15.** Archive this list, accept decision 0016, and update the plan and index. Then write the M15b task list from decisions 1, 7, 8 and 9 and the M15b files of section 3.3.
 
 ## 5. Results
 
@@ -377,3 +377,25 @@ R6 is made in `8b5cfc8`.
 - Tests: `test_a_net_named_value_on_e_or_g_is_refused` (the six ngspice lines of the table and a `vol=` line, with columns); `test_other_words_there_are_names` gains `H1 value 0 Vs 1k` and `R5 out value 1k`; `test_a_net_named_value_in_another_node_position_is_a_node` shows that the six lines load on LTspice. They are listed in NG-NLS-001 and LT-NLS-001.
 - Probes: `e-value-out`, `e-value-out-minus` and `e-value-control-minus` (ngspice stops; refused), and `h-value-out` (ngspice runs; linear).
 - Decision 0016 item 9, the ngspice `discrepancies.md` row and the `value_word` comment in `ngspice.lark` say so.
+
+## 8. Review round 3 (2026-11-06, `55b975c`) — no further changes required
+
+### 8.1 Outcome
+
+R6 is made as 7.5 reports. Nothing else is required, and M15 is ready for the maintainer's approval (T12).
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,429 passed, 2 skipped, coverage 98.54%, in 18 min 20 s. This matches 7.5.
+  - ruff, ruff format and `mypy src` are clean.
+  - CI on #12 at `55b975c` is green on all five jobs. This settles the CI read that 7.5 left pending.
+- **R6 (probed on ngspice 47):**
+  - `E1 value 0 vx 0 2`, `E1 out value vx 0 2`, `E1 out 0 vx Value 2` and `G1 0 out vx value 1m` are refused at `value`, at the right column. ngspice stops on each.
+  - The same E inside a subcircuit is refused too.
+  - `H1 value 0 Vs 1k` and `E1 out 0 vx values 2` load, and ngspice runs them.
+  - On LTspice, `E1 out 0 vx value 2` and `E1 out value vx 0 2` load, and LTspice runs them.
+
+### 8.2 Noted, no change required
+
+- **ngspice runs some of the newly refused lines, but wires them wrongly.** `E1 value 0 vol='2*v(vx)'` and `E1 value 0 value={2*v(vx)}` run on ngspice. However, `v(value)` is 1.5 V: the voltage of a 3 V source through 1k into `Rv value 0 1k`, as if `E1` were not there. The expected 2 V does not appear. ngspice's word replacement moves `E1` off the net `value` without a message.
+  - So refusing these lines is right. Loading them would report a topology that ngspice does not simulate.
+  - The ngspice `discrepancies.md` row could say "runs, with `E1` not connected to `value`" for the expression forms. That can wait for T12.
+- The `__all__` order and architecture §5.3's `| None` stay as 6.5 says. T12 picks up the second when it accepts decision 0016.

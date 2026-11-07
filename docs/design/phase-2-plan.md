@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M14 are complete, and M15 is ready for review
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M15 are complete, and M15b is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -80,7 +80,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - S and W models (SW, CSW) with `on` and `off`.
 - **Exit:** a negative test shows that any change to a control node or controlling source is a `TopologyViolation`.
 
-### M15 — Behavioural forms (B, and nonlinear E, F, G, H) ([task list](./m15-tasks.md); split into M15 and M15b, decision 1)
+### M15 — Behavioural forms (B, and nonlinear E, F, G, H) (complete; [task list](./archive/phase-2/m15-tasks.md), [decision 0016](../decisions/0016-behavioral-expressions.md); split into M15 and M15b, decision 1)
 
 - **B:** ngspice forms (manual §5.1); LTspice `V=`, `I=`, `R=` and `P=` with their parameters.
 - **E and G:** ngspice `vol=`, `cur=`, `VALUE`, `TABLE` and POLY (§5.2–§5.5); LTspice `table=`, `Laplace=`, `value=` and POLY. POLY control nodes are topology.
@@ -90,7 +90,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Exit:** every form has golden diffs and solver tests showing results move as expected.
 - **Split (maintainer, 2026-11-06):** M15 holds B, the expression forms of E, F, G and H, C `Q=` and L `Flux=` and the hysteretic L, the formula scan, the expression edit and the query. M15b holds the rest.
 
-### M15b — Tables, polynomials and transfer functions
+### M15b — Tables, polynomials and transfer functions ([task list](./m15b-tasks.md))
 
 - TABLE and `table=`, POLY on E, F, G and H (its control nodes and sources are topology, counted from the dimension), `Laplace=` on E, G and LTspice's B, and ngspice's FREQ and AND, OR, NAND and NOR (manual §5.2.6, §5.2.7).
 - **Edit API:** set a table's points and a polynomial's coefficients.
