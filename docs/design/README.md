@@ -21,7 +21,7 @@ Active plans and design notes live in this folder. Completed work records move t
 | Document | Status |
 |---|---|
 | [phase-2-plan.md](./phase-2-plan.md) | ACTIVE |
-| [m15-tasks.md](./m15-tasks.md) | ACTIVE |
+| [m15b-tasks.md](./m15b-tasks.md) | DRAFT |
 | [elements.md](./elements.md) | ACTIVE (living reference) |
 | [statements.md](./statements.md) | ACTIVE (living reference) |
 | [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
@@ -31,6 +31,7 @@ Active plans and design notes live in this folder. Completed work records move t
 | [archive/phase-2/m11-tasks.md](./archive/phase-2/m11-tasks.md) | COMPLETE (2026-11-04) |
 | [archive/phase-2/m13-tasks.md](./archive/phase-2/m13-tasks.md) | COMPLETE (2026-11-06) |
 | [archive/phase-2/m14-tasks.md](./archive/phase-2/m14-tasks.md) | COMPLETE (2026-11-06) |
+| [archive/phase-2/m15-tasks.md](./archive/phase-2/m15-tasks.md) | COMPLETE (2026-11-06) |
 | [archive/phase-2/phase-2-code-changes.md](./archive/phase-2/phase-2-code-changes.md) | COMPLETE (2026-11-03) |
 | [archive/phase-1/m0-tasks.md](./archive/phase-1/m0-tasks.md) | COMPLETE (2026-10-20) |
 | [archive/phase-1/m1-tasks.md](./archive/phase-1/m1-tasks.md) | COMPLETE (2026-10-21) |
