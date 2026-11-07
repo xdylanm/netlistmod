@@ -88,6 +88,11 @@ _PROBES = {
     # Review R2: `value` after the output nodes is the keyword, to ngspice too.
     "e-value-node": ("Rv value 0 1k\nE1 out 0 value 0 2", False, "refused"),
     "g-value-node": ("Rv value 0 1k\nG1 0 out value 0 1m", False, "refused"),
+    # Review R6: ngspice reads `value` as the keyword in every node position of E and G.
+    "e-value-out": ("Rv value 0 1k\nE1 value 0 vx 0 2", False, "refused"),
+    "e-value-out-minus": ("Rv value 0 1k\nE1 out value vx 0 2", False, "refused"),
+    "e-value-control-minus": ("Rv value 0 1k\nE1 out 0 vx value 2", False, "refused"),
+    "h-value-out": ("Rv value 0 1k\nH1 value 0 Vsense 1k", True, "linear"),
     "f-value-source": ("value vx vq 0\nRq vq 0 1k\nF1 0 out value 2", True, "linear"),
     "h-value-source": ("value vx vq 0\nRq vq 0 1k\nH1 out 0 value 1k", True, "linear"),
     # Review R4: ngspice joins a braced or quoted expression over a + line; the library refuses.

@@ -142,9 +142,33 @@ def test_value_after_the_output_nodes_is_the_keyword(line: str) -> None:
 
 
 @pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        ("E1 value 0 vx 0 2", 4),
+        ("E1 out value vx 0 2", 8),
+        ("E1 out 0 vx value 2", 13),
+        ("E1 out 0 vx VALUE 2", 13),
+        ("G1 0 value vx 0 1m", 6),
+        ("G1 0 out vx value 1m", 13),
+        ("E1 value 0 vol='2*v(vx)'", 4),
+    ],
+)
+def test_a_net_named_value_on_e_or_g_is_refused(line: str, column: int) -> None:
+    # ngspice replaces `value` with `vol=` or `cur=` wherever it stands, and stops: "mal formed
+    # E source instance: e1  vol= 0 vx 0 2" (review R6).
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert "ngspice reads `value` on an E or G line as the keyword of the expression form" in (
+        error.reason
+    )
+
+
+@pytest.mark.parametrize(
     ("line", "names"),
     [
         ("F1 0 out value 2", ["0", "out"]),  # ngspice reads `value` as the controlling source
+        ("H1 value 0 Vs 1k", ["value", "0"]),  # ngspice runs it (review R6)
+        ("R5 out value 1k", ["out", "value"]),
         ("E1 out 0 vol 0 2", ["out", "0", "vol", "0"]),
         ("E1 out 0 values 0 2", ["out", "0", "values", "0"]),
     ],

@@ -14,6 +14,7 @@ from netlistmod.model.nodes import (
     Cccs,
     Ccvs,
     CurrentSwitch,
+    Node,
     Vccs,
     Vcvs,
     VoltageSwitch,
@@ -153,6 +154,16 @@ class ControlledRules(ElementsRules):
     def _voltage_controlled(
         self, kind: type[Vcvs | Vccs], element: _Element, children: list[Any]
     ) -> _Item:
+        if self._dialect is Dialect.NGSPICE:
+            # ngspice replaces the word `value` with `vol=` or `cur=` wherever it stands on an E
+            # or G line, so a net of that name stops it in any node position (review R6).
+            for node in element.all(Node):
+                if node.name.lower() == "value":
+                    raise self._error_at(
+                        node.span.start,
+                        f"`{node.name}`: ngspice reads `value` on an E or G line as the keyword "
+                        "of the expression form, in any node position; give the net another name",
+                    )
         fields = self._gain_or_expression(element, children)
         return _Item(element.end, lambda span: kind(**_common(element, span), **fields))
 

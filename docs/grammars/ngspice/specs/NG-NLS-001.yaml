@@ -27,6 +27,7 @@ tests:
 - tests/grammar/ngspice/test_behavioral.py::test_the_expression_forms_of_e_and_g
 - tests/grammar/ngspice/test_behavioral.py::test_value_after_the_output_nodes_is_the_keyword
 - tests/grammar/ngspice/test_behavioral.py::test_other_words_there_are_names
+- tests/grammar/ngspice/test_behavioral.py::test_a_net_named_value_on_e_or_g_is_refused
 - tests/grammar/ngspice/test_behavioral.py::test_a_delimited_expression_over_a_continuation_is_refused
 - tests/grammar/ngspice/test_behavioral.py::test_a_bare_expression_after_vol_or_cur_is_refused
 - tests/grammar/ngspice/test_behavioral.py::test_the_m15b_forms_stay_unsupported

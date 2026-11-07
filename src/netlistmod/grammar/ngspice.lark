@@ -418,7 +418,8 @@ TABLE4_KW.3: /table[ \t]*(?==)/i
 // A bare expression there stops ngspice; recognised only so that it gets its own message.
 bare_expression: B_PIECE rest NL
 // `value` and a blank after E's or G's output nodes is the keyword to ngspice, which stops
-// ("mal formed E source instance"); recognised only so that it gets its own message.
+// ("mal formed E source instance"); recognised only so that it gets its own message. A node
+// `value` in another position of E or G is refused by the transformer (review R6).
 value_word: (SEP | CSEP | BS_CONT) VALUE_WORD_KW rest NL
           | (SEP | TRAILING_COMMENT | BS_CONT) value_word
 VALUE_WORD_KW.3: /value(?=[ \t]+[^ \t\r\n={'])/i
