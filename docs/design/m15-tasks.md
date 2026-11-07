@@ -1,6 +1,6 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
-> **Status:** ACTIVE — review round 2 (section 7) requires change R6 before M15 can close. R1 to R5 of round 1 are made (section 6.5); section 2 records the maintainer's decisions (2026-11-06).
+> **Status:** READY FOR REVIEW — review round 2 change R6 made (2026-11-06); R1 to R5 of round 1 are made (section 6.5); section 2 records the maintainer's decisions (2026-11-06).
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
@@ -338,7 +338,7 @@ R1, R3, R4 and R5 are made as 6.5 reports. R2 is right for the third field of ev
 
 ### 7.2 Required change
 
-[ ] **R6 — On ngspice, `value` is the keyword in every node position of E and G.**
+[x] **R6 — On ngspice, `value` is the keyword in every node position of E and G.**
 
 | Line, with a net `value` (`Rv value 0 1k`) | ngspice 47 | Library at `cf8051b` |
 |---|---|---|
@@ -362,3 +362,18 @@ R1, R3, R4 and R5 are made as 6.5 reports. R2 is right for the third field of ev
 ### 7.4 Exit for this round
 
 Make R6. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 7.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 7.5 Report (round 2, `8b5cfc8`)
+
+R6 is made in `8b5cfc8`.
+
+**Checks:**
+- Full local run at `8b5cfc8` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,429 passed, 2 skipped, coverage 98.54%, in 17 min 51 s.
+- CI on #12 at `8b5cfc8`: all five jobs were still pending at the one read after the push, which this round made after the local run rather than before it; the result is on the PR.
+- No corpus file changed, so both snapshots are unchanged.
+
+**R6:**
+- On ngspice, `_voltage_controlled` refuses a node written `value`, in any case, on an E or G line, at that node: "`value`: ngspice reads `value` on an E or G line as the keyword of the expression form, in any node position; give the net another name". It covers the expression forms too (`E1 value 0 vol='2*v(vx)'`). The third field keeps R2's grammar refusal and message. LTspice, F, H and the other letters are unchanged.
+- Tests: `test_a_net_named_value_on_e_or_g_is_refused` (the six ngspice lines of the table and a `vol=` line, with columns); `test_other_words_there_are_names` gains `H1 value 0 Vs 1k` and `R5 out value 1k`; `test_a_net_named_value_in_another_node_position_is_a_node` shows that the six lines load on LTspice. They are listed in NG-NLS-001 and LT-NLS-001.
+- Probes: `e-value-out`, `e-value-out-minus` and `e-value-control-minus` (ngspice stops; refused), and `h-value-out` (ngspice runs; linear).
+- Decision 0016 item 9, the ngspice `discrepancies.md` row and the `value_word` comment in `ngspice.lark` say so.
