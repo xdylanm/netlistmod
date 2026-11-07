@@ -1,0 +1,76 @@
+name: Release
+
+# Publishing a GitHub Release (tag v<version>, made on main) publishes that version to PyPI.
+# Decision 0018. PyPI trusts this repository, this workflow file and the `pypi` environment
+# (Trusted Publishing), so no token is stored.
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+        with:
+          python-version: "3.13"
+      - name: Tag must match the package version
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          version=$(python -c 'import tomllib; print(tomllib.load(open("pyproject.toml", "rb"))["project"]["version"])')
+          if [ "$TAG" != "v$version" ]; then
+            echo "Tag $TAG does not match pyproject.toml version $version" >&2
+            exit 1
+          fi
+      - run: uv build
+      - name: Smoke test the wheel in a clean environment
+        run: |
+          uv venv "$RUNNER_TEMP/smoke"
+          uv pip install --python "$RUNNER_TEMP/smoke/bin/python" dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/smoke/bin/python" -I - <<'PY'
+          import tempfile
+          from importlib.metadata import version
+          from pathlib import Path
+
+          import netlistmod
+          from netlistmod import Dialect, Netlist
+
+          assert netlistmod.__version__ == version("netlistmod")
+          with tempfile.TemporaryDirectory() as folder:
+              path = Path(folder) / "divider.cir"
+              path.write_bytes(b"divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 1k\n.op\n.end\n")
+              Netlist.load(path, dialect=Dialect.NGSPICE).set_value("R2", "3k").save()
+              assert path.read_bytes() == b"divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 3k\n.op\n.end\n"
+              Netlist.load(path, dialect=Dialect.LTSPICE)
+          PY
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: dist
+          path: dist/
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: pypi
+      url: https://pypi.org/project/netlistmod/
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: dist
+          path: dist/
+      - uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3

@@ -19,8 +19,10 @@ device letters raise `UnsupportedConstruct` until their phase 2 milestone.
 ## Quick start
 
 ```bash
-uv sync
+pip install netlistmod
 ```
+
+To work on the library itself, clone it and run `uv sync`.
 
 ```python
 >>> from pathlib import Path
@@ -57,7 +59,7 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 
 ## Status
 
-Phase 1 is complete, with both dialects validated on their solvers ([M9](docs/design/archive/phase-1/m9-tasks.md)), and phase 2 is next. There is no release yet.
+Phase 1 is complete, with both dialects validated on their solvers ([M9](docs/design/archive/phase-1/m9-tasks.md)), and phase 2 is under way. The current release is an alpha (`0.5.0`): the public API may still change before 1.0.
 
 Supported platforms are Linux and Windows, with Python 3.13 or newer. LTspice validation runs on Windows. macOS is not tested.
 

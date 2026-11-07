@@ -4,12 +4,32 @@ build-backend = "hatchling.build"
 
 [project]
 name = "netlistmod"
-version = "0.1.0"
+version = "0.5.0"
 description = "A source-preserving SPICE netlist editing library"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "xdylanm" }]
+keywords = ["spice", "netlist", "ngspice", "ltspice", "parser", "editor"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+    "Typing :: Typed",
+]
 dependencies = ["lark>=1.2.2", "interegular>=0.3.3"]
+
+[project.urls]
+Homepage = "https://github.com/xdylanm/netlistmod"
+Repository = "https://github.com/xdylanm/netlistmod"
+Changelog = "https://github.com/xdylanm/netlistmod/blob/main/CHANGELOG.md"
 
 [dependency-groups]
 dev = [

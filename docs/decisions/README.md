@@ -19,3 +19,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0014 — Transistors](0014-transistors.md)
 - [0015 — Linear dependent sources and switches](0015-controlled-sources.md)
 - [0016 — Behavioural expressions](0016-behavioral-expressions.md)
+- [0018 — Publishing to PyPI](0018-pypi-publication.md) (0017 is reserved for M15b)
