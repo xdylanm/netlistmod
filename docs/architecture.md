@@ -565,7 +565,7 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
   - test matrix across Linux and Windows and supported Python versions, which includes the strict grammar build, spec-coverage, docs link and coverage checks;
   - Dependabot for actions and dependencies.
 - **Merging:** one pull request per milestone, merged after review and only when CI is green. Branch protection enforces this where the repository's plan allows.
-- **Not in v1:** macOS, a solver in CI, and a release workflow. v1 is a beta tagged `0.9.0`, not published to PyPI.
+- **Not in v1:** macOS and a solver in CI. v1 is a beta tagged `0.9.0`. A release workflow publishes a GitHub Release to PyPI through Trusted Publishing ([decision 0018](decisions/0018-pypi-publication.md)); `0.5.0` is the first, an alpha.
 - **LTspice:** no CI job in v1; local procedure documented in `docs/testing.md`.
 
 ---

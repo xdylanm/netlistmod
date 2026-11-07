@@ -10,7 +10,7 @@ Reach v1 as architecture §6.7 defines it: every element type in the ngspice and
 
 This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngspice N, P and Y, LTspice `@` and `&`, and the forms of phase 1 letters that are still rejected, such as stimulus functions and LTspice's `tbl=`, `Q=` and `Flux=`.
 
-**v1 is a beta.** It is feature complete and tagged `0.9.0`, and it is not published to PyPI. The maintainer then uses it in practice; a 1.0 release is outside this plan.
+**v1 is a beta.** It is feature complete and tagged `0.9.0`, and is tagged at the end of phase 2. Alphas are published to PyPI from `0.5.0` ([decision 0018](../decisions/0018-pypi-publication.md)), so the maintainer can use it in practice; a 1.0 release is outside this plan.
 
 **Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./archive/phase-2/m11-tasks.md)).
 
@@ -121,7 +121,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 
 - Update the usage guides, error reference, README and CHANGELOG, and set the version to `0.9.0`. The README says this is a feature-complete beta.
 - Final evidence from a clean clone with both solvers, as in phase 1's T10, and a v1 review package.
-- After the gate: tag `v0.9.0`. Nothing is published to PyPI. What 1.0 commits to in the public API (§18) is reviewed after the maintainer's practical use.
+- After the gate: tag `v0.9.0`; its release publishes to PyPI like `0.5.0` did. What 1.0 commits to in the public API (§18) is reviewed after the maintainer's practical use.
 - **Exit:** the v1 gate (section 6) passes.
 
 ## 5. Device letters by milestone
@@ -179,6 +179,6 @@ All decided on 2026-11-03.
 4. **LTspice `.machine`: decided.** It stays `UnsupportedConstruct` in v1, as a named exclusion, because its `.output` lines drive nodes.
 5. **Workflow: decided.** One pull request per milestone, with Linux and Windows CI and no macOS. There is no ngspice job: the solver tests and spec entries are validated on ngspice 47, a distribution package may be a different version, and the required local run already covers ngspice.
 6. **Stress testing: decided.** None is added, so limit 8's stress and performance part stays as it is.
-7. **v1 release: decided.** v1 is a beta, tagged `0.9.0`, with no PyPI publication.
+7. **v1 release: decided.** v1 is a beta, tagged `0.9.0`. Decision 0018 amends the original "no PyPI publication": alphas from `0.5.0` are published.
 
 **Needed from you:** netlists with BJTs, MOSFETs and behavioural sources from your own KiCad and LTspice projects for the corpus, ideally before M13.

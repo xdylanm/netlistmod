@@ -6,7 +6,7 @@
 - **Decision:**
   1. **Platforms are Linux and Windows,** on Python 3.13 and 3.14. macOS is neither required nor claimed; the library may work there, but nothing is validated.
   2. **CI installs no solver, and the optional ngspice job is dropped.** The solver tests skip through their fixture, which also proves that they skip cleanly. The local run with both solvers stays required for each milestone. Solver tests and spec entries are validated on ngspice 47, a distribution package may be another version, and differences would be noise.
-  3. **No release workflow in v1.** v1 is a feature-complete beta, tagged `0.9.0` and not published to PyPI. A later release decides its own publishing.
+  3. **No release workflow in v1.** v1 is a feature-complete beta, tagged `0.9.0` and not published to PyPI. A later release decides its own publishing. *Superseded by [decision 0018](0018-pypi-publication.md): a release workflow publishes to PyPI, starting with `0.5.0`.*
   4. **One pull request per milestone,** merged with "Rebase and merge" after the maintainer's review, and only when CI is green. Branch protection enforces this if the repository's plan and visibility allow; otherwise it is a convention.
   5. **CI runs Hypothesis derandomized,** through the `ci` profile, so a pull request cannot fail on an example unrelated to its change. Local runs stay random. The 90% coverage gate applies to every test job.
   6. **Amendments to the architecture:** §4 (the layout regains `.github/`); §10.3 ("Environment"); §13 ("GitHub Actions", "Branch protection", and the "Phase 1" line); §19 decision 14.

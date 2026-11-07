@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 — 2026-11-07
 
-**Phase 1 summary.** A source-preserving editor for SPICE netlists, with no release yet.
+The first release, an alpha published to PyPI ([decision 0018](docs/decisions/0018-pypi-publication.md)). It covers phase 1 and phase 2 up to M15; M15b (TABLE, POLY, Laplace and the digital gates) is not in it.
+
+**Phase 1 summary.** A source-preserving editor for SPICE netlists.
 
 - **Dialects:** ngspice, validated on ngspice 47, and LTspice, validated on LTspice 26.1.1 on Windows. The caller always selects the dialect.
 - **Constructs:** R, C, L, K, V, I, D and X elements; `.param`, `.model`, `.subckt`; `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`, `.global`; LTspice `.step`. Other dot-commands are preserved verbatim, and `.control`, `.if`, `.include` and `.lib` are opaque.
