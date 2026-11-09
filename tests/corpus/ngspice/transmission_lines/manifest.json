@@ -1,0 +1,18 @@
+{
+  "family": "transmission_lines",
+  "origin": "KiCad schematics by the maintainer, exported for ngspice, and variants made for M16, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-09",
+  "notes": "Every file waits for M16 (pending). Provenance confirmed by the maintainer, 2026-11-09.",
+  "fixtures": {
+    "test_kicad_tline.cir": {
+      "sha256": "e66ce416b8b38251386e8917ed2722dfa32ea1890dbc0e715c8835313b20ef96",
+      "note": "KiCad's TLINE, which KiCad exports as an O line with an LTRA model (KiCad, by the maintainer).",
+      "solver": {
+        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
+      },
+      "pending": "M16"
+    }
+  }
+}

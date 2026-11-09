@@ -32,6 +32,9 @@ and the ``nonlinear_*`` golden files. No other entry changed, and no rejected fi
 terminals changed: M15b adds no element letter. M15b review round 1 replaced
 ``elements_rejects/e_freq_hz.cir`` with ``elements_rejects/e_freq_first_point.cir`` and added
 ``controlled_sources/test_esource_freq_manual.cir``; no other entry changed.
+M16's task list added the ``transmission_lines`` family with the maintainer's KiCad export,
+``test_kicad_tline.cir``, as a rejected file (an O line, unsupported until M16 loads it); no
+other entry changed.
 """
 
 from __future__ import annotations
