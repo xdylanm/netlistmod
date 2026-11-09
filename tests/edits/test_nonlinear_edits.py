@@ -47,8 +47,8 @@ def _line(netlist: Netlist, designator: str) -> str:
     ("designator", "points", "line"),
     [
         ("E1", [("0", "0"), ("2", "5")], "E1 a 0 TABLE {v(vx)} = (0,0) (2,5)"),
-        ("E1", [("0", "0")], "E1 a 0 TABLE {v(vx)} = (0, 0)"),
-        ("E1", [("0", "0"), ("1", "2"), ("2", "4")], "E1 a 0 TABLE {v(vx)} = (0, 0) (1, 2) (2, 4)"),
+        ("E1", [("0", "0")], "E1 a 0 TABLE {v(vx)} = (0,0)"),
+        ("E1", [("0", "0"), ("1", "2"), ("2", "4")], "E1 a 0 TABLE {v(vx)} = (0,0) (1,2) (2,4)"),
         ("E2", [("0", "0"), ("2", "5")], "E2 b 0 vx 0 TABLE = (0 0 2 5)"),
         ("E2", [("0", "0"), ("1", "2"), ("2", "4")], "E2 b 0 vx 0 TABLE = (0 0 1 2 2 4)"),
         ("G1", [("0", "0"), ("2", "5m")], "G1 0 c TABLE {v(vx)} = (0,0) (2,5m) m=2"),
@@ -124,7 +124,7 @@ def test_set_poly_coefficients_keeps_the_separator_and_down_to_the_minimum() -> 
         ("E1", [], "at least one point"),
         ("E1", [("0", "{k}")], "is not a number"),
         ("E1", [("0", "k")], "is not a number"),
-        ("E3", [("1Hz", "5", "0")], "unit suffix"),
+        ("E3", [("1e9", "5", "0"), ("1e10", "5", "0")], "stops on a FREQ table"),
         ("E5", [("0", "0")], "has POLY coefficients, not a table"),
         ("E6", [("0", "0")], "is a voltage-controlled voltage source line and has no table"),
     ],
@@ -278,3 +278,158 @@ def test_text_that_would_change_the_topology_does_not_land(text: str) -> None:
     except (EditError, TopologyViolation):
         return
     assert edited.signature() == netlist.signature()
+
+
+# --- the text of a rewrite (review R3) --------------------------------------------------------
+
+_HEAD = "t\nV1 in 0 2\nR1 in vx 1k\nR2 vx 0 2k\nVs vx vs 0\nR3 vs 0 1k\nRl o 0 1k\n"
+
+
+def _ngspice(lines: str) -> Netlist:
+    return Netlist.from_text(_HEAD + lines + ".op\n.end\n", dialect=Dialect.NGSPICE)
+
+
+def _lines(netlist: Netlist) -> list[str]:
+    body = netlist.text.split("Rl o 0 1k\n", 1)[1]
+    return body.splitlines()[:-2]
+
+
+@pytest.mark.ngspice_only
+@pytest.mark.parametrize(
+    ("line", "points", "expected"),
+    [
+        (
+            "E1 o 0 TABLE {v(vx)} = (0,0) (2,4)\n",
+            [("0", "0"), ("1", "1"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)} = (0,0) (1,1) (2,4)"],
+        ),
+        (
+            "E1 o 0 TABLE {v(vx)}=(0,0)(2,4)\n",
+            [("0", "0"), ("1", "1"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)}=(0,0)(1,1)(2,4)"],
+        ),
+        (
+            "E1 o 0 TABLE {v(vx)} = (0 , 0)   (2 , 4)\n",
+            [("0", "0"), ("1", "1"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)} = (0 , 0)   (1 , 1)   (2 , 4)"],
+        ),
+        (
+            "E1 o 0 TABLE {v(vx)} = (0 0 2 4)\n",
+            [("0", "0"), ("1", "1"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)} = (0 0 1 1 2 4)"],
+        ),
+        (
+            "E1 o 0 FREQ {v(vx)}= DB ( 1e7, 6.02, 0) (1e9, 6.02, 0)\n",
+            [("1e7", "6", "0"), ("1e8", "5", "0"), ("1e9", "4", "0")],
+            ["E1 o 0 FREQ {v(vx)}= DB ( 1e7, 6, 0) ( 1e8, 5, 0) ( 1e9, 4, 0)"],
+        ),
+        (
+            "E1 o 0 FREQ {v(vx)}= DB\n+(1, 6.02, 0)\n+(1e9, 6.02, 0)\n",
+            [("1", "6", "0"), ("1e6", "5", "0"), ("1e9", "4", "0")],
+            [
+                "E1 o 0 FREQ {v(vx)}= DB",
+                "+(1, 6, 0)",
+                "+(1e6, 5, 0)",
+                "+(1e9, 4, 0)",
+            ],
+        ),
+        (
+            "E1 o 0 TABLE {v(vx)} = (0,0)\n+ (2,4)\n",
+            [("0", "0"), ("1", "1"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)} = (0,0)", "+ (1,1)", "+ (2,4)"],
+        ),
+        (
+            "E1 o 0 TABLE {v(vx)} =\n+ (0,0)\n+ (2,4)\n",
+            [("0", "0"), ("2", "4")],
+            ["E1 o 0 TABLE {v(vx)} =", "+ (0,0)", "+ (2,4)"],
+        ),
+    ],
+)
+def test_set_table_keeps_the_text_the_line_wrote(
+    line: str, points: list[tuple[str, ...]], expected: list[str]
+) -> None:
+    edited = _ngspice(line).set_table("E1", points)
+    assert _lines(edited) == expected
+
+
+@pytest.mark.ngspice_only
+def test_set_table_writes_each_point_on_a_line_of_its_own() -> None:
+    netlist = _ngspice("E1 o 0 TABLE {v(vx)} =\n+ (0,0)\n+ (2,4)\n")
+    edited = netlist.set_table("E1", [("0", "0"), ("1", "1"), ("2", "4"), ("3", "4")])
+    assert _lines(edited) == ["E1 o 0 TABLE {v(vx)} =", "+ (0,0)", "+ (1,1)", "+ (2,4)", "+ (3,4)"]
+    assert edited.signature() == netlist.signature()
+
+
+@pytest.mark.ngspice_only
+@pytest.mark.parametrize(
+    ("line", "message"),
+    [
+        (
+            "E1 o 0 TABLE {v(vx)} =\n+ (0,0) ; first\n+ (2,4) ; second\n",
+            "has a comment among its points",
+        ),
+        ("E1 o 0 TABLE {v(vx)} = (0,0,\n+ 2,4)\n", "not each on a line of their own"),
+        ("E1 o 0 TABLE {v(vx)} = (0,\n+ 0) (2,4)\n", "not each on a line of their own"),
+    ],
+)
+def test_set_table_refuses_a_count_change_that_loses_a_comment_or_joins_lines(
+    line: str, message: str
+) -> None:
+    netlist = _ngspice(line)
+    with pytest.raises(EditError, match=message):
+        netlist.set_table("E1", [("0", "0"), ("1", "1"), ("2", "4")])
+    # The same number of points is always edited value for value, comments and lines kept.
+    edited = netlist.set_table("E1", [("0", "0"), ("2", "5")])
+    assert edited.text.count("\n") == netlist.text.count("\n")
+
+
+@pytest.mark.ngspice_only
+def test_set_table_refuses_a_first_frequency_that_ngspice_stops_on() -> None:
+    netlist = _ngspice("E1 o 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e9, 6.02, 0)\n")
+    with pytest.raises(EditError, match="follows its parenthesis directly"):
+        netlist.set_table("E1", [("1e7", "6.02", "0"), ("1e9", "6.02", "0")])
+    # A first frequency of one character, a later one of any length, and a blank all run.
+    assert (
+        "(3, 6.02, 0)" in netlist.set_table("E1", [("3", "6.02", "0"), ("1e9", "6.02", "0")]).text
+    )
+    blank = _ngspice("E1 o 0 FREQ {v(vx)}= DB ( 1e7Hz, 6.02, 0) (1e9Hz, 6.02, 0)\n")
+    assert (
+        "( 1e8Hz, 6.02, 0)"
+        in blank.set_table("E1", [("1e8Hz", "6.02", "0"), ("1e9Hz", "6.02", "0")]).text
+    )
+
+
+@pytest.mark.ngspice_only
+def test_set_poly_coefficients_refuses_a_count_change_over_a_continuation() -> None:
+    netlist = _ngspice("E1 o 0 POLY(1) vx 0 0\n+ 2\n")
+    with pytest.raises(EditError, match="continue on another line"):
+        netlist.set_poly_coefficients("E1", ["0", "2", "3"])
+    edited = netlist.set_poly_coefficients("E1", ["1", "3"])
+    assert _lines(edited) == ["E1 o 0 POLY(1) vx 0 1", "+ 3"]
+
+
+@pytest.mark.ltspice_only
+def test_set_table_on_a_ltspice_table_over_a_continuation() -> None:
+    head = "t\nV1 in 0 2\nR1 in vx 1k\nR2 vx 0 2k\nRl o 0 1k\n"
+    netlist = Netlist.from_text(
+        head + "E1 o 0 vx 0\n+ table=(0,0,2,4)\n.op\n.end\n", dialect=Dialect.LTSPICE
+    )
+    edited = netlist.set_table("E1", [("0", "0"), ("1", "1"), ("2", "4")])
+    assert "+ table=(0,0,1,1,2,4)" in edited.text
+    split = Netlist.from_text(
+        head + "E1 o 0 vx 0 table=(0,0,\n+ 2,4)\n.op\n.end\n", dialect=Dialect.LTSPICE
+    )
+    with pytest.raises(EditError, match="not each on a line of their own"):
+        split.set_table("E1", [("0", "0"), ("1", "1"), ("2", "4")])
+
+
+@pytest.mark.ltspice_only
+def test_set_param_laplace_on_b_refuses_a_reference() -> None:
+    netlist = Netlist.from_text(
+        "t\nV1 in 0 2\nR1 in vx 1k\nR2 vx 0 2k\nRl o 0 1k\n"
+        "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k)\n.op\n.end\n",
+        dialect=Dialect.LTSPICE,
+    )
+    for formula in ("V(vx)/(1+s)", "I(V1)/(1+s)"):
+        with pytest.raises(EditError, match="not allowed here"):
+            netlist.set_param("B1", "laplace", formula)

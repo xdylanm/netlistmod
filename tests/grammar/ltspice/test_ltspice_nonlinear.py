@@ -181,6 +181,8 @@ def test_poly_counts_its_control_fields_from_the_dimension(
         ("E1 OUT N002 POLY(1) VX 0", 25, "at least 1 coefficient"),
         ("E1 OUT N002 POLY(2) VX 0 0 1", 29, "at least 1 coefficient"),
         ("F1 OUT 0 POLY(1) (Vsense) 0 2", 18, ""),
+        ("E1 OUT N002 POLY(2) VX (IN,0) 0 0 1 0", 24, "follows a whole number of pairs"),
+        ("E1 OUT N002 POLY(2) VX 0 VX (IN,0) 0 1 0", 29, "follows a whole number of pairs"),
         ("F1 OUT 0 POLY(1) Vsense 0 2 m=2", 30, ""),
         ("E1 OUT N002 POLY(1) VX 0 0 2.2 m=2", 33, ""),
     ],
@@ -226,6 +228,9 @@ def test_b_takes_laplace_as_a_trailing_parameter(
         ("B1 OUT 0 R=1k laplace=1/(1+s/1k)", 15),
         ("B1 OUT 0 P=1m laplace=1/(1+s/1k)", 15),
         ("B1 OUT 0 V=K*V(VX) window=1m", 20),
+        ("B1 OUT 0 V=K*V(VX) laplace=V(VX)/(1+s/1k)", 28),
+        ("B1 OUT 0 V=K*V(VX) laplace=I(Vsense)/(1+s/1k)", 28),
+        ("B1 OUT 0 I=K*V(VX) laplace={1/(1+V(VX)/1k)}", 34),
     ],
 )
 def test_b_laplace_is_refused_where_the_reference_does_not_show_it(line: str, column: int) -> None:

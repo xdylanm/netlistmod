@@ -265,12 +265,12 @@
       "error": "ParseError",
       "note": "FREQ without a format word; ngspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
     },
-    "e_freq_hz.cir": {
-      "sha256": "a95647f4a1acc89bf09a59a502d8fe02879f859261422e4e1c197f96ae3c03e8",
+    "e_freq_first_point.cir": {
+      "sha256": "6cef91a728908cd9cbdb53ab30a3f7dba9012aaf6b8617c7f9001724c39fa215",
       "line": 13,
-      "column": 43,
+      "column": 30,
       "error": "ParseError",
-      "note": "FREQ with a unit suffix on a frequency, as the manual writes it (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+      "note": "FREQ whose first frequency follows its parenthesis and has more than one character, as the manual's example writes it; ngspice stops (decision 0017 item 4, review R4). Written for M15b from the maintainer's controlled_sources examples."
     },
     "e_and_count.cir": {
       "sha256": "f315dce56de8da18f09ba1ec620f633ea3d0f3eba1a2d40095c830b8d1380948",

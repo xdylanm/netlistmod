@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import string
 from collections.abc import Callable
 from typing import Any
 
@@ -30,6 +31,22 @@ from netlistmod.model.values import (
 )
 from netlistmod.source import SourceText, Span
 
+_NAME_CHARACTERS = frozenset(string.ascii_letters + string.digits + "_.")
+
+
+def _first_reference(text: str) -> int | None:
+    """Where a ``V(`` or ``I(`` starts in a formula, for LTspice's ``Laplace=`` and ``laplace=``:
+    it stops on a voltage or current reference there ("Voltage reference not allowed here")."""
+    for index, character in enumerate(text):
+        if character not in "VvIi" or (index and text[index - 1] in _NAME_CHARACTERS):
+            continue
+        after = index + 1
+        while after < len(text) and text[after] in " \t":
+            after += 1
+        if text[after : after + 1] == "(":
+            return index
+    return None
+
 
 class _Rules:
     """The parse a rule mixin works on, and the helpers every family uses."""
@@ -37,6 +54,18 @@ class _Rules:
     _source: SourceText
     _dialect: Dialect
     _rkm: bool
+
+    def _refuse_references(self, formula: Formula, written: str) -> None:
+        """Refuse a ``V(`` or ``I(`` in the transfer function ``written`` (``Laplace=`` or
+        ``laplace=``), where LTspice stops (decision 0017 item 4)."""
+        found = _first_reference(formula.text)
+        if found is not None:
+            raise self._error_at(
+                formula.span.start + (1 if formula.delimiter else 0) + found,
+                f"`{formula.text[found]}(` in a `{written}` formula: LTspice stops on a "
+                'voltage or current reference there ("Voltage reference not allowed '
+                'here"); the formula takes `s` and the parameters only',
+            )
 
     def _field(self, children: list[Any], build: Callable[[Token], object]) -> _Field:
         if len(children) == 2 and isinstance(children[1], Token):

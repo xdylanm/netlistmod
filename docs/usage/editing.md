@@ -318,7 +318,7 @@ and a `Laplace=` formula use `set_expression`.
 >>> edited = nonlinear.set_table("E1", [("0", "0"), ("1", "1"), ("2", "5")])
 >>> edited = edited.set_poly_coefficients("E2", ["0", "3", "4"])
 >>> print("\n".join(line for line in edited.text.splitlines() if line.startswith("E")))
-E1 a 0 TABLE {v(vx)} = (0, 0) (1, 1) (2, 5)
+E1 a 0 TABLE {v(vx)} = (0,0) (1,1) (2,5)
 E2 b 0 POLY(1) vx 0 0 3 4
 >>> edited.signature() == nonlinear.signature()
 True

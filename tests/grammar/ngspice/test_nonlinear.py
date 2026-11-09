@@ -269,7 +269,14 @@ def test_freq_reads_its_format_words_and_triples(
     [
         ("E1 out 0 FREQ {v(vx)} = (1, 2, 0) (1e9, 2, 0)", 25),
         ("E1 out 0 FREQ {v(vx)} = DB (1, 2) (1e9, 2)", 29),
-        ("E1 out 0 FREQ {v(vx)} = DB (1, 6.02, 0) (1e9Hz, 6.02, 0)", 42),
+        ("E1 out 0 FREQ {v(vx)} = DB (1e7, 6.02, 0) (1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB (1.0e+07Hz, 6.02, 0) (1.0e+09Hz, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB (10, 6.02, 0, 1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB MAG (1, 6.02, 0) (1e9, 6.02, 0)", 28),
+        ("E1 out 0 FREQ {v(vx)} = MAG DB (1, 6.02, 0) (1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DEG RAD (1, 6.02, 0) (1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = R_I DB (1, 6.02, 0) (1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB R_I (1, 6.02, 0) (1e9, 6.02, 0)", 28),
         ("E1 out 0 FREQ {v(vx)} = DB (1, 6.02, 0, 1e9, 6.02)", 46),
         ("G1 0 out FREQ {v(vx)} = DB (1, 6.02, 0) (1e9, 6.02, 0) m=2", 56),
     ],
@@ -277,6 +284,35 @@ def test_freq_reads_its_format_words_and_triples(
 def test_malformed_freq_lines_are_refused(line: str, column: int) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
+
+
+@pytest.mark.parametrize(
+    ("line", "first", "words"),
+    [
+        # A blank after the "(" runs in ngspice, with or without a unit suffix (review R4).
+        ("E1 out 0 FREQ {v(vx)} = DB ( 1e7, 6.02, 0) (1e9, 6.02, 0)", "1e7", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB ( 1e7Hz, 6.02, 0) (1e9Hz, 6.02, 0)", "1e7Hz", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB ( 1.5, 6.02, 0, 1e9, 6.02, 0)", "1.5", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB (1, 6.02, 0) (1e7Hz, 6.02, 0)", "1", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB (0, 6.02, 0)", "0", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB DB (1, 6.02, 0)", "1", ("DB", "DB")),
+        ("E1 out 0 FREQ {v(vx)} = MAG DEG (1, 6.02, 0)", "1", ("MAG", "DEG")),
+        ("E1 out 0 FREQ {v(vx)} = DB RAD (1, 6.02, 0)", "1", ("DB", "RAD")),
+    ],
+)
+def test_freq_first_frequency_and_format_words_that_run(
+    line: str, first: str, words: tuple[str, ...]
+) -> None:
+    item = _element(line)
+    assert item.table is not None
+    assert item.table.points[0].values[0].text == first
+    assert item.table.format == words
+
+
+def test_the_freq_stop_names_the_fix() -> None:
+    error = _reject("E1 out 0 FREQ {v(vx)} = DB (1e7, 6.02, 0) (1e9, 6.02, 0)")
+    assert "write a blank after it, `( 1e7, ...)`" in error.reason
+    assert "keeps the last" in _reject("E1 out 0 FREQ {v(vx)} = DB MAG (1, 6.02, 0)").reason
 
 
 @pytest.mark.parametrize("word", ["and", "AND", "or", "nand", "NOR"])

@@ -179,6 +179,16 @@
    "nodes": 38
   }
  },
+ "controlled_sources/test_esource_freq_manual.cir": {
+  "rkm": {
+   "digest": "53c28c3e3940ebf8605c09fe3bfc1b8120673175d02047f21a16cc5b5672081c",
+   "nodes": 46
+  },
+  "standard": {
+   "digest": "53c28c3e3940ebf8605c09fe3bfc1b8120673175d02047f21a16cc5b5672081c",
+   "nodes": 46
+  }
+ },
  "controlled_sources/test_esource_or.cir": {
   "rkm": {
    "digest": "b53e0cc7a37213ad0f00c678411e5a5eefcc8d23311fc7ac1bb27df60ea2556b",
@@ -1043,11 +1053,11 @@
  },
  "edits_golden/nonlinear_table.expected.cir": {
   "rkm": {
-   "digest": "74515679ed6bf9376d8a21c226e321f23f03b1397c2b57c2a4537a4697e6c817",
+   "digest": "85e55a7c3c86d426f5a781bed497e857f110773a34c62c35f124722451967ef2",
    "nodes": 165
   },
   "standard": {
-   "digest": "74515679ed6bf9376d8a21c226e321f23f03b1397c2b57c2a4537a4697e6c817",
+   "digest": "85e55a7c3c86d426f5a781bed497e857f110773a34c62c35f124722451967ef2",
    "nodes": 165
   }
  },
@@ -1607,15 +1617,15 @@
    "line": 13
   }
  },
- "elements_rejects/e_freq_hz.cir": {
+ "elements_rejects/e_freq_first_point.cir": {
   "rkm": {
-   "column": 43,
+   "column": 30,
    "error": "ParseError",
    "expected": [],
    "line": 13
   },
   "standard": {
-   "column": 43,
+   "column": 30,
    "error": "ParseError",
    "expected": [],
    "line": 13

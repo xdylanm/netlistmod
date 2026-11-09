@@ -115,6 +115,12 @@ _PROBES = {
     ),
     "b-laplace-braced": ("B1 out 0 V=2*V(vx) laplace={1/(1+s/1k)}", True, "B v laplace=1/(1+s/1k)"),
     "b-laplace-current": ("B1 0 out I=2m*V(vx) laplace=1/(1+s/1k)", True, "B i laplace=1/(1+s/1k)"),
+    "b-laplace-voltage": ("B1 out 0 V=2*V(vx) laplace=V(vx)/(1+s/1k)", False, "refused"),
+    "b-laplace-current-reference": (
+        "B1 out 0 V=2*V(vx) laplace=I(Vsense)/(1+s/1k)",
+        False,
+        "refused",
+    ),
     "b-laplace-resistor": ("B1 out 0 R=1k laplace=1/(1+s/1k)", True, "refused"),
     "b-laplace-power": ("B1 out 0 P=1m laplace=1/(1+s/1k)", True, "refused"),
     "b-window-alone": ("B1 out 0 V=2*V(vx) window=1m", True, "refused"),
@@ -123,6 +129,9 @@ _PROBES = {
     "e-poly-pair-blank": ("E1 out 0 POLY(1) (vx 0) 0 2", True, "Vcvs poly N=1 c=0,2"),
     "e-poly-mixed": ("E1 out 0 POLY(2) (vx,0) vx 0 0 1 1", True, "Vcvs poly N=2 c=0,1,1"),
     "e-poly-tight": ("E1 out 0 POLY(2) (vx,0)(vx,0) 0 1 1", True, "Vcvs poly N=2 c=0,1,1"),
+    # A (n+,n-) pair is one control pair and must start on a pair boundary (review R1).
+    "e-poly-straddle": ("E1 out 0 POLY(2) vx (in,0) 0 0 1 0", False, "refused"),
+    "e-poly-flat-names": ("E1 out 0 POLY(2) vx in 0 0 0 1 0", True, "Vcvs poly N=2 c=0,1,0"),
     "e-poly-blank": ("E1 out 0 POLY (1) vx 0 0 2", True, "Vcvs poly N=1 c=0,2"),
     "e-poly-braced-dimension": ("E1 out 0 POLY({1}) vx 0 0 2", True, "refused"),
     "e-poly-commas": ("E1 out 0 POLY(1) vx,0 0,2", True, "Vcvs poly N=1 c=0,2"),

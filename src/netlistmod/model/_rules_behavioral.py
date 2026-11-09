@@ -76,6 +76,7 @@ class BehavioralRules(ElementsRules):
                     f"after `{quantity.token}=` but the library refuses what the reference "
                     "does not show",
                 )
+            self._refuse_references(laplace.formula, "laplace=")
             keyword = laplace.keyword
             name_span = _span(keyword)
             name = str(keyword).strip().rstrip("=").strip()

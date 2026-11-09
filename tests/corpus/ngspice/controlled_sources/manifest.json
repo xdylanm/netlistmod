@@ -84,6 +84,10 @@
       "sha256": "6b8fff11e78e101b27d1cc7281c02680775fc326efbaeae5cf121ace326e21de",
       "note": "Variant: FREQ, an XSPICE form (manual 5.2.6)."
     },
+    "test_esource_freq_manual.cir": {
+      "sha256": "e19913cf4d52d7a1a120f81bd20a1141286f86ec0b4dd0c7f0f4500329a20dc2",
+      "note": "Variant: FREQ in the manual's layout, three points on continuation lines with a blank after the first parenthesis (manual 5.2.6)."
+    },
     "test_esource_or.cir": {
       "sha256": "15e1b00340806dca3894f82584ab3c2a3bee5c325e81bc02f6c792b136918cc7",
       "note": "Variant: or(2), an XSPICE form (manual 5.2.7)."

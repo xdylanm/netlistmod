@@ -138,7 +138,8 @@ sources in `control`, a tuple: one source for the linear form, N for `POLY`, non
   POLY's control nodes follow the output pair in `nodes`, and its controlling sources are `control`;
   both are counted from `N`, which must be an integer literal. `window=`, `nfft=`, `mtol=` and `m=`
   are in `params`. The points of an ngspice `TABLE` are numbers; a bare expression there, a net
-  named `table`, a gate whose inputs are not `2N` and a unit suffix on a `FREQ` frequency are
+  named `table`, a gate whose inputs are not `2N`, a `FREQ` first frequency of several characters
+  right after its `(` (write `( 1e7, ...)`) and `FREQ` format words that contradict each other are
   refused, because the solver stops or reads them differently (`discrepancies.md`).
 
 ## Behavioural sources and expressions

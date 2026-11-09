@@ -183,11 +183,12 @@ class _Operations(Generic[_R]):
 
         ``points`` holds one sequence of value texts for each point: two values, or three for
         FREQ (frequency, magnitude, phase). The points are written in the layout the line has,
-        each in its own parentheses or one flat list, with the separator written between the
-        first two values, and their number may change. ``EditError`` before anything is written
+        each in its own parentheses or one flat list, reusing the separators the line wrote, and
+        their number may change (refused over a comment among the points, or over lines that
+        do not each hold one point). ``EditError`` before anything is written
         for a point of the wrong width, fewer points than the form takes (two for a gate or
         ``table=``, one for ngspice TABLE and FREQ), a value that is not a number on an ngspice
-        TABLE, and a FREQ frequency with a unit suffix. The expression of TABLE and FREQ is
+        TABLE. The expression of TABLE and FREQ is
         :meth:`set_expression`; the dimension, the nodes, a gate's inputs and FREQ's format words
         are not editable.
         """
