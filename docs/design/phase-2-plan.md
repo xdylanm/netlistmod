@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M15 are complete, and M15b is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M15b are complete, and M16 is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -90,7 +90,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Exit:** every form has golden diffs and solver tests showing results move as expected.
 - **Split (maintainer, 2026-11-06):** M15 holds B, the expression forms of E, F, G and H, C `Q=` and L `Flux=` and the hysteretic L, the formula scan, the expression edit and the query. M15b holds the rest.
 
-### M15b — Tables, polynomials and transfer functions ([task list](./m15b-tasks.md))
+### M15b — Tables, polynomials and transfer functions (complete; [task list](./archive/phase-2/m15b-tasks.md), [decision 0017](../decisions/0017-tables-polynomials-and-transfer-functions.md))
 
 - TABLE and `table=`, POLY on E, F, G and H (its control nodes and sources are topology, counted from the dimension), `Laplace=` on E, G and LTspice's B, and ngspice's FREQ and AND, OR, NAND and NOR (manual §5.2.6, §5.2.7).
 - **Edit API:** set a table's points and a polynomial's coefficients.
@@ -115,6 +115,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Value specifications (§6.4):** check the manual's full range against the grammar, including the comma-separated lists recorded in LTspice's `discrepancies.md`.
 - **Architecture tests:** no matrix entry is `planned`, every `UnsupportedConstruct` path that remains is justified, and the lookaround terminal list is reviewed (limit 3).
 - **Corpus:** real circuits for each device group, with manifests and provenance. Extend the independent Hypothesis oracle and the edit properties to the new elements.
+- **Messages carried from M15b** ([m15b-tasks](./archive/phase-2/m15b-tasks.md) 6.3): own messages for the refusals that still give the generic list of expected tokens (ngspice POLY pairs in parentheses, G's four-node TABLE and gate, `and (2)`, LTspice `window=` before `Laplace=`), the braces in a refused TABLE point's message, and a readable name for `GAIN_KW`.
 - **Exit:** the spec-coverage report shows every construct with tests, and each `documented` entry says why the solver cannot decide.
 
 ### M19 — v1 review package and beta tag

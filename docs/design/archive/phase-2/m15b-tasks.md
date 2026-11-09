@@ -1,7 +1,7 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
-> **Status:** READY FOR REVIEW — review round 2 (section 7): R6 done (report in 7.5). R1 to R5 of round 1 are made (section 6.5; R4 decided by the maintainer on 2026-11-09); T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./archive/phase-2/m15-tasks.md) and [decision 0016](../decisions/0016-behavioral-expressions.md).
+> **Status:** COMPLETE (2026-11-09) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./m15-tasks.md) and [decision 0016](../../../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
 
@@ -264,7 +264,7 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 
 ### After the maintainer's approval
 
-[ ] **T12 — Close M15b.** Archive this list, accept decision 0017, and update the plan and index.
+[x] **T12 — Close M15b.** Archive this list, accept decision 0017, and update the plan and index.
 
 ## 5. Results
 
@@ -485,3 +485,24 @@ Make R6. Run the full check set with `--require-solver ngspice --require-solver 
 R6 is made. `_check_first_frequency` now judges the first value as written (`source[span.start:span.end]`, braces or quotes included) and the character before it, so `({1e7}, …)` and `({f0}, …)` are refused at the value, with the message quoting it as written (`( {f0}, ...)`) and saying "braced or not". `( {f0}, …)` loads. The three rows are probes in `test_ngspice_nonlinear_probes.py` (`e-freq-first-braced`, `e-freq-first-parameter`, `e-freq-first-parameter-blank`; `{k}` stands for `{f0}`, with `.param k=2` in the probe base), the refusals have columns in `test_malformed_freq_lines_are_refused`, and the loading case is in `test_freq_first_frequency_and_format_words_that_run`. The ngspice `discrepancies.md` row and decision 0017 item 4 say "braced or not". A one-character braced value such as `{k}` is judged by its written length (3), as the review asks.
 
 **Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%, in 20 min 4 s. ruff, format and mypy pass. CI: see the pull request after the push.
+
+## 8. Review round 3 (2026-11-09, `19fea3c`) — no further changes required
+
+### 8.1 Outcome
+
+R6 is made as 7.5 reports. Nothing else is required, and M15b is ready for the maintainer's approval (T12).
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 49 s. This matches 7.5.
+  - CI on #14 at `19fea3c` is green on all five jobs.
+- **R6 (probed on ngspice 47, `.param f0=1e7`):**
+  - `({1e7}, …)` and `({f0}, …)` are refused at the value, with the message quoting it as written (`( {f0}, ...)`), and ngspice stops on both.
+  - `( {f0}, …)` loads, and ngspice runs it.
+  - A quoted first value, `('1e7', …)`, which no earlier round probed, is refused too, and ngspice stops on it. The check on the written text covers it with no further change.
+  - `(1, …)` still loads and runs.
+- **Diff since round 2:** the change is the check in `_check_first_frequency`, three probes, three grammar tests, and one sentence each in decision 0017 item 4 and the ngspice `discrepancies.md`. Nothing else moved.
+
+### 8.2 Noted, no change required
+
+- The open 6.3 items (own messages for the generic refusals, the braces in the TABLE point message, `GAIN_KW`) carry to M18's completeness audit, as 7.3 says.
+- When T12 accepts decision 0017, its status line and the consequences need no other edit. The amendments of rounds 1 and 2 are already in its items 4 and 6.
