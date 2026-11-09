@@ -4460,5 +4460,19 @@
    ],
    "line": 2
   }
+ },
+ "transmission_lines/test_kicad_tline.cir": {
+  "rkm": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 7
+  },
+  "standard": {
+   "column": 1,
+   "error": "UnsupportedConstruct",
+   "expected": [],
+   "line": 7
+  }
  }
 }

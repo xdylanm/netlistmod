@@ -96,10 +96,11 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Edit API:** set a table's points and a polynomial's coefficients.
 - **Exit:** as M15.
 
-### M16 — Transmission lines (T, O, U as URC, Y, P)
+### M16 — Transmission lines (T, O, U as URC, Y, P) ([task list](./m16-tasks.md))
 
 - T with `Z0=` and `TD=`, or `F=` and `NL=`; O with LTRA; U as URC, in both dialects.
 - ngspice Y (TXL) and P (CPL). P has a variable node list up to the line count, so it follows the rule from M13.
+- **Also (maintainer, 2026-11-09):** `remove_param` and `remove_model_param` for every line and model with named parameters.
 - **Exit:** each letter is `supported`, with spec entries validated wherever the solver can run the form.
 
 ### M17 — Special and mixed-signal devices (A, N, U digital, `@`, `&`)
@@ -108,6 +109,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **ngspice N:** OSDI devices (manual §9). A solver test needs a compiled model, so these entries may stay `documented`.
 - **ngspice U digital:** told apart from URC by shape, and accepted only in a subcircuit body, with `DIALECT_GATED_SYNTAX` (info) because it needs the PS flag (section 8, point 2). Check the shapes against every basic type in manual §10.1 first; raise it with the maintainer if any form is ambiguous.
 - **LTspice:** A (eight fixed nodes and a model), `@` and `&`. `.machine` stays an `UnsupportedConstruct`; record it as a named v1 exclusion (section 8, point 4).
+- **The planned-letter tests** use A after M16 ([m16-tasks](./m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
 - **Exit:** no letter in either matrix is `planned`.
 
 ### M18 — Completeness audit

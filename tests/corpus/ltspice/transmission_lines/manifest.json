@@ -1,0 +1,67 @@
+{
+  "family": "transmission_lines",
+  "origin": "LTspice schematics by the maintainer, LTspice 26.1.1's -netlist exports of them, and variants made for M16, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-09",
+  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. Every file waits for M16 (pending). Provenance confirmed by the maintainer, 2026-11-09.",
+  "fixtures": {
+    ".gitignore": {
+      "sha256": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
+      "note": "Keeps LTspice run output out, as in controlled_sources (decision 0009).",
+      "pending": "M16"
+    },
+    "test_ltspice_tline_O.asc": {
+      "sha256": "00d4030e7df684561a6e6898112873df82f5f00a37935c7d9150cfdf19190352",
+      "note": "O: a lossy line with an LTRA model (schematic by the maintainer).",
+      "pending": "M16"
+    },
+    "test_ltspice_tline_O.net": {
+      "sha256": "173dcc3e34c0ce29fe1cd3eff77fe6294032412847860b16a17ab2b6211a75f0",
+      "note": "LTspice 26.1.1's export of test_ltspice_tline_O.asc.",
+      "solver": {
+        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
+      },
+      "pending": "M16"
+    },
+    "test_ltspice_tline_O_reject.asc": {
+      "sha256": "9b21590d0cf4093074c9b66b204d082bc23495b5343ffdd170029840b4e536b3",
+      "note": "O with the model in SpiceModel and LTRA left in Value (schematic by the maintainer); its export is a reject.",
+      "pending": "M16"
+    },
+    "test_ltspice_tline_O_reject.net": {
+      "sha256": "ca881635c92b58e750613d17b87215a2325314953678a10173927039bf02abb2",
+      "note": "LTspice 26.1.1's export of test_ltspice_tline_O_reject.asc: `O1 \u2026 myline LTRA`, which LTspice stops on and the library refuses (m16-tasks decision 13). T2 makes it a reject.",
+      "solver": {
+        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
+      },
+      "pending": "M16"
+    },
+    "test_ltspice_tline_T.asc": {
+      "sha256": "3cc10406d3d3849e3781cda98b40acfdf85ca8fa47276f7695ec08455fea477a",
+      "note": "T: a lossless line, the tline symbol's defaults (schematic by the maintainer).",
+      "pending": "M16"
+    },
+    "test_ltspice_tline_T.net": {
+      "sha256": "0af873b096239644efbbe7d17ab7f8b5315c431ca54f59777f876e5e9365ec10",
+      "note": "LTspice 26.1.1's export of test_ltspice_tline_T.asc (`Td=50n Z0=50`).",
+      "solver": {
+        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
+      },
+      "pending": "M16"
+    },
+    "test_ltspice_tline_U.asc": {
+      "sha256": "67b555e3ef85f8121ec29cc5094e273a9348d5c28935c190587c99f681cbe6e7",
+      "note": "U: a URC line with L= and N= (schematic by the maintainer).",
+      "pending": "M16"
+    },
+    "test_ltspice_tline_U.net": {
+      "sha256": "583d0e9ba29c904331b11f70ba2bc2309363cb53690199e3b532a35e5d28db42",
+      "note": "LTspice 26.1.1's export of test_ltspice_tline_U.asc.",
+      "solver": {
+        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
+      },
+      "pending": "M16"
+    }
+  }
+}
