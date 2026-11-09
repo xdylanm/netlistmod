@@ -34,7 +34,6 @@ from netlistmod.model.nodes import Node, Table, TablePoint
 from netlistmod.model.values import (
     ElementReference,
     Formula,
-    NumericValue,
     ParamAssignment,
     Value,
 )
@@ -254,16 +253,14 @@ class NonlinearRules(ControlledRules):
         character and follows its ``(`` directly; a blank after the ``(`` runs (decision 0017
         item 4, review R4)."""
         first = table.points[0].values[0]
-        if (
-            isinstance(first, NumericValue)
-            and len(first.text) > 1
-            and self._source.text[first.span.start - 1 : first.span.start] == "("
-        ):
+        text = self._source.text
+        written = text[first.span.start : first.span.end]
+        if len(written) > 1 and text[first.span.start - 1 : first.span.start] == "(":
             raise self._error_at(
                 first.span.start,
                 "ngspice stops on a FREQ table whose first frequency follows its parenthesis "
-                "directly and has more than one character; write a blank after it, "
-                f"`( {first.text}, ...)`",
+                "directly and has more than one character, braced or not; write a blank "
+                f"after it, `( {written}, ...)`",
             )
 
     def _gate_fields(self, element: _Element, head: _Head) -> dict[str, Any]:

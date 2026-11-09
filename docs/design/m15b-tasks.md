@@ -1,6 +1,6 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
-> **Status:** READY FOR REVIEW — review round 1 (section 6): R1 to R5 done on branch `m15b-tables` (report in 6.5; R4 decided by the maintainer on 2026-11-09). T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
+> **Status:** ACTIVE — review round 2 (section 7) requires change R6 before M15b can close. R1 to R5 of round 1 are made (section 6.5; R4 decided by the maintainer on 2026-11-09); T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./archive/phase-2/m15-tasks.md) and [decision 0016](../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
@@ -432,3 +432,56 @@ All five changes are made on branch `m15b-tables`. Each follows 6.2 as written; 
 - **6.3 items taken:** a `laplace=… ic=0` row in the LTspice `discrepancies.md`. Not taken: the own messages for the generic refusals, the braces in the quoted TABLE point and the `GAIN_KW` name, which the review marks as welcome only if cheap and which are not.
 
 **Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,120 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 46 s; the one failure (the `editing.md` example showing the old `(0, 0)` separators) was fixed and `tests/test_usage_docs.py` passes. ruff, format, mypy, `mypy --strict` on the three new test files, `lint-imports` and pre-commit pass. CI: see the pull request after the push.
+
+## 7. Review round 2 (2026-11-09, `eebd11b`)
+
+### 7.1 Outcome
+
+R1, R2, R3 and R5 are made as 6.5 reports. R4 is right for a numeric first frequency, but a braced one stops ngspice the same way and still loads. That is R6 below, the only change left.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,121 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 44 s. That is one more than 6.5 reports, which counted the run before its `editing.md` fix; this run has no failure.
+  - CI on #14 at `eebd11b` is green on all five jobs.
+- **R1 (probed on LTspice 26.1.1):** `POLY(2) vx (in,0) 0 0 1 0` and `POLY(2) (vx,0) vx (in,0) 0 0 1 1` are refused at the pair, at the right column. Pairs on a pair boundary, mixed with flat ones (`POLY(3) (vx,0) vx 0 (in,0) 0 1 1 1`), load, and LTspice runs them (4.667).
+- **R2:** B's `laplace=V(vx)/…` and `laplace={I(Vsense)/…}` are refused at the reference, and `set_param("B1", "laplace", "V(vx)/(1+s)")` is refused through verification. Moving the scan into `_rules_base.py` is a good choice, since both families share one message.
+- **R3:**
+  - A count change over a comment is refused, and an unchanged count edits value for value beside the comment.
+  - One point per `+` line (also with the first point on the head line, and with `+  ` indentation) gets one new point per line.
+  - Mixed layouts and LTspice's flat list over a `+` line are refused for a count change.
+  - The written separators are kept: `(0,0)(1,1)(2,4)`, three blanks between points, `( 0, 0, 1, 1, 2, 4 )` on LTspice, and POLY's `0,3,4` and `0  3  4`.
+  - A coefficient run over a `+` line is refused for a count change and edited one for one otherwise.
+- **R4 (probed on ngspice 47):**
+  - `(1e7, …)` and `(-1, …)` are refused with the fix in the message, and ngspice stops on both.
+  - `( 1e7Hz, …)`, a tab after the `(`, and the manual's three points with the blank all load, and ngspice runs them.
+  - A FREQ edit that would write `(1e3, …` first is refused through verification with the same message. An edit of a line written `+( 1, …)` keeps the blank on every point, and ngspice runs the result.
+  - The `.ac` test pins ngspice's linear interpolation in frequency, which is useful evidence in its own right.
+- **R5:** `DB MAG`, `MAG DB`, `DB DEG RAD` and `R_I DEG` are refused at the contradicting word. `DB DB` and `DB DEG` load.
+- **6.5's choices:** accepted, including the B tests living in `test_ltspice_nonlinear.py`, the inline expected lines in place of new golden cases, and the 6.3 items left for later.
+
+### 7.2 Required change
+
+[x] **R6 — A braced first frequency stops ngspice too.**
+
+| First point (`E1 out 0 FREQ {v(vx)} = DB …`, `.param f0=1e7`) | ngspice 47 | Library at `eebd11b` |
+|---|---|---|
+| `({1e7}, 6.02, 0) (1e9, 6.02, 0)` | stops | loads |
+| `({f0}, 6.02, 0) (1e9, 6.02, 0)` | stops | loads |
+| `( {f0}, 6.02, 0) (1e9, 6.02, 0)` | runs, 2.666 | loads (right) |
+
+- `_check_first_frequency` judges only a `NumericValue`, as 6.5 says, for want of a probe. These probes show that the stop follows the written text after the `(`, whatever its kind.
+- **Change:** apply the check to any first value. Use its written text, from `span.start` to `span.end` (the braces or quotes included), and the character before `span.start`. Keep the message, quoting the value as written (`( {f0}, ...)`).
+- **Tests:** the three rows as probes in `test_ngspice_nonlinear_probes.py`, refusals with columns for the first two, and a test that the third loads. Extend the ngspice `discrepancies.md` row and decision 0017 item 4 with "braced or not".
+
+### 7.3 Noted, no change required
+
+- The 6.3 items left for later (the generic messages, the quoted braces in a TABLE point message, `GAIN_KW`) stay open. They fit M18's completeness audit.
+
+### 7.4 Exit for this round
+
+Make R6. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 7.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 7.5 Report on round 2
+
+R6 is made. `_check_first_frequency` now judges the first value as written (`source[span.start:span.end]`, braces or quotes included) and the character before it, so `({1e7}, …)` and `({f0}, …)` are refused at the value, with the message quoting it as written (`( {f0}, ...)`) and saying "braced or not". `( {f0}, …)` loads. The three rows are probes in `test_ngspice_nonlinear_probes.py` (`e-freq-first-braced`, `e-freq-first-parameter`, `e-freq-first-parameter-blank`; `{k}` stands for `{f0}`, with `.param k=2` in the probe base), the refusals have columns in `test_malformed_freq_lines_are_refused`, and the loading case is in `test_freq_first_frequency_and_format_words_that_run`. The ngspice `discrepancies.md` row and decision 0017 item 4 say "braced or not". A one-character braced value such as `{k}` is judged by its written length (3), as the review asks.
+
+**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%, in 20 min 4 s. ruff, format and mypy pass. CI: see the pull request after the push.
