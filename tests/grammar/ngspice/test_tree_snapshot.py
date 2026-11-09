@@ -29,7 +29,9 @@ written as rejected files, so their entries changed from an error to a parse; it
 ``elements_rejects/e_poly_too_few.cir`` from ``UnsupportedConstruct`` to a ``ParseError`` at the
 line's end, and added three ``controlled_sources`` files, eleven ``elements_rejects`` files
 and the ``nonlinear_*`` golden files. No other entry changed, and no rejected file's expected
-terminals changed: M15b adds no element letter.
+terminals changed: M15b adds no element letter. M15b review round 1 replaced
+``elements_rejects/e_freq_hz.cir`` with ``elements_rejects/e_freq_first_point.cir`` and added
+``controlled_sources/test_esource_freq_manual.cir``; no other entry changed.
 """
 
 from __future__ import annotations

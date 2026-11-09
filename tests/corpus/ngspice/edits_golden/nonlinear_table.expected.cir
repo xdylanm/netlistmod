@@ -9,9 +9,9 @@ E1 eo 0 TABLE {2*v(vx)} = (0,0) (2,5)
 R4 eo 0 1k
 E2 ep 0 TABLE {v(vx)} = (0 0) (2 5)
 R5 ep 0 1k
-E3 eq 0 vx 0 TABLE = (0, 0, 1, 2, 2, 4)
+E3 eq 0 vx 0 TABLE = (0,0,1,2,2,4)
 R6 eq 0 1k
-G1 0 gt TABLE {v(vx)} = (0, 0) (1, 1m) (2, 5m) m=2
+G1 0 gt TABLE {v(vx)} = (0,0) (1,1m) (2,5m) m=2
 R7 gt 0 1k
 E4 er 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e9, 6.02, 0) ; freq
 R8 er 0 1k

@@ -1,6 +1,6 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
-> **Status:** READY FOR REVIEW — implemented on branch `m15b-tables`; approved by the maintainer on 2026-11-08, with section 2 decided
+> **Status:** READY FOR REVIEW — review round 1 (section 6): R1 to R5 done on branch `m15b-tables` (report in 6.5; R4 decided by the maintainer on 2026-11-09). T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./archive/phase-2/m15-tasks.md) and [decision 0016](../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
@@ -285,6 +285,150 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 5. **`LT-UNS-001` has no grammar rule left.** It keeps the phase-2 letters and lists `body_line` under `core_rules`, which the coverage check requires of an entry with no rule of its own. If you would rather retire the entry, say so.
 6. **The bare-`TABLE` refusal** (`TABLE v(vx) = …`) is recognised by a lookahead that finds `(` in the next word (a node name cannot hold one), so a net named `table` is not mistaken for it. It is the only place a keyword's recognition looks past the next field.
 7. **POLY's coefficients on ngspice** refuse a bare name (`0 k`) although ngspice runs it, as decision 4 says (the gain slot), and so does the discrepancies row.
-8. `Laplace=`'s `V()`/`I()` refusal is for E and G only: B's `laplace=` formula was not probed for it.
+8. `Laplace=`'s `V()`/`I()` refusal is for E and G only: B's `laplace=` formula was not probed for it. *(Resolved by R2: LTspice stops on B's `laplace=` too, and the library refuses it.)*
 9. The model layer may not import `re` (a contract test), so the FREQ suffix check and the `V(`/`I(` scan are small hand-written scanners in `_rules_nonlinear.py`.
 10. The new decision record is `proposed`; T12 accepts it.
+
+## 6. Review round 1 (2026-11-09, `9790826`)
+
+### 6.1 Outcome
+
+M15b goes back for changes R1 to R5. Most of the work matches section 2 and holds up on review. One finding (R4) corrects a probe of the planning round: the `Hz` refusal of decision 4 rests on a misread stop.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,049 passed, 2 skipped, 968 deselected, coverage 98.46%, in 20 min 6 s. This matches section 5.1.
+  - CI on #14 at `9790826` is green on all five jobs.
+- **Nodes and topology:**
+  - `Table`, `TablePoint` and the three `ControlledSource` fields are as decision 1 says, and so is `control` as a tuple on F, H and W (decision 2).
+  - The signature keeps one `control` entry per source in line order, so a linear line's entry is unchanged. The signature snapshot is unchanged.
+  - The `value` and `table` net refusals cover POLY's control nodes and a gate's inputs too (`E1 out 0 POLY(1) table 0 0 2` and `and(2) vx 0 table 0 …` are refused at the node).
+- **Counting (decision 3), by hand on both dialects:**
+  - `POLY({1})`, `POLY(0)` and `POLY(k)` are refused at the dimension, and `POLY (1)` loads.
+  - Too few control fields is refused at the line's end, with the coefficient minimums of decision 4: two on ngspice and one on LTspice.
+  - LTspice's pairs load in all four forms (comma, blank, tight, mixed). A source in parentheses, and a pair after the control nodes, are refused.
+  - The gate count is read from the line and refused when it is not 2N, or fewer than two pairs.
+- **Fields (decision 4):**
+  - ngspice TABLE: a bare expression, a formula or name in a point, a three-value point, an odd flat list, G's four-node form and `m=` on E are each refused. `m=` loads on G.
+  - LTspice `table=`: an odd count, one pair, pairs in their own parentheses, a bare name and `m=` are refused, and `{2*k}` loads.
+  - `Laplace=`: an unknown parameter, two nodes and `V(` are refused on E and G. B's `laplace=` is refused after `R=` and `P=`, and `window=` without it is refused.
+- **Edits:**
+  - With an unchanged count, `set_table` and `set_poly_coefficients` replace values one for one, which keeps tight forms byte-exact (section 5.2, point 3, accepted).
+  - The write-time refusals of decision 6 all fire: the width, the minimums, numbers only on ngspice TABLE, and a gate's two points.
+  - `set_value` and `set_expression` name the right operation on each form.
+  - `set_param` covers `window=`, `nfft=`, `mtol=`, `m=` and B's `laplace=`.
+- **Section 5.2:**
+  - Points 3 to 7, 9 and 10 are accepted.
+  - The `m=` part of point 1 is accepted: refusing E's POLY `m=` follows the manual, and the row is in the ngspice `discrepancies.md`.
+  - Point 1's `Hz` part and point 2 are R4. Point 8 is R2.
+
+### 6.2 Required changes
+
+[x] **R1 — An LTspice POLY pair must start on a pair boundary.**
+
+| Line (`vx` = 4/3 V, `in` = 2 V) | LTspice 26.1.1 | Library at `9790826` |
+|---|---|---|
+| `E1 out 0 POLY(2) vx (in,0) 0 0 1 0` | stops: "Insufficient number of node pairs" | loads, with the pairs `(vx, in)` and `(0, 0)` |
+| `E1 out 0 POLY(2) vx in 0 0 0 1 0` (the same names, flat) | runs, `v(out)` = −0.667 | loads (right) |
+
+- `_poly_fields` takes a parenthesised pair wherever it falls, so a pair may straddle two control pairs. LTspice reads the parentheses as one control pair and stops when that pair does not start on a pair boundary.
+- **Change:** refuse a `(n+,n-)` pair that starts after an odd number of control names, at the pair, with its own message ("a `(n+,n-)` pair is one control pair; it follows a whole number of pairs").
+- **Tests:** the first line as a refusal with its column, in `tests/grammar/ltspice/test_ltspice_nonlinear.py`; both lines as probes in `test_ltspice_nonlinear_probes.py`.
+
+[x] **R2 — Refuse `V()` and `I()` in B's `laplace=` too.**
+- LTspice stops on both:
+  - `B1 out 0 V=2*V(vx) laplace=V(vx)/(1+s/1k)` ("Voltage reference not allowed here");
+  - `B1 out 0 V=2*V(vx) laplace=I(Vsense)/(1+s/1k)` ("Current reference not allowed here").
+- The library loads both today, and `set_param("B1", "laplace", "V(vx)/(1+s)")` writes such a line. Decision 0017 item 4 gives the refusal to `laplace=` as well as `Laplace=`. The comment in `_form_fields` ("B's laplace= was not probed") and section 5.2, point 8, say otherwise.
+- **Change:** apply `_first_reference` to B's `laplace=` formula in `BehavioralRules.behavioral`, with the same message, so that `set_param` is refused through verification.
+- **Tests:** a refusal with its column for each line in `tests/grammar/ltspice/test_ltspice_behavioral.py`, both lines as probes, and a `set_param` refusal in `tests/edits/test_nonlinear_edits.py`. Update the comment and point 8.
+
+[x] **R3 — `set_table` must not drop comments or join lines, and must keep the written separators.**
+
+| Edit (three points for two) | Result at `9790826` |
+|---|---|
+| `E1 out 0 TABLE {v(vx)} =` / `+ (0,0) ; first` / `+ (2,4) ; second` | `+ (0, 0) (1, 1) (2, 4) ; second`: **the comment `; first` is lost**, and two lines become one |
+| `E1 out 0 FREQ {v(vx)}= DB` / `+(1, 6.02, 0)` / `+(1e9, 6.02, 0)` (the manual's layout) | the points are joined onto one `+` line |
+| `E1 out 0 TABLE {v(vx)} = (0,0) (2,4)` | `(0, 0) (1, 1) (2, 4)`: the separator becomes `, ` where `,` was written |
+| `E1 out 0 TABLE {v(vx)}=(0,0)(2,4)` | `(0, 0) (1, 1) (2, 4)`: a blank appears between points written tight |
+| `set_poly_coefficients` on `POLY(1) vx 0 0` / `+ 2` with three coefficients | the `+` line is joined onto the first |
+
+- ngspice runs the first line as written, and the library loads it. A rewrite that loses a comment breaks P3, and `set_poly_coefficients` already refuses that case.
+- Decision 6 says the points are written "with the separator written between its first two values". That means the text as written (`,`), not `", "` whenever a comma is present.
+- **Change:**
+  - **Comments:** when the count changes, refuse (`EditError`, as `set_poly_coefficients` does) if a comment lies inside the table's span.
+  - **Lines:** when every point stands on its own physical line, write each new point on its own continuation line, with the prefix of the first continuation line (for example `+` or `+ `). Otherwise refuse a count change over several lines with a message that suggests changing the points one for one. For `set_poly_coefficients`, refuse a count change whose run spans a continuation.
+  - **Separators:** reuse the exact text between the first two values, and the exact text between the first two points (a blank, several blanks or none). Keep the text between the first point's `(` and its first value too (R4).
+- **Tests:** golden diffs for the five rows (the first as an `EditError`), on ngspice, and the LTspice `table=` over a `+` line. Amend decision 0017 item 6 with these rules.
+
+[x] **R4 — FREQ: the stop is in the first point, not the `Hz` suffix.** **Decided (maintainer, 2026-11-09): refuse, as recommended below.**
+
+ngspice 47, `.op` (`.ac` gives the same stops), `vx` = 4/3 V, `E1 out 0 FREQ {v(vx)} = DB …`:
+
+| First point | ngspice 47 |
+|---|---|
+| `(1, …)`, `(3, …)`, `(9, …)`, `(0, …)`; `(1, …) (1e7, …)` | run |
+| `(10, …)`, `(100, …)`, `(1.5, …)`, `(10k, …)`, `(1e7, …)`, `(2e0, …)`; flat `(1e7, …, 1e9, …)`; `R_I`, `MAG`, quotes, G | stop: "Undefined parameter [v]" … "Expression err: v(vx)}={db} (1e7, …" |
+| `( 1e7, …)`, `( 1Hz, …)`, `( 1e7Hz, …) (1e9Hz, …)`; flat `( 1e7, …)` | run, 2.666 |
+| The manual's example (§5.2.6) as written, `+(1.000000e+07Hz, …`; the same with `+ (1e7, …` | stop |
+| The manual's example with a blank after the first `(`: `+( 1.000000e+07Hz, …` | runs |
+
+- So ngspice's parameter pass stops when the first point's frequency has more than one character and follows its `(` directly. A `Hz` suffix runs anywhere. Section 3.1's `(1Hz, …)` probe of the planning round, and the developer's "stops on `Hz` on the first frequency", both saw this stop.
+- Every FREQ test and corpus file starts at `(1, …`, which hides the stop. The library loads `(1e7, 6.02, 0) …`, the commonest real form, and ngspice stops on it.
+- **Change (decided):**
+  - Drop the `Hz` refusal, so that a unit suffix loads as other numbers do.
+  - Refuse the real stop, at the first value: "ngspice stops on a FREQ table whose first frequency follows its parenthesis directly and has more than one character; write a blank after it, `( 1e7, …)`". This follows P5, as every other stop of this milestone does, and the message gives the fix.
+  - `set_table` keeps the text between the first `(` and the first value (R3), so an edit of a line that has the blank keeps it. An edit that would write the stop is refused through verification.
+- *Considered:* load these lines, with a discrepancies row and a note in `docs/usage/elements.md` (not chosen).
+- **Tests:**
+  - Probes for each row in `test_ngspice_nonlinear_probes.py`, replacing `e-freq-hz-first` and `e-freq-hz-later`.
+  - Refusals with columns, and a test that `( 1e7Hz, …` loads.
+  - An accept file `test_esource_freq_manual.cir`: the manual's three points with the blank.
+  - A solver test in `.ac` where the table varies with frequency (for example, 0 dB at 1 kHz and −20 dB at 1 MHz). It checks the magnitude at a point between them, and that `set_table` moves it.
+  - `e_freq_hz.cir` becomes a reject for the first-point stop, or is replaced, with its manifest.
+- Amend decision 0017 item 4 and the closing consequence that cites the `Hz` finding, and replace both FREQ rows of the ngspice `discrepancies.md`. Section 5.2, point 2 is then resolved.
+
+[x] **R5 — Refuse FREQ format words that contradict each other.**
+- ngspice runs `FREQ {v(vx)} = DB MAG (1, 6.02, 0) (1e9, 6.02, 0)`, but reads the points as MAG: `v(out)` = 8.03, where `DB` alone gives 2.67. It keeps the last word.
+- The library loads it with `format=("DB", "MAG")`, so a reader of the netlist or of `Table.format` would take the points for dB.
+- **Change:** refuse, at the second word, `DB` with `MAG`, `DEG` with `RAD`, and `R_I` with any other word: "ngspice keeps the last of contradicting format words; write one". A repeated word (`DB DB`) runs and reads the same, so it may load.
+- **Tests:** the refusals with columns, and the `DB MAG` probe showing what ngspice computes. Add a row to the ngspice `discrepancies.md`.
+
+### 6.3 Noted, no change required
+
+- **Generic messages.** Some refusals that a solver runs get the generic "Expected: …" list rather than their own message:
+  - ngspice POLY pairs in parentheses;
+  - G's four-node TABLE;
+  - G's gate;
+  - `and (2)`.
+
+  They are refused, which is what decision 3 asks. Own messages would match M15's practice, and are welcome if cheap. LTspice's `window=1m Laplace=…` says "`window` is not a gain: the gain is not set", which is misleading; a sentence naming `Laplace=` would help.
+- A braced value refused in an ngspice TABLE point is quoted without its braces (`` `4` in a TABLE point `` for `{4}`). Quoting `value.span`'s text would be clearer.
+- The generic list still shows the raw `GAIN_KW` (from M14). One entry in `grammar/loader.py` would name it.
+- A `*` comment line between the `+` lines of a TABLE is refused. That predates M15b: every continued statement refuses one (`R1 a 0` / `* c` / `+ 1k`). No change here.
+- LTspice runs `laplace=… ic=0`, with `ic=` after `laplace=`. The library refuses it, following the reference's order, as decision 6 does for `window=`. A discrepancies row would make it findable.
+
+### 6.4 Exit for this round
+
+Make R1 to R5 (the maintainer chose R4's refusal on 2026-11-09). Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5. Then set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 6.5 Report on round 1
+
+All five changes are made on branch `m15b-tables`. Each follows 6.2 as written; the points below are where I had to choose.
+
+- **R1.** `_poly_fields` refuses a `(n+,n-)` pair that follows an odd number of names, at the pair. Both of 6.2's lines are probes on LTspice 26.1.1 (`e-poly-straddle` stops, `e-poly-flat-names` runs), and the refusal has columns for the first and a later straddle in `test_ltspice_nonlinear.py`.
+- **R2.** The scan moved from `_rules_nonlinear.py` to `_rules_base.py` (`_first_reference` and `_refuse_references`), so `NonlinearRules` and `BehavioralRules` share it and the message. B's `laplace=` refuses `V(` and `I(` in the formula, braced or bare, and `set_param("B1", "laplace", "V(vx)/(1+s)")` is refused through verification. The B grammar tests are in `test_ltspice_nonlinear.py` beside the other B `laplace=` tests, not in `test_ltspice_behavioral.py`. Point 8 of 5.2 is resolved.
+- **R3.**
+  - `set_table` reuses the text between the first two values, between the first two points, and between the first point's `(` and its first value, so a blank after the `(` (R4) is kept. That text is applied to every new point, so `( 1e7, …)` becomes `( 1e7, …) ( 1e8, …)`; ngspice runs it.
+  - A count change is refused over a comment in the table's span. Over several lines it is refused unless every point stands on its own physical line; then each new point is written on a continuation line with the text between the first two points (`\n+` or `\n+ `). The first point may be on the head line (`= (0,0)` with `+ (2,4)` below): that counts as one point per line.
+  - A flat list that crosses a line is refused for a count change. An unchanged count is always edited value for value.
+  - `set_poly_coefficients` refuses a count change whose run spans a continuation, and no longer falls back to a blank for a separator.
+  - The two golden files `nonlinear_table` (ngspice and LTspice) changed to the separators as written (`(0,0,1,2,2,4)`, `(1,1m)`); the diffs were read. The five rows of 6.2 and the `+` line cases are tests in `test_nonlinear_edits.py` with inline expected lines, not new golden manifest cases. Decision 0017 item 6 is amended.
+- **R4.**
+  - The `Hz` refusal and `_is_plain_frequency` are removed. `_check_first_frequency` refuses a first frequency of more than one character that follows its `(` directly, as a numeric value; a braced first frequency is not judged, as I have no probe for it.
+  - `elements_rejects/e_freq_hz.cir` became `e_freq_first_point.cir` (the manual's `(1.0e+07Hz, …) (1.0e+09Hz, …)`, error at (13, 30)), and `controlled_sources/test_esource_freq_manual.cir` is the accept file (three points on continuation lines with the blank). The tree snapshot is regenerated, and its docstring says what changed.
+  - Probes replace `e-freq-hz-first` and `e-freq-hz-later` with the rows of 6.2, plus the flat forms and a `Hz` suffix after a blank. All of them match ngspice 47. A solver test in `.ac` checks a table that varies with frequency: ngspice interpolates the magnitude linearly in frequency, so halfway between 0 dB at 1 kHz and -20 dB at 1 MHz the gain is 0.55, not -10 dB, and `set_table` to -40 dB moves it to 0.505.
+  - Decision 0017 items 4 and the consequences, and the ngspice `discrepancies.md`, are amended. Point 2 of 5.2 is resolved: the library now models the stop.
+- **R5.** `DB`/`MAG`, `DEG`/`RAD` and `R_I` with any other word are refused at the second word of the pair, in either order and also when other words stand between them (`DB DEG RAD`). `DB DB` loads. The probes show that ngspice runs all of them, and `test_what_ngspice_computes` has `DB MAG` at 8.03. A discrepancies row is added.
+- **6.3 items taken:** a `laplace=… ic=0` row in the LTspice `discrepancies.md`. Not taken: the own messages for the generic refusals, the braces in the quoted TABLE point and the `GAIN_KW` name, which the review marks as welcome only if cheap and which are not.
+
+**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,120 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 46 s; the one failure (the `editing.md` example showing the old `(0, 0)` separators) was fixed and `tests/test_usage_docs.py` passes. ruff, format, mypy, `mypy --strict` on the three new test files, `lint-imports` and pre-commit pass. CI: see the pull request after the push.

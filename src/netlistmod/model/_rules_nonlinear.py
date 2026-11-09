@@ -9,7 +9,6 @@ slot reads them, and a form a solver reads differently from the manual is refuse
 
 from __future__ import annotations
 
-import string
 from dataclasses import dataclass
 from typing import Any, Literal, NoReturn
 
@@ -43,10 +42,7 @@ from netlistmod.source import Span
 
 _DELIMITED = frozenset({"BRACE_FORMULA", "QUOTE_FORMULA"})
 
-# The scale factors and nothing else after a frequency: a unit suffix (`1e9Hz`) is refused.
-_SCALE_FACTORS = frozenset({"", "t", "g", "meg", "mil", "k", "m", "u", "n", "p", "f", "µ"})
-_NAME_CHARACTERS = frozenset(string.ascii_letters + string.digits + "_.")
-_DIGITS = frozenset(string.digits)
+_CONTRADICTIONS = (("DB", "MAG"), ("DEG", "RAD"))
 # The most coefficients a form needs to be a polynomial at all, by dialect (decision 0017 item 4).
 _MIN_COEFFICIENTS = {Dialect.NGSPICE: 2, Dialect.LTSPICE: 1}
 
@@ -82,41 +78,14 @@ class _FormatWord:
     token: Token
 
 
-def _first_reference(text: str) -> int | None:
-    """Where a ``V(`` or ``I(`` starts in a formula, for LTspice's ``Laplace=``: it stops on a
-    voltage or current reference there ("Voltage reference not allowed here")."""
-    for index, character in enumerate(text):
-        if character not in "VvIi" or (index and text[index - 1] in _NAME_CHARACTERS):
-            continue
-        after = index + 1
-        while after < len(text) and text[after] in " 	":
-            after += 1
-        if text[after : after + 1] == "(":
-            return index
-    return None
-
-
-def _is_plain_frequency(text: str) -> bool:
-    """Whether ``text`` is a number with at most a scale factor after it, no unit suffix."""
-    i = 1 if text[:1] in ("+", "-") else 0
-    start = i
-    while i < len(text) and text[i] in _DIGITS:
-        i += 1
-    digits = i - start
-    if i < len(text) and text[i] == ".":
-        i += 1
-        while i < len(text) and text[i] in _DIGITS:
-            i += 1
-            digits += 1
-    if digits == 0:
+def _contradicts(first: str, second: str) -> bool:
+    """Whether two FREQ format words (upper case) cannot both hold: ``DB`` with ``MAG``, ``DEG``
+    with ``RAD``, and ``R_I`` with any other word. A repeated word does not."""
+    if first == second:
         return False
-    if i < len(text) and text[i] in "eE":
-        j = i + 1 + (text[i + 1 : i + 2] in ("+", "-"))
-        if j < len(text) and text[j] in _DIGITS:
-            i = j
-            while i < len(text) and text[i] in _DIGITS:
-                i += 1
-    return text[i:].lower() in _SCALE_FACTORS
+    if "R_I" in (first, second):
+        return True
+    return (first, second) in _CONTRADICTIONS or (second, first) in _CONTRADICTIONS
 
 
 def item_end(item: Token | _PolyPair) -> int:
@@ -209,16 +178,7 @@ class NonlinearRules(ControlledRules):
     def _form_fields(self, element: _Element, children: list[Any]) -> dict[str, Any]:
         laplace = element.optional(_Laplace)
         if laplace is not None:
-            formula = laplace.formula
-            found = _first_reference(formula.text)
-            if found is not None:
-                # E and G only: B's laplace= was not probed (decision 0017 item 4).
-                raise self._error_at(
-                    formula.span.start + (1 if formula.delimiter else 0) + found,
-                    f"`{formula.text[found]}(` in a `Laplace=` formula: LTspice stops on a "
-                    'voltage or current reference there ("Voltage reference not allowed '
-                    'here"); the formula takes `s` and the parameters only',
-                )
+            self._refuse_references(laplace.formula, "Laplace=")
             return {
                 "form": "laplace",
                 "expression": laplace.formula,
@@ -271,22 +231,40 @@ class NonlinearRules(ControlledRules):
                     )
 
     def _freq_fields(self, element: _Element, head: _Head) -> dict[str, Any]:
-        words = tuple(str(word.token) for word in element.all(_FormatWord))
+        format_words = element.all(_FormatWord)
+        words = tuple(str(word.token) for word in format_words)
         table = self._table(element.lists, head, width=3, formats=words)
-        for point in table.points:
-            frequency = point.values[0]
-            if isinstance(frequency, NumericValue) and not _is_plain_frequency(frequency.text):
-                raise self._error_at(
-                    frequency.span.start,
-                    f"`{frequency.text}`: the manual's own FREQ example writes a unit suffix "
-                    "(`1.0e+07Hz`), and ngspice stops on it; write the frequency as a number, "
-                    "with a scale factor at most",
+        for index, word in enumerate(words):
+            earlier = [w.upper() for w in words[:index]]
+            if any(_contradicts(before, word.upper()) for before in earlier):
+                raise self._parse_error(
+                    format_words[index].token,
+                    f"`{word}` contradicts an earlier format word: ngspice keeps the last of "
+                    "contradicting format words and reads the points by it; write one",
                 )
+        self._check_first_frequency(table)
         return {
             "form": "freq",
             "expression": self._expression_of(head),
             "table": table,
         }
+
+    def _check_first_frequency(self, table: Table) -> None:
+        """ngspice's parameter pass stops when the first point's frequency has more than one
+        character and follows its ``(`` directly; a blank after the ``(`` runs (decision 0017
+        item 4, review R4)."""
+        first = table.points[0].values[0]
+        if (
+            isinstance(first, NumericValue)
+            and len(first.text) > 1
+            and self._source.text[first.span.start - 1 : first.span.start] == "("
+        ):
+            raise self._error_at(
+                first.span.start,
+                "ngspice stops on a FREQ table whose first frequency follows its parenthesis "
+                "directly and has more than one character; write a blank after it, "
+                f"`( {first.text}, ...)`",
+            )
 
     def _gate_fields(self, element: _Element, head: _Head) -> dict[str, Any]:
         count = self._dimension(head)
@@ -417,6 +395,13 @@ class NonlinearRules(ControlledRules):
             item = items[used]
             used += 1
             if isinstance(item, _PolyPair):
+                if len(names) % 2:
+                    raise self._error_at(
+                        item.span.start,
+                        "a `(n+,n-)` pair is one control pair; it follows a whole number of "
+                        "pairs (LTspice stops on a pair that starts after an odd number of "
+                        "control names)",
+                    )
                 if len(names) + 2 > need:
                     raise self._error_at(
                         item.span.start, "a `(n+,n-)` pair would run past POLY's control nodes"

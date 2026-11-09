@@ -12,6 +12,7 @@ Changes:
 - A net named `table` on an ngspice E or G line is refused at the node, as `value` is: ngspice stops on it in every node position (M15b).
 - The expressions of TABLE and FREQ join `expression_reads`; `s` in `Laplace=` and `laplace=` is not a parameter reference (M15b).
 - The M15b corpus files load and run in the solver sweeps, with new variants and golden files (M15b).
+- Review round 1 of M15b: a LTspice POLY `(n+,n-)` pair must start on a pair boundary; B's `laplace=` refuses `V()` and `I()` as `Laplace=` does; `set_table` keeps the separators the line wrote, refuses a count change over a comment, and writes each new point on its own continuation line when the points were; ngspice FREQ refuses a first frequency of several characters right after its `(` (ngspice stops; write `( 1e7, ...)`) and contradicting format words, and a unit suffix on a frequency now loads.
 
 ## 0.5.0 — 2026-11-07
 

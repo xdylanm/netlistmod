@@ -11,16 +11,15 @@ from netlistmod.edit._ops_common import _VALUE, _element, _kind
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model._rules_elements import _reads_as_number
-from netlistmod.model._rules_nonlinear import _is_plain_frequency
 from netlistmod.model.nodes import ControlledSource, Table
 from netlistmod.model.values import Formula
 from netlistmod.source import Span
 
 _TABLE = SlotCheck((Table,), "a table")
+_NEWLINE = "\n"
 # The fewest coefficients a polynomial takes, by dialect: ngspice stops with fewer than two,
 # LTspice runs one (the constant).
 _MIN_COEFFICIENTS = {Dialect.NGSPICE: 2, Dialect.LTSPICE: 1}
-_DELIMITERS = ("{", "'")
 
 
 def use_instead(element: ControlledSource) -> str:
@@ -46,11 +45,13 @@ def set_table(
 
     ``points`` holds one sequence of value texts for each point: two values, or three for FREQ.
     The new points are written in the layout the line has (each in its own parentheses, or one
-    flat list) with the separator written between its first two values, and the number of points
-    may change. When the shape is the same, only the values are replaced. The refusals are made
-    before verification: a point of the wrong width, fewer points than the form takes (two for a
-    gate or ``table=``, one for ngspice TABLE and FREQ), a number that is not a number on ngspice
-    TABLE, and a frequency with a unit suffix.
+    flat list), reusing as written the text between the first two values, between the first two
+    points and around the first point's values, and the number of points may change. When the
+    count is the same, only the values are replaced. A count change is refused over a comment
+    among the points, and over several lines unless each point is on a line of its own. The
+    other refusals are made before verification: a point of the wrong width, fewer points than
+    the form takes (two for a gate or ``table=``, one for ngspice TABLE and FREQ), and a value
+    that is not a number on ngspice TABLE.
     """
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, ControlledSource) or element.table is None:
@@ -70,10 +71,15 @@ def set_table(
             for point, row in zip(table.points, rows)
             for old, new in zip(point.values, row)
         ]
+    if any(
+        table.span.start <= comment.start < table.span.end for comment in element.trailing_comments
+    ):
+        raise EditError(
+            f"`{designator}` has a comment among its points; change them one for one, or "
+            "remove the comment first"
+        )
     text = netlist.source.text
-    first = table.points[0].values
-    separator = ", " if "," in text[first[0].span.end : first[1].span.start] else " "
-    return [Edit(table.span, _write_table(table, rows, separator), reason, (_TABLE,))]
+    return [Edit(table.span, _write_table(text, table, rows, designator), reason, (_TABLE,))]
 
 
 def _check_points(dialect: Dialect, element: ControlledSource, rows: list[tuple[str, ...]]) -> None:
@@ -103,19 +109,54 @@ def _check_points(dialect: Dialect, element: ControlledSource, rows: list[tuple[
                         f"`{value}` is not a number: the points of an ngspice TABLE are numbers "
                         "(parameters are not allowed)"
                     )
-    if freq:
-        for row in rows:
-            if row[0][:1] not in _DELIMITERS and not _is_plain_frequency(row[0]):
-                raise EditError(
-                    f"`{row[0]}` is a frequency with a unit suffix, which ngspice stops on; "
-                    "write a number, with a scale factor at most"
-                )
 
 
-def _write_table(table: Table, rows: list[tuple[str, ...]], separator: str) -> str:
-    if table.layout == "pairs":
-        return " ".join(f"({separator.join(row)})" for row in rows)
-    return f"({separator.join(value for row in rows for value in row)})"
+def _write_table(text: str, table: Table, rows: list[tuple[str, ...]], designator: str) -> str:
+    """The points rewritten as the line wrote them: the text between its first two values, between
+    its first two points, and around the first point's values are reused as written."""
+    first = table.points[0].values
+    start = table.span.start
+    opener = text[start : first[0].span.start]  # "(" and any blanks before the first value
+    closer_at = text.index(")", first[-1].span.end) + 1
+    closer = text[first[-1].span.end : closer_at]
+    inner = text[first[0].span.end : first[1].span.start]
+    if table.layout == "flat":
+        if "\n" in text[table.span.start : table.span.end]:
+            raise _several_lines(designator)
+        body = inner.join(value for row in rows for value in row)
+        last = table.points[-1].values[-1].span.end
+        return f"{opener}{body}{text[last : table.span.end]}"
+    if _NEWLINE not in text[start : table.span.end]:
+        gap = " "
+        if len(table.points) > 1:
+            second = table.points[1].values[0].span.start
+            gap = text[closer_at : text.rindex("(", 0, second)]
+        return gap.join(f"{opener}{inner.join(row)}{closer}" for row in rows)
+    # The line continues: each point must stand on a line of its own, and each new point is
+    # written on a continuation line like the first (the text between the first two points).
+    groups = [
+        (
+            text.rindex("(", 0, point.values[0].span.start),
+            text.index(")", point.values[-1].span.end) + 1,
+        )
+        for point in table.points
+    ]
+    gaps = [text[groups[i][1] : groups[i + 1][0]] for i in range(len(groups) - 1)]
+    if (
+        not gaps
+        or not all(_NEWLINE in gap for gap in gaps)
+        or any(_NEWLINE in text[a:b] for a, b in groups)
+    ):
+        raise _several_lines(designator)
+    return gaps[0].join(f"{opener}{inner.join(row)}{closer}" for row in rows)
+
+
+def _several_lines(designator: str) -> EditError:
+    return EditError(
+        f"the points of `{designator}` are not each on a line of their own, and the line "
+        "continues; change them one for one (the same number of points), or write the table "
+        "on one line first"
+    )
 
 
 def set_poly_coefficients(
@@ -153,8 +194,13 @@ def set_poly_coefficients(
             "remove the comment first"
         )
     text = netlist.source.text
+    if "\n" in text[run.start : run.end]:
+        raise EditError(
+            f"the coefficients of `{designator}` continue on another line; change them one for "
+            "one (the same number of coefficients), or write them on one line first"
+        )
     gap = text[old[0].span.end : old[1].span.start] if len(old) > 1 else " "
-    separator = gap if gap and "\n" not in gap and ";" not in gap else " "
+    separator = gap or " "
     written = separator.join(texts)
     slots: list[SlotCheck] = []
     offset = 0

@@ -162,7 +162,7 @@
     "behavioral_param.expected.cir": "ed88570d7e7acc2aa846e3521a19d7cb138e8a14ab1219a044a4d34d49ea4e52",
     "behavioral_batch.expected.cir": "2821655e3eb0d55461bab4fe9072d7afb797e3ed85aab8667a7091252942384e",
     "nonlinear_sources.cir": "c03157560b5d253f7015fa1968d5defdba6ae27cec3b1537fbcec89ea65547e9",
-    "nonlinear_table.expected.cir": "8c9cd6046b438199fe6b5547984643702592eb0c4f3f3665352aaddf1cd20209",
+    "nonlinear_table.expected.cir": "923930f66890e245c89c64d6eef5df89e9bc88eabe0e1ade8926b4541fb517d4",
     "nonlinear_freq_and_gate.expected.cir": "2c71bb3ac87bb6352546826e16d6db0bc05487273b1c755cc3796ca59ef58a69",
     "nonlinear_poly.expected.cir": "a310ea9da9fd5214a5dc78ab2a212499e236abfad80f68707c3d91ebc4e059af"
   },

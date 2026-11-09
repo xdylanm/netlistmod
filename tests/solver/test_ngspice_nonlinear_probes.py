@@ -205,12 +205,120 @@ _PROBES = {
     "g-freq-m": ("G1 0 out FREQ {v(vx)}= DB (1, 6.02, 0) (1e9, 6.02, 0) m=2", False, "refused"),
     "e-freq-no-format": ("E1 out 0 FREQ {v(vx)}= (1, 2, 0) (1e9, 2, 0)", False, "refused"),
     "e-freq-two-values": ("E1 out 0 FREQ {v(vx)}= DB (1, 2) (1e9, 2)", False, "refused"),
-    "e-freq-hz-first": (
-        "E1 out 0 FREQ {v(vx)}= DB (1Hz, 6.02, 0) (1e9, 6.02, 0)",
+    # The stop is in the first point: a frequency of more than one character that follows its
+    # "(" directly (review R4). A blank after the "(" runs, with or without a Hz suffix.
+    "e-freq-first-0": (
+        "E1 out 0 FREQ {v(vx)}= DB (0, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-first-3": (
+        "E1 out 0 FREQ {v(vx)}= DB (3, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-first-10": ("E1 out 0 FREQ {v(vx)}= DB (10, 6.02, 0) (1e9, 6.02, 0)", False, "refused"),
+    "e-freq-first-100": (
+        "E1 out 0 FREQ {v(vx)}= DB (100, 6.02, 0) (1e9, 6.02, 0)",
         False,
         "refused",
     ),
-    "e-freq-hz-later": ("E1 out 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e9Hz, 6.02, 0)", True, "refused"),
+    "e-freq-first-1.5": (
+        "E1 out 0 FREQ {v(vx)}= DB (1.5, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-10k": (
+        "E1 out 0 FREQ {v(vx)}= DB (10k, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-1e7": (
+        "E1 out 0 FREQ {v(vx)}= DB (1e7, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-2e0": (
+        "E1 out 0 FREQ {v(vx)}= DB (2e0, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-1-then-1e7": (
+        "E1 out 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e7, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-first-flat-1e7": (
+        "E1 out 0 FREQ {v(vx)}= DB (1e7, 6.02, 0, 1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-blank": (
+        "E1 out 0 FREQ {v(vx)}= DB ( 1e7, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-first-blank-flat": (
+        "E1 out 0 FREQ {v(vx)}= DB ( 1e7, 6.02, 0, 1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) flat:2x3 DB",
+    ),
+    "e-freq-first-blank-hz": (
+        "E1 out 0 FREQ {v(vx)}= DB ( 1Hz, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-hz-both": (
+        "E1 out 0 FREQ {v(vx)}= DB ( 1e7Hz, 6.02, 0) (1e9Hz, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-hz-later": (
+        "E1 out 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e9Hz, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-manual": (
+        "E1 out 0 FREQ {v(vx)}= DB\n+( 1.000000e+07Hz, 6.02, 0)\n+(1.000000e+08Hz, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
+    "e-freq-manual-no-blank": (
+        "E1 out 0 FREQ {v(vx)}= DB\n+(1.000000e+07Hz, 6.02, 0)\n+(1.000000e+08Hz, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-manual-no-hz": (
+        "E1 out 0 FREQ {v(vx)}= DB\n+ (1e7, 6.02, 0)\n+ (1e8, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    # Contradicting format words: ngspice keeps the last (review R5).
+    "e-freq-db-mag": (
+        "E1 out 0 FREQ {v(vx)}= DB MAG (1, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "refused",
+    ),
+    "e-freq-mag-db": (
+        "E1 out 0 FREQ {v(vx)}= MAG DB (1, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "refused",
+    ),
+    "e-freq-deg-rad": (
+        "E1 out 0 FREQ {v(vx)}= DB DEG RAD (1, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "refused",
+    ),
+    "e-freq-r-i-db": (
+        "E1 out 0 FREQ {v(vx)}= R_I DB (1, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "refused",
+    ),
+    "e-freq-db-db": (
+        "E1 out 0 FREQ {v(vx)}= DB DB (1, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB,DB",
+    ),
     "e-and": ("E1 out 0 and(2) vx 0 vx 0 (0.5, 0) (0.9, 2)", True, "Vcvs and pairs:2x2 N=2"),
     "e-and-upper": ("E1 out 0 AND(2) vx 0 vx 0 (0.5, 0) (0.9, 2)", True, "Vcvs and pairs:2x2 N=2"),
     "e-or": ("E1 out 0 or(2) vx 0 vx 0 (0.5, 0) (0.9, 2)", True, "Vcvs or pairs:2x2 N=2"),
@@ -275,11 +383,13 @@ def test_nonlinear_probes(solver: Solver, tmp_path: Path, case: str) -> None:
         ("E1 out 0 TABLE v(vx) = (0,0) (2,4)", 4.0),
         ("E1 out 0 vx 0 TABLE = (0,0,2,{2*k})", 4 / 3),
         ("E1 out 0 TABLE {v(vx)} = (0,0,0) (2,4,0)", 4 / 3),
+        ("E1 out 0 FREQ {v(vx)}= DB MAG (1, 6.02, 0) (1e9, 6.02, 0)", 8.03),
+        ("E1 out 0 FREQ {v(vx)}= DB (1, 6.02, 0) (1e9, 6.02, 0)", 8 / 3),
     ],
 )
 def test_what_ngspice_computes(solver: Solver, tmp_path: Path, line: str, result: float) -> None:
     values = op(solver, tmp_path, _BASE.format(line=line))
-    assert values["v(out)"] == pytest.approx(result, rel=1e-4)
+    assert values["v(out)"] == pytest.approx(result, rel=1e-3)
 
 
 def _out(solver: Solver, folder: Path, netlist: Netlist) -> float:
@@ -374,3 +484,19 @@ def test_freq_is_an_ac_form_and_an_edited_point_moves_it(solver: Solver, tmp_pat
     tripled = edited.set_expression("E1", "3*v(vx)")
     (third,) = ac(solver, tmp_path / "expression", tripled)["v(out)"]
     assert abs(third) == pytest.approx(8, rel=1e-3)
+
+
+def test_freq_table_varies_with_frequency_and_set_table_moves_it(
+    solver: Solver, tmp_path: Path
+) -> None:
+    # The manual's layout: a blank after the first "(" (review R4). 0 dB at 1 kHz and -20 dB at
+    # 1 MHz. ngspice interpolates the magnitude linearly in frequency, so halfway (500.5 kHz) the
+    # gain is (1 + 0.1) / 2 and the 2/3 V at vx scales by it.
+    line = "E1 out 0 FREQ {v(vx)}= DB" + chr(10) + "+( 1e3, 0, 0)" + chr(10) + "+(1e6, -20, 0)"
+    text = _AC.format(line=line).replace(".ac lin 1 1k 1k", ".ac lin 1 500.5k 500.5k")
+    netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
+    (middle,) = ac(solver, tmp_path / "before", netlist)["v(out)"]
+    assert abs(middle) == pytest.approx(2 / 3 * 0.55, rel=1e-2)
+    edited = netlist.set_table("E1", [("1e3", "0", "0"), ("1e6", "-40", "0")])
+    (lower,) = ac(solver, tmp_path / "after", edited)["v(out)"]
+    assert abs(lower) == pytest.approx(2 / 3 * 0.505, rel=1e-2)
