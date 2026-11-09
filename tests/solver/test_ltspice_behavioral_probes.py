@@ -75,7 +75,6 @@ _PROBES = {
     "b-v-and-i": ("B1 out 0 V=2 I=1m", False, "refused"),
     "b-none": ("B1 out 0", False, "refused"),
     "b-tc1": ("B1 out 0 V=2*V(vx) tc1=0", False, "refused"),
-    "b-laplace": ("B1 out 0 V=2*V(vx) laplace=1/(1+s/1k)", True, "unsupported"),
     # Review R1: a read of a node inside an instance of sub.
     "b-into-node": (
         ".subckt sub a\nVq a b 0\nR1 b n 1k\nR2 n 0 1k\n.ends\nX1 vx sub\n" + "B1 out 0 V=V(X1:n)",
@@ -94,9 +93,6 @@ _PROBES = {
     "h-value": ("H1 out 0 value={1k*I(Vsense)}", True, "Ccvs value 1k*I(Vsense)"),
     "e-vol": ("E1 out 0 vol='2*V(vx)'", False, "refused"),
     "e-table-braces": ("E1 out 0 TABLE {V(vx)} = (0,0) (1,2) (2,4)", True, "refused"),
-    "e-table": ("E1 out 0 vx 0 table=(0, 0, 2, 4)", True, "unsupported"),
-    "e-poly": ("E1 out 0 POLY(1) vx 0 0 2", True, "unsupported"),
-    "e-laplace": ("E1 out 0 vx 0 Laplace=2", True, "unsupported"),
     "c-charge": ("C9 out 0 Q=1u*x ic=0 m=2", True, "C Q 1u*x"),
     "c-charge-braces": ("C9 out 0 Q={1u*x}", True, "C Q 1u*x"),
     "l-flux": ("L9 out n9 Flux=1m*tanh(5*x)\nR9 n9 0 1k", True, "L 1m*tanh(5*x) "),

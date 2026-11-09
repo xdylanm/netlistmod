@@ -41,16 +41,6 @@ class ControlledRules(ElementsRules):
     def ctl_m(self, children: list[Any]) -> _Field:
         return self.param(children)
 
-    def nonlinear_form(self, children: list[Any]) -> NoReturn:
-        keyword = _field_token(children)
-        form = str(keyword).strip().lower()
-        raise self._unsupported(
-            keyword, f"{self._dialect.display_name} nonlinear dependent source form ({form})"
-        )
-
-    cc_form = nonlinear_form
-    ctl_form = nonlinear_form
-
     # The gain forms a solver runs and the library refuses, each with its own message (decision
     # 0015 item 6). The column is the offending token's.
 
@@ -107,7 +97,7 @@ class ControlledRules(ElementsRules):
     def cswitch(self, children: list[Any]) -> _Item:
         element = _Element(children)
         model = element.all(ModelReference)[0]
-        control = element.all(ElementReference)[0]
+        control = element.all(ElementReference)[:1]
         return _Item(
             element.end,
             lambda span: CurrentSwitch(
@@ -122,8 +112,6 @@ class ControlledRules(ElementsRules):
 
     g_form = e_form
     value_form = e_form
-
-    table_form = nonlinear_form
 
     def bare_expression(self, children: list[Any]) -> NoReturn:
         piece = _field_token(children)
@@ -154,28 +142,41 @@ class ControlledRules(ElementsRules):
     def _voltage_controlled(
         self, kind: type[Vcvs | Vccs], element: _Element, children: list[Any]
     ) -> _Item:
+        fields = self._form_fields(element, children)
+        nodes = fields.pop("nodes", None) or element.all(Node)
+        params = fields.pop("params", None)
         if self._dialect is Dialect.NGSPICE:
-            # ngspice replaces the word `value` with `vol=` or `cur=` wherever it stands on an E
-            # or G line, so a net of that name stops it in any node position (review R6).
-            for node in element.all(Node):
-                if node.name.lower() == "value":
+            # ngspice replaces the word `value` with `vol=` or `cur=`, and reads `table` as the
+            # keyword of TABLE, wherever either stands on an E or G line, so a net of that name
+            # stops it in any node position (reviews R6, M15b decision 0017 item 5).
+            for node in nodes:
+                if node.name.lower() in ("value", "table"):
                     raise self._error_at(
                         node.span.start,
-                        f"`{node.name}`: ngspice reads `value` on an E or G line as the keyword "
-                        "of the expression form, in any node position; give the net another name",
+                        f"`{node.name}`: ngspice reads `{node.name.lower()}` on an E or G line as "
+                        "the keyword of "
+                        + (
+                            "the expression form"
+                            if node.name.lower() == "value"
+                            else "the TABLE form"
+                        )
+                        + ", in any node position; give the net another name",
                     )
-        fields = self._gain_or_expression(element, children)
-        return _Item(element.end, lambda span: kind(**_common(element, span), **fields))
+        return _Item(
+            element.end,
+            lambda span: kind(**_common(element, span, nodes=nodes, params=params), **fields),
+        )
 
     def _current_controlled(
         self, kind: type[Cccs | Ccvs], element: _Element, children: list[Any]
     ) -> _Item:
-        fields = self._gain_or_expression(element, children)
-        control = element.optional(ElementReference)
-        return _Item(
-            element.end,
-            lambda span: kind(**_common(element, span), control=control, **fields),
-        )
+        fields = self._form_fields(element, children)
+        fields.setdefault("control", element.all(ElementReference))
+        return _Item(element.end, lambda span: kind(**_common(element, span), **fields))
+
+    def _form_fields(self, element: _Element, children: list[Any]) -> dict[str, Any]:
+        """The fields the line's form sets; the nonlinear forms override this (decision 0017)."""
+        return self._gain_or_expression(element, children)
 
     def _gain_or_expression(self, element: _Element, children: list[Any]) -> dict[str, Any]:
         form = element.optional(_Form)

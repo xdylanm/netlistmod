@@ -16,18 +16,13 @@ grammar:
 - ON_KW
 - ctl_m
 - CTL_M_KW
-- nonlinear_form
-- cc_form
-- VC_FORM_KW
-- CC_FORM_KW
 - gain_keyword
 - second_value
 - GAIN_KW
 tests:
 - tests/grammar/ngspice/test_controlled_sources.py::test_continuations_join_the_line
-- tests/grammar/ngspice/test_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
 - tests/document/test_controlled_topology.py::test_control_nodes_are_connections
 - tests/document/test_controlled_topology.py::test_the_signature_holds_each_controlling_source
 - tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
 - tests/grammar/ngspice/test_controlled_sources.py::test_refused_gain_forms_name_the_form
-notes: 'Decision 0015. E, G and S write four nodes, the output pair then the control pair; F, H and W two nodes and a controlling source, an element reference resolved in its own scope. The expression forms of §5 are NG-NLS-001 (M15); TABLE, POLY, FREQ and AND/OR/NAND/NOR are UnsupportedConstruct after the output nodes until M15b.'
+notes: 'Decision 0015. E, G and S write four nodes, the output pair then the control pair; F, H and W two nodes and a controlling source, an element reference resolved in its own scope. The expression forms of §5 are NG-NLS-001 (M15); TABLE is NG-TBL-001, POLY NG-PLY-001, and FREQ and AND/OR/NAND/NOR NG-XSP-001 (M15b). F, H and W hold their controlling sources as a tuple, control, of one source (decision 0017 item 2).'

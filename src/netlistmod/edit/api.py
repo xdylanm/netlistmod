@@ -170,6 +170,56 @@ class _Operations(Generic[_R]):
             operations.upsert_target(self._target(), "set_expression", scope, designator),
         )
 
+    def set_table(
+        self,
+        designator: str,
+        points: Sequence[Sequence[str]],
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Replace the points of an ngspice ``TABLE``, ``FREQ`` or gate line, or of an LTspice
+        ``table=`` (decision 0017 item 6).
+
+        ``points`` holds one sequence of value texts for each point: two values, or three for
+        FREQ (frequency, magnitude, phase). The points are written in the layout the line has,
+        each in its own parentheses or one flat list, with the separator written between the
+        first two values, and their number may change. ``EditError`` before anything is written
+        for a point of the wrong width, fewer points than the form takes (two for a gate or
+        ``table=``, one for ngspice TABLE and FREQ), a value that is not a number on an ngspice
+        TABLE, and a FREQ frequency with a unit suffix. The expression of TABLE and FREQ is
+        :meth:`set_expression`; the dimension, the nodes, a gate's inputs and FREQ's format words
+        are not editable.
+        """
+        return self._submit(
+            operations.set_table(
+                self._target(), designator, points, scope=scope, in_definition=in_definition
+            ),
+            operations.upsert_target(self._target(), "set_table", scope, designator),
+        )
+
+    def set_poly_coefficients(
+        self,
+        designator: str,
+        values: Sequence[str],
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Replace the coefficients of an E, F, G or H line written ``POLY(N)``, from the first to
+        the last (decision 0017 item 6).
+
+        The count may change, down to the fewest the dialect takes (two on ngspice, one on
+        LTspice); ``m=`` stays as it is. The dimension, the control nodes and the controlling
+        sources are topology and are not editable (``TopologyViolation``).
+        """
+        return self._submit(
+            operations.set_poly_coefficients(
+                self._target(), designator, values, scope=scope, in_definition=in_definition
+            ),
+            operations.upsert_target(self._target(), "set_poly_coefficients", scope, designator),
+        )
+
     def set_switch_state(
         self,
         designator: str,

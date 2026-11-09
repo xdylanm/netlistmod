@@ -23,6 +23,7 @@ from netlistmod.edit._ops_common import (
     _kind,
     _last_field_end,
 )
+from netlistmod.edit._ops_nonlinear import use_instead
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
@@ -37,12 +38,15 @@ from netlistmod.model.nodes import (
     SubcktInstance,
     Switch,
     Vccs,
+    Vcvs,
     VoltageSource,
 )
 from netlistmod.model.values import (
     Flag,
     ParamAssignment,
 )
+
+_LAPLACE_PARAMS = ("window", "nfft", "mtol")
 
 
 def set_value(
@@ -70,8 +74,14 @@ def set_value(
         return [Edit(element.dc.span, value, reason, (_VALUE,))]
     if isinstance(element, ControlledSource):
         if element.value is None:
+            if element.form in ("vol", "cur", "value"):
+                raise EditError(
+                    f"`{designator}` is written as an expression (`{element.form}`); "
+                    "use set_expression"
+                )
             raise EditError(
-                f"`{designator}` is written as an expression (`{element.form}`); use set_expression"
+                f"`{designator}` is written as {element.form} and has no gain; "
+                f"use {use_instead(element)}"
             )
         return [Edit(element.value.span, value, reason, (_VALUE,))]
     if isinstance(element, MutualCoupling):
@@ -100,9 +110,21 @@ def set_param(
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
     if isinstance(element, ControlledSource | Switch):
-        # Only an ngspice F or G takes a parameter, m= (decision 0015 item 7).
-        if ltspice or not isinstance(element, Cccs | Vccs) or folded != found_fold("m"):
-            only = "" if ltspice else "; on ngspice only F and G take `m=`"
+        # An ngspice F or G takes m= (decision 0015 item 7), and an LTspice E or G with Laplace=
+        # takes window=, nfft= and mtol= (decision 0017).
+        laplace = (
+            ltspice
+            and isinstance(element, Vcvs | Vccs)
+            and element.form == "laplace"
+            and folded in {found_fold(word) for word in _LAPLACE_PARAMS}
+        )
+        meter = not ltspice and isinstance(element, Cccs | Vccs) and folded == found_fold("m")
+        if not (laplace or meter):
+            if ltspice:
+                named = folded in {found_fold(word) for word in _LAPLACE_PARAMS}
+                only = "; only a line with `Laplace=` takes it" if named else ""
+            else:
+                only = "; on ngspice only F and G take `m=`"
             raise EditError(f"`{designator}` takes no parameter `{name}`{only}")
         return _assign(element.params, element, name, value, reason, folded=found_fold)
     takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES, BehavioralSource)

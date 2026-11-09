@@ -34,6 +34,7 @@ from netlistmod.edit._ops_elements import (
     set_param,
     set_value,
 )
+from netlistmod.edit._ops_nonlinear import set_poly_coefficients, set_table
 from netlistmod.edit._ops_sources import (
     remove_stimulus,
     set_ac,
@@ -67,9 +68,11 @@ __all__ = [
     "set_model",
     "set_model_param",
     "set_param",
+    "set_poly_coefficients",
     "set_param_statement",
     "set_stimulus",
     "set_stimulus_arg",
+    "set_table",
     "set_switch_state",
     "set_value",
     "stimulus_target",

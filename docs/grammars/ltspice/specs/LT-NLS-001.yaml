@@ -27,4 +27,4 @@ tests:
 notes: 'Decision 0016 item 3. value= after the output nodes, with an expression in braces, quotes or
   bare; F and H have no controlling source then. ngspice''s vol= stops LTspice and is refused, and
   ngspice''s TABLE {...} =, which LTspice runs but its reference does not show, is refused
-  (discrepancies.md). POLY, table= and Laplace= stay UnsupportedConstruct until M15b.'
+  (discrepancies.md). POLY, table= and Laplace= are LT-PLY-001, LT-TBL-001 and LT-LAP-001 (M15b).'

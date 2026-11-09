@@ -1,0 +1,24 @@
+id: LT-TBL-001
+dialect: ltspice
+construct: table= on E and G
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "E — Voltage-Dependent Voltage Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-08'
+grammar:
+- table_form
+- TABLE_KW
+core_rules:
+- fn_list
+tests:
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_table_is_one_flat_list_after_the_control_nodes
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_malformed_tables_are_refused
+- tests/edits/test_nonlinear_edits.py::test_set_table_on_ltspice
+- tests/edits/test_nonlinear_edits.py::test_set_table_refusals_on_ltspice
+- tests/solver/test_ltspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_what_ltspice_computes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_an_edited_table_coefficient_or_formula_moves_the_result
+notes: 'Decision 0017 items 1 and 4. table=(x, y, ...) follows the four nodes of E or G: one parenthesised list of values with commas or blanks, over + lines if need be, with = optional (table(...) runs). The line keeps its class with value None, form "table" and a Table of layout "flat". At least two pairs and an even count (LTspice stops otherwise, "Pairs of numbers expected"); pairs in their own parentheses, nested parentheses, a name for a value, m= and two nodes stop LTspice and are refused. The values follow LTspice''s value slot ({k} runs, a bare k stops). ngspice''s TABLE {...} = on an E line is refused although LTspice runs it (discrepancies.md).'

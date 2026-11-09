@@ -14,10 +14,8 @@ validated_on:
 grammar:
 - e_form
 - g_form
-- table_form
 - E_FORM_KW
 - G_FORM_KW
-- TABLE4_KW
 - bare_expression
 - value_word
 - VALUE_WORD_KW
@@ -30,11 +28,10 @@ tests:
 - tests/grammar/ngspice/test_behavioral.py::test_a_net_named_value_on_e_or_g_is_refused
 - tests/grammar/ngspice/test_behavioral.py::test_a_delimited_expression_over_a_continuation_is_refused
 - tests/grammar/ngspice/test_behavioral.py::test_a_bare_expression_after_vol_or_cur_is_refused
-- tests/grammar/ngspice/test_behavioral.py::test_the_m15b_forms_stay_unsupported
 - tests/grammar/ngspice/test_behavioral.py::test_laplace_stays_a_parse_error
 - tests/document/test_expression_reads.py::test_value_forms_read_their_sources
 - tests/solver/test_ngspice_behavioral_probes.py::test_behavioral_probes
 notes: 'Decision 0016 item 3. The line keeps its M14 class (Vcvs, Vccs) with value None, form set to
   the keyword and expression set; G takes m=. vol= and cur= take quotes or braces, and a bare
   expression there, which stops ngspice 47, is refused with its own message. value takes = or not.
-  TABLE (both forms), POLY, FREQ and AND/OR/NAND/NOR stay UnsupportedConstruct until M15b.'
+  TABLE, POLY, FREQ and AND/OR/NAND/NOR are NG-TBL-001, NG-PLY-001 and NG-XSP-001 (M15b).'

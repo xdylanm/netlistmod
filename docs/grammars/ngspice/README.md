@@ -67,6 +67,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-OPP-001](./specs/NG-OPP-001.yaml) | .op operating point | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-OPT-001](./specs/NG-OPT-001.yaml) | .options / .option | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-PAR-001](./specs/NG-PAR-001.yaml) | instance parameters, model references and the off flag | validated | ngspice 47 (2026-10-31) |
+| [NG-PLY-001](./specs/NG-PLY-001.yaml) | POLY on E, F, G and H | validated | ngspice 47 (2026-11-08) |
 | [NG-PRM-001](./specs/NG-PRM-001.yaml) | .param assignments | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-RES-001](./specs/NG-RES-001.yaml) | resistor (R) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-SAV-001](./specs/NG-SAV-001.yaml) | .save output vectors | validated | ngspice 47 (2026-10-31) |
@@ -76,6 +77,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-SUB-001](./specs/NG-SUB-001.yaml) | subcircuit calls (X) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-SWC-001](./specs/NG-SWC-001.yaml) | current-controlled switch (W) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-SWV-001](./specs/NG-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | ngspice 47 (2026-11-06) |
+| [NG-TBL-001](./specs/NG-TBL-001.yaml) | TABLE on E and G, and E's four-node TABLE | validated | ngspice 47 (2026-11-08) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TRN-001](./specs/NG-TRN-001.yaml) | .tran transient analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TTL-001](./specs/NG-TTL-001.yaml) | implicit first-line title and explicit .title | validated | ngspice 47 (2026-10-22, 2026-10-31) |
@@ -84,4 +86,5 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-VAL-001](./specs/NG-VAL-001.yaml) | brace and quoted expressions, and string parameter values | validated | ngspice 47 (2026-10-31) |
 | [NG-VCC-001](./specs/NG-VCC-001.yaml) | voltage-controlled current source (G) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-VCV-001](./specs/NG-VCV-001.yaml) | voltage-controlled voltage source (E) lines | validated | ngspice 47 (2026-11-06) |
+| [NG-XSP-001](./specs/NG-XSP-001.yaml) | FREQ on E and G, and AND, OR, NAND and NOR on E | validated | ngspice 47 (2026-11-08) |
 | [NG-XTR-001](./specs/NG-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ngspice 47 (2026-11-05) |

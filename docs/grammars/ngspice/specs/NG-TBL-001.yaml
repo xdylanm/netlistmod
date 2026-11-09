@@ -1,0 +1,34 @@
+id: NG-TBL-001
+dialect: ngspice
+construct: TABLE on E and G, and E's four-node TABLE
+manual_ref:
+- '[ngspice-manual] §5.2.3 "TABLE"'
+- '[ngspice-manual] §5.3.3 "TABLE"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-08'
+grammar:
+- table_form
+- table4_form
+- table_bare
+- TABLE_KW
+- TABLE4_KW
+- TABLE_BARE_KW
+tests:
+- tests/grammar/ngspice/test_nonlinear.py::test_the_expression_form_of_table
+- tests/grammar/ngspice/test_nonlinear.py::test_the_four_node_table_reads_its_control_nodes
+- tests/grammar/ngspice/test_nonlinear.py::test_the_table_remembers_its_spans
+- tests/grammar/ngspice/test_nonlinear.py::test_malformed_tables_are_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_a_parameter_in_a_table_point_is_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_a_bare_table_expression_is_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_a_net_named_table_on_e_or_g_is_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_other_keyword_names_stay_nets
+- tests/document/test_nonlinear_topology.py::test_table_and_freq_expressions_are_reads
+- tests/edits/test_nonlinear_edits.py::test_set_table_on_ngspice
+- tests/edits/test_nonlinear_edits.py::test_set_table_refusals_on_ngspice
+- tests/solver/test_ngspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ngspice_nonlinear_probes.py::test_what_ngspice_computes
+- tests/solver/test_ngspice_nonlinear_probes.py::test_an_edited_table_or_coefficient_moves_the_result
+notes: 'Decision 0017 items 1, 3 and 4. E and G write TABLE {expression} = points, with the expression in braces or quotes and = optional; E also writes the four-node form, TABLE = points after the control nodes, which G does not (ngspice stops, so it is a ParseError). The points are pairs, each in its own parentheses, or one flat list, with commas or blanks: each list is a core fn_list. The line keeps its class with value None, form "table", the expression (TABLE {expr} only) and a Table holding the points. At least one point; a pair has two values and a flat list an even count. The values are numbers: the manual allows no parameters and ngspice 47 runs some forms wrongly (a bare expression gives 4.0 where the table gives 2.67), so a bare expression, a formula and a name in a point are refused (discrepancies.md). m= follows the points on G only. A net named table (any case) stops ngspice in any node position of E and G, as value does, and is refused at the node.'

@@ -236,6 +236,55 @@
       "column": 10,
       "error": "ParseError",
       "note": "value after F's output nodes is the expression form's keyword, not the controlling source; LTspice runs it as value=2.2 (decision 0016 item 9). Written for M15 review R2 from the maintainer's controlled_sources examples."
+    },
+    "e_table_pairs.cir": {
+      "sha256": "2706877ff5aed6b4aa7e6098a1bf23049feff11328f2bbc64e59df5ac57f6e66",
+      "line": 4,
+      "column": 31,
+      "error": "ParseError",
+      "note": "Table= with pairs in their own parentheses; LTspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_table_odd.cir": {
+      "sha256": "706a2f9d944feca09ed7a909cbdad08c15b37830512d0739e118490d42521de9",
+      "line": 4,
+      "column": 31,
+      "error": "ParseError",
+      "note": "Table= with an odd count; LTspice stops (\"Pairs of numbers expected\"). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_laplace_read.cir": {
+      "sha256": "73fa5017358ea30a10d0c1c2ef11ee561a02a9bd00f23cd8482aeb1e353d9802",
+      "line": 4,
+      "column": 26,
+      "error": "ParseError",
+      "note": "A V() in Laplace=; LTspice stops (\"Voltage reference not allowed here\"). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_laplace_unknown_param.cir": {
+      "sha256": "b28c1bb6b877cd6dad8fa1ef82a19dee196249b49c237a1b2f96cdcd39878266",
+      "line": 4,
+      "column": 39,
+      "error": "ParseError",
+      "note": "An unknown parameter after Laplace=; LTspice stops. Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_poly_dimension.cir": {
+      "sha256": "b9ee4713c27f8e3e6055c2103e5083428a9d7b52d3bd5f3d199da6002ccbde41",
+      "line": 4,
+      "column": 18,
+      "error": "ParseError",
+      "note": "POLY with a braced dimension; LTspice runs it, but the dimension decides the topology (decision 0017 item 3). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "f_poly_paren.cir": {
+      "sha256": "93a103bfea7500bccbcee7f85b24bcd9002b93f89d59b3de71f604d9349a8c0c",
+      "line": 8,
+      "column": 18,
+      "error": "ParseError",
+      "note": "A controlling source in parentheses; LTspice stops. Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "b_laplace_resistor.cir": {
+      "sha256": "1116073e1ff1a0ac30165ccbffaa3ca500b1c31e2c0bfb5e7b0864c9583e06cd",
+      "line": 8,
+      "column": 15,
+      "error": "ParseError",
+      "note": "Laplace= on R=; LTspice runs it, but its reference shows it on V= and I= only (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
     }
   }
 }

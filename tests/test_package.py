@@ -66,6 +66,8 @@ def test_public_exports_and_version() -> None:
         "Ccvs",
         "CurrentSwitch",
         "Switch",
+        "Table",
+        "TablePoint",
         "Vccs",
         "Vcvs",
         "VoltageSwitch",

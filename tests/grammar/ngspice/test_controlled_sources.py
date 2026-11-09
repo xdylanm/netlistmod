@@ -19,7 +19,6 @@ from netlistmod import (
     SourceText,
     Span,
     Switch,
-    UnsupportedConstruct,
     Vccs,
     Vcvs,
     VoltageSwitch,
@@ -82,8 +81,9 @@ def test_f_and_h_have_two_nodes_and_a_controlling_source(
     item = _element(line)
     assert type(item) is kind
     assert len(item.nodes) == 2
-    assert item.control == ElementReference(control, item.control.span)
-    assert _slice(line, item.control.span) == control
+    assert len(item.control) == 1
+    assert item.control == (ElementReference(control, item.control[0].span),)
+    assert _slice(line, item.control[0].span) == control
     assert item.value.text == value
 
 
@@ -125,7 +125,7 @@ def test_continuations_join_the_line() -> None:
     item = parse(SourceText("t\nE1 a 0\n+ b 0 2\nW1 a 0\n+ Vs sm off\n.end\n"), Dialect.NGSPICE)
     vcvs, switch = item.items[1], item.items[2]
     assert [node.name for node in vcvs.control_nodes] == ["b", "0"]
-    assert switch.control.designator == "Vs"
+    assert [source.designator for source in switch.control] == ["Vs"]
 
 
 @pytest.mark.parametrize(
@@ -151,24 +151,6 @@ def test_continuations_join_the_line() -> None:
 def test_malformed_lines_are_rejected(line: str, column: int) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
-
-
-@pytest.mark.parametrize(
-    ("line", "form"),
-    [
-        ("E1 a 0 POLY(1) b 0 0 2", "poly"),
-        ("E1 a 0 TABLE {V(b)} = (0,0) (1,2)", "table"),
-        ("E1 a 0 FREQ {V(b)}= DB (1, 0, 0)", "freq"),
-        ("E1 a 0 and(2) b 0 b 0 (0.5, 0) (2.8, 3.3)", "and"),
-        ("F1 a 0 POLY(1) V1 0 2", "poly"),
-        ("H1 a 0 poly (1) V1 0 2", "poly"),
-    ],
-)
-def test_the_nonlinear_forms_are_unsupported(line: str, form: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
-    assert (captured.value.line, captured.value.column) == (2, 8)
-    assert captured.value.construct == f"ngspice nonlinear dependent source form ({form})"
 
 
 # Review R1: each refused gain form that a solver runs names the form, at the offending token.

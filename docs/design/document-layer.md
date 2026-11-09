@@ -114,6 +114,7 @@ body's entries, then the following lines), with exact text everywhere; `scope` i
 | element (R, C, L, V, I, D) | `("element", scope, designator, type name, (node, …))` |
 | X line | `("instance", scope, designator, (node, …), subckt name)` |
 | K line | `("coupling", scope, designator, (inductor, …))` |
+| controlling source (F, H, W) | `("control", scope, designator, source)`, one entry for each source after the element's own, in line order: one for the linear form, N for POLY, none for LTspice's `value=` (decision 0017 item 2). POLY's control nodes are in the element entry's `nodes`; swapping two POLY sources changes the order of the entries |
 | definition | `("subckt", scope, name, (port, …))` |
 | last entry | `("global", (sorted set of .global node names))` |
 
@@ -171,7 +172,7 @@ The API and the signature encoding are the same; `$G_*` nodes count as global. W
 
 `expression_reads(designator, scope=())` returns the reads of the element's expressions in
 source order: B's expression, an expression form of E, F, G or H, C's charge, L's flux, and an
-R, C or L formula value. `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
+R, C or L formula value, and the expression of an ngspice `TABLE` or `FREQ` (M15b, decision 0017). `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
 name in `v(a)` or `v(a,b)`) or `"source"` (`i(Vx)`); `span` covers the name; `target` is the
 `Net` or the `Component`, or `None`. An element without an expression reads nothing; F's
 controlling source is topology (section 3), not a read.
@@ -182,5 +183,5 @@ solvers. A source read resolves as an element reference. The reads never enter t
 
 The formula scan (section 5) reads, inside an expression, `{...}` within a bare expression,
 `+` continuations and LTspice's `~`. The words an expression gives a meaning to are not
-parameters there: LTspice's `time` in B and `value=`, and `x` in `Q=` and `Flux=`. LTspice's
+parameters there: LTspice's `time` in B and `value=`, `x` in `Q=` and `Flux=`, and `s` in `Laplace=` and B's `laplace=`. LTspice's
 `time` elsewhere is still a name.

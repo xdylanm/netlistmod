@@ -87,6 +87,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-GLB-001](./specs/LT-GLB-001.yaml) | .global | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-ICN-001](./specs/LT-ICN-001.yaml) | .ic and .nodeset | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-IND-001](./specs/LT-IND-001.yaml) | inductor (L) lines | validated | ltspice 26.1.1 (2026-11-01, 2026-11-06) |
+| [LT-LAP-001](./specs/LT-LAP-001.yaml) | Laplace= on E and G, and laplace= on B | validated | ltspice 26.1.1 (2026-11-08) |
 | [LT-JFT-001](./specs/LT-JFT-001.yaml) | junction FET (J) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | ltspice 26.1.1 (2026-11-01) |
@@ -103,6 +104,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib, and .lib blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPP-001](./specs/LT-OPP-001.yaml) | .op | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPT-001](./specs/LT-OPT-001.yaml) | .options, .option and .opt | validated | ltspice 26.1.1 (2026-11-01) |
+| [LT-PLY-001](./specs/LT-PLY-001.yaml) | POLY on E, F, G and H | validated | ltspice 26.1.1 (2026-11-08) |
 | [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-RES-001](./specs/LT-RES-001.yaml) | resistor (R) lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | ltspice 26.1.1 (2026-11-01) |
@@ -113,6 +115,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-SWC-001](./specs/LT-SWC-001.yaml) | current-controlled switch (W) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-SWV-001](./specs/LT-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | ltspice 26.1.1 (2026-11-06) |
+| [LT-TBL-001](./specs/LT-TBL-001.yaml) | table= on E and G | validated | ltspice 26.1.1 (2026-11-08) |
 | [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-TRN-001](./specs/LT-TRN-001.yaml) | .tran | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-TTL-001](./specs/LT-TTL-001.yaml) | implicit first-line title and .title | validated | ltspice 26.1.1 (2026-11-01) |

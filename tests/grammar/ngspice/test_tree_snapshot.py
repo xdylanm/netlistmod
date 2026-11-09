@@ -24,6 +24,12 @@ among them, as rejected files), the behavioural golden files, six ``elements_rej
 now loads. The same 17 rejected files gained the B letter among their expected terminals; no
 other entry changed. M15 review R2 added ``elements_rejects/e_value_node.cir``, and no other
 entry changed.
+M15b (decision 0017) loaded the ten ``controlled_sources`` files of its forms that M15 had
+written as rejected files, so their entries changed from an error to a parse; it changed
+``elements_rejects/e_poly_too_few.cir`` from ``UnsupportedConstruct`` to a ``ParseError`` at the
+line's end, and added three ``controlled_sources`` files, eleven ``elements_rejects`` files
+and the ``nonlinear_*`` golden files. No other entry changed, and no rejected file's expected
+terminals changed: M15b adds no element letter.
 """
 
 from __future__ import annotations

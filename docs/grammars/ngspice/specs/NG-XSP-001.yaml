@@ -1,0 +1,30 @@
+id: NG-XSP-001
+dialect: ngspice
+construct: FREQ on E and G, and AND, OR, NAND and NOR on E
+manual_ref:
+- '[ngspice-manual] §5.2.6 "FREQ"'
+- '[ngspice-manual] §5.3.6 "FREQ"'
+- '[ngspice-manual] §5.2.7 "AND, OR, NAND, NOR"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-08'
+grammar:
+- freq_form
+- freq_fmt
+- gate_form
+- FREQ_KW
+- FREQ_FMT_KW
+- GATE_KW
+tests:
+- tests/grammar/ngspice/test_nonlinear.py::test_freq_reads_its_format_words_and_triples
+- tests/grammar/ngspice/test_nonlinear.py::test_malformed_freq_lines_are_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_gates_read_two_points_and_their_inputs
+- tests/grammar/ngspice/test_nonlinear.py::test_malformed_gates_are_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_the_gate_count_message_names_the_inputs
+- tests/document/test_nonlinear_topology.py::test_changing_a_gate_input_is_a_topology_violation
+- tests/edits/test_nonlinear_edits.py::test_set_table_on_ngspice
+- tests/solver/test_ngspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ngspice_nonlinear_probes.py::test_freq_is_an_ac_form_and_an_edited_point_moves_it
+notes: 'Decision 0017 items 3 and 4. FREQ {expression} = format words, then triples (frequency, magnitude, phase), in pairs layout or one flat list, with or without commas; E and G take it, G without m=. The expression is the line''s expression; the words (DB, MAG, DEG, RAD, R_I) are Table.format, and ngspice stops without one. A frequency with a unit suffix is refused (the manual''s own example writes 1.0e+07Hz and ngspice stops on it; ngspice 47 runs the suffix on a later frequency, discrepancies.md). A gate, on E only, writes and(N), or(N), nand(N) or nor(N), the input node pairs, then two points (x, y) with a comma, separated by a blank. ngspice ignores N and reads every name before the first point as an input, so the inputs are counted from the line: an even count of at least four, and 2N, otherwise a ParseError (ngspice runs a line whose N differs, discrepancies.md). The inputs are in nodes and so topology.'

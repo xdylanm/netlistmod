@@ -1,0 +1,14 @@
+.title KiCad schematic
+* reject: FREQ without a format word; ngspice stops (decision 0017 item 4)
+.op
+.control
+  run
+  print v(/VX) v(/OUT)
+.endc
+R1 /OUT GND 1k
+R5 Net-_R5-Pad1_ /VX 1k
+V1 Net-_R5-Pad1_ GND DC 2 
+R6 /VX GND 1k
+R2 a GND 100
+E1 /OUT a FREQ {v(/VX)}= (1, 6.85, 0) (1e9, 6.85, 0)
+.end

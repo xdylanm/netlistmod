@@ -44,9 +44,9 @@ def _reading(text: str) -> str:
     # The last one is the line under test; the others feed it.
     item = netlist.lines.find_all((ControlledSource, Switch), recursive=True)[-1].item
     assert isinstance(item, ControlledSource | Switch)
-    control = getattr(item, "control", None)
+    control = getattr(item, "control", ())
     parts = [type(item).__name__, ",".join(node.name for node in item.nodes)]
-    parts.append(control.designator if control is not None else "-")
+    parts.append(",".join(source.designator for source in control) or "-")
     if isinstance(item, ControlledSource):
         gain = item.value if item.value is not None else item.expression
         parts.append(getattr(gain, "text", ""))
@@ -68,8 +68,6 @@ _PROBES = {
     "e-three-nodes": ("E1 out 0 vx 2", False, "refused"),
     "e-comma": ("E1 out,0 vx 0 2", True, "refused"),
     "e-value": ("E1 out 0 value={2*V(vx)}", True, "Vcvs out,0 - 2*V(vx)"),  # M15
-    "e-poly": ("E1 out 0 POLY(1) vx 0 0 2", True, "unsupported"),
-    "e-laplace": ("E1 out 0 vx 0 Laplace=2", True, "unsupported"),
     "g-gain": ("G1 0 out vx 0 2m", True, "Vccs 0,out,vx,0 - 2m"),
     "g-m": ("G1 0 out vx 0 2m m=2", False, "refused"),
     "f-gain": ("F1 0 out Vs 2", True, "Cccs 0,out Vs 2"),

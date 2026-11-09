@@ -83,7 +83,7 @@ The dialect has this construct, but the library does not support it yet. It is s
 
 ```
 
-**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, and the linear forms of E, F, G, H, S and W, with DC, AC and source functions. Other letters, and the nonlinear forms of E, F, G and H, wait for later phase 2 milestones. There is no way to skip the line.
+**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, and the linear forms of E, F, G, H, S and W, with DC, AC and source functions. Other letters wait for later phase 2 milestones; ngspice's `LAPLACE` is a `ParseError`, because ngspice does not offer it. There is no way to skip the line.
 
 ### `EditError`
 

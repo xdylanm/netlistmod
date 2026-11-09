@@ -16,7 +16,6 @@ from netlistmod import (
     ParseError,
     SourceText,
     Span,
-    UnsupportedConstruct,
     Vccs,
     Vcvs,
     VoltageSwitch,
@@ -69,7 +68,7 @@ def test_e_and_g_have_four_nodes_and_a_gain(
 def test_f_and_h_have_a_controlling_source(line: str, kind: type, control: str) -> None:
     item = _element(line)
     assert type(item) is kind
-    assert item.control.designator == control
+    assert [source.designator for source in item.control] == [control]
 
 
 @pytest.mark.parametrize(
@@ -108,22 +107,6 @@ def test_switches_take_a_model_and_an_optional_state(
 def test_malformed_lines_are_rejected(line: str, column: int) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
-
-
-@pytest.mark.parametrize(
-    ("line", "column", "form"),
-    [
-        ("E1 a 0 POLY(1) b 0 0 2", 8, "poly"),
-        ("E1 a 0 b 0 table=(0,0,1,2)", 12, "table"),
-        ("G1 a 0 b 0 Laplace=1/(1+s)", 12, "laplace"),
-        ("H1 a 0 POLY(1) V1 0 2", 8, "poly"),
-    ],
-)
-def test_the_nonlinear_forms_are_unsupported(line: str, column: int, form: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        parse(SourceText(f"title\n{line}\n.end\n"), Dialect.LTSPICE)
-    assert (captured.value.line, captured.value.column) == (2, column)
-    assert captured.value.construct == f"LTspice nonlinear dependent source form ({form})"
 
 
 _FAMILY = Path(__file__).parents[2] / "corpus" / "ltspice" / "controlled_sources"

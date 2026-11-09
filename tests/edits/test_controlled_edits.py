@@ -112,7 +112,7 @@ def test_a_changed_control_is_a_topology_violation(designator: str, field: int, 
     )
     item = line.item
     controls = getattr(item, "control_nodes", None)
-    span = controls[field - 3].span if controls else item.control.span
+    span = controls[field - 3].span if controls else item.control[0].span
     with pytest.raises(TopologyViolation):
         netlist.apply([Edit(span, text, f"rewire {designator}")])
 

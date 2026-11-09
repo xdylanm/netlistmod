@@ -126,13 +126,18 @@ class SourcesRules(ElementsRules):
     def fn_list(self, children: list[Any]) -> _FnList:
         inner = children[-1]
         if isinstance(inner, _FnList):
-            return _FnList(inner.args, inner.end, (*_comment_spans(children), *inner.comments))
+            return _FnList(
+                inner.args, inner.end, (*_comment_spans(children), *inner.comments), inner.start
+            )
         fields = [child for child in children if isinstance(child, _Field)]
         close = fields[-1].node
         assert isinstance(close, _RParen)
         comments = tuple(comment for field in fields for comment in field.comments)
         args = tuple(field.node for field in fields[:-1])
-        return _FnList(args, close.span.end, comments)  # type: ignore[arg-type]
+        opener = next(
+            child for child in children if isinstance(child, Token) and child.type == "LPAR"
+        )
+        return _FnList(args, close.span.end, comments, _span(opener).start)  # type: ignore[arg-type]
 
     def fn_first(self, children: list[Any]) -> _Field:
         return self._field(children, self._value)

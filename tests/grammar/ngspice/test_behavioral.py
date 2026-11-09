@@ -13,7 +13,6 @@ from netlistmod import (
     ParseError,
     SourceText,
     Span,
-    UnsupportedConstruct,
     Vccs,
     Vcvs,
     parse,
@@ -185,25 +184,6 @@ def test_a_bare_expression_after_vol_or_cur_is_refused(line: str, column: int) -
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
     assert "only in quotes or braces (ngspice manual §5.2.1)" in error.reason
-
-
-@pytest.mark.parametrize(
-    ("line", "column", "form"),
-    [
-        ("E1 out 0 TABLE {v(vx)} = (0,0) (1,2)", 10, "table"),
-        ("E1 out 0 vx 0 TABLE = (0, 0, 1, 2)", 15, "table"),
-        ("G1 0 out TABLE {v(vx)} = (0,0) (1,2m)", 10, "table"),
-        ("E1 out 0 POLY(1) vx 0 0 2", 10, "poly"),
-        ("F1 out 0 POLY(1) Vs 0 2", 10, "poly"),
-        ("E1 out 0 FREQ {v(vx)}= DB (1, 0, 0)", 10, "freq"),
-        ("E1 out 0 nand(2) vx 0 vx 0 (0.5, 0) (2.8, 3.3)", 10, "nand"),
-    ],
-)
-def test_the_m15b_forms_stay_unsupported(line: str, column: int, form: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
-    assert (captured.value.line, captured.value.column) == (2, column)
-    assert captured.value.construct == f"ngspice nonlinear dependent source form ({form})"
 
 
 @pytest.mark.parametrize(

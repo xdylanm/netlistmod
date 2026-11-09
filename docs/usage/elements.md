@@ -101,7 +101,8 @@ E, G, F and H lines become `Vcvs`, `Vccs`, `Cccs` and `Ccvs` (subclasses of
 `ControlledSource`), and S and W lines `VoltageSwitch` and `CurrentSwitch` (subclasses of
 `Switch`) ([decision 0015](../decisions/0015-controlled-sources.md)). A control is topology: E,
 G and S list their control nodes after the output nodes, and F, H and W name their controlling
-source in `control`.
+sources in `control`, a tuple: one source for the linear form, N for `POLY`, none for LTspice's
+`value=` ([decision 0017](../decisions/0017-tables-polynomials-and-transfer-functions.md)).
 
 ```python
 >>> source = SourceText(
@@ -115,8 +116,8 @@ source in `control`.
 >>> _, e1, f1, s1, *_ = parse(source, Dialect.NGSPICE).items
 >>> [node.name for node in e1.control_nodes], e1.value.text
 (['in', '0'], '2')
->>> f1.control.designator, f1.value.text, f1.params[0].name
-('Vsense', '3', 'm')
+>>> [source.designator for source in f1.control], f1.value.text, f1.params[0].name
+(['Vsense'], '3', 'm')
 >>> s1.model.model_name, s1.flags[0].name
 ('sm', 'OFF')
 
@@ -128,8 +129,17 @@ source in `control`.
 - **Controlling source:** found in the line's own scope only. One that is missing gives `UNRESOLVED_ELEMENT`, and one that is not a voltage source gives `CONTROL_SOURCE_MISMATCH`.
 - **Expression forms:** E `vol=` and G `cur=` (in quotes or braces), and `value` on both, load
   with `value` `None`, the expression in `expression` and the keyword in `form`.
-- **Nonlinear forms:** `TABLE`, `POLY`, `FREQ` and `AND`/`OR`/`NAND`/`NOR` raise
-  `UnsupportedConstruct` until a later milestone.
+- **Nonlinear forms** (decision 0017): `value` is `None` and `form` is `"table"`, `"poly"`,
+  `"laplace"`, `"freq"`, `"and"`, `"or"`, `"nand"` or `"nor"`. `table` holds the points of
+  ngspice `TABLE`, `FREQ` and the gates and of LTspice `table=` (`Table`: `points`, `layout`,
+  `format`; `TablePoint.values`), `dimension` is POLY's or a gate's `N`, and `coefficients` are
+  POLY's. `expression` is the formula a line writes (`TABLE {expr}`, `FREQ {expr}`, `Laplace=`), and
+  `None` for the four-node `TABLE`, `table=`, POLY and the gates, which read their control nodes.
+  POLY's control nodes follow the output pair in `nodes`, and its controlling sources are `control`;
+  both are counted from `N`, which must be an integer literal. `window=`, `nfft=`, `mtol=` and `m=`
+  are in `params`. The points of an ngspice `TABLE` are numbers; a bare expression there, a net
+  named `table`, a gate whose inputs are not `2N` and a unit suffix on a `FREQ` frequency are
+  refused, because the solver stops or reads them differently (`discrepancies.md`).
 
 ## Behavioural sources and expressions
 

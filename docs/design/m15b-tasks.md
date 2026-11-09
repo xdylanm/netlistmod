@@ -1,6 +1,6 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
-> **Status:** READY — approved by the maintainer on 2026-11-08, with section 2 decided
+> **Status:** READY FOR REVIEW — implemented on branch `m15b-tables`; approved by the maintainer on 2026-11-08, with section 2 decided
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./archive/phase-2/m15-tasks.md) and [decision 0016](../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
@@ -162,7 +162,19 @@ Probes on ngspice 47 and LTspice 26.1.1, from a scratch script outside the repos
 | F `POLY(1) (Vsense) 0 2` | Stops |
 | `table`, `poly` or `laplace` as a net name, in any position | Run |
 
-T1 confirms the points left open: G with a net named `table`, the ngspice `Hz` suffix in another place, and the commas between POLY's names (`vx,0`) against the existing separator rules.
+T1 confirmed the points left open (2026-11-08, ngspice 47 and LTspice 26.1.1), and the probe tests hold every row of both tables, with the library's reading of each line:
+
+| Line | Result |
+|---|---|
+| ngspice, G with a net named `table`, in any of its four node positions (with a load on the net) | Stops, as E does. So the refusal of decision 5 is for E and G. |
+| ngspice, `POLY(1) vx,0 0,2`; `vx , 0 0 , 2`; `vx 0 0, 2` | Run, 2.667. The existing comma separator is enough. |
+| ngspice, `FREQ … (1, 6.02, 0) (1e9Hz, 6.02, 0)` and `(1.0e+07Hz, …)` as a later frequency | **Runs.** A `Hz` suffix on the first frequency stops (`(1Hz, …)`, which is the row of 3.1); the library refuses a suffix on any frequency, as decision 4 says, so this is one more discrepancies row. |
+| ngspice, FREQ whose first frequency is `1.0`, `10` or `1k` | Stops ("Undefined parameter [v]" from the expression pass), while `1` and `2` run. This is ngspice's own reading of the line and the library does not model it: such a line loads. |
+| ngspice, `POLY(1) vx 0 0 2 m=2` on **E** | **Runs.** The manual gives `m` to F and G, and the library refuses it on E and H (one more discrepancies row). |
+| LTspice, `E1 out 0 vx 0 2 window=1m` and B `V=… window=1m` | Run (the "without `laplace=`" rows of 3.1 hold for E as well as B). |
+| LTspice, B `V=2*V(vx) laplace=1/(1+s/1k)` | Runs, and the operating point is the expression's, whatever the transfer function: `laplace=` shapes the response over time, so only an edit that lands and runs is tested for B. |
+
+The ngspice probes that run a form and read it wrongly are quantified in `test_what_ngspice_computes` (4.0 for the bare `TABLE`, 1.333 for the four-node `{2*k}` and for triples, where the table gives 2.667).
 
 ### 3.2 Corpus
 
@@ -191,64 +203,64 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 
 ## 4. Tasks
 
-[ ] **T1 — Probes and decision record 0017.**
+[x] **T1 — Probes and decision record 0017.**
 - Run the open probes of section 3.1 and add them to the tables.
 - Write the probe tests first, in `tests/solver/test_ngspice_nonlinear_probes.py` and `test_ltspice_nonlinear_probes.py`, with M15's shape: line, whether the solver runs it, and the library's reading. They fail until the forms are in.
 - Write 0017 from section 2 as decided, status `proposed` until M15b closes, and add it to the decisions index.
 
-[ ] **T2 — Corpus first.** Add the new files of section 3.2 with manifests (rejects with line, column and error, and `LTSPICE_RUNS` where LTspice runs them). Keep the `pending` marks for now; T9 removes them.
+[x] **T2 — Corpus first.** Add the new files of section 3.2 with manifests (rejects with line, column and error, and `LTSPICE_RUNS` where LTspice runs them). Keep the `pending` marks for now; T9 removes them.
 
-[ ] **T3 — Nodes and `control` as a tuple (recommendations 1 and 2).**
+[x] **T3 — Nodes and `control` as a tuple (recommendations 1 and 2).**
 - `Table`, `TablePoint` and the three new `ControlledSource` fields in `model/nodes.py`, exported from the package, with docstrings.
 - `control: tuple[ElementReference, ...]` on `Cccs`, `Ccvs` and `CurrentSwitch`, set for the linear and `value=` forms. Update every reader in `src/` (`document/topology.py`, `index.py`, `diagnostics.py`, the edit verification) and every test that reads `.control`.
 - **Tests:** the signature snapshot and the compatibility test are unchanged, and `control` is a one-source tuple on every M14 corpus F, H and W line.
 - The breaking change goes in the CHANGELOG, `elements.md`, `docs/usage/elements.md` and architecture §5.3.
 
-[ ] **T4 — POLY (recommendations 3 and 4).** On all four letters and both dialects, in `model/_rules_nonlinear.py`:
+[x] **T4 — POLY (recommendations 3 and 4).** On all four letters and both dialects, in `model/_rules_nonlinear.py`:
 - the grammar's flat field list after `POLY(N)`, LTspice's pairs, and ngspice's `m=` on F and G;
 - the transformer's count, the minimum coefficients, and the dimension as an integer literal.
 - **Negative tests:** too few fields (at the line's end), a dimension of 0 or a formula, ngspice parentheses, LTspice sources in parentheses, too few coefficients.
 - **Topology tests:** the control nodes are in `nodes`, `nets()` and the signature; F's and H's sources are `control` entries, resolved and diagnosed as M14's, including `UNRESOLVED_ELEMENT` for a missing one. A test that changing any control node or source is a `TopologyViolation`.
 - **Spec entries:** `NG-PLY-001` and `LT-PLY-001`.
 
-[ ] **T5 — TABLE and `table=` (recommendations 1 and 4).**
+[x] **T5 — TABLE and `table=` (recommendations 1 and 4).**
 - ngspice: both forms on E, the expression form on G with `m=`; the layouts, the minimums and numbers-only values. G's four-node line becomes a `ParseError`.
 - LTspice: `table=` on E and G, flat, with its minimums.
 - The ngspice refusal of a net named `table` (recommendation 5), with its probes.
 - **Spec entries:** `NG-TBL-001` and `LT-TBL-001`. NG-NLS-001 loses `table_form` and `TABLE4_KW`.
 
-[ ] **T6 — `Laplace=` (LTspice).** E and G `Laplace=` with its parameters, and B's `laplace=` on `V=` and `I=`.
+[x] **T6 — `Laplace=` (LTspice).** E and G `Laplace=` with its parameters, and B's `laplace=` on `V=` and `I=`.
 - `s` is not a reference; `V()` or `I()` in the formula is refused at the read.
 - **Negative tests:** an unknown parameter, a parameter before `Laplace=`, two nodes, B `R=` or `P=` with `laplace=`, `window=` without `laplace=`.
 - **Spec entry:** `LT-LAP-001`. LT-UNS-001 loses B's `laplace=`.
 
-[ ] **T7 — FREQ and the gates (ngspice).**
+[x] **T7 — FREQ and the gates (ngspice).**
 - FREQ on E and G: the expression, the format words and the points, with the refusals of recommendation 4.
 - AND, OR, NAND and NOR on E: the inputs counted from the line and refused when they are not 2N, or fewer than two pairs (decision 3), and the two points. G is refused.
 - **Topology test:** changing any gate input is a `TopologyViolation`.
 - **Solver tests:** FREQ in `.ac` (the manual supports only AC), the gates in `.op`.
 - **Spec entry:** `NG-XSP-001`. NG-UNS-001 loses these forms.
 
-[ ] **T8 — The query and edits (recommendations 6 and 7).**
+[x] **T8 — The query and edits (recommendations 6 and 7).**
 - `expression_reads` on TABLE and FREQ, with document-layer tests, and none on `Laplace=`.
 - `set_table` and `set_poly_coefficients` in `edit/_ops_nonlinear.py` and `edit/api.py`; `set_expression` and `set_param` on the new slots; `set_value`'s message on these forms.
 - **Golden diffs** for each form on both dialects, in each layout, and with a change in the number of points or coefficients.
 - **Property tests** that no edit here changes the signature.
 - **Solver tests** that an edited table, coefficient, FREQ point and `Laplace=` formula move the result.
 
-[ ] **T9 — Corpus and snapshots.**
+[x] **T9 — Corpus and snapshots.**
 - The `pending` marks go, and every M15b accept file loads, round-trips and runs in its sweep.
 - `e_poly_too_few.cir`'s manifest entry becomes a `ParseError` at the line's end. The tree snapshot gains the new files and changes that entry, with its docstring saying so.
 - No existing signature snapshot entry changes. If the new terminals change the expected-terminal lists of the 17 rejected files again, the snapshot docstring says so, as in M13 to M15.
 - The tests of section 3.3 that pinned the forms as unsupported change: the LTspice validation test moves to `.machine`, the last named exclusion.
 
-[ ] **T10 — Documentation.**
+[x] **T10 — Documentation.**
 - Spec entries: NG-VCV, NG-VCC, NG-CCC, NG-CCV and their LTspice twins point to the new entries; NG-UNS-001 and LT-UNS-001 lose the forms.
 - `docs/design/elements.md`, `edit-layer.md` and `document-layer.md`; `docs/usage/elements.md`, `editing.md` (a POLY and a table example) and `errors.md`.
 - Both `discrepancies.md`, with a row for each refusal a solver runs, and the README rows.
 - README, CHANGELOG (an "Unreleased" section) and the architecture amendments.
 
-[ ] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the CI run in section 5, list the design points worth reviewing, and set the status to `READY FOR REVIEW`.
+[x] **T11 — Final evidence and handover.** Open the pull request. Run the full local check set with `--require-solver ngspice --require-solver ltspice`, record it and the CI run in section 5, list the design points worth reviewing, and set the status to `READY FOR REVIEW`.
 
 ### After the maintainer's approval
 
@@ -256,4 +268,23 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 
 ## 5. Results
 
-To be written at T11.
+### 5.1 Evidence
+
+- **Full local check set** (2026-11-08): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,049 passed, 2 skipped**, 968 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.46%** (floor 90%), in 20 min 14 s. The two skips are the ones every run has.
+- `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests, `lint-imports` and `pre-commit run --all-files` pass.
+- **Exit criteria:** every form has golden diffs (`nonlinear_*` cases of both `edits_golden` families) and solver tests that an edited table, coefficient, FREQ point and `Laplace=` formula move the result. The signature snapshot is unchanged and its compatibility test passes. A negative test shows that changing any POLY control node, gate input or POLY controlling source is a `TopologyViolation` (`tests/document/test_nonlinear_topology.py`). Every M15b accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep (809 tests of the three sweeps pass).
+- The tree snapshot changed as 0017's task list says: ten files that M15 wrote as rejects now parse, `e_poly_too_few.cir` is a `ParseError` at the line's end, and 18 files are new. No rejected file's expected terminals changed, because M15b adds no element letter (the snapshot's docstring says so).
+- **CI:** see the pull request.
+
+### 5.2 Design points worth reviewing
+
+1. **Two findings that add discrepancies rows the task list did not have** (T1, above): ngspice runs `m=` after an E's POLY, and runs a `Hz` suffix on a later FREQ frequency. Both follow decision 3 and 4 (refuse what the manual does not show), so the library refuses them; say if you would rather accept either.
+2. **ngspice's FREQ with a first frequency other than 1 or 2 stopped** in the probes, from ngspice's expression pass and not from the form. The library loads such lines. The row is in the probe notes only; I did not chase the cause.
+3. **`set_table` and `set_poly_coefficients` replace values one for one when the shape is unchanged**, and rewrite the points or the run only when the number changes. Decision 6 says "writes them in the layout already on the line"; the minimal edit keeps tight forms such as `(0,0)(2,4)` byte-exact, and a rewrite uses the separator between the first two values. A comment among the coefficients blocks a change of count.
+4. **`Table.layout` of a single group.** One parenthesised group with exactly two values (three for FREQ) is `"pairs"`, one point; a longer single group is `"flat"`. A flat list of two values and a pair cannot be told apart in the text, and writing them the same loses nothing.
+5. **`LT-UNS-001` has no grammar rule left.** It keeps the phase-2 letters and lists `body_line` under `core_rules`, which the coverage check requires of an entry with no rule of its own. If you would rather retire the entry, say so.
+6. **The bare-`TABLE` refusal** (`TABLE v(vx) = …`) is recognised by a lookahead that finds `(` in the next word (a node name cannot hold one), so a net named `table` is not mistaken for it. It is the only place a keyword's recognition looks past the next field.
+7. **POLY's coefficients on ngspice** refuse a bare name (`0 k`) although ngspice runs it, as decision 4 says (the gain slot), and so does the discrepancies row.
+8. `Laplace=`'s `V()`/`I()` refusal is for E and G only: B's `laplace=` formula was not probed for it.
+9. The model layer may not import `re` (a contract test), so the FREQ suffix check and the `V(`/`I(` scan are small hand-written scanners in `_rules_nonlinear.py`.
+10. The new decision record is `proposed`; T12 accepts it.

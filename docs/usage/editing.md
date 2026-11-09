@@ -299,6 +299,37 @@ B1 out 0 V = 3 * v(in) tc1=1m
 
 ```
 
+## Edit a table or a polynomial
+
+`set_table` replaces the points of an ngspice `TABLE`, `FREQ` or gate, or of an LTspice `table=`,
+and `set_poly_coefficients` replaces the coefficients of a `POLY`
+([decision 0017](../decisions/0017-tables-polynomials-and-transfer-functions.md)). The number of
+points or coefficients may change; the dimension, the control nodes and the controlling sources
+are topology, so a change to one is a `TopologyViolation`. The expression of a `TABLE` or `FREQ`
+and a `Laplace=` formula use `set_expression`.
+
+```python
+>>> from netlistmod import EditError
+>>> nonlinear = Netlist.from_text(
+...     "t\nV1 in 0 2\nR1 in vx 1k\nR2 vx 0 2k\nR3 a 0 1k\nR4 b 0 1k\n"
+...     "E1 a 0 TABLE {v(vx)} = (0,0) (2,4)\nE2 b 0 POLY(1) vx 0 0 2\n.op\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> edited = nonlinear.set_table("E1", [("0", "0"), ("1", "1"), ("2", "5")])
+>>> edited = edited.set_poly_coefficients("E2", ["0", "3", "4"])
+>>> print("\n".join(line for line in edited.text.splitlines() if line.startswith("E")))
+E1 a 0 TABLE {v(vx)} = (0, 0) (1, 1) (2, 5)
+E2 b 0 POLY(1) vx 0 0 3 4
+>>> edited.signature() == nonlinear.signature()
+True
+>>> try:
+...     nonlinear.set_poly_coefficients("E2", ["1"])
+... except EditError as error:
+...     print(error)
+a POLY line takes at least 2 coefficients on ngspice; `E2` was given 1
+
+```
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's
