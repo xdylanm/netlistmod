@@ -1,6 +1,6 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
-> **Status:** ACTIVE — review round 2 (section 7) requires change R6 before M15b can close. R1 to R5 of round 1 are made (section 6.5; R4 decided by the maintainer on 2026-11-09); T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
+> **Status:** READY FOR REVIEW — review round 2 (section 7): R6 done (report in 7.5). R1 to R5 of round 1 are made (section 6.5; R4 decided by the maintainer on 2026-11-09); T1 to T11 done (results in section 5); section 2 decided by the maintainer on 2026-11-08
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./archive/phase-2/m15-tasks.md) and [decision 0016](../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
