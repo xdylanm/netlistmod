@@ -272,6 +272,8 @@ def test_freq_reads_its_format_words_and_triples(
         ("E1 out 0 FREQ {v(vx)} = DB (1e7, 6.02, 0) (1e9, 6.02, 0)", 29),
         ("E1 out 0 FREQ {v(vx)} = DB (1.0e+07Hz, 6.02, 0) (1.0e+09Hz, 6.02, 0)", 29),
         ("E1 out 0 FREQ {v(vx)} = DB (10, 6.02, 0, 1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB ({1e7}, 6.02, 0) (1e9, 6.02, 0)", 29),
+        ("E1 out 0 FREQ {v(vx)} = DB ({k}, 6.02, 0) (1e9, 6.02, 0)", 29),
         ("E1 out 0 FREQ {v(vx)} = DB MAG (1, 6.02, 0) (1e9, 6.02, 0)", 28),
         ("E1 out 0 FREQ {v(vx)} = MAG DB (1, 6.02, 0) (1e9, 6.02, 0)", 29),
         ("E1 out 0 FREQ {v(vx)} = DEG RAD (1, 6.02, 0) (1e9, 6.02, 0)", 29),
@@ -293,6 +295,7 @@ def test_malformed_freq_lines_are_refused(line: str, column: int) -> None:
         ("E1 out 0 FREQ {v(vx)} = DB ( 1e7, 6.02, 0) (1e9, 6.02, 0)", "1e7", ("DB",)),
         ("E1 out 0 FREQ {v(vx)} = DB ( 1e7Hz, 6.02, 0) (1e9Hz, 6.02, 0)", "1e7Hz", ("DB",)),
         ("E1 out 0 FREQ {v(vx)} = DB ( 1.5, 6.02, 0, 1e9, 6.02, 0)", "1.5", ("DB",)),
+        ("E1 out 0 FREQ {v(vx)} = DB ( {k}, 6.02, 0) (1e9, 6.02, 0)", "k", ("DB",)),
         ("E1 out 0 FREQ {v(vx)} = DB (1, 6.02, 0) (1e7Hz, 6.02, 0)", "1", ("DB",)),
         ("E1 out 0 FREQ {v(vx)} = DB (0, 6.02, 0)", "0", ("DB",)),
         ("E1 out 0 FREQ {v(vx)} = DB DB (1, 6.02, 0)", "1", ("DB", "DB")),
@@ -312,6 +315,8 @@ def test_freq_first_frequency_and_format_words_that_run(
 def test_the_freq_stop_names_the_fix() -> None:
     error = _reject("E1 out 0 FREQ {v(vx)} = DB (1e7, 6.02, 0) (1e9, 6.02, 0)")
     assert "write a blank after it, `( 1e7, ...)`" in error.reason
+    braced = _reject("E1 out 0 FREQ {v(vx)} = DB ({k}, 6.02, 0) (1e9, 6.02, 0)")
+    assert "`( {k}, ...)`" in braced.reason
     assert "keeps the last" in _reject("E1 out 0 FREQ {v(vx)} = DB MAG (1, 6.02, 0)").reason
 
 

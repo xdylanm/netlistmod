@@ -263,6 +263,22 @@ _PROBES = {
         True,
         "Vcvs freq x=v(vx) flat:2x3 DB",
     ),
+    # A braced first frequency stops the same way (review R6): the text after the "(" decides.
+    "e-freq-first-braced": (
+        "E1 out 0 FREQ {v(vx)}= DB ({1e7}, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-parameter": (
+        "E1 out 0 FREQ {v(vx)}= DB ({k}, 6.02, 0) (1e9, 6.02, 0)",
+        False,
+        "refused",
+    ),
+    "e-freq-first-parameter-blank": (
+        "E1 out 0 FREQ {v(vx)}= DB ( {k}, 6.02, 0) (1e9, 6.02, 0)",
+        True,
+        "Vcvs freq x=v(vx) pairs:2x3 DB",
+    ),
     "e-freq-first-blank-hz": (
         "E1 out 0 FREQ {v(vx)}= DB ( 1Hz, 6.02, 0) (1e9, 6.02, 0)",
         True,
