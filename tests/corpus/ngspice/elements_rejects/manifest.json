@@ -205,9 +205,9 @@
     "e_poly_too_few.cir": {
       "sha256": "d96b36b524e5e289365f5d58f5cc87403d99ca1c64f4720c96021e76f38fceee",
       "line": 13,
-      "column": 11,
-      "error": "UnsupportedConstruct",
-      "note": "POLY(2) with one node pair; ngspice stops. POLY is M15b's, which makes this a ParseError (decision 0016 item 8). Written for M15 from the maintainer's controlled_sources examples."
+      "column": 32,
+      "error": "ParseError",
+      "note": "POLY(2) with one node pair; ngspice stops. The control nodes are counted from the dimension, so the line ends too early: a ParseError at the line's end (decision 0017 item 3; it was UnsupportedConstruct in M15). Written for M15 from the maintainer's controlled_sources examples."
     },
     "e_value_node.cir": {
       "sha256": "0ed79875e9bb67d2e6d6612a8b2cccb90761b8f857e9e50c26b3031ac672ec40",
@@ -215,6 +215,83 @@
       "column": 11,
       "error": "ParseError",
       "note": "value after E's output nodes is the expression form's keyword, not a node; ngspice stops (decision 0016 item 9). Written for M15 review R2 from the maintainer's controlled_sources examples."
+    },
+    "e_table_bare.cir": {
+      "sha256": "214dda08f4d0dd9f3e20abfa0128ae26f20bea84a54323d153723a4736604567",
+      "line": 13,
+      "column": 11,
+      "error": "ParseError",
+      "note": "TABLE with a bare expression; ngspice runs it but reads something else (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_table_param.cir": {
+      "sha256": "9aef7763564f80a7cf53692cc1521029dfd889395c48d2761e990732ef5a20a4",
+      "line": 14,
+      "column": 39,
+      "error": "ParseError",
+      "note": "A parameter in a TABLE point; ngspice reads some forms wrongly (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "g_table_nodes.cir": {
+      "sha256": "b0d435e86846ae30da89c3e7a42f5fa077955baaa7f3962893b18561178b981d",
+      "line": 9,
+      "column": 22,
+      "error": "ParseError",
+      "note": "The four-node TABLE on G; ngspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_poly_parens.cir": {
+      "sha256": "3ef94e0498562ac3d9155d037ae6384e7cf31450794c4a26f9230382f70c1ee5",
+      "line": 13,
+      "column": 19,
+      "error": "ParseError",
+      "note": "POLY with a control pair in parentheses; ngspice runs it, the manual does not show it (decision 0017 item 3). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_poly_dimension.cir": {
+      "sha256": "30ed05e54c37261bc76294de2133b5867044b64462da5d5fedd8185d42c71303",
+      "line": 13,
+      "column": 16,
+      "error": "ParseError",
+      "note": "POLY with a braced dimension; ngspice runs it, but the dimension decides the topology (decision 0017 item 3). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_poly_one_coefficient.cir": {
+      "sha256": "ad3e7f48db73ed1593383e86961b8ee0ba14311cc4c7203ec11fca5f0fa37762",
+      "line": 13,
+      "column": 30,
+      "error": "ParseError",
+      "note": "POLY(1) with one coefficient; ngspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_freq_no_format.cir": {
+      "sha256": "3a62bb24ed14009bdf3ca4848a5010572b8fdb112079a3158c4495b9e464c169",
+      "line": 13,
+      "column": 26,
+      "error": "ParseError",
+      "note": "FREQ without a format word; ngspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_freq_hz.cir": {
+      "sha256": "a95647f4a1acc89bf09a59a502d8fe02879f859261422e4e1c197f96ae3c03e8",
+      "line": 13,
+      "column": 43,
+      "error": "ParseError",
+      "note": "FREQ with a unit suffix on a frequency, as the manual writes it (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_and_count.cir": {
+      "sha256": "f315dce56de8da18f09ba1ec620f633ea3d0f3eba1a2d40095c830b8d1380948",
+      "line": 13,
+      "column": 15,
+      "error": "ParseError",
+      "note": "And(1) with two input pairs; ngspice counts the inputs and ignores N (decision 0017 item 3). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "g_and.cir": {
+      "sha256": "189298bc3d361211a41b789bee99d8f78e656e055bbcd0c0a6cb2e9565a250ef",
+      "line": 9,
+      "column": 16,
+      "error": "ParseError",
+      "note": "A gate on G; ngspice stops (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "e_table_node.cir": {
+      "sha256": "f6431d0b5f439247aba47c79cb304baf6a341fc050626e064cb1837b1083dc7e",
+      "line": 13,
+      "column": 9,
+      "error": "ParseError",
+      "note": "A net named table; ngspice reads it as the keyword (decision 0017 item 5). Written for M15b from the maintainer's controlled_sources examples."
     }
   }
 }

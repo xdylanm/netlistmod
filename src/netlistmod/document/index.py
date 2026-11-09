@@ -311,11 +311,10 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
         # A new chain on purpose: a W line needs both its model reference above and this one.
-        if isinstance(item, Cccs | Ccvs | CurrentSwitch) and item.control is not None:
-            # The controlling source, in the element's own scope only (decision 0015 item 4).
-            references.append(
-                _element_reference(scope, item, item.control.designator, item.control.span)
-            )
+        if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+            # The controlling sources, in the element's own scope only (decision 0015 item 4).
+            for source in item.control:
+                references.append(_element_reference(scope, item, source.designator, source.span))
         elif isinstance(item, MutualCoupling):
             for inductor in item.inductors:
                 references.append(
@@ -495,12 +494,21 @@ def _context_words(owner: object, formula: Formula, dialect: Dialect) -> frozens
         return frozenset()
     if formula is getattr(owner, "charge", None) or formula is getattr(owner, "flux", None):
         return _DEVICE_WORDS
+    # `s` in Laplace= and laplace= is the Laplace variable, not a parameter (decision 0017 item 7).
+    if isinstance(owner, ControlledSource) and owner.form == "laplace":
+        if formula is owner.expression:
+            return _LAPLACE_WORDS
+    if isinstance(owner, BehavioralSource) and any(
+        param.name.lower() == "laplace" and param.value is formula for param in owner.params
+    ):
+        return _LAPLACE_WORDS
     if isinstance(owner, BehavioralSource | ControlledSource) and formula is owner.expression:
         return _EXPRESSION_WORDS
     return frozenset()
 
 
 _EXPRESSION_WORDS = frozenset({"time"})
+_LAPLACE_WORDS = frozenset({"s"})
 _DEVICE_WORDS = frozenset({"time", "x"})
 
 

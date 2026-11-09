@@ -169,6 +169,7 @@ class _FnList:
     args: tuple[Value, ...]
     end: int
     comments: tuple[Span, ...]
+    start: int = 0
 
 
 @dataclass(frozen=True, slots=True)
@@ -197,6 +198,26 @@ class _Name:
     """A name on a transistor line, a node or the model: the last one is the model."""
 
     token: Token
+
+
+@dataclass(frozen=True, slots=True)
+class _Laplace:
+    """LTspice's ``Laplace=`` clause of E, G and B: the keyword, the transfer function, the
+    ``window=``, ``nfft=`` and ``mtol=`` after it, and where the line ends."""
+
+    keyword: Token
+    formula: Formula
+    params: tuple[ParamAssignment, ...]
+    comments: tuple[Span, ...]
+    end: int
+
+
+@dataclass(frozen=True, slots=True)
+class _PolyPair:
+    """An LTspice POLY control pair written ``(n+,n-)``."""
+
+    names: tuple[Token, Token]
+    span: Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -295,6 +316,7 @@ class _Element:
     def __init__(self, children: list[Any]) -> None:
         self.designator: Token = children[0]
         self.fields: list[object] = []
+        self.lists: list[_FnList] = []
         comments: list[Span] = []
         end = 0
         for child in children[1:]:
@@ -308,6 +330,13 @@ class _Element:
                 self.fields.append(child)
                 comments.extend(child.comments)
                 end = child.end
+            elif isinstance(child, _Laplace):
+                self.fields.append(child)
+                comments.extend(child.comments)
+                end = child.end
+            elif isinstance(child, _FnList):
+                self.lists.append(child)
+                comments.extend(child.comments)
             elif isinstance(child, _Tail):
                 self.fields.append(child.field.node)
                 comments.extend((*child.field.comments, *child.comments))

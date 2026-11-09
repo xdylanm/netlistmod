@@ -12,18 +12,13 @@ validated_on:
 grammar:
 - body_line
 - sw_state
-- nonlinear_form
-- ctl_form
-- OUT_FORM_KW
-- CTL_FORM_KW
 - gain_keyword
 - second_value
 - unset_gain
 - GAIN_KW
 tests:
-- tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_the_nonlinear_forms_are_unsupported
 - tests/document/test_controlled_topology.py::test_control_nodes_are_connections
 - tests/document/test_controlled_topology.py::test_a_source_inside_an_instance_is_info_on_ltspice
 - tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
 - tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_refused_gain_forms_name_the_form
-notes: 'Decision 0015, as NG-CTL-001. value= is LT-NLS-001 (M15). POLY after the output nodes, and table= and Laplace= after E''s and G''s control nodes, are UnsupportedConstruct until M15b. A controlling source inside an instance (X1:Vq), which LTspice runs, is kept as text and reported as info.'
+notes: 'Decision 0015, as NG-CTL-001. value= is LT-NLS-001 (M15). POLY is LT-PLY-001, table= LT-TBL-001 and Laplace= LT-LAP-001 (M15b). F, H and W hold their controlling sources as a tuple, control, of one source (decision 0017 item 2). A controlling source inside an instance (X1:Vq), which LTspice runs, is kept as text and reported as info.'

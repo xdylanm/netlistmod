@@ -1,0 +1,25 @@
+nonlinear edits (M15b)
+V1 in 0 2
+R1 in vx 1k
+R2 vx 0 2k
+Vs vx vs 0 ; sense
+R3 vs 0 1k
+.param k=2
+E1 eo 0 vx 0 table=(0, 0, 2, 4)
+R4 eo 0 1k
+G1 0 gt vx 0 table=(0,0,2,4m)
+R5 gt 0 1k
+E2 ep 0 vx 0 Laplace=2/(1+s/1k) window=1m ; transfer
+R6 ep 0 1k
+G2 0 gl vx 0 Laplace={2m/(1+s/1k)} nfft=1024
+R7 gl 0 1k
+E3 et 0 POLY(1) (vx,0) 0 3 4
+R8 et 0 1k
+F1 0 fp POLY(2) Vs Vs 0 2 2
+R9 fp 0 1k
+H1 hp 0 POLY(1) Vs 0 3k
+R10 hp 0 1k
+B1 bo 0 V=V(vx) laplace=1/(1+s/1k) window=1m
+R11 bo 0 1k
+.op
+.end

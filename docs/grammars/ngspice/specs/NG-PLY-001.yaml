@@ -1,0 +1,31 @@
+id: NG-PLY-001
+dialect: ngspice
+construct: POLY on E, F, G and H
+manual_ref:
+- '[ngspice-manual] §5.5 "Non-linear Dependent Sources"'
+- '[ngspice-manual] §4.2.3 "Fxxxx: Linear Current-Controlled Current Sources (CCCS)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-08'
+grammar:
+- poly_form
+- poly_field
+- POLY_KW
+- POLY_DIM
+tests:
+- tests/grammar/ngspice/test_nonlinear.py::test_poly_counts_its_control_fields_from_the_dimension
+- tests/grammar/ngspice/test_nonlinear.py::test_poly_takes_m_on_f_and_g
+- tests/grammar/ngspice/test_nonlinear.py::test_malformed_poly_lines_are_refused
+- tests/grammar/ngspice/test_nonlinear.py::test_poly_names_must_not_be_formulas
+- tests/document/test_nonlinear_topology.py::test_poly_control_nodes_are_in_nodes_nets_and_connections
+- tests/document/test_nonlinear_topology.py::test_poly_controlling_sources_are_control_entries_in_line_order
+- tests/document/test_nonlinear_topology.py::test_swapping_poly_sources_changes_the_signature
+- tests/document/test_nonlinear_topology.py::test_changing_a_control_field_is_a_topology_violation_on_ngspice
+- tests/document/test_nonlinear_topology.py::test_poly_sources_are_resolved_and_diagnosed_as_a_linear_one_is
+- tests/edits/test_nonlinear_edits.py::test_set_poly_coefficients
+- tests/solver/test_ngspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ngspice_nonlinear_probes.py::test_what_ngspice_computes
+- tests/solver/test_ngspice_nonlinear_probes.py::test_an_edited_table_or_coefficient_moves_the_result
+notes: 'Decision 0017 items 1, 2, 3 and 4. POLY(N) is followed by one flat list of names and values: the transformer takes the first 2N as control nodes (E, G), which join nodes after the output pair, or the first N as controlling sources (F, H), which are the control tuple in line order; the rest are coefficients. N is an integer literal of at least 1, with or without a blank before the parenthesis; any other text, POLY({1}) included, is a ParseError at it, because it decides the topology. Fewer fields than 2N or N, and fewer than two coefficients (ngspice stops with fewer), are a ParseError at the line''s end. Names and commas separate fields as elsewhere (vx,0 0,2). Coefficients follow the gain slot: a number or a {...} expression, not a bare name. m= follows on F and G. A control pair in parentheses runs on ngspice 47 but is not in the manual, so it is refused, and m= on E (which ngspice runs) is refused too (discrepancies.md).'

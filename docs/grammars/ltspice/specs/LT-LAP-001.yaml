@@ -1,0 +1,31 @@
+id: LT-LAP-001
+dialect: ltspice
+construct: Laplace= on E and G, and laplace= on B
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "E — Voltage-Dependent Voltage Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "B — Behavioral Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-08'
+grammar:
+- laplace_clause
+- _lap_expr
+- _lap_more
+- _lap_tail
+- lap_param
+- LAPLACE_KW
+- LAP_PARAM_KW
+tests:
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_laplace_is_a_formula_then_its_parameters
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_malformed_laplace_lines_are_refused
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_a_voltage_reference_in_laplace_is_named
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_b_takes_laplace_as_a_trailing_parameter
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_b_laplace_is_refused_where_the_reference_does_not_show_it
+- tests/document/test_nonlinear_topology.py::test_laplace_adds_no_reads_and_s_is_not_a_parameter
+- tests/edits/test_nonlinear_edits.py::test_laplace_uses_set_expression_and_set_param
+- tests/solver/test_ltspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_what_ltspice_computes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_an_edited_laplace_on_b_runs_and_keeps_the_dc_result
+notes: 'Decision 0017 items 1, 4 and 7. On E and G, Laplace= follows the four nodes: the transfer function is the line''s expression (bare, braced or quoted; a bare one may hold blanks and ends at the first blank before name=), then window=, nfft= and mtol=, which are params and may stand on + lines. form is "laplace". Any other name after it, one of the three before Laplace=, a V() or I() in the formula (LTspice stops, "Voltage reference not allowed here") and two nodes are refused. On B, laplace= follows V= or I= as a trailing parameter whose value is the formula as written, with window=, nfft= and mtol= beside it; on R= and P= LTspice runs it but the reference shows it on V= and I= only, and window=, nfft= or mtol= without laplace= runs too, so those are refused (discrepancies.md). s is the Laplace variable, not a parameter reference.'

@@ -4,7 +4,7 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-06",
-  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's second line says what it changes. The intentional failures are in elements_rejects. M15 added B and the nonlinear forms, with variants written from these files; the files of M15b's forms are skipped by the solver sweep until then. Provenance confirmed by the maintainer, 2026-11-06.",
+  "notes": "Exported by LTspice 26.1.1 with -netlist; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's second line says what it changes. The intentional failures are in elements_rejects. M15 added B and the nonlinear forms, with variants written from these files. M15b (decision 0017) loads them, and added variants of its own. Provenance confirmed by the maintainer, 2026-11-06.",
   "fixtures": {
     ".gitignore": {
       "sha256": "9f4d46a14c06adb6794a4f1c599927d91d659879cf4996f89b1c37453725f033",
@@ -24,11 +24,7 @@
     },
     "lt_test_bsource_laplace.cir": {
       "sha256": "964374d59ba0698bbd53bf863177624919255e50024888243d4f087f7791202a",
-      "note": "Variant: B with laplace=, window= and nfft=.",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: B with laplace=, window= and nfft=."
     },
     "lt_test_bsource_power.cir": {
       "sha256": "b2608b9db57291f4b8a7b62632f8a2bee250184649bbca2b7efc1bba90de38f0",
@@ -68,35 +64,19 @@
     },
     "lt_test_esource_laplace.cir": {
       "sha256": "94d44037e066fe1202652106e097bfed732153fe57afc741e41eab8dba985101",
-      "note": "Variant: Laplace=.",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: Laplace=."
     },
     "lt_test_esource_poly.cir": {
       "sha256": "357c8cc78f026375c887daf9ead8c24564363920dbe270f0359840e7590059d0",
-      "note": "Variant: POLY(1).",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: POLY(1)."
     },
     "lt_test_esource_poly_paren.cir": {
       "sha256": "e4fc6d4c95b9374dccd902e48679ce6e1c62fe86a620b6c0270b3103b368fcf0",
-      "note": "Variant: POLY(1) with the control pair in parentheses.",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: POLY(1) with the control pair in parentheses."
     },
     "lt_test_esource_table.cir": {
       "sha256": "f5ebefcb6fa8488ed0003982f1c4facebe3d8fc4fea6ecc7d7b9d15e59a6bdef",
-      "note": "Variant: table=.",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: table=."
     },
     "lt_test_esource_value.cir": {
       "sha256": "4a8ee88484f3f9fb94385f8897dd6c3dab4b72e9045e4bdb00db5f2d09bc7cb9",
@@ -114,6 +94,10 @@
       "sha256": "9ee3bbf538c124d543a560d598962fc7f2e72663a267d6524da6d8656266469f",
       "note": "Variant: the controlling source is an E; loads with CONTROL_SOURCE_MISMATCH, and LTspice runs it."
     },
+    "lt_test_fsource_poly2.cir": {
+      "sha256": "e4ede0391724755925e26c60d9338487c2d662e3ddaf0778940af22edda9731d",
+      "note": "Variant: POLY(2) with two controlling sources."
+    },
     "lt_test_fsource_value.cir": {
       "sha256": "ef85d76390b5a107ec330b0da706e102181715b62b5af3d336bed913edb8a910",
       "note": "Variant: value=."
@@ -129,6 +113,14 @@
     "lt_test_gsource_formula.cir": {
       "sha256": "336b5d0ff3111d61c7c3b9a69f7a44c33145a7792d01197842425c5f7642cf50",
       "note": "Variant: the transconductance is a formula."
+    },
+    "lt_test_gsource_laplace.cir": {
+      "sha256": "098d1756e52a894a94f6f0af2767721ca3a0d538809d1469eccce6edfe7d1bbb",
+      "note": "Variant: Laplace= with window=, nfft= and mtol=."
+    },
+    "lt_test_gsource_poly.cir": {
+      "sha256": "387a619df01e01c495aa5e2ab60cd2ff565416cfa5f4539681a4bd7257e12df3",
+      "note": "Variant: POLY(1)."
     },
     "lt_test_gsource_value.cir": {
       "sha256": "84ce2a000938ecb359020bbb1329a67384c5585949b1998a6af3dbde11a517bd",
@@ -148,11 +140,7 @@
     },
     "lt_test_hsource_poly.cir": {
       "sha256": "d8f68fa29412005c542c114dfaed20b33181aa4376d43316ed3f3966ca451249",
-      "note": "Variant: POLY(1).",
-      "solver": {
-        "skip": "Loads from M15b (decision 0016 item 1): the library refuses the form until then."
-      },
-      "pending": "M15b"
+      "note": "Variant: POLY(1)."
     },
     "lt_test_inductor_flux.cir": {
       "sha256": "b909dfeba76b20dd82f2ead9734eaba6b3a33be82e09f7a4468a6accebd2f960",

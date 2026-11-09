@@ -269,6 +269,8 @@ def _signature_entries(scope: Scope, entries: list[SignatureEntry]) -> None:
         elif isinstance(item, Component):
             nodes = tuple(node.name for node in item.nodes)
             entries.append(("element", scope.display, item.designator, type(item).__name__, nodes))
-            if isinstance(item, Cccs | Ccvs | CurrentSwitch) and item.control is not None:
-                # A controlling source is topology but not a net (decision 0015 item 3).
-                entries.append(("control", scope.display, item.designator, item.control.designator))
+            if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+                # A controlling source is topology but not a net (decision 0015 item 3): one
+                # entry for each, in line order (decision 0017 item 2).
+                for source in item.control:
+                    entries.append(("control", scope.display, item.designator, source.designator))

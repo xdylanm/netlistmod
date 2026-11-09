@@ -258,19 +258,55 @@ class Mesfet(Transistor):
     """A ``Z`` line: a MESFET, or on LTspice an IGBT."""
 
 
+@dataclass(frozen=True, slots=True)
+class TablePoint:
+    """One point of a :class:`Table`: two values ``(x, y)``, or three for FREQ ``(f, mag, phase)``.
+
+    ``span`` runs from the first value to the last, parentheses excluded.
+    """
+
+    values: tuple[Value, ...]
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class Table:
+    """The points of a TABLE, ``table=``, FREQ or gate line (decision 0017 item 1).
+
+    ``layout`` is ``"pairs"`` when each point is in its own parentheses and ``"flat"`` when one
+    parenthesised list holds every value. ``format`` is FREQ's words as written (``DB``, ``MAG``,
+    ``DEG``, ``RAD``, ``R_I``), empty for the other forms. ``span`` runs over the points, from the
+    first opening parenthesis to the last closing one.
+    """
+
+    points: tuple[TablePoint, ...]
+    layout: Literal["pairs", "flat"]
+    format: tuple[str, ...]
+    span: Span
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ControlledSource(Component):
-    """Fields shared by the dependent sources E, F, G and H (decisions 0015 and 0016).
+    """Fields shared by the dependent sources E, F, G and H (decisions 0015, 0016 and 0017).
 
     A linear line has ``value``, the gain: a voltage gain, transconductance, current gain or
-    transresistance. An expression line has ``expression`` instead, and ``form``, its keyword in
-    lower case (``"vol"``, ``"cur"`` or ``"value"``); exactly one of ``value`` and
-    ``expression`` is set. ``params`` holds ngspice's ``m=`` on F and G (and G's expression form).
+    transresistance. Every other form has ``value`` ``None`` and ``form``, its keyword in lower
+    case: ``"vol"``, ``"cur"`` or ``"value"`` (an ``expression``), ``"table"``, ``"poly"``,
+    ``"laplace"``, ``"freq"``, ``"and"``, ``"or"``, ``"nand"`` or ``"nor"``.
+
+    ``expression`` is the formula the line writes: the expression forms', ngspice's ``TABLE`` and
+    ``FREQ`` input, and LTspice's ``Laplace=`` transfer function. ``table`` holds the points of
+    TABLE, ``table=``, FREQ and the gates. ``dimension`` is POLY's or a gate's ``N`` as written,
+    and ``coefficients`` POLY's coefficients. ``params`` holds ``m=`` (ngspice G, and F and G
+    POLY) and LTspice's ``window=``, ``nfft=`` and ``mtol=``.
     """
 
     value: Value | None = None
     expression: Formula | None = None
     form: str | None = None
+    table: Table | None = None
+    dimension: int | None = None
+    coefficients: tuple[Value, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -295,18 +331,20 @@ class Vccs(ControlledSource):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Cccs(ControlledSource):
-    """An ``F`` line. ``control`` names the source whose current controls it; an LTspice
-    ``value=`` line names none (its expression reads the currents)."""
+    """An ``F`` line. ``control`` names the sources whose currents control it: one for the
+    linear form, ``N`` in line order for POLY, and none for an LTspice ``value=`` line (its
+    expression reads the currents)."""
 
-    control: ElementReference | None = None
+    control: tuple[ElementReference, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Ccvs(ControlledSource):
-    """An ``H`` line. ``control`` names the source whose current controls it; an LTspice
-    ``value=`` line names none (its expression reads the currents)."""
+    """An ``H`` line. ``control`` names the sources whose currents control it: one for the
+    linear form, ``N`` in line order for POLY, and none for an LTspice ``value=`` line (its
+    expression reads the currents)."""
 
-    control: ElementReference | None = None
+    control: tuple[ElementReference, ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -329,9 +367,9 @@ class VoltageSwitch(Switch):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class CurrentSwitch(Switch):
-    """A ``W`` line. ``control`` names the source whose current controls it."""
+    """A ``W`` line. ``control`` holds the one source whose current controls it."""
 
-    control: ElementReference
+    control: tuple[ElementReference, ...]
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

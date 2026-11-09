@@ -309,9 +309,7 @@ Z_PARAM_KW.3: /(?:temp|m)(?=[ \t]*=)/i
 
 // Linear dependent sources and switches (reference E, G, H, F, S, W; decision 0015). The gain is
 // one value, and none of the six takes a parameter. A switch's state may take a value, as other
-// LTspice flags may. The forms M15b adds are recognised only to be reported as unsupported: POLY
-// after the output nodes, and on E and G table= and Laplace= after the control nodes; their text
-// runs to the line end.
+// LTspice flags may. The forms of decision 0017 (POLY, table=, Laplace=) follow below.
 // spec: LT-CTL-001
 %extend body_line: vcvs
                  | vccs
@@ -320,12 +318,6 @@ Z_PARAM_KW.3: /(?:temp|m)(?=[ \t]*=)/i
                  | vswitch
                  | cswitch
 %extend sw_state: SEP (ON_KW | OFF_KW) EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
-nonlinear_form: SEP OUT_FORM_KW rest NL
-              | (SEP | TRAILING_COMMENT) nonlinear_form
-ctl_form: SEP CTL_FORM_KW rest NL
-        | (SEP | TRAILING_COMMENT) ctl_form
-OUT_FORM_KW.3: /poly[ \t]*(?=\()/i
-CTL_FORM_KW.3: /(?:table|laplace)[ \t]*(?==)/i
 // Gain forms recognised only so that each gets its own message (decision 0015 item 6): gain=, which
 // LTspice runs; a second value; and a word in the gain's place, which LTspice writes for a symbol
 // whose value was never set.
@@ -339,8 +331,7 @@ GAIN_KW.3: /gain[ \t]*(?==)/i
 
 // spec: LT-NLS-001
 // value= on E, F, G and H (decision 0016 item 3): an expression in braces, in quotes, or bare, as
-// for B (its pieces stop before a name and "="). POLY, table= and Laplace= stay recognised only
-// to be reported as unsupported until M15b.
+// for B (its pieces stop before a name and "=").
 value_form: SEP VALUE_FORM_KW EQ
           | (SEP | TRAILING_COMMENT) value_form
 _x_expression: (BRACE_FORMULA | QUOTE_FORMULA) (NL | eol)
@@ -355,20 +346,56 @@ value_word: SEP VALUE_WORD_KW rest NL
           | (SEP | TRAILING_COMMENT) value_word
 VALUE_WORD_KW.3: /value(?=[ \t]+[^ \t\r\n={'])/i
 
+// table= on E and G (reference E): one parenthesised list of values after the four nodes, with
+// or without "=", so the list is a core fn_list. Laplace= takes a transfer function, bare or
+// braced, then window=, nfft= and mtol=; B's laplace= is the same clause (decision 0017).
+// spec: LT-TBL-001
+table_form: SEP TABLE_KW EQ?
+          | (SEP | TRAILING_COMMENT) table_form
+TABLE_KW.3: /table(?=[ \t]*[=(])/i
+
+// spec: LT-LAP-001
+laplace_clause: SEP LAPLACE_KW EQ _lap_expr
+              | (SEP | TRAILING_COMMENT) laplace_clause
+_lap_expr: (BRACE_FORMULA | QUOTE_FORMULA) _lap_tail
+         | B_PIECE _lap_more
+_lap_more: _lap_tail
+         | SEP B_PIECE _lap_more
+_lap_tail: lap_param* (NL | eol)
+lap_param: SEP LAP_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+         | (SEP | TRAILING_COMMENT) lap_param
+LAPLACE_KW.3: /laplace[ \t]*(?==)/i
+LAP_PARAM_KW.3: /(?:window|nfft|mtol)(?=[ \t]*=)/i
+
+// POLY(N) and its flat list (reference, "Polynomial (legacy)"): names and values, with commas or
+// blanks between them. On E and G, a control pair may be written "(n+,n-)", tight or not; the
+// transformer counts the control nodes from the dimension (decision 0017 item 3).
+// spec: LT-PLY-001
+poly_form: SEP POLY_KW LPAR POLY_DIM rparen
+         | (SEP | TRAILING_COMMENT) poly_form
+poly_field: (SEP | CSEP) (FIELD_NUMBER | EMBEDDED | WORD | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT) poly_field
+poly_pair: LPAR poly_pn poly_pn rparen
+         | (SEP | TRAILING_COMMENT) poly_pair
+poly_pn: (FIELD_NUMBER | WORD)
+       | (SEP | CSEP | TRAILING_COMMENT) poly_pn
+POLY_KW.3: /poly[ \t]*(?=\()/i
+POLY_DIM.4: /[^ \t\r\n()]+/
+
 // spec: LT-VCV-001
-vcvs: E_NAME node node node node (value (NL | eol) | ctl_form)
+vcvs: E_NAME node node node node (value (NL | eol) | table_form fn_list (NL | eol) | laplace_clause)
     | E_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | E_NAME node node value_form _x_expression
     | E_NAME node node value_word
-    | E_NAME node node nonlinear_form
+    | E_NAME node node poly_form (poly_field | poly_pair)* (NL | eol)
 %override E_NAME.4: /[Ee]/ _LT_CHAR*
 
 // spec: LT-VCC-001
-vccs: G_NAME node node node node (value (NL | eol) | ctl_form)
+vccs: G_NAME node node node node (value (NL | eol) | table_form fn_list (NL | eol) | laplace_clause)
     | G_NAME node node node node (value second_value | gain_keyword | unset_gain)
     | G_NAME node node value_form _x_expression
     | G_NAME node node value_word
-    | G_NAME node node nonlinear_form
+    | G_NAME node node poly_form (poly_field | poly_pair)* (NL | eol)
 %override G_NAME.4: /[Gg]/ _LT_CHAR*
 
 // spec: LT-CCC-001
@@ -376,7 +403,7 @@ cccs: F_NAME node node ctl_ref value (NL | eol)
     | F_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | F_NAME node node value_form _x_expression
     | F_NAME node node value_word
-    | F_NAME node node nonlinear_form
+    | F_NAME node node poly_form poly_field* (NL | eol)
 %override F_NAME.4: /[Ff]/ _LT_CHAR*
 
 // spec: LT-CCV-001
@@ -384,7 +411,7 @@ ccvs: H_NAME node node ctl_ref value (NL | eol)
     | H_NAME node node ctl_ref (value second_value | gain_keyword | unset_gain)
     | H_NAME node node value_form _x_expression
     | H_NAME node node value_word
-    | H_NAME node node nonlinear_form
+    | H_NAME node node poly_form poly_field* (NL | eol)
 %override H_NAME.4: /[Hh]/ _LT_CHAR*
 
 // spec: LT-SWV-001
@@ -397,7 +424,7 @@ cswitch: W_NAME node node ctl_ref model sw_state? (NL | eol)
 
 // B: V=, I=, R= or P=, then an expression, then ic=, tripdv=, tripdt=, Rpar= and vprx= (reference
 // B; decision 0016 item 2). A bare expression may hold blanks and + continuations, as for ngspice.
-// laplace= follows (LT-UNS-001).
+// laplace= follows (LT-LAP-001).
 // spec: LT-BEH-001
 %extend body_line: behavioral
 behavioral: B_NAME node node b_quantity (BRACE_FORMULA | QUOTE_FORMULA) _b_tail
@@ -406,7 +433,7 @@ b_quantity: SEP B_QUANTITY_KW EQ
           | (SEP | TRAILING_COMMENT) b_quantity
 _b_more: _b_tail
        | SEP B_PIECE _b_more
-_b_tail: b_param* ((NL | eol) | b_laplace | b_second_quantity)
+_b_tail: b_param* ((NL | eol) | laplace_clause | b_second_quantity)
 // A second quantity stops LTspice; recognised only so that it gets its own message.
 b_second_quantity: SEP B_QUANTITY_KW rest NL
                  | (SEP | TRAILING_COMMENT) b_second_quantity
@@ -416,12 +443,7 @@ B_QUANTITY_KW.3: /[virp](?=[ \t]*=)/i
 B_PARAM_KW.3: /(?:ic|tripdv|tripdt|rpar|vprx)(?=[ \t]*=)/i
 B_PIECE.4: /(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?!(?:\{[^{}\r\n]*\}|'[^'\r\n]*')[ \t]*(?:\r?\n|$|;|\$ |[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)))(?:(?:[^ \t\r\n;'\"$]|\$(?! ))|[ \t]+(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?=(?:[^ \t\r\n;'\"$]|\$(?! ))))+/i
 %override B_NAME.4: /[Bb]/ _LT_CHAR*
-// B's laplace= (with window=, nfft= and mtol=) is M15b's: recognised only to be reported as
-// unsupported, with its text to the line end.
-// spec: LT-UNS-001
-b_laplace: SEP B_LAPLACE_KW rest NL
-         | (SEP | TRAILING_COMMENT) b_laplace
-B_LAPLACE_KW.3: /laplace[ \t]*(?==)/i
+// B's laplace= is the laplace_clause above, after V= or I= (decision 0017 item 4).
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold

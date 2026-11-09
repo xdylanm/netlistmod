@@ -388,12 +388,6 @@ mesfet: Z_NAME node node node t_name t_area? _ng_ttail
 ctl_m: (SEP | CSEP | BS_CONT) CTL_M_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
      | (SEP | TRAILING_COMMENT | BS_CONT) ctl_m
 CTL_M_KW.3: /m(?=[ \t]*=)/i
-nonlinear_form: (SEP | CSEP | BS_CONT) (VC_FORM_KW | CC_FORM_KW) rest NL
-              | (SEP | TRAILING_COMMENT | BS_CONT) nonlinear_form
-cc_form: (SEP | CSEP | BS_CONT) CC_FORM_KW rest NL
-       | (SEP | TRAILING_COMMENT | BS_CONT) cc_form
-VC_FORM_KW.3: /table[ \t]*(?=[{'=(])|freq[ \t]*(?=[{'])|(?:and|or|nand|nor)(?=\()/i
-CC_FORM_KW.3: /poly[ \t]*(?=\()/i
 // Gain forms that ngspice runs and the library refuses, recognised only so that each gets its own
 // message (decision 0015 item 6): gain= in the gain's place, and a second value after the gain.
 gain_keyword: (SEP | CSEP | BS_CONT) GAIN_KW rest NL
@@ -404,17 +398,13 @@ GAIN_KW.3: /gain[ \t]*(?==)/i
 
 // spec: NG-NLS-001
 // The expression forms (decision 0016 item 3): E vol= and G cur= (quotes or braces, §5.2.1, §5.3.1),
-// and value on both, whose = is optional (§5.2.2, §5.3.2). TABLE, POLY, FREQ and AND/OR/NAND/NOR
-// stay recognised only to be reported as unsupported until M15b, as is E's four-node TABLE.
+// and value on both, whose = is optional (§5.2.2, §5.3.2).
 e_form: (SEP | CSEP | BS_CONT) E_FORM_KW EQ?
       | (SEP | TRAILING_COMMENT | BS_CONT) e_form
 g_form: (SEP | CSEP | BS_CONT) G_FORM_KW EQ?
       | (SEP | TRAILING_COMMENT | BS_CONT) g_form
-table_form: (SEP | CSEP | BS_CONT) TABLE4_KW rest NL
-          | (SEP | TRAILING_COMMENT | BS_CONT) table_form
 E_FORM_KW.3: /vol(?=[ \t]*=)|value[ \t]*(?=[={'])/i
 G_FORM_KW.3: /cur(?=[ \t]*=)|value[ \t]*(?=[={'])/i
-TABLE4_KW.3: /table[ \t]*(?==)/i
 // A bare expression there stops ngspice; recognised only so that it gets its own message.
 bare_expression: B_PIECE rest NL
 // `value` and a blank after E's or G's output nodes is the keyword to ngspice, which stops
@@ -430,42 +420,88 @@ VALUE_WORD_KW.3: /value(?=[ \t]+[^ \t\r\n={'])/i
 unclosed_expression: OPEN_FORMULA NL
 OPEN_FORMULA.5: /(?:\{[^{}\r\n]*|'[^'\r\n]*)(?=\r?\n)(?:\r?\n[ \t]*\+[^\r\n]*)*/
 
+// The nonlinear forms of §5 (decision 0017). A tail that ends the line holds its own NL.
+// TABLE {expression} = points (§5.2.3, §5.3.3): the expression in braces or quotes, = optional,
+// then pairs "(x, y) (x, y)" or one flat list; each list is a core fn_list. E's four-node form
+// has the control nodes first and the keyword in the value's place. A bare expression stops
+// ngspice's reading (4.0 where the table gives 2.67), so it is recognised only to be refused.
+// spec: NG-TBL-001
+table_form: (SEP | CSEP | BS_CONT) TABLE_KW (BRACE_FORMULA | QUOTE_FORMULA) EQ?
+          | (SEP | TRAILING_COMMENT | BS_CONT) table_form
+table4_form: (SEP | CSEP | BS_CONT) TABLE4_KW EQ?
+           | (SEP | TRAILING_COMMENT | BS_CONT) table4_form
+table_bare: (SEP | CSEP | BS_CONT) TABLE_BARE_KW rest NL
+          | (SEP | TRAILING_COMMENT | BS_CONT) table_bare
+TABLE_KW.3: /table[ \t]*(?=[{'])/i
+TABLE4_KW.3: /table[ \t]*(?=[=(])/i
+TABLE_BARE_KW.3: /table(?=[ \t]+[^ \t\r\n(){}'=;$,\\]*\()/i
+
+// POLY(N) and its flat list of names and values (§5.5): the transformer counts the control nodes
+// (E, G: 2N) or sources (F, H: N) from the dimension, and the rest are coefficients. The dimension
+// is any text, so that the transformer can refuse one that is not an integer literal.
+// spec: NG-PLY-001
+poly_form: (SEP | CSEP | BS_CONT) POLY_KW LPAR POLY_DIM rparen
+         | (SEP | TRAILING_COMMENT | BS_CONT) poly_form
+poly_field: (SEP | CSEP | BS_CONT) (FIELD_NUMBER | WORD | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | BS_CONT) poly_field
+POLY_KW.3: /poly[ \t]*(?=\()/i
+POLY_DIM.4: /[^ \t\r\n()]+/
+
+// FREQ {expression} = format words, then triples (§5.2.6, §5.3.6); AND, OR, NAND and NOR (§5.2.7):
+// the gate's input nodes, then two points.
+// spec: NG-XSP-001
+freq_form: (SEP | CSEP | BS_CONT) FREQ_KW (BRACE_FORMULA | QUOTE_FORMULA) EQ?
+         | (SEP | TRAILING_COMMENT | BS_CONT) freq_form
+freq_fmt: FREQ_FMT_KW
+        | (SEP | CSEP | TRAILING_COMMENT | BS_CONT) freq_fmt
+gate_form: (SEP | CSEP | BS_CONT) GATE_KW LPAR POLY_DIM rparen
+         | (SEP | TRAILING_COMMENT | BS_CONT) gate_form
+FREQ_KW.3: /freq[ \t]*(?=[{'])/i
+FREQ_FMT_KW.3: /(?:db|mag|deg|rad|r_i)(?![^ \t\r\n(;$])/i
+GATE_KW.3: /(?:and|or|nand|nor)(?=\()/i
+
 // spec: NG-VCV-001
 vcvs: E_NAME node node node node value (NL | eol)
     | E_NAME node node node node value second_value
     | E_NAME node node node node gain_keyword
-    | E_NAME node node node node table_form
+    | E_NAME node node node node table4_form fn_list+ (NL | eol)
     | E_NAME node node e_form (BRACE_FORMULA | QUOTE_FORMULA) (NL | eol)
     | E_NAME node node e_form bare_expression
     | E_NAME node node e_form unclosed_expression
     | E_NAME node node value_word
-    | E_NAME node node nonlinear_form
+    | E_NAME node node table_form fn_list+ (NL | eol)
+    | E_NAME node node table_bare
+    | E_NAME node node poly_form poly_field* (NL | eol)
+    | E_NAME node node freq_form freq_fmt* fn_list+ (NL | eol)
+    | E_NAME node node gate_form node+ fn_list+ (NL | eol)
 %override E_NAME.4: /[Ee]/ _NG_UNIT*
 
 // spec: NG-VCC-001
 vccs: G_NAME node node node node value ctl_m? (NL | eol)
     | G_NAME node node node node value second_value
     | G_NAME node node node node gain_keyword
-    | G_NAME node node node node table_form
     | G_NAME node node g_form (BRACE_FORMULA | QUOTE_FORMULA) ctl_m? (NL | eol)
     | G_NAME node node g_form bare_expression
     | G_NAME node node g_form unclosed_expression
     | G_NAME node node value_word
-    | G_NAME node node nonlinear_form
+    | G_NAME node node table_form fn_list+ ctl_m? (NL | eol)
+    | G_NAME node node table_bare
+    | G_NAME node node poly_form poly_field* ctl_m? (NL | eol)
+    | G_NAME node node freq_form freq_fmt* fn_list+ (NL | eol)
 %override G_NAME.4: /[Gg]/ _NG_UNIT*
 
 // spec: NG-CCC-001
 cccs: F_NAME node node ctl_ref value ctl_m? (NL | eol)
     | F_NAME node node ctl_ref value second_value
     | F_NAME node node ctl_ref gain_keyword
-    | F_NAME node node cc_form
+    | F_NAME node node poly_form poly_field* ctl_m? (NL | eol)
 %override F_NAME.4: /[Ff]/ _NG_UNIT*
 
 // spec: NG-CCV-001
 ccvs: H_NAME node node ctl_ref value (NL | eol)
     | H_NAME node node ctl_ref value second_value
     | H_NAME node node ctl_ref gain_keyword
-    | H_NAME node node cc_form
+    | H_NAME node node poly_form poly_field* (NL | eol)
 %override H_NAME.4: /[Hh]/ _NG_UNIT*
 
 // S: four nodes, the model, then ON or OFF (§3.3.15).

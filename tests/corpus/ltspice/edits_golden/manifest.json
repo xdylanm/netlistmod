@@ -101,7 +101,11 @@
     "behavioral_expression.expected.net": "98d7bed7230ccbe3a383547a9cbfb8075e6e21d13b679aef3259b671becd475b",
     "behavioral_forms.expected.net": "d4fd5ca8a0584e1060e2816f0900d7d1ecffd4c3b10b04759726d6522a053408",
     "behavioral_param.expected.net": "f87ba66857c6d62860b661098b227af9709050aa66511c081368cd8445810924",
-    "behavioral_batch.expected.net": "ff15167bec6999b47bc1fdc345f1c5386eea710ff67114daf9f9a50574ac0b96"
+    "behavioral_batch.expected.net": "ff15167bec6999b47bc1fdc345f1c5386eea710ff67114daf9f9a50574ac0b96",
+    "nonlinear_sources.net": "84a9c2eaff2e212e17f5c72fa70cf6d6f83da1e8cf60937ce875eafb4e0c36e8",
+    "nonlinear_table.expected.net": "d7c1fb7dc98d56b336a9e0b20559b3df4a32f48a4fac7db85f32a28d7b9864c5",
+    "nonlinear_laplace.expected.net": "61121228b3400388f862cf725a136ee9454134d6b7357b997e1d63ce76c91825",
+    "nonlinear_poly.expected.net": "ecfdab90e7a98fa023ed2bf1782355ceb28eeee676808b88b3f7a871126d4c0a"
   },
   "cases": {
     "set_value": {
@@ -843,6 +847,116 @@
         ]
       ],
       "expected": "behavioral_batch.expected.net"
+    },
+    "nonlinear_table": {
+      "input": "nonlinear_sources.net",
+      "steps": [
+        [
+          "set_table",
+          "E1",
+          [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "2",
+              "5"
+            ]
+          ]
+        ],
+        [
+          "set_table",
+          "G1",
+          [
+            [
+              "0",
+              "0"
+            ],
+            [
+              "1",
+              "1m"
+            ],
+            [
+              "2",
+              "5m"
+            ]
+          ]
+        ]
+      ],
+      "expected": "nonlinear_table.expected.net"
+    },
+    "nonlinear_laplace": {
+      "input": "nonlinear_sources.net",
+      "steps": [
+        [
+          "set_expression",
+          "E2",
+          "3/(1+s/2k)"
+        ],
+        [
+          "set_param",
+          "E2",
+          "window",
+          "2m"
+        ],
+        [
+          "set_param",
+          "E2",
+          "nfft",
+          "2048"
+        ],
+        [
+          "set_expression",
+          "G2",
+          "3m/(1+s/2k)"
+        ],
+        [
+          "set_param",
+          "B1",
+          "laplace",
+          "2/(1+s/2k)"
+        ],
+        [
+          "set_param",
+          "B1",
+          "nfft",
+          "512"
+        ]
+      ],
+      "expected": "nonlinear_laplace.expected.net"
+    },
+    "nonlinear_poly": {
+      "input": "nonlinear_sources.net",
+      "steps": [
+        [
+          "set_poly_coefficients",
+          "E3",
+          [
+            "0",
+            "3",
+            "4"
+          ]
+        ],
+        [
+          "set_poly_coefficients",
+          "F1",
+          [
+            "0",
+            "2",
+            "2"
+          ]
+        ],
+        [
+          "set_poly_coefficients",
+          "H1",
+          [
+            "0",
+            "3k"
+          ]
+        ]
+      ],
+      "expected": "nonlinear_poly.expected.net"
     }
   }
 }

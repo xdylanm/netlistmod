@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from netlistmod.document import Netlist, ScopePath
 from netlistmod.edit._ops_common import _TWO_TERMINAL, _element, _kind
+from netlistmod.edit._ops_nonlinear import use_instead
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
@@ -47,6 +48,11 @@ def _expression_of(element: Component, designator: str) -> Formula:
         return element.expression
     if isinstance(element, ControlledSource):
         if element.expression is None:
+            if element.value is None:
+                raise EditError(
+                    f"`{designator}` ({element.form}) reads its control nodes and has no "
+                    f"expression; use {use_instead(element)}"
+                )
             raise EditError(f"`{designator}` has a gain, not an expression; use set_value")
         return element.expression
     if isinstance(element, Capacitor) and element.charge is not None:

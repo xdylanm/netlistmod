@@ -106,9 +106,6 @@ _PROBES = {
     "e-value-no-equals": ("E1 out 0 value {2*v(vx)}", True, "Vcvs value 2*v(vx)"),
     "g-cur-m": ("G1 0 out cur='1m*v(vx)' m=2", True, "Vccs cur 1m*v(vx)"),
     "g-value": ("G1 0 out value={2m*v(vx)}", True, "Vccs value 2m*v(vx)"),
-    "e-table": ("E1 out 0 TABLE {v(vx)} = (0,0) (1,2) (2,4)", True, "unsupported"),
-    "e-poly": ("E1 out 0 POLY(1) vx 0 0 2", True, "unsupported"),
-    "e-freq": ("E1 out 0 FREQ {v(vx)}= DB (1, 0, 0) (1e6, 0, 0)", True, "unsupported"),
     "e-laplace": ("E1 out 0 LAPLACE {v(vx)} {2}", False, "refused"),
 }
 

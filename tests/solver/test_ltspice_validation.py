@@ -272,7 +272,7 @@ def test_an_include_brings_in_its_file_and_stays_opaque(
     assert netlist(text).lines.find(OpaqueStatement) is not None
 
 
-# LT-MCH-001, LT-UNS-001.
+# LT-MCH-001.
 
 
 def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path) -> None:
@@ -282,22 +282,6 @@ def test_a_state_machine_runs_and_is_unsupported(solver: Solver, tmp_path: Path)
     text = f"probe\nR1 q 0 1k\n{block}.tran 1m\n.end\n"
     result = run(solver, tmp_path, text)
     assert result.ok, result.log
-    with pytest.raises(UnsupportedConstruct):
-        parse(SourceText(text), Dialect.LTSPICE)
-
-
-@pytest.mark.parametrize(
-    "line",
-    [
-        # Q=, Flux= and value= load since M15; these are M15b's.
-        "E1 a 0 POLY(1) in 0 0 2\nR9 a 0 1k",
-        "E1 a 0 in 0 Laplace=1/(1+s)\nR9 a 0 1k",
-        "B1 a 0 V=V(in) laplace=1/(1+s)\nR9 a 0 1k",
-    ],
-)
-def test_other_forms_run_and_are_unsupported(solver: Solver, tmp_path: Path, line: str) -> None:
-    text = divider(f".param x=1\n{line}\n")
-    assert run(solver, tmp_path, text).ok
     with pytest.raises(UnsupportedConstruct):
         parse(SourceText(text), Dialect.LTSPICE)
 

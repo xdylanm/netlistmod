@@ -1,0 +1,29 @@
+id: LT-PLY-001
+dialect: ltspice
+construct: POLY on E, F, G and H
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "E — Voltage-Dependent Voltage Source"'
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "F — Current-Dependent Current Source"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-08'
+grammar:
+- poly_form
+- poly_field
+- poly_pair
+- poly_pn
+- POLY_KW
+- POLY_DIM
+tests:
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_poly_counts_its_control_fields_from_the_dimension
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_malformed_poly_lines_are_refused
+- tests/grammar/ltspice/test_ltspice_nonlinear.py::test_a_pair_may_not_stand_among_the_coefficients
+- tests/document/test_nonlinear_topology.py::test_changing_a_control_field_is_a_topology_violation_on_ltspice
+- tests/document/test_nonlinear_topology.py::test_poly_control_nodes_are_in_nodes_nets_and_connections
+- tests/edits/test_nonlinear_edits.py::test_set_poly_coefficients
+- tests/solver/test_ltspice_nonlinear_probes.py::test_nonlinear_probes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_what_ltspice_computes
+- tests/solver/test_ltspice_nonlinear_probes.py::test_an_edited_table_coefficient_or_formula_moves_the_result
+notes: 'Decision 0017 items 1, 2, 3 and 4. POLY(N) follows the output nodes (E, G) or the two nodes (F, H) and is followed by a flat list of names and values, with blanks or commas. The transformer takes 2N control nodes on E and G, which join nodes, or N controlling sources on F and H, which are the control tuple; the rest are coefficients. On E and G a control pair may be written (n+,n-) with a comma or a blank, tight or not, and mixed with flat names; it counts as two names. A controlling source in parentheses stops LTspice and is refused. N is an integer literal of at least 1 (POLY({1}) runs on LTspice 26.1.1 but decides the topology, so it is refused, discrepancies.md); fewer fields than the dimension need, and no coefficient at all (LTspice runs it as a gain of 1, which its reference does not show), are a ParseError at the line''s end. At least one coefficient. Coefficients follow LTspice''s gain slot: a bare name stops LTspice.'

@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+M15b (decision 0017): the nonlinear dependent-source forms load and edit on both dialects.
+
+Changes:
+
+- **Breaking:** `Cccs.control`, `Ccvs.control` and `CurrentSwitch.control` are now `tuple[ElementReference, ...]`: one source for the linear form, N for POLY in line order, and `()` for LTspice's `value=` (it was `None`). The signature has one `control` entry for each source, in line order; a linear line gives the same entry as before, so no saved digest changes. Read `item.control[0]` where you read `item.control` (M15b, decision 0017 item 2).
+- ngspice TABLE (E and G, and E's four-node form), POLY (E, F, G and H), FREQ (E and G) and AND, OR, NAND and NOR (E) load, and so do LTspice's `table=` and POLY (E and G, with `(n+,n-)` pairs) and `Laplace=` (E and G), and B's `laplace=` (M15b). They keep the `Vcvs`, `Vccs`, `Cccs` and `Ccvs` classes, with `form` and the new `ControlledSource.table`, `dimension` and `coefficients`; `Table` and `TablePoint` are exported. POLY's control nodes and sources are topology, counted from the dimension.
+- Add `set_table` and `set_poly_coefficients`; `set_expression` covers the expression of TABLE and FREQ and the `Laplace=` formula, and `set_param` covers `window=`, `nfft=` and `mtol=` (M15b).
+- A net named `table` on an ngspice E or G line is refused at the node, as `value` is: ngspice stops on it in every node position (M15b).
+- The expressions of TABLE and FREQ join `expression_reads`; `s` in `Laplace=` and `laplace=` is not a parameter reference (M15b).
+- The M15b corpus files load and run in the solver sweeps, with new variants and golden files (M15b).
+
 ## 0.5.0 — 2026-11-07
 
 The first release, an alpha published to PyPI ([decision 0018](docs/decisions/0018-pypi-publication.md)). It covers phase 1 and phase 2 up to M15; M15b (TABLE, POLY, Laplace and the digital gates) is not in it.

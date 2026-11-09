@@ -10,8 +10,8 @@ The caller always selects the dialect; there is no default and no detection.
 
 | Dialect | `Dialect` | Input | Elements | Reference | Validated on |
 |---|---|---|---|---|---|
-| ngspice | `NGSPICE` | `.cir`, `.sp`, `.net`, KiCad exports | R, C, L, K, V, I, D, X; Q, M, J, Z (M13); E, F, G, H, S, W (M14); B and the expression forms (M15) | [ngspice manual](docs/references.md) | ngspice 47 |
-| LTspice | `LTSPICE` | `.net`, `.cir` (an `.asc` schematic is [exported first](docs/usage/ltspice-export.md)) | R, C, L, K, V, I, D, X; Q, M, J, Z (M13); E, F, G, H, S, W (M14); B and the expression forms (M15) | [ltspice-reference](docs/references.md) | LTspice 26.1.1, Windows |
+| ngspice | `NGSPICE` | `.cir`, `.sp`, `.net`, KiCad exports | R, C, L, K, V, I, D, X; Q, M, J, Z (M13); E, F, G, H, S, W (M14); B and the expression forms (M15); TABLE, POLY, FREQ and the gates (M15b) | [ngspice manual](docs/references.md) | ngspice 47 |
+| LTspice | `LTSPICE` | `.net`, `.cir` (an `.asc` schematic is [exported first](docs/usage/ltspice-export.md)) | R, C, L, K, V, I, D, X; Q, M, J, Z (M13); E, F, G, H, S, W (M14); B and the expression forms (M15); `table=`, POLY and `Laplace=` (M15b) | [ltspice-reference](docs/references.md) | LTspice 26.1.1, Windows |
 
 Where a solver and the library differ, the file is `docs/grammars/<dialect>/discrepancies.md`. Other
 device letters raise `UnsupportedConstruct` until their phase 2 milestone.

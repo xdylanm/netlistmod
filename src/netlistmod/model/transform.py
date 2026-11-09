@@ -33,7 +33,7 @@ from netlistmod.dialects import Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
 from netlistmod.grammar.loader import parse_tree
 from netlistmod.model._rules_behavioral import BehavioralRules
-from netlistmod.model._rules_controlled import ControlledRules
+from netlistmod.model._rules_nonlinear import NonlinearRules
 from netlistmod.model._rules_sources import SourcesRules
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._rules_structure import StructureRules
@@ -46,7 +46,7 @@ from netlistmod.source import SourceText
 class _NodeBuilder(
     StructureRules,
     SourcesRules,
-    ControlledRules,
+    NonlinearRules,
     BehavioralRules,
     StatementsRules,
     Transformer[Token, ParseResult],

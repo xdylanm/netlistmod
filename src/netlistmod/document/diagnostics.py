@@ -193,8 +193,7 @@ def _reference_findings(
     if (
         reference.kind == "element"
         and isinstance(owner, Cccs | Ccvs | CurrentSwitch)
-        and owner.control is not None
-        and reference.span == owner.control.span
+        and any(reference.span == source.span for source in owner.control)
         and target is not None
         and isinstance(target, Component)
         and not isinstance(target, VoltageSource)

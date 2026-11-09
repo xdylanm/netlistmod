@@ -25,7 +25,6 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_behavioral.py::test_a_b_line_has_a_quantity_and_an_expression
 - tests/grammar/ltspice/test_ltspice_behavioral.py::test_malformed_b_lines_are_refused
-- tests/grammar/ltspice/test_ltspice_behavioral.py::test_laplace_on_b_is_m15b
 - tests/document/test_expression_reads.py::test_ltspice_time_and_x_are_the_simulation_s_in_an_expression
 - tests/document/test_expression_reads.py::test_a_source_inside_an_instance_is_info
 - tests/edits/test_behavioral_edits.py::test_set_expression_on_ltspice

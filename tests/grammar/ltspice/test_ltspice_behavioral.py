@@ -16,7 +16,6 @@ from netlistmod import (
     ParseError,
     SourceText,
     Span,
-    UnsupportedConstruct,
     Vccs,
     Vcvs,
     parse,
@@ -79,13 +78,6 @@ def test_malformed_b_lines_are_refused(line: str, column: int, reason: str) -> N
     assert reason in error.reason
 
 
-def test_laplace_on_b_is_m15b() -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        parse(SourceText("t\nB1 out 0 V=2*V(vx) laplace=1/(1+s)\n.end\n"), Dialect.LTSPICE)
-    assert captured.value.column == 20
-    assert captured.value.construct == "LTspice behavioral source form (laplace)"
-
-
 @pytest.mark.parametrize(
     ("line", "kind"),
     [
@@ -99,7 +91,7 @@ def test_laplace_on_b_is_m15b() -> None:
 def test_value_on_e_to_h(line: str, kind: type) -> None:
     item = _element(line)
     assert type(item) is kind
-    assert (item.form, item.value, getattr(item, "control", None)) == ("value", None, None)
+    assert (item.form, item.value, getattr(item, "control", ())) == ("value", None, ())
     assert "V(vx)" in item.expression.text or "I(Vs)" in item.expression.text
 
 

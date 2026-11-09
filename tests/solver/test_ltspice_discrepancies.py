@@ -443,6 +443,8 @@ LTSPICE_RUNS = {
     "elements_rejects/source_after_ac.cir",
     "elements_rejects/s_on_off.cir",
     "elements_rejects/e_table_braces.cir",
+    "elements_rejects/e_poly_dimension.cir",
+    "elements_rejects/b_laplace_resistor.cir",
     "elements_rejects/f_value_source.cir",
     "statements_rejects/ic_resistor_current.cir",
     "statements_rejects/meas_sp_body.cir",

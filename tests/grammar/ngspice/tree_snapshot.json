@@ -151,16 +151,12 @@
  },
  "controlled_sources/test_esource_and.cir": {
   "rkm": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "913dbde372c75c1ae6222dbb6ddb07f1c821dba5f02346c7715d0876f71667d9",
+   "nodes": 39
   },
   "standard": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "913dbde372c75c1ae6222dbb6ddb07f1c821dba5f02346c7715d0876f71667d9",
+   "nodes": 39
   }
  },
  "controlled_sources/test_esource_formula.cir": {
@@ -175,72 +171,62 @@
  },
  "controlled_sources/test_esource_freq.cir": {
   "rkm": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "7b2c9ae4fa9dd4562e49f9d8fe2ef0ae54cf05b1dbb9d4a5d0cee80a100492fd",
+   "nodes": 38
   },
   "standard": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "7b2c9ae4fa9dd4562e49f9d8fe2ef0ae54cf05b1dbb9d4a5d0cee80a100492fd",
+   "nodes": 38
+  }
+ },
+ "controlled_sources/test_esource_or.cir": {
+  "rkm": {
+   "digest": "b53e0cc7a37213ad0f00c678411e5a5eefcc8d23311fc7ac1bb27df60ea2556b",
+   "nodes": 39
+  },
+  "standard": {
+   "digest": "b53e0cc7a37213ad0f00c678411e5a5eefcc8d23311fc7ac1bb27df60ea2556b",
+   "nodes": 39
   }
  },
  "controlled_sources/test_esource_poly.cir": {
   "rkm": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "95e01b85ceaade19334e38141e7e40a3c6f59642eb2c0a414c30ee35ea0b1fb9",
+   "nodes": 32
   },
   "standard": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "95e01b85ceaade19334e38141e7e40a3c6f59642eb2c0a414c30ee35ea0b1fb9",
+   "nodes": 32
   }
  },
  "controlled_sources/test_esource_poly2.cir": {
   "rkm": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "f6f5dd8b2426fac9e83f8bbe74658fc0897d1d2817d3a62c5eee1f0c29a5d72c",
+   "nodes": 35
   },
   "standard": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "f6f5dd8b2426fac9e83f8bbe74658fc0897d1d2817d3a62c5eee1f0c29a5d72c",
+   "nodes": 35
   }
  },
  "controlled_sources/test_esource_table.cir": {
   "rkm": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "6ad8c2590190484e4795217e6c6d1a78060defb7e3754a6150f96ad83d41fcb7",
+   "nodes": 36
   },
   "standard": {
-   "column": 11,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "6ad8c2590190484e4795217e6c6d1a78060defb7e3754a6150f96ad83d41fcb7",
+   "nodes": 36
   }
  },
  "controlled_sources/test_esource_table_nodes.cir": {
   "rkm": {
-   "column": 19,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "96bea385aa884810b0e85a1dd4b6721ef7541775d683effd5c6f93ed1d256eb7",
+   "nodes": 37
   },
   "standard": {
-   "column": 19,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 13
+   "digest": "96bea385aa884810b0e85a1dd4b6721ef7541775d683effd5c6f93ed1d256eb7",
+   "nodes": 37
   }
  },
  "controlled_sources/test_esource_value.cir": {
@@ -295,16 +281,22 @@
  },
  "controlled_sources/test_fsource_poly.cir": {
   "rkm": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 10
+   "digest": "ba0df1bff62c2ca2e5b27a66450de6fa600ec83ea7ee9d7ce6ccb6c370f7c1d8",
+   "nodes": 30
   },
   "standard": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 10
+   "digest": "ba0df1bff62c2ca2e5b27a66450de6fa600ec83ea7ee9d7ce6ccb6c370f7c1d8",
+   "nodes": 30
+  }
+ },
+ "controlled_sources/test_fsource_poly2.cir": {
+  "rkm": {
+   "digest": "5c56f99d9f21fe80d2c19965af7c4edd56a9d13b229fed40d4b3594ea34d17eb",
+   "nodes": 34
+  },
+  "standard": {
+   "digest": "5c56f99d9f21fe80d2c19965af7c4edd56a9d13b229fed40d4b3594ea34d17eb",
+   "nodes": 34
   }
  },
  "controlled_sources/test_fsource_subckt.cir": {
@@ -337,6 +329,16 @@
    "nodes": 35
   }
  },
+ "controlled_sources/test_gsource_freq.cir": {
+  "rkm": {
+   "digest": "b51115dd4b0769c2b69a4ce434b741ae57ba3d0bfbabfaa0b9d09f76a21b1a09",
+   "nodes": 42
+  },
+  "standard": {
+   "digest": "b51115dd4b0769c2b69a4ce434b741ae57ba3d0bfbabfaa0b9d09f76a21b1a09",
+   "nodes": 42
+  }
+ },
  "controlled_sources/test_gsource_m.cir": {
   "rkm": {
    "digest": "433552e0988cd9d1ded8ec78e0d898af3ad696beddfc03d45381bc94cad0fa9f",
@@ -349,30 +351,22 @@
  },
  "controlled_sources/test_gsource_poly.cir": {
   "rkm": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "8a9f113ae02c83adde0ec82cb02504a26170c1bb09c2e8a2ada65f37fe43ac12",
+   "nodes": 36
   },
   "standard": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "8a9f113ae02c83adde0ec82cb02504a26170c1bb09c2e8a2ada65f37fe43ac12",
+   "nodes": 36
   }
  },
  "controlled_sources/test_gsource_table.cir": {
   "rkm": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "9cc3c15cac6708e424829e14e46e19d618287d46f5512a135cc019777385ba42",
+   "nodes": 40
   },
   "standard": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "9cc3c15cac6708e424829e14e46e19d618287d46f5512a135cc019777385ba42",
+   "nodes": 40
   }
  },
  "controlled_sources/test_gsource_value.cir": {
@@ -397,16 +391,12 @@
  },
  "controlled_sources/test_hsource_poly.cir": {
   "rkm": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "9cd0229c2bf9271a72b83fd80ea7d632f3369171f59049d22aef198cc81aced9",
+   "nodes": 27
   },
   "standard": {
-   "column": 13,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 9
+   "digest": "9cd0229c2bf9271a72b83fd80ea7d632f3369171f59049d22aef198cc81aced9",
+   "nodes": 27
   }
  },
  "controlled_sources/test_hsource_sense_later.cir": {
@@ -1021,6 +1011,46 @@
    "nodes": 11
   }
  },
+ "edits_golden/nonlinear_freq_and_gate.expected.cir": {
+  "rkm": {
+   "digest": "580f9455bf4b760e2375fc4fb0ec232fa03d7c3f719c671f780e4840afaf7629",
+   "nodes": 166
+  },
+  "standard": {
+   "digest": "580f9455bf4b760e2375fc4fb0ec232fa03d7c3f719c671f780e4840afaf7629",
+   "nodes": 166
+  }
+ },
+ "edits_golden/nonlinear_poly.expected.cir": {
+  "rkm": {
+   "digest": "5f78a66e4b24303a0cc722701336049b29b1e768f890894465b06b34fe9a824a",
+   "nodes": 163
+  },
+  "standard": {
+   "digest": "5f78a66e4b24303a0cc722701336049b29b1e768f890894465b06b34fe9a824a",
+   "nodes": 163
+  }
+ },
+ "edits_golden/nonlinear_sources.cir": {
+  "rkm": {
+   "digest": "ffa6c445b7701236b117da7d68ad9d4714b2633046000cc70d43db7f0882c50e",
+   "nodes": 162
+  },
+  "standard": {
+   "digest": "ffa6c445b7701236b117da7d68ad9d4714b2633046000cc70d43db7f0882c50e",
+   "nodes": 162
+  }
+ },
+ "edits_golden/nonlinear_table.expected.cir": {
+  "rkm": {
+   "digest": "74515679ed6bf9376d8a21c226e321f23f03b1397c2b57c2a4537a4697e6c817",
+   "nodes": 165
+  },
+  "standard": {
+   "digest": "74515679ed6bf9376d8a21c226e321f23f03b1397c2b57c2a4537a4697e6c817",
+   "nodes": 165
+  }
+ },
  "edits_golden/param_added.expected.cir": {
   "rkm": {
    "digest": "b1aa4a52c4d5cd9fa01d4609765366d5416abf504621fc4c8e3edd8c2fbb2a5b",
@@ -1563,6 +1593,48 @@
    "line": 2
   }
  },
+ "elements_rejects/e_and_count.cir": {
+  "rkm": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_freq_hz.cir": {
+  "rkm": {
+   "column": 43,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 43,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_freq_no_format.cir": {
+  "rkm": {
+   "column": 26,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 26,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
  "elements_rejects/e_laplace.cir": {
   "rkm": {
    "column": 19,
@@ -1635,18 +1707,122 @@
    "line": 13
   }
  },
+ "elements_rejects/e_poly_dimension.cir": {
+  "rkm": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_poly_one_coefficient.cir": {
+  "rkm": {
+   "column": 30,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 30,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_poly_parens.cir": {
+  "rkm": {
+   "column": 19,
+   "error": "ParseError",
+   "expected": [
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
+    "end of line",
+    "field separator",
+    "name",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  },
+  "standard": {
+   "column": 19,
+   "error": "ParseError",
+   "expected": [
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
+    "end of line",
+    "field separator",
+    "name",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 13
+  }
+ },
  "elements_rejects/e_poly_too_few.cir": {
   "rkm": {
+   "column": 32,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 32,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_table_bare.cir": {
+  "rkm": {
    "column": 11,
-   "error": "UnsupportedConstruct",
+   "error": "ParseError",
    "expected": [],
    "line": 13
   },
   "standard": {
    "column": 11,
-   "error": "UnsupportedConstruct",
+   "error": "ParseError",
    "expected": [],
    "line": 13
+  }
+ },
+ "elements_rejects/e_table_node.cir": {
+  "rkm": {
+   "column": 9,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  },
+  "standard": {
+   "column": 9,
+   "error": "ParseError",
+   "expected": [],
+   "line": 13
+  }
+ },
+ "elements_rejects/e_table_param.cir": {
+  "rkm": {
+   "column": 39,
+   "error": "ParseError",
+   "expected": [],
+   "line": 14
+  },
+  "standard": {
+   "column": 39,
+   "error": "ParseError",
+   "expected": [],
+   "line": 14
   }
  },
  "elements_rejects/e_two_values.cir": {
@@ -1689,6 +1865,62 @@
    "error": "ParseError",
    "expected": [],
    "line": 13
+  }
+ },
+ "elements_rejects/g_and.cir": {
+  "rkm": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 9
+  },
+  "standard": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 9
+  }
+ },
+ "elements_rejects/g_table_nodes.cir": {
+  "rkm": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [
+    "GAIN_KW",
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
+    "field separator",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 9
+  },
+  "standard": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [
+    "GAIN_KW",
+    "`'expression'`",
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`{expression}`",
+    "field separator",
+    "number",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 9
   }
  },
  "elements_rejects/missing_node.cir": {
