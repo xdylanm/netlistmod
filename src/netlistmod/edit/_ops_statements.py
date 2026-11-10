@@ -81,7 +81,7 @@ def set_model_param(
         old = matches[0].value
         comment = _comment_inside(statement, old.span)
         if comment is not None:
-            new = _list_values(netlist, statement.model_type, matches[0].name, value)
+            new = _list_values(netlist, statement.model_type, matches[0].name, value, reason)
             if len(new) != len(old.values):
                 raise _refuse_over_comment(
                     netlist,
@@ -110,18 +110,31 @@ def set_model_param(
     return _assign((), statement, name, value, reason, point, folded=found.fold)
 
 
-def _list_values(netlist: Netlist, model_type: str, name: str, value: str) -> list[str]:
+def _list_values(
+    netlist: Netlist, model_type: str, name: str, value: str, reason: str
+) -> list[str]:
     """The values of ``value`` as the grammar reads them in ``name=`` of a ``model_type`` model:
-    a one-line probe is parsed, so the edit never scans the text itself (P13)."""
+    a one-line probe is parsed, so the edit never scans the text itself (P13).
+
+    The probe must read the whole of ``value`` as that one parameter's value, and nothing else:
+    one parameter, no flag, no comment, and a value whose span covers all of ``value``. Otherwise
+    the ``EditError`` is the one the whole-list edit gets from verification, so a value is
+    accepted or refused the same way whether or not the list holds a comment (review R4).
+    """
     newline = conventions.DEFAULT_TERMINATOR
-    probe = SourceText(
-        f"probe{newline}.model probe {model_type} {name}={value}{newline}.end{newline}"
-    )
+    head = f"probe{newline}.model probe {model_type} {name}="
+    probe = SourceText(f"{head}{value}{newline}.end{newline}")
     try:
         items = parse(probe, netlist.dialect, rkm=netlist.rkm).items
     except (ParseError, UnsupportedConstruct) as error:
         raise EditError(f"`{name}={value}` does not parse as a list of values: {error}") from error
     statement = next(item for item in items if isinstance(item, ModelStatement))
-    parsed = statement.params[0].value
+    parsed = statement.params[0].value if len(statement.params) == 1 else None
+    whole = Span(len(head), len(head) + len(value))
+    if parsed is None or statement.flags or statement.trailing_comments or parsed.span != whole:
+        raise EditError(
+            f"{reason}: `{value}` does not re-parse as {_VALUE.description}; the text would "
+            "change more than the intended slot"
+        )
     values = parsed.values if isinstance(parsed, ValueList) else (parsed,)
     return [probe.text[v.span.start : v.span.end] for v in values]

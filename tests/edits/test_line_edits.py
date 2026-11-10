@@ -197,6 +197,16 @@ def test_a_cpl_list_over_a_comment_is_set_value_for_value() -> None:
 
 
 @ngspice_only
+@pytest.mark.parametrize("value", ["1 2 3 ; x", "1 2 x=3"])
+@pytest.mark.parametrize("comment", [" ; c", ""])
+def test_a_cpl_list_value_is_read_whole_or_refused(value: str, comment: str) -> None:
+    # Review R4: with a comment in the list or without one, the same value gets the same refusal.
+    netlist = _cpl(f".model p cpl length=1 R=10 0{comment}\n+ 10 L=50n G=0 C=20p")
+    with pytest.raises(EditError, match=r"does not re-parse as a value"):
+        netlist.set_model_param("p", "R", value)
+
+
+@ngspice_only
 def test_a_cpl_list_without_a_comment_is_edited_whole() -> None:
     netlist = _cpl(".model p cpl(length=1 R=10 0\n+ 10 L=50n G=0 C=20p)")
     edited = netlist.set_model_param("p", "R", "1 2")
