@@ -1,10 +1,11 @@
 """Every accept fixture in ngspice 47 (M7 T5, T8 tier; architecture §10.3 (a) and (c)).
 
 Each fixture is loaded, prepared as its manifest's ``solver`` field says (stub files in place of
-includes kept outside the repository, an included harness of definitions) and run with an
-``.op`` added when it has no analysis (``tests/support/ngspice.py``). (a) It must run without an
-error and produce data. (c) It is saved unedited with ``load(...).save(...)``, which must give
-the same bytes, and the saved file must give the same raw file, except its ``Date:`` line.
+includes kept outside the repository, an included harness of definitions, data files copied
+beside it, and the install's OSDI models it needs, skipped with a reason when missing) and run
+with an ``.op`` added when it has no analysis (``tests/support/ngspice.py``). (a) It must run
+without an error and produce data. (c) It is saved unedited with ``load(...).save(...)``, which
+must give the same bytes, and the saved file must give the same raw file, except its ``Date:`` line.
 Both runs go through the same preparation and the bytes are asserted equal first, so the raw
 comparison adds a check that ngspice is deterministic (decision 0008 item 3).
 """
@@ -12,6 +13,7 @@ comparison adds a check that ngspice is deterministic (decision 0008 item 3).
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +21,7 @@ import pytest
 
 from netlistmod import Dialect, Netlist
 from tests.support.ngspice import STUBS, Run, run, without_date
-from tests.support.solvers import Solver, copy_external_files
+from tests.support.solvers import Solver, copy_external_files, require_osdi
 
 pytestmark = pytest.mark.solver("ngspice")
 
@@ -36,6 +38,8 @@ FAMILIES = (
     "kicad_transistors",
     "controlled_sources",
     "transmission_lines",
+    "code_models",
+    "osdi_devices",
 )
 
 
@@ -59,9 +63,17 @@ RUNNABLE = [
 ]
 
 
-def _run(solver: Solver, folder: Path, path: Path, field: dict[str, Any]) -> Run:
+def _run(
+    solver: Solver, folder: Path, path: Path, field: dict[str, Any], origin: Path | None = None
+) -> Run:
     # RKM values occur only in the KiCad corpus; standard notation parses the same with rkm=True.
     copy_external_files(folder, field)
+    # An OSDI fixture needs the install's compiled model; a data file goes beside the netlist,
+    # where a code model's `file="..."` finds it (manual §8.1.3).
+    require_osdi(solver, field.get("osdi", ()))
+    for name in field.get("data", ()):
+        folder.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile((origin or path).parent / name, folder / name)
     netlist = Netlist.load(path, dialect=Dialect.NGSPICE, rkm=True)
     harness = field.get("harness")
     result = run(
@@ -93,6 +105,6 @@ def test_unedited_round_trip_gives_identical_results(
     Netlist.load(path, dialect=Dialect.NGSPICE, rkm=True).save(saved)
     assert saved.read_bytes() == path.read_bytes()
     original = _run(solver, tmp_path / "original", path, field)
-    again = _run(solver, tmp_path / "again", saved, field)
+    again = _run(solver, tmp_path / "again", saved, field, origin=path)
     assert original.raw_bytes is not None and again.raw_bytes is not None
     assert without_date(again.raw_bytes) == without_date(original.raw_bytes)

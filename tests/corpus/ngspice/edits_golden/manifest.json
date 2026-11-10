@@ -183,7 +183,51 @@
     "lines_comments.cir": "7488bee363f5e2a218f8612bf6672af56210b9e19162afa2eca1997e5fc04b23",
     "lines_comments.expected.cir": "14f29780f1302aa2983e97ad251a601a4a1b540a004774fb5a404814d91e493d",
     "lines_comments_crlf.cir": "d14f878e029acd996a6eae42c8ca2875c05c1776358b95935c8e15318aaf8761",
-    "lines_comments_crlf.expected.cir": "0d62e3ec6faccb387ed665b17bba2a135ff25884d0967d881bcec13f28b73631"
+    "lines_comments_crlf.expected.cir": "0d62e3ec6faccb387ed665b17bba2a135ff25884d0967d881bcec13f28b73631",
+    "special.cir": {
+      "sha256": "70708fea00aa5bace0ca27a764c6284a7846301fbb28ad7a79d34fca5abc056b",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    },
+    "special_models.expected.cir": {
+      "sha256": "d20b98922d52ec9f7f50daa68e6e79bc239148af8fcade514258b0b912b11688",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    },
+    "special_remove.expected.cir": {
+      "sha256": "cf23492646e071d645767031dbdddbc72ad3c7d8e645da530ae839990eb924ff",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    },
+    "special_string.cir": {
+      "sha256": "dd98621b35f3421cb935c89e7d69f8ab736e48f81d44f79b7bf27bb02bbc120b",
+      "solver": {
+        "skip": "filesource reads its data file, which the golden family does not hold; tests/corpus/ngspice/code_models/test_xspice_filesource.cir runs a quoted file= with one."
+      }
+    },
+    "special_string.expected.cir": {
+      "sha256": "f8f11303b34f9e4132a7959be8bbd5bb23d1f6faccc8748d005105159fa5dc7b",
+      "solver": {
+        "skip": "filesource reads its data file, which the golden family does not hold; tests/corpus/ngspice/code_models/test_xspice_filesource.cir runs a quoted file= with one."
+      }
+    },
+    "special_values.expected.cir": {
+      "sha256": "d6fc99ddb1220ab2caf2d9baceef4e25eb75828800eee03b01aaf30086ed1e16",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    }
   },
   "cases": {
     "value": {
@@ -1700,6 +1744,109 @@
         ]
       ],
       "expected": "lines_comments_crlf.expected.cir"
+    },
+    "special_models": {
+      "input": "special.cir",
+      "steps": [
+        [
+          "set_model",
+          "a1",
+          "amp2"
+        ],
+        [
+          "set_model",
+          "N1",
+          "rmod2"
+        ]
+      ],
+      "expected": "special_models.expected.cir"
+    },
+    "special_values": {
+      "input": "special.cir",
+      "steps": [
+        [
+          "set_model_param",
+          "amp",
+          "gain",
+          "10"
+        ],
+        [
+          "set_model_param",
+          "sum",
+          "in_offset",
+          "[0.5 -0.5]"
+        ],
+        [
+          "set_model_param",
+          "sum",
+          "in_gain",
+          "[2 3]"
+        ],
+        [
+          "set_model_param",
+          "lim",
+          "fraction",
+          "TRUE"
+        ],
+        [
+          "set_model_param",
+          "amp",
+          "in_offset",
+          "0.1"
+        ],
+        [
+          "set_param",
+          "N1",
+          "l",
+          "40u"
+        ],
+        [
+          "set_param",
+          "N1",
+          "m",
+          "2"
+        ]
+      ],
+      "expected": "special_values.expected.cir"
+    },
+    "special_remove": {
+      "input": "special.cir",
+      "steps": [
+        [
+          "remove_param",
+          "N1",
+          "w"
+        ],
+        [
+          "remove_model_param",
+          "lim",
+          "fraction"
+        ],
+        [
+          "remove_model_param",
+          "sum",
+          "in_offset"
+        ]
+      ],
+      "expected": "special_remove.expected.cir"
+    },
+    "special_string": {
+      "input": "special_string.cir",
+      "steps": [
+        [
+          "set_model_param",
+          "src",
+          "file",
+          "\"other.txt\""
+        ],
+        [
+          "set_model_param",
+          "src",
+          "amplscale",
+          "[2]"
+        ]
+      ],
+      "expected": "special_string.expected.cir"
     }
   }
 }

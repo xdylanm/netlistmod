@@ -40,6 +40,12 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | `BehavioralSource` (B) | `quantity: str` (`"v"`, `"i"`, and on LTspice `"r"` or `"p"`), `expression: Formula`; `params` holds the trailing parameters (ngspice `tc1=`, `tc2=`, `temp=`, `dtemp=`; LTspice `ic=`, `tripdv=`, `tripdt=`, `Rpar=`, `vprx=`) (decision 0016) |
 | `VoltageSwitch` (S), `CurrentSwitch` (W), subclasses of `Switch` | `model: ModelReference`, `flags: tuple[Flag, ...]` (`on` or `off`); S has four `nodes` and `control_nodes`, W two `nodes` and `control`, a tuple of the one controlling source |
 | `LosslessLine` (T), `LossyLine` (O), `RcLine` (U), `TxlLine` (Y), `CoupledLine` (P), subclasses of `TransmissionLine` (decision 0019) | T has no extra field: `Z0=` (or `Zo=`), `TD=`, `F=`, `NL=` and ngspice's `IC=` (a `ValueList` of four values) are `params`. O, U, Y and P have `model: ModelReference`; U's `l=` and `n=` and Y's and P's `len=` are `params`. T, O, Y and P have `port1` and `port2` properties (each port's nodes, then its reference node; on P a port is its X nodes and its reference), and P has `conductors` (X). U has three `nodes` and no ports. Y's and P's reference nodes are ground. |
+| `CodeModelDevice` (ngspice A; decision 0020 items 2 and 4) | `model: ModelReference` (the last name on the line), `ports: tuple[CodeModelPort, ...]`; `nodes` is every node of every port in order, without `null` and `%vnam` sources; `params == ()` (a code model's values are on its `.model`); a `control` property holds the `%vnam` sources, controlling references like F's |
+| `CodeModelPort`, `CodeModelConnection` | `CodeModelPort.vector: bool`, `connections`, `span` (with the brackets of a vector), `port_type: str \| None` (a type before a vector, such as `%v[a b]` or `%vd [a b c d]`); `CodeModelConnection.port_type: str \| None` (as written: `%v`, `%vd`, `%vnam` …), `nodes` (one, or two for a differential type), `inverted` (a `~`), `null`, `source: ElementReference \| None` (a `%vnam`'s source) and `span` |
+| `OsdiDevice` (ngspice N; decision 0020 item 6) | `model: ModelReference` (the last name before the first `name=value`); the instance parameters are `params` |
+| `SpecialFunction` (LTspice A; decision 0020 items 3 and 7) | `function: Identifier` (one of the 13 names, as written); eight `nodes`, with `inputs` (1 to 5), `outputs` (6 and 7) and `common` (8) properties; the named parameters are `params` |
+| `FrequencyAnalyzer` (LTspice `@`; decision 0020 item 7) | `impedance: Flag \| None` (`zm`), `reference_net` and `intermediate_net: Node \| None` (what `refnode=` and `intnode=` name: node references, not terminals); two `nodes`; `params` holds every named parameter, `flist=`, `pp=`, `nmax=` and `ac=` as a `ValueList` when they hold more than one value |
+| `FraProbe` (LTspice `&`; decision 0020 item 8) | `analyzer: ElementReference` (`@` and the probe's suffix; its span is the probe's designator); four `nodes`, with `output_pair` and `input_pair` properties |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
 Deviation from task 3.1: `AcSpec.magnitude` is required, because the manual requires ACMAG
@@ -54,7 +60,7 @@ parameters, models, flags · `NG-RES-001` · `NG-CAP-001` · `NG-IND-001` · `NG
 transistor line shape · `NG-BJT-001` · `NG-MOS-001` · `NG-JFT-001` · `NG-MES-001` (M13) · `NG-CTL-001`
 the shape of the dependent sources and switches · `NG-VCV-001` · `NG-VCC-001` · `NG-CCC-001` ·
 `NG-CCV-001` · `NG-SWV-001` · `NG-SWC-001` (M14) · `NG-TLL-001` T · `NG-LTR-001` O · `NG-URC-001` U
-· `NG-TXL-001` Y · `NG-CPL-001` P (M16). Every grammar
+· `NG-TXL-001` Y · `NG-CPL-001` P (M16) · `NG-COD-001` A · `NG-OSD-001` N (M17). Every grammar
 definition, including `_` sub-terminals, carries a `// spec:` marker.
 
 ## 3. Element grammar (field by field)

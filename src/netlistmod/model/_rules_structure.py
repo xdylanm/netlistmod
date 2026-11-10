@@ -130,7 +130,7 @@ class StructureRules(_Rules):
     core__end = end
 
     def machine_block(self, children: list[Any]) -> NoReturn:
-        raise self._unsupported(children[0], "LTspice .machine state machine")
+        raise self._unsupported(children[0], "LTspice .machine state machine, out of scope for v1")
 
     def machine_line(self, children: list[Any]) -> None:
         return None

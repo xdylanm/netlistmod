@@ -1,0 +1,54 @@
+id: NG-COD-001
+dialect: ngspice
+construct: code model (A) lines
+manual_ref:
+- '[ngspice-manual] §8.1 "Code Model Element & .MODEL Cards"'
+- '[ngspice-manual] §22.2.1 "XSPICE Syntax Extensions"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-10'
+grammar:
+- body_line
+- code_model
+- a_port
+- a_conn
+- a_net
+- a_net_gap
+- a_paren
+- a_vnam
+- a_source
+- a_vector
+- a_member
+- a_dvector
+- a_dmember
+- a_dconn
+- a_param
+- A_TYPE
+- A_DTYPE
+- A_VNAM
+- A_NOT
+- A_NOT_BLANK
+- A_PCOMMA
+- A_PARAM_KW
+- A_NAME
+- VEC_OPEN
+- VEC_CLOSE
+tests:
+- tests/grammar/ngspice/test_special.py::test_ports_and_connections
+- tests/grammar/ngspice/test_special.py::test_vnam_names_a_source_that_is_not_a_node
+- tests/grammar/ngspice/test_special.py::test_spans_slice_back_to_their_text
+- tests/grammar/ngspice/test_special.py::test_comments_inside_a_continued_line_are_kept
+- tests/grammar/ngspice/test_special.py::test_refused_code_model_lines
+- tests/grammar/ngspice/test_special.py::test_malformed_code_model_lines_are_syntax_errors
+- tests/document/test_special_topology.py::test_every_code_model_node_is_a_connection_without_null_or_the_source
+- tests/document/test_special_topology.py::test_the_signature_records_each_port_and_connection
+- tests/document/test_special_topology.py::test_changing_a_port_or_its_source_is_a_topology_violation
+- tests/document/test_special_topology.py::test_tilde_is_not_topology
+- tests/document/test_special_topology.py::test_a_missing_vnam_source_is_unresolved
+- tests/solver/test_ngspice_special_probes.py::test_code_model_probes
+- tests/solver/test_ngspice_special_probes.py::test_what_ngspice_computes
+- tests/solver/test_ngspice_special_probes.py::test_a_code_model_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Ports, then the model, the last name on the line (decision 0020 item 4). A port is a connection or a vector [ ... ] of connections; a connection is an optional port type of Table 8.1 (any case) and its node, two for a differential type, with or without parentheses and with or without a blank before them; or null (any case); or %vnam and a source, which is a controlling reference and not a net. A digital node may carry ~ with no blank. A port type may stand before a vector and applies to each of its untyped connections; with a differential type, each untyped connection is a pair of nodes (§8.1.1 Example 1, %vd [1 2 3 4]). The port count and types, and where null is allowed, are not checked: the library cannot see a code model''s interface. Refused: a name=value on the line and a number as the model (ngspice stops); %vnam inside a vector (ngspice stops: unknown controlling source); a comma inside a vector or inside parentheses, and ~ before a blank (ngspice runs them; the manual writes blanks: discrepancies.md). The signature records each port''s position, vector flag and type, and each connection''s type, nodes and null; ~ is left out.'

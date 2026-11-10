@@ -1,0 +1,59 @@
+{
+  "family": "code_models",
+  "origin": "ngspice code-model netlists written for M17 (decision 0020), and variants of them, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-10",
+  "notes": "The base netlists were written here and run in ngspice 47; the ngspice distribution's examples are not copied. Provenance confirmed by the maintainer, 2026-11-10.",
+  "fixtures": {
+    "test_xspice_control.cir": {
+      "sha256": "7d3ffe9f1c76a757b248f398da34bb1190ce26017a77e8867988058309a5e89e",
+      "note": "%vnam, a %i(...) output, and limit with fraction=FALSE (base netlist, written for M17)."
+    },
+    "test_xspice_control_vnam_paren.cir": {
+      "sha256": "3d85020b7de3b232e16e29b9e429e5642c919e6a97a263c4e05ad3a45354c157",
+      "note": "test_xspice_control.cir with %vnam(Vs) and fraction=true (variant)."
+    },
+    "test_xspice_digital.cir": {
+      "sha256": "c28a031802918e912c0c9b74524ff0ae8c196b14ee2458609743caf3a7b92b5e",
+      "note": "adc_bridge and dac_bridge with vector ports, d_inverter, d_nand with ~, and d_dff with null set and reset (base netlist, written for M17)."
+    },
+    "test_xspice_digital_subckt.cir": {
+      "sha256": "520085eacb62cdac1d0543096c207f4694e5d107f64381ea256c0cbfa7c0c7c8",
+      "note": "test_xspice_digital.cir inside a subcircuit, with NULL and Null (variant)."
+    },
+    "test_xspice_filesource.cir": {
+      "sha256": "0eb683d0b4eff4bbddbcbf77afb05ac373f4211738e99451e17a19c91603414f",
+      "note": "filesource with a quoted file= path, its data file beside it (variant).",
+      "solver": {
+        "data": [
+          "test_xspice_filesource.txt"
+        ]
+      }
+    },
+    "test_xspice_filesource.txt": {
+      "sha256": "559063ad0ce637f386daba69b38935fe939e40e2659311c46744dc589da6ed36",
+      "note": "The data file test_xspice_filesource.cir reads: time and value columns (written for M17)."
+    },
+    "test_xspice_gain.cir": {
+      "sha256": "7f4cef1a6b29c0c66bf49dd877f5c22d19fa4e5456542a323f656f96480f75f4",
+      "note": "gain with no port types, %v(...) and %vd(... ...) (base netlist, written for M17)."
+    },
+    "test_xspice_gain_blank_types.cir": {
+      "sha256": "1ee7fcba802d9a696be13c2ce40c459bfd40d2d2c7d56695727566151042ea7a",
+      "note": "test_xspice_gain.cir with each port type before a blank: %v in, %v (in), %vd in mid, %vd (in mid) (variant)."
+    },
+    "test_xspice_summer.cir": {
+      "sha256": "296ec7247bd36657d44233ffe225b9263b1b7cc587abc0193d737c011692a35b",
+      "note": "summer with a vector port, a typed vector port holding a %vd connection, and vector parameters with a brace, over a + line (base netlist, written for M17)."
+    },
+    "test_xspice_summer_dvector.cir": {
+      "sha256": "f0bd5d4692222443f3f6a03645807f1ae939da7c7fc40b4679e5e6d2618d27b7",
+      "note": "test_xspice_summer.cir with a differential vector port, %vd [in1 0 in2 0], and %v [in1 %vd in2 in1] (variant; manual §8.1.1 Examples 1 and 2)."
+    },
+    "test_xspice_summer_unbracketed.cir": {
+      "sha256": "64f384722615a462503efe5b55e8b6c848fc310d5fecd2d770c85ab468982100",
+      "note": "test_xspice_summer.cir with .model values written without parentheses, blanks inside the brackets and a vector over a + line (variant)."
+    }
+  }
+}

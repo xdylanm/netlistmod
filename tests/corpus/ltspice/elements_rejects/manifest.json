@@ -86,9 +86,9 @@
     "frequency_analyzer.cir": {
       "sha256": "e2b6c8eb6105359d1dcd87d1dd3ffab2f324eeb74cc655dec9a70bbe032ffdaf",
       "line": 2,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "planned for phase 2"
+      "column": 8,
+      "error": "ParseError",
+      "note": "fmin= is not a parameter of the frequency response analyzer (LTspice stops)"
     },
     "misspelt_parameter.cir": {
       "sha256": "1157f726629652b1bea81ae69a04a7cc56fb9a0f635f526614c5cd7454254405",
@@ -103,13 +103,6 @@
       "column": 1,
       "error": "ParseError",
       "note": "N is not an LTspice letter"
-    },
-    "phase_2_letter.cir": {
-      "sha256": "2596542c3e7f19c6ed70b91af71de6f8e6a4c26da77862b24ec9d06872b1a1c4",
-      "line": 2,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "planned for phase 2"
     },
     "quoted_number.cir": {
       "sha256": "5184ef3fba50fc9359e3387deaa9c287d3c9f820aa5ba25595dc0f76d057cc8b",
@@ -313,6 +306,48 @@
       "column": 12,
       "error": "ParseError",
       "note": "U needs L="
+    },
+    "a_inv_name.cir": {
+      "sha256": "314f8264ba791557ed7cdb2710ee535d8c014250e1400d3f2b6cbe22f6f46331",
+      "line": 2,
+      "column": 20,
+      "error": "ParseError",
+      "note": "INV is a symbol, not a special function name (LTspice stops)"
+    },
+    "a_bare_param.cir": {
+      "sha256": "b925f2c75cb285c545a5c928c29682211fc50e25633a525d79db365e0f80077a",
+      "line": 2,
+      "column": 30,
+      "error": "ParseError",
+      "note": "a bare name in an A parameter's value (LTspice runs it)"
+    },
+    "a_seven_nodes.cir": {
+      "sha256": "81c55619121d6a4165a5987abd90550c4a882350c3e6929a8b5edb5bc24f61d9",
+      "line": 2,
+      "column": 21,
+      "error": "ParseError",
+      "note": "an A line with seven nodes (LTspice stops)"
+    },
+    "fra_unknown_param.cir": {
+      "sha256": "17943d41b5515d5dd185de5478a5bc11c916ce384e455902d3948570ebce2d44",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a parameter the analyzer does not take (LTspice stops)"
+    },
+    "fra_zm_twice.cir": {
+      "sha256": "996198a5c6ce1a4617387a70f263f6618824af888caba8f517bcab495a1aa1d8",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "zm written twice (LTspice runs it)"
+    },
+    "probe_param.cir": {
+      "sha256": "7576acb41c54cebb7c0cafa2d3e87ad2f3d9ea906543f200d4640dc5094fe83a",
+      "line": 3,
+      "column": 12,
+      "error": "ParseError",
+      "note": "a parameter on an & line (LTspice stops)"
     }
   }
 }

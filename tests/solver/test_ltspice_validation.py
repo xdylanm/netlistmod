@@ -204,8 +204,8 @@ def test_fra_needs_its_device(solver: Solver, tmp_path: Path) -> None:
     assert netlist(circuit.format("", "")).lines.find(UnknownDirective) is not None
     with_device = circuit.format(device, "")
     assert run(solver, tmp_path / "device", with_device).returncode == 0
-    with pytest.raises(UnsupportedConstruct):
-        parse(SourceText(with_device), Dialect.LTSPICE)
+    # The @ line loads since M17 (decision 0020 item 7).
+    assert netlist(with_device).element("@1") is not None
 
 
 @pytest.mark.parametrize("arguments", ["", " Tstart=0 dTmax=1u Tstep=1u Tstop=1m"])

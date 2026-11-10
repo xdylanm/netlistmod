@@ -1,0 +1,23 @@
+M17 golden input: code models and OSDI devices (netlistmod)
+V1 in 0 1
+Vs in x 0
+Rx x 0 1k
+a1 in out1 amp
+a2 [in x] out2 sum
+a3 in out3 lim
+N1 out1 0 rmod w=1u l=40u m=2
+Rl1 out1 0 1k
+Rl2 out2 0 1k
+Rl3 out3 0 1k
+.model amp gain(gain=10 in_offset=0.1)
+.model amp2 gain(gain=2)
+.model sum summer(in_offset=[0.5 -0.5] in_gain=[2 ; one per input
++ 3] out_gain=1)
+.model lim limit(gain=5 out_lower_limit=0 out_upper_limit=3 fraction=TRUE)
+.model rmod r2_cmc(rsh=200)
+.model rmod2 r2_cmc(rsh=100)
+.control
+pre_osdi r2_cmc.osdi
+.endc
+.op
+.end

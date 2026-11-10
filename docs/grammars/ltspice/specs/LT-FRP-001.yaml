@@ -1,0 +1,23 @@
+id: LT-FRP-001
+dialect: ltspice
+construct: frequency response probe (&) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "& — Frequency Response Analysis Probe"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-10'
+grammar:
+- body_line
+- fra_probe
+- PROBE_NAME
+core_rules:
+- node
+tests:
+- tests/grammar/ltspice/test_ltspice_special.py::test_a_probe_has_four_nodes_and_names_its_analyzer
+- tests/grammar/ltspice/test_ltspice_special.py::test_refused_probe_lines
+- tests/document/test_special_topology.py::test_a_probe_finds_its_analyzer
+- tests/solver/test_ltspice_special_probes.py::test_analyzer_probes
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Four nodes, the output pair and the input pair, and nothing after them (decision 0020 item 8). analyzer names @ and the probe''s suffix, compared in any case, resolved in the probe''s scope: UNRESOLVED_ELEMENT when missing, unless the scope has exactly one @, which LTspice then uses. It is not topology.'

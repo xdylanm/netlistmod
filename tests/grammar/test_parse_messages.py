@@ -6,6 +6,9 @@ do not name the missing field for each construct, which would repeat the grammar
 
 from __future__ import annotations
 
+from contextlib import AbstractContextManager
+from unittest.mock import patch
+
 import pytest
 
 from netlistmod import Dialect, ParseError, SourceText, UnsupportedConstruct, parse
@@ -110,20 +113,33 @@ def test_blank_lines_after_end_are_valid(dialect: Dialect) -> None:
     parse(SourceText("t\n.end\n\n  \n"), dialect)
 
 
+# No letter is planned after M17, so these tests mark one in a mocked device matrix (decision
+# 0020 item 10). "Ω" has no grammar rule in either dialect, so its line fails at its first
+# character, as a planned letter's did.
+_PLANNED = {"Ω": {"status": "planned", "phase": 2, "milestone": "M99"}}
+
+
+def _planned_matrix() -> AbstractContextManager[object]:
+    return patch("netlistmod.grammar.loader.device_matrix", return_value=_PLANNED)
+
+
 @pytest.mark.parametrize("dialect", _BOTH)
-@pytest.mark.parametrize("after", ["A1 a b c m\n", "hello world\n"])
+@pytest.mark.parametrize("after", ["Ω1 a b c m\n", "hello world\n"])
 def test_a_planned_letter_after_end_says_the_netlist_ends_there(
     dialect: Dialect, after: str
 ) -> None:
-    error = _reject(f"t\n.end\n{after}", dialect)
+    with _planned_matrix():
+        error = _reject(f"t\n.end\n{after}", dialect)
     assert "the netlist ends at `.end`" in error.reason
     assert (error.line, error.column) == (3, 1)
 
 
 @pytest.mark.parametrize("dialect", _BOTH)
 def test_a_planned_letter_before_end_stays_an_unsupported_construct(dialect: Dialect) -> None:
-    with pytest.raises(UnsupportedConstruct):
-        parse(SourceText("t\nA1 a b c m\n.end\n"), dialect)
+    with _planned_matrix(), pytest.raises(UnsupportedConstruct) as captured:
+        parse(SourceText("t\nΩ1 a b c m\n.end\n"), dialect)
+    assert captured.value.construct == f"{dialect.display_name} Ω device"
+    assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 def test_end_inside_a_subcircuit_keeps_its_own_message() -> None:

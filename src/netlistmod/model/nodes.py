@@ -454,6 +454,136 @@ class BehavioralSource(Component):
     expression: Formula
 
 
+@dataclass(frozen=True, slots=True)
+class CodeModelConnection:
+    """One connection of an ngspice code-model port (decision 0020 item 4).
+
+    ``port_type`` is the type as written (``%v``, ``%vd``, ``%vnam`` …), or ``None``. ``nodes``
+    holds its node, or two for a differential type, without ``~``: ``inverted`` records a ``~``.
+    ``null`` marks an unconnected port, and ``source`` names the source of a ``%vnam``; both have
+    no nodes. ``span`` runs from the type (or ``~``, or the node) to the end of the connection.
+    """
+
+    port_type: str | None
+    nodes: tuple[Node, ...]
+    inverted: bool
+    null: bool
+    source: ElementReference | None
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
+class CodeModelPort:
+    """One port of an ngspice code-model line: a connection, or a vector ``[ … ]`` of them.
+
+    ``vector`` is ``True`` for a vector, whose ``span`` includes its brackets. ``port_type`` is a
+    type written before the vector (``%v[a b]``), which applies to each of its connections that
+    has none of its own; it is ``None`` for a scalar port, whose type is on its connection.
+    """
+
+    vector: bool
+    connections: tuple[CodeModelConnection, ...]
+    span: Span
+    port_type: str | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CodeModelDevice(Component):
+    """An ngspice ``A`` line, a code model instance (decision 0020 items 2 and 4).
+
+    ``ports`` holds the ports in order, and ``model`` the model, the last name on the line.
+    ``nodes`` is every node of every port in order, without ``null`` and without ``%vnam``
+    sources, so the topology queries see it as any other element. The line takes no parameters;
+    a code model's values are on its ``.model``.
+    """
+
+    model: ModelReference
+    ports: tuple[CodeModelPort, ...]
+
+    @property
+    def control(self) -> tuple[ElementReference, ...]:
+        """The sources of the ``%vnam`` connections, in line order: controlling references, like
+        those of F and H (decision 0015 item 3)."""
+        return tuple(
+            connection.source
+            for port in self.ports
+            for connection in port.connections
+            if connection.source is not None
+        )
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class OsdiDevice(Component):
+    """An ngspice ``N`` line, an OSDI (Verilog-A) device: nodes, the model, then the named
+    instance parameters in ``params`` (decision 0020 item 6). The module defines the node count,
+    which the library does not check."""
+
+    model: ModelReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class SpecialFunction(Component):
+    """An LTspice ``A`` line, a special function (decision 0020 items 2, 3 and 7): eight nodes,
+    the ``function`` as written (``BUF``, ``OTA`` …), then the named parameters in ``params``."""
+
+    function: Identifier
+
+    @property
+    def inputs(self) -> tuple[Node, ...]:
+        """Nodes 1 to 5, the inputs."""
+        return self.nodes[:5]
+
+    @property
+    def outputs(self) -> tuple[Node, ...]:
+        """Nodes 6 and 7, the inverted and the true output."""
+        return self.nodes[5:7]
+
+    @property
+    def common(self) -> Node:
+        """Node 8, the common node the outputs refer to."""
+        return self.nodes[7]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class FrequencyAnalyzer(Component):
+    """An LTspice ``@`` line, the frequency response analyzer (decision 0020 items 2 and 7).
+
+    ``nodes`` are its two terminals. ``impedance`` is the ``zm`` flag, or ``None``. ``params``
+    holds the named parameters in order; ``flist=``, ``pp=``, ``nmax=`` and ``ac=`` may hold a
+    :class:`~netlistmod.model.values.ValueList`. ``refnode=`` and ``intnode=`` are parameters
+    whose value is a net name, an :class:`~netlistmod.model.values.Identifier`; the nets they
+    name are ``reference_net`` and ``intermediate_net``, which the analyzer measures. They are
+    node references, not terminals: they are not in ``nodes`` or the signature.
+    """
+
+    impedance: Flag | None
+    reference_net: Node | None = None
+    intermediate_net: Node | None = None
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class FraProbe(Component):
+    """An LTspice ``&`` line, a frequency response probe (decision 0020 items 2 and 8): four nodes,
+    the output pair and then the input pair.
+
+    ``analyzer`` names the ``@`` with the probe's suffix (``&1`` measures with ``@1``). It is not
+    written on the line, so its span is the probe's designator. It is resolved in the probe's
+    scope; it is not topology.
+    """
+
+    analyzer: ElementReference
+
+    @property
+    def output_pair(self) -> tuple[Node, ...]:
+        """Nodes 1 and 2."""
+        return self.nodes[:2]
+
+    @property
+    def input_pair(self) -> tuple[Node, ...]:
+        """Nodes 3 and 4."""
+        return self.nodes[2:]
+
+
 @dataclass(frozen=True, slots=True, kw_only=True)
 class SubcktInstance(Component):
     """An ``X`` line: its nodes, the subcircuit name and the parameter overrides."""
@@ -771,6 +901,11 @@ BodyItem: TypeAlias = (
     | RcLine
     | TxlLine
     | CoupledLine
+    | CodeModelDevice
+    | OsdiDevice
+    | SpecialFunction
+    | FrequencyAnalyzer
+    | FraProbe
     | SubcktInstance
 )
 """An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
@@ -832,6 +967,11 @@ ELEMENT_NAMES: dict[type[Component], str] = {
     RcLine: "uniform RC line",
     TxlLine: "TXL transmission line",
     CoupledLine: "coupled transmission line",
+    CodeModelDevice: "code model",
+    OsdiDevice: "OSDI device",
+    SpecialFunction: "special function",
+    FrequencyAnalyzer: "frequency response analyzer",
+    FraProbe: "frequency response probe",
     SubcktInstance: "subcircuit call",
 }
 

@@ -22,3 +22,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0017 — Tables, polynomials and transfer functions](0017-tables-polynomials-and-transfer-functions.md)
 - [0018 — Publishing to PyPI](0018-pypi-publication.md)
 - [0019 — Transmission lines](0019-transmission-lines.md)
+- [0020 — Special and mixed-signal devices](0020-special-and-mixed-signal-devices.md)

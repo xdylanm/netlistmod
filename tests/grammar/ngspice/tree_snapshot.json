@@ -1,4 +1,104 @@
 {
+ "code_models/test_xspice_control.cir": {
+  "rkm": {
+   "digest": "e27a08d6b9b96c51eb7b4a2284799ed87d8d0e736f57505ceafbbf451a7659d2",
+   "nodes": 71
+  },
+  "standard": {
+   "digest": "e27a08d6b9b96c51eb7b4a2284799ed87d8d0e736f57505ceafbbf451a7659d2",
+   "nodes": 71
+  }
+ },
+ "code_models/test_xspice_control_vnam_paren.cir": {
+  "rkm": {
+   "digest": "3169d6fe42873432f71559c377adf98099b97f76d250a350decc37c5b23a5ca3",
+   "nodes": 71
+  },
+  "standard": {
+   "digest": "3169d6fe42873432f71559c377adf98099b97f76d250a350decc37c5b23a5ca3",
+   "nodes": 71
+  }
+ },
+ "code_models/test_xspice_digital.cir": {
+  "rkm": {
+   "digest": "8ff0cdbecea58b5b625e04816f95a2efcd705216b732e5a5e563f663f678cc46",
+   "nodes": 149
+  },
+  "standard": {
+   "digest": "8ff0cdbecea58b5b625e04816f95a2efcd705216b732e5a5e563f663f678cc46",
+   "nodes": 149
+  }
+ },
+ "code_models/test_xspice_digital_subckt.cir": {
+  "rkm": {
+   "digest": "e2c8aa5546cf807ce84914c21b44cec83920cab65a8908c701f3dc0ec109111c",
+   "nodes": 163
+  },
+  "standard": {
+   "digest": "e2c8aa5546cf807ce84914c21b44cec83920cab65a8908c701f3dc0ec109111c",
+   "nodes": 163
+  }
+ },
+ "code_models/test_xspice_filesource.cir": {
+  "rkm": {
+   "digest": "521798453b5affc245ba8dc3e93f8d48d30a5907bb9f592c6717bac17b449ce2",
+   "nodes": 28
+  },
+  "standard": {
+   "digest": "521798453b5affc245ba8dc3e93f8d48d30a5907bb9f592c6717bac17b449ce2",
+   "nodes": 28
+  }
+ },
+ "code_models/test_xspice_gain.cir": {
+  "rkm": {
+   "digest": "18719d8eb21773c40f51395672d33154d9fb27b42f09961df4a5f748faece6fb",
+   "nodes": 68
+  },
+  "standard": {
+   "digest": "18719d8eb21773c40f51395672d33154d9fb27b42f09961df4a5f748faece6fb",
+   "nodes": 68
+  }
+ },
+ "code_models/test_xspice_gain_blank_types.cir": {
+  "rkm": {
+   "digest": "58eaac4bb14acb3997eef628dc574eb5e848fa2b8c2cb3b6df2f654bfc553b1b",
+   "nodes": 84
+  },
+  "standard": {
+   "digest": "58eaac4bb14acb3997eef628dc574eb5e848fa2b8c2cb3b6df2f654bfc553b1b",
+   "nodes": 84
+  }
+ },
+ "code_models/test_xspice_summer.cir": {
+  "rkm": {
+   "digest": "4d69d0bf1ff83a82241af0aac430a62e46e90dc274287b4d2ca4dc38457b2aa1",
+   "nodes": 68
+  },
+  "standard": {
+   "digest": "4d69d0bf1ff83a82241af0aac430a62e46e90dc274287b4d2ca4dc38457b2aa1",
+   "nodes": 68
+  }
+ },
+ "code_models/test_xspice_summer_dvector.cir": {
+  "rkm": {
+   "digest": "6c189ebb613dda3d218c1c065ff544250b88f974137bc16ed4d2f4f63c8a3845",
+   "nodes": 72
+  },
+  "standard": {
+   "digest": "6c189ebb613dda3d218c1c065ff544250b88f974137bc16ed4d2f4f63c8a3845",
+   "nodes": 72
+  }
+ },
+ "code_models/test_xspice_summer_unbracketed.cir": {
+  "rkm": {
+   "digest": "00866fc75b12d0835ad7fab9eb1123c88d23339964dad72211d24759b1bf6c9f",
+   "nodes": 68
+  },
+  "standard": {
+   "digest": "00866fc75b12d0835ad7fab9eb1123c88d23339964dad72211d24759b1bf6c9f",
+   "nodes": 68
+  }
+ },
  "controlled_sources/diag_f_ctrl_missing.cir": {
   "rkm": {
    "digest": "ed4d0c8b29f4a9a758804043ca6fd0d3633b0c93a953eb03a84b708cf94b0226",
@@ -1461,6 +1561,66 @@
    "nodes": 105
   }
  },
+ "edits_golden/special.cir": {
+  "rkm": {
+   "digest": "7314ad613429586b025cc156f61f1c864859e0e55b35ddb98d39b36e02cdc7e2",
+   "nodes": 101
+  },
+  "standard": {
+   "digest": "7314ad613429586b025cc156f61f1c864859e0e55b35ddb98d39b36e02cdc7e2",
+   "nodes": 101
+  }
+ },
+ "edits_golden/special_models.expected.cir": {
+  "rkm": {
+   "digest": "73ec5166495e9329567062c9cfbda50428e06f42b19157b236abb9cf3c2b2ad3",
+   "nodes": 101
+  },
+  "standard": {
+   "digest": "73ec5166495e9329567062c9cfbda50428e06f42b19157b236abb9cf3c2b2ad3",
+   "nodes": 101
+  }
+ },
+ "edits_golden/special_remove.expected.cir": {
+  "rkm": {
+   "digest": "c7465f51080c11d485a2651a0acbc198c3b8535680a82dcbb96ad98d79429cf0",
+   "nodes": 93
+  },
+  "standard": {
+   "digest": "c7465f51080c11d485a2651a0acbc198c3b8535680a82dcbb96ad98d79429cf0",
+   "nodes": 93
+  }
+ },
+ "edits_golden/special_string.cir": {
+  "rkm": {
+   "digest": "00beabe68a4f13c6d0178a3360f7e10b2ff6b4e97b73772684e95287da538a21",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "00beabe68a4f13c6d0178a3360f7e10b2ff6b4e97b73772684e95287da538a21",
+   "nodes": 24
+  }
+ },
+ "edits_golden/special_string.expected.cir": {
+  "rkm": {
+   "digest": "5931005bc83997c457ccc6ca5d024f6ca334b25edcdf0d210ea11ea573d71fc7",
+   "nodes": 24
+  },
+  "standard": {
+   "digest": "5931005bc83997c457ccc6ca5d024f6ca334b25edcdf0d210ea11ea573d71fc7",
+   "nodes": 24
+  }
+ },
+ "edits_golden/special_values.expected.cir": {
+  "rkm": {
+   "digest": "52dfe90d5f172026ee4fb88324a504a4d8d9a2960279ab75c32b30c3fc06463a",
+   "nodes": 105
+  },
+  "standard": {
+   "digest": "52dfe90d5f172026ee4fb88324a504a4d8d9a2960279ab75c32b30c3fc06463a",
+   "nodes": 105
+  }
+ },
  "edits_golden/swap_include.expected.cir": {
   "rkm": {
    "digest": "e49ca21229bd285176e4fb05d16e61a112ac015b699badbb841277a3495680f2",
@@ -1589,6 +1749,90 @@
   "standard": {
    "digest": "aaa1371dc30eb673e83878e4cbecaa408e055a69e5634da30ba09a270ee9f3ca",
    "nodes": 25
+  }
+ },
+ "elements_rejects/a_model_number.cir": {
+  "rkm": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 11,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/a_param_on_instance.cir": {
+  "rkm": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/a_paren_comma.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/a_tilde_blank.cir": {
+  "rkm": {
+   "column": 4,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 4,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/a_vector_comma.cir": {
+  "rkm": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 7,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/a_vnam_in_vector.cir": {
+  "rkm": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 5,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
   }
  },
  "elements_rejects/b_no_expression.cir": {
@@ -2087,6 +2331,48 @@
    "line": 2
   }
  },
+ "elements_rejects/n_flag.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/n_model_number.cir": {
+  "rkm": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 8,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/n_positional.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
  "elements_rejects/nested_braces.cir": {
   "rkm": {
    "column": 8,
@@ -2226,20 +2512,6 @@
     "`{expression}`",
     "number"
    ],
-   "line": 2
-  }
- },
- "elements_rejects/phase_2_letter.cir": {
-  "rkm": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 2
-  },
-  "standard": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
    "line": 2
   }
  },
@@ -2901,6 +3173,26 @@
    "nodes": 86
   }
  },
+ "osdi_devices/test_osdi_r2_cmc.cir": {
+  "rkm": {
+   "digest": "d2cf9eee3bc0337bde781f32f78c1fdae9d3abf12dba67edb0e7c8c47a89a3d9",
+   "nodes": 33
+  },
+  "standard": {
+   "digest": "d2cf9eee3bc0337bde781f32f78c1fdae9d3abf12dba67edb0e7c8c47a89a3d9",
+   "nodes": 33
+  }
+ },
+ "osdi_devices/test_osdi_r2_cmc_subckt.cir": {
+  "rkm": {
+   "digest": "9322da84dacd09990169a2c132f4d57799fa9c4ff2b1d8c7410b536f751d842a",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "9322da84dacd09990169a2c132f4d57799fa9c4ff2b1d8c7410b536f751d842a",
+   "nodes": 44
+  }
+ },
  "statements_basic/analyses.cir": {
   "rkm": {
    "digest": "e330ac3df71f63eadc84dcbb0ffa99ff36fc5c7d1a35e443489f3a6677a6a61f",
@@ -3167,6 +3459,34 @@
    "line": 3
   }
  },
+ "statements_rejects/model_vector_comma.cir": {
+  "rkm": {
+   "column": 31,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 31,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "statements_rejects/model_vector_on_builtin.cir": {
+  "rkm": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 16,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
  "statements_rejects/model_without_type.cir": {
   "rkm": {
    "column": 10,
@@ -3309,6 +3629,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -3335,6 +3656,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3365,6 +3687,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -3391,6 +3714,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3545,12 +3869,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3581,12 +3907,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3655,12 +3983,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3691,12 +4021,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3729,12 +4061,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3765,12 +4099,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3803,12 +4139,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3839,12 +4177,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3895,11 +4235,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3930,11 +4272,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -3985,11 +4329,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4020,11 +4366,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4046,20 +4394,6 @@
     "voltage-controlled switch (`S`)",
     "voltage-controlled voltage source (`E`)"
    ],
-   "line": 2
-  }
- },
- "structure_rejects/element_line.cir": {
-  "rkm": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 2
-  },
-  "standard": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
    "line": 2
   }
  },
@@ -4093,11 +4427,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4128,11 +4464,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4165,11 +4503,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4200,11 +4540,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4273,12 +4615,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4309,12 +4653,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4347,12 +4693,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4383,12 +4731,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4439,6 +4789,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -4466,6 +4817,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4496,6 +4848,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -4523,6 +4876,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4573,11 +4927,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4608,11 +4964,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4645,11 +5003,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4680,11 +5040,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4717,11 +5079,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4752,11 +5116,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4789,11 +5155,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4824,11 +5192,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4879,6 +5249,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -4905,6 +5276,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",
@@ -4935,6 +5307,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "OSDI device (`N`)",
     "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
@@ -4961,6 +5334,7 @@
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
+    "code model (`A`)",
     "comment line (`*`)",
     "coupled transmission line (`P`)",
     "coupling (`K`)",

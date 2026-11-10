@@ -427,6 +427,14 @@ def test_an_inductor_loop_stops_ltspice_without_an_error_line(
     netlist(text)
 
 
+def test_the_former_planned_letter_line_now_loads_and_runs(solver: Solver, tmp_path: Path) -> None:
+    # Until M17, elements_rejects/phase_2_letter.cir held this A line as an unsupported letter
+    # (decision 0020 item 10).
+    text = "M8 reject\nA1 a 0 0 0 0 b 0 0 BUF\nV1 a 0 1\nR1 b 0 1k\n.op\n.end\n"
+    assert run(solver, tmp_path, text).ok
+    assert netlist(text).element("A1") is not None
+
+
 # Every reject fixture, with a load, a model and an analysis added so that only the fixture's own
 # construct can stop LTspice.
 
@@ -435,8 +443,7 @@ _ADDED = (
     b".param x=1 name=1\n.op\n"
 )
 LTSPICE_RUNS = {
-    # Unsupported in phase 1.
-    "elements_rejects/phase_2_letter.cir",
+    # A named v1 exclusion (decision 0020 item 11).
     "statements_rejects/machine_block.cir",
     # Rows of discrepancies.md.
     "elements_rejects/resistor_keyword_value.cir",
@@ -458,6 +465,9 @@ LTSPICE_RUNS = {
     "elements_rejects/t_ic.cir",
     "elements_rejects/t_no_length.cir",
     "statements_rejects/ltra_flags.cir",
+    # M17 (decision 0020): forms LTspice runs that the reference does not show.
+    "elements_rejects/a_bare_param.cir",
+    "elements_rejects/fra_zm_twice.cir",
 }
 _REJECTS = sorted(
     path

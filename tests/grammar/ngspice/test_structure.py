@@ -248,12 +248,19 @@ def test_backslashes_that_do_not_end_a_statement_line_are_text(
     assert isinstance(result.items[2], End)
 
 
-# M16 (decision 0019) made T a supported letter; A stays planned until M17.
-@pytest.mark.parametrize("continued", ["A1 a 0 \\\\\nb 0 amod", "A1 a 0\n+ b 0 amod"])
+# No letter is planned after M17 (decision 0020 item 10): a mocked matrix marks "Ω", which has
+# no grammar rule, as planned.
+_PLANNED = {"Ω": {"status": "planned", "phase": 2, "milestone": "M99"}}
+
+
+@pytest.mark.parametrize("continued", ["Ω1 a 0 \\\\\nb 0 amod", "Ω1 a 0\n+ b 0 amod"])
 def test_continued_element_line_is_reported_at_its_first_line(continued: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
+    with (
+        patch("netlistmod.grammar.loader.device_matrix", return_value=_PLANNED),
+        pytest.raises(UnsupportedConstruct) as captured,
+    ):
         _parse(f"title\n{continued}\n.end\n")
-    assert captured.value.construct == "ngspice A device"
+    assert captured.value.construct == "ngspice Ω device"
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
@@ -520,16 +527,15 @@ def test_stray_block_closers_are_rejected(closer: str) -> None:
     assert captured.value.excerpt == closer + "\n^"
 
 
-PHASE_2_LETTERS = sorted(set(string.ascii_uppercase) - set("RCLKVIDXQMJZEFGHSWBTOUYP"))
-
-
-@pytest.mark.parametrize("letter", PHASE_2_LETTERS)
-def test_element_lines_are_positioned_unsupported_constructs(letter: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(f"title\n{letter}1 a b 1k\n.end\n")
-    assert captured.value.construct == f"ngspice {letter} device"
+def test_a_planned_element_line_is_a_positioned_unsupported_construct() -> None:
+    with (
+        patch("netlistmod.grammar.loader.device_matrix", return_value=_PLANNED),
+        pytest.raises(UnsupportedConstruct) as captured,
+    ):
+        _parse("title\nΩ1 a b 1k\n.end\n")
+    assert captured.value.construct == "ngspice Ω device"
     assert (captured.value.line, captured.value.column) == (2, 1)
-    assert captured.value.excerpt == f"{letter}1 a b 1k\n^"
+    assert captured.value.excerpt == "Ω1 a b 1k\n^"
 
 
 def test_unknown_letter_is_parse_error_and_device_matrix_is_complete() -> None:
@@ -544,10 +550,10 @@ def test_unknown_letter_is_parse_error_and_device_matrix_is_complete() -> None:
 def test_device_letter_with_error_status_remains_parse_error() -> None:
     with patch(
         "netlistmod.grammar.loader.device_matrix",
-        return_value={"A": {"status": "error"}},
+        return_value={"Ω": {"status": "error"}},
     ):
         with pytest.raises(ParseError) as captured:
-            _parse("title\nA1 a b 1k\n.end\n")
+            _parse("title\nΩ1 a b 1k\n.end\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 

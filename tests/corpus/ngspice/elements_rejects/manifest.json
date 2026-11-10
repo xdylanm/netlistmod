@@ -125,13 +125,6 @@
       "error": "ParseError",
       "note": "braces do not nest"
     },
-    "phase_2_letter.cir": {
-      "sha256": "86c78c597b48ea47f14c539c28cc8aca6a35b6bf499d5c955dc4521be000f785",
-      "line": 2,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "unsupported letter"
-    },
     "e_two_values.cir": {
       "sha256": "5d0a772799ba571579880b52bc456a59ee54d6b98aad3e6fde01c5f5950bc5eb",
       "line": 13,
@@ -390,6 +383,69 @@
       "column": 18,
       "error": "ParseError",
       "note": "m= on P, which ngspice ignores"
+    },
+    "a_param_on_instance.cir": {
+      "sha256": "3d24038a95530b16c9f3d62622ea81c0ef8d09ca141628a53a49dd3688659adc",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "a name=value on an A line (ngspice stops)"
+    },
+    "a_vector_comma.cir": {
+      "sha256": "a79df72a216b927e61436d8f6ae7d1b4632f7a330ae900f6bc000bae0fdb6bd1",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a comma inside a vector port (ngspice runs it)"
+    },
+    "a_tilde_blank.cir": {
+      "sha256": "5829b327f14b8052e34c6680119248a365c8ad427e8d0618ef1b57c469d4c8e0",
+      "line": 2,
+      "column": 4,
+      "error": "ParseError",
+      "note": "~ before a blank (ngspice runs it)"
+    },
+    "a_model_number.cir": {
+      "sha256": "017979bb065654d9546bed4d0b91775332076ef4f7d8c98bdddac7e3381186be",
+      "line": 2,
+      "column": 11,
+      "error": "ParseError",
+      "note": "a number as an A line's model (ngspice stops)"
+    },
+    "a_paren_comma.cir": {
+      "sha256": "2377b2820fe7b5cdf2a3f68be79e0fa8a085b6116b03d394957a0f80bd16f605",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a comma inside a connection's parentheses (ngspice runs it)"
+    },
+    "a_vnam_in_vector.cir": {
+      "sha256": "86e950e5dc86bdd445f2f43be2b4e4982617b291f4e181136d1072a40ae6d9b3",
+      "line": 2,
+      "column": 5,
+      "error": "ParseError",
+      "note": "%vnam inside a vector (ngspice stops)"
+    },
+    "n_positional.cir": {
+      "sha256": "1155bc9e842c8751dc806d56f490e04b54abe7e957f2b4639ce1d837dfec8fdf",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "a positional value after an N line's model (ngspice stops)"
+    },
+    "n_flag.cir": {
+      "sha256": "51112334812a2b914d34d1a14a2560006f1479044a330e0d78990b11f841bfeb",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "off on an N line (ngspice stops)"
+    },
+    "n_model_number.cir": {
+      "sha256": "e81b0b600a1ef0b40c438eb07b0b00eae0ebe5ef7cd4133ac05e0b45f0459025",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a number as an N line's model (ngspice stops)"
     }
   }
 }

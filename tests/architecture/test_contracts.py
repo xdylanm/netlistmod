@@ -16,7 +16,12 @@ from lark import Lark
 from lark.exceptions import LexError
 
 from netlistmod.dialects import Dialect
-from netlistmod.grammar.loader import build_parser, pending_dialects, registered_dialects
+from netlistmod.grammar.loader import (
+    build_parser,
+    device_matrix,
+    pending_dialects,
+    registered_dialects,
+)
 
 ROOT = Path(__file__).parents[2]
 SOURCE = ROOT / "src" / "netlistmod"
@@ -369,3 +374,11 @@ def test_no_message_cites_an_internal_document() -> None:
         if _INTERNAL_CITATION.search(text)
     ]
     assert not found
+
+
+@pytest.mark.parametrize("dialect", sorted(Dialect, key=lambda item: item.value))
+def test_no_device_letter_is_planned(dialect: Dialect) -> None:
+    # M17's exit and M18's audit item (decision 0020 item 10): every letter is supported, or an
+    # error for a letter the dialect does not have.
+    matrix = device_matrix(dialect)
+    assert [letter for letter, entry in matrix.items() if entry["status"] == "planned"] == []

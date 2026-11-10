@@ -1,0 +1,28 @@
+{
+  "family": "osdi_devices",
+  "origin": "ngspice OSDI netlists written for M17 (decision 0020), and a variant",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-10",
+  "notes": "pre_osdi names r2_cmc.osdi without a path; the solver sweep sets NGSPICE_OSDI_DIR to the install's lib/ngspice folder and skips with a reason when the model is not there. Provenance confirmed by the maintainer, 2026-11-10.",
+  "fixtures": {
+    "test_osdi_r2_cmc.cir": {
+      "sha256": "9240b37a9c0ae6178fc4269164f584c3bd1dc378b6e4727a0ab19fb11902ec86",
+      "note": "N with the r2_cmc OSDI model that ngspice 47 ships, one with m=2; pre_osdi r2_cmc.osdi in a .control block (base netlist, written for M17).",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    },
+    "test_osdi_r2_cmc_subckt.cir": {
+      "sha256": "ef3e5ebd7e8741a9a3621311dd30b93d6c736aba5aced8c387ba1d2782a3d7c0",
+      "note": "test_osdi_r2_cmc.cir with the N lines in a subcircuit and a braced length (variant).",
+      "solver": {
+        "osdi": [
+          "r2_cmc.osdi"
+        ]
+      }
+    }
+  }
+}

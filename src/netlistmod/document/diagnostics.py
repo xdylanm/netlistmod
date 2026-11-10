@@ -13,7 +13,7 @@ from typing import Literal
 
 from netlistmod.dialects import Dialect
 from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
-from netlistmod.document.models import allowed_model_types, model_type_allowed
+from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground
 from netlistmod.model.nodes import (
     Cccs,
@@ -176,17 +176,14 @@ def _reference_findings(
         and isinstance(owner, Component)
         and not model_type_allowed(owner, target.model_type, index.dialect)
     ):
-        allowed = ", ".join(
-            f"`{kind.upper()}`" for kind in sorted(allowed_model_types(owner, index.dialect))
-        )
         cited = " (ngspice manual §2.5)" if index.dialect is Dialect.NGSPICE else ""
         findings.append(
             (
                 DiagnosticCode.MODEL_TYPE_MISMATCH,
                 "warning",
                 f"`{owner.designator}` refers to model `{target.name}` of type "
-                f"`{target.model_type}`, but {element_phrase(owner)} takes a model of "
-                f"type {allowed}{cited}",
+                f"`{target.model_type}`, but {element_phrase(owner)} takes "
+                f"{model_type_requirement(owner, index.dialect)}{cited}",
                 reference.span,
             )
         )

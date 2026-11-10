@@ -128,3 +128,6 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-LTR-001](./specs/LT-LTR-001.yaml) | lossy transmission line (O) lines | validated | ltspice 26.1.1 (2026-11-09) |
 | [LT-TLL-001](./specs/LT-TLL-001.yaml) | lossless transmission line (T) lines | validated | ltspice 26.1.1 (2026-11-09) |
 | [LT-URC-001](./specs/LT-URC-001.yaml) | uniform RC line (U) lines | validated | ltspice 26.1.1 (2026-11-09) |
+| [LT-SPF-001](./specs/LT-SPF-001.yaml) | special function (A) lines | validated | ltspice 26.1.1 (2026-11-10) |
+| [LT-FRA-001](./specs/LT-FRA-001.yaml) | frequency response analyzer (@) lines | validated | ltspice 26.1.1 (2026-11-10) |
+| [LT-FRP-001](./specs/LT-FRP-001.yaml) | frequency response probe (&) lines | validated | ltspice 26.1.1 (2026-11-10) |

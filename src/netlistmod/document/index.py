@@ -36,12 +36,15 @@ from netlistmod.model.nodes import (
     Capacitor,
     Cccs,
     Ccvs,
+    CodeModelDevice,
     Component,
     ControlledSource,
     CoupledLine,
     CurrentSwitch,
     DcDirective,
     Diode,
+    FraProbe,
+    FrequencyAnalyzer,
     GlobalDirective,
     IcDirective,
     Inductor,
@@ -50,6 +53,7 @@ from netlistmod.model.nodes import (
     MutualCoupling,
     OpaqueBlock,
     OpaqueStatement,
+    OsdiDevice,
     ParamStatement,
     RcLine,
     Resistor,
@@ -68,6 +72,8 @@ from netlistmod.source import SourceText, Span
 _T = TypeVar("_T")
 # The transmission lines that refer to a model (T has none; decision 0019).
 _MODEL_LINES = LossyLine | RcLine | TxlLine | CoupledLine
+# The ngspice devices whose model may be any type that is not built in (decision 0020).
+_OPEN_MODEL = CodeModelDevice | OsdiDevice
 
 ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node"]
 """What a reference names: a ``.model``, a ``.subckt``, a parameter, a subcircuit default
@@ -308,7 +314,14 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         if (
             isinstance(
                 item,
-                Resistor | Capacitor | Inductor | Diode | Transistor | Switch | _MODEL_LINES,
+                Resistor
+                | Capacitor
+                | Inductor
+                | Diode
+                | Transistor
+                | Switch
+                | _MODEL_LINES
+                | _OPEN_MODEL,
             )
             and item.model is not None
         ):
@@ -320,10 +333,18 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
         # A new chain on purpose: a W line needs both its model reference above and this one.
-        if isinstance(item, Cccs | Ccvs | CurrentSwitch):
-            # The controlling sources, in the element's own scope only (decision 0015 item 4).
+        if isinstance(item, Cccs | Ccvs | CurrentSwitch | CodeModelDevice):
+            # The controlling sources, in the element's own scope only (decision 0015 item 4); an
+            # A line's %vnam sources are controlling references too (decision 0020 item 4).
             for source in item.control:
                 references.append(_element_reference(scope, item, source.designator, source.span))
+        elif isinstance(item, FraProbe):
+            references.append(_analyzer_reference(scope, item))
+        elif isinstance(item, FrequencyAnalyzer):
+            # refnode= and intnode= name nets the analyzer measures (decision 0020 item 7).
+            for net in (item.reference_net, item.intermediate_net):
+                if net is not None:
+                    references.append(_node_reference(scope, item, net.name, net.span))
         elif isinstance(item, MutualCoupling):
             for inductor in item.inductors:
                 references.append(
@@ -407,6 +428,24 @@ def _stepped_parameter(scope: Scope, name: str) -> StepDirective | None:
         ):
             return line.item
     return None
+
+
+def _analyzer_reference(scope: Scope, probe: FraProbe) -> Reference:
+    """The ``@`` a probe measures with: the one of its suffix in its scope, or else the scope's
+    only ``@``, which LTspice then uses (decision 0020 item 8)."""
+    reference = _element_reference(scope, probe, probe.analyzer.designator, probe.analyzer.span)
+    if reference.target is None:
+        analyzers = [
+            element
+            for elements in scope.elements.values()
+            for element in elements
+            if isinstance(element, FrequencyAnalyzer)
+        ]
+        if len(analyzers) == 1:
+            return Reference(
+                "element", reference.name, reference.span, scope.path, probe, analyzers[0]
+            )
+    return reference
 
 
 def _element_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:

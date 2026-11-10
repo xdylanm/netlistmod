@@ -207,12 +207,74 @@ on ngspice ([decision 0019](../decisions/0019-transmission-lines.md)). Each is a
   form must be given. LTspice T takes only `Zo=` (or `Z0=`) and `Td=`.
 - **O** takes four nodes and an LTRA model, and nothing after it.
 - **U** is a URC line: three nodes, a URC model, `l=` (required) and `n=`. Any other ngspice U
-  line is the digital U, which raises `UnsupportedConstruct` until M17.
+  line is the digital U, which raises `UnsupportedConstruct`: it is out of scope for v1.
 - **Y** and **P** take an optional `len=`. Their reference nodes (Y's second and fourth, and
   each P port's last) must be ground, since ngspice ignores them. P holds one to eight lines:
   2X+2 nodes, then the model.
 - **`.model`:** an ngspice LTRA model takes LTRA's flags (`nosteplimit` and the others of
   §6.2.1), and a CPL model's `R=`, `L=`, `G=` and `C=` take a list of values (a `ValueList`).
+
+## Code models, OSDI devices and frequency analysis
+
+ngspice's A lines are XSPICE code models and its N lines OSDI (Verilog-A) devices; LTspice's A
+lines are special functions, `@` its frequency response analyzer and `&` the analyzer's probe
+([decision 0020](../decisions/0020-special-and-mixed-signal-devices.md)).
+
+```python
+>>> from netlistmod import CodeModelDevice
+>>> text = (
+...     "t\nV1 in 0 1\nVs in x 0\na1 %v [in1 %vd(in2 0)] out sum\na2 %vnam Vs [~d null] g\n"
+...     "N1 out 0 rmod w=1u\n.model sum summer(in_gain=[2.0 1.0] fraction=FALSE)\n"
+...     ".model rmod r2_cmc(rsh=200)\n.end\n"
+... )
+>>> netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
+>>> a1 = netlist.element("a1")
+>>> isinstance(a1, CodeModelDevice), [node.name for node in a1.nodes], a1.model.model_name
+(True, ['in1', 'in2', '0', 'out'], 'sum')
+>>> [(c.port_type, [n.name for n in c.nodes]) for c in a1.ports[0].connections]
+[(None, ['in1']), ('%vd', ['in2', '0'])]
+>>> a2 = netlist.element("a2")
+>>> [s.designator for s in a2.control], [(c.inverted, c.null) for c in a2.ports[1].connections]
+(['Vs'], [(True, False), (False, True)])
+>>> netlist.models["sum"][0].params[0].value.text
+'[2.0 1.0]'
+>>> netlist.element("N1").model.model_name
+'rmod'
+
+```
+
+- **ngspice A** writes its ports, then its model, the last name. A port is a connection or a
+  vector `[ … ]`; a connection is an optional port type (`%v`, `%i`, `%vd` … of Table 8.1) and its
+  node, two for a differential type, with or without parentheses, or `null`, or `%vnam` and a
+  source. `~` inverts a digital node. `nodes` holds every node, without `null` and the `%vnam`
+  sources, which are controlling references like F's. A code model takes no parameter on its
+  line; its `.model` takes vectors, `TRUE` and `FALSE`, and quoted strings, which a built-in
+  type does not.
+- **N** writes its nodes, then the model, then the instance parameters. The library does not check
+  the node count or the parameter names, which the Verilog-A module defines; ngspice loads the
+  module with `pre_osdi` in a `.control` block.
+- **LTspice A** writes eight nodes, one of 13 function names (`BUF`, `AND`, `OR`, `XOR`,
+  `SCHMITT`, `DFLOP`, `SRFLOP`, `VARISTOR`, `MODULATOR`, `OTA`, `PHASEDET`, `COUNTER`,
+  `SAMPLEHOLD`; the reference's symbol names such as INV are not netlist names), then named
+  parameters.
+- **`@`** writes two nodes, then `zm` and the reference's parameters in any order; `flist=`,
+  `pp=`, `nmax=` and `ac=` take a list. `refnode=` and `intnode=` name nets the analyzer measures,
+  which are node references, not connections. **`&`** writes four nodes, and measures with the
+  `@` of its suffix (`&1` with `@1`).
+
+```python
+>>> lt = Netlist.from_text(
+...     "t\nA1 in 0 0 0 0 nq q 0 BUF Vhigh=5\n@1 in q fstart=1k fend=10k refnode=in\n"
+...     "&1 q 0 in 0\n.end\n",
+...     dialect=Dialect.LTSPICE,
+... )
+>>> a1 = lt.element("A1")
+>>> a1.function.name, [n.name for n in a1.outputs], a1.common.name
+('BUF', ['nq', 'q'], '0')
+>>> lt.element("@1").reference_net.name, lt.element("&1").analyzer.designator
+('in', '@1')
+
+```
 
 ## LTspice
 

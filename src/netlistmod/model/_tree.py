@@ -251,6 +251,15 @@ class _ModelParams:
 
 
 @dataclass(frozen=True, slots=True)
+class _CodeParam:
+    """A ``.model`` parameter written with a code model's value: a vector, ``TRUE`` or ``FALSE``,
+    or a quoted string (decision 0020 item 5). Only a type that is not built in takes one."""
+
+    param: ParamAssignment
+    form: Literal["vector", "boolean", "string"]
+
+
+@dataclass(frozen=True, slots=True)
 class _RParen:
     span: Span
 

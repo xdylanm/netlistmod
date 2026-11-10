@@ -29,15 +29,19 @@ from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     BehavioralSource,
     BipolarTransistor,
+    CodeModelDevice,
     Component,
     ControlledSource,
     CurrentSource,
     Diode,
+    FrequencyAnalyzer,
     Jfet,
     LosslessLine,
     LossyLine,
     Mesfet,
     ModelStatement,
+    OsdiDevice,
+    SpecialFunction,
     SubcktInstance,
     TransmissionLine,
     VoltageSource,
@@ -74,6 +78,11 @@ def remove_param(
             f"`{designator}` is a lossy transmission line and takes no parameter; its values are "
             "in its LTRA model (use remove_model_param)"
         )
+    if isinstance(element, CodeModelDevice):
+        raise EditError(
+            f"`{designator}` is a code model and takes no parameter on its line; a code model's "
+            "parameters are on its `.model` line (use remove_model_param)"
+        )
     takes = (
         *_TWO_TERMINAL,
         Diode,
@@ -83,6 +92,9 @@ def remove_param(
         TransmissionLine,
         VoltageSource,
         CurrentSource,
+        OsdiDevice,
+        SpecialFunction,
+        FrequencyAnalyzer,
     )
     if not isinstance(element, takes):
         raise EditError(f"`{designator}` is a {_kind(element)} line and takes no parameters")

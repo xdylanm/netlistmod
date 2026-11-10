@@ -1,0 +1,15 @@
+OSDI r2_cmc resistors in a subcircuit, with a braced length (netlistmod M17 variant)
+.param len=20u
+V1 in 0 1
+X1 in out pair
+Rl out 0 1k
+.subckt pair a b
+N1 a b rmod w=1u l={len}
+N2 b 0 rmod w=1u l={len} m=2
+.ends pair
+.model rmod r2_cmc(rsh=200)
+.control
+pre_osdi r2_cmc.osdi
+.endc
+.op
+.end

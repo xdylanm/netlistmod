@@ -1,0 +1,4 @@
+M17 reject
+a1 in out amp gain=2
+.model amp gain(gain=5)
+.end

@@ -111,7 +111,10 @@
     "lines_models.expected.net": "67f1484f1f80edc2cd0c1bcf84dac156e5f94e26f9a348e4efce9b30c2325015",
     "lines_remove.expected.net": "87daa8e917a350ddb4a4b67259b76b2570d919d98c191d8be6dccb182e799683",
     "lines_comments.net": "1d68c6c6f0c1254cd6d209ccd230538e6e7fb14c0be81773ef84e25b88b8c687",
-    "lines_comments.expected.net": "76022de9ee6bdcb1e9d7969a72269f35093ceb52993f6579ca61cf37743c6eb1"
+    "lines_comments.expected.net": "76022de9ee6bdcb1e9d7969a72269f35093ceb52993f6579ca61cf37743c6eb1",
+    "special.net": "54182c58f5255c3c862d4aea0515b983e81eecb9322fcb2f3bd071f56f1ebd8f",
+    "special_params.expected.net": "06b86c8781d9d643f9e17078601cb142bdba4251eb7d86fd9c305fc4fe26fcc2",
+    "special_remove.expected.net": "6c6fc4ec4588390e589f5c261791f9ee9cfb34f7b3d9311a91b721604af1ffc6"
   },
   "cases": {
     "set_value": {
@@ -184,7 +187,7 @@
       "steps": [
         [
           "set_instance_param",
-          "X\u00a7U2",
+          "X§U2",
           "rval",
           "2k2"
         ]
@@ -1071,6 +1074,69 @@
         ]
       ],
       "expected": "lines_comments.expected.net"
+    },
+    "special_params": {
+      "input": "special.net",
+      "steps": [
+        [
+          "set_param",
+          "A1",
+          "Vhigh",
+          "3.3"
+        ],
+        [
+          "set_param",
+          "A1",
+          "Trise",
+          "2n"
+        ],
+        [
+          "set_param",
+          "@1",
+          "fend",
+          "20k"
+        ],
+        [
+          "set_param",
+          "@1",
+          "flist",
+          "1k 10k"
+        ],
+        [
+          "set_param",
+          "@1",
+          "refnode",
+          "q"
+        ],
+        [
+          "set_param",
+          "@1",
+          "acmag",
+          "1"
+        ]
+      ],
+      "expected": "special_params.expected.net"
+    },
+    "special_remove": {
+      "input": "special.net",
+      "steps": [
+        [
+          "remove_param",
+          "A1",
+          "Td"
+        ],
+        [
+          "remove_param",
+          "@1",
+          "flist"
+        ],
+        [
+          "remove_param",
+          "@1",
+          "refnode"
+        ]
+      ],
+      "expected": "special_remove.expected.net"
     }
   }
 }

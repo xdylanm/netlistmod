@@ -1,0 +1,9 @@
+* special.net: M17 golden input, special functions and frequency analysis (netlistmod)
+V1 in 0 PULSE(0 5 0 10n 10n 100n 200n)
+A1 in 0 0 0 0 nq q 0 BUF Vhigh=5
+R1 q 0 1k
+R2 nq 0 1k
+@1 in q fstart=1k fend=10k
+&1 q 0 in 0
+.op
+.end

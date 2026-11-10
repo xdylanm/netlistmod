@@ -1,0 +1,4 @@
+M17 reject
+a1 [%vnam V1 in] out sum
+.model sum summer
+.end

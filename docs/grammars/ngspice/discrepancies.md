@@ -259,3 +259,19 @@ Decision 0019. Each evidence entry is a case of `tests/solver/test_ngspice_line_
 | Ignores any unknown bare word in a `.model` (`foobar` runs on LTRA and on D), so a run does not show that an LTRA flag is read. `lininterp` and `mixedinterp` change a `.tran` waveform; `nosteplimit`, `steplimit`, `nocontrol`, `truncnr` and `truncdontcut` give the same one in that probe. | The seven flags load on an LTRA model, and are a `ParseError` on any other type (decision 0019 item 8). | `test_which_ltra_flags_change_a_run`; `statements_rejects/ltra_flag_on_diode.cir` |
 | Runs a second value after a parameter outside a CPL matrix (`.model dm d is=1e-14 1e-15`) and ignores it. | `ParseError` at the second value: only the R, L, G and C matrices of a CPL model take a list (decision 0019 item 9). | `statements_rejects/cpl_list_on_diode.cir` |
 | Stops on a CPL model without one of its matrices ("lossy line parallel conductance not given"), or without `length=` even when the instance writes `len=`, and on a TXL model without `g=`. | Loads: model contents are not checked (decision 0019, section 1). `remove_model_param` may remove a matrix. | `edits_golden/lines_cpl_remove.expected.cir` (its manifest's `solver.skip`) |
+
+## Code model and OSDI observations (ngspice 47, 2026-11-10; M17)
+
+Decision 0020. Each evidence entry is a case of `tests/solver/test_ngspice_special_probes.py::test_code_model_probes` or `test_osdi_probes`; every circuit has `V1 in 0 1`, `Rin in 0 1k` and `Rl out 0 1k`, and `gain=5` gives 5 V.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Runs a comma inside a vector port (`[in, in]`) and inside a connection's parentheses (`%vd(in, 0)`); the manual writes blanks. | `ParseError` at the comma (decision 0020 item 4). | `vector-comma`, `vd-comma`; `elements_rejects/a_vector_comma.cir`, `elements_rejects/a_paren_comma.cir` |
+| Runs `~ d` (a blank after the tilde) on a digital node; the manual writes `~d`. | `ParseError` at the `~`. | `tilde-blank`; `elements_rejects/a_tilde_blank.cir` |
+| Runs a comma between a code model's vector values (`in_gain=[2.0, 1.0]`); the manual writes blanks. | `ParseError` at the comma (decision 0020 item 5). | `model-vector-comma`; `statements_rejects/model_vector_comma.cir` |
+| Runs `TRUE` and a quoted string on a built-in model type (`.model dm d(foo=TRUE)`), with only "Model issue" in the log, and ignores them. | `ParseError`: a vector, a boolean or a string is a code model's value, refused on a built-in type (decision 0020 item 5). | `model-true-on-d`; `statements_rejects/model_vector_on_builtin.cir` |
+| Stops on `%vnam` inside a vector ("unknown controlling source", naming the node after it). | `ParseError` at the `%vnam`. | `vnam-in-vector`; `elements_rejects/a_vnam_in_vector.cir` |
+| Stops on an A line without a model, on an A or N model of a built-in type ("Invalid model type for A type device"), on too many or the wrong ports, `null` where a port needs a node, and `~` on an analog port. | Loads, with `UNRESOLVED_MODEL` or `MODEL_TYPE_MISMATCH` for the model; ports are not checked, because a code model's interface is not visible to the library (decision 0020 item 4). | `no-model`, `builtin-model`, `tilde-analog`, `osdi-diode-model` |
+| Stops on three nodes on a two-terminal `r2_cmc`, an unknown instance parameter (`foo=1`), and an N line without `pre_osdi`. | Loads: the node count and the parameter names belong to the Verilog-A module (decision 0020 item 6). | `osdi-three-nodes`, `osdi-unknown`; `test_osdi_needs_pre_osdi` |
+| Runs one node on a two-terminal `r2_cmc` (`N1 out rmod`), leaving its second terminal open (0 V). | Loads, as one node. | `osdi-one-node` |
+| Ignores an `r2_cmc` model's `rsh=`: 0.3333 V with `rsh=100`, `200` or none; the instance's `l=` and `w=` move the result. | Loads; model contents are not checked. | `test_an_osdi_edit_moves_the_result` (its comment) |

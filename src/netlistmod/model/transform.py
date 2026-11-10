@@ -36,6 +36,7 @@ from netlistmod.model._rules_behavioral import BehavioralRules
 from netlistmod.model._rules_lines import LinesRules
 from netlistmod.model._rules_nonlinear import NonlinearRules
 from netlistmod.model._rules_sources import SourcesRules
+from netlistmod.model._rules_special import SpecialRules
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._rules_structure import StructureRules
 from netlistmod.model.nodes import (
@@ -49,6 +50,7 @@ class _NodeBuilder(
     SourcesRules,
     NonlinearRules,
     BehavioralRules,
+    SpecialRules,
     LinesRules,
     StatementsRules,
     Transformer[Token, ParseResult],

@@ -71,19 +71,24 @@ the netlist ends at `.end`: only blank lines may follow it
 
 ### `UnsupportedConstruct`
 
-The dialect has this construct, but the library does not support it yet. It is separate from `ParseError` so that a caller can tell "not yet" from "wrong".
+The dialect has this construct, but the library does not support it. It is separate from `ParseError` so that a caller can tell "not supported" from "wrong". Since M17 every device letter is supported, and two constructs are named exclusions of v1 (decision 0020 items 1 and 11): the ngspice digital U and LTspice's `.machine`.
 
 ```python
 >>> from netlistmod import UnsupportedConstruct
 >>> try:
-...     parse(SourceText("title\nA1 in out amod\n.end\n"), Dialect.NGSPICE)
+...     parse(SourceText("title\nU1 inv vdd vss a y d0 dmio\n.end\n"), Dialect.NGSPICE)
 ... except UnsupportedConstruct as error:
-...     print(error.line, error.column)
-2 1
+...     print(error.line, error.column, error.construct)
+2 1 ngspice digital U device, out of scope for v1
+>>> try:
+...     parse(SourceText("title\n.machine\n.state s0 0\n.endmachine\n.end\n"), Dialect.LTSPICE)
+... except UnsupportedConstruct as error:
+...     print(error.construct)
+LTspice .machine state machine, out of scope for v1
 
 ```
 
-**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, the dependent sources and switches E, F, G, H, S and W, B, and the transmission lines T, O and U (and on ngspice Y and P), with DC, AC and source functions. An ngspice U line that is not a URC line is the digital U, unsupported until M17. Other letters wait for later phase 2 milestones; ngspice's `LAPLACE` is a `ParseError`, because ngspice does not offer it. There is no way to skip the line.
+**What to do:** the library supports every device letter of both dialects: R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, the dependent sources and switches E, F, G, H, S and W, B, the transmission lines T, O and U (and on ngspice Y and P), ngspice's code models (A) and OSDI devices (N), and LTspice's special functions (A), frequency response analyzer (`@`) and probe (`&`). An ngspice U line that is not a URC line is the digital U: its libraries are written for PSpice compatibility mode, where `$` is a name character, so v1 does not read it. Rewrite it with XSPICE code models (A lines), or keep it in a file the netlist includes, which the library does not read; do the same with a `.machine` block. ngspice's `LAPLACE` is a `ParseError`, because ngspice does not offer it. There is no way to skip the line.
 
 ### `EditError`
 

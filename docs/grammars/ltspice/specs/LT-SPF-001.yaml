@@ -1,0 +1,33 @@
+id: LT-SPF-001
+dialect: ltspice
+construct: special function (A) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "A — Special Functions"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-10'
+grammar:
+- body_line
+- special_function
+- sf_function
+- sf_other
+- _sf_tail
+- sf_param
+- sf_extra
+- SF_FUNCTION_KW
+- A_NAME
+core_rules:
+- node
+tests:
+- tests/grammar/ltspice/test_ltspice_special.py::test_each_function_name_loads
+- tests/grammar/ltspice/test_ltspice_special.py::test_parameters_are_open_and_may_be_comma_separated
+- tests/grammar/ltspice/test_ltspice_special.py::test_refused_special_function_lines
+- tests/grammar/ltspice/test_ltspice_special.py::test_seven_nodes_end_the_line_too_early
+- tests/document/test_special_topology.py::test_special_function_and_probe_nodes_are_connections
+- tests/document/test_special_topology.py::test_changing_any_node_is_a_topology_violation_on_lt_lines
+- tests/solver/test_ltspice_special_probes.py::test_special_function_probes
+- tests/solver/test_ltspice_special_probes.py::test_vhigh_moves_the_output
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Eight nodes, the function, then named parameters (decision 0020 items 3 and 7). The function is one of the 13 names LTspice''s own symbols write (BUF, AND, OR, XOR, SCHMITT, DFLOP, SRFLOP, VARISTOR, MODULATOR, OTA, PHASEDET, COUNTER, SAMPLEHOLD), any case: an exception to decision 0002, because the reference''s symbol names (INV, SCHMTBUF, SCHMTINV, MODULATE) stop LTspice; another name is refused with the name its symbol writes. Parameter names are open (LTspice stops on an unknown one), in LTspice''s value slot, with a comma allowed before one. Refused: a bare name in a value (LTspice runs it: write braces), a positional value, a flag, seven or nine nodes (LTspice stops). Which parameters a function needs (COUNTER cycles=, MODULATOR mark=) is not checked.'

@@ -13,7 +13,7 @@ core_rules:
 - body_line
 tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_ngspice_source_functions_are_not_ltspice_syntax
-- tests/grammar/ltspice/test_ltspice_elements.py::test_phase_2_letters_are_unsupported
+- tests/grammar/ltspice/test_ltspice_elements.py::test_a_planned_letter_is_unsupported
 - tests/solver/test_ltspice_validation.py::test_ngspice_source_functions_stop_ltspice
 - tests/solver/test_ltspice_validation.py::test_letters_that_are_not_ltspice_letters_stop_both
-notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms of M15b (POLY, table=, Laplace=) and B''s laplace= load since decision 0017 (LT-PLY-001, LT-TBL-001, LT-LAP-001). T, O and U load since decision 0019 (LT-TLL-001, LT-LTR-001, LT-URC-001); A, @ and & stay planned until M17.'
+notes: 'A planned letter: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms of M15b (POLY, table=, Laplace=) and B''s laplace= load since decision 0017 (LT-PLY-001, LT-TBL-001, LT-LAP-001). T, O and U load since decision 0019 (LT-TLL-001, LT-LTR-001, LT-URC-001); A, @ and & load since decision 0020 (LT-SPF-001, LT-FRA-001, LT-FRP-001), so no letter is planned, and the planned-letter path is tested on a mocked device matrix (decision 0020 item 10).'

@@ -19,4 +19,5 @@ grammar:
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_machine_block_is_unsupported
 - tests/solver/test_ltspice_validation.py::test_a_state_machine_runs_and_is_unsupported
-notes: Matched as a block only to raise UnsupportedConstruct (decision 0009 item 5).
+- tests/solver/test_ltspice_special_probes.py::test_a_state_machine_stays_unsupported
+notes: 'Matched as a block only to raise UnsupportedConstruct (decision 0009 item 5). A named v1 exclusion (decision 0020 item 11): the message says "out of scope for v1".'

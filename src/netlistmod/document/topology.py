@@ -25,6 +25,7 @@ from netlistmod.document.names import GROUND, is_automatic_global, is_ground, ne
 from netlistmod.model.nodes import (
     Cccs,
     Ccvs,
+    CodeModelDevice,
     Component,
     CurrentSwitch,
     GlobalDirective,
@@ -89,7 +90,8 @@ class TopologySignature:
     Entries hold the exact text of every topology token: each element's scope, designator,
     type and ordered nodes; each definition's name and ordered ports; each ``X`` line's nodes
     and subcircuit name; each ``K`` line's inductors; each F, H and W line's controlling
-    source; and the ``.global`` node set.
+    source; each ngspice A line's port structure and ``%vnam`` sources; and the ``.global`` node
+    set.
     """
 
     entries: tuple[SignatureEntry, ...]
@@ -269,8 +271,33 @@ def _signature_entries(scope: Scope, entries: list[SignatureEntry]) -> None:
         elif isinstance(item, Component):
             nodes = tuple(node.name for node in item.nodes)
             entries.append(("element", scope.display, item.designator, type(item).__name__, nodes))
-            if isinstance(item, Cccs | Ccvs | CurrentSwitch):
+            if isinstance(item, CodeModelDevice):
+                # The port structure (decision 0020 item 4): without it, `[a null] b` and
+                # `[null a] b` would have the same nodes.
+                entries.append(("ports", scope.display, item.designator, _port_structure(item)))
+            if isinstance(item, Cccs | Ccvs | CurrentSwitch | CodeModelDevice):
                 # A controlling source is topology but not a net (decision 0015 item 3): one
                 # entry for each, in line order (decision 0017 item 2).
                 for source in item.control:
                     entries.append(("control", scope.display, item.designator, source.designator))
+
+
+def _port_structure(item: CodeModelDevice) -> tuple[object, ...]:
+    """Each port's position, whether it is a vector and its type, and each connection's type,
+    nodes and ``null``, as written. ``~`` is left out: it inverts a value, not a connection."""
+    return tuple(
+        (
+            position,
+            port.vector,
+            port.port_type,
+            tuple(
+                (
+                    connection.port_type,
+                    tuple(node.name for node in connection.nodes),
+                    connection.null,
+                )
+                for connection in port.connections
+            ),
+        )
+        for position, port in enumerate(item.ports)
+    )

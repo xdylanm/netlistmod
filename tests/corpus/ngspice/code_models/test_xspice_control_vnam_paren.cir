@@ -1,0 +1,15 @@
+XSPICE source-current input written %vnam(Vs), and limit with fraction=true (netlistmod M17 variant)
+V1 in 0 1
+Vs in a 0
+R1 a 0 1k
+a1 %vnam(Vs) out1 amp
+a2 in %i(out2) amp_i
+a3 in out3 lim
+Rl1 out1 0 1k
+Rl2 out2 0 1k
+Rl3 out3 0 1k
+.model amp gain(gain=1000)
+.model amp_i gain(gain=1m)
+.model lim limit(gain=5 out_lower_limit=0 out_upper_limit=3 fraction=true)
+.op
+.end

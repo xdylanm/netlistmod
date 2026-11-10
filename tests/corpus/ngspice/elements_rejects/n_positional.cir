@@ -1,0 +1,4 @@
+M17 reject
+N1 a b rmod 5
+.model rmod r2_cmc
+.end

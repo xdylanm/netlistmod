@@ -38,6 +38,8 @@ _MOST_CONDUCTORS = 8
 # What the IC= of an ngspice T holds: V1, I1, V2 and I2 (§6.1).
 _IC_VALUES = 4
 _IMPEDANCE = frozenset({"z0", "zo"})
+# The construct an ngspice U line of any shape but a URC line's raises (decision 0020 item 1).
+DIGITAL_U = "ngspice digital U device, out of scope for v1"
 
 
 @dataclass(frozen=True, slots=True)
@@ -212,7 +214,7 @@ class LinesRules(ElementsRules):
         self, element: _Element, words: tuple[_UWord, ...]
     ) -> tuple[tuple[Node, ...], ModelReference]:
         """Classify an ngspice U line (decision 0019): three nodes and a model is a URC line, and
-        any other shape is the digital U of M17."""
+        any other shape is the digital U, which is out of scope for v1 (decision 0020 item 1)."""
         tokens = [word.token for word in words]
         shaped = not any("(" in str(token) or ")" in str(token) for token in tokens)
         if shaped and len(tokens) == 5 and _reads_as_number(str(tokens[4])):
@@ -224,7 +226,7 @@ class LinesRules(ElementsRules):
         if shaped and len(tokens) == 5 and str(tokens[4]).lower() == "off":
             raise self._parse_error(tokens[4], "`off`: a URC line takes no flag")
         if not shaped or len(tokens) != 4:
-            raise self._unsupported(element.designator, "ngspice digital U device")
+            raise self._unsupported(element.designator, DIGITAL_U)
         other = element.optional(_UOther)
         if other is not None:
             raise self._parse_error(

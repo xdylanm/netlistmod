@@ -3,7 +3,7 @@
 This runs the ``-netlist`` switch on every run and shows LTspice version drift. The exports are
 compared after the one normalisation ``docs/usage/ltspice-export.md`` describes: the absolute path
 in the first comment becomes the file name. It covers ``contributed_examples`` and, since M16, the
-maintainer's ``transmission_lines`` schematics.
+maintainer's ``transmission_lines`` schematics, and since M17 the ``special_functions`` ones.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ from tests.support.solvers import Solver, run_ltspice
 
 CORPUS = Path(__file__).parent / "corpus" / "ltspice"
 FAMILY = CORPUS / "contributed_examples"
-FAMILIES = (FAMILY, CORPUS / "transmission_lines")
+FAMILIES = (FAMILY, CORPUS / "transmission_lines", CORPUS / "special_functions")
 SCHEMATICS = sorted(
     path.with_suffix(".asc") for family in FAMILIES for path in family.glob("*.net")
 )
@@ -60,7 +60,11 @@ def test_every_export_has_its_schematic_in_the_family() -> None:
     for schematic in SCHEMATICS:
         manifest = json.loads((schematic.parent / "manifest.json").read_text(encoding="utf-8"))
         assert schematic.name in manifest["fixtures"]
-    unexported = {"contributed_examples": {"r_subckt"}, "transmission_lines": set()}
+    unexported = {
+        "contributed_examples": {"r_subckt"},
+        "transmission_lines": set(),
+        "special_functions": set(),
+    }
     for family in FAMILIES:
         stems = {path.stem for path in family.glob("*.asc")}
         assert stems - {p.stem for p in SCHEMATICS} == unexported[family.name]

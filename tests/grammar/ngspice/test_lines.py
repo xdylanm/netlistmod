@@ -184,7 +184,7 @@ def test_u_is_a_urc_line_with_four_names(line: str, params: list[tuple[str, str]
 def test_any_other_u_shape_is_the_digital_u(line: str) -> None:
     with pytest.raises(UnsupportedConstruct) as captured:
         parse(SourceText(f"title\n{line}\n.end\n"), Dialect.NGSPICE)
-    assert captured.value.construct == "ngspice digital U device"
+    assert captured.value.construct == "ngspice digital U device, out of scope for v1"
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 

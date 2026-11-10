@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 
@@ -528,10 +529,13 @@ def test_nonlinear_forms_load(line: str) -> None:
     assert element.value is None
 
 
-@pytest.mark.parametrize("letter", list("A@&"))
-def test_phase_2_letters_are_unsupported(letter: str) -> None:
-    error = _unsupported(f"{letter}1 a b c")
-    assert f"LTspice {letter} device" in str(error)
+def test_a_planned_letter_is_unsupported() -> None:
+    # No letter is planned after M17 (decision 0020 item 10): a mocked matrix marks N, which has
+    # no LTspice grammar rule, as planned.
+    planned = {"N": {"status": "planned", "phase": 2, "milestone": "M99"}}
+    with patch("netlistmod.grammar.loader.device_matrix", return_value=planned):
+        error = _unsupported("N1 a b c")
+    assert "LTspice N device" in str(error)
     assert (error.line, error.column) == (2, 1)
 
 
@@ -547,7 +551,7 @@ def test_the_device_matrix_matches_its_document() -> None:
     )
     assert matrix == packaged
     supported = {k for k, v in matrix.items() if v["status"] == "supported"}
-    assert supported == set("RCLVIDXKQMJZEFGHSWBTOU")
+    assert supported == set("RCLVIDXKQMJZEFGHSWBTOUA@&")
 
 
 def test_param_assignment_spans_slice_back() -> None:
