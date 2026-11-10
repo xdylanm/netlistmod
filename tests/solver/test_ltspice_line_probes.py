@@ -97,7 +97,7 @@ _PROBES = {
     "u-lower": ("U1 a b 0 umod l=5", True, "RcLine 3 umod l=5"),
     "u-n": ("U1 a b 0 umod L=5 N=6", True, "RcLine 3 umod L=5 N=6"),
     "u-braced": ("U1 a b 0 umod L={len*5}", True, "RcLine 3 umod L=len*5"),
-    "u-bare": ("U1 a b 0 umod L=len", True, "RcLine 3 umod L=len"),
+    "u-bare": ("U1 a b 0 umod L=len", True, "refused"),
     "u-inv": ("U1 inv b 0 umod L=5\nR3 a inv 1m", True, "RcLine 3 umod L=5"),
     "u-no-l": ("U1 a b 0 umod", False, "refused"),
     "u-n-only": ("U1 a b 0 umod N=6", False, "refused"),

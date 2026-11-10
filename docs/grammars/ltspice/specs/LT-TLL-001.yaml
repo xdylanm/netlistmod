@@ -17,6 +17,7 @@ grammar:
 - T_PARAM_KW
 - T_UNLISTED_KW
 - T_NAME
+- LINE_BARE
 core_rules:
 - node
 - eol
@@ -24,6 +25,7 @@ tests:
 - tests/grammar/ltspice/test_ltspice_lines.py::test_t_takes_zo_and_td
 - tests/grammar/ltspice/test_ltspice_lines.py::test_refused_t_lines_name_the_rule
 - tests/grammar/ltspice/test_ltspice_lines.py::test_other_t_forms_are_syntax_errors
+- tests/grammar/ltspice/test_ltspice_lines.py::test_a_bare_name_in_a_value_is_refused
 - tests/solver/test_ltspice_line_probes.py::test_line_probes
 - tests/solver/test_ltspice_line_probes.py::test_what_ltspice_computes_in_ac
 - tests/solver/test_ltspice_line_probes.py::test_an_edit_moves_the_result

@@ -176,7 +176,13 @@ def test_ltra_flags_stay_as_written() -> None:
         (".model lm LTRA(R=10 len=1)", ("lm", "len"), ".model lm LTRA(R=10)"),
         (".model dm D(Is=1e-14)", ("dm", "is"), ".model dm D()"),
         (".model dm D Is=1e-14 N=2", ("dm", "Is"), ".model dm D N=2"),
-        (".model dm D(Is=1e-14\n+ N=2)", ("dm", "N"), ".model dm D(Is=1e-14)"),
+        (".model dm D(Is=1e-14\n+ N=2)", ("dm", "N"), ".model dm D(Is=1e-14\n+ )"),
+        (".model dm D(Is=1e-14 ; sat\n+ N=2)", ("dm", "N"), ".model dm D(Is=1e-14 ; sat\n+ )"),
+        (
+            ".model dm D Is=1e-14\n+ Rs=10 ; series\n+ N=1",
+            ("dm", "Rs"),
+            ".model dm D Is=1e-14 ; series\n+ N=1",
+        ),
         (".model dm D(Is=1e-14\n+ N=2 Rs=1)", ("dm", "N"), ".model dm D(Is=1e-14\n+ Rs=1)"),
     ],
 )
@@ -186,10 +192,13 @@ def test_remove_model_param(before: str, edit: tuple[str, str], after: str) -> N
     assert edited.source.text == f"title\nR1 a 0 1\n{after}\n.end\n"
 
 
-def test_remove_model_param_refuses_a_comment_beside_the_field() -> None:
-    netlist = _netlist("title\nR1 a 0 1\n.model dm D(Is=1e-14 ; c\n+ N=2)\n.end\n")
-    with pytest.raises(EditError, match="a comment stands beside the field"):
-        netlist.remove_model_param("dm", "Is")
+def test_remove_model_param_keeps_a_comment_beside_the_field() -> None:
+    # Review R1: a comment only ends a physical line, so the removal never holds one.
+    netlist = _netlist("title\nR1 a 0 1\n.model dm D Is=1e-14 ; c\n+ N=2\n.end\n")
+    edited = netlist.remove_model_param("dm", "N")
+    assert edited.source.text == "title\nR1 a 0 1\n.model dm D Is=1e-14 ; c\n.end\n"
+    edited = netlist.remove_model_param("dm", "Is")
+    assert edited.source.text == "title\nR1 a 0 1\n.model dm D ; c\n+ N=2\n.end\n"
 
 
 # remove_param on every family that takes a named parameter (decision 0019 item 11).
@@ -205,6 +214,18 @@ _BOTH_REMOVALS = [
     ("R1 a 0 1k m=2\n+ temp=30", "temp", "R1 a 0 1k m=2"),
     ("R1 a 0 1k\n+ m=2 temp=30", "m", "R1 a 0 1k\n+ temp=30"),
     ("R1 a 0 1k m=2 ; note", "m", "R1 a 0 1k ; note"),
+    # Review R1: the removed span follows where the field sits on its physical line, and a
+    # comment after a field that is alone on its line moves to the end of the line before.
+    ("R1 a 0 1k m=2 tc1=0 ; note", "m", "R1 a 0 1k tc1=0 ; note"),
+    ("R1 a 0 1k ; note\n+ m=2", "m", "R1 a 0 1k ; note"),
+    ("R1 a 0 1k ; note\r\n+ m=2", "m", "R1 a 0 1k ; note"),
+    ("R1 a 0 1k\n+ m=2 tc1=0 ; note", "m", "R1 a 0 1k\n+ tc1=0 ; note"),
+    ("R1 a 0 1k\n+ tc1=0 m=2 ; note", "m", "R1 a 0 1k\n+ tc1=0 ; note"),
+    ("R1 a 0 1k\n+ m=2 ; note\n+ tc1=0", "m", "R1 a 0 1k ; note\n+ tc1=0"),
+    ("R1 a 0 1k\r\n+ m=2 ; note\r\n+ tc1=0", "m", "R1 a 0 1k ; note\r\n+ tc1=0"),
+    ("R1 a 0 1k ; first\n+ m=2 ; note\n+ tc1=0", "m", "R1 a 0 1k ; first ; note\n+ tc1=0"),
+    ("R1 a 0 1k m=2 ; c\n+ temp=1", "m", "R1 a 0 1k ; c\n+ temp=1"),
+    ("R1 a 0 1k\n+ m=2", "m", "R1 a 0 1k"),
 ]
 _NG_REMOVALS = [
     ("R1 a 0 1k tc1=1m, tc2=0", "tc2", "R1 a 0 1k tc1=1m"),
@@ -215,6 +236,9 @@ _NG_REMOVALS = [
     ("Q1 c b e qn area=2", "area", "Q1 c b e qn"),
     ("V9 a 0 1 portnum=1 z0=50", "z0", "V9 a 0 1 portnum=1"),
     ("R1 a 0 1k m=2 \\\\\ntemp=30", "temp", "R1 a 0 1k m=2"),
+    ("R1 a 0 1k \\\\\nm=2 ; note", "m", "R1 a 0 1k ; note"),
+    ("R1 a 0 1k \\\\\r\nm=2 ; note\r\n+ tc1=0", "m", "R1 a 0 1k ; note\r\n+ tc1=0"),
+    ("T1 a 0 b 0 Z0=50 F=1g\n+ NL=0.1 ; frac", "nl", "T1 a 0 b 0 Z0=50 F=1g ; frac"),
 ]
 _LT_REMOVALS = [
     ("V9 a 0 1 Rser=1", "rser", "V9 a 0 1"),
@@ -255,9 +279,7 @@ def test_remove_param_on_ltspice_lines(line: str, name: str, after: str) -> None
         ("R1 a 0 1k", "m", "has no parameter `m`"),
         ("X1 a 0 sub k=1", "k", "subcircuit call"),
         ("K1 L1 L2 0.5", "x", "takes no parameters"),
-        ("R1 a 0 1k m=2 ; c\n+ temp=1", "m", "a comment stands beside the field"),
-        ("R1 a 0 1k ; c\n+ m=2", "m", "a comment stands beside the field"),
-        ("R1 a 0 1k\n+ m=2 ; c", "m", "a comment stands beside the field"),
+        ("T1 a 0 b 0 Z0=50\n+ TD=1n ; delay", "td", "length must be given"),
     ],
 )
 def test_remove_param_refusals(line: str, name: str, message: str) -> None:
@@ -275,6 +297,49 @@ def test_remove_param_names_remove_value_for_a_value_keyword() -> None:
 def test_remove_param_refuses_a_positional_area() -> None:
     with pytest.raises(EditError, match="positional"):
         _netlist(f"title\nJ1 d g s jn 2\n{_MODELS}.end\n").remove_param("J1", "area")
+
+
+_PARAMS = ("m", "temp", "tc1", "tc2")
+
+
+@st.composite
+def _commented_lines(draw: st.DrawFn) -> tuple[str, str]:
+    """An R line whose parameters are spread over ``+`` lines, with comments at line ends, and
+    the name of one of its parameters."""
+    names = draw(st.lists(st.sampled_from(_PARAMS), min_size=1, max_size=4, unique=True))
+    eol = draw(st.sampled_from(["\n", "\r\n"]))
+    text = "R1 a 0 1k"
+    for index, name in enumerate(names):
+        if draw(st.booleans()):
+            text += f" ; c{index}" if draw(st.booleans()) else ""
+            text += f"{eol}+"
+        text += f" {name}=1"
+    if draw(st.booleans()):
+        text += " ; last"
+    return text + eol, draw(st.sampled_from(names))
+
+
+def _comments(netlist: Netlist) -> list[str]:
+    item = netlist.element("R1")
+    return [netlist.source.text[s.start : s.end] for s in item.trailing_comments]
+
+
+@settings(max_examples=60, deadline=None)
+@given(case=_commented_lines())
+def test_a_removal_keeps_every_comment_byte_for_byte(case: tuple[str, str]) -> None:
+    line, name = case
+    netlist = _netlist(f"title\n{line}.end\n")
+    edited = netlist.remove_param("R1", name)
+    # Every comment's text is in the result, in order and unchanged; two may share a line.
+    joined = " ".join(_comments(edited))
+    position = 0
+    for comment in _comments(netlist):
+        position = joined.index(comment, position) + len(comment)
+    assert "".join(_comments(edited)).replace(" ", "") == "".join(_comments(netlist)).replace(
+        " ", ""
+    )
+    assert name not in [param.name for param in edited.element("R1").params]
+    assert edited.signature() == netlist.signature()
 
 
 # The exit: no sequence of these edits changes the signature.

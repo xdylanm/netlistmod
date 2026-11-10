@@ -468,12 +468,15 @@ _t_more: t_param _t_more
        | NL
        | eol
        | t_unlisted
-t_param: SEP T_PARAM_KW EQ _lt_value
+t_param: SEP T_PARAM_KW EQ (_lt_value | LINE_BARE)
        | (SEP | TRAILING_COMMENT) t_param
 t_unlisted: SEP T_UNLISTED_KW rest NL
           | (SEP | TRAILING_COMMENT) t_unlisted
 T_PARAM_KW.3: /(?:z0|zo|td)(?=[ \t]*=)/i
 T_UNLISTED_KW.3: /(?:f|nl|ic|rel|abs)(?=[ \t]*=)/i
+// A bare name or expression in a line's value (Zo=z, L=len), which LTspice reads as a parameter
+// reference: recognised only so that it gets its own message, as on every other LTspice element.
+LINE_BARE.2: /[A-Za-z_][^ \t\r\n;'"{}=,]*/
 T_NAME.4: /[Tt]/ _LT_CHAR*
 
 // O: four nodes and an LTRA model, then nothing. A field after the model (as an `ltline` symbol
@@ -485,15 +488,14 @@ line_extra: SEP (WORD | NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA) rest 
           | (SEP | TRAILING_COMMENT) line_extra
 O_NAME.4: /[Oo]/ _LT_CHAR*
 
-// U: three nodes, a URC model, then L= and N= in either order. A value may also be a bare
-// parameter name (L=len), which LTspice reads.
+// U: three nodes, a URC model, then L= and N= in either order. A bare name in a value is refused,
+// as on T.
 // spec: LT-URC-001
 %extend body_line: rc_line
 rc_line: U_NAME node node node model u_param* (NL | eol)
-u_param: SEP U_PARAM_KW EQ (_lt_value | U_BARE)
+u_param: SEP U_PARAM_KW EQ (_lt_value | LINE_BARE)
        | (SEP | TRAILING_COMMENT) u_param
 U_PARAM_KW.3: /[ln](?=[ \t]*=)/i
-U_BARE.2: /[A-Za-z_][A-Za-z0-9_]*(?![^ \t\r\n;])/
 U_NAME.4: /[Uu]/ _LT_CHAR*
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any

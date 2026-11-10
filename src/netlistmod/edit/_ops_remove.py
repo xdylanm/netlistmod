@@ -1,9 +1,9 @@
 """Removal operations: a named parameter of an element line or of a ``.model`` (decision 0019).
 
-A field goes with the separator before it, so the line keeps its other fields as written. Where
-that separator starts a ``+`` line that holds more fields, the separator after it goes instead,
-so the other fields stay on their line. A comment beside the field refuses the edit, since the
-text after the removal could join it.
+The removed span is chosen from where the field sits on its physical line (review R1): after
+another field, the separator before it goes; first on its line with more after it, the separator
+after it; alone on its line, the line break before it, so that a comment after it moves to the
+end of the line before. A comment only ends a physical line, so no removal touches one.
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ def remove_param(
         raise EditError(f"`{designator}` has no parameter `{name}`")
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
-    return [Edit(_removal(netlist, element, matches[0], reason), "", reason)]
+    return [Edit(_removal(netlist, element, matches[0]), "", reason)]
 
 
 def remove_model_param(
@@ -144,53 +144,55 @@ def remove_model_param(
         raise EditError(f"model `{model}` has no parameter `{name}`")
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
-    return [Edit(_removal(netlist, statement, matches[0], reason), "", reason)]
+    return [Edit(_removal(netlist, statement, matches[0]), "", reason)]
 
 
 def _removal(
     netlist: Netlist,
     owner: Component | ModelStatement,
     param: ParamAssignment,
-    reason: str,
 ) -> Span:
-    """The text a removed field takes with it: the field and the separator before it, or the
-    one after it when the field is first inside parentheses or starts a ``+`` line that holds
-    more fields."""
+    """The text a removed field takes with it, chosen from where the field sits on its physical
+    line (decision 0019 item 11, review R1). A comment can only end a physical line, so none of
+    these spans holds one:
+
+    1. after another field (or a ``.model``'s ``(``) on its line: the separator before it and the
+       field; first inside ``(``, the field and the separator after it, when a field or the
+       ``)`` follows on the line;
+    2. first on its line, with a later field or the ``)`` on that line: the field and the
+       separator after it;
+    3. alone on its line: from the line break that ends the line before (with a ``\\``
+       continuation's backslashes and the blanks before them) to the end of the field, so that
+       what followed the field, a comment say, moves to the end of the line before.
+    """
     text = netlist.source.text
     spans = _field_spans(owner)
-    close = owner.close_paren_span if isinstance(owner, ModelStatement) else None
     before = max(span.end for span in spans if span.end <= param.span.start)
-    # The next field, and the next field or the closing parenthesis.
-    after_field = min(
-        (span.start for span in spans if span.start >= param.span.end and span != close),
-        default=None,
-    )
-    after = after_field if close is None else min(after_field or close.start, close.start)
-    line_start = text.rfind("\n", 0, param.span.start) + 1
-    continued = text[line_start : param.span.start].lstrip(" \t").startswith("+")
-    for comment in owner.trailing_comments:
-        between = before <= comment.start < param.span.start
-        same_line = (
-            comment.start >= param.span.end and "\n" not in text[param.span.end : comment.start]
+    # The next field or the closing parenthesis, whichever comes first.
+    after = min((span.start for span in spans if span.start >= param.span.end), default=None)
+    followed = after is not None and "\n" not in text[param.span.end : after]
+    if "\n" not in text[before : param.span.start]:
+        opened = (
+            isinstance(owner, ModelStatement)
+            and owner.open_paren_span is not None
+            and before == owner.open_paren_span.end
         )
-        # A comment after the line's last field stays where it is, unless the field is on a +
-        # line, which the comment would then hold alone.
-        if between or (same_line and (after is not None or continued)):
-            raise EditError(
-                f"{reason}: a comment stands beside the field, and the text after the removal "
-                "could join it; remove the field by hand"
-            )
-    opened = (
-        isinstance(owner, ModelStatement)
-        and owner.open_paren_span is not None
-        and before == owner.open_paren_span.end
-    )
-    if opened and after is not None:
+        if opened and followed and after is not None:
+            return Span(param.span.start, after)
+        return Span(before, param.span.end)
+    if followed and after is not None:
         return Span(param.span.start, after)
-    starts_line = "\n" in text[before : param.span.start]
-    if starts_line and after_field is not None and "\n" not in text[param.span.end : after_field]:
-        return Span(param.span.start, after_field)
-    return Span(before, param.span.end)
+    start = text.rfind("\n", before, param.span.start)
+    if start > before and text[start - 1] == "\r":
+        start -= 1
+    if text[start - 1 : start] == "\\":
+        # A `\\` continuation: its backslashes and the blanks before them go with it. A comment
+        # never ends in a backslash continuation, so this never cuts into one.
+        while start > before and text[start - 1] == "\\":
+            start -= 1
+        while start > before and text[start - 1] in " \t":
+            start -= 1
+    return Span(start, param.span.end)
 
 
 def _field_spans(owner: Component | ModelStatement) -> list[Span]:

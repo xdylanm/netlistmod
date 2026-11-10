@@ -13,7 +13,7 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | Type | Fields |
 |---|---|
 | `NumericValue` | `text`, `span`, `notation: "standard" \| "rkm"`, `solver_mismatch: bool` (`"rkm"` is also an LTspice embedded decimal) |
-| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'` or empty for a bare LTspice `.param` expression or a bare parameter in an LTspice U's `L=` or `N=` (decision 0019), `span` (with delimiters) |
+| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'` or empty for a bare LTspice `.param` expression, `span` (with delimiters) |
 | `Value` | alias `NumericValue \| Formula` |
 | `ModelReference` | `model_name`, `span` |
 | `SubcktReference` | `name`, `span` |
@@ -117,7 +117,7 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 
 - **D:** `area` is the positional area; `area=` written out is a parameter.
 - **Q, M, J, Z:** Q and M take 3 or 4 nodes, J and Z exactly 3. Q, J and Z take a positional `area`. Each letter's parameter names are a closed list (decision 0014 item 6), and M has no `thermal` flag. An embedded decimal such as `1n5` is an area only where no further name may follow.
 - **E, F, G, H, S, W:** no parameter on any of the six. A switch's state may take a value (`off=1`). value= and POLY after the output nodes, and table= and Laplace= after E's and G's control nodes, are unsupported (M15).
-- **T, O, U (M16, decision 0019):** T takes `Zo=` (or `Z0=`) and `Td=`, the reference's names; `F=`, `NL=`, `IC=`, `rel=` and `abs=` are refused. O is as on ngspice. U is only a URC line: three nodes, a model, `L=` and `N=`, whose value may also be a bare parameter name. Y and P are not LTspice letters. The spec IDs are `LT-TLL-001`, `LT-LTR-001` and `LT-URC-001`.
+- **T, O, U (M16, decision 0019):** T takes `Zo=` (or `Z0=`) and `Td=`, the reference's names; `F=`, `NL=`, `IC=`, `rel=` and `abs=` are refused. O is as on ngspice. U is only a URC line: three nodes, a model, `L=` and `N=`. A bare name in a T or U value (`Zo=z`, `L=len`) is refused with a message suggesting braces, as on every LTspice element (review R2). Y and P are not LTspice letters. The spec IDs are `LT-TLL-001`, `LT-LTR-001` and `LT-URC-001`.
 - **X:** open parameter names, with or without `params:`.
 - **K:** three or more inductors, as in ngspice.
 - **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.

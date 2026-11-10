@@ -109,7 +109,9 @@
     "lines.net": "24609de8ec2ca266ba72face0b6f60ce6b0c60e9c99291c3da8f417efefef14a",
     "lines_params.expected.net": "94102de4aaee6fbbe3617fa2b54b67e863cc7f31d0ff16f816f813447698f13c",
     "lines_models.expected.net": "67f1484f1f80edc2cd0c1bcf84dac156e5f94e26f9a348e4efce9b30c2325015",
-    "lines_remove.expected.net": "87daa8e917a350ddb4a4b67259b76b2570d919d98c191d8be6dccb182e799683"
+    "lines_remove.expected.net": "87daa8e917a350ddb4a4b67259b76b2570d919d98c191d8be6dccb182e799683",
+    "lines_comments.net": "1d68c6c6f0c1254cd6d209ccd230538e6e7fb14c0be81773ef84e25b88b8c687",
+    "lines_comments.expected.net": "76022de9ee6bdcb1e9d7969a72269f35093ceb52993f6579ca61cf37743c6eb1"
   },
   "cases": {
     "set_value": {
@@ -1023,6 +1025,52 @@
         ]
       ],
       "expected": "lines_remove.expected.net"
+    },
+    "lines_remove_comments": {
+      "input": "lines_comments.net",
+      "steps": [
+        [
+          "remove_param",
+          "R1",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R2",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R3",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R4",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R5",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R6",
+          "m"
+        ],
+        [
+          "remove_model_param",
+          "dm",
+          "rs"
+        ],
+        [
+          "remove_model_param",
+          "dm2",
+          "rs"
+        ]
+      ],
+      "expected": "lines_comments.expected.net"
     }
   }
 }

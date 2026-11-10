@@ -1,0 +1,29 @@
+removal beside comments (M16 review R1)
+V1 a 0 1
+R1 a 0 1k m=2 tc1=0 ; note
+R2 a 0 1k ; note
++ m=2
+R3 a 0 1k
++ m=2 tc1=0 ; note
+R4 a 0 1k
++ tc1=0 m=2 ; note
+R5 a 0 1k
++ m=2 ; note
++ tc1=0
+R6 a 0 1k ; first
++ m=2 ; note
++ tc1=0
+D1 a 0 dm
+D2 a 0 dm2
+.model dm d(is=1e-14 ; sat
++ rs=10)
+.model dm2 d is=1e-14
++ rs=10 ; series
++ n=1
+R7 a 0 1k \\
+m=2 ; note
+T1 a 0 b 0 Z0=50 F=1g
++ NL=0.1 ; frac
+R8 b 0 50
+.op
+.end

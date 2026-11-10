@@ -367,8 +367,10 @@ A CPL matrix is set as a whole list, and `remove_model_param` takes a parameter 
 
 ```
 
-A removal that leaves a line without what it needs (a T's `Z0=`, a U's `l=`) is refused by the
-verification. Nodes, P's line count and an O line's (absent) parameters are not editable.
+A removal never touches a comment: a field that is alone on its `+` line goes with the line
+break before it, so a comment after it moves to the end of the line before
+(`R1 a 0 1k` / `+ m=2 ; note` becomes `R1 a 0 1k ; note`). A removal that leaves a line without
+what it needs (a T's `Z0=`, a U's `l=`) is refused by the verification. Nodes, P's line count and an O line's (absent) parameters are not editable.
 
 ## Continued lines, blocks and includes
 
