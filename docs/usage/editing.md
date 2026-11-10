@@ -367,10 +367,27 @@ A CPL matrix is set as a whole list, and `remove_model_param` takes a parameter 
 
 ```
 
+A CPL matrix over `+` lines may hold a comment at a line's end. Then `set_model_param` with as
+many values replaces each value in place, so the comment stays; a different count, and
+`remove_model_param` of that matrix, are an `EditError` that names the comment, and the line is
+edited by hand (review R3, as for `set_table`):
+
+```python
+>>> commented = Netlist.from_text(
+...     "t\nP1 a1 a2 0 b1 b2 0 pmod\n.model pmod cpl length=1\n+R=10 0 ; coupling\n+10\n"
+...     "+L=50n 5n 50n\n+G=0 0 0\n+C=20p -2p 20p\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> print(commented.set_model_param("pmod", "R", "20 0 20").source.text.splitlines()[3:5])
+['+R=20 0 ; coupling', '+20']
+
+```
+
 A removal never touches a comment: a field that is alone on its `+` line goes with the line
 break before it, so a comment after it moves to the end of the line before
-(`R1 a 0 1k` / `+ m=2 ; note` becomes `R1 a 0 1k ; note`). A removal that leaves a line without
-what it needs (a T's `Z0=`, a U's `l=`) is refused by the verification. Nodes, P's line count and an O line's (absent) parameters are not editable.
+(`R1 a 0 1k` / `+ m=2 ; note` becomes `R1 a 0 1k ; note`). A removal that leaves a line
+without what it needs (a T's `Z0=`, a U's `l=`) is refused by the verification. Nodes, P's
+line count and an O line's (absent) parameters are not editable.
 
 ## Continued lines, blocks and includes
 

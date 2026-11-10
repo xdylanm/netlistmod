@@ -3,7 +3,8 @@
 The removed span is chosen from where the field sits on its physical line (review R1): after
 another field, the separator before it goes; first on its line with more after it, the separator
 after it; alone on its line, the line break before it, so that a comment after it moves to the
-end of the line before. A comment only ends a physical line, so no removal touches one.
+end of the line before. A comment only ends a physical line, so no removal takes one, except
+from inside a CPL list over ``+`` lines, which is refused (review R3).
 """
 
 from __future__ import annotations
@@ -16,8 +17,10 @@ from netlistmod.edit._ops_common import (
     _TRANSISTORS,
     _TWO_TERMINAL,
     _VALUE_KEYWORDS,
+    _comment_inside,
     _element,
     _kind,
+    _refuse_over_comment,
     _spans,
     resolve_scope,
 )
@@ -129,7 +132,8 @@ def remove_model_param(
     in_definition: bool = False,
 ) -> list[Edit]:
     """Remove parameter ``name`` of the ``.model`` named ``model`` defined in ``scope``. A CPL
-    matrix goes whole; flags are not removable."""
+    matrix goes whole, and is refused when a comment lies inside it (review R3); flags are not
+    removable."""
     found = resolve_scope(netlist, scope, in_definition)
     definitions = found.models.get(found.fold(model))
     if not definitions:
@@ -154,7 +158,8 @@ def _removal(
 ) -> Span:
     """The text a removed field takes with it, chosen from where the field sits on its physical
     line (decision 0019 item 11, review R1). A comment can only end a physical line, so none of
-    these spans holds one:
+    these spans holds one, unless the field itself does: a CPL list over ``+`` lines with a
+    comment inside it is refused (review R3).
 
     1. after another field (or a ``.model``'s ``(``) on its line: the separator before it and the
        field; first inside ``(``, the field and the separator after it, when a field or the
@@ -165,6 +170,14 @@ def _removal(
        continuation's backslashes and the blanks before them) to the end of the field, so that
        what followed the field, a comment say, moves to the end of the line before.
     """
+    comment = _comment_inside(owner, param.span)
+    if comment is not None:
+        where = (
+            f"model `{owner.name}`"
+            if isinstance(owner, ModelStatement)
+            else f"`{owner.designator}`"
+        )
+        raise _refuse_over_comment(netlist, comment, f"`{param.name}=` of {where}")
     text = netlist.source.text
     spans = _field_spans(owner)
     before = max(span.end for span in spans if span.end <= param.span.start)

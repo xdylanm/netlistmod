@@ -44,7 +44,8 @@ A line, which stays planned until M17, so their entries (an unsupported construc
 column 1) did not change. The same 17
 rejected files gained the five new letters among their expected terminals. No node, position or
 error class of any other entry changed. M16 review round 1 (R1) added the
-``edits_golden/lines_comments*`` files, and no other entry changed.
+``edits_golden/lines_comments*`` files, and no other entry changed. M16 review round 2 (R3)
+added the ``edits_golden/lines_cpl_comments*`` files, and no other entry changed.
 """
 
 from __future__ import annotations

@@ -1,6 +1,6 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** READY FOR REVIEW — review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
+> **Status:** READY FOR REVIEW — review round 2's R3 made (section 7.5); review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
@@ -579,4 +579,91 @@ So the two letters disagree.
 - **Checks:**
   - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,890 passed, 2 skipped**, 1,089 deselected, coverage **98.52%**, in 21 min 29 s;
   - `ruff`, `mypy` and `pre-commit run --all-files` pass;
+  - **CI:** see the pull request.
+
+## 7. Review round 2 (2026-11-09, `1a981fe`, #15)
+
+### 7.1 Outcome
+
+R1 and R2 are made as decided. M16 goes back for one more change, R3: a CPL list that holds a comment loses it under `set_model_param` and `remove_model_param`. The list span has crossed the comment since `a9d386b`; R1's new tests on `remove_model_param` brought it to light.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,890 passed, 2 skipped, 1,089 deselected, coverage 98.52%, in 21 min 28 s. This matches 6.5.
+  - CI on #15 at `1a981fe` is green on all five jobs.
+- **R1, by hand on both dialects (a scratch script outside the repository):**
+  - Every row of R1's table gives its result, CRLF included, and two comments join on one line.
+  - Other cases also give the right results:
+    - `\` continuations: the field first on a continued line with more after it; the field alone with a comment after it; `\` with no blank before it; and a chain of two `\` lines, removing either field.
+    - Blanks: blanks around a field alone on its `+` line, and trailing blanks on the line before, stay as written.
+    - Parentheses:
+      - `d(` / `+ is=1e-14 ; c` / `+ )` gives `d( ; c` / `+ )`;
+      - `d(is=1e-14 ; c` / `+ )` gives the same;
+      - `d (is=1e-14 rs=10)` gives `d (rs=10)`.
+    - Two removals in a row, each of a field alone on its line with a comment, give `R1 a 0 1k ; a ; b`.
+    - LTspice U's `+ N=6 ; n` gives `U1 a b 0 um L=5 ; n`.
+  - **The developer's two notes in 6.5, both accepted:**
+    - The T row (`+ TD=1n ; delay`) is my error in R1's table: removing `TD=` leaves no length, which decision 2 refuses. The refusal is right.
+    - `d(is=1e-14` / `+ rs=10)` giving `d(is=1e-14` / `+ )` follows rule 2 as written. The table's "unchanged" for that row contradicted the rule. The new result is the smaller diff, and it is the same with or without a comment on the line before, so keep it. Both solvers run `+ )` (R1's probe).
+  - The property test checks every comment's text over `+` lines with LF and CRLF. R3 widens it.
+- **R2:**
+  - A bare name in T's or U's value is refused at the value's column, with `write {name}`, on `L=len`, `N=n_2`, `L=a.b`, `Zo=z` and `Td=td`.
+  - LTspice's unlisted T names (`F=x`) keep their own message. `U_BARE` is gone, and no `Formula` with an empty delimiter is left outside `.param`.
+  - `discrepancies.md`, `LT-URC-001`, `LT-TLL-001`, `elements.md`, decision 0019 item 4 and section 2 decision 4 agree.
+
+### 7.2 Required changes
+
+[x] **R3 — A comment inside a CPL list is lost by `set_model_param` and `remove_model_param`.**
+
+A CPL list may run over `+` lines with a comment at a line's end, and the library loads it, as decision 9 says. The `ValueList` span runs from the first value to the last, so it holds that comment, and both edits replace the whole span:
+
+| Model | Edit | Result at `1a981fe` |
+|---|---|---|
+| `.model p cpl length=1 R=10 0 ; c` / `+ 10 L=50n G=0 C=20p` | `remove_model_param("p", "R")` | `.model p cpl length=1 L=50n G=0 C=20p`: `; c` is gone |
+| the same, with `L=50n` before `R=` | `remove_model_param("p", "R")` | the same loss |
+| `.model p cpl(length=1 R=10 0 ; c` / `+ 10 L=50n G=0 C=20p)` | `set_model_param("p", "R", "1 2 3")` | `cpl(length=1 R=1 2 3 L=50n G=0 C=20p)`: `; c` is gone |
+
+This is the only list that can hold a comment. A comment inside an `IC=` or `tc=` list, or a CPL list with commas, does not load.
+
+- **Change:** follow decision 0017 item 6, the rule `set_table` and `set_poly_coefficients` already use:
+  - `set_model_param` on a CPL list with the same number of values replaces each value's span, so a comment between them stays.
+  - A different count, and `remove_model_param` of the list, are `EditError`s when a comment lies inside the list's span. The message names the comment and says to edit by hand.
+  - Without a comment, nothing changes.
+- *Considered:* rebuilding the list around the comment. That has the same problem `set_table` has, and decision 0017 item 6 refused it there.
+- **Tests:**
+  - the three rows above, as results or refusals on ngspice;
+  - a same-count `set_model_param` over two `+` lines with a comment, as a golden diff that runs in the ngspice sweep;
+  - the property test of R1 extended to CPL lists over `+` lines, with both edits (refusals allowed), checking that every comment survives.
+- **Docs:**
+  - decision 0019 items 9 and 11;
+  - the `set_model_param` and `remove_model_param` rows of `edit-layer.md`;
+  - the CPL paragraph of `docs/usage/editing.md`.
+
+### 7.3 Noted, no change required
+
+- The `remove_param` docstring in `edit/api.py` now states the `+` line rule twice, and its lines are wrapped unevenly. The new sentence in `docs/usage/editing.md` runs past the line width. Tidy these with R3 if convenient.
+
+### 7.4 Exit for this round
+
+1. Make R3 as decided.
+2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 7.5.
+3. Set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 7.5 Round 2 changes (2026-11-09)
+
+- **R3:** made as decided, after decision 0017 item 6.
+  - `_removal` in `edit/_ops_remove.py` refuses a field whose span holds one of the line's comments. Only a CPL list over `+` lines can hold one. The `EditError` names the field, the model, the comment and its line, and says to edit by hand or remove the comment first. The check covers `remove_param` too, where no list can hold a comment today.
+  - `set_model_param` on a CPL list with a comment inside it reads the new value's values with the grammar, from a one-line `.model` probe, since the edit layer may not scan text (P13, `test_edit_does_not_import_regular_expressions`). With the same count it replaces each value's span, so the comment stays. Another count is refused with the same message, and a value that does not parse as a list is an `EditError`.
+  - Without a comment, nothing changes: the list is replaced or removed whole.
+  - The shared helpers are `_comment_inside` and `_refuse_over_comment` in `edit/_ops_common.py`.
+- **Results for the three rows of R3:**
+  - Removing `R=` from `R=10 0 ; c` / `+ 10`, with `L=50n` before or after `R=`, is refused with "`R=` of model `p` holds the comment `; c` (line 4)".
+  - `set_model_param("p", "R", "1 2 3")` gives `cpl(length=1 R=1 2 ; c` / `+ 3 L=50n G=0 C=20p)`; `"1 2"` is refused.
+- **Tests:**
+  - in `tests/edits/test_line_edits.py`: the three rows, the same-count case with commas and a braced formula, the wrong count, a value that does not parse, the lists without a comment, and the property test `test_a_cpl_list_edit_keeps_every_comment`. The property test draws a CPL `R=` list over `+` lines with LF or CRLF, with comments at line ends and a trailing comment, and uses either edit with any count. Each edit keeps every comment in order, or is refused naming one.
+  - golden diff `lines_cpl_comment_list`: `edits_golden/lines_cpl_comments.cir` sets a list over two `+` lines with a comment. Both files run in the ngspice sweep. The tree snapshot adds the two files, and no other entry changed.
+- **Docs:** decision 0019 items 9 and 11, the `set_model_param` and `remove_model_param` rows of `edit-layer.md`, the CPL paragraph of `docs/usage/editing.md` (a doctest of the same-count edit), the API docstrings and the CHANGELOG.
+- **7.3 tidied:** the `remove_param` docstring states the `+` line rule once and wraps evenly, and the paragraph in `docs/usage/editing.md` fits the line width.
+- **Checks:**
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,911 passed, 2 skipped**, 1,100 deselected, coverage **98.53%**, in 21 min 42 s. The first run failed only the P13 contract, on a regular expression I had used to split the list. The grammar probe replaced it, and the second run is the one above.
+  - `ruff`, `mypy` and `pre-commit run --all-files` pass.
   - **CI:** see the pull request.
