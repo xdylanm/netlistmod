@@ -1,0 +1,15 @@
+coupled line edits (M16)
+V1 in1 0 1
+V2 in2 0 0.5
+R1 in1 a1 50
+R2 in2 a2 50
+P1 a1 a2 0 b1 b2 0 pmod
+R3 b1 0 50
+R4 b2 0 50
+.model pmod CPL length=1
++R=20 0 20
++L=60n 6n 60n
++G=0 0 0
++C=20p -2p 20p
+.op
+.end

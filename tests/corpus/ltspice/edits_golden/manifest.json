@@ -105,7 +105,11 @@
     "nonlinear_sources.net": "84a9c2eaff2e212e17f5c72fa70cf6d6f83da1e8cf60937ce875eafb4e0c36e8",
     "nonlinear_table.expected.net": "5aa5d878fd4bb84361037fdb52102518f612a2fcdd31277b712ce8d4820cc478",
     "nonlinear_laplace.expected.net": "61121228b3400388f862cf725a136ee9454134d6b7357b997e1d63ce76c91825",
-    "nonlinear_poly.expected.net": "ecfdab90e7a98fa023ed2bf1782355ceb28eeee676808b88b3f7a871126d4c0a"
+    "nonlinear_poly.expected.net": "ecfdab90e7a98fa023ed2bf1782355ceb28eeee676808b88b3f7a871126d4c0a",
+    "lines.net": "24609de8ec2ca266ba72face0b6f60ce6b0c60e9c99291c3da8f417efefef14a",
+    "lines_params.expected.net": "94102de4aaee6fbbe3617fa2b54b67e863cc7f31d0ff16f816f813447698f13c",
+    "lines_models.expected.net": "67f1484f1f80edc2cd0c1bcf84dac156e5f94e26f9a348e4efce9b30c2325015",
+    "lines_remove.expected.net": "87daa8e917a350ddb4a4b67259b76b2570d919d98c191d8be6dccb182e799683"
   },
   "cases": {
     "set_value": {
@@ -178,7 +182,7 @@
       "steps": [
         [
           "set_instance_param",
-          "X§U2",
+          "X\u00a7U2",
           "rval",
           "2k2"
         ]
@@ -957,6 +961,68 @@
         ]
       ],
       "expected": "nonlinear_poly.expected.net"
+    },
+    "lines_params": {
+      "input": "lines.net",
+      "steps": [
+        [
+          "set_param",
+          "T1",
+          "zo",
+          "75"
+        ],
+        [
+          "set_param",
+          "T1",
+          "td",
+          "2n"
+        ],
+        [
+          "set_param",
+          "U1",
+          "l",
+          "10"
+        ]
+      ],
+      "expected": "lines_params.expected.net"
+    },
+    "lines_models": {
+      "input": "lines.net",
+      "steps": [
+        [
+          "set_model",
+          "O1",
+          "lmod2"
+        ],
+        [
+          "set_model",
+          "U1",
+          "umod2"
+        ],
+        [
+          "set_model_param",
+          "lmod",
+          "R",
+          "20"
+        ]
+      ],
+      "expected": "lines_models.expected.net"
+    },
+    "lines_remove": {
+      "input": "lines.net",
+      "steps": [
+        [
+          "remove_param",
+          "U1",
+          "N"
+        ],
+        [
+          "remove_model_param",
+          "lmod",
+          "R"
+        ]
+      ],
+      "expected": "lines_remove.expected.net"
     }
   }
 }

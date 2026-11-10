@@ -35,6 +35,7 @@ from netlistmod.edit._ops_elements import (
     set_value,
 )
 from netlistmod.edit._ops_nonlinear import set_poly_coefficients, set_table
+from netlistmod.edit._ops_remove import remove_model_param, remove_param
 from netlistmod.edit._ops_sources import (
     remove_stimulus,
     set_ac,
@@ -56,6 +57,8 @@ __all__ = [
     "directive_target",
     "include_target",
     "remove_directive",
+    "remove_model_param",
+    "remove_param",
     "remove_stimulus",
     "remove_value",
     "replace_directive",

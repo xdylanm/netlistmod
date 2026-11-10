@@ -1,0 +1,3 @@
+M16 reject
+.model lm LTRA(R=1 L=50n C=20p len=1 nosteplimit lininterp)
+.end

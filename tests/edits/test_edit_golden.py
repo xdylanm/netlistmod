@@ -76,4 +76,6 @@ def test_the_cases_cover_every_operation() -> None:
         "directives.set",
         "add_include",
         "remove_value",
+        "remove_param",
+        "remove_model_param",
     }

@@ -105,7 +105,7 @@
       "note": "N is not an LTspice letter"
     },
     "phase_2_letter.cir": {
-      "sha256": "cb686db84bc07f5b74af9629d098166563c45e8cb5dcf921055abb1b2a33969b",
+      "sha256": "2596542c3e7f19c6ed70b91af71de6f8e6a4c26da77862b24ec9d06872b1a1c4",
       "line": 2,
       "column": 1,
       "error": "UnsupportedConstruct",
@@ -285,6 +285,34 @@
       "column": 15,
       "error": "ParseError",
       "note": "Laplace= on R=; LTspice runs it, but its reference shows it on V= and I= only (decision 0017 item 4). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "t_f_nl.cir": {
+      "sha256": "dd6e172d531ec4d2c91fcdddf8faa44ccbc76d8598c53c7e523c280cb80590fb",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "F= and NL= run, the reference lists Td="
+    },
+    "t_ic.cir": {
+      "sha256": "aa441c5b44e72bb93a939fe895422ce90fee01fab0cc76c46086d43af92eb60f",
+      "line": 2,
+      "column": 24,
+      "error": "ParseError",
+      "note": "IC= runs, the reference does not list it"
+    },
+    "t_no_length.cir": {
+      "sha256": "97b4112ff6aed289e68076b8e23d2a1634ba03eb5d6eb700ffeaf2a6ba434e0c",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "T without Td= (LTspice uses a default delay)"
+    },
+    "u_no_length.cir": {
+      "sha256": "8a957d9b7061dea1ca68727d198bbd0c66cfa3ed9cda3daaf0a22bec90bc3ff1",
+      "line": 2,
+      "column": 12,
+      "error": "ParseError",
+      "note": "U needs L="
     }
   }
 }

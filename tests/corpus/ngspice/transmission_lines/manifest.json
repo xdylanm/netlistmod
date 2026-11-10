@@ -4,15 +4,55 @@
   "license": "MIT",
   "author": "xdylanm",
   "date": "2026-11-09",
-  "notes": "Every file waits for M16 (pending). Provenance confirmed by the maintainer, 2026-11-09.",
+  "notes": "Provenance confirmed by the maintainer, 2026-11-09.",
   "fixtures": {
     "test_kicad_tline.cir": {
       "sha256": "e66ce416b8b38251386e8917ed2722dfa32ea1890dbc0e715c8835313b20ef96",
-      "note": "KiCad's TLINE, which KiCad exports as an O line with an LTRA model (KiCad, by the maintainer).",
-      "solver": {
-        "skip": "Loads from M16 (m16-tasks.md): the library refuses the form until then."
-      },
-      "pending": "M16"
+      "note": "KiCad's TLINE, which KiCad exports as an O line with an LTRA model (KiCad, by the maintainer)."
+    },
+    "test_tline_o_flags.cir": {
+      "sha256": "0280ae52dc3439c498dfa63acba287b43839c5afdebe6c96882de78742959643",
+      "note": "O with an LTRA model that writes two flags (variant)."
+    },
+    "test_tline_p1.cir": {
+      "sha256": "3cb9402fca5d9d3066747acc22c85f7dff108c01cea5021674cc468a857ae66c",
+      "note": "P with one line (variant)."
+    },
+    "test_tline_p2.cir": {
+      "sha256": "a9c51de7c2655ffe1a2c60afdb7b0c73b38aaff9be3ba0e3a4fdda295e284904",
+      "note": "P with two coupled lines and their matrices, with blanks, commas and a brace (variant)."
+    },
+    "test_tline_t_f_nl.cir": {
+      "sha256": "49f502808d7149663da1f7c82b509dd43035c1f8ae7ebfc4b5f3b28a56d14e39",
+      "note": "T with F= and NL= (variant)."
+    },
+    "test_tline_t_ic.cir": {
+      "sha256": "c880497b3e7eb5ffad89965dcb89b7d60d6625cdfea077d700e0fe20c2ad1ec4",
+      "note": "T with IC=, four comma-separated values (variant)."
+    },
+    "test_tline_t_td.cir": {
+      "sha256": "e03e099e4685fb0fd56627507d4604eeb02166dab19c06ed60d2ff0e92286bc4",
+      "note": "T with TD= in place of KiCad's O line (variant)."
+    },
+    "test_tline_t_zo.cir": {
+      "sha256": "cfbc84e5fcb4b06a984f7f9c6091880f4ffbf90a7b12ae4f945794d543904545",
+      "note": "T with the reference's spelling Zo= (variant; decision 0019 item 3)."
+    },
+    "test_tline_u.cir": {
+      "sha256": "6cba3d7c20fb9ea3c2a9154707bb6b46ec89169e841a56f1b91f6914003bf8b3",
+      "note": "U as a URC line, with l= (variant)."
+    },
+    "test_tline_u_n.cir": {
+      "sha256": "f80b3afd6e538c17e0cad66d53612f8f3aa8fd887e2d4ff9c79653fc39170da2",
+      "note": "U with n= before l= (variant)."
+    },
+    "test_tline_y.cir": {
+      "sha256": "f1b2c11365dda07a4bd2d16c73a492ccebd2eeca12ea4c77144128ff048a467a",
+      "note": "Y with the model's length= (variant)."
+    },
+    "test_tline_y_len.cir": {
+      "sha256": "11829476c112b20734f7414a3eb8828774049c6c9eddc45fe4656e0f5e315106",
+      "note": "Y with len= (variant)."
     }
   }
 }

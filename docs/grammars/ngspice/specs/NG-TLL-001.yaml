@@ -1,0 +1,32 @@
+id: NG-TLL-001
+dialect: ngspice
+construct: lossless transmission line (T) lines
+manual_ref:
+- '[ngspice-manual] §6.1 "Lossless Transmission Lines"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-09'
+grammar:
+- body_line
+- lossless_line
+- _t_more
+- t_param
+- t_unlisted
+- T_PARAM_KW
+- T_UNLISTED_KW
+- T_NAME
+tests:
+- tests/grammar/ngspice/test_lines.py::test_t_takes_its_closed_parameter_list
+- tests/grammar/ngspice/test_lines.py::test_ic_is_a_list_of_four_values
+- tests/grammar/ngspice/test_lines.py::test_refused_t_lines_name_the_rule
+- tests/grammar/ngspice/test_lines.py::test_other_t_forms_are_syntax_errors
+- tests/document/test_line_topology.py::test_every_node_is_a_connection_and_in_the_signature
+- tests/document/test_line_topology.py::test_changing_any_node_is_a_topology_violation
+- tests/solver/test_ngspice_line_probes.py::test_line_probes
+- tests/solver/test_ngspice_line_probes.py::test_what_ngspice_computes_in_ac
+- tests/solver/test_ngspice_line_probes.py::test_what_ngspice_computes_in_op
+- tests/solver/test_ngspice_line_probes.py::test_a_tran_shows_td_and_len_move_the_waveform
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes, then a closed parameter list in any order: Z0= or Zo= (one parameter, decision 0019 item 3), and TD=, or F= with an optional NL=, and IC=, four comma-separated values (V1, I1, V2, I2). Z0= must be given, and exactly one length form. ngspice 47 runs a line without a length (a default delay, -9 degrees at 100 MHz), TD= beside F= (TD= wins), NL= without F=, rel= and abs=, IC= with one to four values or blank-separated values, and two impedances (the last wins); the library refuses each (discrepancies.md). Every node is used: a reference held at 0.2 V gives 0.4 V.'

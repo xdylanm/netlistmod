@@ -187,6 +187,20 @@
       "column": 11,
       "error": "ParseError",
       "note": ".meas tran"
+    },
+    "ltra_flag_on_diode.cir": {
+      "sha256": "d501a1009ef358ba7d4c802fef434c3dbd7d6fad74c23290cd59aae444e3f070",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "an LTRA flag on another model type"
+    },
+    "cpl_list_on_diode.cir": {
+      "sha256": "082d6e97e86bb72f433906742efcfd337ed15962f8de8682b17789d3c9f52dbe",
+      "line": 2,
+      "column": 22,
+      "error": "ParseError",
+      "note": "a list of values outside a CPL matrix"
     }
   }
 }

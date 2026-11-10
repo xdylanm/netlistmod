@@ -9,31 +9,25 @@ names; they never classify syntax (P13).
 
 from __future__ import annotations
 
-from string import ascii_lowercase, ascii_uppercase
 from typing import Final
-from unicodedata import normalize
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import Dialect, fold_name, is_ground_name
 
 GROUND: Final = "0"
 """The canonical name of the ground net."""
 
-_ASCII_LOWER: Final = str.maketrans(ascii_uppercase, ascii_lowercase)
-_GROUND_NAMES: Final = frozenset({"0", "gnd"})
 _LTSPICE_GLOBAL_PREFIX: Final = "$g_"
 _LTSPICE_BLOCK_PREFIX: Final = "x§"
 
 
 def fold(name: str, dialect: Dialect) -> str:
     """Return ``name`` in the form the dialect compares names in."""
-    if dialect is Dialect.LTSPICE:
-        return normalize("NFC", name).casefold()
-    return name.translate(_ASCII_LOWER)
+    return fold_name(name, dialect)
 
 
 def is_ground(name: str, dialect: Dialect) -> bool:
     """Whether a node name is the ground net (``0`` or ``gnd`` in any case, not ``00``)."""
-    return fold(name, dialect) in _GROUND_NAMES
+    return is_ground_name(name, dialect)
 
 
 def net_name(name: str, dialect: Dialect) -> str:

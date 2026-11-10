@@ -95,16 +95,18 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
     ) -> _R:
         """Set an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an ngspice F
-        or G line, a parameter of a B line (``tc1=``, ``ic=``, ``Rpar=``, ...) or of an LTspice V
-        or I line, or add ``name=value`` after the line's last field. On LTspice a flag takes its
-        value in place (``noiseless`` → ``noiseless=1``).
+        or G line, a parameter of a B line (``tc1=``, ``ic=``, ``Rpar=``, ...), of an LTspice V
+        or I line, or of a T, U, Y or P line (``TD=``, ``l=``, ``len=``, ngspice's ``IC=`` as a
+        whole list), or add ``name=value`` after the line's last field. A T line keeps its
+        spelling of the impedance: ``z0`` sets ``Zo=`` on a line that writes ``Zo=``. On LTspice a
+        flag takes its value in place (``noiseless`` → ``noiseless=1``).
 
         ``area`` goes in the positional slot where the dialect writes one (J and Z, and an
         LTspice D or Q), unless the line already writes ``area=``. A name that is the line's
         value keyword (``r``, ``resistance``, …) sets the value when it is written that way,
         otherwise ``EditError`` (use :meth:`set_value`). E, H, S and W, and on LTspice F and G,
-        take no parameter. A repeated parameter is an ``EditError``; an X line takes
-        :meth:`set_instance_param`.
+        take no parameter, nor does an O line (its values are in its LTRA model). A repeated
+        parameter is an ``EditError``; an X line takes :meth:`set_instance_param`.
         """
         return self._submit(
             operations.set_param(
@@ -122,13 +124,14 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
         allow_external: bool = False,
     ) -> _R:
-        """Replace the model name of an R, C, L, D, Q, M, J, Z, S or W line, or add one after the
-        value of an R, C or L line that has none (``R1 a b 1k`` → ``R1 a b 1k rmod``).
+        """Replace the model name of an R, C, L, D, Q, M, J, Z, S, W, O, U, Y or P line, or add one
+        after the value of an R, C or L line that has none (``R1 a b 1k`` → ``R1 a b 1k rmod``).
 
         The model must resolve from the element's scope with a type allowed for the element
         (R → ``R``, C → ``C``, L → ``L``, D → ``D``, Q → ``NPN`` or ``PNP``, M → ``NMOS``,
         ``PMOS`` or ``VDMOS``, J → ``NJF`` or ``PJF``, Z → ``NMF`` or ``PMF`` and on LTspice
-        ``NIGBT`` or ``PIGBT``, S → ``SW``, W → ``CSW``), otherwise ``EditError``. An unresolved
+        ``NIGBT`` or ``PIGBT``, S → ``SW``, W → ``CSW``, O → ``LTRA``, U → ``URC``, Y → ``TXL``,
+        P → ``CPL``), otherwise ``EditError``. An unresolved
         model is accepted only with ``allow_external=True`` when an ``.include``, ``.lib`` or
         opaque ``.if`` or ``.lib`` block is in a searched scope (decision 0007 item 3). A value
         written ``r=1k`` takes no model. ngspice uses a given value over the model's geometry; see
@@ -255,6 +258,55 @@ class _Operations(Generic[_R]):
         return self._submit(
             operations.remove_value(
                 self._target(), designator, scope=scope, in_definition=in_definition
+            )
+        )
+
+    def remove_param(
+        self,
+        designator: str,
+        name: str,
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Remove the named parameter ``name`` of an element line (decision 0019): any line on
+        which :meth:`set_param` sets one, an X line's instance parameters excepted.
+
+        The field goes with the separator before it (``R1 a b 1k m=2 tc1=1`` gives ``R1 a b 1k
+        tc1=1``); a ``+`` line holding only the field goes whole, and a field that starts a
+        ``+`` line with more fields takes the separator after it instead. A list such as ``IC=``
+        goes whole; on a T line ``z0`` and ``zo`` name one parameter. ``EditError`` for a value
+        keyword (``r=1k``: use :meth:`remove_value`), a positional area, a flag, a parameter the
+        line does not have, an X line, an O line, and a comment beside the field. A parameter
+        the line needs (a T's ``Z0=``, a U's ``l=``) is refused by the verification, which
+        re-parses the result. To switch a T from ``TD=`` to ``F=``, set ``F=`` and remove ``TD=``
+        in one :meth:`Netlist.batch`.
+        """
+        return self._submit(
+            operations.remove_param(
+                self._target(), designator, name, scope=scope, in_definition=in_definition
+            )
+        )
+
+    def remove_model_param(
+        self,
+        model: str,
+        name: str,
+        *,
+        scope: ScopePath = (),
+        in_definition: bool = False,
+    ) -> _R:
+        """Remove parameter ``name`` of the ``.model`` defined in ``scope`` (decision 0019).
+
+        The field goes with the separator before it; as the first parameter inside parentheses,
+        with the separator after it (``ltra(r=10 len=1)`` gives ``ltra(len=1)``), and the last
+        one leaves the parentheses (``d(is=1e-14)`` gives ``d()``). A CPL matrix goes whole.
+        ``EditError`` for a flag, a parameter the model does not have, and a comment beside the
+        field. Model contents are not checked.
+        """
+        return self._submit(
+            operations.remove_model_param(
+                self._target(), model, name, scope=scope, in_definition=in_definition
             )
         )
 

@@ -1,0 +1,24 @@
+id: NG-LTR-001
+dialect: ngspice
+construct: lossy transmission line (O) lines
+manual_ref:
+- '[ngspice-manual] §6.2 "Lossy Transmission Lines"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-09'
+grammar:
+- body_line
+- lossy_line
+- line_extra
+- O_NAME
+tests:
+- tests/grammar/ngspice/test_lines.py::test_o_takes_four_nodes_and_a_model
+- tests/grammar/ngspice/test_lines.py::test_refused_o_lines
+- tests/grammar/ngspice/test_lines.py::test_o_needs_four_nodes_and_a_model
+- tests/document/test_line_topology.py::test_models_resolve_and_a_wrong_type_is_a_mismatch
+- tests/solver/test_ngspice_line_probes.py::test_line_probes
+- tests/solver/test_ngspice_line_probes.py::test_an_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes and an LTRA model, then nothing: ngspice 47 stops on len= or m= on the instance. A model of another type is MODEL_TYPE_MISMATCH (ngspice stops). KiCad exports its TLINE as an O line with an LTRA model. LTRA''s flags are NG-MOD-001.'

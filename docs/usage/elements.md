@@ -175,6 +175,45 @@ Every element letter that is not supported yet raises
 `UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
 excerpt and expected tokens.
 
+## Transmission lines
+
+T (lossless), O (lossy, LTRA) and U (uniform RC) load on both dialects, and Y (TXL) and P (CPL)
+on ngspice ([decision 0019](../decisions/0019-transmission-lines.md)). Each is a
+`TransmissionLine`; every node is topology, and the named parameters are in `params`.
+
+```python
+>>> from netlistmod import Dialect, LosslessLine, Netlist
+>>> text = (
+...     "t\nT1 a 0 b 0 Z0=50 TD=1n\nO1 a 0 c 0 lmod\nP1 a1 a2 0 b1 b2 0 pmod len=2\n"
+...     ".model lmod ltra r=1 l=50n c=20p len=1 nosteplimit\n"
+...     ".model pmod cpl length=1 R=1 0 1 L=50n 5n 50n G=0 0 0 C=20p -2p 20p\n.end\n"
+... )
+>>> netlist = Netlist.from_text(text, dialect=Dialect.NGSPICE)
+>>> t1 = netlist.element("T1")
+>>> isinstance(t1, LosslessLine), [node.name for node in t1.port2]
+(True, ['b', '0'])
+>>> p1 = netlist.element("P1")
+>>> p1.conductors, p1.model.model_name, [(p.name, p.value.text) for p in p1.params]
+(2, 'pmod', [('len', '2')])
+>>> [flag.name for flag in netlist.models["lmod"][0].flags]
+['nosteplimit']
+>>> netlist.models["pmod"][0].params[1].value.text
+'1 0 1'
+
+```
+
+- **T** takes `Z0=` (or `Zo=`, the same parameter on both dialects), then `TD=`, or `F=` with an
+  optional `NL=`, and on ngspice `IC=`, four comma-separated values. `Z0=` and exactly one length
+  form must be given. LTspice T takes only `Zo=` (or `Z0=`) and `Td=`.
+- **O** takes four nodes and an LTRA model, and nothing after it.
+- **U** is a URC line: three nodes, a URC model, `l=` (required) and `n=`. Any other ngspice U
+  line is the digital U, which raises `UnsupportedConstruct` until M17.
+- **Y** and **P** take an optional `len=`. Their reference nodes (Y's second and fourth, and
+  each P port's last) must be ground, since ngspice ignores them. P holds one to eight lines:
+  2X+2 nodes, then the model.
+- **`.model`:** an ngspice LTRA model takes LTRA's flags (`nosteplimit` and the others of
+  §6.2.1), and a CPL model's `R=`, `L=`, `G=` and `C=` take a list of values (a `ValueList`).
+
 ## LTspice
 
 The nodes are the same. These forms differ ([decision 0009](../decisions/0009-ltspice-dialect.md)):

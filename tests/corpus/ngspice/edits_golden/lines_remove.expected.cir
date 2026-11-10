@@ -1,0 +1,28 @@
+transmission line edits (M16)
+V1 in 0 1
+R1 in a 50
+T1 a 0 b 0 Zo=50 TD=1n ; matched
+R2 b 0 50
+T2 a 0 c 0 Z0=50 F=100meg
++ NL=0.25
+R3 c 0 50
+O1 a 0 d 0 lmod
+R4 d 0 50
+U1 a e 0 umod l=5
+R5 e 0 50
+Y1 a 0 f 0 ymod
+R6 f 0 50
+P1 a 0 g 0 pmod
+R7 g 0 50
+.model lmod ltra(l=50n c=20p len=1 nosteplimit)
+.model lmod2 ltra r=5 l=50n c=20p len=1
+.model umod urc rperl=10
+.model umod2 urc rperl=20 cperl=1p
+.model ymod txl r=1 l=50n g=0 c=20p length=1
+.model pmod cpl length=1
++R=10
++L=50n
++G=0
++C=20p
+.op
+.end

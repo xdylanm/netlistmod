@@ -1,6 +1,6 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** READY — section 2 decided by the maintainer on 2026-11-09
+> **Status:** READY FOR REVIEW — implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
@@ -290,6 +290,22 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 - a `.tran` for T and Y showing that `TD=` and `len=` move the waveform;
 - the probes of decisions 2 to 9 as tests, each with the library's reading.
 
+**T1 results (2026-11-09, ngspice 47 and LTspice 26.1.1):**
+
+| Probe | Result |
+|---|---|
+| P with eight coupled lines, a valid diagonally dominant matrix (off-diagonal L 5n, C −1p) | Runs |
+| P with nine lines, the same matrix | ngspice crashes (exit code 0xC0000409): the manual's limit of eight stands |
+| P with diagonal-only matrices of two or more lines | Stops ("Forbidden combination of model parameters"): coupling is required |
+| LTRA flags in a `.tran` (a 10-length line into 1k) | `lininterp` and `mixedinterp` change the waveform; `nosteplimit`, `steplimit`, `nocontrol`, `truncnr`, `truncdontcut` and `foobar` give the same one |
+| T `TD=1n` against `TD=2n`, and Y `len=1` against `len=2`, in `.tran` | The first rise moves with `TD=` (1.05 ns to 2.05 ns) and with `len=` |
+| P `m=2` (the planning table had it run) | Stops |
+| U with two nodes (`U1 a b umod l=5`) | Stops; the library reads three names as the digital U (unsupported) |
+| A CPL model without one of its matrices, or without `length=` when the instance writes `len=`; a TXL model without `g=` | Stops ("lossy line parallel conductance not given", "lossy line length must be given") |
+| LTspice `A1 a 0 0 0 0 b 0 0 BUF`, the new planned-letter reject | Runs |
+
+Each is a test: `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_line_probes.py`.
+
 ### 3.2 Corpus
 
 - **Today:** no accept file has a transmission line. `elements_rejects/phase_2_letter.cir` holds a T line in both dialects (decision 12).
@@ -320,12 +336,12 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 
 ## 4. Tasks
 
-[ ] **T1 — Probes and decision record 0019.**
+[x] **T1 — Probes and decision record 0019.**
 - Run the open probes of section 3.1, and add them to the tables.
 - Write the probe tests first, in `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_line_probes.py`, with M15b's shape: the line, whether the solver runs it, and the library's reading. They fail until the forms are in.
 - Write 0019 from section 2, with status `proposed` until M16 closes, and add it to the decisions index.
 
-[ ] **T2 — Corpus first.**
+[x] **T2 — Corpus first.**
 - **Done with the task list (2026-11-09):**
   - the maintainer's `.net` exports have their first comment normalised (decision 13);
   - both `transmission_lines` manifests list the maintainer's files, each `pending: M16` with a `solver.skip`;
@@ -337,38 +353,38 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 - Cover the family with the LTspice re-export test. A reject's manifest gives its line, column and error, and the rejects LTspice runs go in `LTSPICE_RUNS`.
 - Mark each accept file `pending: M16`, so that the sweeps skip it until T9.
 
-[ ] **T3 — Nodes, model types and the planned letter (decisions 1, 10 and 12).**
+[x] **T3 — Nodes, model types and the planned letter (decisions 1, 10 and 12).**
 - `TransmissionLine` and its five classes in `model/nodes.py`, exported from the package, with docstrings and properties.
 - `model-types.json` and `MODEL_TYPE_MISMATCH`.
 - The planned-letter tests and fixtures move to A. Add M17's note to the plan.
 
-[ ] **T4 — T (decisions 2 and 3).** On both dialects, in `model/_rules_lines.py`:
+[x] **T4 — T (decisions 2 and 3).** On both dialects, in `model/_rules_lines.py`:
 - the closed parameter lists with both spellings of `Z0`/`Zo`, the required `Z0=`, the one length form and ngspice's `IC=`;
 - **negative tests:** each refusal of decisions 2 and 3, at its column, including `Z0=` with `Zo=`;
 - **spec entries:** `NG-TLL-001` and `LT-TLL-001`.
 
-[ ] **T5 — O and U (decisions 4 and 7).**
+[x] **T5 — O and U (decisions 4 and 7).**
 - O with its model, on both dialects.
 - U as URC on both, with the required `l=` and the shape rule. The ngspice digital U becomes `UnsupportedConstruct`, and NG-UNS-001 lists it.
 - **Spec entries:** `NG-LTR-001`, `LT-LTR-001`, `NG-URC-001` and `LT-URC-001`.
 
-[ ] **T6 — Y and P (decisions 4, 5 and 6).**
+[x] **T6 — Y and P (decisions 4, 5 and 6).**
 - Y's four nodes and P's 2X+2, with the ground references, P's count and the boundary rule. The ground check sits where the import contracts allow (decision 14).
 - **Topology tests:** every node is in `nodes`, `nets()` and the signature. Changing any node of each new letter is a `TopologyViolation`.
 - **Spec entries:** `NG-TXL-001` and `NG-CPL-001`.
 
-[ ] **T7 — `.model` (decisions 8 and 9).**
+[x] **T7 — `.model` (decisions 8 and 9).**
 - LTRA's flags on ngspice, refused on other types and on LTspice.
 - CPL's lists, refused on other parameters and types.
 - Extend NG-MOD-001 and LT-MOD-001, and the `.model` sections of `statements.md`.
 
-[ ] **T8 — Edits on the new lines (decision 11).**
+[x] **T8 — Edits on the new lines (decision 11).**
 - `set_param` (following the written `Z0`/`Zo`), `set_model`, `set_model_param`, and `set_value`'s message.
 - **Golden diffs** for each, on both dialects, including a CPL list and an `IC=` list.
 - **Property tests** that no edit here changes the signature.
 - **Solver tests** that an edited `TD=`, `l=`, `len=`, model name and model parameter move the result. Use `.ac` or `.op` for T, O and U, and `.op` or `.tran` for Y and P.
 
-[ ] **T8b — `remove_param` and `remove_model_param` (decision 11).**
+[x] **T8b — `remove_param` and `remove_model_param` (decision 11).**
 - Both operations, in `edit/_ops_remove.py` and `edit/api.py` (on `Netlist` and `Batch`), with docstrings.
 - **Golden diffs** on both dialects:
   - a field mid-line and at the end;
@@ -383,18 +399,18 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 - **Property tests** that neither operation changes the signature; a **solver test** that removing `len=` from a Y moves the result back to the model's length.
 - `edit-layer.md`, `docs/usage/editing.md` and the CHANGELOG.
 
-[ ] **T9 — Corpus and snapshots.**
+[x] **T9 — Corpus and snapshots.**
 - The `pending` marks go, and every M16 accept file loads, round-trips and runs in its sweep.
 - The tree snapshot gains the new files and the expected-terminal changes, and its docstring says so.
 - No signature snapshot entry changes.
 
-[ ] **T10 — Documentation.**
+[x] **T10 — Documentation.**
 - Both device matrices and their JSON files: T, O, U, Y and P become `supported`, with ngspice U at `M16, M17`.
 - `docs/design/elements.md` and `statements.md`; `docs/usage/elements.md`, `editing.md` (a T and a CPL example) and `errors.md`.
 - Both `discrepancies.md`, with a row for each refusal a solver runs, and decision 3's accepted spelling.
 - README, CHANGELOG ("Unreleased") and the architecture amendments.
 
-[ ] **T11 — Final evidence and handover.**
+[x] **T11 — Final evidence and handover.**
 - Open the pull request.
 - Run the full local check set with `--require-solver ngspice --require-solver ltspice`, and record it and the CI run in section 5.
 - List the design points worth reviewing, and set the status to `READY FOR REVIEW`.
@@ -405,4 +421,28 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 
 ## 5. Results
 
-*(Filled in by T11.)*
+### 5.1 Evidence
+
+- **Full local check set** (2026-11-09): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,824 passed, 2 skipped**, 1,072 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.52%** (floor 90%), in 21 min 24 s. The two skips are the ones every run has.
+- `ruff check`, `ruff format --check`, `mypy` (strict), `lint-imports` and `pre-commit run --all-files` pass.
+- **Exit criteria:**
+  - every letter is `supported` in both device matrices (ngspice U at `M16, M17`), with spec entries validated on its solver (NG-TLL-001, NG-LTR-001, NG-URC-001, NG-TXL-001, NG-CPL-001, LT-TLL-001, LT-LTR-001, LT-URC-001; NG-MOD-001 and LT-MOD-001 extended);
+  - the signature snapshot is unchanged and its compatibility test passes;
+  - changing any node of each new letter, and P's line count, is a `TopologyViolation` (`tests/document/test_line_topology.py`);
+  - every M16 accept file of both `transmission_lines` families loads, round-trips byte-exact and runs in its solver sweep, and the maintainer's four LTspice schematics re-export to the committed `.net` files;
+  - every edit has golden diffs (the `lines*` cases of both `edits_golden` families), and solver tests show that an edited `TD=`, `l=`, `len=`, model name and model parameter, a removed `len=` and a removed model parameter move the result (`test_an_edit_moves_the_result` on both solvers).
+- The tree snapshot changed as its docstring says: the KiCad file parses, 35 files are new, and 17 rejected files list the five new letters among their expected terminals; `phase_2_letter.cir` and `structure_rejects/element_line.cir` now hold an A line, with the same entries.
+- **CI:** see the pull request.
+
+### 5.2 Design points worth reviewing
+
+1. **A repeated impedance is refused, other repeats load.** Decision 3 makes `Z0=` with `Zo=` a "repeated parameter" that never loads, and decision 2 says repeats follow the library's existing rule, under which a repeated parameter loads and edits refuse it. I refuse any repeat of the impedance (`Z0=` twice too) at parse time and leave other repeats (`TD=` twice, `l=` twice) to the existing rule. Say if every repeat on a line should be refused.
+2. **Three findings the task list did not have** (T1, section 3.1): ngspice 47 stops on `m=2` on P (the planning table had it run, ignored); a CPL model needs every matrix and `length=` even when the instance writes `len=`, and a TXL model needs `g=`; ngspice crashes rather than stops on nine coupled lines. The CPL-removal golden (`lines_cpl_remove.expected.cir`) therefore has a `solver.skip`, since model contents are not checked.
+3. **A second T-based planned-letter fixture**, `structure_rejects/element_line.cir`, was not in decision 12's list; it now holds an A line too.
+4. **Five names on an ngspice U whose last is a number or `off`** are a `ParseError` (positional length, flag) rather than the digital U, so that `u_positional.cir` is refused as decision 4 says. Any other five-name line is the digital U, as decision 7 says. A three-name line (`U1 a b umod l=5`) is the digital U too.
+5. **The comment rule of `remove_param`.** A comment after the field on its line refuses the edit only when more fields follow or the field is on a `+` line; a comment after a line's last field stays put (`R1 a 0 1k m=2 ; note` loses `m=2`). This reads decision 11's "between the field and the rest of the line" literally.
+6. **Removal of a field that starts a `+` line holding more fields** takes the separator after it, so the other fields stay on their line; a `+` line holding only the field goes whole.
+7. **`remove_param` coverage** includes everything `set_param` sets, and also an LTspice E or G's `window=`/`nfft=`/`mtol=` and ngspice V's port parameters, which decision 11's list does not name; say if they should be refused.
+8. **LTspice T refuses a comma between parameters** (`Zo=50, Td=1n`, which LTspice runs), as LTspice element lines take no comma; it has a discrepancies row.
+9. **Refusal messages:** `rel=`/`abs=`, LTspice `F=`/`NL=`/`IC=`, a field after an O's model, and LTRA flags on LTspice each have their own message; `m=` on Y and P and unknown names are generic syntax errors at the field.
+10. The new decision record is `proposed`; T12 accepts it.

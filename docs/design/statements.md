@@ -65,6 +65,7 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
 | `.param <ident> = <expr> …` (§2.11.1) | `param_stmt: PARAM_KW param_def+ …` | `assignments` |
 | bare expression (§2.11.1) | `bare_value`, `bare_tail` | `ParseError` at the value |
 | `.model mname type(pname=pval …)` (§2.5), unparenthesized (§3.2.2) | `model_stmt: MODEL_KW x_name x_name (param* \| model_paren)` | `name`, `model_type`, `params`, `parenthesized` |
+| a CPL matrix `R=1 0 1` (§6.4.2); LTRA's flags (§6.2.1) | ngspice `model_more` after a parameter, and `_ltra_flag` in `model_flag` | the matrix is one `ParamAssignment` whose value is a `ValueList` (first value to last); the flags are `flags` (decision 0019 items 8 and 9) |
 | `.SUBCKT subnam N1 … <ident>=<value> …` (§2.6.1, §2.11.3) | `subckt_header: SUBCKT_KW x_name subckt_port+ x_param*` | `name`, `ports`, `params` |
 | body | `subckt_def: subckt_header subckt_item* ends_line` | `body`, `header_span` |
 | statements not allowed in a body | `not_in_subckt` | `ParseError` at the keyword |
@@ -110,6 +111,6 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 4, 
 - **`.tran`** may have one argument (`tstep` is then `None`) and modifiers.
 - **`.ac`** also has `list` and `file=`; **`.dc`** a variation per sweep, up to three sweeps, and `list` or `file=` on the last; **`.temp`** a list.
 - **`.param`** also has `.param x 3k` and bare expressions, which give a `Formula` with an empty `delimiter`.
-- **`.model`** has `ako:`, and a string or bare word for `mfg` and `type` only.
+- **`.model`** has `ako:`, and a string or bare word for `mfg` and `type` only. LTRA's ngspice flags are refused with their own message (the reference lists none), and a list of values after a parameter is a syntax error (LTspice has no CPL).
 - **`.ic`** has `i(L1)=value`; **`.meas`** may omit the analysis, and has `noise` and `op`; **`.save`** has device currents and wildcards.
 - **`.step`** is a typed node, with no limit on nesting. A parameter swept by `.step param` counts as defined.

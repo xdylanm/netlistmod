@@ -13,7 +13,6 @@ from netlistmod.model.nodes import (
     TopLevelItem,
 )
 from netlistmod.model.values import (
-    Flag,
     Formula,
     Identifier,
     ModelReference,
@@ -244,12 +243,11 @@ class _Bare:
 
 @dataclass(frozen=True, slots=True)
 class _ModelParams:
-    """The parenthesized parameter list of a ``.model`` line and its parenthesis tokens."""
+    """The parenthesized fields of a ``.model`` line, in order, and its parenthesis tokens."""
 
-    params: tuple[ParamAssignment, ...]
+    fields: tuple[object, ...]
     open_span: Span
     close_span: Span
-    flags: tuple[Flag, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)

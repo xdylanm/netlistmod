@@ -92,7 +92,7 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-MES-001](./specs/LT-MES-001.yaml) | MESFET and IGBT (Z) lines | validated | ltspice 26.1.1 (2026-11-05) |
-| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01, 2026-11-05) |
+| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | ltspice 26.1.1 (2026-11-01, 2026-11-05, 2026-11-09) |
 | [LT-MOS-001](./specs/LT-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ltspice 26.1.1 (2026-11-05) |
 | [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | validated | ltspice 26.1.1 (2026-11-01) |
 | [LT-NLS-001](./specs/LT-NLS-001.yaml) | expression forms of the dependent sources (value= on E, F, G and H) | validated | ltspice 26.1.1 (2026-11-06) |
@@ -125,3 +125,6 @@ reference does not mention is marked observed in the entry's notes (§11.3 rule 
 | [LT-VCC-001](./specs/LT-VCC-001.yaml) | voltage-dependent current source (G) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-VCV-001](./specs/LT-VCV-001.yaml) | voltage-dependent voltage source (E) lines | validated | ltspice 26.1.1 (2026-11-06) |
 | [LT-XTR-001](./specs/LT-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | ltspice 26.1.1 (2026-11-05) |
+| [LT-LTR-001](./specs/LT-LTR-001.yaml) | lossy transmission line (O) lines | validated | ltspice 26.1.1 (2026-11-09) |
+| [LT-TLL-001](./specs/LT-TLL-001.yaml) | lossless transmission line (T) lines | validated | ltspice 26.1.1 (2026-11-09) |
+| [LT-URC-001](./specs/LT-URC-001.yaml) | uniform RC line (U) lines | validated | ltspice 26.1.1 (2026-11-09) |

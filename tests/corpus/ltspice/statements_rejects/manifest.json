@@ -222,6 +222,13 @@
       "column": 1,
       "error": "ParseError",
       "note": "L18"
+    },
+    "ltra_flags.cir": {
+      "sha256": "47fbd7117d2a6a9d56590ca51911af199e96d9a987c410d22104145985f480b6",
+      "line": 2,
+      "column": 38,
+      "error": "ParseError",
+      "note": "LTRA flags run, the reference lists none"
     }
   }
 }

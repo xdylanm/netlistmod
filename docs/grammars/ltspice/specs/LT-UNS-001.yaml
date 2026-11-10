@@ -16,4 +16,4 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_phase_2_letters_are_unsupported
 - tests/solver/test_ltspice_validation.py::test_ngspice_source_functions_stop_ltspice
 - tests/solver/test_ltspice_validation.py::test_letters_that_are_not_ltspice_letters_stop_both
-notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms of M15b (POLY, table=, Laplace=) and B''s laplace= load since decision 0017 (LT-PLY-001, LT-TBL-001, LT-LAP-001).'
+notes: 'Phase 2 letters: UnsupportedConstruct. N, P and Y stop both; LTspice''s message for P and Y is Expected nodes. The nonlinear dependent source forms of M15b (POLY, table=, Laplace=) and B''s laplace= load since decision 0017 (LT-PLY-001, LT-TBL-001, LT-LAP-001). T, O and U load since decision 0019 (LT-TLL-001, LT-LTR-001, LT-URC-001); A, @ and & stay planned until M17.'

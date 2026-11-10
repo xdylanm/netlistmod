@@ -453,6 +453,11 @@ LTSPICE_RUNS = {
     "statements_rejects/nodeset_current.cir",
     "statements_rejects/text_after_end.cir",
     "elements_rejects/flag_with_a_word.cir",
+    # M16 (decision 0019): forms LTspice runs that the reference does not show.
+    "elements_rejects/t_f_nl.cir",
+    "elements_rejects/t_ic.cir",
+    "elements_rejects/t_no_length.cir",
+    "statements_rejects/ltra_flags.cir",
 }
 _REJECTS = sorted(
     path

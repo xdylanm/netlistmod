@@ -35,6 +35,15 @@ terminals changed: M15b adds no element letter. M15b review round 1 replaced
 M16's task list added the ``transmission_lines`` family with the maintainer's KiCad export,
 ``test_kicad_tline.cir``, as a rejected file (an O line, unsupported until M16 loads it); no
 other entry changed.
+M16 (decision 0019) loaded ``test_kicad_tline.cir``, so its entry changed from an error to a
+parse, and added the ``transmission_lines`` variants, the ``lines*`` golden files, fourteen
+``elements_rejects`` files and two ``statements_rejects`` files.
+``elements_rejects/phase_2_letter.cir``
+and ``structure_rejects/element_line.cir`` held a T line as the planned letter; they now hold an
+A line, which stays planned until M17, so their entries (an unsupported construct at line 2,
+column 1) did not change. The same 17
+rejected files gained the five new letters among their expected terminals. No node, position or
+error class of any other entry changed.
 """
 
 from __future__ import annotations

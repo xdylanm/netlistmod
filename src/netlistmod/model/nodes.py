@@ -373,6 +373,74 @@ class CurrentSwitch(Switch):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class TransmissionLine(Component):
+    """Base of the transmission lines T, O, U, Y and P (decision 0019), for ``isinstance``.
+
+    ``nodes`` are every node as written; every one is topology. The named parameters are in
+    ``params``.
+    """
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class _TwoPortLine(TransmissionLine):
+    """A line with two ports, each a set of nodes and then its reference node."""
+
+    @property
+    def port1(self) -> tuple[Node, ...]:
+        """Port 1's nodes: its signal node or nodes, then its reference node."""
+        return self.nodes[: len(self.nodes) // 2]
+
+    @property
+    def port2(self) -> tuple[Node, ...]:
+        """Port 2's nodes: its signal node or nodes, then its reference node."""
+        return self.nodes[len(self.nodes) // 2 :]
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LosslessLine(_TwoPortLine):
+    """A ``T`` line: four nodes and no model. ``params`` holds ``Z0=`` (or ``Zo=``), then ``TD=``,
+    or ``F=`` with an optional ``NL=``, and on ngspice ``IC=``, whose value is a
+    :class:`~netlistmod.model.values.ValueList` of four values (V1, I1, V2, I2)."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class LossyLine(_TwoPortLine):
+    """An ``O`` line: four nodes and an ``LTRA`` model, and nothing after it."""
+
+    model: ModelReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class RcLine(TransmissionLine):
+    """A ``U`` line read as a uniform RC line (URC): three nodes (the two ends and the capacitance
+    node), a ``URC`` model, then ``l=`` and an optional ``n=`` in ``params``. It has no ports."""
+
+    model: ModelReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class TxlLine(_TwoPortLine):
+    """An ngspice ``Y`` line: four nodes, whose second and fourth are ground (ngspice ignores
+    them), a ``TXL`` model and an optional ``len=`` in ``params``."""
+
+    model: ModelReference
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class CoupledLine(_TwoPortLine):
+    """An ngspice ``P`` line: ``2X+2`` nodes for ``X`` coupled lines, a ``CPL`` model and an
+    optional ``len=`` in ``params``. Each port is its ``X`` nodes and then its reference node,
+    which is ground (ngspice ignores it)."""
+
+    model: ModelReference
+
+    @property
+    def conductors(self) -> int:
+        """The number of coupled lines, ``X``."""
+        return len(self.nodes) // 2 - 1
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class BehavioralSource(Component):
     """A ``B`` line (decision 0016).
 
@@ -698,6 +766,11 @@ BodyItem: TypeAlias = (
     | VoltageSwitch
     | CurrentSwitch
     | BehavioralSource
+    | LosslessLine
+    | LossyLine
+    | RcLine
+    | TxlLine
+    | CoupledLine
     | SubcktInstance
 )
 """An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
@@ -754,6 +827,11 @@ ELEMENT_NAMES: dict[type[Component], str] = {
     VoltageSwitch: "voltage-controlled switch",
     CurrentSwitch: "current-controlled switch",
     BehavioralSource: "behavioral source",
+    LosslessLine: "lossless transmission line",
+    LossyLine: "lossy transmission line",
+    RcLine: "uniform RC line",
+    TxlLine: "TXL transmission line",
+    CoupledLine: "coupled transmission line",
     SubcktInstance: "subcircuit call",
 }
 

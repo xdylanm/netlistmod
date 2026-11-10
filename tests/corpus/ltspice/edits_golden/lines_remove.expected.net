@@ -1,0 +1,15 @@
+* transmission line edits (M16)
+V1 in 0 SINE(0 1 100Meg) AC 1
+R1 in a 50
+T1 a 0 b 0 Td=1n Z0=50
+R2 b 0 50
+O1 a 0 c 0 lmod
+R3 c 0 50
+U1 a d 0 umod L=5
+R4 d 0 50
+.model lmod LTRA(L=50n C=20p len=1)
+.model lmod2 LTRA(R=5 L=50n C=20p len=1)
+.model umod URC(Rperl=10 Cperl=1p)
+.model umod2 URC(Rperl=20 Cperl=1p)
+.ac dec 10 10Meg 1000Meg
+.end

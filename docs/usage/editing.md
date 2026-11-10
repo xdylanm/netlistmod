@@ -330,6 +330,46 @@ a POLY line takes at least 2 coefficients on ngspice; `E2` was given 1
 
 ```
 
+## Edit a transmission line
+
+`set_param` sets a line's parameters, `set_model` its model, and `remove_param` and
+`remove_model_param` take a parameter out ([decision 0019](../decisions/0019-transmission-lines.md)).
+A T keeps the spelling of its impedance, and its length form is switched in one batch:
+
+```python
+>>> from netlistmod import Dialect, Netlist
+>>> line = Netlist.from_text(
+...     "t\nT1 a 0 b 0 Zo=50 TD=1n\nR1 b 0 50\n.end\n", dialect=Dialect.NGSPICE
+... )
+>>> print(line.set_param("T1", "z0", "75").source.text.splitlines()[1])
+T1 a 0 b 0 Zo=75 TD=1n
+>>> with line.batch() as batch:
+...     batch.set_param("T1", "f", "100meg")
+...     batch.set_param("T1", "nl", "0.1")
+...     batch.remove_param("T1", "td")
+>>> print(batch.result.source.text.splitlines()[1])
+T1 a 0 b 0 Zo=50 f=100meg nl=0.1
+
+```
+
+A CPL matrix is set as a whole list, and `remove_model_param` takes a parameter out of a `.model`:
+
+```python
+>>> cpl_text = (
+...     "t\nP1 a1 a2 0 b1 b2 0 pmod\n.model pmod cpl length=1\n+R=1 0 1\n+L=50n 5n 50n\n"
+...     "+G=0 0 0\n+C=20p -2p 20p\n.model lm ltra(r=10 l=50n c=20p len=1)\n.end\n"
+... )
+>>> cpl = Netlist.from_text(cpl_text, dialect=Dialect.NGSPICE)
+>>> print(cpl.set_model_param("pmod", "L", "60n 6n 60n").source.text.splitlines()[4])
++L=60n 6n 60n
+>>> print(cpl.remove_model_param("lm", "r").source.text.splitlines()[7])
+.model lm ltra(l=50n c=20p len=1)
+
+```
+
+A removal that leaves a line without what it needs (a T's `Z0=`, a U's `l=`) is refused by the
+verification. Nodes, P's line count and an O line's (absent) parameters are not editable.
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's

@@ -1,0 +1,25 @@
+id: NG-CPL-001
+dialect: ngspice
+construct: coupled transmission line (P) lines
+manual_ref:
+- '[ngspice-manual] §6.4.2 "Coupled Multiconductor Line (CPL)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-09'
+grammar:
+- body_line
+- coupled_line
+- P_NAME
+tests:
+- tests/grammar/ngspice/test_lines.py::test_p_takes_2x_plus_2_nodes_then_its_model
+- tests/grammar/ngspice/test_lines.py::test_refused_p_lines
+- tests/grammar/ngspice/test_lines.py::test_p_m_is_a_syntax_error
+- tests/document/test_line_topology.py::test_y_and_p_nodes_are_topology
+- tests/document/test_line_topology.py::test_changing_the_line_count_of_p_is_a_topology_violation
+- tests/solver/test_ngspice_line_probes.py::test_line_probes
+- tests/solver/test_ngspice_line_probes.py::test_p_holds_up_to_eight_lines
+- tests/solver/test_ngspice_line_probes.py::test_an_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: '2X+2 nodes for X coupled lines (one to eight), then the model, the last name before len= or the end (decision 0014''s boundary rule), then an optional len=. port1 is the first half of the nodes and port2 the second, each ending in its reference node, which must be ground (ngspice ignores it). ngspice 47 runs eight lines and crashes on nine with a valid matrix (T1). The model''s matrix size is not checked against X.'
