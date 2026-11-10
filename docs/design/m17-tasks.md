@@ -1,6 +1,6 @@
 # M17 task list — Special and mixed-signal devices (ngspice A and N; LTspice A, `@` and `&`)
 
-> **Status:** READY — approved by the maintainer on 2026-11-10, with section 2 decided and the provenance of the base files (section 3.2) confirmed
+> **Status:** READY FOR REVIEW — implemented on 2026-11-10 (T1 to T10; section 5). Approved by the maintainer on 2026-11-10, with section 2 decided and the provenance of the base files (section 3.2) confirmed
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M17). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./archive/phase-2/m16-tasks.md), [decision 0014](../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../decisions/0015-controlled-sources.md) (controlling references).
 
 ## 1. Scope
@@ -324,7 +324,24 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
 
 **Found with the maintainer's schematics (2026-11-10):** a `.fra` run writes `<name>.fra_<instance>.raw`, which `tests/support/raw.py` reads as a "Frequency Response Analysis" plot with `frequency`, `gain_<n>`, `V(stimulus_<n>)` and `probe_<n>`. So an edited `fend=` can be shown to move its frequency points. During `.fra`, an independent source's `AC` value does not apply, so a probe whose input pair sits on such a source's node reads ±inf.
 
-**For T1:**
+**Found in T1 (2026-11-10; `test_ngspice_special_probes.py`, `test_ltspice_special_probes.py`):**
+
+| Line | Result | Library |
+|---|---|---|
+| ngspice `a1 in out dm` with `.model dm d` | Stops: "Invalid model type for A type device" | Loads, `MODEL_TYPE_MISMATCH` |
+| `%vd (in 0)` (a blank before the parenthesis); `(in)` with no type; `%vd(in, 0)` | Run, 5 | Loads; loads; refused (a comma) |
+| `%vd [in 0 in 0]` (a differential type before a vector), the manual's §8.1.1 Example 1 | Runs, 2 | Loads: each untyped connection is a pair |
+| `[%vnam Vs in]` (`%vnam` inside a vector) | Stops: "unknown controlling source in" | Refused |
+| `NULL`, `Null` in `d_dff`'s set and reset | Run | Loads as `null` |
+| `%v null`; `%vd(in 0 in)`; `%v(in 0)` | Stop | Refused |
+| `.model dm d(is=1e-14 foo=TRUE)`; `gain(gain=5 x="abc")`; `gain(x=abc)` | Run with "Model issue"; run; stop | Refused; loads; refused |
+| `[[in] in]`; `[]`; `in_gain=[]` | Stop ("Arrays of arrays not allowed"; "at least one value") | Refused |
+| r2_cmc with `rsh=100`, `200` or none; `w=2u`; no `w=` | 0.3333 V each; 0.5 V; 0.3333 V (default `w=1u`) | — |
+| LTspice `A1 in 0 clk 0 0 0 q 0 SAMPLEHOLD` with a pulse on CLK | Runs | Loads |
+| `@1 … ZM …` with an `&1` probe | Stops: "FRA Probe not supported for instance @1 in impedance measurement mode" | Loads |
+| `.fra` with `flist=` and `fstart=` but no `fend=` (or neither) | Stops: "Missing parameter" | Loads |
+
+For the record, the open probes were:
 - a valid `SAMPLEHOLD`;
 - ngspice A with a model of a built-in type (`.model dm d`);
 - a differential `%vd` with a blank before its parenthesis;
@@ -418,13 +435,13 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
 
 ## 4. Tasks
 
-[ ] **T1 — Probes and decision record 0020.**
+[x] **T1 — Probes and decision record 0020.**
 - Run the open probes of section 3.1, and add them to the tables.
 - Write the probe tests first, in `tests/solver/test_ngspice_special_probes.py` and `test_ltspice_special_probes.py`, with M16's shape: the line, whether the solver runs it, and the library's reading. They fail until the forms are in.
 - Add a test helper that finds the shipped `r2_cmc.osdi` beside the ngspice in `.env`, and skips with a reason when it is missing.
 - Write 0020 from section 2, with status `proposed` until M17 closes, and add it to the decisions index.
 
-[ ] **T2 — Corpus first.**
+[x] **T2 — Corpus first.**
 - The three new families of section 3.2, with manifests (author, licence and origin as decision 12), in both solver sweeps' `FAMILIES`, each accept file `pending: M17`.
 - The maintainer's files (section 3.2 checklist) are kept byte for byte, and their hashes go in the manifests.
   - The maintainer commits only the `.asc` schematics (2026-11-10).
@@ -433,32 +450,32 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
   - `jellybean.lib` is not copied into the family: as in `ltspice_transistors`, the manifest maps it to `OPENJELLYBEAN_LIB`.
 - Cover any LTspice schematics with the re-export test.
 
-[ ] **T3 — Nodes, model types and the planned-letter tests (decisions 2, 6 and 10).**
+[x] **T3 — Nodes, model types and the planned-letter tests (decisions 2, 6 and 10).**
 - The five classes and `CodeModelPort` in `model/nodes.py`, exported from the package, with docstrings and properties.
 - The "not a built-in type" rule for A and N in `model-types.json` and `MODEL_TYPE_MISMATCH`.
 - The planned-letter tests move to a mocked matrix; the `phase_2_letter.cir` rejects go.
 
-[ ] **T4 — ngspice A (decision 4).**
+[x] **T4 — ngspice A (decision 4).**
 - The port grammar in its own rules in `model/_rules_special.py`, with the refusals of decision 4.
 - `ports`, `nodes`, the `%vnam` reference and the signature entry.
 - **Topology tests:** every node is in `nodes`, `nets()` and the signature. Moving a node between ports, swapping a node and `null`, and changing a port type or the `%vnam` source are each a `TopologyViolation`.
 - **Spec entry:** `NG-COD-001`.
 
-[ ] **T5 — Code-model `.model` values (decision 5).**
+[x] **T5 — Code-model `.model` values (decision 5).**
 - Vectors, booleans and strings on types that are not built-in, refused on built-in types.
 - Extend NG-MOD-001 and the `.model` section of `statements.md`.
 
-[ ] **T6 — ngspice N (decision 6).**
+[x] **T6 — ngspice N (decision 6).**
 - Shape, refusals and the model-type rule.
 - **Spec entry:** `NG-OSD-001`, `validated` with the shipped `r2_cmc.osdi`.
 
-[ ] **T7 — LTspice A, `@` and `&` (decisions 3, 7 and 8).**
+[x] **T7 — LTspice A, `@` and `&` (decisions 3, 7 and 8).**
 - The function list, the eight nodes and the parameters.
 - `@`'s fields and lists, and `refnode=`/`intnode=` as node references.
 - `&` and its analyzer reference, with decision 8's exception.
 - **Spec entries:** `LT-SPF-001`, `LT-FRA-001` and `LT-FRP-001`. `LT-UNS-001` and `LT-MCH-001` change (decision 11).
 
-[ ] **T8 — Edits (decision 9).**
+[x] **T8 — Edits (decision 9).**
 - The operations of decision 9 and their `EditError`s.
 - **Golden diffs:** for each, on its dialect, including a vector, a boolean, a string and an `@` list.
 - **Property tests:** no edit here changes the signature.
@@ -468,12 +485,12 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
   - an LTspice A `Vhigh=` (`.op`);
   - an `@` `fend=` (`.fra`, as T1 found).
 
-[ ] **T9 — Corpus and snapshots.**
+[x] **T9 — Corpus and snapshots.**
 - The `pending` marks go, and every M17 accept file loads, round-trips and runs in its sweep.
 - The tree snapshot gains the new files and loses `phase_2_letter.cir`, and its docstring says so.
 - No signature snapshot entry changes.
 
-[ ] **T10 — Documentation.**
+[x] **T10 — Documentation.**
 - **Both device matrices and their JSON files:** A, N, `@` and `&` become `supported`. ngspice U's milestone becomes `M16`, with a note naming the digital U as a v1 exclusion (decision 1).
 - **Design and usage docs:**
   - `docs/design/elements.md` and `statements.md`;
@@ -482,7 +499,7 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
 - **The plan:** checked against decision 1. Its v1 scope, M17 entry, section 5 and section 8, point 2 are already updated with this list.
 - **Also:** README, CHANGELOG ("Unreleased") and the architecture amendments.
 
-[ ] **T11 — Final evidence and handover.**
+[~] **T11 — Final evidence and handover.** Done locally (section 5); the commit, the pull request and the CI run wait for the maintainer.
 - Open the pull request.
 - Run the full local check set with `--require-solver ngspice --require-solver ltspice`, and record it and the CI run in section 5.
 - List the design points worth reviewing, and set the status to `READY FOR REVIEW`.
@@ -493,4 +510,32 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from scratch scripts outside th
 
 ## 5. Results
 
-To be written in T11.
+Written in T11, 2026-11-10, on `m17-special-devices` (not yet committed or pushed; no pull request or CI run yet).
+
+### What was done
+
+- **T1.** The open probes ran on ngspice 47 and LTspice 26.1.1, and section 3.1 gains a "Found in T1" table. The probe tests are `tests/solver/test_ngspice_special_probes.py` (43 code-model probes, 11 OSDI probes, the computed values and the edits) and `tests/solver/test_ltspice_special_probes.py` (38 special-function probes, 33 analyzer and probe probes, and the edits). `require_osdi` and `osdi_directory` in `tests/support/solvers.py` find `r2_cmc.osdi` in the install's `lib/ngspice` and skip with a reason when it is missing; `tests/support/ngspice.run` sets `NGSPICE_OSDI_DIR` to that folder. Decision 0020 is written, `proposed`, and in the decisions index.
+- **T2.** The three families have manifests (xdylanm, MIT; provenance confirmed 2026-11-10) and are in both solver sweeps' `FAMILIES` and in the LTspice re-export test. The five LTspice schematics are kept byte for byte; their `-netlist` exports were made here, with the path comment replaced by the file name (the GUI export of `test_ltspice_fra.net` differed only in that line). LTspice's run output in the folder (`.raw`, `.log`, `.db`) and the copied `jellybean.lib` were moved out of the repository (to a scratch folder) and are kept out by the family's `.gitignore`; `jellybean.lib` maps to `OPENJELLYBEAN_LIB`. Variants: six ngspice code-model files and a data file, one OSDI file, five LTspice files. Rejects: nine ngspice `elements_rejects`, two `statements_rejects`, six LTspice `elements_rejects`. Two new manifest `solver` fields: `osdi` (the modules a fixture needs) and `data` (files copied beside it). No accept file was left `pending`, since T3 to T9 landed together.
+- **T3.** The five classes, `CodeModelPort` and `CodeModelConnection` are in `model/nodes.py` and exported. `model-types.json` moved to the model package with a reader, `model/model_types.py` (the parser needs the built-in types, and the model layer may not read the document layer); its `not_builtin` list names `CodeModelDevice` and `OsdiDevice`. The planned-letter tests run on a mocked matrix, with `Ω` (no grammar rule in either dialect) as the planned letter; `test_no_device_letter_is_planned` is the architecture test.
+- **T4 to T7.** The grammar is in `ngspice.lark` (`code_model`, `osdi_device`, `model_code`) and `ltspice.lark` (`special_function`, `frequency_analyzer`, `fra_probe`); the rules are in `model/_rules_special.py`. No new terminal is outside interegular's collision check, so the reviewed list is unchanged. Spec entries NG-COD-001, NG-OSD-001, LT-SPF-001, LT-FRA-001 and LT-FRP-001 are new and `validated`; NG-MOD-001, NG-UNS-001, NG-URC-001, LT-UNS-001 and LT-MCH-001 changed.
+- **T8.** The edits of decision 9, with golden cases `special_models`, `special_values`, `special_remove` and `special_string` (ngspice) and `special_params` and `special_remove` (LTspice); `tests/edits/test_special_edits.py` holds the `EditError`s and two Hypothesis properties (no edit changes the signature). Solver tests show that a code-model parameter, a vector, `set_model`, an OSDI `l=` and `w=`, an LTspice A `Vhigh=` and an `@` `fend=` and `fstart=` move the result.
+- **T9.** Every M17 accept file loads, round-trips and runs in its sweep. The tree snapshot gains the M17 files and loses the two planned-letter rejects, and its docstring says so; the same 17 rejected files gained the two new letters among their expected terminals, and no other entry changed. The signature snapshot is unchanged.
+- **T10.** Both device matrices and their documents, `elements.md`, `statements.md`, `edit-layer.md`, the usage guides (`elements.md`, `editing.md` and `errors.md`, with both v1 exclusions), both `discrepancies.md`, the grammar READMEs, the README, the CHANGELOG and architecture §4, §5.3, rule 14 and §7.2. The plan already carried decision 1.
+
+### Evidence
+
+- Full local run with both solvers: `python -m pytest --require-solver ngspice --require-solver ltspice`: 9434 passed, 2 skipped, 1 failed (23 min 55 s; coverage 98.6 %). The failure was `tests/solver/test_ltspice_validation.py::test_fra_needs_its_device`, an M8 test that still expected `@` to be unsupported; it now checks that the line loads, and that file passes on its own (344 passed). The whole run was not repeated after that one-line test change.
+- `ruff check`, `ruff format --check`, `mypy --strict` (the package and the named tests), `lint-imports` and `pre-commit run --all-files`: clean.
+- CI: not run yet (no pull request).
+
+### Design points worth reviewing
+
+1. **`%vd [1 2 3 4]` loads.** The task list did not decide a differential type before a vector; the manual's §8.1.1 Example 1 writes it, so it loads, each untyped connection being a pair (a grammar rule of its own, `a_dvector`). `%vnam` inside a vector is refused (ngspice stops).
+2. **Refusals beyond decision 4's list:** a comma inside a connection's parentheses (`%vd(in, 0)`, which ngspice runs) is refused like a comma inside a vector; `null` after a port type or in parentheses is refused (ngspice stops). An untyped parenthesised connection, `(in)`, loads: decision 4 allows parentheses with or without a type, and ngspice runs it.
+3. **`structure_rejects/element_line.cir` was removed** with the two `phase_2_letter.cir` files: it also held an A line as the planned letter, and now loads.
+4. **The comma between LTspice A parameters is accepted** (decision 7: LTspice runs it). Decision 7 says "as on T", but LTspice T refuses a comma (`t-comma` in the LTspice `discrepancies.md`), so the two letters now differ; one of them may want to change.
+5. **`@` lists with a comment inside them** (over `+` lines) are refused by `set_param` and `remove_param` whatever the new count; code-model vectors follow M16's R3 rule (value for value with as many values). The difference is deliberate but small; `@` could follow R3 too.
+6. **`zm` with a probe** stops LTspice ("FRA Probe not supported … in impedance measurement mode"); the library loads it, as it does not check analyzer modes. The `.fra` run's need for `fstart=` and `fend=` beside `flist=` is not checked either.
+7. **`model-types.json` moved** to `netlistmod/model/` (CHANGELOG and decision 0020 consequences), because the parser now reads the built-in types.
+8. **r2_cmc ignores its model's `rsh=`**, so no OSDI model edit can be shown to move a result; the instance's `l=` and `w=` do. The base file's `rsh=200` is inert.
+9. **`FraProbe.analyzer`'s span is the probe's designator**, since the reference is not written on the line.

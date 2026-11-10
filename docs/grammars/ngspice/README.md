@@ -29,6 +29,8 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-CPL-001](./specs/NG-CPL-001.yaml) | coupled transmission line (P) lines | validated | ngspice 47 (2026-11-09) |
+| [NG-COD-001](./specs/NG-COD-001.yaml) | code model (A) lines | validated | ngspice 47 (2026-11-10) |
+| [NG-OSD-001](./specs/NG-OSD-001.yaml) | OSDI device (N) lines | validated | ngspice 47 (2026-11-10) |
 | [NG-CTL-001](./specs/NG-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | ngspice 47 (2026-11-06) |
 | [NG-DCA-001](./specs/NG-DCA-001.yaml) | .dc transfer function | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-DIO-001](./specs/NG-DIO-001.yaml) | junction diode (D) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -55,7 +57,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-LTR-001](./specs/NG-LTR-001.yaml) | lossy transmission line (O) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-MEA-001](./specs/NG-MEA-001.yaml) | .meas / .measure (shallow) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-MES-001](./specs/NG-MES-001.yaml) | MESFET (Z) lines | validated | ngspice 47 (2026-11-05) |
-| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05, 2026-11-09) |
+| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05, 2026-11-09, 2026-11-10) |
 | [NG-MOS-001](./specs/NG-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-MUT-001](./specs/NG-MUT-001.yaml) | mutual coupling (K) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NLS-001](./specs/NG-NLS-001.yaml) | expression forms of the dependent sources (E vol= and value, G cur= and value) | validated | ngspice 47 (2026-11-06) |

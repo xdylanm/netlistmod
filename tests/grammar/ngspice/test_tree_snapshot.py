@@ -46,6 +46,12 @@ rejected files gained the five new letters among their expected terminals. No no
 error class of any other entry changed. M16 review round 1 (R1) added the
 ``edits_golden/lines_comments*`` files, and no other entry changed. M16 review round 2 (R3)
 added the ``edits_golden/lines_cpl_comments*`` files, and no other entry changed.
+M17 (decision 0020) added the ``code_models`` and ``osdi_devices`` families, nine
+``elements_rejects`` files and two ``statements_rejects`` files, and the code-model golden files.
+It removed ``elements_rejects/phase_2_letter.cir`` and ``structure_rejects/element_line.cir``,
+whose A line now loads, since no letter is planned (decision 0020 item 10). The same 17 rejected
+files gained the two new letters among their expected terminals. No node, position or error
+class of any other entry changed.
 """
 
 from __future__ import annotations

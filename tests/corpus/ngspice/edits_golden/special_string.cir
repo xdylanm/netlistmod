@@ -1,0 +1,6 @@
+M17 golden input: a code model's quoted file= (netlistmod)
+a1 [out] src
+Rl out 0 1k
+.model src filesource(file="in.txt" amploffset=[0] amplscale=[1])
+.tran 1u 10u
+.end

@@ -1,0 +1,6 @@
+# LTspice run output, and the jellybean.lib copy a run needs: never committed (decision 0009).
+*.raw
+*.log
+*.plt
+*.db
+jellybean.lib

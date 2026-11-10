@@ -201,6 +201,20 @@
       "column": 22,
       "error": "ParseError",
       "note": "a list of values outside a CPL matrix"
+    },
+    "model_vector_on_builtin.cir": {
+      "sha256": "ddfa5af6ce445e5ccd7231f5f0bdf6663e36fc24cd767f89052948dbb332448d",
+      "line": 2,
+      "column": 16,
+      "error": "ParseError",
+      "note": "a vector value on a built-in model type"
+    },
+    "model_vector_comma.cir": {
+      "sha256": "ec61a68ddcaaaaf42df7ca26e0171ee972d27c8e4de8e22cf88932f716f689a5",
+      "line": 2,
+      "column": 31,
+      "error": "ParseError",
+      "note": "a comma between a code model's vector values (ngspice runs it)"
     }
   }
 }

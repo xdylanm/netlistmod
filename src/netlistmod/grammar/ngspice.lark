@@ -612,13 +612,86 @@ Y_NAME.4: /[Yy]/ _NG_UNIT*
 coupled_line: P_NAME t_name+ line_len* (NL | eol)
 P_NAME.4: /[Pp]/ _NG_UNIT*
 
+// Code models (§8.1, §22.2.1; decision 0020 item 4). After the designator comes a list of ports,
+// then the model, which is the last name on the line; the transformer takes it from the list. A
+// port is a connection or a vector "[ ... ]" of connections. A connection is an optional port type,
+// then its node (two for a differential type), with or without parentheses; or null; or %vnam and
+// a source. A digital node may carry a "~" with no blank after it. A port type may stand before a
+// vector; inside a vector of a differential type, an untyped connection is a pair of nodes
+// (Example 1 of §8.1.1, `%vd [1 2 3 4]`). A comma inside a vector or inside parentheses, "~" before a blank, a %vnam inside a vector
+// and a name=value on the line are recognised only so that each gets its own message.
+// spec: NG-COD-001
+%extend body_line: code_model
+code_model: A_NAME a_port+ (NL | eol)
+          | A_NAME a_port+ a_param
+a_port: (SEP | CSEP | BS_CONT) (a_conn | a_vnam | a_vector)
+      | (SEP | CSEP | BS_CONT) A_TYPE SEP? a_vector
+      | (SEP | CSEP | BS_CONT) A_DTYPE SEP? a_dvector
+      | (SEP | TRAILING_COMMENT | BS_CONT) a_port
+a_conn: a_net
+      | A_TYPE a_net_gap
+      | A_DTYPE a_net_gap a_net_gap
+      | (A_TYPE | A_DTYPE) SEP? a_paren
+      | a_paren
+a_net: A_NOT? WORD
+     | A_NOT_BLANK WORD
+a_net_gap: (SEP | CSEP | BS_CONT) a_net
+         | (SEP | TRAILING_COMMENT | BS_CONT) a_net_gap
+a_paren: LPAR WORD (A_PCOMMA? WORD)* RPAR
+a_vnam: A_VNAM a_source
+a_source: (SEP | CSEP | BS_CONT) WORD
+        | LPAR WORD RPAR
+        | (SEP | TRAILING_COMMENT | BS_CONT) a_source
+a_vector: VEC_OPEN (a_conn | a_vnam) a_member* VEC_CLOSE
+a_member: (SEP | CSEP | BS_CONT) (a_conn | a_vnam)
+        | (SEP | TRAILING_COMMENT | BS_CONT) a_member
+a_dvector: VEC_OPEN (a_dconn | a_vnam) a_dmember* VEC_CLOSE
+a_dmember: (SEP | CSEP | BS_CONT) (a_dconn | a_vnam)
+         | (SEP | TRAILING_COMMENT | BS_CONT) a_dmember
+a_dconn: a_net a_net_gap
+       | A_TYPE a_net_gap
+       | A_DTYPE a_net_gap a_net_gap
+       | (A_TYPE | A_DTYPE) SEP? a_paren
+       | a_paren
+a_param: (SEP | CSEP | BS_CONT) A_PARAM_KW rest NL
+       | (SEP | TRAILING_COMMENT | BS_CONT) a_param
+A_TYPE.3: /%(?:v|i|g|h|d)(?![A-Za-z0-9_])/i
+A_DTYPE.3: /%(?:vd|id|gd|hd)(?![A-Za-z0-9_])/i
+A_VNAM.3: /%vnam(?![A-Za-z0-9_])/i
+A_NOT.3: "~"
+A_NOT_BLANK.4: /~(?=[ \t])/
+A_PCOMMA.12: /[ \t]*,[ \t]*/
+A_PARAM_KW.3: /[A-Za-z_][A-Za-z0-9_]*(?=[ \t]*=)/
+A_NAME.4: /[Aa]/ _NG_UNIT*
+VEC_OPEN.11: /\[[ \t]*/
+VEC_CLOSE.11: /[ \t]*\]/
+
+// OSDI devices (§9.3.1.6; decision 0020 item 6): nodes, then the model, the last name before the
+// first name=value or the end (decision 0014's boundary rule), then named parameters.
+// spec: NG-OSD-001
+%extend body_line: osdi_device
+osdi_device: N_NAME t_name t_name+ param* (NL | eol)
+N_NAME.4: /[Nn]/ _NG_UNIT*
+
 // A list of values after a parameter (a CPL matrix, R=1 0 1; decision 0019), and LTRA's flags
-// (§6.2.1), which the transformer allows only on their own model types.
+// (§6.2.1), which the transformer allows only on their own model types. A code model's .model
+// also takes a vector "[ ... ]", TRUE or FALSE, and a quoted string (§8.1; decision 0020 item 5),
+// which the transformer allows only on a type that is not a built-in SPICE type. A comma between
+// a vector's values is recognised only so that it gets its own message.
 // spec: NG-MOD-001
-%override model_stmt: MODEL_KW x_name x_name (param | model_flag | model_text | model_more)* (NL | eol)
+%override model_stmt: MODEL_KW x_name x_name (param | model_flag | model_text | model_more | model_code)* (NL | eol)
                     | MODEL_KW x_name x_name model_paren (NL | eol)
-%override model_paren: LPAR ((model_param_first | model_flag_first) (param | model_flag | model_text | model_more)*)? rparen
+%override model_paren: LPAR ((model_param_first | model_flag_first) (param | model_flag | model_text | model_more | model_code)*)? rparen
                      | (SEP | TRAILING_COMMENT | BS_CONT) model_paren
+model_code: (SEP | CSEP | BS_CONT) WORD EQ _code_value
+          | (SEP | TRAILING_COMMENT | BS_CONT) model_code
+%extend model_param_first: WORD EQ _code_value
+_code_value: BOOL_KW | STRING_VALUE | m_vector
+m_vector: VEC_OPEN _m_first m_element* VEC_CLOSE
+_m_first: NUMBER | BRACE_FORMULA | QUOTE_FORMULA
+m_element: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+         | (SEP | TRAILING_COMMENT | BS_CONT) m_element
+BOOL_KW.2: /(?:true|false)(?![^ \t\r\n=%(),\[\]<>~{}'";$\\\/])/i
 model_more: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
           | (SEP | TRAILING_COMMENT | BS_CONT) model_more
 %extend model_param_first: BS_CONT model_param_first

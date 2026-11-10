@@ -9,7 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from ctypes import wintypes
 from dataclasses import dataclass
 from pathlib import Path
@@ -203,6 +203,24 @@ def discover_solver(
         if candidate.is_file():
             return Solver(name, candidate, _version_string(name, candidate))
     return None
+
+
+def osdi_directory(solver: Solver) -> Path:
+    """The folder of the compiled OSDI models an ngspice install ships (``lib/ngspice`` beside
+    ``bin``; manual §9.3.1.6). A netlist's ``pre_osdi r2_cmc.osdi`` finds them there through
+    ``NGSPICE_OSDI_DIR`` (decision 0020 item 6)."""
+    return solver.path.parent.parent / "lib" / "ngspice"
+
+
+def require_osdi(solver: Solver, modules: Iterable[str]) -> None:
+    """Skip the test, with the reason, if the ngspice install ships none of ``modules``: a Linux
+    package may build ngspice without its OSDI models."""
+    import pytest
+
+    folder = osdi_directory(solver)
+    for module in modules:
+        if not (folder / module).is_file():
+            pytest.skip(f"{module} is not in {folder}: this ngspice ships no OSDI model {module}")
 
 
 def copy_external_files(folder: Path, field: Mapping[str, object]) -> None:

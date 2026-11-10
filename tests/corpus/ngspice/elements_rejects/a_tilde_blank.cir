@@ -1,0 +1,4 @@
+M17 reject
+a1 ~ d y inv
+.model inv d_inverter
+.end

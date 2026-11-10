@@ -29,4 +29,4 @@ tests:
 - tests/solver/test_ngspice_line_probes.py::test_what_ngspice_computes_in_op
 - tests/solver/test_ngspice_line_probes.py::test_an_edit_moves_the_result
 - tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
-notes: 'A U line is URC when exactly four names (three nodes, then the model) come before its first name=value or the end; every other shape is the digital U of M17 and raises UnsupportedConstruct (NG-UNS-001). l= must be given, and n= is optional, in either order. ngspice 47 runs a line without l= and a positional length with a near-zero length (0.4995 V where l=5 gives 0.3333 V); the library refuses both. A first node named inv stays URC.'
+notes: A U line is URC when exactly four names (three nodes, then the model) come before its first name=value or the end; every other shape is the digital U, out of scope for v1 (decision 0020 item 1), and raises UnsupportedConstruct (NG-UNS-001). l= must be given, and n= is optional, in either order. ngspice 47 runs a line without l= and a positional length with a near-zero length (0.4995 V where l=5 gives 0.3333 V); the library refuses both. A first node named inv stays URC.

@@ -1,0 +1,7 @@
+XSPICE file source with a quoted path to a data file beside it (netlistmod M17 variant)
+a1 [out] src
+Rl out 0 1k
+.model src filesource(file="test_xspice_filesource.txt" amploffset=[0] amplscale=[2]
++ timerelative=FALSE amplstep=FALSE)
+.tran 1u 10u
+.end

@@ -4,6 +4,7 @@ construct: .model statements
 manual_ref:
 - '[ngspice-manual] §2.5 ".MODEL Device Models"'
 - '[ngspice-manual] §3.2.2 "Instance and model parameters"'
+- '[ngspice-manual] §8.1 "Code Model Element & .MODEL Cards"'
 status: validated
 validated_on:
 - solver: ngspice
@@ -18,6 +19,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-11-09'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-10'
 grammar:
 - model_stmt
 - model_paren
@@ -41,6 +45,12 @@ grammar:
 - MIXEDINTERP_KW
 - TRUNCNR_KW
 - TRUNCDONTCUT_KW
+- model_code
+- _code_value
+- m_vector
+- _m_first
+- m_element
+- BOOL_KW
 tests:
 - tests/grammar/ngspice/test_statements.py::test_model_statement_fields_and_spans
 - tests/grammar/ngspice/test_statements.py::test_malformed_model_statements_are_rejected
@@ -59,4 +69,8 @@ tests:
 - tests/grammar/ngspice/test_lines.py::test_ltra_flags_and_lists_stay_on_their_model_types
 - tests/grammar/ngspice/test_lines.py::test_a_cpl_matrix_is_a_value_list
 - tests/solver/test_ngspice_line_probes.py::test_which_ltra_flags_change_a_run
-notes: '.model name type, then name=value parameters, in parentheses (§2.5) or not (§3.2.2), separated by blanks, one comma or continuations; inside parentheses the first one may follow ( directly. The type is any name, recorded as written (XSPICE types are not in Table 2.3; models are not validated, non-goal 8). Values are numbers or formulas. Settled: D() is accepted (§2.5: unspecified parameters take defaults; ngspice 47 accepts it); an unclosed ( is reported at the opener; a parameter without a value is rejected (§2.5 shows pname=pval; ngspice 47 accepts it: discrepancy); a repeated parameter is accepted as syntax; nothing may follow the closing parenthesis. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7). LTRA''s six flags of §6.2.1, each one word (nocontrol), and steplimit, which the manual''s example writes, are flags of an LTRA model only (decision 0019 item 8): ngspice ignores any unknown bare word, so on another type they are refused. A probe shows that lininterp and mixedinterp change a run; for the others no probe decides whether ngspice reads them. The R, L, G and C matrices of a CPL model take a list of values, held as a ValueList (item 9); a second value elsewhere, which ngspice ignores, is refused at that value.'
+- tests/grammar/ngspice/test_special.py::test_code_model_values
+- tests/grammar/ngspice/test_special.py::test_a_vector_may_be_first_or_over_a_continuation_line
+- tests/grammar/ngspice/test_special.py::test_refused_model_values
+- tests/grammar/ngspice/test_special.py::test_malformed_model_values_are_syntax_errors
+notes: '.model name type, then name=value parameters, in parentheses (§2.5) or not (§3.2.2), separated by blanks, one comma or continuations; inside parentheses the first one may follow ( directly. The type is any name, recorded as written (XSPICE types are not in Table 2.3; models are not validated, non-goal 8). Values are numbers or formulas. Settled: D() is accepted (§2.5: unspecified parameters take defaults; ngspice 47 accepts it); an unclosed ( is reported at the opener; a parameter without a value is rejected (§2.5 shows pname=pval; ngspice 47 accepts it: discrepancy); a repeated parameter is accepted as syntax; nothing may follow the closing parenthesis. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7). LTRA''s six flags of §6.2.1, each one word (nocontrol), and steplimit, which the manual''s example writes, are flags of an LTRA model only (decision 0019 item 8): ngspice ignores any unknown bare word, so on another type they are refused. A probe shows that lininterp and mixedinterp change a run; for the others no probe decides whether ngspice reads them. The R, L, G and C matrices of a CPL model take a list of values, held as a ValueList (item 9); a second value elsewhere, which ngspice ignores, is refused at that value. A model whose type is not a built-in SPICE type of model-types.json (a code model or an OSDI module) may also give a vector [ ... ] of values separated by blanks, over + lines, held as a ValueList whose span takes the brackets; TRUE or FALSE (any case), an Identifier; and a quoted string (file="in.txt"), a Formula with the " delimiter that is never read as an expression (decision 0020 item 5). Each is refused on a built-in type, and a comma between vector values is refused (ngspice runs it: discrepancies.md). Parameter names are not checked.'

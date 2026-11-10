@@ -15,6 +15,7 @@ from netlistmod.model._tree import (
     _RESERVED_PARAMS,
     _STEP_VARIATIONS,
     _Bare,
+    _CodeParam,
     _comment_spans,
     _dot,
     _Element,
@@ -36,6 +37,7 @@ from netlistmod.model._tree import (
     _StepSweep,
     _Tail,
 )
+from netlistmod.model.model_types import builtin_model_types
 from netlistmod.model.nodes import (
     AcDirective,
     BodyItem,
@@ -81,6 +83,7 @@ _LTRA_FLAGS = frozenset(
     {"nosteplimit", "steplimit", "nocontrol", "lininterp", "mixedinterp", "truncnr", "truncdontcut"}
 )
 _LTRA_FLAG_TERMINALS = frozenset(f"{flag.upper()}_KW" for flag in _LTRA_FLAGS)
+_CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,6 +207,15 @@ class StatementsRules(ElementsRules):
                 extra = []
             if isinstance(node, ParamAssignment):
                 params.append(node)
+            elif isinstance(node, _CodeParam):
+                if kind in builtin_model_types(self._dialect):
+                    raise self._error_at(
+                        node.param.value.span.start,
+                        f"{_CODE_FORMS[node.form]} for `{node.param.name}=` on a `{model_type}` "
+                        "model: only a code model or an OSDI model (a type that is not a built-in "
+                        "SPICE type) takes one (ngspice manual §8.1)",
+                    )
+                params.append(node.param)
             elif isinstance(node, Flag):
                 if node.name.lower() in _LTRA_FLAGS and kind != "ltra":
                     raise self._error_at(

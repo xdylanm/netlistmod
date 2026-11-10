@@ -1,0 +1,4 @@
+M17 reject
+@1 a b
+&1 a 0 b 0 x=1
+.end

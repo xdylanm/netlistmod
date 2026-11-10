@@ -389,6 +389,40 @@ break before it, so a comment after it moves to the end of the line before
 without what it needs (a T's `Z0=`, a U's `l=`) is refused by the verification. Nodes, P's
 line count and an O line's (absent) parameters are not editable.
 
+## Edit a code model, an OSDI device or an analyzer
+
+A code model's values are on its `.model` line: `set_model_param` replaces a vector whole, and
+sets `TRUE`, `FALSE` and a quoted string as written. An N line's instance parameters, an LTspice
+A line's and an `@` line's are set with `set_param`; an `@` list is replaced whole
+([decision 0020](../decisions/0020-special-and-mixed-signal-devices.md)).
+
+```python
+>>> code = Netlist.from_text(
+...     "t\nV1 in 0 1\na1 [in in] out sum\nN1 out 0 rmod w=1u\n"
+...     ".model sum summer(in_gain=[1 1] fraction=FALSE)\n.model rmod r2_cmc\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> edited = code.set_model_param("sum", "in_gain", "[2 0.5]").set_param("N1", "l", "20u")
+>>> print(edited.source.text.splitlines()[4])
+.model sum summer(in_gain=[2 0.5] fraction=FALSE)
+>>> print(edited.source.text.splitlines()[3])
+N1 out 0 rmod w=1u l=20u
+>>> lt = Netlist.from_text(
+...     "t\n@1 in q fstart=1k fend=10k flist=1k 2k\n.end\n", dialect=Dialect.LTSPICE
+... )
+>>> lt = lt.set_param("@1", "flist", "1k 2k 5k").set_param("@1", "fend", "20k")
+>>> print(lt.source.text.splitlines()[1])
+@1 in q fstart=1k fend=20k flist=1k 2k 5k
+
+```
+
+An A line's ports and its `%vnam` source are topology, and are not editable. `set_param` on an
+ngspice A line is an `EditError` that points to `set_model_param`; an LTspice A line's function
+and an analyzer's `zm` flag are not editable (edit the line by hand); and a probe (`&`) takes no
+parameters. A code-model vector with a comment inside it over `+` lines is set value for value
+when the new vector has as many values, and is otherwise refused; an `@` list with a comment
+inside it is refused. Either way the comment is never lost.
+
 ## Continued lines, blocks and includes
 
 Text over several physical lines is passed as a list; the lines are joined with the file's

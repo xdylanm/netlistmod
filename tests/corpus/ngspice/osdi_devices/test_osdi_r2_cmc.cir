@@ -1,0 +1,11 @@
+OSDI r2_cmc resistors, one with m=2 (netlistmod M17 base)
+V1 in 0 1
+N1 in out rmod w=1u l=20u
+N2 out 0 rmod w=1u l=20u m=2
+Rl out 0 1k
+.model rmod r2_cmc(rsh=200)
+.control
+pre_osdi r2_cmc.osdi
+.endc
+.op
+.end

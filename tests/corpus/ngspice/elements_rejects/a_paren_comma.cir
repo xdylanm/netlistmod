@@ -1,0 +1,4 @@
+M17 reject
+a1 %vd(in, 0) out amp
+.model amp gain
+.end

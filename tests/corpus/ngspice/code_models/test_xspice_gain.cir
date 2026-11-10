@@ -1,0 +1,13 @@
+XSPICE gain blocks with and without port types (netlistmod M17 base)
+V1 in 0 dc 1 ac 1
+R1 in mid 1k
+R2 mid 0 1k
+a1 in out1 amp
+a2 %v(in) %v(out2) amp
+a3 %vd(in mid) %v(out3) amp
+Rl1 out1 0 1k
+Rl2 out2 0 1k
+Rl3 out3 0 1k
+.model amp gain(in_offset=0 gain=5 out_offset=0)
+.op
+.end

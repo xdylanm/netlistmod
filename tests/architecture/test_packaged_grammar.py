@@ -18,7 +18,7 @@ GRAMMAR_RESOURCES = {
     "netlistmod/grammar/formula.lark",
     "netlistmod/grammar/formula_ltspice.lark",
     "netlistmod/grammar/formula-reserved.json",
-    "netlistmod/document/model-types.json",
+    "netlistmod/model/model-types.json",
 }
 
 

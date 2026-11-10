@@ -66,6 +66,7 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
 | bare expression (§2.11.1) | `bare_value`, `bare_tail` | `ParseError` at the value |
 | `.model mname type(pname=pval …)` (§2.5), unparenthesized (§3.2.2) | `model_stmt: MODEL_KW x_name x_name (param* \| model_paren)` | `name`, `model_type`, `params`, `parenthesized` |
 | a CPL matrix `R=1 0 1` (§6.4.2); LTRA's flags (§6.2.1) | ngspice `model_more` after a parameter, and `_ltra_flag` in `model_flag` | the matrix is one `ParamAssignment` whose value is a `ValueList` (first value to last); the flags are `flags` (decision 0019 items 8 and 9) |
+| a code model's vector `in_gain=[2.0 1.0]`, `TRUE`/`FALSE`, `file="in.txt"` (§8.1) | ngspice `model_code` and `model_param_first` with `_code_value` (`m_vector`, `BOOL_KW`, `STRING_VALUE`) | a `ValueList` whose span and text take the brackets; an `Identifier`; a `Formula` with the `"` delimiter, never read as an expression. Only on a type that is not built in (`model-types.json`); a comma between vector values is refused (decision 0020 item 5) |
 | `.SUBCKT subnam N1 … <ident>=<value> …` (§2.6.1, §2.11.3) | `subckt_header: SUBCKT_KW x_name subckt_port+ x_param*` | `name`, `ports`, `params` |
 | body | `subckt_def: subckt_header subckt_item* ends_line` | `body`, `header_span` |
 | statements not allowed in a body | `not_in_subckt` | `ParseError` at the keyword |

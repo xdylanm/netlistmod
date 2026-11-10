@@ -498,6 +498,59 @@ u_param: SEP U_PARAM_KW EQ (_lt_value | LINE_BARE)
 U_PARAM_KW.3: /[ln](?=[ \t]*=)/i
 U_NAME.4: /[Uu]/ _LT_CHAR*
 
+// A: eight nodes, the function, then named parameters (reference "A — Special Functions"; decision
+// 0020 items 3 and 7). The function names are the 13 that LTspice's own symbols write, any case;
+// another name is recognised only so that it gets its own message. Parameter names are open, and a
+// comma may stand before one. A bare name in a value is refused, as on T; a positional value and a
+// flag are recognised only so that they get their own message.
+// spec: LT-SPF-001
+%extend body_line: special_function
+special_function: A_NAME node node node node node node node node sf_function _sf_tail
+                | A_NAME node node node node node node node node sf_other
+sf_function: SEP SF_FUNCTION_KW
+           | (SEP | TRAILING_COMMENT) sf_function
+sf_other: SEP WORD rest NL
+        | (SEP | TRAILING_COMMENT) sf_other
+_sf_tail: sf_param* ((NL | eol) | sf_extra)
+sf_param: (SEP | CSEP) WORD EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | LINE_BARE)
+        | (SEP | TRAILING_COMMENT) sf_param
+sf_extra: (SEP | CSEP) (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | OFF_KW) rest NL
+        | (SEP | TRAILING_COMMENT) sf_extra
+SF_FUNCTION_KW.3: /(?:buf|and|or|xor|schmitt|dflop|srflop|varistor|modulator|ota|phasedet|counter|samplehold)(?![^ \t\r\n=(),{}'"|;])/i
+A_NAME.4: /[Aa]/ _LT_CHAR*
+
+// @: two nodes, then the zm flag and the reference's named parameters in any order (reference
+// "@ — Frequency Response Analyzer"; decision 0020 item 7). flist=, pp=, nmax= and ac= take a list;
+// each value after the first is its own field, which the transformer joins to the parameter before
+// it. refnode= and intnode= name a net. The value tokens are written out, not `_lt_value`: that
+// rule's state is shared with M's ic=, whose comma would then win over the list's. Another name is recognised only so that it gets its own
+// message, as is a bare name in a value.
+// spec: LT-FRA-001
+%extend body_line: frequency_analyzer
+frequency_analyzer: FRA_NAME node node (fra_param | fra_net | fra_more | fra_zm)* ((NL | eol) | fra_unlisted)
+fra_param: (SEP | CSEP) FRA_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | LINE_BARE)
+         | (SEP | TRAILING_COMMENT) fra_param
+fra_net: (SEP | CSEP) FRA_NET_KW EQ WORD
+       | (SEP | TRAILING_COMMENT) fra_net
+fra_more: (SEP | CSEP) (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
+        | (SEP | TRAILING_COMMENT) fra_more
+fra_zm: SEP ZM_KW
+      | (SEP | TRAILING_COMMENT) fra_zm
+fra_unlisted: (SEP | CSEP) FRA_UNLISTED_KW rest NL
+            | (SEP | TRAILING_COMMENT) fra_unlisted
+FRA_PARAM_KW.4: /(?:delay|fstart|fend|oct|fcoarse|flist|nmax|pp0|pp1|f0|f1|pp|tavgmin|tsettle|rpar|acmag|acphase|ac|enabled)(?=[ \t]*=)/i
+FRA_NET_KW.4: /(?:refnode|intnode)(?=[ \t]*=)/i
+FRA_UNLISTED_KW.3: /[A-Za-z_][A-Za-z0-9_]*(?=[ \t]*=)/
+ZM_KW.2: "zm"i
+FRA_NAME.4: /@/ _LT_CHAR*
+
+// &: four nodes and nothing after them (reference "& — Frequency Response Analysis Probe"; decision
+// 0020 item 8): the output pair, then the input pair. Its analyzer is the @ of the same suffix.
+// spec: LT-FRP-001
+%extend body_line: fra_probe
+fra_probe: PROBE_NAME node node node node (NL | eol)
+PROBE_NAME.4: /&/ _LT_CHAR*
+
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold
 // is not interpreted.

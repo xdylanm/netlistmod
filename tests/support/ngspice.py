@@ -28,7 +28,7 @@ from netlistmod import (
     TranDirective,
 )
 from tests.support.raw import Plot, RawFileError, read_raw, without_date
-from tests.support.solvers import Solver, run_ngspice
+from tests.support.solvers import Solver, osdi_directory, run_ngspice
 
 __all__ = [
     "ELEMENTS_HARNESS",
@@ -167,7 +167,9 @@ def run(
         (folder / ".spiceinit").write_text("set ngbehavior=lt\n", encoding="utf-8")
     raw = netlist_path.with_suffix(".raw")
     raw.unlink(missing_ok=True)
-    result = run_ngspice(solver, netlist_path, raw=raw, cwd=cwd, env=_ENVIRONMENT)
+    # `pre_osdi name.osdi` in a netlist finds the install's compiled models (decision 0020 item 6).
+    environment = {**_ENVIRONMENT, "NGSPICE_OSDI_DIR": str(osdi_directory(solver))}
+    result = run_ngspice(solver, netlist_path, raw=raw, cwd=cwd, env=environment)
     log_path = folder / "ngspice.log"
     log = log_path.read_text(encoding="utf-8", errors="replace") if log_path.is_file() else ""
     raw_bytes = raw.read_bytes() if raw.is_file() else None

@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 from netlistmod.dialects import Dialect
 from netlistmod.document import Netlist, ScopePath
-from netlistmod.document.models import allowed_model_types, model_type_allowed
+from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _MODEL,
@@ -18,10 +18,12 @@ from netlistmod.edit._ops_common import (
     _TWO_TERMINAL,
     _VALUE,
     _VALUE_KEYWORDS,
+    _comment_inside,
     _element,
     _insert,
     _kind,
     _last_field_end,
+    _refuse_over_comment,
 )
 from netlistmod.edit._ops_nonlinear import use_instead
 from netlistmod.edit.plan import Edit, SlotCheck
@@ -30,13 +32,18 @@ from netlistmod.model.nodes import (
     BehavioralSource,
     BipolarTransistor,
     Cccs,
+    CodeModelDevice,
     ControlledSource,
     Diode,
+    FraProbe,
+    FrequencyAnalyzer,
     Jfet,
     LosslessLine,
     LossyLine,
     Mesfet,
     MutualCoupling,
+    OsdiDevice,
+    SpecialFunction,
     SubcktInstance,
     Switch,
     TransmissionLine,
@@ -48,6 +55,7 @@ from netlistmod.model.values import (
     Flag,
     ModelReference,
     ParamAssignment,
+    ValueList,
 )
 
 _LAPLACE_PARAMS = ("window", "nfft", "mtol")
@@ -97,10 +105,15 @@ def set_value(
             f"`{designator}` is a {_kind(element)} and has no value slot; its values are in its "
             "LTRA model (use set_model_param)"
         )
-    if isinstance(element, TransmissionLine):
+    if isinstance(element, TransmissionLine | OsdiDevice | SpecialFunction | FrequencyAnalyzer):
         raise EditError(
             f"`{designator}` is a {_kind(element)} and has no value slot; use set_param to set "
             "its parameters"
+        )
+    if isinstance(element, CodeModelDevice):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)} and has no value slot; its values are on its "
+            "`.model` line (use set_model_param)"
         )
     raise EditError(f"`{designator}` is a {_kind(element)} line and has no value slot")
 
@@ -116,7 +129,8 @@ def set_param(
 ) -> list[Edit]:
     """Set or add an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an
     ngspice F or G line (decision 0015 item 7), a parameter of an LTspice V or I line, or one of
-    a T, U, Y or P line (decision 0019; a T keeps its spelling of ``Z0=`` or ``Zo=``).
+    a T, U, Y or P line (decision 0019; a T keeps its spelling of ``Z0=`` or ``Zo=``), or one of an
+    ngspice N, an LTspice A or an ``@`` line (decision 0020 item 9).
     ``area`` goes in the positional slot where the dialect writes one (decision 0014 item 5),
     unless the line already writes ``area=``."""
     element = _element(netlist, designator, scope, in_definition)
@@ -149,6 +163,20 @@ def set_param(
             f"`{designator}` is a {_kind(element)} and takes no parameter; its values are in its "
             "LTRA model (use set_model_param)"
         )
+    if isinstance(element, CodeModelDevice):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)} and takes no parameter on its line; a code "
+            "model's parameters are on its `.model` line (use set_model_param)"
+        )
+    if isinstance(element, FraProbe):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)}: four nodes and no parameters; its analyzer's "
+            "parameters are on the `@` line"
+        )
+    if isinstance(element, FrequencyAnalyzer):
+        return _analyzer_param(netlist, element, name, value, reason, found_fold)
+    if isinstance(element, OsdiDevice | SpecialFunction):
+        return _assign(element.params, element, name, value, reason, folded=found_fold)
     if isinstance(element, TransmissionLine):
         if isinstance(element, LosslessLine) and folded in _IMPEDANCE:
             # Z0= and Zo= are one parameter: the line keeps the spelling it writes.
@@ -193,6 +221,33 @@ def set_param(
             return [Edit(element.area.span, value, reason, (_VALUE,))]
         return [_insert(element.model.span.end, conventions.field(value), reason, _VALUE, 1)]
     return _assign(element.params, element, name, value, reason, folded=found_fold)
+
+
+def _analyzer_param(
+    netlist: Netlist,
+    element: FrequencyAnalyzer,
+    name: str,
+    value: str,
+    reason: str,
+    folded: Callable[[str], str],
+) -> list[Edit]:
+    """A parameter of an ``@`` line: a list is replaced whole, unless a comment lies inside it;
+    ``refnode=`` and ``intnode=`` take a net name; ``zm`` is not editable (decision 0020
+    item 9)."""
+    designator = element.designator
+    if element.impedance is not None and folded(name) == folded(element.impedance.name):
+        raise EditError(
+            f"`{element.impedance.name}` of `{designator}` is a flag, which is not editable; "
+            "edit the line by hand to add or remove it"
+        )
+    matches = [param for param in element.params if folded(param.name) == folded(name)]
+    if len(matches) == 1 and isinstance(matches[0].value, ValueList):
+        comment = _comment_inside(element, matches[0].value.span)
+        if comment is not None:
+            raise _refuse_over_comment(
+                netlist, comment, f"the list `{matches[0].name}=` of `{designator}`"
+            )
+    return _assign(element.params, element, name, value, reason, folded=folded)
 
 
 def set_instance_param(
@@ -244,14 +299,31 @@ def set_model(
     in_definition: bool = False,
     allow_external: bool = False,
 ) -> list[Edit]:
-    """Replace the model name of an R, C, L, D, Q, M, J, Z, S, W, O, U, Y or P line, or add one
-    after the value of an R, C or L line that has none (decision 0007 item 3; review round 1;
-    decisions 0014 and 0015: S takes an SW model and W a CSW model; decision 0019: O takes LTRA,
-    U URC, Y TXL and P CPL)."""
+    """Replace the model name of an R, C, L, D, Q, M, J, Z, S, W, O, U, Y, P, ngspice A or N line,
+    or add one after the value of an R, C or L line that has none (decision 0007 item 3; review
+    round 1; decisions 0014 and 0015: S takes an SW model and W a CSW model; decision 0019: O takes
+    LTRA, U URC, Y TXL and P CPL; decision 0020: A and N take any type that is not built in)."""
     element = _element(netlist, designator, scope, in_definition)
     if isinstance(element, LosslessLine):
         raise EditError(f"`{designator}` is a {_kind(element)} and has no model")
-    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS, Switch, TransmissionLine)):
+    if isinstance(element, SpecialFunction):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)}: its function `{element.function.name}` is not "
+            "a model and is not editable, because it changes what the device is; edit the line "
+            "by hand"
+        )
+    if not isinstance(
+        element,
+        (
+            *_TWO_TERMINAL,
+            Diode,
+            *_TRANSISTORS,
+            Switch,
+            TransmissionLine,
+            CodeModelDevice,
+            OsdiDevice,
+        ),
+    ):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
     if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
@@ -269,13 +341,9 @@ def set_model(
     definition = next((found.models[key][0] for found in chain if key in found.models), None)
     if definition is not None:
         if not model_type_allowed(element, definition.model_type, netlist.dialect):
-            allowed = ", ".join(
-                f"`{kind.upper()}`"
-                for kind in sorted(allowed_model_types(element, netlist.dialect))
-            )
             raise EditError(
                 f"model `{model}` has type `{definition.model_type}`, but `{designator}` "
-                f"takes a model of type {allowed}"
+                f"takes {model_type_requirement(element, netlist.dialect)}"
             )
     else:
         searched = ", ".join(found.describe() for found in chain)

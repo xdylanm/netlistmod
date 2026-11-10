@@ -1,0 +1,108 @@
+{
+  "family": "special_functions",
+  "origin": "LTspice schematics drawn by the maintainer for M17, their -netlist exports, and variants of the exports, each changing one form",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-10",
+  "notes": "Exported by LTspice 26.1.1 with -netlist, with Default Devices and Default Libraries off; the first comment line holds the absolute schematic path in the export and is replaced by the file name. A variant's first line says what it changes. The FRA files include jellybean.lib from openjellybean 0.5.0 (https://github.com/xdylanm/openjellybean, MIT), which is not copied here: the solver sweep runs them when OPENJELLYBEAN_LIB names that file.",
+  "fixtures": {
+    ".gitignore": {
+      "sha256": "2372d1e52fc7ab6c930fbb228b2dff1e3563466babffa142b6ba4bfaaa5e04c2",
+      "note": "Keeps LTspice run output and the jellybean.lib copy out, as in ltspice_transistors."
+    },
+    "test_ltspice_fra.asc": {
+      "sha256": "224d381aa02bbf09bff581004940c288052414c1497abb23242aecd23531f719",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: a closed loop with the fra (@) and fraprobe (&) symbols and a .fra directive."
+    },
+    "test_ltspice_fra.net": {
+      "sha256": "9bd7fb3185a51e15fa5b8c5af96a745097d2f85e5cdc0869988970f8693331c4",
+      "note": "LTspice 26.1.1's -netlist export of test_ltspice_fra.asc.",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_fra_flist.cir": {
+      "sha256": "555cc1704cae10237750721b755f511d87132f11474210ae7f206b9e27554869",
+      "note": "test_ltspice_fra.net with flist= over a + line (variant).",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_fra_lists.cir": {
+      "sha256": "cbe5f5d3bcc4fdcb19f7c1ba454933ee74b8927d8cca7579af1d623a6949192c",
+      "note": "test_ltspice_fra.net with pp= and nmax= pairs and ac=1,0 (variant).",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_fra_named.cir": {
+      "sha256": "3f7d9cd01c72f6ae1f908ec0933c1ce77c59d877fe594968f9bc37c56c671b54",
+      "note": "test_ltspice_fra.net with the analyzer and its probe named @A and &a (variant).",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_fra_nets.cir": {
+      "sha256": "17ca0085a058179ba4a52a8192e3d15520675b18c0f1e1274d672a0ed0472b92",
+      "note": "test_ltspice_fra.net with refnode=, intnode= and a braced delay (variant).",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_fra_zm.cir": {
+      "sha256": "e5cffb402e4243e8019e57e083c4451a889f6d4218e25e0cbfebc3412eb0becb",
+      "note": "test_ltspice_fra.net with ZM and without its probe, which LTspice refuses in impedance mode (variant).",
+      "solver": {
+        "external": {
+          "jellybean.lib": "OPENJELLYBEAN_LIB"
+        }
+      }
+    },
+    "test_ltspice_functions.asc": {
+      "sha256": "72499ae143ca46ddd17407ac77577e70eefe53df44917a0ba8e62bd9aac606cb",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: counter, phidet, modulate, modulate2, sample and varistor (COUNTER, PHASEDET, MODULATOR, SAMPLEHOLD, VARISTOR)."
+    },
+    "test_ltspice_functions.net": {
+      "sha256": "bb4b95ca14eef8bf2361a149887db56b261578e03c19587c24597c777589383e",
+      "note": "LTspice 26.1.1's -netlist export of test_ltspice_functions.asc."
+    },
+    "test_ltspice_gates.asc": {
+      "sha256": "75656721f6a122ee497f97cdf0ddb4fb32f5f75856b36c7dd3172b6f17fc0427",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: buf, inv and buf1 (each BUF), and, or, xor, dflop and srflop, with Vhigh=, Trise= and Td= on some."
+    },
+    "test_ltspice_gates.net": {
+      "sha256": "b9403e954276beaab01e812cb14154f447780ae868c55844e2c5607f8d4302bd",
+      "note": "LTspice 26.1.1's -netlist export of test_ltspice_gates.asc."
+    },
+    "test_ltspice_gates_params.cir": {
+      "sha256": "1209658fe8f8d2dd55e055b4ef4bdbdf5a64b2410205b1ad95f8492b209e8a89",
+      "note": "test_ltspice_gates.net with lower-case function names, a comma between parameters and a braced value (variant)."
+    },
+    "test_ltspice_ota.asc": {
+      "sha256": "7d2f7806a7c69c720fc34436a4f87e12a15db899a1367912afa8fa1b7466ca33",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: ota, mota and mota8 (each OTA), with G=, Iout= and Rout=."
+    },
+    "test_ltspice_ota.net": {
+      "sha256": "cb84add8bd13b2774a6e1ca1a951d33a5348a6d60c6e7446ece13e8ab86c1722",
+      "note": "LTspice 26.1.1's -netlist export of test_ltspice_ota.asc."
+    },
+    "test_ltspice_schmitt.asc": {
+      "sha256": "9555739074a41d2bda20a6278a4a3f1044f333cf737c59cab2f8e3a51619c9f9",
+      "note": "Drawn by the maintainer in LTspice 26.1.1: schmitt, schmtbuf, schmtinv and a diff variant (each SCHMITT), with Vt= and Vh=."
+    },
+    "test_ltspice_schmitt.net": {
+      "sha256": "2ebcf1e60c13330dc7c1d84ef11bfeb78ed8ec956eb61bb8b70b5cd29c8809b6",
+      "note": "LTspice 26.1.1's -netlist export of test_ltspice_schmitt.asc."
+    }
+  }
+}

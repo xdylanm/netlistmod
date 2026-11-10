@@ -2,13 +2,26 @@
 
 ## Unreleased
 
+M17 (decision 0020): the special and mixed-signal devices load and edit, and no device letter is planned.
+
+Changes:
+
+- ngspice A lines (XSPICE code models) load as `CodeModelDevice`, with `ports` of `CodeModelPort` and `CodeModelConnection` (port types of Table 8.1, vectors, `~`, `null` and `%vnam`). `nodes` holds every node without `null` and the `%vnam` sources, which are controlling references; the signature records each A line's port structure (M17).
+- ngspice N lines (OSDI devices) load as `OsdiDevice`: nodes, the model by the boundary rule, then instance parameters (M17).
+- A code model's `.model` takes vectors `[ … ]` (a `ValueList` with the brackets), `TRUE` and `FALSE`, and quoted strings, on a model type that is not built in; A and N take only such a model, with `MODEL_TYPE_MISMATCH` and `set_model`'s check (M17).
+- LTspice A lines (special functions) load as `SpecialFunction`, with one of the 13 function names LTspice's symbols write; `@` loads as `FrequencyAnalyzer` (`zm`, its lists, and `refnode=` and `intnode=` as node references), and `&` as `FraProbe`, which names its analyzer (M17).
+- Forms the solvers run but the manual or the reference does not show are refused, with rows in each `discrepancies.md` (M17).
+- `set_param` and `remove_param` cover N, LTspice A and `@`; `set_model` covers ngspice A and N; `set_model_param` and `remove_model_param` cover code-model and OSDI models, a vector as a whole. A line's function, `zm`, ports and `%vnam` source are not editable (M17).
+- The ngspice digital U and LTspice `.machine` are named exclusions of v1: their `UnsupportedConstruct` says "out of scope for v1" (M17).
+- `model-types.json` moves from `netlistmod/document/` to `netlistmod/model/`, read by the new `netlistmod.model.model_types` (M17).
+
 M16 (decision 0019): the transmission lines load and edit.
 
 Changes:
 
 - T (lossless), O (lossy, LTRA) and U (uniform RC) load on both dialects, and Y (TXL) and P (CPL) on ngspice, as `LosslessLine`, `LossyLine`, `RcLine`, `TxlLine` and `CoupledLine`, subclasses of the new `TransmissionLine` (all exported). Every node is topology; `port1`, `port2` and P's `conductors` are properties (M16).
 - T takes `Z0=` and `Zo=` on both dialects, as one parameter; it needs `Z0=` and exactly one length form (`TD=`, or `F=` with an optional `NL=`), and ngspice's `IC=` is four comma-separated values. U needs `l=`. Y's and P's reference nodes must be ground, since ngspice ignores them. Forms the solvers run but the manual or the reference does not show are refused, with rows in each `discrepancies.md` (M16).
-- An ngspice U line that is not a URC line (three nodes and a model) is the digital U, which raises `UnsupportedConstruct` until M17 (M16).
+- An ngspice U line that is not a URC line (three nodes and a model) is the digital U, which raises `UnsupportedConstruct` (M16; out of scope for v1 since M17).
 - `.model`: an ngspice LTRA model takes LTRA's flags in `flags`, and a CPL model's `R=`, `L=`, `G=` and `C=` take a list of values, a `ValueList`; both are refused elsewhere. The model types LTRA, URC, TXL and CPL join `MODEL_TYPE_MISMATCH` and `set_model` (M16).
 - Add `remove_param` and `remove_model_param`, on `Netlist` and `Batch`, for every line and model that takes named parameters. `set_param`, `set_model` and `set_model_param` cover the new lines and models (M16). A CPL matrix over `+` lines with a comment inside it is set value for value with as many values, so the comment stays; another count, and its removal, are refused (M16 review R3).
 - The tests' planned letter is A, which stays planned until M17 (M16).

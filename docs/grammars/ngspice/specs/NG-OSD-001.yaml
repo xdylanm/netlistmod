@@ -1,0 +1,25 @@
+id: NG-OSD-001
+dialect: ngspice
+construct: OSDI device (N) lines
+manual_ref:
+- '[ngspice-manual] §9.3.1.6 "Prepare the ngspice netlist"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-10'
+grammar:
+- body_line
+- osdi_device
+- N_NAME
+tests:
+- tests/grammar/ngspice/test_special.py::test_an_osdi_device
+- tests/grammar/ngspice/test_special.py::test_refused_osdi_lines
+- tests/grammar/ngspice/test_special.py::test_an_osdi_line_needs_a_node_and_a_model
+- tests/document/test_special_topology.py::test_an_osdi_device_has_its_nodes_and_its_model
+- tests/document/test_special_topology.py::test_a_built_in_model_type_is_a_mismatch
+- tests/solver/test_ngspice_special_probes.py::test_osdi_probes
+- tests/solver/test_ngspice_special_probes.py::test_osdi_needs_pre_osdi
+- tests/solver/test_ngspice_special_probes.py::test_an_osdi_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Nodes, then the model, the last name before the first name=value or the end (decision 0014''s boundary rule), then named parameters in ngspice''s value slot (decision 0020 item 6). At least one node; the count is not checked, because the Verilog-A module defines it (ngspice 47 runs a two-terminal r2_cmc with one node and stops on three). Parameter names are not checked. The model must be of a type that is not built in (MODEL_TYPE_MISMATCH). Refused: a positional value after the model, a flag (off) and a number as the model (ngspice stops). Validated with the r2_cmc.osdi that the Windows build of ngspice 47 ships, loaded with pre_osdi in a .control block; the tests skip with a reason when the install has no such model.'

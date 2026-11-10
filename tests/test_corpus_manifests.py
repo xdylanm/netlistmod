@@ -84,7 +84,9 @@ def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
     fields = solver_fields()
     assert {path.parent.name for path in fields} == set(families)
     for path, field in fields.items():
-        assert set(field) <= {"skip", "stubs", "harness", "external"}, path
+        assert set(field) <= {"skip", "stubs", "harness", "external", "osdi", "data"}, path
+        for name in field.get("data", ()):
+            assert (path.parent / name).is_file(), f"{path}: missing data file {name}"
         for variable in field.get("external", {}).values():
             assert re.fullmatch(r"[A-Z][A-Z0-9_]*", variable), f"{path}: {variable!r}"
         if "skip" in field:
