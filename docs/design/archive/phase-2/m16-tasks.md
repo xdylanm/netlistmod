@@ -1,7 +1,7 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** READY FOR REVIEW — review round 3's R4 made (section 8.4); review round 2's R3 made (section 7.5); review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
+> **Status:** COMPLETE (2026-11-09) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 9
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M16). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./m15b-tasks.md) and [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
 
@@ -417,7 +417,7 @@ Each is a test: `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_lin
 
 ### After the maintainer's approval
 
-[ ] **T12 — Close M16.** Archive this list, accept decision 0019, and update the plan and index.
+[x] **T12 — Close M16.** Archive this list, accept decision 0019, and update the plan and index.
 
 ## 5. Results
 
@@ -675,7 +675,7 @@ This is the only list that can hold a comment. A comment inside an `IC=` or `tc=
 R3 is made as decided, and the 7.3 tidy-up is done. M16 goes back for one small change, R4: the new same-count path of `set_model_param` accepts a value that the normal path refuses, and drops part of it without saying so.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): not run this round. It was stopped so that R4 could go first, and it runs in the next round.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): not run this round. It was stopped so that R4 could go first, and it runs in the next round (9.1).
   - CI on #15 at `7f0b4fb` is green on all five jobs.
 - **R3, by hand on ngspice (a scratch script outside the repository):**
   - The three rows of R3 give the results in 7.5: both removals are refused naming `; c` and its line, and `"1 2 3"` keeps the comment.
@@ -721,3 +721,17 @@ R3 is made as decided, and the 7.3 tidy-up is done. M16 goes back for one small 
   - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,915 passed, 2 skipped**, 1,104 deselected, coverage **98.53%**, in 22 min 9 s;
   - `ruff`, `mypy` and `pre-commit run --all-files` pass;
   - **CI:** see the pull request.
+
+## 9. Review round 4 (2026-11-09, `2b822fa`, #15)
+
+### 9.1 Outcome
+
+**Approved.** R4 is made as decided, and no change is required. T12 follows: archive this list, accept decision 0019, and update the plan and the index.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,915 passed, 2 skipped, 1,104 deselected, coverage 98.53%, in 21 min 51 s. This matches 8.4, and it covers round 3, whose run was stopped.
+  - CI on #15 at `2b822fa` is green on all five jobs.
+- **R4, by hand on ngspice (the round 3 scratch script):**
+  - With `; c` inside the list, `"1 2 3 ; x"`, `"1 2 ; x"` and `"1 2 x=3"` are refused with "does not re-parse as a value". That is the message they get without the comment, and the message `.model dm d` gets for `is="2 ; x"`.
+  - Every accepted result of round 3 is unchanged: the same-count edits (commas, braces, a value over `+` lines), the subcircuit and `batch()` cases, and the count and parse refusals.
+- **The case in 8.4 that still differs** (a model in parentheses refuses `"1 2 3 ; x"` with a different message on each path) is accepted. Both paths refuse, and nothing is dropped.

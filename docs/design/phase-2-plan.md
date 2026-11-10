@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M15b are complete, and M16 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M16 are complete, and M17 is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -96,7 +96,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Edit API:** set a table's points and a polynomial's coefficients.
 - **Exit:** as M15.
 
-### M16 — Transmission lines (T, O, U as URC, Y, P) ([task list](./m16-tasks.md))
+### M16 — Transmission lines (T, O, U as URC, Y, P) (complete; [task list](./archive/phase-2/m16-tasks.md), [decision 0019](../decisions/0019-transmission-lines.md))
 
 - T with `Z0=` and `TD=`, or `F=` and `NL=`; O with LTRA; U as URC, in both dialects.
 - ngspice Y (TXL) and P (CPL). P has a variable node list up to the line count, so it follows the rule from M13.
@@ -109,7 +109,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **ngspice N:** OSDI devices (manual §9). A solver test needs a compiled model, so these entries may stay `documented`.
 - **ngspice U digital:** told apart from URC by shape, and accepted only in a subcircuit body, with `DIALECT_GATED_SYNTAX` (info) because it needs the PS flag (section 8, point 2). Check the shapes against every basic type in manual §10.1 first; raise it with the maintainer if any form is ambiguous.
 - **LTspice:** A (eight fixed nodes and a model), `@` and `&`. `.machine` stays an `UnsupportedConstruct`; record it as a named v1 exclusion (section 8, point 4).
-- **The planned-letter tests** use A after M16 ([m16-tasks](./m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
+- **The planned-letter tests** use A after M16 ([m16-tasks](./archive/phase-2/m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
 - **Exit:** no letter in either matrix is `planned`.
 
 ### M18 — Completeness audit
@@ -118,6 +118,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Architecture tests:** no matrix entry is `planned`, every `UnsupportedConstruct` path that remains is justified, and the lookaround terminal list is reviewed (limit 3).
 - **Corpus:** real circuits for each device group, with manifests and provenance. Extend the independent Hypothesis oracle and the edit properties to the new elements.
 - **Messages carried from M15b** ([m15b-tasks](./archive/phase-2/m15b-tasks.md) 6.3): own messages for the refusals that still give the generic list of expected tokens (ngspice POLY pairs in parentheses, G's four-node TABLE and gate, `and (2)`, LTspice `window=` before `Laplace=`), the braces in a refused TABLE point's message, and a readable name for `GAIN_KW`.
+- **Carried from M16** ([m16-tasks](./archive/phase-2/m16-tasks.md) 6.3): own messages for `m=` on Y and P and for ngspice T's `IC=0 0 0 0`, and an LTspice `+` line that holds only a comment, which the library loads and LTspice stops on.
 - **Exit:** the spec-coverage report shows every construct with tests, and each `documented` entry says why the solver cannot decide.
 
 ### M19 — v1 review package and beta tag
