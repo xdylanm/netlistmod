@@ -178,6 +178,8 @@
         "skip": "ngspice stops on a CPL model without one of its matrices (\"lossy line parallel conductance not given\"); the library does not check model contents (decision 0019)."
       }
     },
+    "lines_cpl_comments.cir": "3c58f12ab70aad1004bce206225ddd4f36c5e39e9e8183e3e2781813b83bde18",
+    "lines_cpl_comments.expected.cir": "c9a6965e5b920ce2575f5b001f35066cd965d996b4766675bf4ce91addfd86dc",
     "lines_comments.cir": "7488bee363f5e2a218f8612bf6672af56210b9e19162afa2eca1997e5fc04b23",
     "lines_comments.expected.cir": "14f29780f1302aa2983e97ad251a601a4a1b540a004774fb5a404814d91e493d",
     "lines_comments_crlf.cir": "d14f878e029acd996a6eae42c8ca2875c05c1776358b95935c8e15318aaf8761",
@@ -1574,6 +1576,18 @@
         ]
       ],
       "expected": "lines_cpl_remove.expected.cir"
+    },
+    "lines_cpl_comment_list": {
+      "input": "lines_cpl_comments.cir",
+      "steps": [
+        [
+          "set_model_param",
+          "pmod",
+          "R",
+          "20 0 20"
+        ]
+      ],
+      "expected": "lines_cpl_comments.expected.cir"
     },
     "lines_remove_comments": {
       "input": "lines_comments.cir",

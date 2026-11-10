@@ -221,3 +221,21 @@ def _spans(value: object) -> Iterator[Span]:
     elif is_dataclass(value) and not isinstance(value, type):
         for field in fields(value):
             yield from _spans(getattr(value, field.name))
+
+
+def _comment_inside(owner: object, span: Span) -> Span | None:
+    """The first end-of-line comment of ``owner`` that lies inside ``span``: only a CPL list
+    over ``+`` lines can hold one (review R3)."""
+    comments: tuple[Span, ...] = getattr(owner, "trailing_comments", ())
+    return next((c for c in comments if span.start <= c.start < span.end), None)
+
+
+def _refuse_over_comment(netlist: Netlist, comment: Span, what: str) -> EditError:
+    """The refusal of an edit that would replace ``what`` across ``comment`` (decision 0017
+    item 6, review R3)."""
+    text = netlist.source.text[comment.start : comment.end]
+    line = netlist.source.text.count("\n", 0, comment.start) + 1
+    return EditError(
+        f"{what} holds the comment `{text}` (line {line}); the edit would lose it. Edit the "
+        "line by hand, or remove the comment first"
+    )

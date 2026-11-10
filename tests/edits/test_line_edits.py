@@ -159,6 +159,98 @@ def test_a_cpl_matrix_is_set_and_removed_whole() -> None:
     assert "+R=" not in removed.source.text and "+L=50n\n" in removed.source.text
 
 
+_CPL_HEAD = "title\nV1 a 0 1\nP1 a e 0 c f 0 p\n"
+
+
+def _cpl(model: str) -> Netlist:
+    return _netlist(f"{_CPL_HEAD}{model}\n.end\n")
+
+
+@ngspice_only
+@pytest.mark.parametrize(
+    "model",
+    [
+        ".model p cpl length=1 R=10 0 ; c\n+ 10 L=50n G=0 C=20p",
+        ".model p cpl length=1 L=50n R=10 0 ; c\n+ 10 G=0 C=20p",
+    ],
+)
+def test_removing_a_cpl_list_over_a_comment_is_refused(model: str) -> None:
+    # Review R3: the list's span holds the comment, so removing it would lose the comment.
+    with pytest.raises(EditError, match=r"`R=` of model `p` holds the comment `; c` \(line 4\)"):
+        _cpl(model).remove_model_param("p", "R")
+
+
+@ngspice_only
+def test_a_cpl_list_over_a_comment_is_set_value_for_value() -> None:
+    # Review R3, after decision 0017 item 6: the same count replaces each value's span.
+    netlist = _cpl(".model p cpl(length=1 R=10 0 ; c\n+ 10 L=50n G=0 C=20p)")
+    edited = netlist.set_model_param("p", "R", "1 2 3")
+    assert (
+        edited.source.text
+        == f"{_CPL_HEAD}.model p cpl(length=1 R=1 2 ; c\n+ 3 L=50n G=0 C=20p)\n.end\n"
+    )
+    assert netlist.set_model_param("p", "r", "{a}, 2, 3").source.text.count("; c") == 1
+    with pytest.raises(EditError, match=r"has 3 values, not 2, and holds the comment `; c`"):
+        netlist.set_model_param("p", "R", "1 2")
+    with pytest.raises(EditError, match="does not parse as a list of values"):
+        netlist.set_model_param("p", "R", "1 = 3")
+
+
+@ngspice_only
+def test_a_cpl_list_without_a_comment_is_edited_whole() -> None:
+    netlist = _cpl(".model p cpl(length=1 R=10 0\n+ 10 L=50n G=0 C=20p)")
+    edited = netlist.set_model_param("p", "R", "1 2")
+    assert edited.source.text == f"{_CPL_HEAD}.model p cpl(length=1 R=1 2 L=50n G=0 C=20p)\n.end\n"
+    removed = netlist.remove_model_param("p", "R")
+    assert removed.source.text == f"{_CPL_HEAD}.model p cpl(length=1 L=50n G=0 C=20p)\n.end\n"
+
+
+@st.composite
+def _commented_cpl(draw: st.DrawFn) -> tuple[str, int]:
+    """A CPL model whose `R=` list runs over `+` lines with comments at line ends, and the
+    number of values of a new list."""
+    eol = draw(st.sampled_from(["\n", "\r\n"]))
+    count = draw(st.integers(min_value=1, max_value=4))
+    text = ".model p cpl length=1 R=1"
+    for index in range(1, count):
+        if draw(st.booleans()):
+            text += f" ; c{index}" if draw(st.booleans()) else ""
+            text += f"{eol}+"
+        text += f" {index + 1}"
+    if draw(st.booleans()):
+        text += f" ; tail{eol}+"
+    text += " L=50n G=0 C=20p"
+    return text, draw(st.integers(min_value=1, max_value=4))
+
+
+def _model_comments(netlist: Netlist) -> list[str]:
+    model = netlist.models["p"][0]
+    return [netlist.source.text[s.start : s.end] for s in model.trailing_comments]
+
+
+@ngspice_only
+@settings(max_examples=60, deadline=None)
+@given(case=_commented_cpl(), remove=st.booleans())
+def test_a_cpl_list_edit_keeps_every_comment(case: tuple[str, int], remove: bool) -> None:
+    # Review R3: either edit keeps every comment, or is refused.
+    model, count = case
+    netlist = _cpl(model)
+    try:
+        if remove:
+            edited = netlist.remove_model_param("p", "R")
+        else:
+            edited = netlist.set_model_param("p", "R", " ".join(str(9 + n) for n in range(count)))
+    except EditError as error:
+        assert "holds the comment" in str(error)
+        assert _model_comments(netlist)
+        return
+    joined = " ".join(_model_comments(edited))
+    position = 0
+    for comment in _model_comments(netlist):
+        position = joined.index(comment, position) + len(comment)
+    assert edited.signature() == netlist.signature()
+
+
 @ngspice_only
 def test_ltra_flags_stay_as_written() -> None:
     text = _LINES.replace("len=1)\n.model lmod2", "len=1 nosteplimit)\n.model lmod2")

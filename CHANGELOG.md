@@ -10,7 +10,7 @@ Changes:
 - T takes `Z0=` and `Zo=` on both dialects, as one parameter; it needs `Z0=` and exactly one length form (`TD=`, or `F=` with an optional `NL=`), and ngspice's `IC=` is four comma-separated values. U needs `l=`. Y's and P's reference nodes must be ground, since ngspice ignores them. Forms the solvers run but the manual or the reference does not show are refused, with rows in each `discrepancies.md` (M16).
 - An ngspice U line that is not a URC line (three nodes and a model) is the digital U, which raises `UnsupportedConstruct` until M17 (M16).
 - `.model`: an ngspice LTRA model takes LTRA's flags in `flags`, and a CPL model's `R=`, `L=`, `G=` and `C=` take a list of values, a `ValueList`; both are refused elsewhere. The model types LTRA, URC, TXL and CPL join `MODEL_TYPE_MISMATCH` and `set_model` (M16).
-- Add `remove_param` and `remove_model_param`, on `Netlist` and `Batch`, for every line and model that takes named parameters. `set_param`, `set_model` and `set_model_param` cover the new lines and models (M16).
+- Add `remove_param` and `remove_model_param`, on `Netlist` and `Batch`, for every line and model that takes named parameters. `set_param`, `set_model` and `set_model_param` cover the new lines and models (M16). A CPL matrix over `+` lines with a comment inside it is set value for value with as many values, so the comment stays; another count, and its removal, are refused (M16 review R3).
 - The tests' planned letter is A, which stays planned until M17 (M16).
 
 M15b (decision 0017): the nonlinear dependent-source forms load and edit on both dialects.

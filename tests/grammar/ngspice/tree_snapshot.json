@@ -1001,6 +1001,26 @@
    "nodes": 58
   }
  },
+ "edits_golden/lines_cpl_comments.cir": {
+  "rkm": {
+   "digest": "09c6dd414b6a511788592999908b8b15d1de9349aaba35b68bb8ca2ac14640f0",
+   "nodes": 58
+  },
+  "standard": {
+   "digest": "09c6dd414b6a511788592999908b8b15d1de9349aaba35b68bb8ca2ac14640f0",
+   "nodes": 58
+  }
+ },
+ "edits_golden/lines_cpl_comments.expected.cir": {
+  "rkm": {
+   "digest": "09c6dd414b6a511788592999908b8b15d1de9349aaba35b68bb8ca2ac14640f0",
+   "nodes": 58
+  },
+  "standard": {
+   "digest": "09c6dd414b6a511788592999908b8b15d1de9349aaba35b68bb8ca2ac14640f0",
+   "nodes": 58
+  }
+ },
  "edits_golden/lines_cpl_list.expected.cir": {
   "rkm": {
    "digest": "b226e6cc665a039fc2471b62eb9ae35e50c8f02ba692a0cda6c205cb0ad4ab2d",

@@ -272,17 +272,16 @@ class _Operations(Generic[_R]):
         """Remove the named parameter ``name`` of an element line (decision 0019): any line on
         which :meth:`set_param` sets one, an X line's instance parameters excepted.
 
-        The field goes with the separator before it (``R1 a b 1k m=2 tc1=1`` gives ``R1 a b 1k
-        tc1=1``); a ``+`` line holding only the field goes whole, and a field that starts a
-        ``+`` line with more fields takes the separator after it instead, and a field alone on its
-        line takes the line break before it, so a comment after it moves to the line before. A
-        list such as ``IC=``
-        goes whole; on a T line ``z0`` and ``zo`` name one parameter. ``EditError`` for a value
-        keyword (``r=1k``: use :meth:`remove_value`), a positional area, a flag, a parameter the
-        line does not have, an X line and an O line; no removal touches a comment. A parameter
-        the line needs (a T's ``Z0=``, a U's ``l=``) is refused by the verification, which
-        re-parses the result. To switch a T from ``TD=`` to ``F=``, set ``F=`` and remove ``TD=``
-        in one :meth:`Netlist.batch`.
+        The field goes with the separator before it (``R1 a b 1k m=2 tc1=1`` gives
+        ``R1 a b 1k tc1=1``). A field that starts a ``+`` line with more after it takes the
+        separator after it instead; a field alone on its line takes the line break before it, so
+        a comment after it moves to the line before. A list such as ``IC=`` goes whole; on a T
+        line ``z0`` and ``zo`` name one parameter. ``EditError`` for a value keyword (``r=1k``:
+        use :meth:`remove_value`), a positional area, a flag, a parameter the line does not
+        have, an X line and an O line; no removal touches a comment. A parameter the line needs
+        (a T's ``Z0=``, a U's ``l=``) is refused by the verification, which re-parses the
+        result. To switch a T from ``TD=`` to ``F=``, set ``F=`` and remove ``TD=`` in one
+        :meth:`Netlist.batch`.
         """
         return self._submit(
             operations.remove_param(
@@ -303,8 +302,9 @@ class _Operations(Generic[_R]):
         The field goes with the separator before it; as the first parameter inside parentheses,
         with the separator after it (``ltra(r=10 len=1)`` gives ``ltra(len=1)``), and the last
         one leaves the parentheses (``d(is=1e-14)`` gives ``d()``). A CPL matrix goes whole.
-        ``EditError`` for a flag and a parameter the model does not have; the separator is chosen as
-        for :meth:`remove_param`. Model contents are not checked.
+        ``EditError`` for a flag, a parameter the model does not have, and a CPL matrix with a
+        comment inside it (over ``+`` lines), which the removal would lose (review R3); the
+        separator is chosen as for :meth:`remove_param`. Model contents are not checked.
         """
         return self._submit(
             operations.remove_model_param(
@@ -451,7 +451,12 @@ class _Operations(Generic[_R]):
         in_definition: bool = False,
     ) -> _R:
         """Set a parameter of the ``.model`` defined in ``scope``, or add ``name=value`` after
-        its last parameter (inside the parentheses, if any)."""
+        its last parameter (inside the parentheses, if any).
+
+        A CPL matrix is replaced as a whole list (``"50n 10n 50n"``). When a comment lies inside
+        it (over ``+`` lines), a list of as many values replaces each value in place, so the
+        comment stays, and another count is an ``EditError`` (review R3).
+        """
         return self._submit(
             operations.set_model_param(
                 self._target(), model, name, value, scope=scope, in_definition=in_definition
