@@ -1,6 +1,6 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** READY FOR REVIEW — review round 2's R3 made (section 7.5); review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
+> **Status:** READY FOR REVIEW — review round 3's R4 made (section 8.4); review round 2's R3 made (section 7.5); review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
@@ -666,4 +666,58 @@ This is the only list that can hold a comment. A comment inside an `IC=` or `tc=
 - **Checks:**
   - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,911 passed, 2 skipped**, 1,100 deselected, coverage **98.53%**, in 21 min 42 s. The first run failed only the P13 contract, on a regular expression I had used to split the list. The grammar probe replaced it, and the second run is the one above.
   - `ruff`, `mypy` and `pre-commit run --all-files` pass.
+  - **CI:** see the pull request.
+
+## 8. Review round 3 (2026-11-09, `7f0b4fb`, #15)
+
+### 8.1 Outcome
+
+R3 is made as decided, and the 7.3 tidy-up is done. M16 goes back for one small change, R4: the new same-count path of `set_model_param` accepts a value that the normal path refuses, and drops part of it without saying so.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): not run this round. It was stopped so that R4 could go first, and it runs in the next round.
+  - CI on #15 at `7f0b4fb` is green on all five jobs.
+- **R3, by hand on ngspice (a scratch script outside the repository):**
+  - The three rows of R3 give the results in 7.5: both removals are refused naming `; c` and its line, and `"1 2 3"` keeps the comment.
+  - Commas (`"1, 2, 3"`) and braced formulas (`"{r} 0 {r}"`) are set value for value, in the list's own layout.
+  - Wrong counts (`"1"`, `"1 2"`, `"1 2 3 4"`) are refused with the count and the comment named. `""` and `"1 2 3)"` are refused as not parsing.
+  - The edit works inside a subcircuit with `in_definition=True`, and in a `batch()` beside a whole-list edit of another parameter.
+  - Lists without a comment are replaced and removed whole, as before.
+- **The probe approach** (a one-line `.model` parsed by the grammar, for P13) is accepted.
+
+### 8.2 Required changes
+
+[x] **R4 — `set_model_param` on a CPL list with a comment drops text from the new value.**
+
+`_list_values` parses `name=value` in a probe `.model` line and takes the values of its first parameter. Whatever else the probe line reads is ignored:
+
+| Value | Without a comment in the list | With a comment in the list, at `7f0b4fb` |
+|---|---|---|
+| `"1 2 3 ; x"` | `EditError`: "does not re-parse as a value" | `R=1 2 ; c` / `+ 3`: `; x` is dropped silently |
+| `"1 2 x=3"` | `EditError`: "does not re-parse as a value" | `EditError`: "has 3 values, not 2", which misnames the cause |
+
+- **Change:** the probe must read the whole of `value` as the parameter's list, and nothing else:
+  - exactly one parameter;
+  - no comment;
+  - the value's span covers all of `value`.
+
+  Otherwise raise the same `EditError` the normal path gives ("does not re-parse as a value"). Then a value is accepted or refused the same way whether or not the list holds a comment.
+- **Tests:** the two rows above, with a comment in the list, give the normal path's refusal.
+- **Docs:** none beyond the docstring of `_list_values`.
+
+### 8.3 Exit for this round
+
+1. Make R4.
+2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 8.4.
+3. Set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 8.4 Round 3 changes (2026-11-09)
+
+- **R4:** `_list_values` in `edit/_ops_statements.py` accepts the probe only when it reads the whole of `value` as the one parameter's value: exactly one parameter, no flag, no comment, and a value span that covers all of `value`. Otherwise it raises the normal path's message, "`…` does not re-parse as a value; the text would change more than the intended slot", with the edit's reason in front. The docstring says so. A probe that does not parse keeps its own message, as accepted in 8.1.
+  - **Results**, with `R=10 0 ; c` / `+ 10`: `"1 2 3 ; x"` and `"1 2 x=3"` are refused with that message, as they are without the comment.
+  - **One case still differs**, as before R4. On a model in parentheses, the whole-list path refuses `"1 2 3 ; x"` as an unbalanced `(`, because the comment takes the `)`. The same-count path refuses it as not re-parsing as a value. Both are refusals, and nothing is dropped.
+- **Tests:** `test_a_cpl_list_value_is_read_whole_or_refused` runs the two rows with and without a comment in the list, and expects the same refusal from each.
+- **Checks:**
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,915 passed, 2 skipped**, 1,104 deselected, coverage **98.53%**, in 22 min 9 s;
+  - `ruff`, `mypy` and `pre-commit run --all-files` pass;
   - **CI:** see the pull request.
