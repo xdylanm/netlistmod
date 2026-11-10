@@ -12,7 +12,7 @@ This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngs
 
 **v1 is a beta.** It is feature complete and tagged `0.9.0`, and is tagged at the end of phase 2. Alphas are published to PyPI from `0.5.0` ([decision 0018](../decisions/0018-pypi-publication.md)), so the maintainer can use it in practice; a 1.0 release is outside this plan.
 
-**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, and LTspice `.machine` stays unsupported (section 8, point 4). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./archive/phase-2/m11-tasks.md)).
+**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, LTspice `.machine` stays unsupported (section 8, point 4), and so does the ngspice digital U, which needs PSpice compatibility mode (section 8, point 2; [m17-tasks](./m17-tasks.md) decision 1). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./archive/phase-2/m11-tasks.md)).
 
 ## 2. Assumptions
 
@@ -103,11 +103,11 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Also (maintainer, 2026-11-09):** `remove_param` and `remove_model_param` for every line and model with named parameters.
 - **Exit:** each letter is `supported`, with spec entries validated wherever the solver can run the form.
 
-### M17 — Special and mixed-signal devices (A, N, U digital, `@`, `&`)
+### M17 — Special and mixed-signal devices (A, N, `@`, `&`) ([task list](./m17-tasks.md))
 
 - **ngspice A:** the port syntax of manual §8 and §22.2, in its own rules (section 3, point 4). Decide how vector ports appear in `nodes` and the signature.
-- **ngspice N:** OSDI devices (manual §9). A solver test needs a compiled model, so these entries may stay `documented`.
-- **ngspice U digital:** told apart from URC by shape, and accepted only in a subcircuit body, with `DIALECT_GATED_SYNTAX` (info) because it needs the PS flag (section 8, point 2). Check the shapes against every basic type in manual §10.1 first; raise it with the maintainer if any form is ambiguous.
+- **ngspice N:** OSDI devices (manual §9). The Windows build of ngspice 47 ships compiled models, so these entries can be `validated` ([m17-tasks](./m17-tasks.md) decision 6).
+- **ngspice U digital: dropped from v1** (maintainer, 2026-11-10; [m17-tasks](./m17-tasks.md) decision 1). Its libraries use `$` names that only PS mode reads, and its node counts depend on each basic type. It stays `UnsupportedConstruct` as a named exclusion.
 - **LTspice:** A (eight fixed nodes and a model), `@` and `&`. `.machine` stays an `UnsupportedConstruct`; record it as a named v1 exclusion (section 8, point 4).
 - **The planned-letter tests** use A after M16 ([m16-tasks](./archive/phase-2/m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
 - **Exit:** no letter in either matrix is `planned`.
@@ -138,7 +138,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 | M15 | B; E, F, G, H (expressions); C `q=` | B; E, F, G, H (`value=`); C `Q=`, L `Flux=` and hysteretic |
 | M15b | E, F, G, H (TABLE, POLY, FREQ, AND/OR) | E, F, G, H (`table=`, `Laplace=`, POLY); B `laplace=` |
 | M16 | T, O, U (URC), Y, P | T, O, U |
-| M17 | A, N, U (digital) | A, `@`, `&` |
+| M17 | A, N (U digital: excluded from v1) | A, `@`, `&` |
 
 ## 6. v1 gate
 
@@ -179,6 +179,8 @@ All decided on 2026-11-03.
    - A URC line whose first node is named `inv` stayed a URC line with `ngbehavior=psa`.
 
    There is no parser option. The grammar tells the forms apart by shape, accepts the digital form only in a subcircuit body as the manual says, and reports `DIALECT_GATED_SYNTAX` (info) because it needs the flag. This needs no exception to P5, and it matches the rule that the library does not validate solver inputs. M17 checks the shapes against every basic type before relying on this.
+
+   **Amended (maintainer, 2026-11-10):** the digital U is out of v1 ([m17-tasks](./m17-tasks.md) decision 1). Its PS-mode `$` names and type-dependent node counts would need a reading mode. The URC shape rule stays, and every other U line stays `UnsupportedConstruct`.
 3. **LTspice `.end`: decided.** It stays required, and M11 records this as closing the question.
 4. **LTspice `.machine`: decided.** It stays `UnsupportedConstruct` in v1, as a named exclusion, because its `.output` lines drive nodes.
 5. **Workflow: decided.** One pull request per milestone, with Linux and Windows CI and no macOS. There is no ngspice job: the solver tests and spec entries are validated on ngspice 47, a distribution package may be a different version, and the required local run already covers ngspice.
