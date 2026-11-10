@@ -1,6 +1,6 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** READY FOR REVIEW — implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
+> **Status:** ACTIVE — review round 1 (section 6) requires R1 and R2; implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
@@ -92,7 +92,7 @@ The rest were accepted as recommended. "Considered" marks an option weighed and 
    - **Y and P** take an optional `len=`, which overrides the model's `length=` (§6.4).
      - ngspice runs `m=2` on both and ignores it. It is refused, with a row, as is any other name.
      - A positional length is refused: ngspice ignores it on Y and stops on P.
-   - **`l=`, `n=` and `len=` are values** in each dialect's value slot: a number, or a formula in braces or quotes, and on LTspice a bare parameter (`L=len`, which LTspice runs). Whether `n=` is a whole number is not checked.
+   - **`l=`, `n=` and `len=` are values** in each dialect's value slot: a number, or a formula in braces or quotes. *(Corrected by review R2: a bare parameter such as `L=len`, which LTspice runs, is refused on LTspice U and T, as on every other LTspice element.)* Whether `n=` is a whole number is not checked.
 5. **The reference nodes of Y and P must be ground.** **Decided (option A).**
    - The manual writes Y as `YXXXXXXX N1 0 N2 0 mname` and P's references as `GND1` and `GND2`. ngspice ignores those nodes: the same circuit with a port's reference held at 0.2 V gives the same result to four digits in `.op` and `.tran`, on Y and on P. T uses every node (0.4 against 0.5).
    - Accepting another name would put a connection into the signature that the solver does not make. So Y's second or fourth node, or one of P's two reference nodes, must be ground (`0` or `gnd`, any case, names.md N2). Anything else is a `ParseError` at the node, whose message says that ngspice ignores it and to write `0`. It gets a discrepancies row.
@@ -258,7 +258,7 @@ The probes ran on ngspice 47 and LTspice 26.1.1, from a scratch script outside t
 | Y with a reference node held at 0.2 V (port 1, port 2, or both) | Runs, the same result as grounded: ngspice ignores it |
 | P one line `R=10 L=50n G=0 C=20p`, in `.op` and `.tran`; without `len=`; `len=2` | Run (0.4545 / 0.3394; 0.4167) |
 | P two lines, matrices with blanks, commas, braces, in parentheses, over a `+` line inside a list | Run |
-| P `m=2` | Runs, ignored |
+| P `m=2` | Stops (corrected by T1; the planning probe had it run, ignored) |
 | P with a reference node held at 0.2 V; references named `gnd` | Run, the same result as grounded |
 | P odd node count; positional `2`; a TXL model; matrices too short for the line count | Stop |
 | P with eight or nine lines | Both stopped on the matrix written, so this is open (T1) |
@@ -446,3 +446,120 @@ Each is a test: `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_lin
 8. **LTspice T refuses a comma between parameters** (`Zo=50, Td=1n`, which LTspice runs), as LTspice element lines take no comma; it has a discrepancies row.
 9. **Refusal messages:** `rel=`/`abs=`, LTspice `F=`/`NL=`/`IC=`, a field after an O's model, and LTRA flags on LTspice each have their own message; `m=` on Y and P and unknown names are generic syntax errors at the field.
 10. The new decision record is `proposed`; T12 accepts it.
+
+## 6. Review round 1 (2026-11-09, `a9d386b`, #15)
+
+### 6.1 Outcome
+
+M16 goes back for R1 and R2. The letters, the `.model` forms, the topology and the edits other than removal match section 2, and they held up when I checked them by hand on both dialects. R1 widens the removal rule, as section 5.2 point 5 asks. R2 corrects a sentence of decision 4 that I wrote wrongly in planning.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,824 passed, 2 skipped, 1,072 deselected, coverage 98.52%, in 21 min 8 s. This matches section 5.1.
+  - CI on #15 at `a9d386b` is green on all five jobs.
+- **By hand, both dialects (a scratch script outside the repository):**
+  - **T:**
+    - `Z0=`, `Zo=` and `ZO=` load on both. `Z0=` with `Zo=`, or `Z0=` twice, is refused at the second, with its own message.
+    - No length, `TD=` with `F=`, `NL=` without `F=`, no `Z0=`, `rel=`, and an `IC=` of two values are each refused at the right column, with their own messages.
+    - LTspice's `F=` and `IC=` are refused with the reference named. LTspice's export (`Td=50n Z0=50`) loads.
+  - **O:**
+    - It takes nothing after its model. LTspice's `myline LTRA` export is refused, with the cause in the message.
+    - A D model gives `MODEL_TYPE_MISMATCH`.
+  - **U:**
+    - A missing `l=` and a positional `5` are refused with the ngspice behaviour in the message.
+    - `U1 inv b 0 umod l=5` is an `RcLine`. The digital line and the four-node line are `UnsupportedConstruct`. On LTspice, the digital line is a `ParseError`.
+  - **Y and P:**
+    - A non-ground reference is refused at the node; `gnd` and `GND` load.
+    - P's `port1`, `port2` and `conductors` are right for one and two lines.
+    - An odd count, 20 names and a model named `5` are refused.
+  - **`.model`:**
+    - LTRA's flags load on ngspice, inside parentheses too, and `nocontrol` and `steplimit` load. `no control` is refused.
+    - The flags are refused on a D model, with their own message, and on LTspice.
+    - CPL lists load with blanks, commas, braces and over `+` lines. A list on `is=` or `length=` is refused.
+  - **Edits:**
+    - `set_param` follows the written spelling: `Zo=50` becomes `Zo=75`, and LTspice's `Z0=50` becomes `Z0=75`.
+    - Adding `TD=` beside `F=`, and removing `Z0=` or `l=`, are refused through verification.
+    - `set_value`, `set_param` on O, and `set_model` to a D model name the right operation.
+    - The batch that switches a T to `F=`/`NL=` gives `T1 a 0 b 0 Z0=50 f=100meg nl=0.1`.
+    - `remove_param` refuses a value keyword, a positional area, a flag and an X line, each with its message.
+- **Section 5.2:**
+  - Points 1 to 4 and 6 to 10 are accepted. Point 5 is R1.
+  - The P `m=2` correction in point 2 is noted, and section 3.1 should say so. It is part of R1's documentation pass.
+
+### 6.2 Required changes
+
+[ ] **R1 — `remove_param` and `remove_model_param` refuse safe edits.**
+
+The rule in decision 11 refuses whenever a comment sits near the field. But a comment can only end a physical line, so most of these removals can never touch one. The rule should look at the text the edit removes, not at where the comments are. Results at `a9d386b`, by hand on both dialects:
+
+| Line (removing `m=2`, `rs=10` or `TD=1n`) | At `a9d386b` | Safe result |
+|---|---|---|
+| `R1 a 0 1k m=2 tc1=0 ; note` | refused | `R1 a 0 1k tc1=0 ; note` |
+| `R1 a 0 1k ; note` / `+ m=2` (also with CRLF; also LTspice) | refused | `R1 a 0 1k ; note` |
+| `R1 a 0 1k` / `+ m=2 tc1=0 ; note` | refused | `R1 a 0 1k` / `+ tc1=0 ; note` |
+| `R1 a 0 1k` / `+ tc1=0 m=2 ; note` | refused | `R1 a 0 1k` / `+ tc1=0 ; note` |
+| `.model dm d(is=1e-14 ; sat` / `+ rs=10)` | refused | `.model dm d(is=1e-14 ; sat` / `+ )` |
+| `R1 a 0 1k m=2 ; note`; `+ m=2` alone; `\` continuations; `d(is=1e-14` / `+ rs=10)` | right | unchanged |
+| `T1 a 0 b 0 Z0=50` / `+ TD=1n ; delay` | refused | `T1 a 0 b 0 Z0=50 ; delay` |
+| `.model dm d is=1e-14` / `+ rs=10 ; series` / `+ n=1` | refused | `.model dm d is=1e-14 ; series` / `+ n=1` |
+
+Probed on ngspice 47 and LTspice 26.1.1:
+- `+ )` on its own line runs on both, and loads.
+- A `*` comment line inside a continued statement does not load, as before M16, so the removed text can never include one.
+
+**Change:** remove the comment refusals. Choose the removed span from where the field sits on its physical line:
+
+1. **The field follows another field of the statement on the same physical line:** remove the separator before it and the field. Comments only end a line, so this span never holds one.
+2. **The field is the first one on its physical line, and a later field or the closing `)` is on the same line:** remove the field and the separator after it, up to that field or `)`. A comment later on the line stays.
+3. **The field is the only one on its physical line** (a `+` line, or the line after a `\`): remove from the line break that ends the line before (`\r\n` or `\n`, with a `\` continuation's backslash and the blank before it) up to the end of the field. What followed the field on its line is kept as written, so a comment there moves back to the end of the line before (maintainer, 2026-11-09):
+
+   ```
+   R1 a 0 1k              R1 a 0 1k ; note
+   + m=2 ; note     →     + tc1=0
+   + tc1=0
+   ```
+
+   - With no comment, the line goes whole, as at `a9d386b`.
+   - If the line before already ends with a comment, the two join on that line (`R1 a 0 1k ; first` and `+ m=2 ; note` give `R1 a 0 1k ; first ; note`). The text of both is kept byte for byte, and both solvers read the result as one comment.
+   - Keeping `+ ; note` instead would not work: LTspice stops on a `+` line that holds only a comment ("Syntax error"), although ngspice runs it.
+
+**Tests:**
+- A golden diff for each row above, on both dialects, including CRLF, a `\` continuation and the two comments that join.
+- A property test that a removal leaves the text of every comment byte for byte in the result.
+- A solver test, on both dialects, that the results with a moved comment run.
+- `test_remove_model_param_refuses_a_comment_beside_the_field` and its `remove_param` twin become tests of the new results.
+
+**Docs:**
+- Decision 0019 item 11, `edit-layer.md` (both rows) and `docs/usage/editing.md` get the new rule.
+- In section 3.1's ngspice table, the P `m=2` row becomes "stops" (section 5.2 point 2).
+
+[ ] **R2 — A bare parameter name on LTspice U (`L=len`).**
+
+Decision 4 says that U's `l=`, `n=` and `len=` follow each dialect's value slot, "and on LTspice a bare parameter (`L=len`, which LTspice runs)". The second half is my error from planning: the library's LTspice value slot refuses bare names on every element, with a discrepancies row (LTspice `discrepancies.md`, the row for `R=x*2` and `m=x`). The implementation follows the sentence as written:
+- U takes `L=len` (`U_BARE` in `ltspice.lark`);
+- T, whose decision says nothing about it, refuses `Zo=z` with a generic message, although LTspice runs it (−36°, section 3.1).
+
+So the two letters disagree.
+
+- **Decided (maintainer, 2026-11-09):** refuse the bare name on U too, as on every other LTspice element:
+  - drop `U_BARE`;
+  - give U and T one message suggesting `{len}`;
+  - add both to that discrepancies row;
+  - correct decision 0019 item 4, and decision 4 of section 2.
+
+  No corpus file writes `L=len`. The tests that accept it become refusals: `test_ltspice_lines.py`, and the probe rows, which keep "LTspice runs it". `LT-URC-001` and `elements.md` change with them.
+- *Considered:* accept bare names on both U and T, as a second exception to the LTspice value rule.
+
+### 6.3 Noted, no change required
+
+- **The `.net` exports disappeared from the working tree after the commit.** At 18:31, the four `transmission_lines/*.net` files were missing from the working tree of `m16-lines`, although `a9d386b` has them. Nothing in the tests deletes them: the harness removes only `.raw` and `.log` files, in temporary folders. I restored them from the commit, and they re-export identically. If you open these schematics in the LTspice GUI, check afterwards that the exports are still there.
+- **LTspice and a `+` line that holds only a comment.** The library loads such a line on LTspice, but LTspice stops on it. This was here before M16; it belongs with M18's audit of value and line forms.
+- **Messages that are still the generic list of expected tokens**, for M18 with M15b's (plan M18):
+  - `m=` on Y and P (section 5.2 point 9);
+  - `IC=0 0 0 0`;
+  - LTspice's `Zo=z` gets its own message in R2, so it leaves this list.
+
+### 6.4 Exit for this round
+
+1. Make R1 and R2 as decided.
+2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5.
+3. Set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).

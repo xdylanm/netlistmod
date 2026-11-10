@@ -13,7 +13,6 @@ grammar:
 - rc_line
 - u_param
 - U_PARAM_KW
-- U_BARE
 - U_NAME
 core_rules:
 - node
@@ -21,10 +20,10 @@ core_rules:
 - eol
 tests:
 - tests/grammar/ltspice/test_ltspice_lines.py::test_u_is_a_urc_line
-- tests/grammar/ltspice/test_ltspice_lines.py::test_a_bare_parameter_is_a_bare_formula
+- tests/grammar/ltspice/test_ltspice_lines.py::test_a_bare_name_in_a_value_is_refused
 - tests/grammar/ltspice/test_ltspice_lines.py::test_refused_u_lines
 - tests/solver/test_ltspice_line_probes.py::test_line_probes
 - tests/solver/test_ltspice_line_probes.py::test_what_ltspice_computes_in_op
 - tests/solver/test_ltspice_line_probes.py::test_an_edit_moves_the_result
 - tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
-notes: 'Three nodes, a URC model, then L= (required: LTspice stops without it) and an optional N=, in either order. A value may be a bare parameter name (L=len), which LTspice reads; it is a Formula with an empty delimiter. U is only a URC line on LTspice.'
+notes: 'Three nodes, a URC model, then L= (required: LTspice stops without it) and an optional N=, in either order. A bare name in a value (L=len), which LTspice runs as a parameter reference, is refused with a message suggesting {len}, as on T and every other LTspice element (review R2). U is only a URC line on LTspice.'

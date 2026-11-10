@@ -274,10 +274,12 @@ class _Operations(Generic[_R]):
 
         The field goes with the separator before it (``R1 a b 1k m=2 tc1=1`` gives ``R1 a b 1k
         tc1=1``); a ``+`` line holding only the field goes whole, and a field that starts a
-        ``+`` line with more fields takes the separator after it instead. A list such as ``IC=``
+        ``+`` line with more fields takes the separator after it instead, and a field alone on its
+        line takes the line break before it, so a comment after it moves to the line before. A
+        list such as ``IC=``
         goes whole; on a T line ``z0`` and ``zo`` name one parameter. ``EditError`` for a value
         keyword (``r=1k``: use :meth:`remove_value`), a positional area, a flag, a parameter the
-        line does not have, an X line, an O line, and a comment beside the field. A parameter
+        line does not have, an X line and an O line; no removal touches a comment. A parameter
         the line needs (a T's ``Z0=``, a U's ``l=``) is refused by the verification, which
         re-parses the result. To switch a T from ``TD=`` to ``F=``, set ``F=`` and remove ``TD=``
         in one :meth:`Netlist.batch`.
@@ -301,8 +303,8 @@ class _Operations(Generic[_R]):
         The field goes with the separator before it; as the first parameter inside parentheses,
         with the separator after it (``ltra(r=10 len=1)`` gives ``ltra(len=1)``), and the last
         one leaves the parentheses (``d(is=1e-14)`` gives ``d()``). A CPL matrix goes whole.
-        ``EditError`` for a flag, a parameter the model does not have, and a comment beside the
-        field. Model contents are not checked.
+        ``EditError`` for a flag and a parameter the model does not have; the separator is chosen as
+        for :meth:`remove_param`. Model contents are not checked.
         """
         return self._submit(
             operations.remove_model_param(

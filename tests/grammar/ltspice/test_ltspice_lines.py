@@ -10,7 +10,6 @@ import pytest
 
 from netlistmod import (
     Dialect,
-    Formula,
     LosslessLine,
     LossyLine,
     Netlist,
@@ -119,9 +118,21 @@ def test_u_is_a_urc_line(line: str, params: list[tuple[str, str]]) -> None:
     assert _params(item) == params
 
 
-def test_a_bare_parameter_is_a_bare_formula() -> None:
-    value = _item("U1 a b 0 um L=len").params[0].value
-    assert isinstance(value, Formula) and value.delimiter == "" and value.text == "len"
+@pytest.mark.parametrize(
+    ("line", "column", "name"),
+    [
+        ("U1 a b 0 um L=len", 15, "len"),
+        ("U1 a b 0 um L=5 N=n", 19, "n"),
+        ("U1 a b 0 um L=len*2", 15, "len*2"),
+        ("T1 a 0 b 0 Zo=z Td=1n", 15, "z"),
+        ("T1 a 0 b 0 Zo=50 Td=td", 21, "td"),
+    ],
+)
+def test_a_bare_name_in_a_value_is_refused(line: str, column: int, name: str) -> None:
+    # Review R2: as on every other LTspice element; LTspice reads it as a reference.
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert f"write `{{{name}}}`" in error.reason
 
 
 @pytest.mark.parametrize(
@@ -132,7 +143,6 @@ def test_a_bare_parameter_is_a_bare_formula() -> None:
         ("U1 a b 0 um 5", 13),
         ("U1 a b 0 um L=5 m=2", 17),
         ("U1 a b 0 0 um L=5", 12),
-        ("U1 a b 0 um L=len*2", 15),
     ],
 )
 def test_refused_u_lines(line: str, column: int) -> None:

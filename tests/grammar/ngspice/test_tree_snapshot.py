@@ -43,7 +43,8 @@ and ``structure_rejects/element_line.cir`` held a T line as the planned letter; 
 A line, which stays planned until M17, so their entries (an unsupported construct at line 2,
 column 1) did not change. The same 17
 rejected files gained the five new letters among their expected terminals. No node, position or
-error class of any other entry changed.
+error class of any other entry changed. M16 review round 1 (R1) added the
+``edits_golden/lines_comments*`` files, and no other entry changed.
 """
 
 from __future__ import annotations

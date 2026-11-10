@@ -177,7 +177,11 @@
       "solver": {
         "skip": "ngspice stops on a CPL model without one of its matrices (\"lossy line parallel conductance not given\"); the library does not check model contents (decision 0019)."
       }
-    }
+    },
+    "lines_comments.cir": "7488bee363f5e2a218f8612bf6672af56210b9e19162afa2eca1997e5fc04b23",
+    "lines_comments.expected.cir": "14f29780f1302aa2983e97ad251a601a4a1b540a004774fb5a404814d91e493d",
+    "lines_comments_crlf.cir": "d14f878e029acd996a6eae42c8ca2875c05c1776358b95935c8e15318aaf8761",
+    "lines_comments_crlf.expected.cir": "0d62e3ec6faccb387ed665b17bba2a135ff25884d0967d881bcec13f28b73631"
   },
   "cases": {
     "value": {
@@ -1570,6 +1574,118 @@
         ]
       ],
       "expected": "lines_cpl_remove.expected.cir"
+    },
+    "lines_remove_comments": {
+      "input": "lines_comments.cir",
+      "steps": [
+        [
+          "remove_param",
+          "R1",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R2",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R3",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R4",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R5",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R6",
+          "m"
+        ],
+        [
+          "remove_model_param",
+          "dm",
+          "rs"
+        ],
+        [
+          "remove_model_param",
+          "dm2",
+          "rs"
+        ],
+        [
+          "remove_param",
+          "R7",
+          "m"
+        ],
+        [
+          "remove_param",
+          "T1",
+          "nl"
+        ]
+      ],
+      "expected": "lines_comments.expected.cir"
+    },
+    "lines_remove_comments_crlf": {
+      "input": "lines_comments_crlf.cir",
+      "steps": [
+        [
+          "remove_param",
+          "R1",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R2",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R3",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R4",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R5",
+          "m"
+        ],
+        [
+          "remove_param",
+          "R6",
+          "m"
+        ],
+        [
+          "remove_model_param",
+          "dm",
+          "rs"
+        ],
+        [
+          "remove_model_param",
+          "dm2",
+          "rs"
+        ],
+        [
+          "remove_param",
+          "R7",
+          "m"
+        ],
+        [
+          "remove_param",
+          "T1",
+          "nl"
+        ]
+      ],
+      "expected": "lines_comments_crlf.expected.cir"
     }
   }
 }

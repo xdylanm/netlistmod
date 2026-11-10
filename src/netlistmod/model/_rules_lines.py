@@ -27,7 +27,6 @@ from netlistmod.model.nodes import (
     TxlLine,
 )
 from netlistmod.model.values import (
-    Formula,
     ModelReference,
     ParamAssignment,
     ValueList,
@@ -59,24 +58,19 @@ class LinesRules(ElementsRules):
     """Rules for the transmission-line letters."""
 
     def t_param(self, children: list[Any]) -> _Field:
+        token = children[-1]
+        if isinstance(token, Token) and token.type == "LINE_BARE":
+            # LTspice reads a bare name as a parameter reference (review R2, decision 0019).
+            raise self._parse_error(
+                token,
+                f"`{token}`: LTspice reads a bare name in a value as a parameter reference; "
+                f"write `{{{token}}}`. Only `.param` takes a bare expression",
+            )
         return self.param(children)
 
     line_len = t_param
 
-    def u_param(self, children: list[Any]) -> _Field:
-        def build(name: Token) -> ParamAssignment:
-            token = children[-1]
-            name_span = _span(name)
-            if token.type == "U_BARE":
-                # LTspice reads a bare name in L= and N= as a parameter (decision 0019).
-                value: Any = Formula(str(token), "", _span(token))
-            else:
-                value = self._value(token)
-            return ParamAssignment(
-                str(name), value, Span(name_span.start, value.span.end), name_span
-            )
-
-        return self._field(children, build)
+    u_param = t_param
 
     def u_word(self, children: list[Any]) -> _Field:
         return self._field(children, _UWord)
