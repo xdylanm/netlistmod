@@ -1,6 +1,6 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
-> **Status:** ACTIVE — review round 1 (section 6) requires R1 and R2; implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
+> **Status:** READY FOR REVIEW — review round 1's R1 and R2 made (section 6.5); implemented 2026-11-09 (section 5); section 2 decided by the maintainer on 2026-11-09
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M16). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./archive/phase-2/m15b-tasks.md) and [decision 0014](../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
@@ -487,7 +487,7 @@ M16 goes back for R1 and R2. The letters, the `.model` forms, the topology and t
 
 ### 6.2 Required changes
 
-[ ] **R1 — `remove_param` and `remove_model_param` refuse safe edits.**
+[x] **R1 — `remove_param` and `remove_model_param` refuse safe edits.**
 
 The rule in decision 11 refuses whenever a comment sits near the field. But a comment can only end a physical line, so most of these removals can never touch one. The rule should look at the text the edit removes, not at where the comments are. Results at `a9d386b`, by hand on both dialects:
 
@@ -532,7 +532,7 @@ Probed on ngspice 47 and LTspice 26.1.1:
 - Decision 0019 item 11, `edit-layer.md` (both rows) and `docs/usage/editing.md` get the new rule.
 - In section 3.1's ngspice table, the P `m=2` row becomes "stops" (section 5.2 point 2).
 
-[ ] **R2 — A bare parameter name on LTspice U (`L=len`).**
+[x] **R2 — A bare parameter name on LTspice U (`L=len`).**
 
 Decision 4 says that U's `l=`, `n=` and `len=` follow each dialect's value slot, "and on LTspice a bare parameter (`L=len`, which LTspice runs)". The second half is my error from planning: the library's LTspice value slot refuses bare names on every element, with a discrepancies row (LTspice `discrepancies.md`, the row for `R=x*2` and `m=x`). The implementation follows the sentence as written:
 - U takes `L=len` (`U_BARE` in `ltspice.lark`);
@@ -563,3 +563,20 @@ So the two letters disagree.
 1. Make R1 and R2 as decided.
 2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5.
 3. Set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 6.5 Round 1 changes (2026-11-09)
+
+- **R1:** `_removal` in `edit/_ops_remove.py` chooses the span from where the field sits on its physical line, with the three rules of R1, and has no comment refusal left. Every row of R1's table gives its safe result on both dialects, CRLF included, and two comments join (`R1 a 0 1k ; first ; note`).
+  - **Tests:** the rows are in `tests/edits/test_line_edits.py` (on both dialects, with CRLF, `\` continuations and the joined comments); the comment-refusal tests now check the results; `test_a_removal_keeps_every_comment_byte_for_byte` is the property test.
+  - **Golden diffs and solver runs:** `edits_golden/lines_comments.cir`, `lines_comments_crlf.cir` (ngspice) and `lines_comments.net` (LTspice) hold every row, `+ )` and the joined comments; their expected files run in both solver sweeps.
+  - **Two notes:**
+    - The T row of the table (`Z0=50` / `+ TD=1n ; delay`) still refuses, through verification, because removing `TD=` leaves no length; its span is the one R1 gives. The golden files use `F=1g` / `+ NL=0.1 ; frac` instead, which gives `T1 a 0 b 0 Z0=50 F=1g ; frac`.
+    - The table marks `d(is=1e-14` / `+ rs=10)` "unchanged" (`d(is=1e-14)` at `a9d386b`). Rule 2, as written, gives `d(is=1e-14` / `+ )` for it as well, since the `)` follows on the line. I followed the rule, so the result is the same with or without a comment on the line before. Keeping `d(is=1e-14)` would need the rule to look at that comment again. Say if you want the old result back.
+  - **Docs:** decision 0019 item 11, both rows of `edit-layer.md`, `docs/usage/editing.md` and the API docstrings have the new rule. Section 3.1's P `m=2` row says "stops".
+- **R2:** LTspice's `U_BARE` is gone. A bare name in T's or U's value (`LINE_BARE`, recognised only to be refused) gets one message suggesting braces (`write {len}`).
+  - **Tests:** `test_a_bare_name_in_a_value_is_refused` covers T and U. The `u-bare` probe keeps "LTspice runs it" and now reads `refused`.
+  - **Docs:** the LTspice bare-name row of `discrepancies.md` names T and U, and `LT-URC-001`, `LT-TLL-001`, `elements.md`, decision 0019 item 4 and section 2 decision 4 are corrected.
+- **Checks:**
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,890 passed, 2 skipped**, 1,089 deselected, coverage **98.52%**, in 21 min 29 s;
+  - `ruff`, `mypy` and `pre-commit run --all-files` pass;
+  - **CI:** see the pull request.
