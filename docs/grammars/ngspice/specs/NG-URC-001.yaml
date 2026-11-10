@@ -1,0 +1,32 @@
+id: NG-URC-001
+dialect: ngspice
+construct: uniform RC line (U) lines
+manual_ref:
+- '[ngspice-manual] §6.3 "Uniform Distributed RC Lines"'
+- '[ngspice-manual] §10.1.3 "URC transmission line versus U devices"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-09'
+grammar:
+- body_line
+- rc_line
+- _u_more
+- _u_params
+- u_word
+- u_param
+- u_other
+- _U_CHAR
+- U_WORD
+- U_PARAM_KW
+- U_NAME
+tests:
+- tests/grammar/ngspice/test_lines.py::test_u_is_a_urc_line_with_four_names
+- tests/grammar/ngspice/test_lines.py::test_any_other_u_shape_is_the_digital_u
+- tests/grammar/ngspice/test_lines.py::test_refused_u_lines
+- tests/solver/test_ngspice_line_probes.py::test_line_probes
+- tests/solver/test_ngspice_line_probes.py::test_what_ngspice_computes_in_op
+- tests/solver/test_ngspice_line_probes.py::test_an_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'A U line is URC when exactly four names (three nodes, then the model) come before its first name=value or the end; every other shape is the digital U of M17 and raises UnsupportedConstruct (NG-UNS-001). l= must be given, and n= is optional, in either order. ngspice 47 runs a line without l= and a positional length with a near-zero length (0.4995 V where l=5 gives 0.3333 V); the library refuses both. A first node named inv stays URC.'

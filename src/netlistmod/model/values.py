@@ -46,7 +46,8 @@ Value: TypeAlias = NumericValue | Formula
 
 @dataclass(frozen=True, slots=True)
 class ValueList:
-    """The comma-separated values of an LTspice ``tc=a,b``; ``span`` runs from first to last.
+    """A list of values: an LTspice ``tc=a,b``, an ``ic=``, and a CPL model's matrix
+    (``R=1 0 1``). ``span`` runs from the first value to the last.
 
     ``text`` is the source slice of ``span``, so every parameter value has a ``text``.
     """
@@ -85,7 +86,8 @@ class ParamAssignment:
     """A ``name=value`` parameter; ``span`` runs from the name to the end of the value.
 
     Used for instance parameters, ``.param`` assignments, ``.model`` parameters and ``.subckt``
-    default values. The value is a :class:`ValueList` only for an LTspice ``tc=``, and an
+    default values. The value is a :class:`ValueList` for an LTspice ``tc=``, an ``ic=`` and a CPL
+    model's matrix, and an
     :class:`Identifier` only for an LTspice bare word in ``mfg``, ``pn`` or ``type``, which is kept
     verbatim.
     """

@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Literal, NoReturn
 
 from lark import Token, v_args
 from lark.tree import Meta
 
+from netlistmod.dialects import Dialect
 from netlistmod.model._rules_elements import ElementsRules
 from netlistmod.model._tree import (
     _BARE_EXPRESSION,
@@ -70,8 +72,22 @@ from netlistmod.model.values import (
     NumericValue,
     ParamAssignment,
     Value,
+    ValueList,
 )
 from netlistmod.source import Span
+
+_CPL_MATRICES = frozenset({"r", "l", "g", "c"})
+_LTRA_FLAGS = frozenset(
+    {"nosteplimit", "steplimit", "nocontrol", "lininterp", "mixedinterp", "truncnr", "truncdontcut"}
+)
+_LTRA_FLAG_TERMINALS = frozenset(f"{flag.upper()}_KW" for flag in _LTRA_FLAGS)
+
+
+@dataclass(frozen=True, slots=True)
+class _ModelValue:
+    """A value after a ``.model`` parameter's value: the next value of a CPL matrix."""
+
+    value: Value
 
 
 class StatementsRules(ElementsRules):
@@ -126,8 +142,8 @@ class StatementsRules(ElementsRules):
         name, model_type = element.all(Token)[:2]
         ako = element.optional(ModelReference)
         paren = element.optional(_ModelParams)
-        params = paren.params if paren is not None else element.all(ParamAssignment)
-        flags = paren.flags if paren is not None else element.all(Flag)
+        fields = paren.fields if paren is not None else tuple(element.fields)
+        params, flags = self._model_fields(str(model_type), fields)
         return _Item(
             element.end,
             lambda span: ModelStatement(
@@ -145,6 +161,59 @@ class StatementsRules(ElementsRules):
             ),
         )
 
+    def _model_fields(
+        self, model_type: str, fields: tuple[object, ...]
+    ) -> tuple[tuple[ParamAssignment, ...], tuple[Flag, ...]]:
+        """The parameters and flags of a ``.model`` line, in order. The values after a CPL
+        matrix's first one join it in a :class:`ValueList`, and LTRA's flags stay on an LTRA
+        model (decision 0019)."""
+        kind = model_type.lower()
+        params: list[ParamAssignment] = []
+        flags: list[Flag] = []
+        extra: list[Value] = []
+        previous: object = None
+        for node in (*fields, None):
+            if isinstance(node, _ModelValue):
+                last = previous if isinstance(previous, ParamAssignment) else None
+                if last is None:
+                    raise self._error_at(
+                        node.value.span.start,
+                        "a value without a name: a `.model` value follows `name=`",
+                    )
+                if kind != "cpl" or last.name.lower() not in _CPL_MATRICES:
+                    raise self._error_at(
+                        node.value.span.start,
+                        f"a second value for `{last.name}=`: only the R, L, G and C matrices of a "
+                        "CPL model take a list of values (ngspice reads the first and ignores "
+                        "the rest)",
+                    )
+                extra.append(node.value)
+                continue
+            previous = node
+            if extra:
+                last = params[-1]
+                assert not isinstance(last.value, ValueList | Identifier)
+                values = (last.value, *extra)
+                span = Span(values[0].span.start, values[-1].span.end)
+                params[-1] = ParamAssignment(
+                    last.name,
+                    ValueList(self._source.text[span.start : span.end], values, span),
+                    Span(last.span.start, span.end),
+                    last.name_span,
+                )
+                extra = []
+            if isinstance(node, ParamAssignment):
+                params.append(node)
+            elif isinstance(node, Flag):
+                if node.name.lower() in _LTRA_FLAGS and kind != "ltra":
+                    raise self._error_at(
+                        node.span.start,
+                        f"`{node.name}` is a flag of an LTRA model (ngspice manual §6.2.1); "
+                        f"ngspice ignores it on a `{model_type}` model",
+                    )
+                flags.append(node)
+        return tuple(params), tuple(flags)
+
     def model_paren(self, children: list[Any]) -> _Field:
         fields = [child for child in children if isinstance(child, _Field)]
         comments = (*_comment_spans(children), *(c for f in fields for c in f.comments))
@@ -152,16 +221,27 @@ class StatementsRules(ElementsRules):
         if isinstance(inner, _ModelParams):
             # A gap before the parenthesis: the list is the nested field.
             return _Field(inner, comments)
-        params = tuple(f.node for f in fields if isinstance(f.node, ParamAssignment))
-        flags = tuple(f.node for f in fields if isinstance(f.node, Flag))
+        nodes = tuple(f.node for f in fields if not isinstance(f.node, _RParen))
         assert isinstance(inner, _RParen)  # the grammar ends the list with rparen
         open_paren = next(c for c in children if isinstance(c, Token) and c.type == "LPAR")
-        return _Field(_ModelParams(params, _span(open_paren), inner.span, flags), comments)
+        return _Field(_ModelParams(nodes, _span(open_paren), inner.span), comments)
 
     def model_flag(self, children: list[Any]) -> _Field:
-        return self._field(children, lambda token: Flag(str(token), _span(token)))
+        def build(token: Token) -> Flag:
+            if token.type in _LTRA_FLAG_TERMINALS and self._dialect is Dialect.LTSPICE:
+                raise self._parse_error(
+                    token,
+                    f"`{token}` is an ngspice LTRA flag: the LTspice reference lists only R, L, "
+                    "G, C and Len for LTRA",
+                )
+            return Flag(str(token), _span(token))
+
+        return self._field(children, build)
 
     model_flag_first = model_flag
+
+    def model_more(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _ModelValue(self._value(token)))
 
     def model_text(self, children: list[Any]) -> _Field:
         return self.param(children)

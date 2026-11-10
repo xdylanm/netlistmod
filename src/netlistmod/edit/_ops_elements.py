@@ -33,20 +33,26 @@ from netlistmod.model.nodes import (
     ControlledSource,
     Diode,
     Jfet,
+    LosslessLine,
+    LossyLine,
     Mesfet,
     MutualCoupling,
     SubcktInstance,
     Switch,
+    TransmissionLine,
     Vccs,
     Vcvs,
     VoltageSource,
 )
 from netlistmod.model.values import (
     Flag,
+    ModelReference,
     ParamAssignment,
 )
 
 _LAPLACE_PARAMS = ("window", "nfft", "mtol")
+# The two spellings of a T line's impedance, which name one parameter (decision 0019).
+_IMPEDANCE = ("z0", "zo")
 
 
 def set_value(
@@ -86,6 +92,16 @@ def set_value(
         return [Edit(element.value.span, value, reason, (_VALUE,))]
     if isinstance(element, MutualCoupling):
         raise EditError(f"`{designator}` is a coupling; use set_coupling to set its value")
+    if isinstance(element, LossyLine):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)} and has no value slot; its values are in its "
+            "LTRA model (use set_model_param)"
+        )
+    if isinstance(element, TransmissionLine):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)} and has no value slot; use set_param to set "
+            "its parameters"
+        )
     raise EditError(f"`{designator}` is a {_kind(element)} line and has no value slot")
 
 
@@ -99,7 +115,8 @@ def set_param(
     in_definition: bool = False,
 ) -> list[Edit]:
     """Set or add an instance parameter of an R, C, L, D, Q, M, J or Z line, ``m=`` of an
-    ngspice F or G line (decision 0015 item 7), or a parameter of an LTspice V or I line.
+    ngspice F or G line (decision 0015 item 7), a parameter of an LTspice V or I line, or one of
+    a T, U, Y or P line (decision 0019; a T keeps its spelling of ``Z0=`` or ``Zo=``).
     ``area`` goes in the positional slot where the dialect writes one (decision 0014 item 5),
     unless the line already writes ``area=``."""
     element = _element(netlist, designator, scope, in_definition)
@@ -126,6 +143,18 @@ def set_param(
             else:
                 only = "; on ngspice only F and G take `m=`"
             raise EditError(f"`{designator}` takes no parameter `{name}`{only}")
+        return _assign(element.params, element, name, value, reason, folded=found_fold)
+    if isinstance(element, LossyLine):
+        raise EditError(
+            f"`{designator}` is a {_kind(element)} and takes no parameter; its values are in its "
+            "LTRA model (use set_model_param)"
+        )
+    if isinstance(element, TransmissionLine):
+        if isinstance(element, LosslessLine) and folded in _IMPEDANCE:
+            # Z0= and Zo= are one parameter: the line keeps the spelling it writes.
+            written = [param for param in element.params if found_fold(param.name) in _IMPEDANCE]
+            if len(written) == 1:
+                return [Edit(written[0].value.span, value, reason, (_VALUE,))]
         return _assign(element.params, element, name, value, reason, folded=found_fold)
     takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES, BehavioralSource)
     port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
@@ -215,11 +244,14 @@ def set_model(
     in_definition: bool = False,
     allow_external: bool = False,
 ) -> list[Edit]:
-    """Replace the model name of an R, C, L, D, Q, M, J, Z, S or W line, or add one after the
-    value of an R, C or L line that has none (decision 0007 item 3; review round 1; decisions
-    0014 and 0015: S takes an SW model and W a CSW model)."""
+    """Replace the model name of an R, C, L, D, Q, M, J, Z, S, W, O, U, Y or P line, or add one
+    after the value of an R, C or L line that has none (decision 0007 item 3; review round 1;
+    decisions 0014 and 0015: S takes an SW model and W a CSW model; decision 0019: O takes LTRA,
+    U URC, Y TXL and P CPL)."""
     element = _element(netlist, designator, scope, in_definition)
-    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS, Switch)):
+    if isinstance(element, LosslessLine):
+        raise EditError(f"`{designator}` is a {_kind(element)} and has no model")
+    if not isinstance(element, (*_TWO_TERMINAL, Diode, *_TRANSISTORS, Switch, TransmissionLine)):
         raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
     if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
@@ -258,8 +290,9 @@ def set_model(
                 "set it without a type check"
             )
     reason = f"set_model {designator}"
-    if element.model is not None:
-        return [Edit(element.model.span, model, reason, (_MODEL,))]
+    current = getattr(element, "model", None)
+    if isinstance(current, ModelReference):
+        return [Edit(current.span, model, reason, (_MODEL,))]
     # Without a model the grammar requires a value; the model goes right after it.
     assert isinstance(element, _TWO_TERMINAL) and element.value is not None
     return [_insert(element.value.span.end, conventions.field(model), reason, _MODEL, 1)]

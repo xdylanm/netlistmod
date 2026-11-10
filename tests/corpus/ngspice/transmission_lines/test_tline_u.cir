@@ -1,0 +1,8 @@
+.title KiCad schematic
+.model __U1 URC rperl=10 cperl=1p
+R2 GND Net-_C1-Pad1_ 50
+C1 Net-_C1-Pad1_ GND 22p
+V1 Net-_R1-Pad2_ GND DC 0.1 SIN( 0.1 1 100Meg 0 0 0 ) AC 1  
+R1 Net-_R1-Pad1_ Net-_R1-Pad2_ 50
+UT1 Net-_R1-Pad1_ Net-_C1-Pad1_ GND __U1 l=5
+.end

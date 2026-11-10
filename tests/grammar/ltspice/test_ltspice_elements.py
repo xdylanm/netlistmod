@@ -528,7 +528,7 @@ def test_nonlinear_forms_load(line: str) -> None:
     assert element.value is None
 
 
-@pytest.mark.parametrize("letter", list("AOTU@&"))
+@pytest.mark.parametrize("letter", list("A@&"))
 def test_phase_2_letters_are_unsupported(letter: str) -> None:
     error = _unsupported(f"{letter}1 a b c")
     assert f"LTspice {letter} device" in str(error)
@@ -547,7 +547,7 @@ def test_the_device_matrix_matches_its_document() -> None:
     )
     assert matrix == packaged
     supported = {k for k, v in matrix.items() if v["status"] == "supported"}
-    assert supported == set("RCLVIDXKQMJZEFGHSWB")
+    assert supported == set("RCLVIDXKQMJZEFGHSWBTOU")
 
 
 def test_param_assignment_spans_slice_back() -> None:

@@ -76,14 +76,14 @@ The dialect has this construct, but the library does not support it yet. It is s
 ```python
 >>> from netlistmod import UnsupportedConstruct
 >>> try:
-...     parse(SourceText("title\nT1 a 0 b 0 z0=50 td=1n\n.end\n"), Dialect.NGSPICE)
+...     parse(SourceText("title\nA1 in out amod\n.end\n"), Dialect.NGSPICE)
 ... except UnsupportedConstruct as error:
 ...     print(error.line, error.column)
 2 1
 
 ```
 
-**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, and the linear forms of E, F, G, H, S and W, with DC, AC and source functions. Other letters wait for later phase 2 milestones; ngspice's `LAPLACE` is a `ParseError`, because ngspice does not offer it. There is no way to skip the line.
+**What to do:** the library supports R, C, L, K, V, I, D, X, the transistors Q, M, J and Z, the dependent sources and switches E, F, G, H, S and W, B, and the transmission lines T, O and U (and on ngspice Y and P), with DC, AC and source functions. An ngspice U line that is not a URC line is the digital U, unsupported until M17. Other letters wait for later phase 2 milestones; ngspice's `LAPLACE` is a `ParseError`, because ngspice does not offer it. There is no way to skip the line.
 
 ### `EditError`
 

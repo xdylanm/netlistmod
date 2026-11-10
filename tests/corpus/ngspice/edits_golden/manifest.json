@@ -164,7 +164,20 @@
     "nonlinear_sources.cir": "c03157560b5d253f7015fa1968d5defdba6ae27cec3b1537fbcec89ea65547e9",
     "nonlinear_table.expected.cir": "923930f66890e245c89c64d6eef5df89e9bc88eabe0e1ade8926b4541fb517d4",
     "nonlinear_freq_and_gate.expected.cir": "2c71bb3ac87bb6352546826e16d6db0bc05487273b1c755cc3796ca59ef58a69",
-    "nonlinear_poly.expected.cir": "a310ea9da9fd5214a5dc78ab2a212499e236abfad80f68707c3d91ebc4e059af"
+    "nonlinear_poly.expected.cir": "a310ea9da9fd5214a5dc78ab2a212499e236abfad80f68707c3d91ebc4e059af",
+    "lines.cir": "db5c9ca2d08c7de532c7bf4bf92b745a4a0f39c191684b95b81f2762d81d1a7f",
+    "lines_params.expected.cir": "3ce2947fbe10f895a7abd1339a3df978263d403b77228c4e821aa2575bc36edb",
+    "lines_models.expected.cir": "2dc05035473a8609e4c72590e675a43e20c8e213f1fd3b227aa1b9cfb0e11b1f",
+    "lines_remove.expected.cir": "c809ca0326e4eb9767f0923b2452bc7eb026de584518ba2ba976c76f6c112668",
+    "lines_batch.expected.cir": "88c0c01c0186692935ed9acd4edc144f6b7dcbc5941f7835202f3f52ed408257",
+    "lines_cpl.cir": "7d555cc50c205fb5438e68f9b7ddae6b74a0fa95d52dcb86fba65013f5b9c81d",
+    "lines_cpl_list.expected.cir": "2656725ae3456efba1a4ccf8b0e8472f6e1e3e676bb6939181e94fdb79ae0098",
+    "lines_cpl_remove.expected.cir": {
+      "sha256": "d90ae98da8f9f7ea04ff091ef640c8ae0c97fcbcb0e4403ddabd05efadfafe6a",
+      "solver": {
+        "skip": "ngspice stops on a CPL model without one of its matrices (\"lossy line parallel conductance not given\"); the library does not check model contents (decision 0019)."
+      }
+    }
   },
   "cases": {
     "value": {
@@ -1388,6 +1401,175 @@
         ]
       ],
       "expected": "nonlinear_poly.expected.cir"
+    },
+    "lines_params": {
+      "input": "lines.cir",
+      "steps": [
+        [
+          "set_param",
+          "T1",
+          "z0",
+          "75"
+        ],
+        [
+          "set_param",
+          "T1",
+          "td",
+          "2n"
+        ],
+        [
+          "set_param",
+          "T2",
+          "ic",
+          "0.1,0,0,0"
+        ],
+        [
+          "set_param",
+          "U1",
+          "l",
+          "10"
+        ],
+        [
+          "set_param",
+          "Y1",
+          "len",
+          "2"
+        ],
+        [
+          "set_param",
+          "P1",
+          "len",
+          "2"
+        ]
+      ],
+      "expected": "lines_params.expected.cir"
+    },
+    "lines_models": {
+      "input": "lines.cir",
+      "steps": [
+        [
+          "set_model",
+          "O1",
+          "lmod2"
+        ],
+        [
+          "set_model",
+          "U1",
+          "umod2"
+        ],
+        [
+          "set_model_param",
+          "lmod",
+          "r",
+          "20"
+        ],
+        [
+          "set_model_param",
+          "pmod",
+          "L",
+          "60n"
+        ],
+        [
+          "set_model_param",
+          "ymod",
+          "length",
+          "2"
+        ]
+      ],
+      "expected": "lines_models.expected.cir"
+    },
+    "lines_remove": {
+      "input": "lines.cir",
+      "steps": [
+        [
+          "remove_param",
+          "U1",
+          "n"
+        ],
+        [
+          "remove_param",
+          "Y1",
+          "len"
+        ],
+        [
+          "remove_param",
+          "T2",
+          "ic"
+        ],
+        [
+          "remove_param",
+          "P1",
+          "len"
+        ],
+        [
+          "remove_model_param",
+          "lmod",
+          "r"
+        ],
+        [
+          "remove_model_param",
+          "umod",
+          "cperl"
+        ]
+      ],
+      "expected": "lines_remove.expected.cir"
+    },
+    "lines_batch": {
+      "input": "lines.cir",
+      "steps": [
+        [
+          "batch",
+          [
+            [
+              "set_param",
+              "T1",
+              "f",
+              "100meg"
+            ],
+            [
+              "set_param",
+              "T1",
+              "nl",
+              "0.1"
+            ],
+            [
+              "remove_param",
+              "T1",
+              "td"
+            ]
+          ]
+        ]
+      ],
+      "expected": "lines_batch.expected.cir"
+    },
+    "lines_cpl_list": {
+      "input": "lines_cpl.cir",
+      "steps": [
+        [
+          "set_model_param",
+          "pmod",
+          "L",
+          "60n 6n 60n"
+        ],
+        [
+          "set_model_param",
+          "pmod",
+          "R",
+          "20 0 20"
+        ]
+      ],
+      "expected": "lines_cpl_list.expected.cir"
+    },
+    "lines_cpl_remove": {
+      "input": "lines_cpl.cir",
+      "steps": [
+        [
+          "remove_model_param",
+          "pmod",
+          "G"
+        ]
+      ],
+      "expected": "lines_cpl_remove.expected.cir"
     }
   }
 }

@@ -11,6 +11,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-05'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-09'
 grammar:
 - param
 - model_param_first
@@ -21,6 +24,15 @@ grammar:
 - AKO_REF
 - model_flag
 - model_text
+- model_flag_first
+- _ltra_flag
+- NOSTEPLIMIT_KW
+- STEPLIMIT_KW
+- NOCONTROL_KW
+- LININTERP_KW
+- MIXEDINTERP_KW
+- TRUNCNR_KW
+- TRUNCDONTCUT_KW
 core_rules:
 - model_paren
 - rparen
@@ -40,4 +52,6 @@ tests:
 - tests/grammar/ltspice/test_ltspice_transistors.py::test_a_model_may_carry_a_channel_flag
 - tests/grammar/ltspice/test_ltspice_transistors.py::test_a_dotted_model_value_is_text
 - tests/solver/test_ltspice_transistor_probes.py::test_a_dotted_model_value_runs
-notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with a hint, since LTspice reads it as a parameter reference (reviews R2, R8). pn is not a metadata name on a .model: pn=3M is an open numeric name, LTspice warns at pn=OnSemi and stops at pn=1N4148A, and the library rejects both. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7).'
+- tests/grammar/ltspice/test_ltspice_lines.py::test_ltra_flags_are_refused_with_a_reason
+- tests/solver/test_ltspice_line_probes.py::test_ltra_flags_are_refused
+notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with a hint, since LTspice reads it as a parameter reference (reviews R2, R8). pn is not a metadata name on a .model: pn=3M is an open numeric name, LTspice warns at pn=OnSemi and stops at pn=1N4148A, and the library rejects both. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7). LTRA''s ngspice flags are recognised only to be refused: the reference lists only R, L, G, C and Len for LTRA, and LTspice 26.1.1 runs steplimit, nosteplimit and lininterp (discrepancies.md; decision 0019 item 8).'

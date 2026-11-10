@@ -543,13 +543,100 @@ B_PARAM_KW.3: /(?:tc1|tc2|temp|dtemp)(?=[ \t]*=)/i
 B_PIECE.4: /(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?!(?:\{[^{}\r\n]*\}|'[^'\r\n]*')[ \t]*(?:\r?\n|$|[;$]|\/\/|[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)))(?:(?:[^ \t\r\n;$'\"\/\\]|\/(?!\/)|\\(?!\\\r?\n))|[ \t]+(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?=(?:[^ \t\r\n;$'\"\/\\]|\/(?!\/)|\\(?!\\\r?\n))))+/i
 %override B_NAME.4: /[Bb]/ _NG_UNIT*
 
+// Transmission lines (§6; decision 0019). Each line has fixed nodes, then a model on all but T,
+// then named parameters. The transformer checks what a parameter list must hold.
+// T: four nodes, then Z0= (or Zo=), TD=, F=, NL= and IC= in any order (§6.1). rel= and abs= run
+// in ngspice, and are recognised only so that they get their own message.
+// spec: NG-TLL-001
+%extend body_line: lossless_line
+lossless_line: T_NAME node node node node _t_more
+_t_more: (t_param | ic_param) _t_more
+       | NL
+       | eol
+       | t_unlisted
+t_param: (SEP | CSEP | BS_CONT) T_PARAM_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | BS_CONT) t_param
+t_unlisted: (SEP | CSEP | BS_CONT) T_UNLISTED_KW rest NL
+          | (SEP | TRAILING_COMMENT | BS_CONT) t_unlisted
+T_PARAM_KW.3: /(?:z0|zo|td|f|nl)(?=[ \t]*=)/i
+T_UNLISTED_KW.3: /(?:rel|abs)(?=[ \t]*=)/i
+T_NAME.4: /[Tt]/ _NG_UNIT*
+
+// O: four nodes and an LTRA model, then nothing (§6.2). A field after the model is recognised
+// only so that it gets its own message.
+// spec: NG-LTR-001
+%extend body_line: lossy_line
+lossy_line: O_NAME node node node node model (NL | eol | line_extra)
+line_extra: (SEP | CSEP | BS_CONT) (WORD | NUMBER | BRACE_FORMULA | QUOTE_FORMULA) rest NL
+          | (SEP | TRAILING_COMMENT | BS_CONT) line_extra
+O_NAME.4: /[Oo]/ _NG_UNIT*
+
+// U: a URC line is three nodes and a URC model, then l= and n= (§6.3); any other U line is the
+// digital U of M17 (§10.1.3), recognised by its shape. The names before the first name=value are
+// read as one list, which a word with parentheses (a digital type) may join, and the transformer
+// counts them. A field after the parameters is recognised only so that it gets a message.
+// spec: NG-URC-001
+%extend body_line: rc_line
+rc_line: U_NAME u_word+ _u_more
+_u_more: u_param _u_params
+       | NL
+       | eol
+_u_params: u_param _u_params
+         | NL
+         | eol
+         | u_other
+u_word: (SEP | CSEP | BS_CONT) U_WORD
+      | (SEP | TRAILING_COMMENT | BS_CONT) u_word
+u_param: (SEP | CSEP | BS_CONT) U_PARAM_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | BS_CONT) u_param
+u_other: (SEP | CSEP | BS_CONT) (U_WORD | NUMBER | BRACE_FORMULA | QUOTE_FORMULA) rest NL
+       | (SEP | TRAILING_COMMENT | BS_CONT) u_other
+_U_CHAR: /[^ \t\r\n=%,\[\]<>~{}'";$\\\/]/
+U_WORD.2: (_U_CHAR | "/" _U_CHAR)+ /(?![ \t]*=|[^ \t\r\n=%,\[\]<>~{}'";$\\\/]|\/[^ \t\r\n=%,\[\]<>~{}'";$\\\/])/
+U_PARAM_KW.3: /[A-Za-z_][A-Za-z0-9_]*(?=[ \t]*=)/
+U_NAME.4: /[Uu]/ _NG_UNIT*
+
+// Y (TXL, §6.4.1): four nodes, whose second and fourth the transformer requires to be ground, a
+// model, then an optional len=. P (CPL, §6.4.2): 2X+2 nodes, then the model, the last name before
+// len= or the end (decision 0014's boundary rule), then len=.
+// spec: NG-TXL-001
+%extend body_line: txl_line
+txl_line: Y_NAME node node node node model line_len* (NL | eol)
+line_len: (SEP | CSEP | BS_CONT) LEN_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+        | (SEP | TRAILING_COMMENT | BS_CONT) line_len
+LEN_KW.3: /len(?=[ \t]*=)/i
+Y_NAME.4: /[Yy]/ _NG_UNIT*
+
+// spec: NG-CPL-001
+%extend body_line: coupled_line
+coupled_line: P_NAME t_name+ line_len* (NL | eol)
+P_NAME.4: /[Pp]/ _NG_UNIT*
+
+// A list of values after a parameter (a CPL matrix, R=1 0 1; decision 0019), and LTRA's flags
+// (§6.2.1), which the transformer allows only on their own model types.
 // spec: NG-MOD-001
-%extend model_paren: BS_CONT model_paren
+%override model_stmt: MODEL_KW x_name x_name (param | model_flag | model_text | model_more)* (NL | eol)
+                    | MODEL_KW x_name x_name model_paren (NL | eol)
+%override model_paren: LPAR ((model_param_first | model_flag_first) (param | model_flag | model_text | model_more)*)? rparen
+                     | (SEP | TRAILING_COMMENT | BS_CONT) model_paren
+model_more: (SEP | CSEP | BS_CONT) (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | BS_CONT) model_more
 %extend model_param_first: BS_CONT model_param_first
 %extend rparen: BS_CONT rparen
-%extend model_flag: (CSEP | BS_CONT) (PCHAN_KW | NCHAN_KW)
+%extend model_flag: SEP _ltra_flag
+                  | (CSEP | BS_CONT) (PCHAN_KW | NCHAN_KW | _ltra_flag)
                   | BS_CONT model_flag
-%extend model_flag_first: BS_CONT model_flag_first
+%extend model_flag_first: _ltra_flag
+                        | BS_CONT model_flag_first
+_ltra_flag: NOSTEPLIMIT_KW | STEPLIMIT_KW | NOCONTROL_KW | LININTERP_KW | MIXEDINTERP_KW
+          | TRUNCNR_KW | TRUNCDONTCUT_KW
+NOSTEPLIMIT_KW.2: "nosteplimit"i
+STEPLIMIT_KW.2: "steplimit"i
+NOCONTROL_KW.2: "nocontrol"i
+LININTERP_KW.2: "lininterp"i
+MIXEDINTERP_KW.2: "mixedinterp"i
+TRUNCNR_KW.2: "truncnr"i
+TRUNCDONTCUT_KW.2: "truncdontcut"i
 %extend model_text: (CSEP | BS_CONT) WORD EQ DOTTED_VALUE
                   | BS_CONT model_text
 

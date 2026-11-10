@@ -20,16 +20,19 @@ _MODEL_TYPES = "model-types.json"
 @lru_cache(maxsize=None)
 def _table(dialect: Dialect) -> dict[str, frozenset[str]]:
     """The types of both dialects (``elements``), with a dialect's own types added (decision
-    0014: LTspice's Z also takes an IGBT)."""
+    0014: LTspice's Z also takes an IGBT; decision 0019: only ngspice has Y and P)."""
     resource = files("netlistmod.document") / _MODEL_TYPES
     parsed = json.loads(resource.read_text(encoding="utf-8"))
     elements = parsed.get("elements") if isinstance(parsed, dict) else None
     if not isinstance(elements, dict):
         raise ValueError("model-types.json must map element class names to model types")
     extra = parsed.get(dialect.value, {})
+    names = (*elements, *(name for name in extra if name not in elements))
     return {
-        str(name): frozenset(str(kind).lower() for kind in (*kinds, *extra.get(name, ())))
-        for name, kinds in elements.items()
+        str(name): frozenset(
+            str(kind).lower() for kind in (*elements.get(name, ()), *extra.get(name, ()))
+        )
+        for name in names
     }
 
 

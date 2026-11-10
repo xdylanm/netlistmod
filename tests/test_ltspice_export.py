@@ -2,7 +2,8 @@
 
 This runs the ``-netlist`` switch on every run and shows LTspice version drift. The exports are
 compared after the one normalisation ``docs/usage/ltspice-export.md`` describes: the absolute path
-in the first comment becomes the file name.
+in the first comment becomes the file name. It covers ``contributed_examples`` and, since M16, the
+maintainer's ``transmission_lines`` schematics.
 """
 
 from __future__ import annotations
@@ -15,8 +16,12 @@ import pytest
 
 from tests.support.solvers import Solver, run_ltspice
 
-FAMILY = Path(__file__).parent / "corpus" / "ltspice" / "contributed_examples"
-SCHEMATICS = sorted(path.with_suffix(".asc") for path in FAMILY.glob("*.net"))
+CORPUS = Path(__file__).parent / "corpus" / "ltspice"
+FAMILY = CORPUS / "contributed_examples"
+FAMILIES = (FAMILY, CORPUS / "transmission_lines")
+SCHEMATICS = sorted(
+    path.with_suffix(".asc") for family in FAMILIES for path in family.glob("*.net")
+)
 _BUNDLED_LIBRARY = "\\lib\\cmp\\"
 _SETTINGS_HELP = (
     "turn off Default Devices and Default Libraries (DefaultDeviceModels and "
@@ -51,21 +56,24 @@ def test_the_settings_check_explains_a_bundled_library_line() -> None:
 
 
 def test_every_export_has_its_schematic_in_the_family() -> None:
-    manifest = json.loads((FAMILY / "manifest.json").read_text(encoding="utf-8"))
     assert SCHEMATICS
     for schematic in SCHEMATICS:
+        manifest = json.loads((schematic.parent / "manifest.json").read_text(encoding="utf-8"))
         assert schematic.name in manifest["fixtures"]
-    assert {path.stem for path in FAMILY.glob("*.asc")} - {p.stem for p in SCHEMATICS} == {
-        "r_subckt"
-    }
+    unexported = {"contributed_examples": {"r_subckt"}, "transmission_lines": set()}
+    for family in FAMILIES:
+        stems = {path.stem for path in family.glob("*.asc")}
+        assert stems - {p.stem for p in SCHEMATICS} == unexported[family.name]
 
 
 @pytest.mark.solver("ltspice")
-@pytest.mark.parametrize("schematic", SCHEMATICS, ids=lambda path: path.stem)
+@pytest.mark.parametrize(
+    "schematic", SCHEMATICS, ids=lambda path: f"{path.parent.name}/{path.stem}"
+)
 def test_a_reexport_matches_the_committed_netlist(
     solver: Solver, schematic: Path, tmp_path: Path
 ) -> None:
-    for path in FAMILY.iterdir():
+    for path in schematic.parent.iterdir():
         if path.suffix in {".asc", ".asy"}:
             copyfile(path, tmp_path / path.name)
     result = run_ltspice(solver, tmp_path / schematic.name, export_netlist=True)

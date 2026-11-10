@@ -124,7 +124,20 @@ MODEL_BARE.5: /(?![+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:e[+-]?[0-9]+)?(?:[^\W\
 %extend model_stmt: MODEL_KW x_name model_ako x_name (param | model_flag | model_text)* (NL | eol)
                   | MODEL_KW x_name model_ako x_name model_paren (NL | eol)
 %extend model_flag: CSEP (PCHAN_KW | NCHAN_KW)
+                  | (SEP | CSEP) _ltra_flag
+%extend model_flag_first: _ltra_flag
 %extend model_text: CSEP WORD EQ DOTTED_VALUE
+// LTRA's flags (ngspice manual §6.2.1) are recognised only so that they get their own message:
+// the reference lists none (decision 0019).
+_ltra_flag: NOSTEPLIMIT_KW | STEPLIMIT_KW | NOCONTROL_KW | LININTERP_KW | MIXEDINTERP_KW
+          | TRUNCNR_KW | TRUNCDONTCUT_KW
+NOSTEPLIMIT_KW.2: "nosteplimit"i
+STEPLIMIT_KW.2: "steplimit"i
+NOCONTROL_KW.2: "nocontrol"i
+LININTERP_KW.2: "lininterp"i
+MIXEDINTERP_KW.2: "mixedinterp"i
+TRUNCNR_KW.2: "truncnr"i
+TRUNCDONTCUT_KW.2: "truncdontcut"i
 model_ako: SEP AKO_REF
          | (SEP | TRAILING_COMMENT) model_ako
 AKO_REF.3: /ako:[^ \t\r\n=(),{}'"|;]+/i
@@ -444,6 +457,44 @@ B_PARAM_KW.3: /(?:ic|tripdv|tripdt|rpar|vprx)(?=[ \t]*=)/i
 B_PIECE.4: /(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?!(?:\{[^{}\r\n]*\}|'[^'\r\n]*')[ \t]*(?:\r?\n|$|;|\$ |[A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=)))(?:(?:[^ \t\r\n;'\"$]|\$(?! ))|[ \t]+(?![A-Za-z_][A-Za-z0-9_]*[ \t]*=(?!=))(?=(?:[^ \t\r\n;'\"$]|\$(?! ))))+/i
 %override B_NAME.4: /[Bb]/ _LT_CHAR*
 // B's laplace= is the laplace_clause above, after V= or I= (decision 0017 item 4).
+
+// Transmission lines (reference T, O and U; decision 0019). T: four nodes, then Zo= (or Z0=) and
+// Td=, the reference's names. F=, NL=, IC=, rel= and abs= run in LTspice and are recognised only so
+// that they get their own message.
+// spec: LT-TLL-001
+%extend body_line: lossless_line
+lossless_line: T_NAME node node node node _t_more
+_t_more: t_param _t_more
+       | NL
+       | eol
+       | t_unlisted
+t_param: SEP T_PARAM_KW EQ _lt_value
+       | (SEP | TRAILING_COMMENT) t_param
+t_unlisted: SEP T_UNLISTED_KW rest NL
+          | (SEP | TRAILING_COMMENT) t_unlisted
+T_PARAM_KW.3: /(?:z0|zo|td)(?=[ \t]*=)/i
+T_UNLISTED_KW.3: /(?:f|nl|ic|rel|abs)(?=[ \t]*=)/i
+T_NAME.4: /[Tt]/ _LT_CHAR*
+
+// O: four nodes and an LTRA model, then nothing. A field after the model (as an `ltline` symbol
+// with LTRA left in its Value writes) is recognised only so that it gets its own message.
+// spec: LT-LTR-001
+%extend body_line: lossy_line
+lossy_line: O_NAME node node node node model (NL | eol | line_extra)
+line_extra: SEP (WORD | NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA) rest NL
+          | (SEP | TRAILING_COMMENT) line_extra
+O_NAME.4: /[Oo]/ _LT_CHAR*
+
+// U: three nodes, a URC model, then L= and N= in either order. A value may also be a bare
+// parameter name (L=len), which LTspice reads.
+// spec: LT-URC-001
+%extend body_line: rc_line
+rc_line: U_NAME node node node model u_param* (NL | eol)
+u_param: SEP U_PARAM_KW EQ (_lt_value | U_BARE)
+       | (SEP | TRAILING_COMMENT) u_param
+U_PARAM_KW.3: /[ln](?=[ \t]*=)/i
+U_BARE.2: /[A-Za-z_][A-Za-z0-9_]*(?![^ \t\r\n;])/
+U_NAME.4: /[Uu]/ _LT_CHAR*
 
 // D: model, optional positional area, then the off flag and m, n, temp, area= and Rpar= in any
 // order. A flag may take a value (reference, Element Overview); the text is kept, and the threshold

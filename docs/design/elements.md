@@ -13,12 +13,12 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | Type | Fields |
 |---|---|
 | `NumericValue` | `text`, `span`, `notation: "standard" \| "rkm"`, `solver_mismatch: bool` (`"rkm"` is also an LTspice embedded decimal) |
-| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'` or empty for a bare LTspice `.param` expression, `span` (with delimiters) |
+| `Formula` | `text` (without delimiters), `delimiter: "{" \| "'" \| '"'` or empty for a bare LTspice `.param` expression or a bare parameter in an LTspice U's `L=` or `N=` (decision 0019), `span` (with delimiters) |
 | `Value` | alias `NumericValue \| Formula` |
 | `ModelReference` | `model_name`, `span` |
 | `SubcktReference` | `name`, `span` |
 | `ElementReference` | `designator`, `span` (the inductors of a `K` line) |
-| `ValueList` | `text`, `values: tuple[Value, ...]`, `span` (first to last); an LTspice `tc=a,b` |
+| `ValueList` | `text`, `values: tuple[Value, ...]`, `span` (first to last); a list of values: an LTspice `tc=a,b`, an `ic=`, and a CPL model's matrix (`R=1 0 1`, decision 0019) |
 | `Identifier` | `name`, `span`; a bare word, such as an option value or an LTspice `mfg=` |
 | `ParamAssignment` | `name`, `value: Value \| ValueList \| Identifier`, `span` (name to end of value), `name_span` |
 | `Flag` | `name`, `span`, `value: Value \| None` (the diode's `off`; an LTspice flag may take a value, which `span` then includes) |
@@ -39,6 +39,7 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | `Table`, `TablePoint` | `Table.points: tuple[TablePoint, ...]`, `layout` (`"pairs"`: each point in its own parentheses; `"flat"`: one parenthesised list), `format: tuple[str, ...]` (FREQ's words as written, empty for the other forms) and `span`; `TablePoint.values: tuple[Value, ...]` (two, or three for FREQ) and `span` (decision 0017 item 1) |
 | `BehavioralSource` (B) | `quantity: str` (`"v"`, `"i"`, and on LTspice `"r"` or `"p"`), `expression: Formula`; `params` holds the trailing parameters (ngspice `tc1=`, `tc2=`, `temp=`, `dtemp=`; LTspice `ic=`, `tripdv=`, `tripdt=`, `Rpar=`, `vprx=`) (decision 0016) |
 | `VoltageSwitch` (S), `CurrentSwitch` (W), subclasses of `Switch` | `model: ModelReference`, `flags: tuple[Flag, ...]` (`on` or `off`); S has four `nodes` and `control_nodes`, W two `nodes` and `control`, a tuple of the one controlling source |
+| `LosslessLine` (T), `LossyLine` (O), `RcLine` (U), `TxlLine` (Y), `CoupledLine` (P), subclasses of `TransmissionLine` (decision 0019) | T has no extra field: `Z0=` (or `Zo=`), `TD=`, `F=`, `NL=` and ngspice's `IC=` (a `ValueList` of four values) are `params`. O, U, Y and P have `model: ModelReference`; U's `l=` and `n=` and Y's and P's `len=` are `params`. T, O, Y and P have `port1` and `port2` properties (each port's nodes, then its reference node; on P a port is its X nodes and its reference), and P has `conductors` (X). U has three `nodes` and no ports. Y's and P's reference nodes are ground. |
 | `SubcktInstance` | `subckt: SubcktReference` |
 
 Deviation from task 3.1: `AcSpec.magnitude` is required, because the manual requires ACMAG
@@ -52,7 +53,8 @@ parameters, models, flags · `NG-RES-001` · `NG-CAP-001` · `NG-IND-001` · `NG
 `NG-SRC-001` · `NG-DIO-001` · `NG-SUB-001` · `NG-UNS-001` unsupported forms · `NG-XTR-001` the
 transistor line shape · `NG-BJT-001` · `NG-MOS-001` · `NG-JFT-001` · `NG-MES-001` (M13) · `NG-CTL-001`
 the shape of the dependent sources and switches · `NG-VCV-001` · `NG-VCC-001` · `NG-CCC-001` ·
-`NG-CCV-001` · `NG-SWV-001` · `NG-SWC-001` (M14). Every grammar
+`NG-CCV-001` · `NG-SWV-001` · `NG-SWC-001` (M14) · `NG-TLL-001` T · `NG-LTR-001` O · `NG-URC-001` U
+· `NG-TXL-001` Y · `NG-CPL-001` P (M16). Every grammar
 definition, including `_` sub-terminals, carries a `// spec:` marker.
 
 ## 3. Element grammar (field by field)
@@ -79,6 +81,11 @@ material) and returns one slot. `[x]` is optional and `x*` repeats.
 | `EXXX n+ n- nc+ nc- value`, `GXXX … value <m=val>` (§4.2.2, §4.2.1) | `vcvs`, `vccs: …_NAME node node node node value`, then `ctl_m` on G; or `…_NAME node node nonlinear_form` (unsupported) | `nodes`, `value`, `params` |
 | `FXXX n+ n- vnam value <m=val>`, `HXXX n+ n- vnam value` (§4.2.3, §4.2.4) | `cccs`, `ccvs: …_NAME node node ctl_ref value`, then `ctl_m` on F; or `cc_form` (POLY, unsupported) | `nodes`, `control`, `value`, `params` |
 | `SXXX n+ n- nc+ nc- model <ON|OFF>`, `WXXX n+ n- vnam model <ON|OFF>` (§3.3.15) | `vswitch`, `cswitch`, with `sw_state` | `nodes`, `control` (W), `model`, `flags` |
+| `TXXX n1 n2 n3 n4 Z0=… TD=…` or `F=… [NL=…]`, `IC=v1,i1,v2,i2` (§6.1) | `lossless_line: T_NAME node node node node` then `t_param` and `ic_param` | `nodes`, `params` |
+| `OXXX n1 n2 n3 n4 mname` (§6.2) | `lossy_line: O_NAME node node node node model` | `nodes`, `model` |
+| `UXXX n1 n2 n3 mname l=len [n=lumps]` (§6.3) | `rc_line: U_NAME u_word+` then `u_param`: four names are a URC line, any other shape the digital U (`UnsupportedConstruct`) | `nodes`, `model`, `params` |
+| `YXXX n1 0 n2 0 mname [len=…]` (§6.4.1) | `txl_line: Y_NAME node node node node model line_len*` | `nodes`, `model`, `params` |
+| `PXXX ni1 … gnd1 no1 … gnd2 mname [len=…]` (§6.4.2) | `coupled_line: P_NAME t_name+ line_len*`; the last name is the model | `nodes`, `model`, `params` |
 | `XXXX n1 [n2…] subnam params` (§2.6.3, §2.11.3) | `subckt_instance: X_NAME node (x_node \| x_last)` | `nodes`, `subckt`, `params` |
 | `params:` (HSPICE) | `params_keyword` | raises `ParseError` |
 
@@ -110,6 +117,7 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 
 - **D:** `area` is the positional area; `area=` written out is a parameter.
 - **Q, M, J, Z:** Q and M take 3 or 4 nodes, J and Z exactly 3. Q, J and Z take a positional `area`. Each letter's parameter names are a closed list (decision 0014 item 6), and M has no `thermal` flag. An embedded decimal such as `1n5` is an area only where no further name may follow.
 - **E, F, G, H, S, W:** no parameter on any of the six. A switch's state may take a value (`off=1`). value= and POLY after the output nodes, and table= and Laplace= after E's and G's control nodes, are unsupported (M15).
+- **T, O, U (M16, decision 0019):** T takes `Zo=` (or `Z0=`) and `Td=`, the reference's names; `F=`, `NL=`, `IC=`, `rel=` and `abs=` are refused. O is as on ngspice. U is only a URC line: three nodes, a model, `L=` and `N=`, whose value may also be a bare parameter name. Y and P are not LTspice letters. The spec IDs are `LT-TLL-001`, `LT-LTR-001` and `LT-URC-001`.
 - **X:** open parameter names, with or without `params:`.
 - **K:** three or more inductors, as in ngspice.
 - **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.

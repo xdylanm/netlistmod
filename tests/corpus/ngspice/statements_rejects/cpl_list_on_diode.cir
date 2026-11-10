@@ -1,0 +1,3 @@
+title
+.model dm d is=1e-14 1e-15
+.end

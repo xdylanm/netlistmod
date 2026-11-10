@@ -1,0 +1,4 @@
+M16 reject
+U1 a b 0 um
+.model um URC(Rperl=10)
+.end

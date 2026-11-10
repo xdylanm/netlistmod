@@ -28,6 +28,7 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-CCV-001](./specs/NG-CCV-001.yaml) | current-controlled voltage source (H) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-CPL-001](./specs/NG-CPL-001.yaml) | coupled transmission line (P) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-CTL-001](./specs/NG-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | ngspice 47 (2026-11-06) |
 | [NG-DCA-001](./specs/NG-DCA-001.yaml) | .dc transfer function | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-DIO-001](./specs/NG-DIO-001.yaml) | junction diode (D) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -51,9 +52,10 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-ICN-001](./specs/NG-ICN-001.yaml) | .ic and .nodeset | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-IND-001](./specs/NG-IND-001.yaml) | inductor (L) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-JFT-001](./specs/NG-JFT-001.yaml) | junction FET (J) lines | validated | ngspice 47 (2026-11-05) |
+| [NG-LTR-001](./specs/NG-LTR-001.yaml) | lossy transmission line (O) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-MEA-001](./specs/NG-MEA-001.yaml) | .meas / .measure (shallow) | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-MES-001](./specs/NG-MES-001.yaml) | MESFET (Z) lines | validated | ngspice 47 (2026-11-05) |
-| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05) |
+| [NG-MOD-001](./specs/NG-MOD-001.yaml) | .model statements | validated | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-05, 2026-11-09) |
 | [NG-MOS-001](./specs/NG-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | ngspice 47 (2026-11-05) |
 | [NG-MUT-001](./specs/NG-MUT-001.yaml) | mutual coupling (K) lines | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NLS-001](./specs/NG-NLS-001.yaml) | expression forms of the dependent sources (E vol= and value, G cur= and value) | validated | ngspice 47 (2026-11-06) |
@@ -78,11 +80,14 @@ table against the entries. Re-validating appends a version to an entry (docs/tes
 | [NG-SWC-001](./specs/NG-SWC-001.yaml) | current-controlled switch (W) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-SWV-001](./specs/NG-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-TBL-001](./specs/NG-TBL-001.yaml) | TABLE on E and G, and E's four-node TABLE | validated | ngspice 47 (2026-11-08) |
+| [NG-TLL-001](./specs/NG-TLL-001.yaml) | lossless transmission line (T) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TRN-001](./specs/NG-TRN-001.yaml) | .tran transient analysis | validated | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-TTL-001](./specs/NG-TTL-001.yaml) | implicit first-line title and explicit .title | validated | ngspice 47 (2026-10-22, 2026-10-31) |
+| [NG-TXL-001](./specs/NG-TXL-001.yaml) | TXL transmission line (Y) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-TXT-001](./specs/NG-TXT-001.yaml) | free text, quoted and braced segments, and trailing comments | observed | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-UNS-001](./specs/NG-UNS-001.yaml) | recognised but unsupported element forms | validated | ngspice 47 (2026-10-31) |
+| [NG-URC-001](./specs/NG-URC-001.yaml) | uniform RC line (U) lines | validated | ngspice 47 (2026-11-09) |
 | [NG-VAL-001](./specs/NG-VAL-001.yaml) | brace and quoted expressions, and string parameter values | validated | ngspice 47 (2026-10-31) |
 | [NG-VCC-001](./specs/NG-VCC-001.yaml) | voltage-controlled current source (G) lines | validated | ngspice 47 (2026-11-06) |
 | [NG-VCV-001](./specs/NG-VCV-001.yaml) | voltage-controlled voltage source (E) lines | validated | ngspice 47 (2026-11-06) |

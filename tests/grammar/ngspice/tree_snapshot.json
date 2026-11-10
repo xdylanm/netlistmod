@@ -931,6 +931,86 @@
    "nodes": 102
   }
  },
+ "edits_golden/lines.cir": {
+  "rkm": {
+   "digest": "ab9c918a2b720f50f3d4f952d4fa372239d2fbc48cfa0b8fc82b1c9cc3709025",
+   "nodes": 143
+  },
+  "standard": {
+   "digest": "ab9c918a2b720f50f3d4f952d4fa372239d2fbc48cfa0b8fc82b1c9cc3709025",
+   "nodes": 143
+  }
+ },
+ "edits_golden/lines_batch.expected.cir": {
+  "rkm": {
+   "digest": "846141952269f7305d81a051d348695fb6046d2fcfd0dfd5c76a55ccea1ca2e0",
+   "nodes": 145
+  },
+  "standard": {
+   "digest": "846141952269f7305d81a051d348695fb6046d2fcfd0dfd5c76a55ccea1ca2e0",
+   "nodes": 145
+  }
+ },
+ "edits_golden/lines_cpl.cir": {
+  "rkm": {
+   "digest": "b226e6cc665a039fc2471b62eb9ae35e50c8f02ba692a0cda6c205cb0ad4ab2d",
+   "nodes": 58
+  },
+  "standard": {
+   "digest": "b226e6cc665a039fc2471b62eb9ae35e50c8f02ba692a0cda6c205cb0ad4ab2d",
+   "nodes": 58
+  }
+ },
+ "edits_golden/lines_cpl_list.expected.cir": {
+  "rkm": {
+   "digest": "b226e6cc665a039fc2471b62eb9ae35e50c8f02ba692a0cda6c205cb0ad4ab2d",
+   "nodes": 58
+  },
+  "standard": {
+   "digest": "b226e6cc665a039fc2471b62eb9ae35e50c8f02ba692a0cda6c205cb0ad4ab2d",
+   "nodes": 58
+  }
+ },
+ "edits_golden/lines_cpl_remove.expected.cir": {
+  "rkm": {
+   "digest": "abab6103a67249d4df410d6682d2c2cc0179b9402291ca290735ff53527f2f8c",
+   "nodes": 53
+  },
+  "standard": {
+   "digest": "abab6103a67249d4df410d6682d2c2cc0179b9402291ca290735ff53527f2f8c",
+   "nodes": 53
+  }
+ },
+ "edits_golden/lines_models.expected.cir": {
+  "rkm": {
+   "digest": "eabba7154c7b123d5b9d980726adbfb05204fd6bd1489f6851dfbc3ee67b17db",
+   "nodes": 143
+  },
+  "standard": {
+   "digest": "eabba7154c7b123d5b9d980726adbfb05204fd6bd1489f6851dfbc3ee67b17db",
+   "nodes": 143
+  }
+ },
+ "edits_golden/lines_params.expected.cir": {
+  "rkm": {
+   "digest": "1d484ebef439a75838793472ef1ffc8b0519f2e7fe0a9ba0773efa4318a0a0bc",
+   "nodes": 143
+  },
+  "standard": {
+   "digest": "1d484ebef439a75838793472ef1ffc8b0519f2e7fe0a9ba0773efa4318a0a0bc",
+   "nodes": 143
+  }
+ },
+ "edits_golden/lines_remove.expected.cir": {
+  "rkm": {
+   "digest": "1e7162b5a18dedc1e9e9f697535b2c26a3c39252f117393b6a0d9a2252f0afef",
+   "nodes": 127
+  },
+  "standard": {
+   "digest": "1e7162b5a18dedc1e9e9f697535b2c26a3c39252f117393b6a0d9a2252f0afef",
+   "nodes": 127
+  }
+ },
  "edits_golden/mesfet_area_transistors.expected.cir": {
   "rkm": {
    "digest": "1801a6124628f48275eff5945b882e7a902eff5c6f332db963013aca99d05c29",
@@ -1999,6 +2079,74 @@
    "line": 2
   }
  },
+ "elements_rejects/o_param.cir": {
+  "rkm": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/p_odd_nodes.cir": {
+  "rkm": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/p_param.cir": {
+  "rkm": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/p_reference_node.cir": {
+  "rkm": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 6,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
  "elements_rejects/parameter_without_value.cir": {
   "rkm": {
    "column": 13,
@@ -2202,6 +2350,160 @@
   },
   "standard": {
    "column": 12,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_ic_count.cir": {
+  "rkm": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_nl_without_f.cir": {
+  "rkm": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_no_length.cir": {
+  "rkm": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_rel.cir": {
+  "rkm": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_td_and_f.cir": {
+  "rkm": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 24,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/t_z0_and_zo.cir": {
+  "rkm": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 18,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/u_no_length.cir": {
+  "rkm": {
+   "column": 14,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 14,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/u_positional.cir": {
+  "rkm": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 15,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
+ "elements_rejects/y_param.cir": {
+  "rkm": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`len=`",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  },
+  "standard": {
+   "column": 17,
+   "error": "ParseError",
+   "expected": [
+    "`,` field separator",
+    "`\\\\` continuation onto a line of statement text",
+    "`len=`",
+    "end of line",
+    "field separator",
+    "trailing comment (`;`, `$` or `//`)"
+   ],
+   "line": 2
+  }
+ },
+ "elements_rejects/y_reference_node.cir": {
+  "rkm": {
+   "column": 10,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 10,
    "error": "ParseError",
    "expected": [],
    "line": 2
@@ -2623,6 +2925,20 @@
    "line": 3
   }
  },
+ "statements_rejects/cpl_list_on_diode.cir": {
+  "rkm": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 22,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  }
+ },
  "statements_rejects/dc_missing_increment.cir": {
   "rkm": {
    "column": 12,
@@ -2697,6 +3013,20 @@
     "`=`"
    ],
    "line": 3
+  }
+ },
+ "statements_rejects/ltra_flag_on_diode.cir": {
+  "rkm": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
+  },
+  "standard": {
+   "column": 13,
+   "error": "ParseError",
+   "expected": [],
+   "line": 2
   }
  },
  "statements_rejects/meas_unknown_analysis.cir": {
@@ -2919,6 +3249,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2945,6 +3276,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -2954,8 +3286,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -2970,6 +3305,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -2996,6 +3332,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3005,8 +3342,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3145,12 +3485,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3160,8 +3502,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3176,12 +3521,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3191,8 +3538,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3245,12 +3595,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3260,8 +3612,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3276,12 +3631,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3291,8 +3648,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3309,12 +3669,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3324,8 +3686,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3340,12 +3705,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3355,8 +3722,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3373,12 +3743,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3388,8 +3760,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3404,12 +3779,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3419,8 +3796,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3455,11 +3835,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3469,8 +3851,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3485,11 +3870,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3499,8 +3886,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3535,11 +3925,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3549,8 +3941,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3565,11 +3960,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3579,8 +3976,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3633,11 +4033,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3647,8 +4049,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3663,11 +4068,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3677,8 +4084,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3695,11 +4105,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3709,8 +4121,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3725,11 +4140,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3739,8 +4156,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3793,12 +4213,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3808,8 +4230,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3824,12 +4249,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3839,8 +4266,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3857,12 +4287,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3872,8 +4304,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3888,12 +4323,14 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ends`",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3903,8 +4340,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3939,6 +4379,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -3966,6 +4407,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -3975,8 +4417,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -3991,6 +4436,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -4018,6 +4464,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4027,8 +4474,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4063,11 +4513,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4077,8 +4529,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4093,11 +4548,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4107,8 +4564,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4125,11 +4585,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4139,8 +4601,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4155,11 +4620,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4169,8 +4636,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4187,11 +4657,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4201,8 +4673,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4217,11 +4692,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4231,8 +4708,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4249,11 +4729,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4263,8 +4745,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4279,11 +4764,13 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.title`",
     "behavioral source (`B`)",
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4293,8 +4780,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4329,6 +4819,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -4355,6 +4846,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4364,8 +4856,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4380,6 +4875,7 @@
     "JFET (`J`)",
     "MESFET (`Z`)",
     "MOSFET (`M`)",
+    "TXL transmission line (`Y`)",
     "`.ac`",
     "`.control`",
     "`.dc`",
@@ -4406,6 +4902,7 @@
     "bipolar transistor (`Q`)",
     "capacitor (`C`)",
     "comment line (`*`)",
+    "coupled transmission line (`P`)",
     "coupling (`K`)",
     "current source (`I`)",
     "current-controlled current source (`F`)",
@@ -4415,8 +4912,11 @@
     "dot-command",
     "end of line",
     "inductor (`L`)",
+    "lossless transmission line (`T`)",
+    "lossy transmission line (`O`)",
     "resistor (`R`)",
     "subcircuit call (`X`)",
+    "uniform RC line (`U`)",
     "voltage source (`V`)",
     "voltage-controlled current source (`G`)",
     "voltage-controlled switch (`S`)",
@@ -4463,16 +4963,122 @@
  },
  "transmission_lines/test_kicad_tline.cir": {
   "rkm": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 7
+   "digest": "81fd0a1a186e633bf77627945bcfed17f060ba6a9fac41cd30d668f1c5f95d3a",
+   "nodes": 44
   },
   "standard": {
-   "column": 1,
-   "error": "UnsupportedConstruct",
-   "expected": [],
-   "line": 7
+   "digest": "81fd0a1a186e633bf77627945bcfed17f060ba6a9fac41cd30d668f1c5f95d3a",
+   "nodes": 44
+  }
+ },
+ "transmission_lines/test_tline_o_flags.cir": {
+  "rkm": {
+   "digest": "8034515d6d2ea91261c55a9b84a7241cda60864c44427dd50151538dd6c1b889",
+   "nodes": 46
+  },
+  "standard": {
+   "digest": "8034515d6d2ea91261c55a9b84a7241cda60864c44427dd50151538dd6c1b889",
+   "nodes": 46
+  }
+ },
+ "transmission_lines/test_tline_p1.cir": {
+  "rkm": {
+   "digest": "b1430ef68c497deb05be183094f866282ceafdd12cb56630c3275d0cf0a4417f",
+   "nodes": 46
+  },
+  "standard": {
+   "digest": "b1430ef68c497deb05be183094f866282ceafdd12cb56630c3275d0cf0a4417f",
+   "nodes": 46
+  }
+ },
+ "transmission_lines/test_tline_p2.cir": {
+  "rkm": {
+   "digest": "58d2974f5b3762b5c7fad0e6ef1231def823f5daaaa0a8f80b1ad5975301dd3f",
+   "nodes": 66
+  },
+  "standard": {
+   "digest": "58d2974f5b3762b5c7fad0e6ef1231def823f5daaaa0a8f80b1ad5975301dd3f",
+   "nodes": 66
+  }
+ },
+ "transmission_lines/test_tline_t_f_nl.cir": {
+  "rkm": {
+   "digest": "06df2df4cffb867fe1eb1247b9b57bfa21da67f1de43fd671f6877ad43c21668",
+   "nodes": 49
+  },
+  "standard": {
+   "digest": "06df2df4cffb867fe1eb1247b9b57bfa21da67f1de43fd671f6877ad43c21668",
+   "nodes": 49
+  }
+ },
+ "transmission_lines/test_tline_t_ic.cir": {
+  "rkm": {
+   "digest": "c01f7908eb44f4d759b3223c677413a4f91d62b6dd3161edea38ac0febbb4111",
+   "nodes": 53
+  },
+  "standard": {
+   "digest": "c01f7908eb44f4d759b3223c677413a4f91d62b6dd3161edea38ac0febbb4111",
+   "nodes": 53
+  }
+ },
+ "transmission_lines/test_tline_t_td.cir": {
+  "rkm": {
+   "digest": "cdefe29e963d13938d097d8ac9c85308ba51906597f1780768eb1c5d20a08036",
+   "nodes": 47
+  },
+  "standard": {
+   "digest": "cdefe29e963d13938d097d8ac9c85308ba51906597f1780768eb1c5d20a08036",
+   "nodes": 47
+  }
+ },
+ "transmission_lines/test_tline_t_zo.cir": {
+  "rkm": {
+   "digest": "cdefe29e963d13938d097d8ac9c85308ba51906597f1780768eb1c5d20a08036",
+   "nodes": 47
+  },
+  "standard": {
+   "digest": "cdefe29e963d13938d097d8ac9c85308ba51906597f1780768eb1c5d20a08036",
+   "nodes": 47
+  }
+ },
+ "transmission_lines/test_tline_u.cir": {
+  "rkm": {
+   "digest": "28e0df6bde863ade5908ddd3bbd09d8c87d34bdee08a29b845070b8b1567dcc4",
+   "nodes": 39
+  },
+  "standard": {
+   "digest": "28e0df6bde863ade5908ddd3bbd09d8c87d34bdee08a29b845070b8b1567dcc4",
+   "nodes": 39
+  }
+ },
+ "transmission_lines/test_tline_u_n.cir": {
+  "rkm": {
+   "digest": "8ebc0ebd47dd11a8b6260b4067f70dacf800d84cba53bca2d3bde9acbba01d43",
+   "nodes": 41
+  },
+  "standard": {
+   "digest": "8ebc0ebd47dd11a8b6260b4067f70dacf800d84cba53bca2d3bde9acbba01d43",
+   "nodes": 41
+  }
+ },
+ "transmission_lines/test_tline_y.cir": {
+  "rkm": {
+   "digest": "72b9ed4f01a56eb88fc5110ca0170ef30ef46ebb85b0080e4576efdaaf5ed0b1",
+   "nodes": 44
+  },
+  "standard": {
+   "digest": "72b9ed4f01a56eb88fc5110ca0170ef30ef46ebb85b0080e4576efdaaf5ed0b1",
+   "nodes": 44
+  }
+ },
+ "transmission_lines/test_tline_y_len.cir": {
+  "rkm": {
+   "digest": "4ab958589b7751f318f045a24728d06ebe40758b81fb7ed79829cba75bb5e7e1",
+   "nodes": 46
+  },
+  "standard": {
+   "digest": "4ab958589b7751f318f045a24728d06ebe40758b81fb7ed79829cba75bb5e7e1",
+   "nodes": 46
   }
  }
 }

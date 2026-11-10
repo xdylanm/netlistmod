@@ -126,7 +126,7 @@
       "note": "braces do not nest"
     },
     "phase_2_letter.cir": {
-      "sha256": "15169e53df9d92ca97eb96a967033fe598d4228af9ea616d590556d8c446da68",
+      "sha256": "86c78c597b48ea47f14c539c28cc8aca6a35b6bf499d5c955dc4521be000f785",
       "line": 2,
       "column": 1,
       "error": "UnsupportedConstruct",
@@ -292,6 +292,104 @@
       "column": 9,
       "error": "ParseError",
       "note": "A net named table; ngspice reads it as the keyword (decision 0017 item 5). Written for M15b from the maintainer's controlled_sources examples."
+    },
+    "t_no_length.cir": {
+      "sha256": "0e0b3b07cb47364c7f2c02fa8ff316ab947ada872c0b40fe8ac6f5cbd99adf1d",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "T without TD= or F= (ngspice uses a default delay)"
+    },
+    "t_td_and_f.cir": {
+      "sha256": "53a3d6dde6de70f1f1dac7993e66d2167cbfa2aa925172a9641e58ce9f89d270",
+      "line": 2,
+      "column": 24,
+      "error": "ParseError",
+      "note": "T with TD= and F= (TD= wins)"
+    },
+    "t_nl_without_f.cir": {
+      "sha256": "c0b4785f016db7d574a8ff88618d29218e2d0f23dca510201bd2f3a37ce7ea42",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "T with NL= and no F="
+    },
+    "t_rel.cir": {
+      "sha256": "b766b09003f98e676c17dd2ae5b91d125167f61fe9649807988ef94574b6e681",
+      "line": 2,
+      "column": 24,
+      "error": "ParseError",
+      "note": "rel= runs but the manual does not list it"
+    },
+    "t_ic_count.cir": {
+      "sha256": "1756ba9274e5dbe6b62dd2aa423d3b0d1fb2346ce9787ca945e958492667b750",
+      "line": 2,
+      "column": 24,
+      "error": "ParseError",
+      "note": "IC= takes four values"
+    },
+    "t_z0_and_zo.cir": {
+      "sha256": "bc1dea4ed7f8d1b81ec6eaebc05531ec37de6aae23dda6ad4d399087fb916971",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "Z0= and Zo= are one parameter"
+    },
+    "o_param.cir": {
+      "sha256": "2bc6e181033ac8dc61b1d65f2aea657a02caf30113947f8c6bfead58528933c4",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "O takes nothing after its model"
+    },
+    "u_no_length.cir": {
+      "sha256": "cfa0c32e3ecbc94942e46af34742b1ce7fe2ddd622218f0715133e487d795121",
+      "line": 2,
+      "column": 14,
+      "error": "ParseError",
+      "note": "U needs l= (ngspice uses a near-zero length)"
+    },
+    "u_positional.cir": {
+      "sha256": "c84bc510772b4df734eb6697cc78dbde7764eb777b64f41b39e5fb944acbfe8b",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "a positional length, which ngspice ignores"
+    },
+    "y_reference_node.cir": {
+      "sha256": "0de5edbf554b771cd6c76c73a4fb25fccbbc1a15b8532b65656875f0556f3627",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a Y reference node must be ground"
+    },
+    "y_param.cir": {
+      "sha256": "a08bfa27b9fb5a0eab8009507612a5adc6b734b613676c531a64314675b6f663",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "m= on Y, which ngspice ignores"
+    },
+    "p_reference_node.cir": {
+      "sha256": "8d15020a710721722c3ec676004f72762592aa2b9d3d317e68bd44328228ec99",
+      "line": 2,
+      "column": 6,
+      "error": "ParseError",
+      "note": "a P reference node must be ground"
+    },
+    "p_odd_nodes.cir": {
+      "sha256": "9b9e4559ee5d4aad628f63ed93a0fd7bd1ba7ee52246554207e63c3d17d7d5b8",
+      "line": 2,
+      "column": 22,
+      "error": "ParseError",
+      "note": "P takes 2X+2 nodes"
+    },
+    "p_param.cir": {
+      "sha256": "b4410acc02b9c7e621a8f2e96dc3f3bc98877a726d4412973ed56992ad6f4987",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "m= on P, which ngspice ignores"
     }
   }
 }

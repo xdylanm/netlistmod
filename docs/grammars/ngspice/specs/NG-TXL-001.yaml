@@ -1,0 +1,29 @@
+id: NG-TXL-001
+dialect: ngspice
+construct: TXL transmission line (Y) lines
+manual_ref:
+- '[ngspice-manual] §6.4.1 "Single Lossy Transmission Line (TXL)"'
+status: validated
+validated_on:
+- solver: ngspice
+  version: '47'
+  date: '2026-11-09'
+grammar:
+- body_line
+- txl_line
+- line_len
+- LEN_KW
+- Y_NAME
+tests:
+- tests/grammar/ngspice/test_lines.py::test_y_takes_four_nodes_a_model_and_len
+- tests/grammar/ngspice/test_lines.py::test_refused_y_lines
+- tests/grammar/ngspice/test_lines.py::test_other_y_fields_are_syntax_errors
+- tests/grammar/ngspice/test_lines.py::test_a_y_reference_node_must_be_ground_inside_a_subcircuit_too
+- tests/document/test_line_topology.py::test_y_and_p_nodes_are_topology
+- tests/document/test_line_topology.py::test_changing_any_y_or_p_node_is_a_topology_violation
+- tests/solver/test_ngspice_line_probes.py::test_line_probes
+- tests/solver/test_ngspice_line_probes.py::test_what_ngspice_computes_in_op
+- tests/solver/test_ngspice_line_probes.py::test_a_tran_shows_td_and_len_move_the_waveform
+- tests/solver/test_ngspice_line_probes.py::test_an_edit_moves_the_result
+- tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
+notes: 'Four nodes, a TXL model and an optional len=, which overrides the model''s length=. The second and fourth nodes must be ground (decision 0019 item 5): ngspice 47 ignores them (a reference held at 0.2 V gives the grounded result), so another name would put a connection into the signature that the solver does not make. m= and a positional length run and are ignored; the library refuses them.'

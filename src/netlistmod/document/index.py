@@ -38,17 +38,20 @@ from netlistmod.model.nodes import (
     Ccvs,
     Component,
     ControlledSource,
+    CoupledLine,
     CurrentSwitch,
     DcDirective,
     Diode,
     GlobalDirective,
     IcDirective,
     Inductor,
+    LossyLine,
     ModelStatement,
     MutualCoupling,
     OpaqueBlock,
     OpaqueStatement,
     ParamStatement,
+    RcLine,
     Resistor,
     SaveDirective,
     StepDirective,
@@ -57,11 +60,14 @@ from netlistmod.model.nodes import (
     Switch,
     TopLevelItem,
     Transistor,
+    TxlLine,
 )
 from netlistmod.model.values import Formula, ParamAssignment
 from netlistmod.source import SourceText, Span
 
 _T = TypeVar("_T")
+# The transmission lines that refer to a model (T has none; decision 0019).
+_MODEL_LINES = LossyLine | RcLine | TxlLine | CoupledLine
 
 ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node"]
 """What a reference names: a ``.model``, a ``.subckt``, a parameter, a subcircuit default
@@ -300,7 +306,10 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
         if isinstance(item, SubcktDefinition):
             continue  # its header and body belong to the nested scope
         if (
-            isinstance(item, Resistor | Capacitor | Inductor | Diode | Transistor | Switch)
+            isinstance(
+                item,
+                Resistor | Capacitor | Inductor | Diode | Transistor | Switch | _MODEL_LINES,
+            )
             and item.model is not None
         ):
             found = _lookup(scope, "models", item.model.model_name)

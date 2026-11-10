@@ -21,3 +21,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0016 — Behavioural expressions](0016-behavioral-expressions.md)
 - [0017 — Tables, polynomials and transfer functions](0017-tables-polynomials-and-transfer-functions.md)
 - [0018 — Publishing to PyPI](0018-pypi-publication.md)
+- [0019 — Transmission lines](0019-transmission-lines.md)

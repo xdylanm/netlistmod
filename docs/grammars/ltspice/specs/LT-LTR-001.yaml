@@ -1,0 +1,27 @@
+id: LT-LTR-001
+dialect: ltspice
+construct: lossy transmission line (O) lines
+manual_ref:
+- '[ltspice-ref] CIRCUIT-ELEMENTS-REFERENCE.md "O — Lossy Transmission Line"'
+status: validated
+validated_on:
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-09'
+grammar:
+- body_line
+- lossy_line
+- line_extra
+- O_NAME
+core_rules:
+- node
+- model
+- eol
+tests:
+- tests/grammar/ltspice/test_ltspice_lines.py::test_o_takes_four_nodes_and_a_model
+- tests/grammar/ltspice/test_ltspice_lines.py::test_o_takes_nothing_after_its_model
+- tests/grammar/ltspice/test_ltspice_lines.py::test_the_family_rejects_fail_where_the_manifest_says
+- tests/solver/test_ltspice_line_probes.py::test_line_probes
+- tests/solver/test_ltspice_line_probes.py::test_an_edit_moves_the_result
+- tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
+notes: 'Four nodes and an LTRA model, then nothing. The ltline symbol with its model in SpiceModel and LTRA left in Value exports O1 ... myline LTRA, which LTspice stops on and the library refuses (the maintainer''s test_ltspice_tline_O_reject). LTspice runs an LTRA model without len=. LTRA''s ngspice flags are refused (LT-MOD-001).'
