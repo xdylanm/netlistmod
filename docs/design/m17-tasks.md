@@ -653,4 +653,4 @@ Decision 7 says that a comma between LTspice A's parameters is accepted "as on T
 - **Checks:**
   - Full run with `--require-solver ngspice --require-solver ltspice`: 9,459 passed, 1 failed, 2 skipped, coverage 98.61%, 24 min 9 s. The failure was the new `comma-after-function` probe, which first expected LTspice to run the line. With the expectation corrected, `test_ltspice_special_probes.py` and `test_ltspice_discrepancies.py` pass (258 passed); the whole run was not repeated.
   - `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` and `pre-commit run --all-files`: clean.
-  - CI: see the line below.
+  - CI on #17: read once after pushing `da2a059`, all five jobs were still pending. This docs-only commit runs them again.
