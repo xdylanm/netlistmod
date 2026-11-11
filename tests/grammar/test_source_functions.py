@@ -49,20 +49,22 @@ _BOTH_ACCEPT = [
     "I1 a 0 DC 1 SIN(0 1)",
     "I1 a 0 SIN(0 1) AC 1",
 ]
+# Each line with the function it holds, as written: the kind is checked, not only that a function
+# was read (A4-8).
 _NGSPICE_ACCEPT = [
-    "V1 a 0 AM(1 0 1k 100k)",
-    "V1 a 0 TRNOISE(1m 1u 0 0)",
-    "V1 a 0 dc 0 trrandom (2 10m 0 1)",
-    "V1 a 0 external",
-    "V1 a 0 dc 0 external",
-    "I1 a 0 dc 0 external m=2",
-    "I1 a 0 dc 0 external m = 2",
-    "V1 a 0 PWL(0 0 5u 1) r=0 td=1u",
-    "V1 a 0 PWL(0 -7 1n -7)\n+ r=0 td=15NS",
-    "V1 a 0 PWL(0 0 1 1) td=1u AC 1",
-    "V1 a 0 PULSE(0 1 \\\\\n1u)",
-    "V1 a 0 \\\\\nPULSE(-1 1 \\\\\n2NS)",
-    "V1 a 0,PULSE(0 1)",
+    ("V1 a 0 AM(1 0 1k 100k)", "AM"),
+    ("V1 a 0 TRNOISE(1m 1u 0 0)", "TRNOISE"),
+    ("V1 a 0 dc 0 trrandom (2 10m 0 1)", "trrandom"),
+    ("V1 a 0 external", "external"),
+    ("V1 a 0 dc 0 external", "external"),
+    ("I1 a 0 dc 0 external m=2", "external"),
+    ("I1 a 0 dc 0 external m = 2", "external"),
+    ("V1 a 0 PWL(0 0 5u 1) r=0 td=1u", "PWL"),
+    ("V1 a 0 PWL(0 -7 1n -7)\n+ r=0 td=15NS", "PWL"),
+    ("V1 a 0 PWL(0 0 1 1) td=1u AC 1", "PWL"),
+    ("V1 a 0 PULSE(0 1 \\\\\n1u)", "PULSE"),
+    ("V1 a 0 \\\\\nPULSE(-1 1 \\\\\n2NS)", "PULSE"),
+    ("V1 a 0,PULSE(0 1)", "PULSE"),
 ]
 _LTSPICE_ACCEPT = [
     "V1 a 0 PULSE(0 1) Rser=1 Cpar=1p",
@@ -168,10 +170,12 @@ def test_both_dialects_accept(dialect: Dialect, line: str) -> None:
     assert netlist.source.text == _text(line)
 
 
-@pytest.mark.parametrize("line", _NGSPICE_ACCEPT)
-def test_ngspice_accepts(line: str) -> None:
+@pytest.mark.parametrize(("line", "function"), _NGSPICE_ACCEPT)
+def test_ngspice_accepts(line: str, function: str) -> None:
     netlist = _load(line, Dialect.NGSPICE)
-    assert _source(netlist).stimulus is not None
+    stimulus = _source(netlist).stimulus
+    assert stimulus is not None
+    assert stimulus.name == function
     assert netlist.source.text == _text(line)
 
 
