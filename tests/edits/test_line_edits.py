@@ -444,36 +444,53 @@ def test_a_removal_keeps_every_comment_byte_for_byte(case: tuple[str, str]) -> N
     assert edited.signature() == netlist.signature()
 
 
-# The exit: no sequence of these edits changes the signature.
-def _operations() -> list[Operation]:
-    operations: list[Operation] = [
-        lambda n: n.set_param("T1", "z0", "75"),
-        lambda n: n.set_param("T1", "td", "2n"),
-        lambda n: n.set_param("U1", "l", "7"),
-        lambda n: n.set_param("U1", "n", "3"),
-        lambda n: n.remove_param("U1", "n"),
-        lambda n: n.set_model("O1", "lmod2"),
-        lambda n: n.set_model("O1", "lmod"),
-        lambda n: n.set_model("U1", "umod2"),
-        lambda n: n.set_model_param("lmod", "R", "3"),
-        lambda n: n.remove_model_param("lmod2", "R"),
-        lambda n: n.remove_model_param("umod", "Cperl"),
+# The exit: no sequence of these edits changes the signature. A removal names what it removes
+# (element or model, target, parameter), so the property knows when it must raise.
+_Removal = tuple[str, str, str]
+
+
+def _operations() -> list[tuple[Operation, _Removal | None]]:
+    operations: list[tuple[Operation, _Removal | None]] = [
+        (lambda n: n.set_param("T1", "z0", "75"), None),
+        (lambda n: n.set_param("T1", "td", "2n"), None),
+        (lambda n: n.set_param("U1", "l", "7"), None),
+        (lambda n: n.set_param("U1", "n", "3"), None),
+        (lambda n: n.remove_param("U1", "n"), ("element", "U1", "n")),
+        (lambda n: n.set_model("O1", "lmod2"), None),
+        (lambda n: n.set_model("O1", "lmod"), None),
+        (lambda n: n.set_model("U1", "umod2"), None),
+        (lambda n: n.set_model_param("lmod", "R", "3"), None),
+        (lambda n: n.remove_model_param("lmod2", "R"), ("model", "lmod2", "R")),
+        (lambda n: n.remove_model_param("umod", "Cperl"), ("model", "umod", "Cperl")),
     ]
     if not is_ltspice():
-        operations.append(lambda n: n.set_param("T1", "ic", "0,0,0,0"))
-        operations.append(lambda n: n.remove_param("T1", "ic"))
+        operations.append((lambda n: n.set_param("T1", "ic", "0,0,0,0"), None))
+        operations.append((lambda n: n.remove_param("T1", "ic"), ("element", "T1", "ic")))
     return operations
 
 
+def _has(netlist: Netlist, removal: _Removal) -> bool:
+    kind, target, name = removal
+    if kind == "element":
+        params = netlist.element(target).params
+    else:
+        params = netlist.models[target][0].params
+    return name.lower() in [param.name.lower() for param in params]
+
+
 @settings(max_examples=40, deadline=None)
-@given(choices=st.lists(st.integers(min_value=0, max_value=12), max_size=8))
+@given(choices=st.lists(st.integers(min_value=0, max_value=12), min_size=1, max_size=8))
 def test_no_sequence_of_line_edits_changes_the_signature(choices: list[int]) -> None:
+    # Only a removal of a parameter that is already gone may raise, and it must (A3-14): every
+    # step is checked, so the property cannot pass with nothing applied.
     netlist = _netlist()
     baseline = netlist.signature()
     operations = _operations()
     for choice in choices:
-        try:
-            netlist = operations[choice % len(operations)](netlist)
-        except EditError:
+        operation, removal = operations[choice % len(operations)]
+        if removal is not None and not _has(netlist, removal):
+            with pytest.raises(EditError, match="has no parameter"):
+                operation(netlist)
             continue
+        netlist = operation(netlist)
         assert netlist.signature() == baseline

@@ -21,6 +21,8 @@
 - **Immutable and eager.** An edit method builds edits against the current text, applies them
   through `apply`, and returns a new `Netlist` that carries the original load's signature
   (`baseline`) and file path (`path`). A failing edit raises; the netlist is unchanged.
+  Idempotence for a removal (`remove_param`, `remove_model_param`, `remove_stimulus`) means
+  that repeating it on its result raises `EditError` and writes nothing.
 - **Batches.** `with nl.batch() as b: …` collects the edits of several operations, each
   computed against `nl`; on a clean exit they are applied as one plan (`b.result`). A failure
   in an operation or the verification leaves nothing applied. `b.plan` shows the edits so far.

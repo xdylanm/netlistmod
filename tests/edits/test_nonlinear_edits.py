@@ -250,11 +250,9 @@ def test_no_table_or_poly_edit_changes_the_signature(
     netlist = _netlist()
     baseline = netlist.signature()
     for step in steps:
-        try:
-            netlist = step(netlist)
-        except EditError:
-            # LTspice's E1 and G1 have no m=, and a form of the other dialect is not there.
-            continue
+        # Each edit applies on both dialects (E1 and G1 are a TABLE line on ngspice and a
+        # `table=` line on LTspice), so a step that raises fails the property (A3-14).
+        netlist = step(netlist)
         assert netlist.signature() == baseline, dialect
 
 
