@@ -67,7 +67,7 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | 5 + 4 solver | ltspice 26.1.1 (2026-11-01, 2026-11-06) |
 | [LT-CCC-001](./specs/LT-CCC-001.yaml) | current-dependent current source (F) lines | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-CCV-001](./specs/LT-CCV-001.yaml) | current-dependent voltage source (H) lines | validated | 1 + 3 solver | ltspice 26.1.1 (2026-11-06) |
-| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | 7 + 5 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
+| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | 8 + 5 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | validated | 3 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-CTL-001](./specs/LT-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | 3 + 1 solver | ltspice 26.1.1 (2026-11-06) |
