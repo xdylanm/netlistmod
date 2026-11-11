@@ -1,6 +1,6 @@
 # M18 task list — Completeness audit
 
-> **Status:** ACTIVE — stage 1 and gate G1 are done (2026-11-10). Stage 2 has started with D1, D3 and D6. The maintainer decided 5, 10, 12 and 13 on 2026-11-10, and 11 on 2026-11-11
+> **Status:** READY FOR REVIEW — implemented on 2026-11-11 as [#18](https://github.com/xdylanm/netlistmod/pull/18); the results are in section 5, and the design points worth reviewing in 5.3
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
 
 ## 1. Scope
@@ -194,7 +194,7 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 
 ### Stage 3 — Evidence and handover (lead)
 
-[~] **T1 — Final evidence and handover.**
+[x] **T1 — Final evidence and handover.** [#18](https://github.com/xdylanm/netlistmod/pull/18).
 - Accept decision 0021 as written (`proposed`) if G1 created it, and update the architecture where it amends it.
 - Run the full local check set with `--require-solver ngspice --require-solver ltspice`, `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` and `pre-commit run --all-files`.
 - Open the pull request, read CI once, record both in section 5.2, list the design points worth reviewing, and set the status to `READY FOR REVIEW`.
@@ -280,7 +280,7 @@ Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` 
 - `ruff check`, `ruff format --check`, `mypy --strict` (the package, and the named tests of `docs/testing.md`), `lint-imports` (1 contract kept) and `pre-commit run --all-files`: clean.
 - **Compatibility:** the signature snapshot is unchanged, and the compatibility test passes. No corpus file changed its parse. The ngspice tree snapshot gained `structure_basic/nested_if.cir` and D4's two files, and five reject entries lost their expected-token lists (D1).
 - **The plan's exit:** every spec entry cites a `def` and a non-solver accept test, except the three refusal entries. Each README's validation table shows its tests. No entry is `documented`: ngspice has 73 `validated` and 2 `observed`, and LTspice has 73 `validated`.
-- **CI:** recorded below after the push.
+- **Pull request:** [#18](https://github.com/xdylanm/netlistmod/pull/18), on `main` (#17 is merged). **CI:** no check had started when it was read right after opening; this commit runs it again.
 
 ### 5.3 Design points worth reviewing
 
@@ -322,3 +322,4 @@ Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` 
 | D2 R1 | developer | 2026-11-11 after a resume, complete | accepted: C7 is checked in the loader after the parse, from the physical lines; `UNCHECKED_TERMINALS` and the lookaround tables are as before; R2's row and probe added. At `afece61`, in a clean worktree, every solver-free test with the CI profile: 7,407 passed, 2 skipped; `ruff`, `ruff format` and `mypy --strict src` clean; its 95 probes and the LTspice reject sweep (184) passed | `afece61` |
 | D7b | developer | 2026-11-11 after a resume, complete | accepted: four removal paths share `_removal_edit` (LTspice only; ngspice output unchanged), with tests for each and CRLF. At `7936120` alone the edit and architecture tests pass (2,415) | `7936120` |
 | D8 | developer | 2026-11-11, complete | accepted: diff read; an indented and a tab-indented `*` line load as `CommentLine`, and ngspice 47 ignores both (a commented-out R3 leaves v(mid) at 1.0 V, 2/3 V when live). NG-COM-001 is `validated` (§2.4.3, §2.1.1); ngspice totals 73 validated, 2 observed. Architecture and doc tests pass in a clean worktree of the commit | this commit |
+| T1 | lead | — | decision 0021 complete, the architecture amended, the final run (5.2), [#18](https://github.com/xdylanm/netlistmod/pull/18) opened, status `READY FOR REVIEW` | `d14f682`, `327d299`, this commit |
