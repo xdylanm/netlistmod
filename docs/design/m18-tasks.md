@@ -179,7 +179,7 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 - **A2-20:** the lone CR, as decision 12 decides. **A1-11:** `.subckt` parameter commas, as decision 10 decides.
 - **Rows and wording:** the ngspice `discrepancies.md` rows of A1-2 (`1d3`, `1meg5`, `1μ`, `1kΩ`, `1_000`, `(1k)` and the others, pinned by solver probes); LTspice rows for A1-6 (`a`), A1-7 (`reject_number_tails`) and A1-8 (`1d3`, `1_000`); the closing comma note and `LT-FLD-001` (A1-12); LTspice `numbers.md` (A1-13); `NG-FLD-001` (A1-14).
 
-[~] **D6 — Architecture, coverage report and stale docs (A2-12 to A2-18; A4-2, A4-5, A4-6, A4-9, A4-14, A4-15).** *Developer.*
+[x] **D6 — Architecture, coverage report and stale docs (A2-12 to A2-18; A4-2, A4-5, A4-6, A4-9, A4-14, A4-15).** *Developer.* Accepted 2026-11-10 (`33a2b59`), except NG-COM-001 (decision 11, open) and the optional Spec column of `devices.md` (not cheap: it needs a new matrix check; left out).
 - **Lookaround (decision 8):** A2's two tables in the grammar READMEs, noting that the merged states after a nested `.endif` are fixed by D5 (A2-19); the comment of `UNCHECKED_TERMINALS` points to them.
 - **Spec checker (A4-2):** match `def <name>(` rather than a substring, and require a non-solver accept test for each entry except the refusal entries.
 - **Coverage report (A4-14):** a Tests column (non-solver and solver counts) and a totals line in each README's "Validation status" table, checked by `check_status_summary`; `tests/support/spec_coverage.py` becomes the generator of those rows or is removed.
@@ -281,3 +281,4 @@ The two baseline failures (3.2) are host noise. The reviewers' scripts are in th
 | A3 | reviewer | 2026-11-10, complete with findings (17 rows) | reviewed at G1 | — |
 | A4 | reviewer | 2026-11-10, complete with findings (16 rows) | reviewed at G1 | — |
 | G1 | lead | — | section 5.1, decisions 10 to 15, stage 2 revised | this commit |
+| D6 | developer | 2026-11-10, complete with findings | accepted: diff read; architecture, docs and usage-doc tests pass in a clean worktree of the commit (923 passed); CRLF working-copy endings normalised. Its findings F1 and F2 (a removed test cited by NG-CPL-001; `re` imported in the model layer) are D1's, sent back to it. Choices accepted: an accept test is a non-solver test whose name does not say it refuses; the refusal entries are constants in the checker; `26.1.1` as the version string | `33a2b59` |
