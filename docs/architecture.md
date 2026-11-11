@@ -490,7 +490,7 @@ LTspice generates a netlist from the command line with `-netlist`, verified on W
 
 ### 10.4 Coverage requirements
 
-- 100% of constructs marked `supported` in the spec entries have at least one accept test outside `tests/solver/`, and each test reference names a `def` (checked in CI; the refusal entries are the exception). Each grammar README's "Validation status" table reports every entry's status and test counts ([decision 0021](decisions/0021-completeness-audit.md) item 8).
+- 100% of constructs marked `supported` in the spec entries have at least one accept test outside `tests/solver/`, and each test reference names a `def` (checked in CI; the refusal entries are the exception). An accept test is recognised by its name: one with no `reject`, `refus` or `unsupported` in it, a heuristic that does not read the assertions. Each grammar README's "Validation status" table reports every entry's status and test counts ([decision 0021](decisions/0021-completeness-audit.md) item 8).
 - Line coverage target: see Section 19.
 - Solver-validated status is tracked per spec entry; it is not a coverage gate in v1.
 

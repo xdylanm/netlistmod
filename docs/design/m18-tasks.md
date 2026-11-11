@@ -284,13 +284,9 @@ Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` 
 
 ### 5.3 Design points worth reviewing
 
-1. **Checks outside the grammar.** The grammar cannot see these without new terminals or lookarounds, so the loader handles them after the parse:
-   - **D1's own messages** (C1, C5, C6) read the parser's value stack after it has stopped, as the loader's older own messages do. They change no acceptance.
-   - **D2's comment-only `+` line** is checked from the physical lines after a successful LTspice parse (review R1).
-
-   P13 keeps syntax in the grammar; here the alternative was two core terminals leaving strict collision checking.
+1. **Checks outside the grammar.** D1's own messages (C1, C5, C6) read the parser's value stack after it has stopped, as the loader's older own messages do. They change no acceptance. *Review round 1:* accepted. D2's refusal of a comment-only last `+` line, checked after a successful parse, is withdrawn (R1, P13).
 2. **ngspice `Q1 c b 0 qm 1μ` is refused** (A1-4). ngspice 47 runs it as an area of 1, ignoring the letter. The library already refuses every positional area on an ngspice Q, so this keeps that rule.
-3. **An LTspice `.subckt` header with ports only, ending on a comment-only `+` line, is refused**, although LTspice runs that one form. Exempting it would need a separate separator rule for that header. It has a row.
+3. ~~An LTspice `.subckt` header with ports only, ending on a comment-only `+` line, is refused.~~ *Review round 1:* the comment-only last `+` line loads on every statement (R1), so this form loads and runs.
 4. **Left as rows, not refused:**
    - an unknown LTspice `.model` type (`.model x FOO(a=1)`), which LTspice stops on;
    - a comma before `params:`, which LTspice runs.
@@ -331,6 +327,7 @@ Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` 
 The maintainer asked for examples of section 5.3 point 1 (checks outside the grammar) and decided:
 - **Kind 1, accepted as it is:** the loader's own messages for lines the parser already refuses (D1: C1, C5 and C6). They change no acceptance.
 - **Kind 1's related edit change, accepted:** an LTspice removal joins the comment of an emptied last `+` line onto the line before (D7b).
+- **Section 5.3 points 2, 3 (as updated), 5, 7, 8 and 9: approved** (maintainer, 2026-11-11). Point 1 is decided above, and points 4 and 6 are approved too: every design point is settled. Point 6's name rule is a heuristic (a refusal test with a neutral name would count as an accept test); no entry relies on one today, and explicit marking of accept tests is a candidate after v1.
 - **Kind 2, changed (R1):** the refusal of a statement whose last `+` line holds only a comment (D2's C7). It ran in the loader after a successful parse, which P13 does not allow for syntax. The grammar's own reading stands. The form loads, as it did before M18, and LTspice stopping on it is a discrepancy.
 
 ### 6.2 Required changes
