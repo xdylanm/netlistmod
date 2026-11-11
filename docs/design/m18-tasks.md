@@ -1,6 +1,6 @@
 # M18 task list — Completeness audit
 
-> **Status:** ACTIVE — review round 1 on [#18](https://github.com/xdylanm/netlistmod/pull/18) (section 6): R1 in progress
+> **Status:** READY FOR REVIEW — review round 1 on [#18](https://github.com/xdylanm/netlistmod/pull/18) is made (section 6.4); every design point of 5.3 is settled
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
 
 ## 1. Scope
@@ -332,7 +332,7 @@ The maintainer asked for examples of section 5.3 point 1 (checks outside the gra
 
 ### 6.2 Required changes
 
-[~] **R1 — A comment-only last `+` line loads on LTspice (amends decision 5 for C7).**
+[x] **R1 — A comment-only last `+` line loads on LTspice (amends decision 5 for C7).**
 - **Code:** remove `_refuse_comment_only_last_line` and its message from `grammar/loader.py`. `CONT` and `SEP` stay as they are, with no lookahead, and `UNCHECKED_TERMINALS` is unchanged.
 - **Tests:**
   - the C7 refusal tests become accept tests that pin the reading (span and round trip);
@@ -349,3 +349,29 @@ The maintainer asked for examples of section 5.3 point 1 (checks outside the gra
 1. Make R1.
 2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, and read CI once after the push.
 3. Add a short report as 6.4, and set the status to `READY FOR REVIEW`.
+
+### 6.4 Round 1 changes (2026-11-11)
+
+- **R1** (`4b42972`, by a developer; reviewed by the lead):
+  - The post-parse check and its message are gone from `grammar/loader.py`, and `parse_tree` ends at the parse, as before D2. `CONT`, `SEP` and `UNCHECKED_TERMINALS` were never changed.
+  - `R1 a 0 1k` / `+ ; note` loads again. The resistor's span takes the `+` line, `trailing_comments` is `['; note']`, and the round trip is byte-exact with LF and CRLF. The same holds on every statement the probes cover.
+  - **Tests:**
+    - the refusal tests are now accept tests;
+    - the C7 probes read "LTspice stops, the library loads", and `end-subckt-ports` reads "both run";
+    - `elements_rejects/plus_comment_last_line.cir` is removed.
+  - **Records:**
+    - a `discrepancies.md` row for the form, under the forms the library accepts and LTspice refuses;
+    - the `.subckt` ports-only row is gone;
+    - `LT-CNT-001` cites the new tests, and the README table is regenerated;
+    - `errors.md`'s LTspice example is now the `.model x BUF(…)` refusal;
+    - the CHANGELOG lists three refused forms.
+  - D7b's edit join is kept, as the maintainer asked.
+- **Lead:**
+  - decision 0021 item 5 lists the form under "Loads, as a row";
+  - section 5.3 point 1 is decided and point 3 is updated, and points 2 to 9 are approved (6.1);
+  - architecture §10.4 notes that an accept test is recognised by its name.
+  - The lead's approval commits had swept R1's uncommitted files into them, so before pushing they were regrouped into `4b42972` (R1) and `2cd1a24` (the record).
+- **Checks:**
+  - full run with `--require-solver ngspice --require-solver ltspice`: 10,173 passed, 2 skipped, coverage 98.73%, in 25 min 21 s;
+  - `pre-commit run --all-files`, `mypy --strict` on the named tests, and `lint-imports` (1 contract kept): clean;
+  - CI on #18: read once after this push.
