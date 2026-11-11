@@ -19,7 +19,7 @@
      - Warnings: *(filled from D2)*
 
      *Considered:* `discrepancies.md` rows only.
-  6. **Edits:** *(filled from D7: a new parameter on an LTspice B line with `laplace=` is placed before `laplace=`.)*
+  6. **A new parameter on an LTspice B line with `laplace=` goes before it** (amends decision 0017 item 4's edits). `set_param` adds it after the last field before `laplace=`, since the library reads only `window=`, `nfft=` and `mtol=` after `laplace=`; those three are still added after it. Before M18, the parameter was written after `laplace=`, the result did not parse, and the edit failed verification with nothing written. LTspice 26.1.1 runs both orders. E and G take only the three after `Laplace=`, so they are unchanged.
   7. **The lookaround terminals are reviewed** (closes phase 1 limit 3).
      - **The review:** the 21 terminals that Lark's strict mode cannot collision-check (10 ngspice, 11 LTspice) were reviewed by hand. For each, the review records the parser states where it is a candidate, the terminals it competes with there, and why they cannot match the same text. The tables are in each dialect's grammar README.
      - **The outcome:** the review found the nested `.if` defect of item 2 and no other. None of the terminals can lose its lookaround without changing behaviour.
