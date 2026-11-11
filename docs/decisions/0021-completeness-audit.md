@@ -17,13 +17,13 @@
   4. **LTspice `.subckt` parameter commas** (`.subckt s p n r=1k, q=2`, also after `params:`) load, as they did through the X parameter rule: an observed form beside X's (`LT-SBD-001`). A comma right after `params:` (`params:, r=1k`) stops LTspice and is refused (item 5).
   5. **LTspice forms that load and that LTspice stops on.** A line shape the grammar can see is refused; a condition that spans lines gets a warning diagnostic. Neither misreads a line.
      - **Refused:**
-       - a `+` line that holds only a comment as the last line of a statement, unless a later `+` line holds a field (blank `+` lines after it do not count). LTspice 26.1.1 stops on it on every statement probed, except at the end of a `.subckt` header with ports only, which it runs (a `discrepancies.md` row). The loader refuses it after the parse, from the source's physical lines, so no terminal gains a lookaround;
        - a special function's name (the 13 of decision 0020 item 3) or `DIGITAL` as a `.model` type: LTspice stops on the `.model` line itself, used or not;
        - a comma right after `params:` on X and `.subckt` (LTspice stops on both).
      - **Warnings** (§17 adds both codes):
        - `FRA_PROBE_IN_IMPEDANCE_MODE`, on an `&` whose resolved analyzer (decision 0020 item 8) has `zm`: LTspice stops under any analysis. It spans two lines, so it is not a grammar check;
        - `FRA_RANGE_MISSING`, on an `@` without `fstart=` and `fend=` when the top level has a `.fra` command; `flist=` does not replace them, and an `@` with `enabled=` is not checked, since the library does not read values.
-     - **Edits:** a removal on LTspice that would leave such a `+` line moves its comment to the end of the last line that keeps a field (`V1 a 0 ; c ; d`).
+     - **Loads, as a row (maintainer, review round 1):** a statement whose last `+` line holds only a comment, unless a later `+` line holds a field. LTspice 26.1.1 stops on it on every statement probed except a `.subckt` header with ports only. The grammar reads it, and P13 keeps syntax in the grammar: a refusal checked after the parse is not taken, and a grammar refusal would need a lookahead on `CONT` and `SEP`, putting them outside strict collision checking.
+     - **Edits:** a removal on LTspice that would leave such a `+` line moves its comment to the end of the last line that keeps a field (`V1 a 0 ; c ; d`), so an edit does not write a form LTspice stops on.
      - **Left as rows:** an unknown LTspice `.model` type (`.model x FOO(a=1)`) loads and LTspice stops on it; a comma before `params:` runs in LTspice and is refused.
 
      *Considered:* `discrepancies.md` rows only.
@@ -52,5 +52,5 @@
     - `LT-CNT-001`, `LT-SUB-001`, `LT-MOD-001`, `LT-FRA-001` and `LT-FRP-001` change with item 5;
     - `NG-COM-001` becomes `validated`: the manual documents both of its accepted forms (§2.4.3 and §2.1.1's leading blanks), and an ngspice 47 probe of an indented `*` line is cited.
   - **Records:** every form either solver runs that the library refuses has a `discrepancies.md` row, including the number forms of the M18 audit (`1d3`, `1meg5`, `1μ` on ngspice, `1_000`, `(1k)` and others) and the LTspice reference's conflict over `a`.
-  - **Parses that change:** lines that were misread or wrongly refused (items 1 to 3), and item 5's refusals, each a form LTspice stops on. No corpus file changes its parse, and the signature snapshot is unchanged. The tree snapshot gains the M18 corpus files and loses the expected-token lists of the item 10 rejects.
+  - **Parses that change:** lines that were misread or wrongly refused (items 1 to 3), and item 5's refusals, each a form LTspice stops on and the grammar sees. No corpus file changes its parse, and the signature snapshot is unchanged. The tree snapshot gains the M18 corpus files and loses the expected-token lists of the item 10 rejects.
   - **Tests:** two new test files cover every phase 2 letter and edit operation on both dialects: an independent oracle (`tests/grammar/test_device_oracle.py`) and edit properties (`tests/edits/test_device_edit_properties.py`). In the properties, idempotence for a removal means that repeating it raises `EditError` and writes nothing.
