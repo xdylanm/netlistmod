@@ -142,6 +142,10 @@
       "sha256": "d8f68fa29412005c542c114dfaed20b33181aa4376d43316ed3f3966ca451249",
       "note": "Variant: POLY(1)."
     },
+    "lt_test_hsource_value.cir": {
+      "sha256": "92795bf8a7cc9dcae995fec7ea9b84193247cc58b20c87a4aab4879a1cb9e5cf",
+      "note": "Variant of lt_test_hsource.net: H with value= (behavioural), the same gain written as {-2.2k*I(V1)}."
+    },
     "lt_test_inductor_flux.cir": {
       "sha256": "b909dfeba76b20dd82f2ead9734eaba6b3a33be82e09f7a4468a6accebd2f960",
       "note": "Variant: an L with Flux= (x is its current)."

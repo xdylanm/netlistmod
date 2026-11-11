@@ -289,6 +289,26 @@
    "nodes": 46
   }
  },
+ "controlled_sources/test_esource_nand.cir": {
+  "rkm": {
+   "digest": "24aff8dacd5338cd587e2d25739ea7a546836a0bf0a447629dade1917a367e59",
+   "nodes": 39
+  },
+  "standard": {
+   "digest": "24aff8dacd5338cd587e2d25739ea7a546836a0bf0a447629dade1917a367e59",
+   "nodes": 39
+  }
+ },
+ "controlled_sources/test_esource_nor.cir": {
+  "rkm": {
+   "digest": "75abf55a71da5f2a6e33d78db8abb6dcbc3c5519fdefb6d148f83bedf1b01dd4",
+   "nodes": 39
+  },
+  "standard": {
+   "digest": "75abf55a71da5f2a6e33d78db8abb6dcbc3c5519fdefb6d148f83bedf1b01dd4",
+   "nodes": 39
+  }
+ },
  "controlled_sources/test_esource_or.cir": {
   "rkm": {
    "digest": "b53e0cc7a37213ad0f00c678411e5a5eefcc8d23311fc7ac1bb27df60ea2556b",

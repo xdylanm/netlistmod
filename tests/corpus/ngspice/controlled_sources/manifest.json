@@ -88,6 +88,14 @@
       "sha256": "e19913cf4d52d7a1a120f81bd20a1141286f86ec0b4dd0c7f0f4500329a20dc2",
       "note": "Variant: FREQ in the manual's layout, three points on continuation lines with a blank after the first parenthesis (manual 5.2.6)."
     },
+    "test_esource_nand.cir": {
+      "sha256": "d6a987e5284af77a0ca4cfdbcad2f550c33037e53715d694ef3dad20cb04c938",
+      "note": "Variant of test_esource.cir: nand(2), an XSPICE form (manual 5.2.7); written as test_esource_and.cir with and changed to nand."
+    },
+    "test_esource_nor.cir": {
+      "sha256": "c68f127aab1550462f228cbe4bbeb7b8c4919288535a863513ee2a86a190d71c",
+      "note": "Variant of test_esource.cir: nor(2), an XSPICE form (manual 5.2.7); written as test_esource_or.cir with or changed to nor."
+    },
     "test_esource_or.cir": {
       "sha256": "15e1b00340806dca3894f82584ab3c2a3bee5c325e81bc02f6c792b136918cc7",
       "note": "Variant: or(2), an XSPICE form (manual 5.2.7)."
