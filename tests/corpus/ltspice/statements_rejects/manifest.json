@@ -229,6 +229,20 @@
       "column": 38,
       "error": "ParseError",
       "note": "LTRA flags run, the reference lists none"
+    },
+    "model_function_type.cir": {
+      "sha256": "89146c529e6970943d8c8ff7ac65aa91318c9d7be25ee780a8cda8557dda192e",
+      "line": 2,
+      "column": 14,
+      "error": "ParseError",
+      "note": "a special function as the .model type (LTspice stops: Expected model definition; M18 D2)"
+    },
+    "subckt_params_comma.cir": {
+      "sha256": "52baf55ab0b81847b557f6bdb77ddb39a99d0b956376c383457c120153aff919",
+      "line": 2,
+      "column": 22,
+      "error": "ParseError",
+      "note": "a comma right after params: on .subckt (LTspice stops: Expected end of line here; M18 D2)"
     }
   }
 }

@@ -179,15 +179,16 @@ def test_subckt_parameter_commas_run_and_load(
     assert [param.name for param in definition.params] == names
 
 
-def test_a_comma_right_after_params_stops_ltspice_but_loads(solver: Solver, tmp_path: Path) -> None:
-    # discrepancies.md: the comma cannot change what the parameters are, so it is not refused.
+def test_a_comma_right_after_params_stops_ltspice_and_is_refused(
+    solver: Solver, tmp_path: Path
+) -> None:
+    # M18 D2 (decision 5's rule): a line shape the grammar can see, so it is refused.
     text = _SUBCKT.format(header=".subckt s p n params:, r=1k")
     result = run(solver, tmp_path, text)
     assert not result.ok
     assert any("Expected end of line" in error for error in result.errors), result.log
-    items = parse(SourceText(text), Dialect.LTSPICE).items
-    definition = next(item for item in items if isinstance(item, SubcktDefinition))
-    assert [param.name for param in definition.params] == ["r"]
+    with pytest.raises(ParseError, match="a comma right after `params:`"):
+        parse(SourceText(text), Dialect.LTSPICE)
 
 
 # A2-20, decision 12: a lone CR right before a CRLF is text.

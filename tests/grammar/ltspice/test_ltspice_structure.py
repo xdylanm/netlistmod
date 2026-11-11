@@ -146,6 +146,88 @@ def test_continuation_must_follow_immediately() -> None:
     _reject("R1 a 0\n\n+ 1k")
 
 
+_COMMENT_ONLY_LAST_LINE = "a `+` line that holds only a comment cannot end a statement"
+
+
+# (statement, line and column of the refused "+" in the netlist; line 1 is the title)
+_COMMENT_ONLY_ENDS: dict[str, tuple[str, int, int]] = {
+    "semicolon": ("R1 a 0 1k\n+ ; note", 3, 1),
+    "semicolon-no-blank": ("R1 a 0 1k\n+;note", 3, 1),
+    "tab": ("R1 a 0 1k\n+\t; note", 3, 1),
+    "dollar": ("R1 a 0 1k\n+ $ note", 3, 1),
+    "indented": ("R1 a 0 1k\n  + ; note", 3, 3),
+    "blank-plus-after": ("R1 a 0 1k\n+ ; note\n+", 3, 1),
+    "blanks-plus-after": ("R1 a 0 1k\n+ ; note\n+   ", 3, 1),
+    "two-comments": ("R1 a 0 1k\n+ ; c1\n+ ; c2", 4, 1),
+    "after-a-value-line": ("R1 a 0\n+ 1k\n+ ; note", 4, 1),
+    "param": (".param p=1\n+ ; c", 3, 1),
+    "model": (".model dd D(Is=1e-14)\n+ ; c", 3, 1),
+    "untyped": (".backanno\n+ ; c", 3, 1),
+    "tran": (".tran 1m\n+ ; c", 3, 1),
+    "x-line": ("X1 a s\n+ ; c", 3, 1),
+    "b-line": ("B1 b 0 V=V(a)*2\n+ ; c", 3, 1),
+    "a-line": ("A1 a 0 0 0 0 nq q 0 BUF\n+ ; c", 3, 1),
+    "subckt-header": (".subckt s p\n+ ; c\nR1 p 0 1k\n.ends", 3, 1),
+    "ends": (".subckt s p\nR1 p 0 1k\n.ends\n+ ; c", 5, 1),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_COMMENT_ONLY_ENDS))
+def test_a_comment_only_plus_line_may_not_end_a_statement(case: str) -> None:
+    # LTspice 26.1.1 stops on each ("Syntax error"; tests/solver/test_ltspice_m18_probes.py),
+    # except the .subckt header with ports only, which it runs (discrepancies.md).
+    statement, line, column = _COMMENT_ONLY_ENDS[case]
+    error = _reject(statement)
+    assert (error.line, error.column) == (line, column)
+    assert error.reason.startswith(_COMMENT_ONLY_LAST_LINE)
+    assert error.expected == ()
+
+
+@pytest.mark.parametrize("ending", ["\n", "\r\n"])
+def test_a_comment_only_plus_line_is_refused_before_end_with_either_line_ending(
+    ending: str,
+) -> None:
+    text = ending.join(["title", "R1 a 0 1k", "+ ; note", ".end", ""])
+    with pytest.raises(ParseError) as captured:
+        _parse(text)
+    assert (captured.value.line, captured.value.column) == (3, 1)
+    assert captured.value.reason.startswith(_COMMENT_ONLY_LAST_LINE)
+
+
+@pytest.mark.parametrize(
+    "statement",
+    [
+        "R1 a 0\n+ ; note\n+ 1k",
+        "R1 a 0 1k\n+ ; note\n+ tc=0",
+        "R1 a 0\n+ ; c1\n+ ; c2\n+ 1k",
+        "R1 a 0\n+\n+ ; c\n+ 1k",
+        "R1 a 0 1k\n+",
+        "R1 a 0 1k\n+   ",
+        ".param p=1\n+ ; c\n+ q=2",
+        ".model dd D(Is=1e-14\n+ ; c\n+ N=1)",
+        ".model dd D(Is=1e-14\n+ ; c\n+ )",
+        ".subckt s p params: r=1k\n+ ; c\n+ q=2\n.ends",
+        "R1 a 0 1k ; same line",
+        "R1 a 0\n+ 1k ; after the value",
+    ],
+)
+def test_a_comment_only_plus_line_before_a_field_continues(statement: str) -> None:
+    # LTspice 26.1.1 runs each (tests/solver/test_ltspice_m18_probes.py).
+    _parse(f"title\n{statement}\n.end\n")
+
+
+def test_a_comment_only_plus_line_after_a_comment_line_keeps_the_general_error() -> None:
+    error = _reject("* c\n+ ; c")
+    assert (error.line, error.column) == (3, 1)
+    assert not error.reason.startswith(_COMMENT_ONLY_LAST_LINE)
+
+
+@pytest.mark.parametrize("statement", ["R1 a 0 1k\n+ ; note", ".param p=1\n+ ; c", "X1 a s\n+ ; c"])
+def test_ngspice_still_reads_a_comment_only_plus_line(statement: str) -> None:
+    # ngspice 47 runs these (tests/solver/test_ltspice_m18_probes.py); its grammar is unchanged.
+    parse(SourceText(f"title\n{statement}\n.end\n"), Dialect.NGSPICE)
+
+
 @pytest.mark.parametrize("line", ["R1 a 0 1k \\\\\nm=2", "R1 a 0 \\\\\n1k", "\\\\"])
 def test_backslash_continuation_is_rejected(line: str) -> None:
     _reject(line)

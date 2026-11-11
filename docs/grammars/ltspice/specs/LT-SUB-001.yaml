@@ -8,10 +8,14 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar:
 - x_last
 - x_param
 - params_marker
+- params_first
 - PARAMS_KW
 core_rules:
 - subckt_instance
@@ -21,7 +25,11 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_subcircuit_calls
 - tests/grammar/ltspice/test_ltspice_elements.py::test_subcircuit_parameters
 - tests/grammar/ltspice/test_ltspice_elements.py::test_malformed_subcircuit_calls
+- tests/grammar/ltspice/test_ltspice_elements.py::test_a_comma_right_after_params_is_refused
+- tests/solver/test_ltspice_m18_probes.py::test_comma_after_params_probes
 - tests/solver/test_ltspice_validation.py::test_subcircuit_calls
 - tests/solver/test_ltspice_edit_results.py::test_set_instance_param_moves_only_that_instance
 notes: 'Nodes, the name, then name=value, with or without params: (L40, the reference shows it on .subckt).
-  The ;§pnba comment is an ordinary comment.'
+  The ;§pnba comment is an ordinary comment. A comma may stand before a parameter (observed),
+  but not right after params:, where LTspice 26.1.1 stops (M18 D2): params_first takes only blanks, +
+  lines and comments before it, and the loader names the comma.'

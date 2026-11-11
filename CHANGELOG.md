@@ -12,6 +12,9 @@ Changes:
 - On ngspice, a line after a nested `.if` block inside the outer block loads; it was a `ParseError` (M18).
 - A lone CR right before a CRLF (`* abc` CR CR LF) is text in a title, a comment, statement text and a block line, on both dialects; it was a `ParseError` (M18).
 - On an LTspice B line with `laplace=`, `set_param` adds a new parameter before `laplace=` (`V=2*V(vs) ic=1 laplace=…`); only `window=`, `nfft=` and `mtol=` go after it. Before, the edit wrote it after `laplace=`, failed verification and wrote nothing (M18).
+- On LTspice, a removal (`remove_param`, `remove_model_param`, `remove_stimulus`, `set_switch_state(d, None)`) that would leave a statement's last `+` line holding only a comment joins that comment to the end of the last line with a field (`V1 a 0 ; c` / `+ SIN(0 1) ; d` becomes `V1 a 0 ; c ; d`), since LTspice stops on such a line; ngspice is unchanged (M18).
+- LTspice refuses four forms that loaded while LTspice 26.1.1 stops on them, each with its own message: a `+` line that holds only a comment as the last line of a statement (one with a field on a later `+` line still loads); a special function's name or `DIGITAL` as a `.model` type (`.model x BUF(…)`); and a comma right after `params:` on X and `.subckt` (M18).
+- Two LTspice warnings: `FRA_PROBE_IN_IMPEDANCE_MODE` on an `&` probe whose analyzer has `zm`, and `FRA_RANGE_MISSING` on an `@` without `fstart=` or `fend=` in a netlist with `.fra`; LTspice stops on both (M18).
 
 M17 (decision 0020): the special and mixed-signal devices load and edit, and no device letter is planned.
 

@@ -486,6 +486,42 @@ def test_malformed_models(line: str) -> None:
 
 
 @pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        (".model x BUF(Vhigh=5)", 10),
+        (".model x buf", 10),
+        (".model x Ota(G=1m)", 10),
+        (".model x SAMPLEHOLD", 10),
+        (".model slow ako:fast COUNTER", 22),
+    ],
+)
+def test_a_special_function_is_not_a_model_type(line: str, column: int) -> None:
+    # LTspice 26.1.1 stops on the .model line itself, used or not ("Expected model definition";
+    # tests/solver/test_ltspice_m18_probes.py); M18 D2.
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert "is a special function, not a model type" in error.reason
+
+
+def test_digital_is_not_a_model_type() -> None:
+    error = _reject(".model x DIGITAL(Vhigh=5)")
+    assert (error.line, error.column) == (2, 10)
+    assert error.reason.startswith("`DIGITAL` is not an LTspice model type")
+
+
+@pytest.mark.parametrize("line", [".model buf D", ".model x FOO(a=1)", ".model x D(Is=1n)"])
+def test_other_model_types_still_load(line: str) -> None:
+    # A special function's name may still name a model; an unknown type is not checked (LTspice
+    # stops on `FOO` too: a finding of M18 D2 for the lead).
+    assert isinstance(_item(line), ModelStatement)
+
+
+def test_ngspice_reads_a_function_name_as_any_model_type() -> None:
+    result = parse(SourceText("title\n.model x BUF(Vhigh=5)\n.end\n"), Dialect.NGSPICE)
+    assert result.items[1].model_type == "BUF"
+
+
+@pytest.mark.parametrize(
     ("line", "kind", "name", "variation", "bounds", "values"),
     [
         (".step param x 1k 3k 2k", "param", "x", None, ["1k", "3k", "2k"], []),

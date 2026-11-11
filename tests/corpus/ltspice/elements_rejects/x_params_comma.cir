@@ -1,0 +1,8 @@
+M18 reject
+V1 a 0 1
+X1 a 0 s params:, r=2k
+.subckt s p n r=1k
+R1 p n {r}
+.ends
+.op
+.end

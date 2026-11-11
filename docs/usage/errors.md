@@ -64,6 +64,11 @@ this line ends too early
 ... except ParseError as error:
 ...     print(error.reason)
 the netlist ends at `.end`: only blank lines may follow it
+>>> try:
+...     parse(SourceText("title\nR1 a 0 1k\n+ ; note\n.end\n"), Dialect.LTSPICE)
+... except ParseError as error:
+...     print(error.line, error.column, error.reason)
+3 1 a `+` line that holds only a comment cannot end a statement: LTspice stops on it ("Syntax error") unless a later `+` line of the statement holds a field; move the comment to the end of the line before
 
 ```
 
@@ -387,3 +392,28 @@ A behavioural expression reads a node, as `v(a)` or `v(a,b)`, that no element of
 ```
 
 **What to do:** correct the node name. Inside a subcircuit, a top-level net is not visible: pass it in as a port, or make it `.global`. `Netlist.expression_reads` lists what an expression reads.
+
+### `FRA_PROBE_IN_IMPEDANCE_MODE`
+
+LTspice only. An `&` probe whose analyzer, the `@` of its suffix or the scope's only `@` ([decision 0020](../decisions/0020-special-and-mixed-signal-devices.md) item 8), measures an impedance (`zm`). LTspice 26.1.1 stops on it ("FRA Probe not supported … in impedance measurement mode"). A warning, on the probe.
+
+```python
+>>> report("t\nV1 a 0 0 AC 1\nR1 a b 1k\nR2 b 0 1k\n@1 a b zm\n&1 b 0 a 0\n.end\n", Dialect.LTSPICE)
+6 1 FRA_PROBE_IN_IMPEDANCE_MODE warning
+
+```
+
+**What to do:** remove the probe, or the `zm` flag: an analyzer measures either an impedance or a loop with its probe.
+
+### `FRA_RANGE_MISSING`
+
+LTspice only. An `@` without `fstart=` or `fend=`, in a netlist with a `.fra` command. LTspice 26.1.1 stops on it in the `.fra` run ("Missing parameter"), with or without `flist=`; under another analysis it runs. An `@` with `enabled=` is not checked, since the library does not read the value and LTspice skips a disabled analyzer. A warning, on the `@`.
+
+```python
+>>> report("t\nV1 a 0 0 AC 1\nR1 a b 1k\nR2 b 0 1k\n@1 a b flist=1k 2k\n.fra\n.end\n", Dialect.LTSPICE)
+5 1 FRA_RANGE_MISSING warning
+6 1 UNTYPED_DIRECTIVE_PRESERVED info
+
+```
+
+**What to do:** give the analyzer `fstart=` and `fend=`, beside `flist=` if it has one.

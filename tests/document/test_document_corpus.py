@@ -52,8 +52,13 @@ def test_every_diagnostic_code_occurs_in_the_corpus() -> None:
     codes = {
         code for fixture in MANIFEST["fixtures"].values() for code, *_ in fixture["diagnostics"]
     }
-    # NODE_INTO_INSTANCE is LTspice's (tests/document/test_ltspice_document.py).
-    assert codes == {code.value for code in DiagnosticCode} - {"NODE_INTO_INSTANCE"}
+    # NODE_INTO_INSTANCE and the FRA codes are LTspice's (tests/document/test_ltspice_document.py,
+    # tests/document/test_ltspice_fra_diagnostics.py).
+    assert codes == {code.value for code in DiagnosticCode} - {
+        "NODE_INTO_INSTANCE",
+        "FRA_PROBE_IN_IMPEDANCE_MODE",
+        "FRA_RANGE_MISSING",
+    }
 
 
 @pytest.mark.parametrize("path", ACCEPT_FILES, ids=lambda path: f"{path.parent.name}/{path.name}")

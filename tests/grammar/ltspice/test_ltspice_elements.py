@@ -516,6 +516,41 @@ def test_subcircuit_headers(header: str, params: list[str]) -> None:
     assert [param.name for param in definition.params] == params
 
 
+_COMMA_AFTER_PARAMS = "a comma right after `params:`"
+
+
+# (line, line and column of the refused comma; line 2 is the line under test)
+_PARAMS_COMMAS: dict[str, tuple[str, int, int]] = {
+    "subckt": (".subckt s p n params:, r=1k\n.ends", 2, 22),
+    "subckt-no-blank": (".subckt s p n params:,r=1k\n.ends", 2, 22),
+    "subckt-blank-before": (".subckt s p n params: , r=1k\n.ends", 2, 23),
+    "subckt-plus-line": (".subckt s p n params:\n+ , r=1k\n.ends", 3, 3),
+    "subckt-comment-then-plus": (".subckt s p n params: ; c\n+ , r=1k\n.ends", 3, 3),
+    "x": ("X1 a 0 s params:, r=2k", 2, 17),
+    "x-no-blank": ("X1 a 0 s params:,r=2k", 2, 17),
+    "x-blank-before": ("X1 a 0 s params: , r=2k", 2, 18),
+}
+
+
+@pytest.mark.parametrize("case", sorted(_PARAMS_COMMAS))
+def test_a_comma_right_after_params_is_refused(case: str) -> None:
+    # LTspice 26.1.1 stops on each (tests/solver/test_ltspice_m18_probes.py); M18 D2.
+    line, row, column = _PARAMS_COMMAS[case]
+    error = _reject(line)
+    assert (error.line, error.column) == (row, column)
+    assert error.reason.startswith(_COMMA_AFTER_PARAMS)
+    assert error.expected == ()
+
+
+@pytest.mark.parametrize(
+    "header",
+    [".subckt s a b params:\n+ r=1k", ".subckt s a b params: r=1k5 q=2", ".subckt s a b params:"],
+)
+def test_the_first_parameter_after_params_takes_a_blank_or_a_plus_line(header: str) -> None:
+    definition = _element(f"{header}\n.ends s")
+    assert isinstance(definition, SubcktDefinition)
+
+
 def test_a_port_cannot_be_zero() -> None:
     assert "cannot be `0`" in str(_reject(".subckt s a 0\n.ends"))
 

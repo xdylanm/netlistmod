@@ -67,7 +67,7 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-CAP-001](./specs/LT-CAP-001.yaml) | capacitor (C) lines | validated | 5 + 4 solver | ltspice 26.1.1 (2026-11-01, 2026-11-06) |
 | [LT-CCC-001](./specs/LT-CCC-001.yaml) | current-dependent current source (F) lines | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-CCV-001](./specs/LT-CCV-001.yaml) | current-dependent voltage source (H) lines | validated | 1 + 3 solver | ltspice 26.1.1 (2026-11-06) |
-| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-CNT-001](./specs/LT-CNT-001.yaml) | + continuation lines | validated | 7 + 5 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-COM-001](./specs/LT-COM-001.yaml) | comment lines (* and ;) | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | validated | 3 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-CTL-001](./specs/LT-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | 3 + 1 solver | ltspice 26.1.1 (2026-11-06) |
@@ -77,8 +77,8 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-END-001](./specs/LT-END-001.yaml) | required final .end | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-FLD-001](./specs/LT-FLD-001.yaml) | field separators | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-FML-001](./specs/LT-FML-001.yaml) | formula expression syntax (reference scan only) | validated | 3 + 6 solver | ltspice 26.1.1 (2026-11-01, 2026-11-10) |
-| [LT-FRA-001](./specs/LT-FRA-001.yaml) | frequency response analyzer (@) lines | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-10) |
-| [LT-FRP-001](./specs/LT-FRP-001.yaml) | frequency response probe (&) lines | validated | 3 + 2 solver | ltspice 26.1.1 (2026-11-10) |
+| [LT-FRA-001](./specs/LT-FRA-001.yaml) | frequency response analyzer (@) lines | validated | 8 + 4 solver | ltspice 26.1.1 (2026-11-10, 2026-11-11) |
+| [LT-FRP-001](./specs/LT-FRP-001.yaml) | frequency response probe (&) lines | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-10, 2026-11-11) |
 | [LT-FUN-001](./specs/LT-FUN-001.yaml) | source functions, shared syntax | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-04) |
 | [LT-FUN-002](./specs/LT-FUN-002.yaml) | PULSE | validated | 1 + 1 solver | ltspice 26.1.1 (2026-11-04) |
 | [LT-FUN-003](./specs/LT-FUN-003.yaml) | SINE and SIN | validated | 1 + 1 solver | ltspice 26.1.1 (2026-11-04) |
@@ -98,7 +98,7 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-MCH-001](./specs/LT-MCH-001.yaml) | .machine blocks | validated | 1 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-MEA-001](./specs/LT-MEA-001.yaml) | .meas and .measure | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-MES-001](./specs/LT-MES-001.yaml) | MESFET and IGBT (Z) lines | validated | 2 + 1 solver | ltspice 26.1.1 (2026-11-05) |
-| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | 8 + 6 solver | ltspice 26.1.1 (2026-11-01, 2026-11-05, 2026-11-09) |
+| [LT-MOD-001](./specs/LT-MOD-001.yaml) | .model statements | validated | 11 + 7 solver | ltspice 26.1.1 (2026-11-01, 2026-11-05, 2026-11-09, 2026-11-11) |
 | [LT-MOS-001](./specs/LT-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-05) |
 | [LT-MUT-001](./specs/LT-MUT-001.yaml) | mutual inductance (K) lines | validated | 2 + 4 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-NLS-001](./specs/LT-NLS-001.yaml) | expression forms of the dependent sources (value= on E, F, G and H) | validated | 6 + 1 solver | ltspice 26.1.1 (2026-11-06) |
@@ -114,12 +114,12 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | validated | 4 + 4 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-RES-001](./specs/LT-RES-001.yaml) | resistor (R) lines | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | 3 + 4 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | 3 + 6 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
+| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | 5 + 7 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-SPF-001](./specs/LT-SPF-001.yaml) | special function (A) lines | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-10) |
 | [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | validated | 9 + 12 solver | ltspice 26.1.1 (2026-11-01, 2026-11-10) |
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | 4 + 7 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | 3 + 2 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-SWC-001](./specs/LT-SWC-001.yaml) | current-controlled switch (W) lines | validated | 1 + 2 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-SWV-001](./specs/LT-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-TBL-001](./specs/LT-TBL-001.yaml) | table= on E and G | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-08) |

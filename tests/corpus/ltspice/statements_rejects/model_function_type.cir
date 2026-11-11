@@ -1,0 +1,3 @@
+M18 reject
+.model mybuf BUF(Vhigh=5)
+.end
