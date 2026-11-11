@@ -300,8 +300,8 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 | 10 | Bare unquoted formulas (`R1 a b 1.1*Rx+1000`) are **not** accepted until validated against the solver. | A catch-all terminal would silently accept typos such as `1kk`. |
 | 11 | Transformer methods for rules with adjacent optional slots MUST dispatch on node *type*, not position. | Positions shift when slots are absent. |
 | 12 | Terminal priorities are used deliberately and commented in the grammar. Keywords share the priority of the generic name terminal so Lark re-types an exact match; block-scoped name terminals keep block terminators out of the top-level name. | Lark only collision-checks terminals of equal priority, so an accidental priority gap hides a conflict. |
-| 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\r?\n)`); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md)). |
-| 14 | On a transistor line, and on an ngspice P or N line, the model is the last name before the first area, flag or parameter ([decision 0019](decisions/0019-transmission-lines.md)); the overlay spells out the name sequences each letter's node counts allow. A field written as a number is a node before the model and an area after it, and a number or a flag keyword in the model's place is refused at its token. | Both solvers decide by looking up defined models, which the library cannot do for included files; syntax stays in the grammar (P13). See [decision 0014](decisions/0014-transistors.md). |
+| 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\n)`, so a CR right before a CRLF is text); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md); [decision 0021](decisions/0021-completeness-audit.md) item 3). |
+| 14 | On a transistor line, and on an ngspice P or N line, the model is the last name before the first area, flag or parameter ([decision 0019](decisions/0019-transmission-lines.md)); the overlay spells out the name sequences each letter's node counts allow. A field written as a number is a node before the model and an area after it, and a number or a flag keyword in the model's place is refused at its token. A field written as a number is never the model, whatever its letters ([decision 0021](decisions/0021-completeness-audit.md) item 1). | Both solvers decide by looking up defined models, which the library cannot do for included files; syntax stays in the grammar (P13). See [decision 0014](decisions/0014-transistors.md). |
 
 ### 6.4 Numeric literals
 
@@ -323,7 +323,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 `.control` ... `.endc` is matched as a single opaque block and preserved verbatim. It is not editable and not interpreted. (Rationale: it is a second language with its own dialect drift, and parametric work is done by running separate single-shot netlists.)
 
-Conditional blocks (`.if` ... `.endif`) are likewise opaque: they are not parsed, and elements inside them are not indexed. Netlists whose topology depends on conditionals are out of scope (Section 7.8).
+Conditional blocks (`.if` ... `.endif`) are likewise opaque: they are not parsed, and elements inside them are not indexed. A nested block has its own rule, so any line may follow its `.endif` ([decision 0021](decisions/0021-completeness-audit.md) item 2). Netlists whose topology depends on conditionals are out of scope (Section 7.8).
 
 Opaque blocks are matched by grammar rules (nesting by recursion for `.if`), not by scanning. A `.control` or `.if` block after `.end` is a syntax error: the netlist ends at `.end`, even though ngspice would run a trailing `.control` block.
 
@@ -331,7 +331,7 @@ Opaque blocks are matched by grammar rules (nesting by recursion for `.if`), not
 
 A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `@` and `&`; qspice's non-ASCII letters) live only in that dialect's overlay.
 
-**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5).
+**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5). Since M17 no letter is `planned`; in v1, `UnsupportedConstruct` is raised only for the two constructs out of scope for v1, the ngspice digital U and LTspice `.machine` ([decision 0021](decisions/0021-completeness-audit.md) item 11).
 
 ---
 
@@ -490,7 +490,7 @@ LTspice generates a netlist from the command line with `-netlist`, verified on W
 
 ### 10.4 Coverage requirements
 
-- 100% of constructs marked `supported` in the spec entries have at least one accept test (checked by a script in CI).
+- 100% of constructs marked `supported` in the spec entries have at least one accept test outside `tests/solver/`, and each test reference names a `def` (checked in CI; the refusal entries are the exception). Each grammar README's "Validation status" table reports every entry's status and test counts ([decision 0021](decisions/0021-completeness-audit.md) item 8).
 - Line coverage target: see Section 19.
 - Solver-validated status is tracked per spec entry; it is not a coverage gate in v1.
 
@@ -638,14 +638,14 @@ nl.save("amp.edited.cir")                            # re-parses and verifies to
 ```
 SpiceNetlistError
 ├── ParseError            (line, column, source excerpt with caret)
-├── UnsupportedConstruct  (known to exist in the dialect, not yet supported)
+├── UnsupportedConstruct  (known to exist in the dialect, not read: in v1 the ngspice digital U and LTspice .machine)
 ├── EditError             (invalid edit: wrong value kind, unresolved model, ambiguous scope)
 ├── TopologyError         (operation not permitted)
 ├── TopologyViolation     (write-time check failed; nothing written)
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNTYPED_DIRECTIVE_PRESERVED` ([decision 0012](decisions/0012-carried-limits.md)), `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)), `UNRESOLVED_NODE` (an expression reads a node no element connects to; [decision 0016](decisions/0016-behavioral-expressions.md)).
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNTYPED_DIRECTIVE_PRESERVED` ([decision 0012](decisions/0012-carried-limits.md)), `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)), `UNRESOLVED_NODE` (an expression reads a node no element connects to; [decision 0016](decisions/0016-behavioral-expressions.md)), `FRA_PROBE_IN_IMPEDANCE_MODE` and `FRA_RANGE_MISSING` (LTspice `&` and `@` lines that LTspice stops on; [decision 0021](decisions/0021-completeness-audit.md) item 5).
 
 A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `NODE_INTO_INSTANCE` is info when the definition is in an include, otherwise a warning; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNTYPED_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
 
