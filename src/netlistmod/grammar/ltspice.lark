@@ -534,7 +534,7 @@ fra_net: (SEP | CSEP) FRA_NET_KW EQ WORD
        | (SEP | TRAILING_COMMENT) fra_net
 fra_more: (SEP | CSEP) (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
         | (SEP | TRAILING_COMMENT) fra_more
-fra_zm: SEP ZM_KW
+fra_zm: (SEP | CSEP) ZM_KW
       | (SEP | TRAILING_COMMENT) fra_zm
 fra_unlisted: (SEP | CSEP) FRA_UNLISTED_KW rest NL
             | (SEP | TRAILING_COMMENT) fra_unlisted

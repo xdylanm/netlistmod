@@ -26,10 +26,11 @@ core_rules:
 tests:
 - tests/grammar/ltspice/test_ltspice_special.py::test_the_analyzer_reads_lists_flags_and_nets
 - tests/grammar/ltspice/test_ltspice_special.py::test_an_analyzer_takes_no_parameter_at_all
+- tests/grammar/ltspice/test_ltspice_special.py::test_ac_writes_its_magnitude_and_phase_with_a_comma_or_a_blank
 - tests/grammar/ltspice/test_ltspice_special.py::test_refused_analyzer_lines
 - tests/grammar/ltspice/test_ltspice_special.py::test_an_analyzer_has_two_nodes
 - tests/document/test_special_topology.py::test_refnode_and_intnode_are_node_references_not_terminals
 - tests/solver/test_ltspice_special_probes.py::test_analyzer_probes
 - tests/solver/test_ltspice_special_probes.py::test_an_analyzer_edit_moves_its_frequencies
 - tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
-notes: 'Two nodes, then the zm flag (any case) and the reference''s named parameters in any order (decision 0020 item 7); the reference''s table is complete, so the list is closed and another name is refused. flist=, pp=, nmax= and ac= take a list, blank- or comma-separated, held as a ValueList; a second value on another parameter is refused. refnode= and intnode= name nets: node references with UNRESOLVED_NODE, not terminals and not in the signature. None is required (LTspice runs @1 in out in .op), though a .fra run needs fstart= and fend=. Refused: a second zm (LTspice runs it) and a bare name in a value. With zm, LTspice refuses a probe (FRA Probe not supported ... in impedance measurement mode); the library does not check it.'
+notes: 'Two nodes, then the zm flag (any case) and the reference''s named parameters in any order (decision 0020 item 7); the reference''s table is complete, so the list is closed and another name is refused. flist=, pp=, nmax= and ac= take a list, blank-separated, held as a ValueList; ac= alone may write its magnitude and phase with a comma (ac=1,0), the reference''s form; a second value on another parameter is refused. refnode= and intnode= name nets: node references with UNRESOLVED_NODE, not terminals and not in the signature. None is required (LTspice runs @1 in out in .op), though a .fra run needs fstart= and fend=. Refused: a second zm (LTspice runs it), a bare name in a value, and a comma before a parameter or zm or between list values other than ac=''s (LTspice runs them; decision 0009, M17 review R1). With zm, LTspice refuses a probe (FRA Probe not supported ... in impedance measurement mode); the library does not check it.'

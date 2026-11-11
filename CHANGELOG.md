@@ -10,7 +10,7 @@ Changes:
 - ngspice N lines (OSDI devices) load as `OsdiDevice`: nodes, the model by the boundary rule, then instance parameters (M17).
 - A code model's `.model` takes vectors `[ … ]` (a `ValueList` with the brackets), `TRUE` and `FALSE`, and quoted strings, on a model type that is not built in; A and N take only such a model, with `MODEL_TYPE_MISMATCH` and `set_model`'s check (M17).
 - LTspice A lines (special functions) load as `SpecialFunction`, with one of the 13 function names LTspice's symbols write; `@` loads as `FrequencyAnalyzer` (`zm`, its lists, and `refnode=` and `intnode=` as node references), and `&` as `FraProbe`, which names its analyzer (M17).
-- Forms the solvers run but the manual or the reference does not show are refused, with rows in each `discrepancies.md` (M17).
+- Forms the solvers run but the manual or the reference does not show are refused, with rows in each `discrepancies.md`; among them a comma on an LTspice A or `@` line, except `ac=1,0` (M17).
 - `set_param` and `remove_param` cover N, LTspice A and `@`; `set_model` covers ngspice A and N; `set_model_param` and `remove_model_param` cover code-model and OSDI models, a vector as a whole. A line's function, `zm`, ports and `%vnam` source are not editable (M17).
 - The ngspice digital U and LTspice `.machine` are named exclusions of v1: their `UnsupportedConstruct` says "out of scope for v1" (M17).
 - `model-types.json` moves from `netlistmod/document/` to `netlistmod/model/`, read by the new `netlistmod.model.model_types` (M17).

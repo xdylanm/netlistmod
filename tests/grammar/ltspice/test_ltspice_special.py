@@ -21,6 +21,7 @@ FUNCTIONS = (
     "BUF AND OR XOR SCHMITT DFLOP SRFLOP VARISTOR MODULATOR OTA PHASEDET COUNTER SAMPLEHOLD"
 ).split()
 NODES = "in 0 0 0 0 nq q com"
+COMMA = "LTspice element lines separate their fields with blanks"
 
 
 def _item(line: str) -> object:
@@ -43,8 +44,8 @@ def test_each_function_name_loads(name: str) -> None:
     assert item.common.name == "com"
 
 
-def test_parameters_are_open_and_may_be_comma_separated() -> None:
-    item = _item(f"A1 {NODES} OTA G=1m, Iout=1m Isink={{-1m}} Rout=1k")
+def test_parameters_are_open() -> None:
+    item = _item(f"A1 {NODES} OTA G=1m Iout=1m Isink={{-1m}} Rout=1k")
     assert isinstance(item, SpecialFunction)
     assert [(p.name, p.value.text) for p in item.params] == [
         ("G", "1m"),
@@ -64,6 +65,9 @@ def test_parameters_are_open_and_may_be_comma_separated() -> None:
         (f"A1 {NODES} BUF 5", 28, "positional value"),
         (f"A1 {NODES} BUF off", 28, "takes no flag"),
         ("A1 in 0 0 0 0 nq q 0 0 BUF", 22, "is not a special function name"),  # nine nodes
+        (f"A1 {NODES} BUF Vhigh=5, Vlow=0", 35, COMMA),
+        (f"A1 {NODES} BUF Vhigh=5,Vlow=0", 35, COMMA),
+        (f"A1 {NODES} BUF, Vhigh=5", 27, COMMA),
     ],
 )
 def test_refused_special_function_lines(line: str, column: int, reason: str) -> None:
@@ -101,6 +105,14 @@ def test_an_analyzer_takes_no_parameter_at_all() -> None:
     assert isinstance(item, FrequencyAnalyzer) and item.params == () and item.impedance is None
 
 
+@pytest.mark.parametrize("line", ["@1 a b ac=1,0", "@1 a b ac=1, 0", "@1 a b ac=1 0"])
+def test_ac_writes_its_magnitude_and_phase_with_a_comma_or_a_blank(line: str) -> None:
+    item = _item(line)
+    assert isinstance(item, FrequencyAnalyzer)
+    value = item.params[0].value
+    assert isinstance(value, ValueList) and [v.text for v in value.values] == ["1", "0"]
+
+
 @pytest.mark.parametrize(
     ("line", "column", "reason"),
     [
@@ -109,6 +121,16 @@ def test_an_analyzer_takes_no_parameter_at_all() -> None:
         ("@1 a b fend=1k 2k", 16, "only flist=, pp=, nmax= and ac= take a list"),
         ("@1 a b 5", 8, "a value without a name"),
         ("@1 a b fstart=f1", 15, "write `{f1}`"),
+        ("@1 a b fstart=1k, fend=2k", 17, COMMA),
+        ("@1 a b fstart=1k,fend=2k", 17, COMMA),
+        ("@1 a b zm, fstart=1k", 10, COMMA),
+        ("@1 a b fstart=1k, zm", 17, COMMA),
+        ("@1 a b fstart=1k, refnode=a", 17, COMMA),
+        ("@1 a b flist=1k,2k,5k", 16, COMMA),
+        ("@1 a b flist=1k, 2k", 16, COMMA),
+        ("@1 a b pp=1k, 10m", 13, COMMA),
+        ("@1 a b nmax=1k,2", 15, COMMA),
+        ("@1 a b ac=1,0, fstart=1k", 14, COMMA),
     ],
 )
 def test_refused_analyzer_lines(line: str, column: int, reason: str) -> None:

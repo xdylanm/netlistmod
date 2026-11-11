@@ -70,6 +70,8 @@ def test_a_code_model_or_osdi_model_may_be_set_to_another_open_type() -> None:
         (lambda n: n.set_value("&1", "1"), "has no value slot"),
         (lambda n: n.set_model("A1", "OTA"), "is not a model and is not editable"),
         (lambda n: n.set_param("@1", "zm", "1"), "is a flag, which is not editable"),
+        (lambda n: n.remove_param("@1", "zm"), "`zm` of `@1` is a flag, which is not editable"),
+        (lambda n: n.remove_param("@1", "ZM"), "`zm` of `@1` is a flag, which is not editable"),
         (lambda n: n.set_param("@1", "flist", "1k"), "holds the comment `; first`"),
         (lambda n: n.remove_param("@1", "flist"), "holds the comment `; first`"),
         (lambda n: n.set_param("@1", "foo", "1"), "does not"),

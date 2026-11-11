@@ -1,6 +1,6 @@
 # M17 task list — Special and mixed-signal devices (ngspice A and N; LTspice A, `@` and `&`)
 
-> **Status:** READY FOR REVIEW — implemented on 2026-11-10 (T1 to T10; section 5). Approved by the maintainer on 2026-11-10, with section 2 decided and the provenance of the base files (section 3.2) confirmed
+> **Status:** READY FOR REVIEW — review round 1's R1 to R3 are made (section 6.5). Implemented on 2026-11-10 (T1 to T11; section 5). Approved by the maintainer on 2026-11-10, with section 2 decided and the provenance of the base files (section 3.2) confirmed
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M17). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./archive/phase-2/m16-tasks.md), [decision 0014](../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../decisions/0015-controlled-sources.md) (controlling references).
 
 ## 1. Scope
@@ -178,10 +178,10 @@ The maintainer took decision 1 as "drop the digital U from v1", decision 3 as op
      - the names are not a closed list, because the reference lists only some of them, by symbol family. LTspice stops on an unknown name ("foo=5"), so an open list does not misread a line;
      - values are in LTspice's value slot. A bare name (`Vhigh=x`), which LTspice runs, is refused with M16's R2 message suggesting `{x}`;
      - a positional value and a flag are refused (LTspice stops);
-     - a comma between parameters is accepted, as on T (LTspice runs it).
+     - a comma before a parameter is refused, as on T and every other LTspice element line (decision 0009; LTspice runs it). *Corrected in review R1:* this line first said the comma was accepted "as on T", which was wrong.
    - **`@`:**
      - two nodes, then fields in any order: the `zm` flag (any case; a second `zm` is refused), and named parameters from the reference's table. That table is complete, so the list is closed: `delay`, `fstart`, `fend`, `oct`, `fcoarse`, `flist`, `nmax`, `pp0`, `pp1`, `f0`, `f1`, `pp`, `tavgmin`, `tsettle`, `rpar`, `acmag`, `acphase`, `ac`, `enabled`, `refnode` and `intnode`. LTspice stops on any other name, on one node and on three;
-     - `flist=` (values), `pp=` (frequency and amplitude pairs), `nmax=` (a value or pairs) and `ac=` (magnitude and phase, comma-separated) are `ValueList`s. Each form was probed;
+     - `flist=` (values), `pp=` (frequency and amplitude pairs), `nmax=` (a value or pairs) and `ac=` (magnitude and phase, comma-separated) are `ValueList`s. Each form was probed. A comma before a parameter or `zm`, or between the values of `flist=`, `pp=` and `nmax=`, is refused (review R1); `ac=1,0` keeps its comma, the reference's form, and `ac=1 0` loads too;
      - none is required: LTspice runs `@1 in out` in `.op`.
    - **`refnode=` and `intnode=` name nets** (decision 2's `reference_net` and `intermediate_net`). They are node references, as `.ic V(n)` is:
      - resolved, with `UNRESOLVED_NODE` (LTspice stops on a missing net);
@@ -499,7 +499,7 @@ For the record, the open probes were:
 - **The plan:** checked against decision 1. Its v1 scope, M17 entry, section 5 and section 8, point 2 are already updated with this list.
 - **Also:** README, CHANGELOG ("Unreleased") and the architecture amendments.
 
-[~] **T11 — Final evidence and handover.** Done locally (section 5); the commit, the pull request and the CI run wait for the maintainer.
+[x] **T11 — Final evidence and handover.** Section 5, with the commit, #17 and its CI run; review round 1 in section 6.5.
 - Open the pull request.
 - Run the full local check set with `--require-solver ngspice --require-solver ltspice`, and record it and the CI run in section 5.
 - List the design points worth reviewing, and set the status to `READY FOR REVIEW`.
@@ -510,7 +510,7 @@ For the record, the open probes were:
 
 ## 5. Results
 
-Written in T11, 2026-11-10, on `m17-special-devices` (not yet committed or pushed; no pull request or CI run yet).
+Written in T11, 2026-11-10, on `m17-special-devices`: committed as `df38d82` and opened as [#17](https://github.com/xdylanm/netlistmod/pull/17). Review round 1's changes follow in section 6.5.
 
 ### What was done
 
@@ -526,7 +526,7 @@ Written in T11, 2026-11-10, on `m17-special-devices` (not yet committed or pushe
 
 - Full local run with both solvers: `python -m pytest --require-solver ngspice --require-solver ltspice`: 9434 passed, 2 skipped, 1 failed (23 min 55 s; coverage 98.6 %). The failure was `tests/solver/test_ltspice_validation.py::test_fra_needs_its_device`, an M8 test that still expected `@` to be unsupported; it now checks that the line loads, and that file passes on its own (344 passed). The whole run was not repeated after that one-line test change.
 - `ruff check`, `ruff format --check`, `mypy --strict` (the package and the named tests), `lint-imports` and `pre-commit run --all-files`: clean.
-- CI: not run yet (no pull request).
+- CI on #17 at `df38d82`: green on all five jobs (the maintainer's check in 6.1). The full run that the line above did not repeat is the maintainer's in 6.1: 9,435 passed, 2 skipped.
 
 ### Design points worth reviewing
 
@@ -539,3 +539,118 @@ Written in T11, 2026-11-10, on `m17-special-devices` (not yet committed or pushe
 7. **`model-types.json` moved** to `netlistmod/model/` (CHANGELOG and decision 0020 consequences), because the parser now reads the built-in types.
 8. **r2_cmc ignores its model's `rsh=`**, so no OSDI model edit can be shown to move a result; the instance's `l=` and `w=` do. The base file's `rsh=200` is inert.
 9. **`FraProbe.analyzer`'s span is the probe's designator**, since the reference is not written on the line.
+
+## 6. Review round 1 (2026-11-10, `df38d82`, #17)
+
+### 6.1 Outcome
+
+M17 goes back for R1 to R3. The letters, the code-model `.model` values, the topology, the diagnostics and the edits match section 2. They held up when I checked them by hand on both dialects, against the pre-M17 code (`13ebefb`) for compatibility. R1 corrects a sentence of decision 7 that I wrote wrong in planning; R2 and R3 are small.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,435 passed, 2 skipped, 1,201 deselected, coverage 98.60%, in 24 min 14 s. This is the full run that section 5's evidence did not repeat after its one-line test fix.
+  - CI on #17 at `df38d82` is green on all five jobs.
+- **Compatibility, by hand against `13ebefb`:** every line that reads differently was a `ParseError` before M17. It now loads, as `gain(in=true)` and `gain gain=[1 2]` do, or gets its own message, as `d(is="1e-14")` and `d(is=[1 2])` do. No line that loaded before reads differently.
+- **By hand, both dialects (a scratch script outside the repository):**
+  - **ngspice A:**
+    - Ports, vectors, `%vd` with and without parentheses, `%v [… %vd(…)]`, `%VD` and `%vnam` load as decision 4 says.
+    - `~ in`, `[in, in]`, a number as the model, a model alone, and a port, `null`, `~amp` or `[amp]` in the model's place are refused, each with its own message.
+    - A D model gives `MODEL_TYPE_MISMATCH`, an undefined one `UNRESOLVED_MODEL`, and a missing `%vnam` source `UNRESOLVED_ELEMENT`.
+    - `null` on an R line is still a node.
+  - **The signature:** `[in null]` against `[null in]`, `[in out] y` against `[in] out y`, `%v` against `%i`, no type against `%v`, a different `%vnam` source and `%vd(in 0)` against `%vd(0 in)` each change the digest. `~` does not, nor does `refnode=`, as decided. Swapping `&`'s pairs does.
+  - **`.model`:**
+    - vectors (also without parentheses, over `+` lines, and with a comment inside), booleans and strings load on a code-model type;
+    - each is refused on `d`, `sw` and `ltra`, with its own message;
+    - `[1,2]` and `[ ]` are refused;
+    - a string is a `Formula` with the `"` delimiter that the parameter scan does not read. 0020 item 5 says so, and it is how `x_param` already holds one.
+  - **N:**
+    - one node loads;
+    - `N1 rmod`, a positional `5`, `off`, a number as the model, a vector and a bare name are refused;
+    - a D model gives `MODEL_TYPE_MISMATCH`.
+  - **LTspice A:**
+    - nodes named `and` and `buf` stay nodes;
+    - `BUFX`, `INV`, nine nodes, `5` after the function, a second value and a bare `Vhigh=x` are refused, each with its own message;
+    - `+ Vhigh=5` loads.
+  - **`@` and `&`:**
+    - a node named `zm` stays a node;
+    - `fstart=1k 2k`, `refnode=out 2`, `zm zm` and `foo=1` are refused with their own messages;
+    - `refnode=nonet` gives `UNRESOLVED_NODE`.
+    - `&` without `@`, and `&2` with `@1` and `@3`, give `UNRESOLVED_ELEMENT`. `&2` with only `@1`, and `&a` with `@A`, give none. `&1` in a subcircuit with `@1` at the top level gives one, as LTspice stops on it.
+  - **Edits:**
+    - `set_model` on A and N, and to a D model (refused, naming the type rule);
+    - `set_param`, `set_value` and `set_model` on the wrong letter, each naming the right operation;
+    - `set_model_param` with a vector, a boolean and a string, and refused through verification with `maybe` or an unquoted string;
+    - the R3 rule on a vector with a comment (same count kept, another count refused, removal refused);
+    - N's `set_param` and `remove_param`;
+    - LTspice A's parameters;
+    - `@`'s values, lists and `refnode=`.
+- **Corpus:**
+  - The five base netlists are byte for byte the ones reviewed in planning.
+  - The five schematics are yours, and the FRA one is your revised version.
+  - Every manifest hash matches, and `jellybean.lib` is ignored and mapped to `OPENJELLYBEAN_LIB`.
+- **Section 5's design points:**
+  - Points 1 to 3 and 7 to 9 are accepted.
+  - Point 4 is R1.
+  - Point 5 is accepted as it is: `@` lists are short, and refusing every edit across a comment is safe.
+  - Point 6 is noted for M18 (6.3).
+
+### 6.2 Required changes
+
+[x] **R1 — Commas on LTspice A and `@` lines.**
+
+Decision 7 says that a comma between LTspice A's parameters is accepted "as on T (LTspice runs it)". That is my error from planning. The library's LTspice value rule refuses a comma separator on every element line (decision 0009). The LTspice `discrepancies.md` has the rows: `m=2, temp=3`, `AC 1, 2`, `.ac list 1,2` and T's `t-comma`. Yet at `df38d82`, all of these load:
+
+| Line | At `df38d82` | LTspice 26.1.1 |
+|---|---|---|
+| `A1 … BUF Vhigh=5, Vlow=0`; `… BUF Vhigh=5,Vlow=0`; `… BUF, Vhigh=5` | loads | runs |
+| `@1 in out fstart=1k, fend=2k`; `fstart=1k,fend=2k`; `zm, fstart=1k` | loads | runs (blank form probed) |
+| `@1 in out flist=1k,2k,5k`; `flist=1k, 2k` | loads | runs |
+| `@1 in out ac=1,0` | loads | runs |
+
+**Change:**
+- Refuse a comma before a parameter, or the `zm` flag, on A and `@`, and a comma between the values of `flist=`, `pp=` and `nmax=`. Use one message that names the rule, and add rows to the existing discrepancies entries.
+- **`ac=` keeps its comma.** The reference gives the pair as magnitude, phase ("A,degrees"), so `ac=1,0` is the documented form, and `ac=1 0` stays accepted as probed.
+- Correct decision 7 in section 2, and decision 0020 item 7.
+
+**Tests:**
+- The probe rows `comma` and `flist-commas` in `test_ltspice_special_probes.py` keep "LTspice runs it", and their reading becomes `refused`.
+- `test_ltspice_gates_params.cir` writes `vhigh={vh}, trise=8n`. Drop the comma there, and add an `a_param_comma` reject to `elements_rejects` (in `LTSPICE_RUNS`). Do the same for `@`, with `fra_param_comma`.
+- LT-SPF-001 and LT-FRA-001 change with them.
+
+*Considered:* keeping the commas on A and `@` as a second exception to decision 0009. The reference shows no comma on either line, and the library refuses it on every other LTspice letter.
+
+[x] **R2 — `remove_param` on `@`'s `zm`.**
+
+`set_param("@1", "zm", "1")` gives the decision 9 message: "`zm` of `@1` is a flag, which is not editable; edit the line by hand". But `remove_param("@1", "zm")` says "`@1` has no parameter `zm`", which is wrong, since the line has it. M16 decision 11 refuses a flag in `remove_param` with a message naming it.
+
+**Change:** give `remove_param` the same message as `set_param`, and add a test.
+
+[x] **R3 — Stale text.**
+- Section 5 still says "not yet committed or pushed; no pull request or CI run yet", and T11 is `[~]`. Record the commit, #17, and the CI run, and tick T11 after the final run.
+- The LTspice `discrepancies.md` row for `.fra` (the one that cites `test_fra_needs_its_device`) still ends "`@` itself is `UnsupportedConstruct` until phase 2". Say instead that `@` loads since M17 (LT-FRA-001).
+
+### 6.3 Noted, no change required
+
+- **Not in this pull request:** the working tree has an uncommitted edit to `phase-2-plan.md`. It changes section 8's last line from "Needed from you" to "Done", listing the transistor and behavioural corpus families. If it is meant to land, it can go in with R3.
+- **For M18's audit** (plan M18, beside M16's carried items):
+  - `zm` with an `&` probe stops LTspice, and the library loads it (section 5 point 6). A diagnostic would fit M18's diagnostics pass.
+  - `.fra` needs `fstart=`/`fend=` or `flist=`, which is not checked either.
+  - LTspice `.model x BUF(…)` loads, and LTspice stops on it (section 1, "Not in M17").
+  - `%vd [in 0 out]`, an odd count in a differential vector, gets the generic list of expected tokens rather than its own message.
+
+### 6.4 Exit for this round
+
+1. Make R1 to R3.
+2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, read CI once after the push, and add a short report as 6.5.
+3. Set the status to `READY FOR REVIEW`. **Do not archive** (T12 follows approval).
+
+### 6.5 Round 1 changes (2026-11-10)
+
+- **R1.** `_rules_special.py` refuses a comma (`CSEP`) before an A parameter, and before an `@` parameter, net or `zm` (`fra_zm` now takes `CSEP` so that the comma gets the message rather than the generic list of expected tokens), and between the values of `flist=`, `pp=` and `nmax=`. One message names the rule ("LTspice element lines separate their fields with blanks", with `ac=1,0` as the one exception). `ac=1,0`, `ac=1, 0` and `ac=1 0` load. Decision 7 in section 2 and decision 0020 item 7 are corrected, and so are LT-SPF-001, LT-FRA-001, the LTspice `discrepancies.md` (a new row beside `t-comma`), `docs/usage/elements.md` and the CHANGELOG.
+  - **Tests:** the probes `comma` and `flist-commas` now read `refused` and still run in LTspice. New probes: `param-comma` and `zm-comma` (both run, both refused), and `comma-after-function`. `test_ltspice_gates_params.cir` drops its comma (manifest hash and note updated). New rejects `elements_rejects/a_param_comma.cir` and `fra_param_comma.cir` are in `LTSPICE_RUNS`. Grammar tests cover each form and the three `ac=` forms.
+  - **One finding:** LTspice 26.1.1 does **not** run `A1 … BUF, Vhigh=5`, a comma right after the function ("syntax error", underlining from the comma), although 6.1's table lists it as running. So `comma-after-function` expects LTspice to stop, and the `discrepancies.md` row says so: there the library and LTspice agree.
+- **R2.** `remove_param` on `@`'s `zm` (any case) gives `set_param`'s message, from one helper, `_refuse_impedance_flag` in `edit/_ops_common.py`. `test_ltspice_refusals` covers `zm` and `ZM`.
+- **R3.** Section 5 records `df38d82`, #17 and its green CI, and T11 is ticked. The LTspice `discrepancies.md` `.fra` row says that `@` loads since M17 (LT-FRA-001). The `phase-2-plan.md` edit of 6.3 was already committed separately (`6d3cba1`).
+- **Checks:**
+  - Full run with `--require-solver ngspice --require-solver ltspice`: 9,459 passed, 1 failed, 2 skipped, coverage 98.61%, 24 min 9 s. The failure was the new `comma-after-function` probe, which first expected LTspice to run the line. With the expectation corrected, `test_ltspice_special_probes.py` and `test_ltspice_discrepancies.py` pass (258 passed); the whole run was not repeated.
+  - `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` and `pre-commit run --all-files`: clean.
+  - CI: see the line below.

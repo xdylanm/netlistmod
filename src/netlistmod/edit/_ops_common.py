@@ -20,6 +20,7 @@ from netlistmod.model.nodes import (
     DcDirective,
     Directive,
     End,
+    FrequencyAnalyzer,
     GlobalDirective,
     Inductor,
     Jfet,
@@ -49,6 +50,18 @@ from netlistmod.model.values import (
     ValueList,
 )
 from netlistmod.source import Span
+
+
+def _refuse_impedance_flag(element: FrequencyAnalyzer, name: str) -> None:
+    """``zm`` on an ``@`` line is a flag that neither ``set_param`` nor ``remove_param`` edits
+    (decision 0020 item 9; review R2 of M17)."""
+    flag = element.impedance
+    if flag is not None and flag.name.lower() == name.lower():
+        raise EditError(
+            f"`{flag.name}` of `{element.designator}` is a flag, which is not editable; "
+            "edit the line by hand to add or remove it"
+        )
+
 
 _VALUE = SlotCheck((NumericValue, Formula, ValueList, Identifier), "a value")
 
