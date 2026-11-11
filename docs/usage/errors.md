@@ -65,10 +65,10 @@ this line ends too early
 ...     print(error.reason)
 the netlist ends at `.end`: only blank lines may follow it
 >>> try:
-...     parse(SourceText("title\nR1 a 0 1k\n+ ; note\n.end\n"), Dialect.LTSPICE)
+...     parse(SourceText("title\n.model x BUF(Vhigh=5)\n.end\n"), Dialect.LTSPICE)
 ... except ParseError as error:
 ...     print(error.line, error.column, error.reason)
-3 1 a `+` line that holds only a comment cannot end a statement: LTspice stops on it ("Syntax error") unless a later `+` line of the statement holds a field; move the comment to the end of the line before
+2 10 `BUF` is a special function, not a model type: LTspice stops on this `.model` line ("Expected model definition"); an A line names its function itself, `A1 ... BUF Vhigh=5`
 
 ```
 

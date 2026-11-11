@@ -1,6 +1,7 @@
 """LTspice 26.1.1 probes for the forms that loaded while LTspice stopped on them (M18 D2, decision 5
-of the M18 task list): a `+` line that holds only a comment, a special function as a `.model`
-type, a comma right after `params:`, and the analyzer's `zm` probe and `.fra` range.
+of the M18 task list): a `+` line that holds only a comment (which the library loads; review R1),
+a special function as a `.model` type, a comma right after `params:`, and the analyzer's `zm`
+probe and `.fra` range.
 
 Each probe pairs what LTspice does with what the library reads: `refused` (a `ParseError`),
 `loads`, or the diagnostic code it reports. Only syntax facts come out of these runs; nothing
@@ -36,28 +37,30 @@ _CONTINUED = "probe\nV1 a 0 1\nR9 a 0 1k\n{body}\n.op\n.end\n"
 
 # (body, LTspice runs it, the library's reading)
 _COMMENT_LINES: dict[str, tuple[str, bool, str]] = {
-    "end-semicolon": ("R2 a 0 1k\n+ ; note", False, "refused"),
-    "end-semicolon-no-blank": ("R2 a 0 1k\n+;note", False, "refused"),
-    "end-tab": ("R2 a 0 1k\n+\t;note", False, "refused"),
-    "end-dollar": ("R2 a 0 1k\n+ $ note", False, "refused"),
-    "end-indented": ("R2 a 0 1k\n  + ; note", False, "refused"),
-    "end-then-blank-plus": ("R2 a 0 1k\n+ ; c\n+", False, "refused"),
-    "end-two-comments": ("R2 a 0 1k\n+ ; c1\n+ ; c2", False, "refused"),
-    "end-after-value-line": ("R2 a 0\n+ 1k\n+ ; note", False, "refused"),
-    "end-param": (".param p=1\n+ ; c", False, "refused"),
-    "end-model": (".model dd D(Is=1e-14)\n+ ; c\nD1 a 0 dd", False, "refused"),
-    "end-untyped": (".backanno\n+ ; c", False, "refused"),
-    "end-global": (".global g\n+ ; c", False, "refused"),
-    "end-x": ("X1 a s\n+ ; c\n.subckt s p\nR1 p 0 1k\n.ends", False, "refused"),
-    "end-b": ("B1 b 0 V=V(a)*2\n+ ; c\nR2 b 0 1k", False, "refused"),
-    "end-ends": ("X1 a s\n.subckt s p\nR1 p 0 1k\n.ends\n+ ; c", False, "refused"),
+    # LTspice stops on a statement whose last "+" line holds only a comment unless a later "+" line
+    # holds a field; the library loads it, the grammar's reading (P13; M18 review R1).
+    "end-semicolon": ("R2 a 0 1k\n+ ; note", False, "loads"),
+    "end-semicolon-no-blank": ("R2 a 0 1k\n+;note", False, "loads"),
+    "end-tab": ("R2 a 0 1k\n+\t;note", False, "loads"),
+    "end-dollar": ("R2 a 0 1k\n+ $ note", False, "loads"),
+    "end-indented": ("R2 a 0 1k\n  + ; note", False, "loads"),
+    "end-then-blank-plus": ("R2 a 0 1k\n+ ; c\n+", False, "loads"),
+    "end-two-comments": ("R2 a 0 1k\n+ ; c1\n+ ; c2", False, "loads"),
+    "end-after-value-line": ("R2 a 0\n+ 1k\n+ ; note", False, "loads"),
+    "end-param": (".param p=1\n+ ; c", False, "loads"),
+    "end-model": (".model dd D(Is=1e-14)\n+ ; c\nD1 a 0 dd", False, "loads"),
+    "end-untyped": (".backanno\n+ ; c", False, "loads"),
+    "end-global": (".global g\n+ ; c", False, "loads"),
+    "end-x": ("X1 a s\n+ ; c\n.subckt s p\nR1 p 0 1k\n.ends", False, "loads"),
+    "end-b": ("B1 b 0 V=V(a)*2\n+ ; c\nR2 b 0 1k", False, "loads"),
+    "end-ends": ("X1 a s\n.subckt s p\nR1 p 0 1k\n.ends\n+ ; c", False, "loads"),
     "end-subckt-params": (
         "X1 a s\n.subckt s p params: r=1k\n+ ; c\nR1 p 0 {r}\n.ends",
         False,
-        "refused",
+        "loads",
     ),
-    # The one form LTspice runs that the library refuses (discrepancies.md).
-    "end-subckt-ports": ("X1 a s\n.subckt s p\n+ ; c\nR1 p 0 1k\n.ends", True, "refused"),
+    # The one form of a comment-only last "+" line that LTspice runs.
+    "end-subckt-ports": ("X1 a s\n.subckt s p\n+ ; c\nR1 p 0 1k\n.ends", True, "loads"),
     "mid-before-value": ("R2 a 0\n+ ; note\n+ 1k", True, "loads"),
     "mid-before-param": ("R2 a 0 1k\n+ ; note\n+ tc=0", True, "loads"),
     "mid-two-comments": ("R2 a 0\n+ ; c1\n+ ; c2\n+ 1k", True, "loads"),

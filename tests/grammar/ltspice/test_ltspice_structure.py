@@ -11,6 +11,7 @@ from netlistmod import (
     CommentLine,
     Dialect,
     End,
+    Netlist,
     OpaqueStatement,
     ParseError,
     Resistor,
@@ -146,52 +147,59 @@ def test_continuation_must_follow_immediately() -> None:
     _reject("R1 a 0\n\n+ 1k")
 
 
-_COMMENT_ONLY_LAST_LINE = "a `+` line that holds only a comment cannot end a statement"
-
-
-# (statement, line and column of the refused "+" in the netlist; line 1 is the title)
-_COMMENT_ONLY_ENDS: dict[str, tuple[str, int, int]] = {
-    "semicolon": ("R1 a 0 1k\n+ ; note", 3, 1),
-    "semicolon-no-blank": ("R1 a 0 1k\n+;note", 3, 1),
-    "tab": ("R1 a 0 1k\n+\t; note", 3, 1),
-    "dollar": ("R1 a 0 1k\n+ $ note", 3, 1),
-    "indented": ("R1 a 0 1k\n  + ; note", 3, 3),
-    "blank-plus-after": ("R1 a 0 1k\n+ ; note\n+", 3, 1),
-    "blanks-plus-after": ("R1 a 0 1k\n+ ; note\n+   ", 3, 1),
-    "two-comments": ("R1 a 0 1k\n+ ; c1\n+ ; c2", 4, 1),
-    "after-a-value-line": ("R1 a 0\n+ 1k\n+ ; note", 4, 1),
-    "param": (".param p=1\n+ ; c", 3, 1),
-    "model": (".model dd D(Is=1e-14)\n+ ; c", 3, 1),
-    "untyped": (".backanno\n+ ; c", 3, 1),
-    "tran": (".tran 1m\n+ ; c", 3, 1),
-    "x-line": ("X1 a s\n+ ; c", 3, 1),
-    "b-line": ("B1 b 0 V=V(a)*2\n+ ; c", 3, 1),
-    "a-line": ("A1 a 0 0 0 0 nq q 0 BUF\n+ ; c", 3, 1),
-    "subckt-header": (".subckt s p\n+ ; c\nR1 p 0 1k\n.ends", 3, 1),
-    "ends": (".subckt s p\nR1 p 0 1k\n.ends\n+ ; c", 5, 1),
+# (statement, the trailing comments it carries); a "+" line that holds only a comment ends it.
+_COMMENT_ONLY_ENDS: dict[str, tuple[str, list[str]]] = {
+    "semicolon": ("R1 a 0 1k\n+ ; note", ["; note"]),
+    "semicolon-no-blank": ("R1 a 0 1k\n+;note", [";note"]),
+    "tab": ("R1 a 0 1k\n+\t; note", ["; note"]),
+    "dollar": ("R1 a 0 1k\n+ $ note", ["$ note"]),
+    "indented": ("R1 a 0 1k\n  + ; note", ["; note"]),
+    "blank-plus-after": ("R1 a 0 1k\n+ ; note\n+", ["; note"]),
+    "blanks-plus-after": ("R1 a 0 1k\n+ ; note\n+   ", ["; note"]),
+    "two-comments": ("R1 a 0 1k\n+ ; c1\n+ ; c2", ["; c1", "; c2"]),
+    "after-a-value-line": ("R1 a 0\n+ 1k\n+ ; note", ["; note"]),
+    "param": (".param p=1\n+ ; c", ["; c"]),
+    "model": (".model dd D(Is=1e-14)\n+ ; c", ["; c"]),
+    "untyped": (".backanno\n+ ; c", ["; c"]),
+    "tran": (".tran 1m\n+ ; c", ["; c"]),
+    "x-line": ("X1 a s\n+ ; c", ["; c"]),
+    "b-line": ("B1 b 0 V=V(a)*2\n+ ; c", ["; c"]),
+    "a-line": ("A1 a 0 0 0 0 nq q 0 BUF\n+ ; c", ["; c"]),
+    "subckt-header": (".subckt s p\n+ ; c\nR1 p 0 1k\n.ends", ["; c"]),
 }
 
 
 @pytest.mark.parametrize("case", sorted(_COMMENT_ONLY_ENDS))
-def test_a_comment_only_plus_line_may_not_end_a_statement(case: str) -> None:
-    # LTspice 26.1.1 stops on each ("Syntax error"; tests/solver/test_ltspice_m18_probes.py),
-    # except the .subckt header with ports only, which it runs (discrepancies.md).
-    statement, line, column = _COMMENT_ONLY_ENDS[case]
-    error = _reject(statement)
-    assert (error.line, error.column) == (line, column)
-    assert error.reason.startswith(_COMMENT_ONLY_LAST_LINE)
-    assert error.expected == ()
+def test_a_comment_only_plus_line_may_end_a_statement(case: str) -> None:
+    # The grammar's reading counts (P13; M18 review R1): the statement's span takes the "+" line
+    # and its comment. LTspice 26.1.1 stops on each but the .subckt header with ports only
+    # ("Syntax error"; discrepancies.md, tests/solver/test_ltspice_m18_probes.py).
+    statement, comments = _COMMENT_ONLY_ENDS[case]
+    text = f"title\n{statement}\n.end\n"
+    result = _parse(text)
+    assert len(result.items) == 3, result.items
+    item = result.items[1]
+    assert text[item.span.start : item.span.end] == f"{statement}\n"
+    assert [text[span.start : span.end] for span in item.trailing_comments] == comments
+    assert Netlist.from_text(text, dialect=Dialect.LTSPICE).text == text
+
+
+def test_a_comment_only_plus_line_after_ends_belongs_to_the_definition() -> None:
+    statement = ".subckt s p\nR1 p 0 1k\n.ends\n+ ; c"
+    definition = _item(statement)
+    assert isinstance(definition, SubcktDefinition)
+    text = f"title\n{statement}\n.end\n"
+    assert text[definition.span.start : definition.span.end] == f"{statement}\n"
 
 
 @pytest.mark.parametrize("ending", ["\n", "\r\n"])
-def test_a_comment_only_plus_line_is_refused_before_end_with_either_line_ending(
-    ending: str,
-) -> None:
+def test_a_comment_only_plus_line_ends_a_statement_with_either_line_ending(ending: str) -> None:
     text = ending.join(["title", "R1 a 0 1k", "+ ; note", ".end", ""])
-    with pytest.raises(ParseError) as captured:
-        _parse(text)
-    assert (captured.value.line, captured.value.column) == (3, 1)
-    assert captured.value.reason.startswith(_COMMENT_ONLY_LAST_LINE)
+    resistor = _parse(text).items[1]
+    assert isinstance(resistor, Resistor)
+    assert text[resistor.span.start : resistor.span.end] == f"R1 a 0 1k{ending}+ ; note{ending}"
+    assert [text[span.start : span.end] for span in resistor.trailing_comments] == ["; note"]
+    assert Netlist.from_text(text, dialect=Dialect.LTSPICE).text == text
 
 
 @pytest.mark.parametrize(
@@ -216,15 +224,16 @@ def test_a_comment_only_plus_line_before_a_field_continues(statement: str) -> No
     _parse(f"title\n{statement}\n.end\n")
 
 
-def test_a_comment_only_plus_line_after_a_comment_line_keeps_the_general_error() -> None:
+def test_a_comment_only_plus_line_after_a_comment_line_is_refused() -> None:
+    # A "+" line continues a statement, not a comment line (the general error at the "+").
     error = _reject("* c\n+ ; c")
     assert (error.line, error.column) == (3, 1)
-    assert not error.reason.startswith(_COMMENT_ONLY_LAST_LINE)
 
 
 @pytest.mark.parametrize("statement", ["R1 a 0 1k\n+ ; note", ".param p=1\n+ ; c", "X1 a s\n+ ; c"])
 def test_ngspice_still_reads_a_comment_only_plus_line(statement: str) -> None:
-    # ngspice 47 runs these (tests/solver/test_ltspice_m18_probes.py); its grammar is unchanged.
+    # ngspice 47 runs these (tests/solver/test_ltspice_m18_probes.py), and loads them as LTspice's
+    # grammar does.
     parse(SourceText(f"title\n{statement}\n.end\n"), Dialect.NGSPICE)
 
 
