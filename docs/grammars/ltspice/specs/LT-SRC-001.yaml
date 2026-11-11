@@ -10,6 +10,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-10'
 grammar:
 - voltage_source
 - ac_spec
@@ -68,4 +71,10 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_a_load_source_sinks_its_current
 - tests/solver/test_ltspice_validation.py::test_current_source_forms_without_a_dc_value
 - tests/solver/test_ltspice_validation.py::test_malformed_current_sources_stop_both
+- tests/grammar/test_source_functions.py::test_a_function_stands_before_or_after_dc_and_ac
+- tests/grammar/test_source_functions.py::test_ltspice_line_parameters_stay_on_the_line
+- tests/solver/test_ltspice_source_functions.py::test_a_function_mixes_with_dc_ac_rser_and_cpar
+- tests/solver/test_ltspice_source_functions.py::test_the_trigger_parameters_run
+- tests/solver/test_ltspice_source_functions.py::test_load_after_a_function_runs
+- tests/solver/test_ltspice_source_functions.py::test_a_step_load_runs
 notes: 'V: value, AC magnitude and phase with or without =, Rser, Cpar. I: a value, an AC part or R=, and the load flag, with or without a value (review R9). AC without = and the DC keyword are observed (LTspice''s own export writes AC 1). A V line without a value runs with a warning, read as 0 V.'

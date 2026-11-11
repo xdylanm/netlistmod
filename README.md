@@ -57,7 +57,7 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 - **Edits** values, formulas, instance and model parameters, source DC and AC values and functions, `.param` lines and directives, and adds an `.include`.
 - **Preserves** other dot-commands verbatim. `.control`, `.if`, `.include` and `.lib` are opaque: their contents are not read.
 - **Never** changes topology (elements, nodes, subcircuit ports), evaluates a value, or launches a solver.
-- **Refuses loudly.** A line outside the grammar is an error, not a guess. Netlists with Q or M devices are rejected until phase 2.
+- **Refuses loudly.** A line outside the grammar is an error, not a guess. A construct outside v1 (the ngspice digital U, LTspice `.machine`) raises `UnsupportedConstruct`.
 
 ## Status
 

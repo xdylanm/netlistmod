@@ -50,11 +50,11 @@ the next line must start with statement text.
 
 Dot-commands that are not typed are preserved without interpretation. `.control`,
 conditional blocks, `.include`, and `.lib` are opaque; the parser does not
-read referenced files. A `.lib name` … `.endl` definition block is not
-recognized in M2. Element lines of the phase 1 letters are parsed since M3
-(see [the element guide](./elements.md)). A device letter known to ngspice but
-not implemented yet raises `UnsupportedConstruct`; malformed structural input raises `ParseError` with a
-source position and excerpt. The LTspice dialect is described in [its grammar documents](../grammars/ltspice/README.md).
+read referenced files. A one-field `.lib name` followed by `.endl` is an opaque
+definition block. Element lines are described in [the element guide](./elements.md).
+The ngspice digital U and LTspice's `.machine` raise `UnsupportedConstruct` (out of
+scope for v1); malformed structural input raises `ParseError` with a source position
+and excerpt. The LTspice dialect is described in [its grammar documents](../grammars/ltspice/README.md).
 
 The parser intentionally follows the manual's strict structure rather than
 ngspice's lenient behavior. For example, it rejects missing `.end`, content

@@ -171,9 +171,9 @@ hold blanks and continuations. A capacitor's charge form `q=` is in `charge`.
 - **What an expression reads** is not topology: `Netlist.expression_reads` lists it, and a
   node no element connects to gives `UNRESOLVED_NODE`.
 
-Every element letter that is not supported yet raises
-`UnsupportedConstruct`. A malformed element line raises `ParseError` with its line, column,
-excerpt and expected tokens.
+Every element letter of both dialects is supported. An ngspice U line that is not a URC line is
+the digital U, which raises `UnsupportedConstruct` (out of scope for v1). A malformed element line
+raises `ParseError` with its line, column, excerpt and expected tokens.
 
 ## Transmission lines
 
@@ -304,7 +304,7 @@ The nodes are the same. These forms differ ([decision 0009](../decisions/0009-lt
 ```
 
 - The embedded decimal needs no option, and `M` is milli.
-- E, F, G, H, S and W take no parameter. A switch's state may take a value (`off=1`). A controlling source inside an instance (`X1:Vq`), which LTspice reads, is kept as text and reported as info, and `value=`, `POLY`, `table=` and `Laplace=` are unsupported.
+- E, F, G, H, S and W take no parameter. A switch's state may take a value (`off=1`). A controlling source inside an instance (`X1:Vq`), which LTspice reads, is kept as text and is reported as info. `value=`, `POLY`, `table=` and `Laplace=` are read since M15 and M15b.
 - Q and M take 3 or 4 nodes, and Q a positional area. Each transistor letter has the reference's
   closed parameter list: Q `temp`; M `L W AD AS PD PS NRD NRS m temp IC`; J `temp`; Z `m temp`;
   and `off`. M has no `thermal` flag, and Z's model may be an IGBT (`NIGBT`, `PIGBT`):

@@ -270,8 +270,10 @@ def test_strict_mode_rejects_a_deliberate_terminal_collision() -> None:
 
 
 # Terminals whose lookarounds interegular cannot model. Lark's strict mode skips them in the
-# collision check without an error, so each one must be reviewed by hand (decision 0003). Adding a
-# terminal here is a deliberate act; this list must not grow silently.
+# collision check without an error, so each one must be reviewed by hand (decision 0003). The
+# reviews are the "Lookaround terminals" tables of docs/grammars/ngspice/README.md and
+# docs/grammars/ltspice/README.md (M18). Adding a terminal here is a deliberate act: review it and
+# add its row there; this list must not grow silently.
 UNCHECKED_TERMINALS = {
     Dialect.NGSPICE: frozenset(
         {

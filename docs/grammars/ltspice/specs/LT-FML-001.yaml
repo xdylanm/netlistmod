@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-10'
 grammar:
 - or_expr
 - and_expr
@@ -25,5 +28,10 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_constants_and_functions_are_not_references
 - tests/solver/test_ltspice_solver_document.py::test_a_param_masks_a_constant_in_its_scope
 - tests/solver/test_ltspice_solver_document.py::test_other_bare_words_are_ordinary_names
+- tests/grammar/ltspice/test_ltspice_behavioral.py::test_a_b_line_has_a_quantity_and_an_expression
+- tests/solver/test_ltspice_behavioral_probes.py::test_behavioral_probes
+- tests/solver/test_ltspice_behavioral_probes.py::test_the_tilde_is_a_logical_not
 notes: 'The formula grammar is shared. The reserved list is per dialect: for LTspice, the words with a built-in value,
-  which a definition in scope masks (formula-reserved.json, scoping.md S11). A call is told apart by the grammar. & and | are logical operators.'
+  which a definition in scope masks (formula-reserved.json, scoping.md S11). A call is told apart by the grammar. & and | are logical operators.
+  ~ is the logical NOT (M15): LTspice 26.1.1 gives 1 for ~0 and ~(1>2), 0 for ~1, and 3 for 2*(~0)+1,
+  and the scan reads the names under it.'

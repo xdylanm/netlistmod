@@ -120,6 +120,23 @@ def test_behavioral_probes(solver: Solver, tmp_path: Path, case: str) -> None:
     assert _reading(text) == reading
 
 
+@pytest.mark.parametrize(
+    ("expression", "reads", "references"),
+    [("~0", 1.0, 0), ("~1", 0.0, 0), ("2*(~0)+1", 3.0, 0), ("~(1>2)", 1.0, 0), ("~(k>3)", 1.0, 1)],
+)
+def test_the_tilde_is_a_logical_not(
+    solver: Solver, tmp_path: Path, expression: str, reads: float, references: int
+) -> None:
+    # LT-FML-001: `~` is LTspice's logical NOT (reference B, Supported Operators); `.param k=2`.
+    text = _BASE.format(line=f"B1 out 0 V={expression}")
+    result = run(solver, tmp_path, text)
+    assert result.ok, result.log
+    assert result.voltage("out") == pytest.approx(reads, abs=1e-9)
+    netlist = Netlist.from_text(text, dialect=Dialect.LTSPICE)
+    assert _reading(text) == f"B v {expression}"
+    assert len(netlist.references_to_param("k")) == references
+
+
 def _out(solver: Solver, folder: Path, netlist: Netlist) -> float:
     result = run(solver, folder, netlist.text)
     assert result.ok, result.log

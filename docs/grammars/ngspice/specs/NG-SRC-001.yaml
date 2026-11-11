@@ -10,6 +10,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-10'
 grammar:
 - voltage_source
 - current_source
@@ -28,6 +31,8 @@ tests:
 - tests/roundtrip/test_ngspice_elements.py::test_kicad_fixtures_parse_into_typed_elements
 - tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
 - tests/solver/test_ngspice_solver_elements.py::test_rc_filter_is_at_minus_3_db_at_its_corner
+- tests/grammar/test_source_functions.py::test_a_function_stands_before_or_after_dc_and_ac
+- tests/solver/test_ngspice_source_functions.py::test_a_function_runs_before_or_after_dc_and_ac
 notes: 'Phase 1: an optional DC value, with or without the DC keyword, then an optional AC magnitude and
   optional phase, in the order of the general form (DC before AC). A source with no value (VMEAS 12 9)
   is valid (§4.1: a zero value may be omitted). DC needs a value and AC needs its magnitude (the manual
