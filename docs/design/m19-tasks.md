@@ -65,7 +65,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M18. Decis
 
 ### 3.2 Baseline run
 
-*Filled in from the run started on 2026-11-11 at `3000e95`, in a clean worktree, with both solvers required.*
+2026-11-11, at `3000e95`, in a clean worktree of `main`, Windows, Python 3.14.3, ngspice 47 and LTspice 26.1.1, with `--require-solver ngspice --require-solver ltspice`: **10,173 passed, 2 skipped** (POSIX only), 1,420 deselected; coverage **98.73%** (44 lines and 35 branches uncovered, in 19 modules). This is the same tree as M18's final run.
 
 ## 4. Tasks
 
@@ -73,7 +73,7 @@ Every task that changes a file ends with the checks green, run as `uv run --env-
 
 ### Stage 0 — Set-up (lead)
 
-[ ] **T0 — Branch, baseline and briefs.** Branch `m19-v1-review`; the baseline run of section 3.2; this list; the stage 1 briefs.
+[x] **T0 — Branch, baseline and briefs.** Branch `m19-v1-review`; the baseline run of section 3.2; this list; the stage 1 briefs.
 
 ### Stage 1 — Reviews (independent reviewers, in parallel; read-only)
 
@@ -132,3 +132,6 @@ The briefs are written at G1 from the findings. Expected:
 
 | Subtask | Role | Reported | Lead's review | Commit |
 |---|---|---|---|---|
+| T0 | Lead | 2026-11-11 | Baseline recorded (section 3.2); decisions 5 to 10 decided | this commit |
+| A1 | Reviewer | 2026-11-11: complete with findings (32, and 11 notes for 1.0) | Spot-checked; classified at G1 | — |
+| A2 | Reviewer | 2026-11-11: complete with findings (47; gate table; 38 limits) | Spot-checked; classified at G1 | — |
