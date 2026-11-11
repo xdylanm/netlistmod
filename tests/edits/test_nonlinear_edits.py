@@ -431,3 +431,73 @@ def test_set_param_laplace_on_b_refuses_a_reference() -> None:
     for formula in ("V(vx)/(1+s)", "I(V1)/(1+s)"):
         with pytest.raises(EditError, match="not allowed here"):
             netlist.set_param("B1", "laplace", formula)
+
+
+_B_HEAD = "t\nV1 in 0 2\nR1 in vx 1k\nR2 vx 0 2k\nRl o 0 1k\n"
+
+
+def _b_line(line: str, name: str, value: str) -> list[str]:
+    netlist = Netlist.from_text(_B_HEAD + line + "\n.op\n.end\n", dialect=Dialect.LTSPICE)
+    edited = netlist.set_param("B1", name, value)
+    return edited.text.splitlines()[5:-2]
+
+
+@pytest.mark.ltspice_only
+@pytest.mark.parametrize(
+    ("line", "name", "expected"),
+    [
+        (
+            "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k)",
+            "ic",
+            ["B1 o 0 V=2*V(vx) ic=1 laplace=1/(1+s/1k)"],
+        ),
+        (
+            "B1 o 0 V={2*V(vx)} Laplace={1/(1+s/1k)} window=1m",
+            "ic",
+            ["B1 o 0 V={2*V(vx)} ic=1 Laplace={1/(1+s/1k)} window=1m"],
+        ),
+        (
+            "B1 o 0 I=2m*V(vx) Rpar=1k laplace=1/(1+s/1k)",
+            "tripdv",
+            ["B1 o 0 I=2m*V(vx) Rpar=1k tripdv=1 laplace=1/(1+s/1k)"],
+        ),
+        (
+            "B1 o 0 V=2*V(vx)\n+ laplace=1/(1+s/1k) ; transfer",
+            "ic",
+            ["B1 o 0 V=2*V(vx) ic=1", "+ laplace=1/(1+s/1k) ; transfer"],
+        ),
+    ],
+)
+def test_set_param_adds_a_b_parameter_before_laplace(
+    line: str, name: str, expected: list[str]
+) -> None:
+    # Only window=, nfft= and mtol= follow B's laplace= (decision 0017 item 4; M18 D7).
+    assert _b_line(line, name, "1") == expected
+
+
+@pytest.mark.ltspice_only
+@pytest.mark.parametrize(
+    ("line", "name", "expected"),
+    [
+        (
+            "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k) window=1m",
+            "nfft",
+            "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k) window=1m nfft=1",
+        ),
+        (
+            "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k)",
+            "mtol",
+            "B1 o 0 V=2*V(vx) laplace=1/(1+s/1k) mtol=1",
+        ),
+        ("B1 o 0 V=2*V(vx) ic=0", "laplace", "B1 o 0 V=2*V(vx) ic=0 laplace=1"),
+        (
+            "B1 o 0 V=2*V(vx) ic=0 laplace=1/(1+s/1k)",
+            "ic",
+            "B1 o 0 V=2*V(vx) ic=1 laplace=1/(1+s/1k)",
+        ),
+    ],
+)
+def test_set_param_on_b_keeps_the_laplace_parameters_after_it(
+    line: str, name: str, expected: str
+) -> None:
+    assert _b_line(line, name, "1") == [expected]

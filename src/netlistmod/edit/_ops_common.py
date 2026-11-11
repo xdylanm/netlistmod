@@ -212,16 +212,18 @@ def _insert(point: int, text: str, reason: str, check: SlotCheck, start: int) ->
     return Edit(Span(point, point), text, reason, (slot,))
 
 
-def _last_field_end(node: object) -> int:
+def _last_field_end(node: object, before: int | None = None) -> int:
     """The end of the last field of an element line (its span and comments excluded): where an
-    added parameter goes (decision 0007 item 5)."""
+    added parameter goes (decision 0007 item 5). With ``before``, the end of the last field
+    that ends at or before that offset."""
     assert is_dataclass(node) and not isinstance(node, type)
     end = 0
     for field in fields(node):
         if field.name in {"span", "trailing_comments"}:
             continue
         for span in _spans(getattr(node, field.name)):
-            end = max(end, span.end)
+            if before is None or span.end <= before:
+                end = max(end, span.end)
     return end
 
 

@@ -259,13 +259,8 @@ def _operations(netlist: Netlist, line: Line, scope: tuple[str, ...]) -> list[_O
         if form == "behavioral":
             quantity = str(line.struct["quantity"])
             name = "tc1" if ng else {"v": "ic", "i": "Rpar", "r": "Rpar", "p": "vprx"}[quantity]
-            present = [written.lower() for written in _names(netlist, d, scope)]
-            # Finding (D3-1): on LTspice, a new parameter after `laplace=` is written after it
-            # and the result does not parse (`B1 o 0 V=2*V(vs) laplace=1/(1+s/1k)` with
-            # set_param ic: EditError). Only that shape is left out: a parameter the line
-            # already has is still set, and a line without `laplace=` takes a new one.
-            if "laplace" not in present or name.lower() in present:
-                setter(name, "1")
+            # On LTspice a new parameter goes before `laplace=` (D3-1, fixed by M18 D7).
+            setter(name, "1")
             removals()
         elif form == "charge":
             setter("tc1" if ng else "ic", "1")
