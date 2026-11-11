@@ -1,9 +1,8 @@
 # ngspice device-letter matrix
 
-Since M3 the phase 1 letters R, C, L, K, V, I, D and X are parsed into typed
-element nodes (spec entries `NG-RES-001` to `NG-SUB-001`); phase 2 added the
-others, the last of them A (`NG-COD-001`) and N (`NG-OSD-001`) in M17, so no letter
-is planned. The table is checked against
+Every ngspice device letter is parsed into a typed element node, apart from the digital U
+(below); each letter has its spec entries. The Phase and Milestone columns record when a
+letter was added. The table is checked against
 [`ngspice-devices.json`](../../../src/netlistmod/grammar/ngspice-devices.json).
 
 | Letter | Status | Phase | Milestone |

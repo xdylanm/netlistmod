@@ -15,7 +15,7 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | Node | Fields |
 |---|---|
 | `ParamStatement` | `assignments: tuple[ParamAssignment, ...]` |
-| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized`, `open_paren_span`, `close_paren_span` (the `(` and `)` tokens, `None` without parentheses; added in M6 review round 1), `ako: ModelReference \| None` (LTspice's `ako:` base) |
+| `ModelStatement` | `name`, `name_span`, `model_type`, `model_type_span`, `params`, `parenthesized`, `open_paren_span`, `close_paren_span` (the `(` and `)` tokens, `None` without parentheses), `ako: ModelReference \| None` (LTspice's `ako:` base), `flags: tuple[Flag, ...]` (bare flags in source order: `pchan` or `nchan`, decision 0014; an ngspice LTRA model's flags, decision 0019 item 8) |
 | `SubcktDefinition` | `name`, `name_span`, `ports: tuple[Node, ...]`, `params` (defaults), `body: tuple[BodyItem, ...]`, `ends: EndsLine`, `header_span` |
 | `EndsLine` | `name: str \| None`, `name_span: Span \| None`, `span`, `trailing_comments` |
 | `Directive` | base of the directives below (top level only) |
@@ -35,7 +35,7 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | `BlankLine` | `span` |
 | `CommentLine` | `text`, `span` |
 | `UnknownDirective` | `name`, `raw`, `span`, `trailing_comments`, `name_span` |
-| `OpaqueBlock` | `kind: "control" \| "if"`, `span` |
+| `OpaqueBlock` | `kind: "control" \| "if" \| "lib"` (a `.lib name` … `.endl` block), `span` |
 | `OpaqueStatement` | `kind: "include" \| "lib"`, `raw`, `span`, `trailing_comments` |
 | `End` | `span` |
 
@@ -97,7 +97,7 @@ Fields reuse the M3 separator design: each field rule starts with its gap (`SEP`
   `variation_span`. `ParamAssignment.span`, `OptionItem.span`, `NodeCondition.span` (from `v(`
   or `all`) and `DcSweep.span` run from their first to their last token. `body_span` runs
   from the first to the last text token of the `.meas` body.
-- **What M6 replaces:** `.param` values (`assignments[i].value.span`), `.model` parameter values,
+- **What the edits replace:** `.param` values (`assignments[i].value.span`), `.model` parameter values,
   directive arguments (the value spans above, `variation_span`, option values, condition
   values), and whole directive lines (`span`) for replace and remove (architecture §7.2).
   Names, ports and `.subckt` structure are topology or identity and are not edited.
