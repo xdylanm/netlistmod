@@ -23,6 +23,7 @@ from netlistmod.edit._ops_common import (
     _insert,
     _kind,
     _last_field_end,
+    _refuse_impedance_flag,
     _refuse_over_comment,
 )
 from netlistmod.edit._ops_nonlinear import use_instead
@@ -235,11 +236,7 @@ def _analyzer_param(
     ``refnode=`` and ``intnode=`` take a net name; ``zm`` is not editable (decision 0020
     item 9)."""
     designator = element.designator
-    if element.impedance is not None and folded(name) == folded(element.impedance.name):
-        raise EditError(
-            f"`{element.impedance.name}` of `{designator}` is a flag, which is not editable; "
-            "edit the line by hand to add or remove it"
-        )
+    _refuse_impedance_flag(element, name)
     matches = [param for param in element.params if folded(param.name) == folded(name)]
     if len(matches) == 1 and isinstance(matches[0].value, ValueList):
         comment = _comment_inside(element, matches[0].value.span)

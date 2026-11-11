@@ -47,6 +47,13 @@ from netlistmod.source import Span
 
 # The analyzer parameters that take a list (reference, "@ — Frequency Response Analyzer").
 _FRA_LISTS = frozenset({"flist", "pp", "nmax", "ac"})
+# A comma on an LTspice A or `@` line (decision 0020 item 7, review R1): refused like a comma on
+# any other LTspice element line (decision 0009). `ac=`'s magnitude and phase are the exception.
+_LT_COMMA = (
+    "a comma as a separator: LTspice element lines separate their fields with blanks, "
+    "and the reference writes no comma on an A or `@` line; only `ac=` writes "
+    "its magnitude and phase with one, `ac=1,0` (LTspice runs the comma)"
+)
 # The ports types of Table 8.1 whose connection is a pair of nodes.
 _DIFFERENTIAL = frozenset({"%vd", "%id", "%gd", "%hd"})
 # The 13 special function names, and the reference's symbols that write one of them (decision
@@ -127,6 +134,7 @@ class _FraValue:
     """A value after an analyzer parameter's value: the next value of its list."""
 
     value: Value
+    comma: Token | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -482,7 +490,14 @@ class SpecialRules(LinesRules):
             f'special function name"). An A line writes one of {_FUNCTIONS}{hint}',
         )
 
-    sf_param = LinesRules.t_param
+    def _refuse_comma(self, children: list[Any]) -> None:
+        comma = next((c for c in children if isinstance(c, Token) and c.type == "CSEP"), None)
+        if comma is not None:
+            raise self._parse_error(comma, _LT_COMMA)
+
+    def sf_param(self, children: list[Any]) -> _Field:
+        self._refuse_comma(children)
+        return self.t_param(children)
 
     def sf_extra(self, children: list[Any]) -> NoReturn:
         token = _field_token(children)
@@ -504,9 +519,13 @@ class SpecialRules(LinesRules):
 
     # LTspice @ and & (decision 0020 items 7 and 8).
 
-    fra_param = LinesRules.t_param
+    def fra_param(self, children: list[Any]) -> _Field:
+        self._refuse_comma(children)
+        return self.t_param(children)
 
     def fra_net(self, children: list[Any]) -> _Field:
+        self._refuse_comma(children)
+
         def build(keyword: Token) -> _FraNet:
             word = children[-1]
             value = Identifier(str(word), _span(word))
@@ -519,9 +538,15 @@ class SpecialRules(LinesRules):
         return self._field(children, build)
 
     def fra_more(self, children: list[Any]) -> _Field:
-        return self._field(children, lambda token: _FraValue(self._value(token)))
+        comma = next((c for c in children if isinstance(c, Token) and c.type == "CSEP"), None)
+        field = self._field(children, lambda token: _FraValue(self._value(token)))
+        if comma is None:
+            return field
+        assert isinstance(field.node, _FraValue)
+        return replace(field, node=replace(field.node, comma=comma))
 
     def fra_zm(self, children: list[Any]) -> _Field:
+        self._refuse_comma(children)
         return self._field(children, lambda token: Flag(str(token), _span(token)))
 
     def fra_unlisted(self, children: list[Any]) -> NoReturn:
@@ -555,6 +580,8 @@ class SpecialRules(LinesRules):
                         f"a second value for `{last.name}=`: only flist=, pp=, nmax= and ac= "
                         "take a list",
                     )
+                if node.comma is not None and last.name.lower() != "ac":
+                    raise self._parse_error(node.comma, _LT_COMMA)
                 extra.append(node.value)
                 continue
             if isinstance(node, Node):

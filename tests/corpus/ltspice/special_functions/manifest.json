@@ -85,8 +85,8 @@
       "note": "LTspice 26.1.1's -netlist export of test_ltspice_gates.asc."
     },
     "test_ltspice_gates_params.cir": {
-      "sha256": "1209658fe8f8d2dd55e055b4ef4bdbdf5a64b2410205b1ad95f8492b209e8a89",
-      "note": "test_ltspice_gates.net with lower-case function names, a comma between parameters and a braced value (variant)."
+      "sha256": "6577873577e55a820646cfcec785ab70af4c685f4dab866b4d832ab73b0ca7e4",
+      "note": "test_ltspice_gates.net with lower-case function names and a braced value (variant)."
     },
     "test_ltspice_ota.asc": {
       "sha256": "7d2f7806a7c69c720fc34436a4f87e12a15db899a1367912afa8fa1b7466ca33",

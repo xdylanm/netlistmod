@@ -342,6 +342,20 @@
       "error": "ParseError",
       "note": "zm written twice (LTspice runs it)"
     },
+    "a_param_comma.cir": {
+      "sha256": "9233ba1cea8f79ef2394cb3678292504f769a42c02ce8c298e6c66d4dd45521b",
+      "line": 2,
+      "column": 31,
+      "error": "ParseError",
+      "note": "a comma between an A line's parameters (LTspice runs it; decision 0009)"
+    },
+    "fra_param_comma.cir": {
+      "sha256": "cb7e8e7d89b773164d87b0220555df9c409d8d0873702750d5f4a4830b9c8e0c",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "a comma between an @ line's parameters (LTspice runs it; decision 0009)"
+    },
     "probe_param.cir": {
       "sha256": "7576acb41c54cebb7c0cafa2d3e87ad2f3d9ea906543f200d4640dc5094fe83a",
       "line": 3,

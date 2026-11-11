@@ -90,7 +90,8 @@ _FUNCTIONS: dict[str, tuple[str, bool, str]] = {
         True,
         "SpecialFunction BUF",
     ),
-    "comma": (f"A1 {_NODES} BUF Vhigh=5, Vlow=0", True, "SpecialFunction BUF"),
+    "comma": (f"A1 {_NODES} BUF Vhigh=5, Vlow=0", True, "refused"),
+    "comma-after-function": (f"A1 {_NODES} BUF, Vhigh=5", False, "refused"),  # syntax error
     "schmitt-thresholds": (f"A1 {_NODES} SCHMITT Vt=0.5 Vh=0.1", True, "SpecialFunction SCHMITT"),
     "ota-parameters": (
         f"A1 {_NODES} OTA G=1m Iout=1m Isink=-1m Rout=1k",
@@ -134,7 +135,9 @@ _ANALYZERS: dict[str, tuple[str, bool, str]] = {
     "intnode": ("@1 in out intnode=out", True, "FrequencyAnalyzer"),
     "refnode-missing": ("@1 in out refnode=nowhere", False, "FrequencyAnalyzer"),
     "flist": ("@1 in out flist=1k 2k 5k", True, "FrequencyAnalyzer"),
-    "flist-commas": ("@1 in out flist=1k,2k,5k", True, "FrequencyAnalyzer"),
+    "flist-commas": ("@1 in out flist=1k,2k,5k", True, "refused"),
+    "param-comma": ("@1 in out fstart=1k, fend=10k", True, "refused"),
+    "zm-comma": ("@1 in out zm, fstart=1k fend=10k", True, "refused"),
     "pp": ("@1 in out pp=1k 10m 10k 1m", True, "FrequencyAnalyzer"),
     "nmax": ("@1 in out nmax=1k 2 10k 1", True, "FrequencyAnalyzer"),
     "ac-comma": ("@1 in out ac=1,0", True, "FrequencyAnalyzer"),

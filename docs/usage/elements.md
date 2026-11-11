@@ -256,9 +256,10 @@ lines are special functions, `@` its frequency response analyzer and `&` the ana
 - **LTspice A** writes eight nodes, one of 13 function names (`BUF`, `AND`, `OR`, `XOR`,
   `SCHMITT`, `DFLOP`, `SRFLOP`, `VARISTOR`, `MODULATOR`, `OTA`, `PHASEDET`, `COUNTER`,
   `SAMPLEHOLD`; the reference's symbol names such as INV are not netlist names), then named
-  parameters.
+  parameters, separated by blanks: a comma is refused, as on every LTspice element line.
 - **`@`** writes two nodes, then `zm` and the reference's parameters in any order; `flist=`,
-  `pp=`, `nmax=` and `ac=` take a list. `refnode=` and `intnode=` name nets the analyzer measures,
+  `pp=`, `nmax=` and `ac=` take a list of blank-separated values; only `ac=` may write its
+  magnitude and phase with a comma (`ac=1,0`). `refnode=` and `intnode=` name nets the analyzer measures,
   which are node references, not connections. **`&`** writes four nodes, and measures with the
   `@` of its suffix (`&1` with `@1`).
 

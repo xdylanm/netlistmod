@@ -468,6 +468,8 @@ LTSPICE_RUNS = {
     # M17 (decision 0020): forms LTspice runs that the reference does not show.
     "elements_rejects/a_bare_param.cir",
     "elements_rejects/fra_zm_twice.cir",
+    "elements_rejects/a_param_comma.cir",
+    "elements_rejects/fra_param_comma.cir",
 }
 _REJECTS = sorted(
     path

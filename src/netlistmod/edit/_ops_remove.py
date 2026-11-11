@@ -20,6 +20,7 @@ from netlistmod.edit._ops_common import (
     _comment_inside,
     _element,
     _kind,
+    _refuse_impedance_flag,
     _refuse_over_comment,
     _spans,
     resolve_scope,
@@ -114,6 +115,8 @@ def remove_param(
                 f"`{flag.name}` is a flag of `{designator}`, not a parameter; flags are not "
                 "removable"
             )
+    if isinstance(element, FrequencyAnalyzer):
+        _refuse_impedance_flag(element, name)
     names = {folded}
     if isinstance(element, LosslessLine) and folded in _IMPEDANCE:
         names = set(_IMPEDANCE)

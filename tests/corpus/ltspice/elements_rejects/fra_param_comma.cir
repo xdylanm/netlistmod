@@ -1,0 +1,3 @@
+M17 reject
+@1 a b fstart=1k, fend=10k
+.end
