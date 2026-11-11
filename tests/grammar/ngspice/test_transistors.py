@@ -191,6 +191,9 @@ def test_a_positional_area_on_q_says_to_write_area_equals(line: str, column: int
         ("Q1 c b 0 qm 1μ", 13),
         ("Q1 c b 0 qm 2Ω", 13),
         ("Q1 c b 0 s qm 1μ off", 15),
+        ("Q1 c b 0 qm 1.5Ω", 13),  # a fraction
+        ("Q1 c b 0 qm 1e3Ω", 13),  # an exponent
+        ("Q1 c b 0 qm 1e3μ", 13),
     ],
 )
 def test_a_q_area_with_another_letter_is_refused_as_an_area(line: str, column: int) -> None:
@@ -206,6 +209,9 @@ def test_a_q_area_with_another_letter_is_refused_as_an_area(line: str, column: i
         ("M1 d g s mm 1μ", 13, "1μ"),
         ("M1 d g s b mm 2Ω", 15, "2Ω"),
         ("Q1 c b e 1μ", 10, "1μ"),
+        ("Q1 c b 0 2.5μ", 10, "2.5μ"),
+        ("J1 d g s 1e3Ω", 10, "1e3Ω"),
+        ("J1 d g s 1eΩ", 10, "1eΩ"),  # an `e` without exponent digits is a letter
     ],
 )
 def test_a_number_with_another_letter_is_not_a_model(line: str, column: int, word: str) -> None:

@@ -27,6 +27,7 @@ NGSPICE_ONLY_CASES = {
         "type `c`",
         "has no model, so it needs its value",
     ],
+    "test_remove_param_refuses_a_repeated_parameter": ["bipolar area"],
 }
 
 
@@ -265,3 +266,27 @@ def test_set_model_resolves_through_enclosing_scopes() -> None:
 def test_element_operation_errors(body: str, operation: Operation, message: str) -> None:
     with pytest.raises(EditError, match=message):
         operation(_netlist(body))
+
+
+@pytest.mark.parametrize(
+    ("body", "designator", "name"),
+    [
+        pytest.param("R1 a b 1k tc1=1 tc1=2", "R1", "tc1", id="resistor tc1"),
+        pytest.param("Q1 c b 0 qm area=1 area=2\n.model qm npn", "Q1", "area", id="bipolar area"),
+    ],
+)
+def test_remove_param_refuses_a_repeated_parameter(body: str, designator: str, name: str) -> None:
+    with pytest.raises(EditError) as captured:
+        _netlist(body).remove_param(designator, name)
+    assert str(captured.value) == (
+        f"remove_param {designator} {name}: parameter `{name}` is repeated; "
+        "the edit has no single target"
+    )
+
+
+def test_remove_model_param_refuses_a_repeated_parameter() -> None:
+    with pytest.raises(EditError) as captured:
+        _netlist(".model dm D(IS=1 IS=2)").remove_model_param("dm", "IS")
+    assert str(captured.value) == (
+        "remove_model_param dm IS: parameter `IS` is repeated; the edit has no single target"
+    )

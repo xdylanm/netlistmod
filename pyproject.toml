@@ -81,7 +81,7 @@ branch = true
 source = ["netlistmod"]
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 98
 show_missing = true
 
 [tool.importlinter]

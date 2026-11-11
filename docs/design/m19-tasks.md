@@ -112,9 +112,9 @@ The developers' files do not overlap: D1 the README and `docs/usage/` apart from
 
 [x] **D3b — Living references and records.** The four living references, `testing.md`, `provenance.md`, and the grammar READMEs, device matrices and `discrepancies.md` prose.
 
-[ ] **D4 — Source docstrings** (5.1.1 point 1): text only.
+[x] **D4 — Source docstrings** (5.1.1 point 1): text only.
 
-[ ] **D5 — Coverage tests.** A test for each reachable path of section 5.1 (A3-1), and the coverage floor of 98 (5.1.1 point 8).
+[x] **D5 — Coverage tests.** A test for each reachable path of section 5.1 (A3-1), and the coverage floor of 98 (5.1.1 point 8).
 
 ### Stage 3 — Evidence and handover (lead)
 
@@ -177,3 +177,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | D3a | Developer | 2026-11-11: complete (decision 0022 proposed; 40 run times removed) | Diff read; 0022 checked against its source decisions; the lead added the `.lib` block to §11.2's opaque list, which the developer reported; the 30 s LTspice timeout in `m8-tasks.md` is a setting, not a measured time, and stays; accepted | this commit |
 | D3b | Developer | 2026-11-11: complete | Diff read; the lead completed the `ltspice_transistors` provenance row, which lacked its author and licence cells; the plan links in the device matrices are fixed at T4, and `testing.md`'s coverage floor with D5; accepted | this commit |
 | D1 | Developer | 2026-11-11: complete with findings (the brief's check ran the six solver-marked demo tests; they passed and wrote only to `tmp_path`) | Diff read; the README's edit list checked against `edit/api.py`; the lead noted in the CHANGELOG that a path given to `read_only_demo.py` is now read without RKM unless `--rkm` is given; accepted | this commit |
+| D4, D5 | Developer | 2026-11-11: complete (11 paths tested; solver-free run 10,205 passed, coverage 99.22%, floor 98) | Diff read; the touched tests and the fast checks rerun; the lead updated `testing.md`'s floor and the oracle's module note, which named review IDs. "(review R3)" in the private `edit/_ops_*` modules stays: point 1 covered the public docstrings; accepted | this commit |

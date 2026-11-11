@@ -126,6 +126,16 @@ def test_an_ngspice_read_into_an_instance_is_info(
         assert "inside instance `x1`" in netlist.diagnostics[0].message
 
 
+@pytest.mark.ngspice_only
+@pytest.mark.parametrize("line", ["F1 out 0 v.x1.vq 2", "H1 out 0 v.x1.vq 1k", ".save i(v.x1.vq)"])
+def test_an_ngspice_controlling_source_inside_an_instance_stays_a_warning(line: str) -> None:
+    # Only an `i()` read in a behavioural expression gets the info note: a control or a `.save`
+    # naming `v.x1.vq` stays the unresolved-element warning.
+    netlist = _netlist(_SUB + "R3 out 0 1k\n" + line)
+    assert _codes(netlist) == [(C.UNRESOLVED_ELEMENT, "warning", "v.x1.vq")]
+    assert "inside instance" not in netlist.diagnostics[0].message
+
+
 @pytest.mark.ltspice_only
 def test_an_ltspice_read_into_an_instance_is_info() -> None:
     netlist = _netlist(_SUB + "R3 out 0 1k\nB1 out 0 V=V(X1:n)")

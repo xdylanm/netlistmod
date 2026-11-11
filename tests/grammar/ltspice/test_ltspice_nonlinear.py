@@ -78,6 +78,8 @@ def test_malformed_tables_are_refused(line: str, column: int) -> None:
         ("E1 OUT N002 VX 0 Laplace=2/(1+s/1k)", Vcvs, "2/(1+s/1k)", []),
         ("E1 OUT N002 VX 0 Laplace = 2 / (1 + s/1k)", Vcvs, "2 / (1 + s/1k)", []),
         ("E1 OUT N002 VX 0 Laplace={2/(1+s/1k)}", Vcvs, "2/(1+s/1k)", []),
+        # A name that starts with V is not a voltage reference.
+        ("E1 OUT N002 VX 0 Laplace=1/(1+s*Vx)", Vcvs, "1/(1+s*Vx)", []),
         (
             "G1 OUT 0 VX 0 Laplace=2m/(1+s/1k) window=1m nfft=1024 mtol=1",
             Vccs,
@@ -109,6 +111,7 @@ def test_laplace_is_a_formula_then_its_parameters(
         ("E1 OUT N002 VX 0 window=1m Laplace=2/(1+s/1k)", 18),
         ("E1 OUT N002 VX 0 Laplace=2/(1+s/1k) foo=1", 37),
         ("E1 OUT N002 VX 0 Laplace=V(vx)/(1+s/1k)", 26),
+        ("E1 OUT N002 VX 0 Laplace=1/(1+s*V (vx))", 33),
         ("E1 OUT N002 VX 0 Laplace={I(V1)/(1+s/1k)}", 27),
         ("E1 OUT N002 Laplace=2/(1+s/1k)", 20),
     ],
@@ -124,6 +127,11 @@ def test_malformed_laplace_lines_are_refused(line: str, column: int) -> None:
         ("E1 OUT N002 VX 0 window=1m Laplace=2/(1+s/1k)", 18, "`window=` before `Laplace=`"),
         ("G1 OUT 0 VX 0 NFFT = 1024 Laplace=2/(1+s/1k)", 15, "`NFFT=` before `Laplace=`"),
         ("E1 OUT N002 VX 0 window=1m\n+ laplace=2/(1+s/1k)", 18, "`window=` before `Laplace=`"),
+        (
+            "E1 OUT N002 VX 0 window=1m laplace Laplace=2/(1+s/1k)",
+            18,
+            "`window=` before `Laplace=`",
+        ),
         ("E1 OUT N002 VX 0 mtol=1", 18, "`mtol=` without `Laplace=`"),
     ],
 )
@@ -138,11 +146,11 @@ def test_a_laplace_parameter_in_the_gain_place_names_laplace(
     assert "is not a gain" not in error.reason
 
 
-def test_a_voltage_reference_in_laplace_is_named() -> None:
-    assert (
-        "Voltage reference not allowed here"
-        in _reject("E1 OUT N002 VX 0 Laplace=V(vx)/(1+s/1k)").reason
-    )
+@pytest.mark.parametrize(
+    "line", ["E1 OUT N002 VX 0 Laplace=V(vx)/(1+s/1k)", "E1 OUT N002 VX 0 Laplace=1/(1+s*V (vx))"]
+)
+def test_a_voltage_reference_in_laplace_is_named(line: str) -> None:
+    assert "Voltage reference not allowed here" in _reject(line).reason
 
 
 @pytest.mark.parametrize(

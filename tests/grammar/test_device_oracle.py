@@ -13,7 +13,8 @@ an ngspice A port's type, node or count) changes the signature, while changing a
 source formatting.
 
 Shapes left out on purpose: non-ASCII letters other than ``µ`` (U+00B5) in a positional number
-after a transistor model (A1-4, a known defect assigned to D5), nested ``.if`` blocks (A2-19),
+after a transistor model and nested ``.if`` blocks (both fixed in M18 and tested in their grammar
+tests; decision 0021 items 1 and 2),
 LTspice's I-only functions (``tbl=``, ``step``) and the file and wave forms (fixed shapes in
 ``test_source_functions.py``).
 """

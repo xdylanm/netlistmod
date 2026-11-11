@@ -190,6 +190,8 @@ def test_a_batch_edits_different_arguments() -> None:
         ("V1 a 0 ; c\n+ SIN(0 1) ; d", ("V1 a 0 ; c\n+ ; d", "V1 a 0 ; c ; d")),
         ("V1 a 0 ; c\n+ SIN(0 1) ; d\n+ AC 1", "V1 a 0 ; c\n+ ; d\n+ AC 1"),
         ("V1 a 0\n+ SIN(0 1) ; d", "V1 a 0 ; d"),
+        # An empty `+` line between is skipped when the comment joins the line before.
+        ("V1 a 0 ; c\n+\n+ SIN(0 1) ; d", ("V1 a 0 ; c\n+\n+ ; d", "V1 a 0 ; c ; d")),
     ],
 )
 def test_remove_stimulus_takes_its_separator(before: str, after: str | tuple[str, str]) -> None:
