@@ -22,6 +22,7 @@ from netlistmod.edit._ops_common import (
     _kind,
     _refuse_impedance_flag,
     _refuse_over_comment,
+    _removal_edit,
     _spans,
     resolve_scope,
 )
@@ -135,7 +136,7 @@ def remove_param(
         raise EditError(f"`{designator}` has no parameter `{name}`")
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
-    return [Edit(_removal(netlist, element, matches[0]), "", reason)]
+    return [_removal_edit(netlist, element, _removal(netlist, element, matches[0]), reason)]
 
 
 def remove_model_param(
@@ -163,7 +164,7 @@ def remove_model_param(
         raise EditError(f"model `{model}` has no parameter `{name}`")
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
-    return [Edit(_removal(netlist, statement, matches[0]), "", reason)]
+    return [_removal_edit(netlist, statement, _removal(netlist, statement, matches[0]), reason)]
 
 
 def _removal(

@@ -22,7 +22,13 @@
   through `apply`, and returns a new `Netlist` that carries the original load's signature
   (`baseline`) and file path (`path`). A failing edit raises; the netlist is unchanged.
   Idempotence for a removal (`remove_param`, `remove_model_param`, `remove_stimulus`) means
-  that repeating it on its result raises `EditError` and writes nothing.
+  that repeating it on its result raises `EditError` and writes nothing. On LTspice, a removal
+  (`remove_param`, `remove_model_param`, `remove_stimulus`, `set_switch_state(d, None)`) that
+  would leave the statement's last `+` line holding only a comment, with no field after the
+  removed one, joins the comments after the last remaining field to that field's line, one
+  blank apart, and the emptied `+` lines go (`V1 a 0 ; c` / `+ SIN(0 1) ; d` becomes
+  `V1 a 0 ; c ; d`): LTspice stops on such a line (M18 D2 and D7b). ngspice runs it, so its
+  removals are unchanged.
 - **Batches.** `with nl.batch() as b: …` collects the edits of several operations, each
   computed against `nl`; on a clean exit they are applied as one plan (`b.result`). A failure
   in an operation or the verification leaves nothing applied. `b.plan` shows the edits so far.

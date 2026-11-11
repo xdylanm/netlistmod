@@ -185,14 +185,30 @@ def test_a_batch_edits_different_arguments() -> None:
         ("V1 a 0\n+ SIN(0 1)\n+ AC 1", "V1 a 0\n+ AC 1"),
         ("V1 a 0 DC 1 ; c\n+ PULSE(0 1)", "V1 a 0 DC 1 ; c"),
         ("V1 a 0 ; c\n+ SIN(0 1) AC 1", "V1 a 0 ; c\n+ AC 1"),
-        ("V1 a 0 ; c\n+ SIN(0 1) ; d", "V1 a 0 ; c\n+ ; d"),
+        # LTspice stops on a statement whose last `+` line holds only a comment (M18 D2): there
+        # the comment joins the line before (M18 D7b); ngspice runs `+ ; d`.
+        ("V1 a 0 ; c\n+ SIN(0 1) ; d", ("V1 a 0 ; c\n+ ; d", "V1 a 0 ; c ; d")),
+        ("V1 a 0 ; c\n+ SIN(0 1) ; d\n+ AC 1", "V1 a 0 ; c\n+ ; d\n+ AC 1"),
         ("V1 a 0\n+ SIN(0 1) ; d", "V1 a 0 ; d"),
     ],
 )
-def test_remove_stimulus_takes_its_separator(before: str, after: str) -> None:
+def test_remove_stimulus_takes_its_separator(before: str, after: str | tuple[str, str]) -> None:
     edited = _netlist(before).remove_stimulus("V1")
+    if isinstance(after, tuple):
+        after = after[current_dialect() is Dialect.LTSPICE]
     assert _line(edited) == after
     assert edited.lines[1].item.ac is not None or "AC" not in before
+
+
+def test_remove_stimulus_joins_a_comment_left_alone_on_the_last_line_over_crlf() -> None:
+    netlist = Netlist.from_text(
+        "t\r\nV1 a 0 ; c\r\n+ SIN(0 1) ; d\r\nR1 a 0 1k\r\n.end\r\n", dialect=current_dialect()
+    )
+    edited = netlist.remove_stimulus("V1").text
+    if current_dialect() is Dialect.LTSPICE:
+        assert edited == "t\r\nV1 a 0 ; c ; d\r\nR1 a 0 1k\r\n.end\r\n"
+    else:
+        assert edited == "t\r\nV1 a 0 ; c\r\n+ ; d\r\nR1 a 0 1k\r\n.end\r\n"
 
 
 @pytest.mark.parametrize("text", ["PULSE(0\n+ 1)", "PULSE(0\r\n+ 1)", "PULSE(0 1)\n"])

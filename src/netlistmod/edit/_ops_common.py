@@ -6,6 +6,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, fields, is_dataclass
 from dataclasses import field as dataclass_field
 
+from netlistmod.dialects import Dialect
 from netlistmod.document import Line, Netlist, Scope, ScopePath
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
@@ -225,6 +226,44 @@ def _last_field_end(node: object, before: int | None = None) -> int:
             if before is None or span.end <= before:
                 end = max(end, span.end)
     return end
+
+
+def _removal_edit(
+    netlist: Netlist, owner: Component | ModelStatement, removed: Span, reason: str
+) -> Edit:
+    """The edit that removes ``removed`` from ``owner``'s statement. On LTspice, when no field
+    follows it and what stays after the statement's last field is comments over ``+`` lines,
+    those comments join that field's line, separated by one blank, and the emptied ``+`` lines
+    go: LTspice stops on a statement whose last ``+`` line holds only a comment (M18 D2 and
+    D7b). ngspice runs it, so there the removal is only the span."""
+    plain = Edit(removed, "", reason)
+    if netlist.dialect is not Dialect.LTSPICE:
+        return plain
+    spans = [
+        span
+        for field in fields(owner)
+        if field.name not in {"span", "trailing_comments"}
+        for span in _spans(getattr(owner, field.name))
+    ]
+    if any(span.start >= removed.end for span in spans):
+        return plain
+    kept = max(span.end for span in spans if span.end <= removed.start)
+    comments = [span for span in owner.trailing_comments if span.start >= kept]
+    end = max((span.end for span in comments), default=removed.end)
+    text = netlist.source.text
+    rest = text[kept : removed.start] + text[removed.end : end]
+    if not comments or "\n" not in rest:
+        return plain
+    first, *later = rest.split("\n")
+    joined = [first.rstrip(" \t\r")]
+    for line in later:
+        content = line.lstrip(" \t")
+        if not content.startswith("+"):
+            return plain  # a line that is not a `+` line: left to verification
+        content = content[1:].strip(" \t\r")
+        if content:
+            joined.append(content)
+    return Edit(Span(kept, max(end, removed.end)), " ".join(joined), reason)
 
 
 def _spans(value: object) -> Iterator[Span]:

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from netlistmod.document import Netlist, ScopePath
 from netlistmod.edit import conventions
-from netlistmod.edit._ops_common import _element, _insert, _kind
+from netlistmod.edit._ops_common import _element, _insert, _kind, _removal_edit
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import Switch
@@ -39,7 +39,7 @@ def set_switch_state(
     if state is None:
         if current is None:
             return []
-        return [Edit(_with_gap(netlist, element, current), "", reason)]
+        return [_removal_edit(netlist, element, _with_gap(netlist, element, current), reason)]
     if current is not None:
         return [Edit(current.span, state, reason, (_STATE,))]
     return [_insert(element.model.span.end, conventions.field(state), reason, _STATE, 1)]
