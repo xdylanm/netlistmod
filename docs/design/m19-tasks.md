@@ -104,7 +104,7 @@ The briefs are written at G1 from the findings. Expected:
 
 The developers' files do not overlap: D1 the README and `docs/usage/` apart from `errors.md`; D2 `errors.md` and the CHANGELOG; D3a the architecture, decision 0022, `AGENTS.md`, `CONTRIBUTING.md` and the run times; D3b the living references, `testing.md`, `provenance.md` and the grammar documents; D4 and D5 `src/` docstrings, tests and `pyproject.toml`.
 
-[ ] **D1 — README and usage guides.** The README's v1 status and "What it does" list; the usage index; each guide's fixes from A1; executed examples where a v1 form has none.
+[x] **D1 — README and usage guides.** The README's v1 status and "What it does" list; the usage index; each guide's fixes from A1; executed examples where a v1 form has none.
 
 [x] **D2 — Error reference and CHANGELOG.** The error reference's fixes from A1, and the CHANGELOG per decision 9.
 
@@ -176,3 +176,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | D2 | Developer | 2026-11-11: complete with findings (the `.if` depth is 247, measured) | Diff read; operations in the v1 summary checked against `edit/api.py`; accepted | this commit |
 | D3a | Developer | 2026-11-11: complete (decision 0022 proposed; 40 run times removed) | Diff read; 0022 checked against its source decisions; the lead added the `.lib` block to §11.2's opaque list, which the developer reported; the 30 s LTspice timeout in `m8-tasks.md` is a setting, not a measured time, and stays; accepted | this commit |
 | D3b | Developer | 2026-11-11: complete | Diff read; the lead completed the `ltspice_transistors` provenance row, which lacked its author and licence cells; the plan links in the device matrices are fixed at T4, and `testing.md`'s coverage floor with D5; accepted | this commit |
+| D1 | Developer | 2026-11-11: complete with findings (the brief's check ran the six solver-marked demo tests; they passed and wrote only to `tmp_path`) | Diff read; the README's edit list checked against `edit/api.py`; the lead noted in the CHANGELOG that a path given to `read_only_demo.py` is now read without RKM unless `--rkm` is given; accepted | this commit |

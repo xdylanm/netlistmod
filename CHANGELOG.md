@@ -14,7 +14,7 @@ M19: the v1 review.
 
 Changes:
 
-- `docs/usage/examples/read_only_demo.py` takes `--help`, `--dialect` and `--rkm`; `--help` used to fail, and the demo read only ngspice with `rkm=True` (M19).
+- `docs/usage/examples/read_only_demo.py` takes `--help`, `--dialect` and `--rkm`; `--help` used to fail, and the demo read only ngspice with `rkm=True`. With no argument it still reads its corpus file with `rkm=True`; a path given without `--rkm` is now read without it (M19).
 
 M18: the completeness audit.
 

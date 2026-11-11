@@ -2,7 +2,7 @@
 
 This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. `Netlist` is the read-only document layer. It parses a netlist with an explicit dialect
 and answers queries about its lines, symbol tables, references, topology and diagnostics.
-Editing and `save()` are described in [editing.md](./editing.md) (M6). The rules behind the answers are in
+Editing and `save()` are described in [editing.md](./editing.md). The rules behind the answers are in
 [names.md](../grammars/ngspice/names.md) and [scoping.md](../grammars/ngspice/scoping.md);
 the API is listed in [document-layer.md](../design/document-layer.md). The examples below are
 executed by the test suite.
@@ -153,7 +153,7 @@ True
 ## Limits
 
 Elements, models and parameters inside `.if` and `.lib` blocks and `.include`/`.lib` files are not
-seen (§7.8). An unresolved reference in a scope with any of these is reported as `info`. A
+seen ([architecture §7.8](../architecture.md#78-known-limits-documented-not-solved)). An unresolved reference in a scope with any of these is reported as `info`. A
 name defined only inside an `.if` block is reported as a warning, although the solver may see it.
 `references_to_param` does not see `.meas` bodies, unknown dot-commands such as `.func`, or opaque
 items, so an empty answer does not prove that a parameter is unused.

@@ -1,27 +1,34 @@
-"""Read-only use of netlistmod (M5 checkpoint): load a KiCad export and print what it holds.
+"""Read-only use of netlistmod: load a netlist and print what it holds.
 
-Run from the repository root::
+Run it from the root of a clone, or give it a netlist::
 
-    uv run --env-file .env python docs/usage/examples/read_only_demo.py [netlist.cir]
+    uv run --env-file .env python docs/usage/examples/read_only_demo.py
+    uv run --env-file .env python docs/usage/examples/read_only_demo.py my.net --dialect ltspice
 
-Without an argument it loads ``tests/corpus/ngspice/kicad_basic/dc_basic_r_divider.cir``,
-whose values use RKM notation (``1k0``), so it is parsed with ``rkm=True``.
+Without a netlist it loads the clone's KiCad export
+``tests/corpus/ngspice/kicad_basic/dc_basic_r_divider.cir``. Its values use RKM notation
+(``1k0``), so on ngspice it is loaded with ``rkm=True``.
+
+``--rkm`` accepts ngspice values such as ``2k7`` in your own netlist. LTspice reads them without
+an option, so ``--rkm`` is refused with ``--dialect ltspice``. A netlist the library refuses
+prints the error, and the script exits with status 1.
 """
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
-from netlistmod import Dialect, Netlist
+from netlistmod import Dialect, Netlist, SpiceNetlistError
 
 CORPUS = Path(__file__).parents[3] / "tests" / "corpus" / "ngspice"
 DEFAULT = CORPUS / "kicad_basic" / "dc_basic_r_divider.cir"
 
 
-def main(path: Path) -> None:
+def main(path: Path, dialect: Dialect = Dialect.NGSPICE, *, rkm: bool = False) -> None:
     """Print the elements, nets, connections, references and diagnostics of ``path``."""
-    netlist = Netlist.load(path, dialect=Dialect.NGSPICE, rkm=True)
+    netlist = Netlist.load(path, dialect=dialect, rkm=rkm)
     print(f"{path.name}: {len(netlist.lines)} lines")
     for scope in netlist.scopes:
         print(f"\n[{scope.describe()}]")
@@ -57,4 +64,26 @@ def main(path: Path) -> None:
 
 
 if __name__ == "__main__":
-    main(Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument("netlist", nargs="?", type=Path, help="default: the clone's KiCad export")
+    parser.add_argument(
+        "--dialect", choices=[d.value for d in Dialect], default=Dialect.NGSPICE.value
+    )
+    parser.add_argument("--rkm", action="store_true", help="accept ngspice RKM values such as 2k7")
+    args = parser.parse_args()
+    dialect = Dialect(args.dialect)
+    if args.rkm and dialect is not Dialect.NGSPICE:
+        parser.error("--rkm applies only to ngspice: LTspice reads RKM values without it")
+    path = args.netlist
+    rkm = args.rkm
+    if path is None:
+        if not DEFAULT.exists():
+            parser.error(f"{DEFAULT} is not here: run from a clone, or give a netlist")
+        path = DEFAULT
+        rkm = dialect is Dialect.NGSPICE
+    try:
+        main(path, dialect, rkm=rkm)
+    except SpiceNetlistError as error:
+        sys.exit(f"{path}: {error}")

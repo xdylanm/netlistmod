@@ -1,9 +1,12 @@
 # Parsing element lines
 
-This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser turns element lines into typed nodes: `Resistor`,
-`Capacitor`, `Inductor`, `MutualCoupling`, `VoltageSource`, `CurrentSource`, `Diode`,
-`BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` and `SubcktInstance`, all subclasses of `Component`. Each node keeps the text of every value and
-a span for every field. The library never evaluates a value.
+This guide describes ngspice; [LTspice](#ltspice) differs as noted at the end. The parser turns
+element lines into typed nodes, all subclasses of `Component`: `Resistor`, `Capacitor`,
+`Inductor`, `MutualCoupling`, `VoltageSource`, `CurrentSource`, `Diode` and `SubcktInstance`, and
+the families of the sections below: `Transistor`, `ControlledSource`, `Switch`,
+`BehavioralSource`, `TransmissionLine`, `CodeModelDevice`, `OsdiDevice`, `SpecialFunction`,
+`FrequencyAnalyzer` and `FraProbe`. Each node keeps the text of every value and a span for every
+field. The library never evaluates a value.
 
 ```python
 >>> from netlistmod import Dialect, ParseError, SourceText, parse
@@ -46,13 +49,16 @@ What the parser accepts (details and citations are in
   surround `=`. Every line of a continued element may end in a `;`, `$` or `//` comment.
 - **Values** are numbers with optional scale factors and trailing letters (`10k`, `1kOhm`,
   `1µ`), formulas (`{expr}` or `'expr'`), or, with `rkm=True` and for R and C only, RKM values.
-  Bare expressions such as `1.1*Rx` are rejected.
+  A bare expression such as `1.1*Rx` is rejected on ngspice; LTspice's values are
+  [different](#ltspice).
 - **R, C, L**: a value, a model, or both, then `name=value` parameters; or a keyword value
   (`r=1k`, `c={c0}`, `l='expr'`), recorded in `value_keyword`. Parameter names are not
   checked.
 - **K**: two or more inductor names, then the coupling value.
 - **V, I**: an optional DC value (with or without `DC`), then an optional `AC` magnitude and
   phase, and a source function in `stimulus` (`PULSE`, `SIN`, `PWL`, …), before or after them.
+  `stimulus` is a `SourceSpec`: the function's `name`, its positional `args` and the `params` it
+  writes by name.
   `distortion` holds ngspice's `DISTOF1` and `DISTOF2`. A function needs its parentheses, and its
   arguments are numbers or formulas.
 - **D**: a mandatory model, then parameters and `off`.
@@ -303,8 +309,39 @@ The nodes are the same. These forms differ ([decision 0009](../decisions/0009-lt
 
 ```
 
-- The embedded decimal needs no option, and `M` is milli.
-- E, F, G, H, S and W take no parameter. A switch's state may take a value (`off=1`). A controlling source inside an instance (`X1:Vq`), which LTspice reads, is kept as text and is reported as info. `value=`, `POLY`, `table=` and `Laplace=` are read since M15 and M15b.
+- **Values** ([LTspice numbers](../grammars/ltspice/numbers.md)): the embedded decimal (`2k2`) is
+  read in every value slot and needs no option; `rkm=True` is a `ValueError`. `M` is milli, `1a` is
+  1 (not atto), and letters after a number are part of its text (`10V`). A bare expression is
+  accepted where the reference writes one: `.param x=2*pi*100`, B's `V=` and `I=`, C's `Q=`, L's
+  `Flux=`, `value=` and `Laplace=`. Elsewhere, as on ngspice, a formula needs `{expr}` or `'expr'`.
+- **V, I:** the functions are `PULSE`, `SINE` (or `SIN`), `EXP`, `SFFM`, `PWL` and `wavefile=`.
+  `PWL file="…"` keeps its path in the stimulus's `params`, and `PWL REPEAT FOR n (…) ENDREPEAT`
+  its count; `PWL REPEAT FOREVER (…) ENDREPEAT` sets `forever`. A V line's `Rser=` and `Cpar=`
+  are in the line's `params`. There is no `distortion`: `DISTOF1` is a `ParseError`.
+- E, F, G, H, S and W take no parameter, apart from `window=`, `nfft=` and `mtol=` after the
+  `Laplace=` of an E or G line. A switch's state may take a value (`off=1`). A controlling source
+  inside an instance (`X1:Vq`), which LTspice reads, is kept as text and is reported as info.
+  `value=`, `POLY`, `table=` and `Laplace=` load as [above](#dependent-sources-and-switches).
+
+```python
+>>> lt = Netlist.from_text(
+...     't\nV1 a 0 SINE(0 1 1k) Rser=1\nV2 b 0 PWL file="wave.txt"\nR1 a b 1k\n'
+...     "E1 c 0 a 0 Laplace=1/(1+s) window=1m\n.end\n",
+...     dialect=Dialect.LTSPICE,
+... )
+>>> sine = lt.element("V1").stimulus
+>>> sine.name, [arg.text for arg in sine.args], lt.element("V1").params[0].name
+('SINE', ['0', '1', '1k'], 'Rser')
+>>> lt.element("V2").stimulus.params[0].value.text
+'wave.txt'
+>>> [(p.name, p.value.text) for p in lt.element("E1").params]
+[('window', '1m')]
+>>> edited = lt.set_stimulus_arg("V1", 2, "2k").set_stimulus_arg("V2", "file", '"w2.txt"')
+>>> edited.text.splitlines()[1:3]
+['V1 a 0 SINE(0 1 2k) Rser=1', 'V2 b 0 PWL file="w2.txt"']
+
+```
+
 - Q and M take 3 or 4 nodes, and Q a positional area. Each transistor letter has the reference's
   closed parameter list: Q `temp`; M `L W AD AS PD PS NRD NRS m temp IC`; J `temp`; Z `m temp`;
   and `off`. M has no `thermal` flag, and Z's model may be an IGBT (`NIGBT`, `PIGBT`):

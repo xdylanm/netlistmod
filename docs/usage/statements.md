@@ -101,7 +101,7 @@ and [statements.md](../design/statements.md)):
 
 ## LTspice
 
-The nodes are the same, with more forms and a typed `.step` ([decision 0009](../decisions/0009-ltspice-dialect.md)):
+The nodes are the same, with more forms and a typed `.step`, a `StepDirective` ([decision 0009](../decisions/0009-ltspice-dialect.md)):
 
 ```python
 >>> source = SourceText(
@@ -125,6 +125,21 @@ The nodes are the same, with more forms and a typed `.step` ([decision 0009](../
 ('param', 'a', '1')
 >>> slow.ako.model_name
 'fast'
+
+```
+
+A bare `.param` expression, which ngspice refuses, is accepted: `.param x=2*pi*100` loads, and
+`params.set` writes one as given (on ngspice the same edit is an `EditError`). The value is a
+`Formula` with an empty delimiter:
+
+```python
+>>> from netlistmod import Netlist
+>>> lt = Netlist.from_text("t\n.param x=2*pi*100\nR1 a 0 {x}\n.end\n", dialect=Dialect.LTSPICE)
+>>> value = lt.params["x"][0].value
+>>> type(value).__name__, value.text, value.delimiter
+('Formula', '2*pi*100', '')
+>>> lt.params.set("x", "2*3").text.splitlines()[1]
+'.param x=2*3'
 
 ```
 

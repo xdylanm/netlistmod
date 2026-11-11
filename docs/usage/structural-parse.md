@@ -19,12 +19,12 @@ End '.end\n'
 
 The result is an immutable sequence of typed nodes: `Title`, `TitleDirective`,
 `BlankLine`, `CommentLine`, `UnknownDirective`, `OpaqueStatement`
-(`.include`/`.lib`), `OpaqueBlock` (`.control` or nested `.if`), and `End`, plus
-the element nodes (M3) and the statement and directive nodes (M4:
-`ParamStatement`, `ModelStatement`, `SubcktDefinition`, `TranDirective`,
-`AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`,
-`IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`; see
-[the statement guide](./statements.md)).
+(`.include`/`.lib`), `OpaqueBlock` (`.control`, nested `.if` or a `.lib` block), and
+`End`, plus the element nodes ([the element guide](./elements.md)) and the statement and
+directive nodes (`ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`,
+`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`,
+`TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`, and
+LTspice's `StepDirective`; see [the statement guide](./statements.md)).
 Every node has a character-offset `Span`; together, the spans tile the source.
 The first physical line is always a title. Later `.title` lines are represented
 as `TitleDirective`.
