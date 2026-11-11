@@ -1,6 +1,6 @@
 # M18 task list — Completeness audit
 
-> **Status:** READY FOR REVIEW — implemented on 2026-11-11 as [#18](https://github.com/xdylanm/netlistmod/pull/18); the results are in section 5, and the design points worth reviewing in 5.3
+> **Status:** ACTIVE — review round 1 on [#18](https://github.com/xdylanm/netlistmod/pull/18) (section 6): R1 in progress
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
 
 ## 1. Scope
@@ -48,7 +48,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, following the us
 
    | Form | Library today | LTspice 26.1.1 | Proposed |
    |---|---|---|---|
-   | a `+` line that holds only a comment | loads | stops | **refuse** (`ParseError`): it is a line shape the grammar can see, and P5 asks for it |
+   | a `+` line that holds only a comment | loads | stops | **refuse** (`ParseError`): it is a line shape the grammar can see, and P5 asks for it. *Amended in review round 1 (maintainer, 2026-11-11): it loads, as before M18, and is a `discrepancies.md` row (section 6, R1).* |
    | `.model x BUF(…)` (a special-function type) | loads | stops ("Expected model definition" when used) | **refuse** the type in the LTspice `.model` rule if A1 or D2's probe shows LTspice stops on the `.model` line itself; otherwise a warning when an A line uses it |
    | `@ … zm` with an `&` probe for it | loads | stops ("FRA Probe not supported … impedance measurement mode") | **diagnostic** (warning) on the probe: it spans two lines, so it is not a grammar check |
    | `@` under `.fra` with neither `fstart=`/`fend=` nor `flist=` | loads | stops ("Missing parameter") | **diagnostic** (warning) on the `@` line, only when the netlist has a `.fra` command |
@@ -323,3 +323,32 @@ Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` 
 | D7b | developer | 2026-11-11 after a resume, complete | accepted: four removal paths share `_removal_edit` (LTspice only; ngspice output unchanged), with tests for each and CRLF. At `7936120` alone the edit and architecture tests pass (2,415) | `7936120` |
 | D8 | developer | 2026-11-11, complete | accepted: diff read; an indented and a tab-indented `*` line load as `CommentLine`, and ngspice 47 ignores both (a commented-out R3 leaves v(mid) at 1.0 V, 2/3 V when live). NG-COM-001 is `validated` (§2.4.3, §2.1.1); ngspice totals 73 validated, 2 observed. Architecture and doc tests pass in a clean worktree of the commit | this commit |
 | T1 | lead | — | decision 0021 complete, the architecture amended, the final run (5.2), [#18](https://github.com/xdylanm/netlistmod/pull/18) opened, status `READY FOR REVIEW` | `d14f682`, `327d299`, this commit |
+
+## 6. Review round 1 (2026-11-11, `740844d`, #18)
+
+### 6.1 Outcome
+
+The maintainer asked for examples of section 5.3 point 1 (checks outside the grammar) and decided:
+- **Kind 1, accepted as it is:** the loader's own messages for lines the parser already refuses (D1: C1, C5 and C6). They change no acceptance.
+- **Kind 1's related edit change, accepted:** an LTspice removal joins the comment of an emptied last `+` line onto the line before (D7b).
+- **Kind 2, changed (R1):** the refusal of a statement whose last `+` line holds only a comment (D2's C7). It ran in the loader after a successful parse, which P13 does not allow for syntax. The grammar's own reading stands. The form loads, as it did before M18, and LTspice stopping on it is a discrepancy.
+
+### 6.2 Required changes
+
+[~] **R1 — A comment-only last `+` line loads on LTspice (amends decision 5 for C7).**
+- **Code:** remove `_refuse_comment_only_last_line` and its message from `grammar/loader.py`. `CONT` and `SEP` stay as they are, with no lookahead, and `UNCHECKED_TERMINALS` is unchanged.
+- **Tests:**
+  - the C7 refusal tests become accept tests that pin the reading (span and round trip);
+  - the probes in `tests/solver/test_ltspice_m18_probes.py` keep "LTspice stops on it", and their reading becomes `loads`;
+  - `elements_rejects/plus_comment_last_line.cir` goes, with its manifest entry. It cannot become an accept file, since LTspice stops on it in the solver sweep.
+- **Records:**
+  - a `discrepancies.md` row: the library loads the form and LTspice 26.1.1 stops on it, unless a later `+` line holds a field;
+  - the `.subckt` ports-only row goes, since the library and LTspice now agree that the form runs;
+  - `LT-CNT-001`'s note, the `errors.md` example and the CHANGELOG line are updated.
+- **Lead:** decision 0021 item 5, decision 5's table (amended above) and section 5.3 points 1 and 3.
+
+### 6.3 Exit for this round
+
+1. Make R1.
+2. Run the full check set with `--require-solver ngspice --require-solver ltspice`, and read CI once after the push.
+3. Add a short report as 6.4, and set the status to `READY FOR REVIEW`.
