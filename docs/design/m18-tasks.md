@@ -66,7 +66,7 @@ M17's pull request [#17](https://github.com/xdylanm/netlistmod/pull/17) is appro
 ### 3.1 Inventory
 
 - **Device matrices:** no letter is `planned` in either matrix, and `test_no_device_letter_is_planned` checks it (M17 T3).
-- **Spec entries:** 151 in all. ngspice: 72 `validated`, 3 `observed` (`NG-COM-001`, `NG-NUM-004`, `NG-TXT-001`). LTspice: 73 `validated`. No entry is `documented`, so the second half of the plan's exit holds today; A4 confirms it, and that no entry should be `documented` instead.
+- **Spec entries:** 148 in all (corrected in A4). ngspice: 72 `validated`, 3 `observed` (`NG-COM-001`, `NG-NUM-004`, `NG-TXT-001`). LTspice: 73 `validated`. No entry is `documented`, so the second half of the plan's exit holds today; A4 confirms it, and that no entry should be `documented` instead.
 - **Value specifications:** `NG-NUM-001` to `004`, `LT-NUM-001` to `004`, `NG-VAL-001`/`LT-VAL-001`, and `docs/grammars/<dialect>/numbers.md`. LTspice's comma forms: `discrepancies.md` rows for `.step`/`.dc`/`.ac list`, `tc=`, `m=2, temp=3`, `AC 1, 2`, `.subckt s a,b`, E/F node commas, T and A/`@` parameters; the closing note lists the comma forms that run ("`tc` values (documented) and, observed, `.model` and `X` parameters, `.param` assignments, `.options` items and `.save` vectors").
 - **`UnsupportedConstruct` paths in `src/`:**
   - `grammar/loader.py` (`planned` letters; reached only with a mocked matrix, decision 6);
@@ -82,7 +82,7 @@ M17's pull request [#17](https://github.com/xdylanm/netlistmod/pull/17) is appro
 
 ### 3.2 Baseline run
 
-Full local run on `m18-completeness-audit` at `6843d4c` with `--require-solver ngspice --require-solver ltspice`: *running; recorded here when it ends.*
+Full local run on `m18-completeness-audit` at `8f8c098` (the tree of `6843d4c` plus this list) with `--require-solver ngspice --require-solver ltspice`: 9,458 passed, 2 failed, 2 skipped, 1,203 deselected, coverage 98.61%, in 26 min 17 s. The two failures were LTspice corpus runs (`test_accept_fixture_runs_in_ltspice[special_functions/test_ltspice_fra_named.cir]` and `test_unedited_round_trip_gives_identical_results[ltspice_transistors/edges.net]`), while the stage 1 reviewers ran LTspice probes at the same time; both pass when rerun on their own (2 passed, 18 s). They are treated as host noise from the parallel solver runs, and T1's final run is made with no other solver work going on.
 
 ### 3.3 Carried items
 
@@ -105,33 +105,33 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 
 ### Stage 0 — Set-up (lead)
 
-[~] **T0 — Task list and baseline.**
+[x] **T0 — Task list and baseline.**
 - Write this list, cut the branch, run the baseline (3.2).
 - Commit the list.
 
 ### Stage 1 — Audits (independent reviewers, in parallel; read-only)
 
-[ ] **A1 — Value specifications (§6.4).** *Reviewer.*
+[~] **A1 — Value specifications (§6.4).** *Reviewer.*
 - **ngspice:** the manual's numeric forms and scale-factor table (§2.1.3, and every other section that defines a value form: units after numbers, `meg`/`mil`, exponents, signs, leading `.`, `µ`, braces and quotes, RKM under the option) against `core.lark`/`ngspice.lark`, `NG-NUM-*`, `NG-VAL-001` and `numbers.md`. For each form: accepted, refused with a `discrepancies.md` row, or missing.
 - **LTspice:** the same against the reference's number and value text, `LT-NUM-*`, `LT-VAL-001` and `numbers.md`.
 - **Value slots:** check that each element's value slot of phase 2 (Q to `&`, the `.model` values of M16 and M17) reads the same number forms as R, or says where and why it differs.
 - **Comma lists:** every row of LTspice's `discrepancies.md` with a comma, and its closing comma note: is each form the reference documents accepted, each form it does not refused with a row, and the note still true after M14 to M17?
 - **Report:** decision 3's table, with a probe (scratch, outside the repository) for any form whose reading is not already pinned by a test.
 
-[ ] **A2 — Architecture and rejection paths.** *Reviewer.*
+[~] **A2 — Architecture and rejection paths.** *Reviewer.*
 - Confirm that no matrix entry or JSON file is `planned`, and that `test_no_device_letter_is_planned` would fail if one were.
 - List every place in `src/` that raises, or documents raising, `UnsupportedConstruct`, with its reason; mark each `justified` (a v1 exclusion or decision 6) or `stale`.
 - **Lookaround review (decision 8):** for each terminal of `UNCHECKED_TERMINALS`, its pattern, the parser states where it is a candidate, the terminals it competes with there, and why they cannot match the same text; flag any that could. Draft the README table.
 - Read the grammar comments, the `parse()` and loader docstrings and `docs/usage/errors.md` for text that M12 to M17 made stale.
 - **Report:** decision 3's table and the draft lookaround table.
 
-[ ] **A3 — Corpus, oracle and edit properties.** *Reviewer.*
+[~] **A3 — Corpus, oracle and edit properties.** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
 - **Corpus:** for each device group of plan section 5 and each dialect, the accept files that hold it, by origin, and whether each has a manifest entry with author, licence, origin and hash, and runs in its solver sweep. Mark groups with no file of the maintainer's (decision 9).
 - **Oracle:** which phase 2 letters and forms `test_element_oracle.py` and `test_broad_oracle.py` generate (today: none), and a proposed design for extending them to every phase 2 letter on both dialects, keeping the oracle independent of the parser (expected values from the generator's record only).
 - **Edit properties:** for each edit operation added in M12 to M17, whether a Hypothesis property shows that it preserves the signature, is idempotent, and changes no text outside its span; list the gaps.
 - **Report:** decision 3's table and the oracle design, sized for D3.
 
-[ ] **A4 — Spec coverage and statuses.** *Reviewer.*
+[~] **A4 — Spec coverage and statuses.** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
 - Run `tests/architecture/test_spec_coverage.py` and read what it checks against §10.4 and §11.2: every `supported` construct has an accept test; each status has its evidence.
 - Check that every grammar rule added in M12 to M17 is traced to a spec entry, and that each spec entry's tests exist and test the construct (sample at least one entry per milestone by reading its tests).
 - The three `observed` ngspice entries: is the manual still silent on each? Is any `validated` entry really `observed` or `documented`?
@@ -191,4 +191,8 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 
 | Subtask | Role | Reported | Lead's review | Commit |
 |---|---|---|---|---|
-| T0 | lead | — | — | — |
+| T0 | lead | — | baseline recorded in 3.2 | `8f8c098`, this commit |
+| A1 | reviewer | stopped on an API rate limit, resumed | — | — |
+| A2 | reviewer | stopped on an API rate limit, resumed | — | — |
+| A3 | reviewer | 2026-11-10, complete with findings (17 rows) | at G1 | — |
+| A4 | reviewer | 2026-11-10, complete with findings (16 rows) | at G1 | — |
