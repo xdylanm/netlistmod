@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-10'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar:
 - body_line
 - fra_probe
@@ -20,4 +23,6 @@ tests:
 - tests/document/test_special_topology.py::test_a_probe_finds_its_analyzer
 - tests/solver/test_ltspice_special_probes.py::test_analyzer_probes
 - tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
-notes: 'Four nodes, the output pair and the input pair, and nothing after them (decision 0020 item 8). analyzer names @ and the probe''s suffix, compared in any case, resolved in the probe''s scope: UNRESOLVED_ELEMENT when missing, unless the scope has exactly one @, which LTspice then uses. It is not topology.'
+- tests/document/test_ltspice_fra_diagnostics.py::test_a_probe_for_an_analyzer_in_zm_mode_is_a_warning
+- tests/solver/test_ltspice_m18_probes.py::test_zm_probe_probes
+notes: 'Four nodes, the output pair and the input pair, and nothing after them (decision 0020 item 8). analyzer names @ and the probe''s suffix, compared in any case, resolved in the probe''s scope: UNRESOLVED_ELEMENT when missing, unless the scope has exactly one @, which LTspice then uses. It is not topology. A probe whose analyzer is in zm mode is FRA_PROBE_IN_IMPEDANCE_MODE, a warning: LTspice stops on it (M18 D2).'

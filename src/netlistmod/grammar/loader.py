@@ -311,6 +311,23 @@ _GATE_WORD = re.compile(r"(?:and|or|nand|nor)", re.IGNORECASE)
 _FOUR_NODE_TABLE = re.compile(r"table[ \t]*[=(]", re.IGNORECASE)
 _M_PARAM = re.compile(r"m[ \t]*=", re.IGNORECASE)
 _VALUE_START: Final[frozenset[str]] = frozenset("0123456789+-.{'")
+# LTspice "+" lines (M18 D2): one that holds only a comment (";", or "$" with a space on both
+# sides, as LTspice's TRAILING_COMMENT), one that holds nothing else, and any.
+_COMMENT_ONLY_PLUS = re.compile(r"[ \t]*\+[ \t]*(?:;| \$ )")
+_BLANK_PLUS = re.compile(r"[ \t]*\+[ \t]*(?:\r?\n|\Z)")
+_PLUS = re.compile(r"[ \t]*\+")
+# The LTspice blocks whose lines are opaque text, not statements.
+_LTSPICE_BLOCKS: Final[frozenset[str]] = frozenset({"lib_block", "machine_block"})
+_COMMENT_ONLY_LAST_LINE = (
+    "a `+` line that holds only a comment cannot end a statement: LTspice stops on it "
+    '("Syntax error") unless a later `+` line of the statement holds a field; move the comment '
+    "to the end of the line before"
+)
+_COMMA_AFTER_PARAMS = (
+    'a comma right after `params:`: LTspice stops on it ("Expected end of line here" on '
+    '`.subckt`, "syntax error" on X); write the first parameter after a blank, '
+    "`params: r=1k`"
+)
 
 
 @lru_cache(maxsize=None)
@@ -341,7 +358,7 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
     """
     parser = build_parser(dialect)
     try:
-        return parser.parse(source.text)
+        tree = parser.parse(source.text)
     except UnexpectedToken as error:
         at_end = error.token.type == _END_OF_INPUT
         offset = len(source.text) if at_end else int(error.token.start_pos or 0)
@@ -350,6 +367,44 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
         raise _map_error(
             source, dialect, int(error.pos_in_stream or 0), error.allowed or (), error
         ) from error
+    if dialect is Dialect.LTSPICE:
+        _refuse_comment_only_last_line(source, tree)
+    return tree
+
+
+def _refuse_comment_only_last_line(source: SourceText, tree: Tree[Token]) -> None:
+    """Refuse an LTspice statement whose last ``+`` line that is not blank holds only a comment
+    (M18 D2): LTspice 26.1.1 stops on it ("Syntax error"), ngspice runs it.
+
+    The tree has parsed, so every ``+`` line outside an opaque block continues a statement. The
+    grammar cannot see which line of a statement is the last without a lookahead on ``CONT`` and
+    ``SEP``, which would take them out of strict collision checking (review R1 of D2), so the
+    check reads the physical lines after the parse.
+    """
+    if "+" not in source.text:
+        return
+    blocks = [
+        (subtree.meta.start_pos, subtree.meta.end_pos)
+        for subtree in tree.iter_subtrees()
+        if subtree.data in _LTSPICE_BLOCKS and not subtree.meta.empty
+    ]
+    count = source.line_count
+    for line in range(2, count + 1):
+        start = source.line_span(line).start
+        if not _COMMENT_ONLY_PLUS.match(source.text, start):
+            continue
+        if any(first <= start < last for first, last in blocks):
+            continue
+        following = line + 1
+        while following <= count and _BLANK_PLUS.match(
+            source.text, source.line_span(following).start
+        ):
+            following += 1
+        if following <= count and _PLUS.match(source.text, source.line_span(following).start):
+            continue  # a later "+" line holds a field, or is checked in its turn
+        offset = source.text.index("+", start)
+        row, column = source.position(offset)
+        raise ParseError(row, column, source.excerpt(offset), (), _COMMENT_ONLY_LAST_LINE)
 
 
 def _expected_names(terminals: Iterable[object], dialect: Dialect) -> tuple[str, ...]:
@@ -473,6 +528,9 @@ def _map_error(
         missing = _missing_after_line_end(error, expected_terminals)
         if missing is not None:
             return _incomplete_line(source, dialect, offset, missing)
+        if dialect is Dialect.LTSPICE and _comma_after_params(source, offset, error):
+            line, column = source.position(offset)
+            return ParseError(line, column, source.excerpt(offset), (), _COMMA_AFTER_PARAMS)
         refusal = _named_refusal(source, dialect, offset, error)
         if refusal is not None:
             refused_at, reason = refusal
@@ -498,6 +556,19 @@ def _map_error(
             reason = f"`{name}` is not an LTspice dot-command, or is not allowed here"
             return ParseError(line, column, source.excerpt(offset), expected, reason)
     return ParseError(line, column, source.excerpt(offset), expected)
+
+
+def _comma_after_params(source: SourceText, offset: int, error: UnexpectedToken) -> bool:
+    """Whether the parser stopped at a comma right after an LTspice ``params:``, with only gap
+    tokens between them."""
+    if not source.text.startswith(",", offset):
+        return False
+    for value in reversed(_value_stack(error)):
+        if isinstance(value, Token) and value.type in ("SEP", "TRAILING_COMMENT"):
+            continue
+        # Before the comma is lexed, the parser has not yet reduced `params:` to its rule.
+        return _is_tree(value, "params_marker") or _is_token(value, "PARAMS_KW")
+    return False
 
 
 def _element_values(error: UnexpectedToken) -> tuple[Token, list[object]] | None:

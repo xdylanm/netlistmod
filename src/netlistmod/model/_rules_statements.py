@@ -84,6 +84,27 @@ _LTRA_FLAGS = frozenset(
 )
 _LTRA_FLAG_TERMINALS = frozenset(f"{flag.upper()}_KW" for flag in _LTRA_FLAGS)
 _CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
+# The LTspice special function names (decision 0020 item 3) and DIGITAL: LTspice 26.1.1 stops on a
+# `.model` line of one of these types on its own ("Expected model definition", M18 D2), since an
+# A line names its function directly.
+_LT_FUNCTION_TYPES = frozenset(
+    {
+        "buf",
+        "and",
+        "or",
+        "xor",
+        "schmitt",
+        "dflop",
+        "srflop",
+        "varistor",
+        "modulator",
+        "ota",
+        "phasedet",
+        "counter",
+        "samplehold",
+        "digital",
+    }
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -91,6 +112,19 @@ class _ModelValue:
     """A value after a ``.model`` parameter's value: the next value of a CPL matrix."""
 
     value: Value
+
+
+def _function_type_reason(model_type: str) -> str:
+    if model_type.lower() == "digital":
+        return (
+            f"`{model_type}` is not an LTspice model type: LTspice stops on this `.model` line, "
+            "with or without parameters"
+        )
+    return (
+        f"`{model_type}` is a special function, not a model type: LTspice stops on this `.model` "
+        'line ("Expected model definition"); an A line names its function itself, '
+        f"`A1 ... {model_type.upper()} Vhigh=5`"
+    )
 
 
 class StatementsRules(ElementsRules):
@@ -143,6 +177,8 @@ class StatementsRules(ElementsRules):
     def model_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         name, model_type = element.all(Token)[:2]
+        if self._dialect is Dialect.LTSPICE and str(model_type).lower() in _LT_FUNCTION_TYPES:
+            raise self._parse_error(model_type, _function_type_reason(str(model_type)))
         ako = element.optional(ModelReference)
         paren = element.optional(_ModelParams)
         fields = paren.fields if paren is not None else tuple(element.fields)

@@ -20,6 +20,8 @@ from netlistmod.model.nodes import (
     Ccvs,
     Component,
     CurrentSwitch,
+    FraProbe,
+    FrequencyAnalyzer,
     GlobalDirective,
     Inductor,
     ModelStatement,
@@ -56,6 +58,8 @@ class DiagnosticCode(StrEnum):
     NODE_INTO_INSTANCE = "NODE_INTO_INSTANCE"
     CONTROL_SOURCE_MISMATCH = "CONTROL_SOURCE_MISMATCH"
     UNRESOLVED_NODE = "UNRESOLVED_NODE"
+    FRA_PROBE_IN_IMPEDANCE_MODE = "FRA_PROBE_IN_IMPEDANCE_MODE"
+    FRA_RANGE_MISSING = "FRA_RANGE_MISSING"
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +127,8 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         for value in walk_nodes(item, NumericValue, bodies=False):
             if index.dialect is Dialect.NGSPICE:
                 found.extend(_value_findings(value))
+    if index.dialect is Dialect.LTSPICE:
+        found.extend(_fra_range_findings(index))
     found.sort(key=lambda entry: (entry[3].start, entry[3].end, _ORDER[entry[0]]))
     diagnostics = []
     for code, severity, message, span in found:
@@ -207,6 +213,22 @@ def _reference_findings(
             )
         )
     if (
+        reference.kind == "element"
+        and isinstance(owner, FraProbe)
+        and isinstance(target, FrequencyAnalyzer)
+        and target.impedance is not None
+    ):
+        findings.append(
+            (
+                DiagnosticCode.FRA_PROBE_IN_IMPEDANCE_MODE,
+                "warning",
+                f"`{owner.designator}` probes for `{target.designator}`, which measures an "
+                f"impedance (`{target.impedance.name}`); {_SOLVER[index.dialect]} stops on a probe "
+                'in that mode ("FRA Probe not supported")',
+                reference.span,
+            )
+        )
+    if (
         reference.kind == "subckt"
         and isinstance(reference.target, SubcktDefinition)
         and isinstance(owner, SubcktInstance)
@@ -221,6 +243,43 @@ def _reference_findings(
                 reference.span,
             )
         )
+    return findings
+
+
+# The parameters every enabled LTspice `@` needs in a `.fra` run; `flist=` does not replace them.
+_FRA_RANGE = ("fstart", "fend")
+
+
+def _fra_range_findings(index: Index) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
+    """Each ``@`` without ``fstart=`` or ``fend=``, when the netlist runs ``.fra`` (top level
+    only): LTspice stops on it ("Missing parameter"). An ``@`` with ``enabled=`` is left alone,
+    since the library does not read the value; LTspice skips a disabled one."""
+    root = index.root
+    if not any(
+        isinstance(line.item, UnknownDirective) and root.fold(line.item.name) == ".fra"
+        for line in root.lines
+    ):
+        return []
+    findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
+    for line in index.lines.walk():
+        item = line.item
+        if not isinstance(item, FrequencyAnalyzer):
+            continue
+        given = {root.fold(param.name) for param in item.params}
+        if "enabled" in given:
+            continue
+        missing = [f"`{name}=`" for name in _FRA_RANGE if name not in given]
+        if missing:
+            findings.append(
+                (
+                    DiagnosticCode.FRA_RANGE_MISSING,
+                    "warning",
+                    f"`{item.designator}` has no {' and no '.join(missing)}; "
+                    f'{_SOLVER[index.dialect]} stops on it in a `.fra` run ("Missing '
+                    'parameter"), and `flist=` does not replace them',
+                    item.designator_span,
+                )
+            )
     return findings
 
 

@@ -566,17 +566,21 @@ d_param: SEP D_PARAM_KW EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA)
 D_PARAM_KW.2: /(?:temp|area|rpar|m|n)(?=[ \t]*=)/i
 
 // X: nodes, the subcircuit name, then parameters, with or without "params:". A comma may stand
-// before a parameter (observed).
+// before a parameter (observed), but not right after "params:": LTspice 26.1.1 stops on
+// "params:, r=1k" on X and on .subckt (M18 D2), so the first parameter after it takes only blanks,
+// "+" lines and comments before it, and the loader names the comma.
 // spec: LT-SUB-001
-%extend x_last: x_name params_marker x_param* (NL | eol)
+%extend x_last: x_name params_marker (params_first x_param*)? (NL | eol)
 %extend x_param: SEP WORD EQ EMBEDDED
                | CSEP WORD EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
 params_marker: SEP PARAMS_KW
              | (SEP | TRAILING_COMMENT) params_marker
+params_first: SEP WORD EQ (NUMBER | EMBEDDED | BRACE_FORMULA | QUOTE_FORMULA | STRING_VALUE)
+            | (SEP | TRAILING_COMMENT) params_first
 PARAMS_KW.2: "params:"i
 
 // spec: LT-SBD-001
-%extend subckt_header: SUBCKT_KW x_name subckt_port+ params_marker x_param* (NL | eol)
+%extend subckt_header: SUBCKT_KW x_name subckt_port+ params_marker (params_first x_param*)? (NL | eol)
 %extend not_in_subckt: (STEP_KW | OPT_KW | TOP_DOT_NAME) rest NL
 
 // Source functions. A list may hold embedded decimals, and SINE is the reference's name for SIN.

@@ -14,6 +14,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-09'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar:
 - param
 - model_param_first
@@ -54,4 +57,8 @@ tests:
 - tests/solver/test_ltspice_transistor_probes.py::test_a_dotted_model_value_runs
 - tests/grammar/ltspice/test_ltspice_lines.py::test_ltra_flags_are_refused_with_a_reason
 - tests/solver/test_ltspice_line_probes.py::test_ltra_flags_are_refused
-notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with a hint, since LTspice reads it as a parameter reference (reviews R2, R8). pn is not a metadata name on a .model: pn=3M is an open numeric name, LTspice warns at pn=OnSemi and stops at pn=1N4148A, and the library rejects both. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7). LTRA''s ngspice flags are recognised only to be refused: the reference lists only R, L, G, C and Len for LTRA, and LTspice 26.1.1 runs steplimit, nosteplimit and lininterp (discrepancies.md; decision 0019 item 8).'
+- tests/grammar/ltspice/test_ltspice_statements.py::test_a_special_function_is_not_a_model_type
+- tests/grammar/ltspice/test_ltspice_statements.py::test_digital_is_not_a_model_type
+- tests/grammar/ltspice/test_ltspice_statements.py::test_other_model_types_still_load
+- tests/solver/test_ltspice_m18_probes.py::test_special_function_model_type_probes
+notes: 'With or without parentheses, and ako: derived models. Observed: mfg and type take a quoted string or a bare word, kept verbatim, as in LTspice''s own libraries. Any other bare word is a ParseError with a hint, since LTspice reads it as a parameter reference (reviews R2, R8). pn is not a metadata name on a .model: pn=3M is an open numeric name, LTspice warns at pn=OnSemi and stops at pn=1N4148A, and the library rejects both. A bare pchan or nchan is a flag, and a dotted value such as version=3.3.0 is text, never a number (decision 0014 item 7). LTRA''s ngspice flags are recognised only to be refused: the reference lists only R, L, G, C and Len for LTRA, and LTspice 26.1.1 runs steplimit, nosteplimit and lininterp (discrepancies.md; decision 0019 item 8). A special function''s name (BUF, OTA … SAMPLEHOLD) or DIGITAL as the type is a ParseError at the type: LTspice 26.1.1 stops on the .model line itself, used or not ("Expected model definition"; M18 D2). Other types are not checked, though LTspice stops on one it does not know.'

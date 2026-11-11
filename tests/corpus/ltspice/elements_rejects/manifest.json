@@ -362,6 +362,20 @@
       "column": 12,
       "error": "ParseError",
       "note": "a parameter on an & line (LTspice stops)"
+    },
+    "plus_comment_last_line.cir": {
+      "sha256": "c98d5e1ea19ba02f7b7ceb2608c38cb5bf526b54e49087191da1cf22530d020d",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "a + line that holds only a comment ends the statement (LTspice stops: Syntax error; M18 D2)"
+    },
+    "x_params_comma.cir": {
+      "sha256": "2889bf790b47e943132b2fa44f0a229e5eaf95d3b8f9d9ac70c13bc8dc948ae3",
+      "line": 3,
+      "column": 17,
+      "error": "ParseError",
+      "note": "a comma right after params: on X (LTspice stops: syntax error; M18 D2)"
     }
   }
 }

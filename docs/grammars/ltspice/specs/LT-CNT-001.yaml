@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar: []
 core_rules:
 - CONT
@@ -20,5 +23,16 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_continuation_lines_join_the_statement
 - tests/solver/test_ltspice_validation.py::test_backslash_continuation_stops_both
 - tests/solver/test_ltspice_discrepancies.py::test_a_continuation_across_other_lines_runs_but_the_library_rejects_it
-notes: The + line must follow immediately; LTspice also joins across comment and blank lines (discrepancies.md).
-  No backslash continuation (L24).
+- tests/grammar/ltspice/test_ltspice_structure.py::test_a_comment_only_plus_line_may_not_end_a_statement
+- tests/grammar/ltspice/test_ltspice_structure.py::test_a_comment_only_plus_line_is_refused_before_end_with_either_line_ending
+- tests/grammar/ltspice/test_ltspice_structure.py::test_a_comment_only_plus_line_before_a_field_continues
+- tests/grammar/ltspice/test_ltspice_structure.py::test_a_comment_only_plus_line_after_a_comment_line_keeps_the_general_error
+- tests/grammar/ltspice/test_ltspice_structure.py::test_ngspice_still_reads_a_comment_only_plus_line
+- tests/solver/test_ltspice_m18_probes.py::test_comment_only_plus_line_probes
+- tests/solver/test_ltspice_m18_probes.py::test_ngspice_runs_and_loads_a_comment_only_plus_line
+notes: 'The + line must follow immediately; LTspice also joins across comment and blank lines (discrepancies.md).
+  No backslash continuation (L24). A + line that holds only a comment (; or space, $, space) may not end
+  a statement: LTspice 26.1.1 stops on it ("Syntax error") unless a later + line holds a field, and blank
+  + lines after it do not count (M18 D2). The loader refuses it after the parse, from the physical
+  lines, so CONT and SEP keep no lookahead (review R1 of D2). LTspice runs it at the end of a .subckt header with ports only, which the library refuses too
+  (discrepancies.md).'
