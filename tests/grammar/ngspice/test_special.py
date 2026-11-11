@@ -193,6 +193,17 @@ def test_comments_inside_a_continued_line_are_kept() -> None:
     assert [n.name for n in item.nodes] == ["in1", "in2", "out"]
 
 
+def test_a_comment_inside_a_differential_connection_is_kept() -> None:
+    text = "title\nA1 %vd a ; c\n+ b m\n.end\n"
+    item = parse(SourceText(text), Dialect.NGSPICE).items[1]
+    assert isinstance(item, CodeModelDevice)
+    assert _ports(item) == [(False, None, [("%vd", ["a", "b"], False, False)])]
+    (connection,) = item.ports[0].connections
+    assert text[connection.span.start : connection.span.end] == "%vd a ; c\n+ b"
+    assert [text[s.start : s.end] for s in item.trailing_comments] == ["; c"]
+    assert text[item.model.span.start : item.model.span.end] == "m"
+
+
 @pytest.mark.parametrize(
     ("line", "column", "reason"),
     [
@@ -273,6 +284,24 @@ def test_a_vector_may_be_first_or_over_a_continuation_line() -> None:
     vector = over.params[0].value
     assert isinstance(vector, ValueList) and len(vector.values) == 2
     assert over.params[1].name == "out_gain"
+
+
+@pytest.mark.parametrize(
+    ("text", "value", "kind"),
+    [
+        (".model m mycm(k=1 ; c\n+ j=[1 2])", "[1 2]", ValueList),
+        (".model m mycm k=1 ; c\n+ j=[1 2]", "[1 2]", ValueList),
+        ('.model m mycm(k=1 ; c\n+ j="x")', '"x"', Formula),
+    ],
+)
+def test_a_comment_before_a_code_model_value_is_kept(text: str, value: str, kind: type) -> None:
+    source = f"title\n{text}\n.end\n"
+    model = _model(text)
+    assert [param.name for param in model.params] == ["k", "j"]
+    second = model.params[1].value
+    assert isinstance(second, kind)
+    assert source[second.span.start : second.span.end] == value
+    assert [source[s.start : s.end] for s in model.trailing_comments] == ["; c"]
 
 
 @pytest.mark.parametrize(

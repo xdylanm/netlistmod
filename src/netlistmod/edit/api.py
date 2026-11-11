@@ -303,7 +303,7 @@ class _Operations(Generic[_R]):
         with the separator after it (``ltra(r=10 len=1)`` gives ``ltra(len=1)``), and the last
         one leaves the parentheses (``d(is=1e-14)`` gives ``d()``). A CPL matrix goes whole.
         ``EditError`` for a flag, a parameter the model does not have, and a CPL matrix with a
-        comment inside it (over ``+`` lines), which the removal would lose (review R3); the
+        comment inside it (over ``+`` lines), which the removal would lose; the
         separator is chosen as for :meth:`remove_param`. Model contents are not checked.
         """
         return self._submit(
@@ -455,7 +455,7 @@ class _Operations(Generic[_R]):
 
         A CPL matrix is replaced as a whole list (``"50n 10n 50n"``). When a comment lies inside
         it (over ``+`` lines), a list of as many values replaces each value in place, so the
-        comment stays, and another count is an ``EditError`` (review R3).
+        comment stays, and another count is an ``EditError``.
         """
         return self._submit(
             operations.set_model_param(

@@ -40,7 +40,7 @@ Use `python -m <tool>` (the signed interpreter) instead of the bare tool
 executables; on Windows with Smart App Control the unsigned shims can be blocked
 (see the note at the end of this document).
 
-`pytest` enforces the project's 90% line-coverage target.
+`pytest` enforces the project's 98% coverage floor (`fail_under` in `pyproject.toml`).
 
 ## Continuous integration
 
@@ -50,7 +50,7 @@ executables; on Windows with Smart App Control the unsigned shims can be blocked
 | Job | Runs on | What it does |
 |---|---|---|
 | Lint and types | Ubuntu, Python 3.13 | `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests below, `lint-imports`, `pre-commit run --all-files` |
-| Test | Ubuntu and Windows, Python 3.13 and 3.14 | The whole suite with the 90% coverage gate, including strict grammar builds, spec coverage and link checks |
+| Test | Ubuntu and Windows, Python 3.13 and 3.14 | The whole suite with the 98% coverage gate, including strict grammar builds, spec coverage and link checks |
 
 The named test command, which runs locally too:
 

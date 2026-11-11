@@ -620,8 +620,10 @@ class ModelStatement(_DotCommand):
     ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
     ``open_paren_span`` and ``close_paren_span`` cover the ``(`` and ``)`` tokens of a
     parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (M6).
-    ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``. ``flags`` holds a
-    bare ``pchan`` or ``nchan`` (decision 0014).
+    ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``. ``flags`` holds the
+    bare flags in source order: ``pchan`` or ``nchan`` (decision 0014) and, on an ngspice
+    ``LTRA`` model, LTRA's flags (``nosteplimit``, ``steplimit``, ``nocontrol``, ``lininterp``,
+    ``mixedinterp``, ``truncnr``, ``truncdontcut``; decision 0019 item 8).
     """
 
     name: str

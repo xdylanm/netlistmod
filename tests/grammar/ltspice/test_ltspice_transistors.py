@@ -162,6 +162,14 @@ def test_a_number_after_an_m_model_is_refused_as_the_model(line: str, word: str)
     assert "a model name cannot be a number" in error.reason
 
 
+@pytest.mark.parametrize(("line", "word"), [("J1 d g s 1e3Ω", "1e3Ω"), ("J1 d g s 2.5μ", "2.5μ")])
+def test_a_number_with_a_letter_in_the_j_model_place_is_refused(line: str, word: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, 10)
+    assert error.reason.startswith(f"`{word}` is in the model's place")
+    assert "a model name cannot be a number" in error.reason
+
+
 def test_a_model_name_cannot_be_a_keyword() -> None:
     error = _reject("Q1 c b e 2 off")
     assert (error.line, error.column) == (2, 12)
