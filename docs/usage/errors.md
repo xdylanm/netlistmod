@@ -1,6 +1,6 @@
 # Errors and diagnostics
 
-The library reports problems in two ways. An **exception** means the requested parse or edit did not happen, and nothing was written. A **diagnostic** is a finding about a netlist that did load; it is data and is never raised. This page covers both dialects, and the examples are executed by the test suite. The rules are in architecture §17.
+The library reports problems in two ways. An **exception** means the requested parse or edit did not happen, and nothing was written. A **diagnostic** is a finding about a netlist that did load; it is data and is never raised. This page covers both dialects, and the examples are executed by the test suite. The rules are in [architecture §17](../architecture.md#17-errors-and-diagnostics).
 
 ```python
 >>> from pathlib import Path
@@ -76,7 +76,7 @@ the netlist ends at `.end`: only blank lines may follow it
 
 ### `UnsupportedConstruct`
 
-The dialect has this construct, but the library does not support it. It is separate from `ParseError` so that a caller can tell "not supported" from "wrong". Since M17 every device letter is supported, and two constructs are named exclusions of v1 (decision 0020 items 1 and 11): the ngspice digital U and LTspice's `.machine`.
+The dialect has this construct, but the library does not support it. It is separate from `ParseError` so that a caller can tell "not supported" from "wrong". Every device letter is supported, and two constructs are named exclusions of v1 ([decision 0020](../decisions/0020-special-and-mixed-signal-devices.md) items 1 and 11): the ngspice digital U and LTspice's `.machine`.
 
 ```python
 >>> from netlistmod import UnsupportedConstruct
@@ -192,11 +192,21 @@ A wrong call, as opposed to a problem with the netlist, gets a standard Python e
 | `ValueError` | An unknown dialect; `rkm=True` with `Dialect.LTSPICE`; a `Reference` from another netlist passed to `resolve` |
 | `KeyError` | `element`, `scope` or `net` of a name that does not exist (a read, where an edit would give `EditError`) |
 | `FileNotFoundError`, `OSError` | `Netlist.load` or `save` on a path that cannot be read or written |
-| `RecursionError` | About 300 nested `.if` levels in ngspice (a known limit) |
+| `RecursionError` | `.if` blocks nested about 240 levels deep in ngspice (a known limit; the exact depth depends on the Python stack) |
 
 ## Diagnostics
 
-`Netlist.diagnostics` is a tuple of `Diagnostic(code, severity, message, span, line, column)`, computed once at load, in source order. A severity is `warning` (probably a mistake, or the solver will object) or `info` (worth knowing).
+`Netlist.diagnostics` is a tuple of `Diagnostic(code, severity, message, span, line, column)`, computed once at load, in source order. A severity is `warning` (probably a mistake, or the solver will object) or `info` (worth knowing). A code is a member of the public enum `DiagnosticCode`, so compare it with `is`; its `value` is the name used in this page.
+
+```python
+>>> from netlistmod import DiagnosticCode
+>>> d = Netlist.from_text("t\nD1 a 0 dm\n.end\n", dialect=Dialect.NGSPICE).diagnostics[0]
+>>> d.code is DiagnosticCode.UNRESOLVED_MODEL
+True
+>>> d.code.value
+'UNRESOLVED_MODEL'
+
+```
 
 ### `UNRESOLVED_MODEL`
 

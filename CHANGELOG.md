@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+**v1 summary.** A source-preserving editor for SPICE netlists, feature complete for v1.
+
+- **Dialects:** ngspice, validated on ngspice 47, and LTspice, validated on LTspice 26.1.1 on Windows. The caller always selects the dialect.
+- **Device letters:** every letter of both dialects. ngspice: R, C, L, K, V, I, D, X; Q, M, J, Z; E, F, G, H, S, W; B; T, O, U (URC), Y, P; A (code models) and N (OSDI devices). LTspice: R, C, L, K, V, I, D, X; Q, M, J, Z; E, F, G, H, S, W; B; T, O, U; A (special functions), `@` (frequency response analyzer) and `&` (probe). The dependent sources take their expression and nonlinear forms (on ngspice TABLE, POLY, FREQ and the gates; on LTspice `table=`, POLY and `Laplace=`), and V and I their source functions.
+- **Edits:** values and formulas, instance and model parameters (set and remove), models, DC and AC values, source functions, coupling, switch states, expressions, tables and POLY coefficients, `.param` lines, directives (add, replace, remove and upsert), and an added `.include`; one at a time, in a batch, or as a verified plan.
+- **Guarantees:** an unedited save is byte-identical, and an edit changes only its own text. Each edit is re-parsed and its topology checked against the load, and nothing is written if a check fails. The grammar is strict: a line outside it is refused loudly, never guessed. `src/` never launches a solver.
+- **Exclusions:** the ngspice digital U and LTspice's `.machine` raise `UnsupportedConstruct`, as out of scope for v1 ([decision 0020](docs/decisions/0020-special-and-mixed-signal-devices.md)).
+
+M19: the v1 review.
+
+Changes:
+
+- `docs/usage/examples/read_only_demo.py` takes `--help`, `--dialect` and `--rkm`; `--help` used to fail, and the demo read only ngspice with `rkm=True` (M19).
+
 M18: the completeness audit.
 
 Changes:
@@ -39,8 +53,6 @@ Changes:
 - `.model`: an ngspice LTRA model takes LTRA's flags in `flags`, and a CPL model's `R=`, `L=`, `G=` and `C=` take a list of values, a `ValueList`; both are refused elsewhere. The model types LTRA, URC, TXL and CPL join `MODEL_TYPE_MISMATCH` and `set_model` (M16).
 - Add `remove_param` and `remove_model_param`, on `Netlist` and `Batch`, for every line and model that takes named parameters. `set_param`, `set_model` and `set_model_param` cover the new lines and models (M16). A CPL matrix over `+` lines with a comment inside it is set value for value with as many values, so the comment stays; another count, and its removal, are refused (M16 review R3).
 - The tests' planned letter is A, which stays planned until M17 (M16).
-
-M15b (decision 0017): the nonlinear dependent-source forms load and edit on both dialects.
 
 M15b (decision 0017): the nonlinear dependent-source forms load and edit on both dialects.
 

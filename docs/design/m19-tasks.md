@@ -106,7 +106,7 @@ The developers' files do not overlap: D1 the README and `docs/usage/` apart from
 
 [ ] **D1 — README and usage guides.** The README's v1 status and "What it does" list; the usage index; each guide's fixes from A1; executed examples where a v1 form has none.
 
-[ ] **D2 — Error reference and CHANGELOG.** The error reference's fixes from A1, and the CHANGELOG per decision 9.
+[x] **D2 — Error reference and CHANGELOG.** The error reference's fixes from A1, and the CHANGELOG per decision 9.
 
 [ ] **D3a — Architecture and rules.** Decision record 0022 for the normative fixes (5.1.1 point 3), the architecture's other stale text, `AGENTS.md` (point 4), `CONTRIBUTING.md`, and the run times (point 5).
 
@@ -173,3 +173,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | A2 | Reviewer | 2026-11-11: complete with findings (47; gate table; 38 limits) | Spot-checked; classified at G1 | — |
 | A3 | Reviewer | 2026-11-11: complete with findings (15; coverage table) | Two loads reproduced; classified at G1 | — |
 | G1 | Lead | 2026-11-11 | Section 5.1; eight points for the maintainer (5.1.1), decided the same day | `6ef5023`, this commit |
+| D2 | Developer | 2026-11-11: complete with findings (the `.if` depth is 247, measured) | Diff read; operations in the v1 summary checked against `edit/api.py`; accepted | this commit |
