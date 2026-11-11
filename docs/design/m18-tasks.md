@@ -111,7 +111,7 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 
 ### Stage 1 — Audits (independent reviewers, in parallel; read-only)
 
-[~] **A1 — Value specifications (§6.4).** *Reviewer.*
+[~] **A1 — Value specifications (§6.4).** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
 - **ngspice:** the manual's numeric forms and scale-factor table (§2.1.3, and every other section that defines a value form: units after numbers, `meg`/`mil`, exponents, signs, leading `.`, `µ`, braces and quotes, RKM under the option) against `core.lark`/`ngspice.lark`, `NG-NUM-*`, `NG-VAL-001` and `numbers.md`. For each form: accepted, refused with a `discrepancies.md` row, or missing.
 - **LTspice:** the same against the reference's number and value text, `LT-NUM-*`, `LT-VAL-001` and `numbers.md`.
 - **Value slots:** check that each element's value slot of phase 2 (Q to `&`, the `.model` values of M16 and M17) reads the same number forms as R, or says where and why it differs.
@@ -192,7 +192,7 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 | Subtask | Role | Reported | Lead's review | Commit |
 |---|---|---|---|---|
 | T0 | lead | — | baseline recorded in 3.2 | `8f8c098`, this commit |
-| A1 | reviewer | stopped on an API rate limit, resumed | — | — |
+| A1 | reviewer | 2026-11-10 after a resume, complete with findings (16 rows) | at G1; row 4 (a topology misread with `μ`/`Ω` after a transistor model) reproduced on both dialects | — |
 | A2 | reviewer | stopped on an API rate limit, resumed | — | — |
 | A3 | reviewer | 2026-11-10, complete with findings (17 rows) | at G1 | — |
 | A4 | reviewer | 2026-11-10, complete with findings (16 rows) | at G1 | — |
