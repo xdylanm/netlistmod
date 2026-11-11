@@ -171,9 +171,9 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 - `docs/design/edit-layer.md`: one sentence on what idempotence means for a removal (A3-15).
 - **Files:** those above only. A failure that shows a library defect is reported with a reproduction, not worked around.
 
-[ ] **D4 — Corpus gaps (A3-6; decision 13).** *Developer; after decision 13.* Variants holding LTspice H `value=`, ngspice `nand`/`nor` and G's gates, with manifest entries and hashes, each in its sweep; and any circuits the maintainer supplies.
+[~] **D4 — Corpus gaps (A3-6; decision 13).** *Developer; after decision 13.* Variants holding LTspice H `value=`, ngspice `nand`/`nor` and G's gates, with manifest entries and hashes, each in its sweep; and any circuits the maintainer supplies.
 
-[ ] **D5 — Value and grammar fixes (A1-2, A1-4, A1-6 to A1-8, A1-11 to A1-14, A2-19, A2-20).** *Developer; after D1 and D6.*
+[~] **D5 — Value and grammar fixes (A1-2, A1-4, A1-6 to A1-8, A1-11 to A1-14, A2-19, A2-20).** *Developer; after D1 and D6.*
 - **A1-4, first (a topology misread):** a number with a non-ASCII letter (`1μ`, `2Ω`) after a transistor's model must never be read as the model. LTspice: `FIELD_NUMBER` takes the letters its `NUMBER` takes, so Q/J/Z areas and POLY coefficients with `μ` and `Ω` load as LTspice reads them. ngspice: probe how ngspice 47 reads `Q1 c b 0 qm 1μ` first, then read it the same way or refuse it at the token. Accept and reject tests, and solver probes on both dialects.
 - **A2-19:** a nested `.if` block in its own rule, so that the line after an inner `.endif` parses (ngspice runs it); a corpus line; and an architecture test that no lexer state offers both a block-only terminal and a statement-start terminal.
 - **A2-20:** the lone CR, as decision 12 decides. **A1-11:** `.subckt` parameter commas, as decision 10 decides.
