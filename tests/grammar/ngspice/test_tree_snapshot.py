@@ -52,6 +52,9 @@ It removed ``elements_rejects/phase_2_letter.cir`` and ``structure_rejects/eleme
 whose A line now loads, since no letter is planned (decision 0020 item 10). The same 17 rejected
 files gained the two new letters among their expected terminals. No node, position or error
 class of any other entry changed.
+M18 D1 gave five refusals their own message, so their entries lost their expected terminals:
+``elements_rejects/e_poly_parens.cir``, ``g_and.cir``, ``g_table_nodes.cir``, ``p_param.cir``
+and ``y_param.cir``. No node, position or error class changed, and no other entry changed.
 """
 
 from __future__ import annotations

@@ -21,6 +21,25 @@ from netlistmod.model.nodes import (
 )
 from netlistmod.model.values import ElementReference, Flag, ModelReference
 
+# LTspice's parameters of the Laplace= form, and the keyword they follow (decision 0017 item 4).
+_LAPLACE_PARAMS = frozenset({"window", "nfft", "mtol"})
+
+
+def _assigns(text: str, at: int) -> bool:
+    """Whether ``=`` follows ``text[at:]``, after blanks."""
+    return text[at:].lstrip(" \t").startswith("=")
+
+
+def _has_laplace(text: str) -> bool:
+    """Whether ``text`` holds a ``Laplace=`` (any case, blanks allowed before the ``=``)."""
+    lowered = text.lower()
+    start = lowered.find("laplace")
+    while start >= 0:
+        if _assigns(lowered, start + len("laplace")):
+            return True
+        start = lowered.find("laplace", start + 1)
+    return False
+
 
 @dataclass(frozen=True, slots=True)
 class _Form:
@@ -65,6 +84,20 @@ class ControlledRules(ElementsRules):
 
     def unset_gain(self, children: list[Any]) -> NoReturn:
         word = _field_token(children)
+        line_end = children[-1]
+        tail = self._source.text[_span(word).end : _span(line_end).start]
+        if str(word).lower() in _LAPLACE_PARAMS and _assigns(tail, 0):
+            # A parameter of Laplace= in the gain's place (M15b 6.3): name the form it belongs to.
+            where = (
+                "before `Laplace=`: LTspice runs it, but the reference writes"
+                if _has_laplace(tail)
+                else "without `Laplace=`: the reference writes"
+            )
+            raise self._parse_error(
+                word,
+                f"`{word}=` {where} `window=`, `nfft=` and `mtol=` only after a `Laplace=` "
+                "formula (`E1 out 0 in 0 Laplace=1/(1+s) window=1m`)",
+            )
         raise self._parse_error(
             word,
             f"`{word}` is not a gain: the gain is not set. LTspice writes the symbol's name in "

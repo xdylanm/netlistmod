@@ -211,13 +211,30 @@ def test_comments_inside_a_continued_line_are_kept() -> None:
         ("a1 %vd(in) out amp", 4, "takes two nodes"),
         ("a1 %v(in 0) out amp", 4, "takes one node"),
         ("a1 (in 0) out amp", 4, "takes one node"),
-        ("a1 %vd [in 0 in] out sum", 16, ""),  # an untyped member is a pair
+        ("a1 %vd [in 0 in] out sum", 16, "a `%vd` vector holds an odd number of nets"),
     ],
 )
 def test_refused_code_model_lines(line: str, column: int, reason: str) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
     assert reason in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        ("a1 %vd [in 0 out] 5 sum", 17),
+        ("a1 %vd [in] 5 sum", 11),
+        ("a1 %id [in 0 out ] 5 sum", 18),
+        ("a1 %VD [1 2\n+ 3] 5 sum", 4),
+    ],
+)
+def test_an_odd_count_in_a_differential_vector_has_its_own_message(line: str, column: int) -> None:
+    # Carried from M17 (M18 C6): the message, at the `]`, instead of the expected tokens.
+    error = _reject(line)
+    assert (error.column, error.expected) == (column, ())
+    assert "vector holds an odd number of nets: each of its connections is a pair" in error.reason
+    assert error.reason.startswith(f"a `{line.split()[1]}` vector")
 
 
 @pytest.mark.parametrize("line", ["a1 [[in] in] out sum", "a1 [] out sum", "a1 %foo in out amp"])

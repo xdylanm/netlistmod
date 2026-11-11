@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+M18: the completeness audit.
+
+Changes:
+
+- Refused forms that gave only the list of expected tokens have their own message: on ngspice, POLY control pairs in parentheses, the four-node TABLE and the gates on G, a blank in `and (2)`, `m=` on Y and P, T's `IC=` with blanks, and an odd count in a differential vector (`%vd [in 0 out]`); on LTspice, `window=`, `nfft=` or `mtol=` in the gain's place names `Laplace=`. A formula refused in an ngspice TABLE point is quoted as written, with its braces or quotes, and the expected tokens name `gain=`. What loads and what is refused, and where, do not change (M18).
+- The edit message for a source with no source function reads "has no source function" (M18).
+
 M17 (decision 0020): the special and mixed-signal devices load and edit, and no device letter is planned.
 
 Changes:

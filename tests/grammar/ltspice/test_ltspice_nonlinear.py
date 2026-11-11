@@ -118,6 +118,26 @@ def test_malformed_laplace_lines_are_refused(line: str, column: int) -> None:
     assert (error.line, error.column) == (2, column)
 
 
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("E1 OUT N002 VX 0 window=1m Laplace=2/(1+s/1k)", 18, "`window=` before `Laplace=`"),
+        ("G1 OUT 0 VX 0 NFFT = 1024 Laplace=2/(1+s/1k)", 15, "`NFFT=` before `Laplace=`"),
+        ("E1 OUT N002 VX 0 window=1m\n+ laplace=2/(1+s/1k)", 18, "`window=` before `Laplace=`"),
+        ("E1 OUT N002 VX 0 mtol=1", 18, "`mtol=` without `Laplace=`"),
+    ],
+)
+def test_a_laplace_parameter_in_the_gain_place_names_laplace(
+    line: str, column: int, reason: str
+) -> None:
+    # M15b 6.3, carried to M18 C2: not "`window` is not a gain".
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert error.reason.startswith(reason)
+    assert "only after a `Laplace=` formula" in error.reason
+    assert "is not a gain" not in error.reason
+
+
 def test_a_voltage_reference_in_laplace_is_named() -> None:
     assert (
         "Voltage reference not allowed here"

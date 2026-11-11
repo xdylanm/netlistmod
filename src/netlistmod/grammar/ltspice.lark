@@ -629,7 +629,7 @@ step_stimulus: SEP I_STEP_KW fn_list
              | (SEP | TRAILING_COMMENT) step_stimulus
 I_STEP_KW.2: "step"i
 
-// Dot-commands form a closed list (decision 5). The reference's other commands stay
+// Dot-commands form a closed list (decision 0009 item 5). The reference's other commands stay
 // UnknownDirective: .backanno and .func may stand in a subcircuit body, the rest only at the top
 // level (LTspice stops at them in a body). Any other dot-command is a ParseError.
 // spec: LT-DIR-001
@@ -658,7 +658,8 @@ LIB_KW.4: ".lib"i
 LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\r?\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
 ENDL_KW.4: ".endl"i
 
-// .machine ... .endmachine is matched as a block only to be reported as unsupported (decision 5).
+// .machine ... .endmachine is matched as a block only to be reported as unsupported: a named v1
+// exclusion (decision 0009 item 5, decision 0020 item 11).
 // spec: LT-MCH-001
 %extend statement: machine_block
 machine_block: MACHINE_KW BLOCK_TEXT? NL machine_line* ENDMACHINE_KW BLOCK_TEXT? NL

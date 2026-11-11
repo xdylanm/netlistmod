@@ -116,6 +116,12 @@ def test_no_stimulus_to_edit() -> None:
         netlist.remove_stimulus("V1")
 
 
+def test_the_no_stimulus_message_reads_as_a_sentence() -> None:
+    with pytest.raises(EditError) as captured:
+        _netlist("V1 a 0 DC 1").remove_stimulus("V1")
+    assert str(captured.value) == "`V1` has no source function; use set_stimulus to add one"
+
+
 def test_not_a_source() -> None:
     netlist = _netlist("V1 a 0 DC 1")
     for call in (

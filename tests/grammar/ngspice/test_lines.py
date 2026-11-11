@@ -301,9 +301,36 @@ def test_refused_p_lines(line: str, column: int | None, reason: str) -> None:
     assert reason in error.reason
 
 
+# Refused forms with no grammar rule of their own: each has its own message instead of the
+# expected tokens (M16 6.3, carried to M18 C5), at the position the corpus manifests pin.
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("Y1 a 0 b 0 ymod m=2", 17, "`m=` on Y: ngspice runs it and ignores it"),
+        ("Y1 a 0 b 0 ymod len=1 M = 2", 23, "`m=` on Y"),
+        ("P1 a b 0 c d 0 pmod len=1 m=2", 27, "`m=` on P"),
+        ("T1 a 0 b 0 z0=50 td=1n ic=0 0 0 0", 29, "`IC=` values separated by blanks"),
+        ("T1 a 0 b 0 z0=50 td=1n IC=0, 0 0 0", 32, "`IC=` values separated by blanks"),
+        ("T1 a 0 b 0 z0=50 td=1n ic=1 2", 29, "with commas, `IC=v1, i1, v2, i2`"),
+    ],
+)
+def test_refused_line_forms_have_their_own_message(line: str, column: int, reason: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column, error.expected) == (2, column, ())
+    assert reason in error.reason
+
+
 def test_p_m_is_a_syntax_error() -> None:
+    # The parser reads `m` as a node of P and stops at its `=`, where the error stays.
     error = _reject("P1 a 0 b 0 pmod m=2")
-    assert error.line == 2
+    assert (error.line, error.column, error.expected) == (2, 18, ())
+    assert error.reason.startswith("`m=` on P: ngspice stops on it; a CPL line takes only `len=`")
+
+
+def test_a_value_after_a_full_ic_list_keeps_the_expected_tokens() -> None:
+    error = _reject("T1 a 0 b 0 z0=50 td=1n ic=0,0,0,0 5")
+    assert (error.column, error.reason) == (35, "")
+    assert error.expected
 
 
 def _model(line: str) -> ModelStatement:

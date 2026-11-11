@@ -222,9 +222,10 @@ class NonlinearRules(ControlledRules):
         for point in table.points:
             for value in point.values:
                 if isinstance(value, Formula):
+                    written = self._source.text[value.span.start : value.span.end]
                     raise self._error_at(
                         value.span.start,
-                        f"`{value.text}` in a TABLE point: ngspice's manual allows numbers "
+                        f"`{written}` in a TABLE point: ngspice's manual allows numbers "
                         "only, and ngspice reads some parameter forms in a point wrongly "
                         "(`{2*k}` gives another table); write the number",
                     )
