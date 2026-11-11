@@ -5,6 +5,7 @@ from pathlib import Path
 import pytest
 
 from netlistmod import (
+    CommentLine,
     Dialect,
     ParamStatement,
     ParseError,
@@ -214,6 +215,21 @@ def test_double_slash_comment_probe(solver: Solver, tmp_path: Path) -> None:
     result = run(solver, tmp_path, text)
     assert result.returncode == 0
     _assert_parser_rejects(text)
+
+
+@pytest.mark.parametrize("indent", ["   ", "\t"])
+def test_indented_star_line_is_a_comment_probe(solver: Solver, tmp_path: Path, indent: str) -> None:
+    divider = "probe circuit\nV1 in 0 DC 2\nR1 in mid 1k\nR2 mid 0 1k\n{line}\n.op\n.end\n"
+    loaded = run(solver, tmp_path / "loaded", divider.format(line="R3 mid 0 1k"))
+    assert loaded.returncode == 0, loaded.log
+    assert loaded.voltage("mid") == pytest.approx(2.0 / 3.0)
+    text = divider.format(line=f"{indent}* R3 mid 0 1k")
+    result = run(solver, tmp_path / "commented", text)
+    assert result.returncode == 0, result.log
+    assert result.voltage("mid") == pytest.approx(1.0)
+    comment = parse(SourceText(text), Dialect.NGSPICE).items[4]
+    assert isinstance(comment, CommentLine)
+    assert comment.text == "* R3 mid 0 1k"
 
 
 @pytest.mark.parametrize(

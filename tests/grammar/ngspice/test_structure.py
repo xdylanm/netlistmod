@@ -416,6 +416,17 @@ def test_standalone_end_of_line_comment_markers_are_rejected() -> None:
         assert captured.value.column == len(line) - len(line.lstrip()) + 1
 
 
+def test_star_comment_lines_may_be_indented() -> None:
+    # A "*" in column 1 is a comment (§2.4.3) and leading white space is ignored (§2.1.1).
+    text = "title\n* column one\n   * spaces\n\t* tab\n.end\n"
+    result = _parse(text)
+    comments = [item for item in result.items[1:4] if isinstance(item, CommentLine)]
+    assert len(comments) == 3
+    assert [item.text for item in comments] == ["* column one", "* spaces", "* tab"]
+    assert [item.span for item in comments] == [Span(6, 19), Span(19, 31), Span(31, 38)]
+    _assert_spans_tile(text, result.items)
+
+
 def test_quotes_are_grouped_but_braces_do_not_protect_comment_markers() -> None:
     text = "title\n.foo \"a ; $ //\"\n.bar {b ; $ //}\n.baz 'c ; $ //'\n.end\n"
     result = _parse(text)

@@ -31,7 +31,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-CCV-001](./specs/NG-CCV-001.yaml) | current-controlled voltage source (H) lines | validated | 2 + 3 solver | ngspice 47 (2026-11-06) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | 7 + 5 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-COD-001](./specs/NG-COD-001.yaml) | code model (A) lines | validated | 11 + 4 solver | ngspice 47 (2026-11-10) |
-| [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | observed | 2 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-COM-001](./specs/NG-COM-001.yaml) | full-line star comments | validated | 3 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-11) |
 | [NG-CPL-001](./specs/NG-CPL-001.yaml) | coupled transmission line (P) lines | validated | 5 + 4 solver | ngspice 47 (2026-11-09) |
 | [NG-CTL-001](./specs/NG-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | 4 + 1 solver | ngspice 47 (2026-11-06) |
 | [NG-DCA-001](./specs/NG-DCA-001.yaml) | .dc transfer function | validated | 6 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -99,7 +99,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-XSP-001](./specs/NG-XSP-001.yaml) | FREQ on E and G, and AND, OR, NAND and NOR on E | validated | 8 + 2 solver | ngspice 47 (2026-11-08) |
 | [NG-XTR-001](./specs/NG-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | 6 + 3 solver | ngspice 47 (2026-11-05, 2026-11-11) |
 
-75 entries: 72 validated, 3 observed, 0 disputed, 0 documented.
+75 entries: 73 validated, 2 observed, 0 disputed, 0 documented.
 
 ## Lookaround terminals
 
