@@ -10,6 +10,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-10'
 grammar:
 - start
 - ternary
@@ -57,6 +60,9 @@ tests:
 - tests/grammar/ngspice/test_formula.py::test_generated_sums_report_every_identifier
 - tests/document/test_resolution.py::test_formula_identifiers_resolve_to_parameters
 - tests/solver/test_ngspice_solver_document.py::test_formula_name_characters_and_constants
+- tests/document/test_expression_reads.py::test_braces_inside_a_bare_expression_are_read
+- tests/grammar/ngspice/test_behavioral.py::test_a_bare_expression_runs_over_a_continuation
+- tests/solver/test_ngspice_behavioral_probes.py::test_behavioral_probes
 notes: 'A separate strict LALR grammar (formula.lark) over the text of a brace or single-quoted
   Formula (decision 0006 item 9); double-quoted strings are string values and are not scanned. It
   follows the §2.11.5 expression forms and operator table (unary - ! and +, ** or ^, * / % \, + -,

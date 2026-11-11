@@ -8,6 +8,8 @@ from typing import Any
 import pytest
 import yaml
 
+from tests.support import spec_coverage
+
 ROOT = Path(__file__).parents[2]
 SPEC_DIRECTORY = ROOT / "docs" / "grammars" / "ngspice" / "specs"
 REFERENCES_FILE = ROOT / "docs" / "references.md"
@@ -41,6 +43,13 @@ REFERENCE_KEY = re.compile(r"^## \[([a-z0-9][a-z0-9-]*)\]\s*$", re.MULTILINE)
 # E source forms, which M15 cites, so they are no longer rejected.
 STALE_CITATION = re.compile(r"§§|manual, §")
 CITATION_SCAN = [ROOT / "docs" / "decisions", ROOT / "docs" / "grammars", ROOT / "src"]
+# The refusal entries (decision 14 of the M18 task list): each is `validated` by probes of the
+# forms it refuses, so it needs no accept test.
+NGSPICE_REFUSALS = frozenset({"NG-UNS-001"})
+LTSPICE_REFUSALS = frozenset({"LT-UNS-001", "LT-MCH-001"})
+TEST_SELECTOR = re.compile(r"test_\w+")
+# A test whose name says it refuses a form is not an accept test.
+REJECTION_TEST = re.compile(r"reject|refus|unsupported")
 
 
 def _load_specs(spec_directory: Path) -> dict[str, dict[str, Any]]:
@@ -80,20 +89,31 @@ def _grammar_declarations(grammar_files: list[Path]) -> dict[str, list[tuple[str
     return declarations
 
 
+def _is_accept_test(reference: str) -> bool:
+    """A test outside ``tests/solver/`` whose name does not say it refuses a form."""
+    name = reference.rpartition("::")[2]
+    return not reference.startswith(SOLVER_TESTS) and not REJECTION_TEST.search(name)
+
+
 def check_spec_coverage(
     root: Path,
     spec_directory: Path,
     grammar_files: list[Path],
     shared_files: list[Path] | None = None,
+    refusals: frozenset[str] = frozenset(),
 ) -> None:
     """Validate spec references, grammar traceability, and test selectors.
 
     An overlay's entry lists its rules under ``grammar`` and the shared rules it relies on, which
-    carry another dialect's markers, under ``core_rules``; it may have only the latter.
+    carry another dialect's markers, under ``core_rules``; it may have only the latter. A selector
+    names a ``def`` in its file, and every entry but a disputed one or one of ``refusals`` cites an
+    accept test outside ``tests/solver/`` (architecture §10.4).
     """
     specs = _load_specs(spec_directory)
     if not specs:
         raise ValueError(f"No spec entries found in {spec_directory}")
+    if unknown := sorted(refusals - specs.keys()):
+        raise ValueError(f"Unknown refusal entries: {unknown}")
     declarations = _grammar_declarations(grammar_files)
     shared = _grammar_declarations(shared_files or [])
     for identifier, path, line_number in (
@@ -138,8 +158,16 @@ def check_spec_coverage(
             path = root / test_path
             if not path.is_file():
                 raise ValueError(f"Spec references missing test file: {test_reference}")
-            if separator and selector not in path.read_text(encoding="utf-8"):
+            if not separator:
+                continue
+            if not TEST_SELECTOR.fullmatch(selector):
+                raise ValueError(f"Malformed test selector: {test_reference}")
+            definition = rf"^\s*def {re.escape(selector)}\("
+            if not re.search(definition, path.read_text(encoding="utf-8"), re.MULTILINE):
                 raise ValueError(f"Spec references missing test selector: {test_reference}")
+        needs_accept_test = entry.get("status") != "disputed" and identifier not in refusals
+        if needs_accept_test and not any(_is_accept_test(reference) for reference in references):
+            raise ValueError(f"Spec entry has no non-solver accept test: {identifier}")
 
     for grammar_name, entries in declarations.items():
         for identifier, _, _ in entries:
@@ -199,7 +227,7 @@ def check_device_matrix(device_json: Path, device_document: Path) -> None:
 
 
 STATUSES = ("documented", "observed", "validated", "disputed")
-SOLVER_TESTS = "tests/solver/"
+SOLVER_TESTS = spec_coverage.SOLVER_TESTS
 RULE_DOCUMENTS = [
     ROOT / "docs" / "grammars" / "ngspice" / "names.md",
     ROOT / "docs" / "grammars" / "ngspice" / "scoping.md",
@@ -289,7 +317,7 @@ def check_rule_tables(root: Path, documents: list[Path], discrepancies: Path) ->
 
 
 def test_ngspice_specs_reference_tests_and_grammar_rules() -> None:
-    check_spec_coverage(ROOT, SPEC_DIRECTORY, GRAMMAR_FILES)
+    check_spec_coverage(ROOT, SPEC_DIRECTORY, GRAMMAR_FILES, refusals=NGSPICE_REFUSALS)
     check_manual_references(SPEC_DIRECTORY, REFERENCES_FILE)
     check_no_stale_citations(CITATION_SCAN)
     check_device_matrix(
@@ -298,25 +326,30 @@ def test_ngspice_specs_reference_tests_and_grammar_rules() -> None:
     )
 
 
-STATUS_ROW = re.compile(r"^\| \[([A-Z0-9-]+)\]\([^)]*\) \| .* \| (\w+) \| ([^|]*) \|$", re.M)
+# | [ID](link) | Construct | Status | Tests | Validated on |
+STATUS_ROW = re.compile(
+    r"^\| \[([A-Z0-9-]+)\]\(([^)]*)\) \| (.*) \| (\w+) \| ([^|]*) \| ([^|]*) \|$", re.M
+)
+TOTALS_LINE = re.compile(r"^\d+ entries: .*$", re.M)
 
 
 def check_status_summary(readme: Path, spec_directory: Path) -> None:
-    """The README's status table lists every entry with its status and validation dates."""
-    found = {
-        identifier: (status, versions.strip())
-        for identifier, status, versions in STATUS_ROW.findall(readme.read_text("utf-8"))
+    """The README's status table lists every entry with its construct, status, test counts and
+    validation dates, and its totals line counts the statuses; ``tests.support.spec_coverage``
+    generates both."""
+    text = readme.read_text("utf-8")
+    found = {identifier: (link, *cells) for identifier, link, *cells in STATUS_ROW.findall(text)}
+    entries = spec_coverage.load_entries(spec_directory)
+    expected = {
+        entry["id"]: (f"./specs/{entry['id']}.yaml", *spec_coverage.row_cells(entry))
+        for entry in entries
     }
-    expected: dict[str, tuple[str, str]] = {}
-    for identifier, entry in _load_specs(spec_directory).items():
-        dates: dict[str, list[str]] = {}
-        for record in entry.get("validated_on") or []:
-            dates.setdefault(f"{record['solver']} {record['version']}", []).append(record["date"])
-        versions = "; ".join(f"{key} ({', '.join(values)})" for key, values in dates.items())
-        expected[identifier] = (entry["status"], versions)
     if found != expected:
         changed = sorted(set(found.items()) ^ set(expected.items()))
         raise ValueError(f"{readme.name} status table differs from the spec entries: {changed}")
+    totals = TOTALS_LINE.findall(text)
+    if totals != [spec_coverage.totals_line(entries)]:
+        raise ValueError(f"{readme.name} totals line differs from the spec entries: {totals}")
 
 
 def test_ngspice_statuses_are_backed_by_solver_evidence() -> None:
@@ -327,7 +360,11 @@ def test_ngspice_statuses_are_backed_by_solver_evidence() -> None:
 
 def test_ltspice_specs_reference_tests_and_grammar_rules() -> None:
     check_spec_coverage(
-        ROOT, LTSPICE_SPEC_DIRECTORY, LTSPICE_GRAMMAR_FILES, shared_files=LTSPICE_SHARED_FILES
+        ROOT,
+        LTSPICE_SPEC_DIRECTORY,
+        LTSPICE_GRAMMAR_FILES,
+        shared_files=LTSPICE_SHARED_FILES,
+        refusals=LTSPICE_REFUSALS,
     )
     check_manual_references(LTSPICE_SPEC_DIRECTORY, REFERENCES_FILE)
     check_device_matrix(
@@ -364,17 +401,6 @@ def test_an_overlay_entry_may_rely_on_core_rules_only(tmp_path: Path) -> None:
         check_spec_coverage(tmp_path, specs, [overlay], shared_files=[core])
 
 
-def test_status_summary_check_rejects_a_stale_row(tmp_path: Path) -> None:
-    specs, _ = _status_project(tmp_path, "status: validated\n" + _RECORD + _SOLVER_TEST)
-    readme = tmp_path / "README.md"
-    row = "| [NG-TEST-001](./specs/NG-TEST-001.yaml) | thing | {} | ngspice 47 (2026-10-31) |\n"
-    readme.write_text(row.format("validated"), encoding="utf-8")
-    check_status_summary(readme, specs)
-    readme.write_text(row.format("documented"), encoding="utf-8")
-    with pytest.raises(ValueError, match="status table differs"):
-        check_status_summary(readme, specs)
-
-
 def _status_project(tmp_path: Path, entry: str, discrepancy: str = "") -> tuple[Path, Path]:
     specs = tmp_path / "specs"
     specs.mkdir()
@@ -389,6 +415,50 @@ def _status_project(tmp_path: Path, entry: str, discrepancy: str = "") -> tuple[
 
 _RECORD = "validated_on:\n- solver: ngspice\n  version: '47'\n  date: '2026-10-31'\n"
 _SOLVER_TEST = "tests: [tests/solver/test_probe.py::test_probe]\n"
+_SUMMARY = (
+    "| [NG-TEST-001](./specs/NG-TEST-001.yaml) | thing | {status} | {tests} |"
+    " ngspice 47 (2026-10-31) |\n\n{totals}\n"
+)
+_SUMMARY_ENTRY = (
+    "construct: thing\nstatus: validated\n"
+    + _RECORD
+    + "tests: [tests/grammar/x.py::test_x, tests/solver/test_probe.py::test_probe]\n"
+)
+_TOTALS = "1 entries: 1 validated, 0 observed, 0 disputed, 0 documented."
+
+
+@pytest.mark.parametrize(
+    ("cells", "message"),
+    [
+        ({}, None),
+        ({"status": "documented"}, "status table differs"),
+        ({"tests": "2 + 0 solver"}, "status table differs"),
+        ({"totals": "1 entries: 1 validated, 0 observed, 0 documented."}, "totals line differs"),
+        ({"totals": ""}, "totals line differs"),
+    ],
+)
+def test_status_summary_check_rejects_a_stale_row(
+    tmp_path: Path, cells: dict[str, str], message: str | None
+) -> None:
+    specs, _ = _status_project(tmp_path, _SUMMARY_ENTRY)
+    readme = tmp_path / "README.md"
+    summary = {"status": "validated", "tests": "1 + 1 solver", "totals": _TOTALS} | cells
+    readme.write_text(_SUMMARY.format(**summary), encoding="utf-8")
+    if message is None:
+        check_status_summary(readme, specs)
+        return
+    with pytest.raises(ValueError, match=message):
+        check_status_summary(readme, specs)
+
+
+def test_status_summary_is_the_generated_table(tmp_path: Path) -> None:
+    specs, _ = _status_project(tmp_path, _SUMMARY_ENTRY)
+    table = spec_coverage.status_table(specs)
+    readme = tmp_path / "README.md"
+    readme.write_text(f"# Title\n\n{table}\nMore text.\n", encoding="utf-8")
+    check_status_summary(readme, specs)
+    row = _SUMMARY.format(status="validated", tests="1 + 1 solver", totals=_TOTALS)
+    assert table == f"{spec_coverage.HEADER}\n{row}"
 
 
 @pytest.mark.parametrize(
@@ -487,6 +557,76 @@ def test_spec_checker_rejects_missing_test_reference(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="missing test file"):
         check_spec_coverage(tmp_path, specs, [grammar])
+
+
+_SELECTOR_TESTS = """# test_named_in_a_comment
+def test_accept_more():
+    assert "test_named_in_a_string"
+
+
+class TestGroup:
+    def test_in_a_class(self):
+        pass
+
+
+def test_x_is_rejected():
+    pass
+"""
+
+
+def _selector_project(tmp_path: Path, tests: str) -> Path:
+    specs = tmp_path / "specs"
+    specs.mkdir()
+    (specs / "NG-TEST-001.yaml").write_text(
+        f"id: NG-TEST-001\nstatus: validated\ngrammar: [start]\ntests: [{tests}]\n",
+        encoding="utf-8",
+    )
+    solver = tmp_path / "tests" / "solver"
+    solver.mkdir(parents=True)
+    (tmp_path / "tests" / "test_example.py").write_text(_SELECTOR_TESTS, encoding="utf-8")
+    (solver / "test_probe.py").write_text("def test_probe():\n    pass\n", encoding="utf-8")
+    (tmp_path / "test.lark").write_text("// spec: NG-TEST-001\nstart: WORD\n", encoding="utf-8")
+    return specs
+
+
+@pytest.mark.parametrize(
+    "selector",
+    ["test_accept", "test_named_in_a_comment", "test_named_in_a_string", "test_accept_more[x]"],
+)
+def test_spec_checker_matches_a_selector_by_its_definition(tmp_path: Path, selector: str) -> None:
+    specs = _selector_project(tmp_path, f"'tests/test_example.py::{selector}'")
+    message = "Malformed test selector" if "[" in selector else "missing test selector"
+    with pytest.raises(ValueError, match=message):
+        check_spec_coverage(tmp_path, specs, [tmp_path / "test.lark"])
+
+
+@pytest.mark.parametrize("selector", ["test_accept_more", "test_in_a_class"])
+def test_spec_checker_accepts_a_defined_selector(tmp_path: Path, selector: str) -> None:
+    specs = _selector_project(tmp_path, f"tests/test_example.py::{selector}")
+    check_spec_coverage(tmp_path, specs, [tmp_path / "test.lark"])
+
+
+@pytest.mark.parametrize(
+    "tests",
+    [
+        "tests/solver/test_probe.py::test_probe",
+        "tests/test_example.py::test_x_is_rejected, tests/solver/test_probe.py::test_probe",
+    ],
+)
+def test_spec_checker_requires_a_non_solver_accept_test(tmp_path: Path, tests: str) -> None:
+    specs = _selector_project(tmp_path, tests)
+    grammar = [tmp_path / "test.lark"]
+    with pytest.raises(ValueError, match="no non-solver accept test"):
+        check_spec_coverage(tmp_path, specs, grammar)
+    check_spec_coverage(tmp_path, specs, grammar, refusals=frozenset({"NG-TEST-001"}))
+
+
+def test_spec_checker_rejects_an_unknown_refusal_entry(tmp_path: Path) -> None:
+    specs = _selector_project(tmp_path, "tests/test_example.py::test_accept_more")
+    with pytest.raises(ValueError, match="Unknown refusal entries"):
+        check_spec_coverage(
+            tmp_path, specs, [tmp_path / "test.lark"], refusals=frozenset({"NG-GONE-001"})
+        )
 
 
 def test_spec_checker_rejects_dangling_grammar_reference(tmp_path: Path) -> None:

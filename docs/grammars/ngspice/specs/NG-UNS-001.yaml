@@ -1,6 +1,6 @@
 id: NG-UNS-001
 dialect: ngspice
-construct: recognised but unsupported element forms
+construct: 'refused element forms (params: on X, the digital U)'
 manual_ref:
 - '[ngspice-manual] §4.1 "Independent Sources for Voltage or Current"'
 - '[ngspice-manual] §2.11.3 "Subcircuit parameters"'
