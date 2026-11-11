@@ -1,6 +1,6 @@
 # M18 task list — Completeness audit
 
-> **Status:** ACTIVE — stage 1 (audits A1 to A4) started on 2026-11-10; stage 2 waits on the audit review (gate G1) and on the decisions marked *for the maintainer* in section 2
+> **Status:** ACTIVE — stage 1 and gate G1 are done (2026-11-10). Stage 2 has started with D1, D3 and D6; D2, D4, D5 and the decision-dependent parts of D6 wait on the decisions marked *for the maintainer* in section 2 (5, 7, 9 to 13)
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
 
 ## 1. Scope
@@ -59,6 +59,17 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, following the us
 8. **The lookaround terminals (limit 3).** *Proposed (lead).* A2 reviews each of the 21 terminals of `UNCHECKED_TERMINALS` (`tests/architecture/test_contracts.py`) by hand: what it matches, which terminals can be candidates in the same parser states, and why they cannot collide. The table goes in each dialect's grammar README beside the list, and the test's comment points to it. A terminal is rewritten only if the review finds a real collision or a simpler form with no lookaround (with a test). Limit 3 then closes as "reviewed in M18; the test keeps the list from growing silently".
 9. **Real circuits per device group.** *Proposed, for the maintainer at G1.* A3 lists each device group of plan section 5 with its accept files by origin (the maintainer's schematics or KiCad exports, or written here). A group with no file of the maintainer's is a `gap`; for each, the maintainer either supplies a circuit (a checklist as in M17 section 3.2) or accepts the files written here, as for M17's ngspice netlists.
 
+10. **LTspice `.subckt` parameter commas** (A1-11). *Proposed, for the maintainer.* LTspice 26.1.1 runs `.subckt s p n r=1k, q=2` and `… params: r=1k, q=2`; the library refuses the comma, though it accepts `X1 … p=1, q=2` (an `observed` form). **Recommended: accept the comma between `.subckt` parameters, as on X,** with the probe as a test and `LT-SUB-001` noting the observed form, so both sides of a call read alike. *Alternative:* keep the refusal and add a `discrepancies.md` row.
+11. **NG-COM-001's status** (A4-9). *Proposed, for the maintainer.* The manual documents both accepted forms (`*` in column 1, §2.4.3; leading blanks ignored, §2.1.1), so the entry is not `observed`. **Recommended: make it `validated`,** add the §2.1.1 citation, and add a grammar test and an ngspice probe of an indented `*` (D6). *Alternative:* keep `observed` and rewrite the note.
+12. **A lone CR right before a CRLF** (A2-20). *Proposed, for the maintainer.* Rule 13 writes free text as `\r(?!\r?\n)`, so `* abc\r\r\n` is a `ParseError` on both dialects (reproduced), while decision 0001 says a lone CR is ordinary text and `SourceText` counts that line as holding one. **Recommended: `\r(?!\n)`,** which accepts it; the terminals stay on the lookaround list, and decision 0021 amends rule 13's wording. *Alternative:* keep it and document it as a limit.
+13. **Corpus origin** (A3-3 to A3-6; refines decision 9). *Proposed, for the maintainer.* Groups with no circuit of the maintainer's:
+    - ngspice: Z; B `i=`; the expression forms of E and G; C `q=`; every M15b form; T, U, Y and P; A and N;
+    - LTspice: Z; B; the `value=` forms; C `Q=`; L `Flux=` and the hysteretic L; every M15b form.
+
+    Most of these have variants of the maintainer's exports, or files written here, and all run in the sweeps. **Recommended: accept the files written here for these groups** (as M17 did for A and N), with D4 adding variants for the three forms no file holds (LTspice H `value=`, ngspice `nand`/`nor` and G's gates), and accept the stimulus forms at group level (A3-5). Per-file origin stays in the manifest notes (A3-3, a documented limit). *Alternative:* the maintainer supplies circuits for some groups (a checklist as in M17 section 3.2); Z and the M15b forms would be the most useful.
+14. **Conventions recorded, no status change** (A4-3, A4-4, A4-12; A1-7). *Proposed (lead).* Decision 0021 states: a refusal entry (`NG-UNS-001`, `LT-UNS-001`, `LT-MCH-001`) is `validated` by probes of the forms it refuses; an LTspice entry may hold observed parts in its notes (decision 0009), while ngspice splits them into their own entry; the checker does not prove that a solver test runs (they skip in CI); and the library does not read `.options`, so LTspice's `reject_number_tails` is a `discrepancies.md` row and a `numbers.md` note, not a diagnostic.
+15. **Decision 7 confirmed by G1.** G1 accepts normative changes (decisions 5, 10 and 12, and the fixes of section 5.1), so the recommendation of decision 7 stands: decision record 0021, `proposed` until M18 closes.
+
 ## 3. Starting point (2026-11-10, `6843d4c`, `m17-special-devices`)
 
 M17's pull request [#17](https://github.com/xdylanm/netlistmod/pull/17) is approved and still open; `main` is at `13ebefb`. M18 works on the branch `m18-completeness-audit`, cut from `6843d4c`, so its pull request is based on M17's branch until #17 is merged, and is rebased onto `main` then.
@@ -111,60 +122,70 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 
 ### Stage 1 — Audits (independent reviewers, in parallel; read-only)
 
-[~] **A1 — Value specifications (§6.4).** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
+[x] **A1 — Value specifications (§6.4).** *Reviewer.* Reported 2026-11-10; reviewed at G1 (section 5.1).
 - **ngspice:** the manual's numeric forms and scale-factor table (§2.1.3, and every other section that defines a value form: units after numbers, `meg`/`mil`, exponents, signs, leading `.`, `µ`, braces and quotes, RKM under the option) against `core.lark`/`ngspice.lark`, `NG-NUM-*`, `NG-VAL-001` and `numbers.md`. For each form: accepted, refused with a `discrepancies.md` row, or missing.
 - **LTspice:** the same against the reference's number and value text, `LT-NUM-*`, `LT-VAL-001` and `numbers.md`.
 - **Value slots:** check that each element's value slot of phase 2 (Q to `&`, the `.model` values of M16 and M17) reads the same number forms as R, or says where and why it differs.
 - **Comma lists:** every row of LTspice's `discrepancies.md` with a comma, and its closing comma note: is each form the reference documents accepted, each form it does not refused with a row, and the note still true after M14 to M17?
 - **Report:** decision 3's table, with a probe (scratch, outside the repository) for any form whose reading is not already pinned by a test.
 
-[~] **A2 — Architecture and rejection paths.** *Reviewer.*
+[x] **A2 — Architecture and rejection paths.** *Reviewer.* Reported 2026-11-10; reviewed at G1 (section 5.1).
 - Confirm that no matrix entry or JSON file is `planned`, and that `test_no_device_letter_is_planned` would fail if one were.
 - List every place in `src/` that raises, or documents raising, `UnsupportedConstruct`, with its reason; mark each `justified` (a v1 exclusion or decision 6) or `stale`.
 - **Lookaround review (decision 8):** for each terminal of `UNCHECKED_TERMINALS`, its pattern, the parser states where it is a candidate, the terminals it competes with there, and why they cannot match the same text; flag any that could. Draft the README table.
 - Read the grammar comments, the `parse()` and loader docstrings and `docs/usage/errors.md` for text that M12 to M17 made stale.
 - **Report:** decision 3's table and the draft lookaround table.
 
-[~] **A3 — Corpus, oracle and edit properties.** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
+[x] **A3 — Corpus, oracle and edit properties.** *Reviewer.* Reported 2026-11-10; reviewed at G1 (section 5.1).
 - **Corpus:** for each device group of plan section 5 and each dialect, the accept files that hold it, by origin, and whether each has a manifest entry with author, licence, origin and hash, and runs in its solver sweep. Mark groups with no file of the maintainer's (decision 9).
 - **Oracle:** which phase 2 letters and forms `test_element_oracle.py` and `test_broad_oracle.py` generate (today: none), and a proposed design for extending them to every phase 2 letter on both dialects, keeping the oracle independent of the parser (expected values from the generator's record only).
 - **Edit properties:** for each edit operation added in M12 to M17, whether a Hypothesis property shows that it preserves the signature, is idempotent, and changes no text outside its span; list the gaps.
 - **Report:** decision 3's table and the oracle design, sized for D3.
 
-[~] **A4 — Spec coverage and statuses.** *Reviewer.* Reported 2026-11-10 (complete with findings); awaiting G1.
+[x] **A4 — Spec coverage and statuses.** *Reviewer.* Reported 2026-11-10; reviewed at G1 (section 5.1).
 - Run `tests/architecture/test_spec_coverage.py` and read what it checks against §10.4 and §11.2: every `supported` construct has an accept test; each status has its evidence.
 - Check that every grammar rule added in M12 to M17 is traced to a spec entry, and that each spec entry's tests exist and test the construct (sample at least one entry per milestone by reading its tests).
 - The three `observed` ngspice entries: is the manual still silent on each? Is any `validated` entry really `observed` or `documented`?
 - Is there a **spec-coverage report** a reader can see (plan exit), or only a test? Propose the smallest form that meets the exit (for example a generated table in each dialect's grammar README, checked by a test).
 - **Report:** decision 3's table.
 
-[ ] **G1 — Audit review (lead).** Check every `gap` by reproduction and a sample of `ok` rows; classify each finding in section 5.1; add decisions to section 2; size D3 to D6; brief the maintainer on the decisions marked *for the maintainer*. Commit section 5.1 and the decisions.
+[x] **G1 — Audit review (lead).** Done 2026-11-10: section 5.1, decisions 10 to 15, and stage 2 as below. Check every `gap` by reproduction and a sample of `ok` rows; classify each finding in section 5.1; add decisions to section 2; size D3 to D6; brief the maintainer on the decisions marked *for the maintainer*. Commit section 5.1 and the decisions.
 
 ### Stage 2 — Development (independent developers; after G1)
 
-[ ] **D1 — Carried messages (C1 to C6).** *Developer.* No change in what loads: every form here stays refused, with its own message instead of the generic list.
-- **Files:** `grammar/loader.py`, the `model/_rules_*.py` that refuse each form, the grammar tests of each, `docs/usage/errors.md` if a message is quoted there.
-- **Tests:** each form's message and column, in both dialects where it applies; the tree snapshot unchanged.
+Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 follows D1 and D6, since it touches the grammar after D1 and the spec entries and `discrepancies.md` after D6. D2 follows D5 and decision 5. D4 follows decision 13. The finding ids (A1-4 and so on) are section 5.1's.
 
-[ ] **D2 — LTspice forms that load and that LTspice stops on (C7 to C10; decision 5).** *Developer; after D1 and the maintainer's decision 5.*
+[ ] **D1 — Messages and stale source text (C1 to C6; A3-16; A2-3, A2-7 to A2-11).** *Developer.* No change in what loads: every form of C1 to C6 stays refused, with its own message instead of the generic list.
+- **Files:** `src/netlistmod/grammar/loader.py`, the `model/_rules_*.py` that refuse each form, `edit/_ops_sources.py` (the A3-16 typo), the comments of `core.lark`, `ngspice.lark` and `ltspice.lark` (comments only), the docstrings of `model/transform.py` and `errors.py`; the grammar and edit tests of each; `docs/usage/errors.md` where it quotes a message.
+- **Tests:** each form's message and column, in both dialects where it applies; the tree snapshot unchanged (or each changed entry listed).
+
+[ ] **D2 — LTspice forms that load and that LTspice stops on (C7 to C10; decision 5).** *Developer; after D5 and the maintainer's decision 5.*
 - Probe each form on LTspice 26.1.1 first (the `.model x BUF(…)` line on its own, and used by an A line), as solver probe tests.
 - Make each change as decided; new diagnostic codes go in `document/diagnostics.py`, §17 and `docs/usage/errors.md`, with decision 0021.
 - **Tests:** a probe test per form (the line, whether LTspice runs it, the library's reading), grammar or diagnostic tests, and an `elements_rejects` or `statements_rejects` file for each refusal.
 
-[ ] **D3 — Oracle and edit properties for phase 2 elements.** *Developer; may run alongside D1 or D2 (tests only).* From A3's design:
-- extend the independent element oracle to every phase 2 letter, on both dialects;
-- add the missing edit properties of A3's list.
-- **Files:** `tests/grammar/` and `tests/edits/` only. A failure that shows a library defect is reported, not worked around.
+[ ] **D3 — Oracle and edit properties for phase 2 elements (A3-7 to A3-15, A4-8).** *Developer; tests only.* From A3's design:
+- a new `tests/grammar/test_device_oracle.py`: every phase 2 letter and form on both dialects; expected spans, structure and signature entries from the generator's record only; and the mutation check (changing any topology token changes the signature);
+- a new `tests/edits/test_device_edit_properties.py`: (a) the signature is kept, (b) idempotence (for a removal: the second call raises `EditError` and writes nothing), (c) the change lies inside the target item or its `.model`, over every operation of A3's matrix;
+- the two properties that `continue` on `EditError` assert that a step applied (A3-14); `test_ngspice_accepts` checks the stimulus kind (A4-8);
+- `docs/design/edit-layer.md`: one sentence on what idempotence means for a removal (A3-15).
+- **Files:** those above only. A failure that shows a library defect is reported with a reproduction, not worked around.
 
-[ ] **D4 — Corpus gaps.** *Developer, and the maintainer where decision 9 asks for a circuit.* Add the files A3 found missing, with manifest entries and hashes; each runs in its sweep. *If A3 finds no gap, this subtask is closed with that note.*
+[ ] **D4 — Corpus gaps (A3-6; decision 13).** *Developer; after decision 13.* Variants holding LTspice H `value=`, ngspice `nand`/`nor` and G's gates, with manifest entries and hashes, each in its sweep; and any circuits the maintainer supplies.
 
-[ ] **D5 — Value-specification gaps.** *Developer; after D2.* The grammar changes A1 found and G1 accepted, each with a spec-entry update, accept and reject tests, and a `discrepancies.md` row where the solver differs. *If A1 finds no gap, closed with that note.*
+[ ] **D5 — Value and grammar fixes (A1-2, A1-4, A1-6 to A1-8, A1-11 to A1-14, A2-19, A2-20).** *Developer; after D1 and D6.*
+- **A1-4, first (a topology misread):** a number with a non-ASCII letter (`1μ`, `2Ω`) after a transistor's model must never be read as the model. LTspice: `FIELD_NUMBER` takes the letters its `NUMBER` takes, so Q/J/Z areas and POLY coefficients with `μ` and `Ω` load as LTspice reads them. ngspice: probe how ngspice 47 reads `Q1 c b 0 qm 1μ` first, then read it the same way or refuse it at the token. Accept and reject tests, and solver probes on both dialects.
+- **A2-19:** a nested `.if` block in its own rule, so that the line after an inner `.endif` parses (ngspice runs it); a corpus line; and an architecture test that no lexer state offers both a block-only terminal and a statement-start terminal.
+- **A2-20:** the lone CR, as decision 12 decides. **A1-11:** `.subckt` parameter commas, as decision 10 decides.
+- **Rows and wording:** the ngspice `discrepancies.md` rows of A1-2 (`1d3`, `1meg5`, `1μ`, `1kΩ`, `1_000`, `(1k)` and the others, pinned by solver probes); LTspice rows for A1-6 (`a`), A1-7 (`reject_number_tails`) and A1-8 (`1d3`, `1_000`); the closing comma note and `LT-FLD-001` (A1-12); LTspice `numbers.md` (A1-13); `NG-FLD-001` (A1-14).
 
-[ ] **D6 — Architecture, coverage report and stale text.** *Developer; disjoint from D1/D2/D5 unless G1 says otherwise.*
-- The lookaround tables in the grammar READMEs and the test comment (decision 8).
-- The `UnsupportedConstruct` docstrings and comments A2 marked `stale`.
-- The spec-coverage report of A4's proposal, with its test.
-- The other `stale` rows of A2 and A4.
+[ ] **D6 — Architecture, coverage report and stale docs (A2-12 to A2-18; A4-2, A4-5, A4-6, A4-9, A4-14, A4-15).** *Developer.*
+- **Lookaround (decision 8):** A2's two tables in the grammar READMEs, noting that the merged states after a nested `.endif` are fixed by D5 (A2-19); the comment of `UNCHECKED_TERMINALS` points to them.
+- **Spec checker (A4-2):** match `def <name>(` rather than a substring, and require a non-solver accept test for each entry except the refusal entries.
+- **Coverage report (A4-14):** a Tests column (non-solver and solver counts) and a totals line in each README's "Validation status" table, checked by `check_status_summary`; `tests/support/spec_coverage.py` becomes the generator of those rows or is removed.
+- **Statuses (A4-5, A4-6):** append `validated_on` to the five stale entries, citing their tests; an LTspice solver test of `~`, cited by `LT-FML-001`. NG-COM-001 as decision 11 decides (after it).
+- **Stale docs:** `docs/usage/elements.md`, `docs/usage/structural-parse.md` and README line 60 (A2-13 to A2-15); NG-UNS-001's name (A2-17); an optional Spec column in `devices.md` (A4-15).
+- **Files:** `docs/grammars/*/README.md`, `docs/grammars/*/devices.md`, the spec entries named, `docs/usage/` except `errors.md`, `README.md`, `tests/architecture/`, `tests/support/spec_coverage.py`, and one new LTspice solver test file.
 
 ### Stage 3 — Evidence and handover (lead)
 
@@ -181,7 +202,70 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 
 ### 5.1 Audit findings (G1)
 
-*Filled at G1.*
+Reviewed 2026-11-10. Every `gap` that changes behaviour was reproduced by the lead:
+- A1-4 on both dialects: `Q1 c b 0 qm 1μ` and `… 2Ω` load with nodes `c b 0 qm` and model `1μ`; `M1 d g s mm 1μ` the same; `J1 … 2μ` fails with an empty message;
+- A2-19: `.if (1)` / `.if (2)` / `.endif` / `R1 a b 1` / `.endif` is a `ParseError` at line 5 on ngspice; the same with `.else` loads;
+- A2-20: `* abc\r\r\n` is a `ParseError` on both dialects;
+- A3-14 and A3-16 by reading the code.
+
+The two baseline failures (3.2) are host noise. The reviewers' scripts are in the session's scratch folder, outside the repository.
+
+**Summary:** no device letter is `planned`; every remaining `UnsupportedConstruct` path is justified; no spec entry is `documented`, and none should be; all 402 grammar rules of M12 to M17 trace to spec entries, and every cited test exists; 20 of the 21 lookaround terminals are reviewed clean, and the review of the 21st found A2-19. Two defects in the library: A1-4 (a topology misread) and A2-19 (a valid netlist refused). The rest are test gaps, records and wording.
+
+**A1 — Value specifications**
+
+| # | Finding | Class | Subtask |
+|---|---|---|---|
+| A1-1, 3, 5, 9, 10, 15 | ngspice and LTspice number forms, every phase 2 value slot, every documented comma form and the comma rows: as the manual and the reference say, or refused with a row | ok | — |
+| A1-2 | ngspice runs forms the library refuses, with no row: `1d3` (read as 1000), `1d-3` (−3), `1meg5`, `2.2k7`, `1μ` (read as 1, not micro), `1kΩ`, `1_000`, `0x10`, `1.5.3`, `1e+`, `(1k)`. Refusing is right (some would be misreads) | gap (records) | D5 |
+| **A1-4** | **LTspice positional numbers (`FIELD_NUMBER`) lack the non-ASCII letters of `NUMBER`: `Q1 c b 0 qm 1μ` loads with `qm` as a node and model `1μ`, where LTspice reads an area of 1e-6. Also M; J and Z fail with an empty message; POLY coefficients with `μ` are refused. ngspice Q and M lines load the same way** | **gap (defect, P4)** | **D5, first** |
+| A1-6 | The LTspice reference contradicts itself on `a` (atto); LTspice reads `1a` as 1 | gap (record) | D5 |
+| A1-7 | `.options reject_number_tails` is not read | question → limit (decision 14) | D5 |
+| A1-8 | LTspice `1d3`, `1_000` are not in the trailing-letters row | gap (record) | D5 |
+| A1-11 | LTspice runs `.subckt` parameter commas; the library refuses them, with no row | question | decision 10, D5 |
+| A1-12 to 14 | The closing comma note and `LT-FLD-001` omit the M12 to M17 forms; LTspice `numbers.md` on bare expressions; `NG-FLD-001`'s "phase 2" remark | stale | D5 |
+| A1-16 | ngspice Greek `μ` gets the generic message | question → limit (A1-2's row) | D5 |
+
+**A2 — Architecture and rejection paths**
+
+| # | Finding | Class | Subtask |
+|---|---|---|---|
+| A2-1, 2 | No matrix entry is `planned`; the test fails on a patched matrix | ok | — |
+| A2-3 to 6 | `UnsupportedConstruct` paths: the planned-letter path (decision 6), the digital U and `.machine` (v1 exclusions); the other places only catch it | ok (justified) | D1 (an optional docstring note) |
+| A2-7 to 11 | `parse()` docstring, `core.lark` and `ngspice.lark` comments, `ltspice.lark`'s bare "decision 5", `errors.py` docstring | stale | D1 |
+| A2-12 | §17 and §6.7 do not name the v1 exclusions | question | 0021 amends them (T1) |
+| A2-13 to 15 | `docs/usage/elements.md`, `structural-parse.md`, README line 60 | stale | D6 (README line 64 is M19's) |
+| A2-17 | NG-UNS-001's name | stale | D6 |
+| A2-18, 21 | Lookaround review: 20 of 21 terminals clean; none can lose its lookaround simply | ok | D6 (the tables) |
+| **A2-19** | **ngspice nested `.if`: after an inner `.endif`, LALR-merged states let `DOT_NAME`, names and `COMMENT_LINE` beat `BLOCK_TEXT`, so any line but `.else` is a `ParseError`; ngspice 47 runs it. A separate nested rule fixes it and builds in strict mode** | **gap (defect)** | **D5** |
+| A2-20 | A lone CR before a CRLF is refused, against decision 0001 | question | decision 12, D5 |
+
+**A3 — Corpus, oracle and edit properties**
+
+| # | Finding | Class | Subtask |
+|---|---|---|---|
+| A3-1, 2, 9, 17 | Manifests and sweeps complete (the run needs `OPENJELLYBEAN_LIB`); about 70 phase 2 operations keep the signature, are idempotent and stay inside their element | ok | — |
+| A3-3 to 6 | Per-file origin only in notes; groups with no file of the maintainer's; stimulus forms; three forms in no accept file | question / gap | decision 13, D4 |
+| A3-7, 8 | Neither oracle generates a phase 2 letter | gap | D3 |
+| A3-10 | The "any topology token changes the signature" property covers only R, C, L and V | gap | D3 (in the oracle file) |
+| A3-11 to 13 | Idempotence and "no text outside the span" are missing for most phase 2 operations; letters and forms are missing from the properties (A3's matrix, carried into D3's brief) | gap | D3 |
+| A3-14 | Two properties `continue` on `EditError` and can pass with no step applied | gap | D3 |
+| A3-15 | What idempotence means for a removal is not stated | question → D3 states it | D3 |
+| A3-16 | Message typo: "has no a source function" | stale | D1 |
+
+**A4 — Spec coverage and statuses**
+
+| # | Finding | Class | Subtask |
+|---|---|---|---|
+| A4-1, 7, 8, 10, 11, 13 | The checker runs in CI; rules traced; 14 sampled entries test their construct; NG-NUM-004 and NG-TXT-001 stay `observed`; no `documented` entry | ok | — |
+| A4-2 | The checker matches a test name as a substring and does not require an accept test | gap (checker) | D6 |
+| A4-3, 4, 12 | Refusal entries graded `validated`; what the checker cannot prove; LTspice entries with observed parts | question → conventions (decision 14) | 0021 |
+| A4-5 | Five entries' `validated_on` predate rules added to them (LT-SRC, NG-SRC, NG-FML, LT-FML, LT-UNS) | stale | D6 |
+| A4-6 | LTspice `~` has no solver test (a probe agrees with the library) | gap | D6 |
+| A4-9 | NG-COM-001 is not really `observed` | question | decision 11, D6 |
+| A4-14 | No coverage report a reader can see shows each construct's tests | gap | D6 |
+| A4-15 | No test ties a device letter to its spec entry | ok (optional) | D6 |
+| A4-16 | This list's count of spec entries | stale | fixed (148) |
 
 ### 5.2 Evidence
 
@@ -192,7 +276,8 @@ Each subtask names its role, the files it may change, and what it reports. `[x]`
 | Subtask | Role | Reported | Lead's review | Commit |
 |---|---|---|---|---|
 | T0 | lead | — | baseline recorded in 3.2 | `8f8c098`, this commit |
-| A1 | reviewer | 2026-11-10 after a resume, complete with findings (16 rows) | at G1; row 4 (a topology misread with `μ`/`Ω` after a transistor model) reproduced on both dialects | — |
-| A2 | reviewer | stopped on an API rate limit, resumed | — | — |
-| A3 | reviewer | 2026-11-10, complete with findings (17 rows) | at G1 | — |
-| A4 | reviewer | 2026-11-10, complete with findings (16 rows) | at G1 | — |
+| A1 | reviewer | 2026-11-10 after a resume, complete with findings (16 rows) | reviewed at G1; A1-4 reproduced on both dialects | — |
+| A2 | reviewer | 2026-11-10 after a resume, complete with findings (21 rows and the lookaround tables) | reviewed at G1; A2-19 and A2-20 reproduced | — |
+| A3 | reviewer | 2026-11-10, complete with findings (17 rows) | reviewed at G1 | — |
+| A4 | reviewer | 2026-11-10, complete with findings (16 rows) | reviewed at G1 | — |
+| G1 | lead | — | section 5.1, decisions 10 to 15, stage 2 revised | this commit |
