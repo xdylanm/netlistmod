@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M17 are complete, and M18 is active
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M18 are complete, and M19 is next
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -112,7 +112,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **The planned-letter tests** use A after M16 ([m16-tasks](./archive/phase-2/m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
 - **Exit:** no letter in either matrix is `planned`.
 
-### M18 — Completeness audit (active; [task list](./m18-tasks.md))
+### M18 — Completeness audit (complete; [task list](./archive/phase-2/m18-tasks.md), [decision 0021](../decisions/0021-completeness-audit.md))
 
 - **Value specifications (§6.4):** check the manual's full range against the grammar, including the comma-separated lists recorded in LTspice's `discrepancies.md`.
 - **Architecture tests:** no matrix entry is `planned`, every `UnsupportedConstruct` path that remains is justified, and the lookaround terminal list is reviewed (limit 3).

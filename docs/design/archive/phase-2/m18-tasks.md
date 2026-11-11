@@ -1,7 +1,7 @@
 # M18 task list — Completeness audit
 
-> **Status:** READY FOR REVIEW — review round 1 on [#18](https://github.com/xdylanm/netlistmod/pull/18) is made (section 6.4); every design point of 5.3 is settled
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
+> **Status:** COMPLETE (2026-11-11) — approved by the maintainer; the results are in section 5, and review round 1 in section 6
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M18). Governed by [architecture.md](../../../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./m17-tasks.md) and carries the items noted for M18 in [M15b](./m15b-tasks.md) 6.3, [M16](./m16-tasks.md) 6.3 and [M17](./m17-tasks.md) 6.3.
 
 ## 1. Scope
 
@@ -201,7 +201,7 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 
 ### After the maintainer's approval
 
-[ ] **T2 — Close M18.** Archive this list, accept decision 0021 if there is one, and update the plan (status and M18 heading) and the index.
+[x] **T2 — Close M18.** Archive this list, accept decision 0021 if there is one, and update the plan (status and M18 heading) and the index.
 
 ## 5. Results
 
@@ -375,3 +375,4 @@ The maintainer asked for examples of section 5.3 point 1 (checks outside the gra
   - full run with `--require-solver ngspice --require-solver ltspice`: 10,173 passed, 2 skipped, coverage 98.73%, in 25 min 21 s;
   - `pre-commit run --all-files`, `mypy --strict` on the named tests, and `lint-imports` (1 contract kept): clean;
   - CI on #18: read once after this push.
+| T2 | lead | — | the maintainer approved M18 on 2026-11-11, with CI green on all five jobs at `5ea254d`; this list is archived, decision 0021 is accepted, and the plan and index are updated | this commit |
