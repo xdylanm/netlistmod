@@ -77,6 +77,28 @@ def test_a_state_with_a_value_is_replaced_whole() -> None:
     assert _line(netlist.set_switch_state("S1", "on"), "S1") == "S1 so 0 a 0 sm on ; trip"
 
 
+@pytest.mark.parametrize(
+    ("line", "ngspice", "ltspice"),
+    [
+        (
+            "S1 so 0 a 0 sm ; c\n+ off ; trip",
+            "S1 so 0 a 0 sm ; c\n+ ; trip",
+            "S1 so 0 a 0 sm ; c ; trip",
+        ),
+        ("S1 so 0 a 0 sm\n+ off ; trip", "S1 so 0 a 0 sm ; trip", "S1 so 0 a 0 sm ; trip"),
+    ],
+)
+def test_removing_a_state_never_leaves_a_comment_alone_on_the_last_ltspice_line(
+    line: str, ngspice: str, ltspice: str
+) -> None:
+    # LTspice stops on a statement whose last `+` line holds only a comment (M18 D2), so there
+    # the comments join the line before (M18 D7b); ngspice runs it.
+    netlist = _netlist(_CIRCUIT.replace("S1 so 0 a 0 sm off ; trip", line))
+    after = ltspice if current_dialect() is Dialect.LTSPICE else ngspice
+    edited = netlist.set_switch_state("S1", None)
+    assert edited.text.split("\nS1 ", 1)[1].split("\nW1 ", 1)[0] == after.removeprefix("S1 ")
+
+
 def test_set_switch_state_refuses_other_lines_and_states() -> None:
     with pytest.raises(EditError, match="has no switch state"):
         _netlist().set_switch_state("E1", "on")

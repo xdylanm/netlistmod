@@ -16,6 +16,7 @@ from netlistmod.edit._ops_common import (
     _element,
     _insert,
     _kind,
+    _removal_edit,
     _spans,
     upsert_target,
 )
@@ -174,7 +175,8 @@ def remove_stimulus(
         raise EditError(
             f"`{designator}` would have no value, and an LTspice I line needs one; use set_dc first"
         )
-    return [Edit(_with_separator(netlist, element, spec), "", f"remove_stimulus {designator}")]
+    removed = _with_separator(netlist, element, spec)
+    return [_removal_edit(netlist, element, removed, f"remove_stimulus {designator}")]
 
 
 def _with_separator(

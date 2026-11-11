@@ -374,6 +374,58 @@ def test_remove_param_on_ltspice_lines(line: str, name: str, after: str) -> None
     _removal(line, name, after)
 
 
+# A removal that leaves a statement's last `+` line holding only a comment: LTspice stops on
+# that (M18 D2), so there the comments join the last line with a field (M18 D7b); ngspice runs
+# it, and its text stays as before. (line, name, ngspice result, LTspice result)
+_COMMENT_LEFT_LAST = [
+    ("R1 a 0 1k\n+ ; c\n+ m=2 ; d", "m", "R1 a 0 1k\n+ ; c ; d", "R1 a 0 1k ; c ; d"),
+    ("R1 a 0 1k ; c\n+ m=2 ; d", "m", "R1 a 0 1k ; c ; d", "R1 a 0 1k ; c ; d"),
+    (
+        "R1 a 0 1k\n+ ; c\n+ m=2 ; d\n+ temp=30",
+        "m",
+        "R1 a 0 1k\n+ ; c ; d\n+ temp=30",
+        "R1 a 0 1k\n+ ; c ; d\n+ temp=30",
+    ),
+    ("D1 a 0 dm\n+ ; c\n+ m=2", "m", "D1 a 0 dm\n+ ; c", "D1 a 0 dm ; c"),
+]
+
+
+@pytest.mark.parametrize(("line", "name", "ngspice", "ltspice"), _COMMENT_LEFT_LAST)
+def test_remove_param_never_leaves_a_comment_alone_on_the_last_ltspice_line(
+    line: str, name: str, ngspice: str, ltspice: str
+) -> None:
+    _removal(line, name, ltspice if is_ltspice() else ngspice)
+
+
+@pytest.mark.parametrize(
+    ("before", "ngspice", "ltspice"),
+    [
+        (
+            ".model dm D Is=1e-14\n+ ; c\n+ N=2 ; d",
+            ".model dm D Is=1e-14\n+ ; c ; d",
+            ".model dm D Is=1e-14 ; c ; d",
+        ),
+        (
+            ".model dm D Is=1e-14\r\n+ ; c\r\n+ N=2 ; d",
+            ".model dm D Is=1e-14\r\n+ ; c ; d",
+            ".model dm D Is=1e-14 ; c ; d",
+        ),
+        (
+            ".model dm D(Is=1e-14 ; c\n+ N=2) ; d",
+            ".model dm D(Is=1e-14 ; c\n+ ) ; d",
+            ".model dm D(Is=1e-14 ; c\n+ ) ; d",
+        ),
+    ],
+)
+def test_remove_model_param_never_leaves_a_comment_alone_on_the_last_ltspice_line(
+    before: str, ngspice: str, ltspice: str
+) -> None:
+    netlist = _netlist(f"title\nR1 a 0 1\n{before}\n.end\n")
+    edited = netlist.remove_model_param("dm", "N")
+    after = ltspice if is_ltspice() else ngspice
+    assert edited.source.text == f"title\nR1 a 0 1\n{after}\n.end\n"
+
+
 @pytest.mark.parametrize(
     ("line", "name", "message"),
     [

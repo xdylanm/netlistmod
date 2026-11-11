@@ -387,7 +387,10 @@ edited by hand (review R3, as for `set_table`):
 
 A removal never touches a comment: a field that is alone on its `+` line goes with the line
 break before it, so a comment after it moves to the end of the line before
-(`R1 a 0 1k` / `+ m=2 ; note` becomes `R1 a 0 1k ; note`). A removal that leaves a line
+(`R1 a 0 1k` / `+ m=2 ; note` becomes `R1 a 0 1k ; note`). On LTspice, which stops on a
+statement whose last `+` line holds only a comment, a removal that would leave one joins its
+comments to the end of the last line with a field instead (`V1 a 0 ; c` / `+ SIN(0 1) ; d`
+loses its function as `V1 a 0 ; c ; d`); ngspice keeps `+ ; d`. A removal that leaves a line
 without what it needs (a T's `Z0=`, a U's `l=`) is refused by the verification. Nodes, P's
 line count and an O line's (absent) parameters are not editable.
 
