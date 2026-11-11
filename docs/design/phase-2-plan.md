@@ -124,9 +124,9 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 
 ### M19 — v1 review package and beta tag
 
-- Update the usage guides, error reference, README and CHANGELOG, and set the version to `0.9.0`. The README says this is a feature-complete beta.
+- Update the usage guides, error reference, README and CHANGELOG. The README says the library is feature complete for v1.
 - Final evidence from a clean clone with both solvers, as in phase 1's T10, and a v1 review package.
-- After the gate: tag `v0.9.0`; its release publishes to PyPI like `0.5.0` did. What 1.0 commits to in the public API (§18) is reviewed after the maintainer's practical use.
+- After the gate: a `release-0.9.0` branch sets the version `0.9.0` and the beta classifier, then the tag `v0.9.0` and its release publish to PyPI like `0.5.0` did. The M19 pull request does not change the version ([m19-tasks](./m19-tasks.md) decision 5). What 1.0 commits to in the public API (§18) is reviewed after the maintainer's practical use.
 - **Exit:** the v1 gate (section 6) passes.
 
 ## 5. Device letters by milestone
