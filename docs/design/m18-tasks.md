@@ -1,6 +1,6 @@
 # M18 task list — Completeness audit
 
-> **Status:** ACTIVE — stage 1 and gate G1 are done (2026-11-10). Stage 2 has started with D1, D3 and D6. The maintainer decided 5, 10, 12 and 13 on 2026-11-10; decision 11 (NG-COM-001) is still open
+> **Status:** ACTIVE — stage 1 and gate G1 are done (2026-11-10). Stage 2 has started with D1, D3 and D6. The maintainer decided 5, 10, 12 and 13 on 2026-11-10, and 11 on 2026-11-11
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M18). Governed by [architecture.md](../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./archive/phase-2/m17-tasks.md) and carries the items noted for M18 in [M15b](./archive/phase-2/m15b-tasks.md) 6.3, [M16](./archive/phase-2/m16-tasks.md) 6.3 and [M17](./archive/phase-2/m17-tasks.md) 6.3.
 
 ## 1. Scope
@@ -60,7 +60,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, following the us
 9. **Real circuits per device group.** *Superseded by decision 13 at G1.* A3 lists each device group of plan section 5 with its accept files by origin (the maintainer's schematics or KiCad exports, or written here). A group with no file of the maintainer's is a `gap`; for each, the maintainer either supplies a circuit (a checklist as in M17 section 3.2) or accepts the files written here, as for M17's ngspice netlists.
 
 10. **LTspice `.subckt` parameter commas** (A1-11). **Decided (maintainer, 2026-11-10): as recommended.** LTspice 26.1.1 runs `.subckt s p n r=1k, q=2` and `… params: r=1k, q=2`; the library refuses the comma, though it accepts `X1 … p=1, q=2` (an `observed` form). **Recommended: accept the comma between `.subckt` parameters, as on X,** with the probe as a test and `LT-SUB-001` noting the observed form, so both sides of a call read alike. *Alternative:* keep the refusal and add a `discrepancies.md` row.
-11. **NG-COM-001's status** (A4-9). *Proposed, for the maintainer.* The manual documents both accepted forms (`*` in column 1, §2.4.3; leading blanks ignored, §2.1.1), so the entry is not `observed`. **Recommended: make it `validated`,** add the §2.1.1 citation, and add a grammar test and an ngspice probe of an indented `*` (D6). *Alternative:* keep `observed` and rewrite the note.
+11. **NG-COM-001's status** (A4-9). **Decided (maintainer, 2026-11-11): as recommended** (D8). The manual documents both accepted forms (`*` in column 1, §2.4.3; leading blanks ignored, §2.1.1), so the entry is not `observed`. **Recommended: make it `validated`,** add the §2.1.1 citation, and add a grammar test and an ngspice probe of an indented `*` (D6). *Alternative:* keep `observed` and rewrite the note.
 12. **A lone CR right before a CRLF** (A2-20). **Decided (maintainer, 2026-11-10): as recommended.** Rule 13 writes free text as `\r(?!\r?\n)`, so `* abc\r\r\n` is a `ParseError` on both dialects (reproduced), while decision 0001 says a lone CR is ordinary text and `SourceText` counts that line as holding one. **Recommended: `\r(?!\n)`,** which accepts it; the terminals stay on the lookaround list, and decision 0021 amends rule 13's wording. *Alternative:* keep it and document it as a limit.
 13. **Corpus origin** (A3-3 to A3-6; refines decision 9). **Decided (maintainer, 2026-11-10): as recommended.** Groups with no circuit of the maintainer's:
     - ngspice: Z; B `i=`; the expression forms of E and G; C `q=`; every M15b form; T, U, Y and P; A and N;
@@ -189,6 +189,8 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 - **Files:** `docs/grammars/*/README.md`, `docs/grammars/*/devices.md`, the spec entries named, `docs/usage/` except `errors.md`, `README.md`, `tests/architecture/`, `tests/support/spec_coverage.py`, and one new LTspice solver test file.
 
 [x] **D7 — A new parameter on an LTspice B line with `laplace=` (D3-1).** *Developer; after D5.* Accepted 2026-11-11 (`24f9788`). `set_param("B1", "ic", "1")` on `B1 o 0 V=2*V(vs) laplace=1/(1+s/1k)` writes `ic=1` after `laplace=…`, which the library refuses (it follows the reference's order, M15b), so the edit fails verification and writes nothing. A new parameter that is not `window=`, `nfft=` or `mtol=` goes before `laplace=`, as on E and G if they have the same gap. Probe whether LTspice runs `laplace=… ic=1` for the record. Golden diff, and D3's exclusion (`test_device_edit_properties.py`) removed.
+
+[~] **D8 — NG-COM-001 `validated` (decision 11).** *Developer.* An indented `*` line as a grammar test and an ngspice 47 probe; the entry cites §2.4.3 and §2.1.1; the README table is regenerated.
 
 ### Stage 3 — Evidence and handover (lead)
 
