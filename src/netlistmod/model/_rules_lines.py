@@ -217,7 +217,7 @@ class LinesRules(ElementsRules):
         any other shape is the digital U, which is out of scope for v1 (decision 0020 item 1)."""
         tokens = [word.token for word in words]
         shaped = not any("(" in str(token) or ")" in str(token) for token in tokens)
-        if shaped and len(tokens) == 5 and _reads_as_number(str(tokens[4])):
+        if shaped and len(tokens) == 5 and _reads_as_number(str(tokens[4]), any_letter=True):
             raise self._parse_error(
                 tokens[4],
                 f"`{tokens[4]}` after the model is a positional length, which ngspice ignores; "
@@ -238,7 +238,7 @@ class LinesRules(ElementsRules):
         return nodes, self._line_model(ModelReference(str(tokens[3]), _span(tokens[3])))
 
     def _line_model(self, model: ModelReference) -> ModelReference:
-        if _reads_as_number(model.model_name):
+        if _reads_as_number(model.model_name, any_letter=True):
             raise self._error_at(
                 model.span.start,
                 f"`{model.model_name}` is in the model's place, and a model name cannot be a "

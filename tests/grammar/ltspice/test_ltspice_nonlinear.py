@@ -173,6 +173,12 @@ def test_a_voltage_reference_in_laplace_is_named() -> None:
         ("F1 OUT 0 POLY(2) V1 V2 0 1 1", Cccs, ["OUT", "0"], ["V1", "V2"], ["0", "1", "1"]),
         ("F1 OUT 0 POLY(1) Vsense 2", Cccs, ["OUT", "0"], ["Vsense"], ["2"]),
         ("H1 OUT 0 POLY(1) Vsense 0 2k", Ccvs, ["OUT", "0"], ["Vsense"], ["0", "2k"]),
+        # M18 A1-4: a coefficient takes any letter, as LTspice's NUMBER does (2μ is 2e-6).
+        ("E1 OUT 0 POLY(1) VX 0 0 2μ", Vcvs, ["OUT", "0", "VX", "0"], [], ["0", "2μ"]),
+        ("E1 OUT 0 POLY(1) (VX,0) 0 2μ", Vcvs, ["OUT", "0", "VX", "0"], [], ["0", "2μ"]),
+        ("G1 OUT 0 POLY(1) VX 0 0 2Ω", Vccs, ["OUT", "0", "VX", "0"], [], ["0", "2Ω"]),
+        ("F1 OUT 0 POLY(1) Vsense 0,2μ", Cccs, ["OUT", "0"], ["Vsense"], ["0", "2μ"]),
+        ("E1 OUT 0 POLY(1) 1μ 0 0 2", Vcvs, ["OUT", "0", "1μ", "0"], [], ["0", "2"]),
     ],
 )
 def test_poly_counts_its_control_fields_from_the_dimension(

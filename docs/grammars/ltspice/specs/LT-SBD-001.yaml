@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar:
 - subckt_header
 - not_in_subckt
@@ -24,8 +27,13 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_a_port_cannot_be_zero
 - tests/grammar/ltspice/test_ltspice_statements.py::test_top_level_statements_are_rejected_in_a_body
 - tests/solver/test_ltspice_validation.py::test_subcircuit_headers
+- tests/solver/test_ltspice_value_probes.py::test_subckt_parameter_commas_run_and_load
+- tests/solver/test_ltspice_value_probes.py::test_a_comma_right_after_params_stops_ltspice_but_loads
 - tests/solver/test_ltspice_validation.py::test_definitions_nest
 - tests/solver/test_ltspice_validation.py::test_top_level_statements_in_a_body_stop_both
 - tests/solver/test_ltspice_discrepancies.py::test_a_port_named_0_runs_but_the_library_rejects_it
-notes: Definitions nest. Top-level statements are rejected in a body; LTspice tolerates .ic and .nodeset
-  there, and a port named 0 (discrepancies.md).
+notes: 'Definitions nest. Top-level statements are rejected in a body; LTspice tolerates .ic and .nodeset
+  there, and a port named 0 (discrepancies.md). Observed (M18 decision 10): a comma may stand before a
+  default parameter, as on X (x_param): r=1k, q=2, with or without params: and with or without blanks
+  around the comma, which LTspice 26.1.1 runs. A comma right after params: loads too, though LTspice
+  stops (discrepancies.md); a comma between ports is refused.'

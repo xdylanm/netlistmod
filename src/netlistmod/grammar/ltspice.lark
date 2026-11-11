@@ -62,17 +62,17 @@
 
 // A comment line starts with "*" or ";" (a "$" line is an error in LTspice 26.1.1).
 // spec: LT-COM-001
-%override COMMENT_LINE.3: /[*;](?:[^\r\n]|\r(?!\r?\n))*/
+%override COMMENT_LINE.3: /[*;](?:[^\r\n]|\r(?!\n))*/
 
 // An end-of-line comment starts at ";", anywhere, or at "$" with a space on both sides: LTspice
 // 26.1.1 reads "1k $ c" as a comment but fails on "1k$ c", "1k $c", "1k $" and on a tab next to the
 // "$" (probe, M8 T3). A "$" elsewhere is a name character ("$G_x", "a$b"). "//" is not a comment.
 // spec: LT-COM-002
-%override TRAILING_COMMENT.3: /(?:;|(?<= )\$ )(?:[^\r\n]|\r(?!\r?\n))*/
+%override TRAILING_COMMENT.3: /(?:;|(?<= )\$ )(?:[^\r\n]|\r(?!\n))*/
 
 // Statement text runs up to a comment or a quote. "/" and "\" are ordinary text here.
 // spec: LT-TXT-001
-%override TEXT.2: /[^ \t\r\n;'"](?:[^\r\n;'"$]|(?<! )\$|\$(?! )|\r(?!\r?\n))*/
+%override TEXT.2: /[^ \t\r\n;'"](?:[^\r\n;'"$]|(?<! )\$|\$(?! )|\r(?!\n))*/
 
 // A name is any string without blanks (reference, Node Naming); LTspice 26.1.1 refuses these
 // characters in one: = ( ) , { } ' " | (and ";", which starts a comment). Blanks and "=" end it.
@@ -281,6 +281,10 @@ I_R_KW.2: "r"i
                  | jfet
                  | mesfet
 %extend t_area: SEP FIELD_EMBEDDED
+// A positional number takes the letters this dialect's NUMBER takes, any Unicode letter (1μ, 2Ω):
+// LTspice 26.1.1 reads `Q1 c b 0 qm 1μ` as an area of 1e-6, so the field is never a model (M18
+// A1-4). It is also POLY's number.
+%override FIELD_NUMBER.4: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?[^\W\d_]*(?![^ \t\r\n;$,)])/
 // An embedded decimal that ends the field, so a model name such as 2N7000_OJ stays a name. It is
 // below WORD, so where a name may also follow (Q1 c b e s 2N3904), the field is a name.
 FIELD_EMBEDDED.1: /[0-9]+(?:meg|mil|[tgkmunpfr]|µ|μ)[0-9]+(?![^ \t\r\n;])/i
@@ -655,7 +659,7 @@ lib_line: (BLOCK_DOT_NAME | BLOCK_TEXT) BLOCK_TEXT* NL
 INCLUDE_KW.4: ".include"i
 INC_KW.4: ".inc"i
 LIB_KW.4: ".lib"i
-LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\r?\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
+LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
 ENDL_KW.4: ".endl"i
 
 // .machine ... .endmachine is matched as a block only to be reported as unsupported: a named v1
@@ -669,7 +673,7 @@ machine_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
 MACHINE_KW.4: ".machine"i
 ENDMACHINE_KW.4: ".endmachine"i
 BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
-BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
 
 // .param: name=value or name value (L11), separated by blanks or a comma. Names start with a letter
 // or "_" and hold letters, digits, "_", "#" and "."; time, temper and hertz are ordinary names. A

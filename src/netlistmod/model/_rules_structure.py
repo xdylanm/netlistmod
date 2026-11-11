@@ -108,6 +108,10 @@ class StructureRules(_Rules):
     def if_line(self, children: list[Any]) -> None:
         return None
 
+    def nested_if_block(self, children: list[Any]) -> None:
+        # Part of its outer block's text, as any if_line is (M18 A2-19).
+        return None
+
     def lib_line(self, children: list[Any]) -> None:
         return None
 

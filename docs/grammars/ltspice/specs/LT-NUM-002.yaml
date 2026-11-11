@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar: []
 core_rules:
 - NUMBER
@@ -16,5 +19,6 @@ tests:
 - tests/grammar/ltspice/test_ltspice_elements.py::test_digits_after_other_letters_are_rejected
 - tests/solver/test_ltspice_validation.py::test_letters_after_a_number_are_ignored
 - tests/solver/test_ltspice_discrepancies.py::test_other_digits_after_letters_read_oddly_and_the_library_rejects_them
+- tests/solver/test_ltspice_value_probes.py::test_letters_ltspice_does_not_read_as_a_multiplier
 notes: Unrecognized letters are ignored by LTspice and kept in the value text. Digits after other letters
   are rejected.

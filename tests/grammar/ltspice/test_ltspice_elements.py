@@ -503,6 +503,11 @@ def test_malformed_subcircuit_calls(line: str) -> None:
         (".subckt s a b r=1k", ["r"]),
         (".subckt s a b params: r=1k", ["r"]),
         (".SUBCKT s a b r=1k, q=2", ["r", "q"]),
+        # M18 decision 10 (A1-11): the comma forms LTspice 26.1.1 runs on .subckt, as on X.
+        (".subckt s a b params: r=1k, q=2", ["r", "q"]),
+        (".subckt s a b r=1k,q=2, w=3", ["r", "q", "w"]),
+        (".subckt s a b r=1k ,q=2", ["r", "q"]),
+        (".subckt s a b, r=1k", ["r"]),
     ],
 )
 def test_subcircuit_headers(header: str, params: list[str]) -> None:

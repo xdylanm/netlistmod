@@ -65,6 +65,16 @@ def _slice(line: str, span: Span) -> str:
         ("J1 d g s jm", ["d", "g", "s"], "jm", None),
         ("J1 d g s jm 1n5", ["d", "g", "s"], "jm", "1n5"),
         ("Z1 d g s zm 2", ["d", "g", "s"], "zm", "2"),
+        # M18 A1-4: a number with any letter after it is an area, as LTspice's NUMBER reads it
+        # (U+03BC is the Greek mu, U+00B5 the micro sign).
+        ("Q1 c b 0 qm 1μ", ["c", "b", "0"], "qm", "1μ"),
+        ("Q1 c b 0 qm 2Ω", ["c", "b", "0"], "qm", "2Ω"),
+        ("Q1 c b 0 qm 1µ", ["c", "b", "0"], "qm", "1µ"),
+        ("Q1 c b 0 s qm 1μ off", ["c", "b", "0", "s"], "qm", "1μ"),
+        ("J1 d g 0 jm 2μ", ["d", "g", "0"], "jm", "2μ"),
+        ("J1 d g 0 jm 2Ω off", ["d", "g", "0"], "jm", "2Ω"),
+        ("Z1 d g 0 zm 2μ", ["d", "g", "0"], "zm", "2μ"),
+        ("Q1 c b 1μ qm", ["c", "b", "1μ"], "qm", None),
     ],
 )
 def test_the_model_is_the_last_name(
@@ -123,6 +133,8 @@ def test_ic_takes_a_comma_list(line: str) -> None:
         ("M1 d g s tj tc vd thermal", 16),  # five nodes, and no thermal flag
         ("J1 d g s b jm", 12),  # four nodes
         ("Q1 c b e 2", 11),  # a number as the model
+        ("Q1 c b e 1μ", 12),  # a number with a Greek mu as the model (M18 A1-4)
+        ("Q1 c b 0 qm 1μ x", 16),  # a name after the area
         ("Q1 c b e qm 2 x", 15),  # a name after the area
         ("Q1 c b e qm area=2", 17),  # outside the closed lists; area could still be a name
         ("Q1 c b e qm ic=0.6,5", 15),
@@ -135,6 +147,19 @@ def test_ic_takes_a_comma_list(line: str) -> None:
 def test_malformed_transistor_lines_are_rejected(line: str, column: int) -> None:
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
+
+
+# M18 A1-4: M has no positional area, so a number after the model is in the model's place, as `2`
+# is; LTspice stops on both ("Unknown parameter").
+@pytest.mark.parametrize(
+    ("line", "word"),
+    [("M1 d g s mm 2", "2"), ("M1 d g s mm 1μ", "1μ"), ("M1 d g s mm 2Ω", "2Ω")],
+)
+def test_a_number_after_an_m_model_is_refused_as_the_model(line: str, word: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, 13)
+    assert error.reason.startswith(f"`{word}` is in the model's place")
+    assert "a model name cannot be a number" in error.reason
 
 
 def test_a_model_name_cannot_be_a_keyword() -> None:

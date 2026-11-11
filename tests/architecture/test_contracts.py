@@ -322,6 +322,56 @@ def test_terminals_outside_strict_collision_checking_are_known(dialect: Dialect)
     assert unchecked == UNCHECKED_TERMINALS[dialect]
 
 
+# The terminals only an opaque block's lines are lexed with, and the block keywords that its
+# lines may also start with (a nested .if).
+_BLOCK_TERMINALS = frozenset({"BLOCK_TEXT", "BLOCK_DOT_NAME"})
+_BLOCK_LINE_STARTS = frozenset({"LINE_END", "IF_KW"})
+
+
+def _statement_starts(parser: Lark) -> frozenset[str]:
+    """The terminals a body line may start with: those the parser accepts after the title."""
+    interactive = parser.parse_interactive("title\n")
+    interactive.exhaust_lexer()
+    return frozenset(str(name) for name in interactive.accepts() if str(name).isupper())
+
+
+def _states_mixing_block_and_statement_starts(parser: Lark) -> list[tuple[int, list[str]]]:
+    starts = _statement_starts(parser) - _BLOCK_LINE_STARTS
+    table = parser.parser.parser._parse_table.states
+    return [
+        (state, sorted(starts & set(actions)))
+        for state, actions in table.items()
+        if _BLOCK_TERMINALS & set(actions) and starts & set(actions)
+    ]
+
+
+# M18 A2-19: a contextual-lexer state that offers a block line's terminals and a statement's first
+# terminal lets the statement's terminal win inside a block (DOT_NAME over BLOCK_DOT_NAME, as
+# BLOCK_TEXT is below WORD and COMMENT_LINE), so a valid block line is refused.
+@pytest.mark.parametrize("dialect", sorted(registered_dialects(), key=lambda item: item.value))
+def test_no_lexer_state_offers_a_block_line_and_a_statement_start(dialect: Dialect) -> None:
+    parser = build_parser(dialect)
+    assert "DOT_NAME" in _statement_starts(parser)
+    assert _states_mixing_block_and_statement_starts(parser) == []
+
+
+def test_the_block_state_check_finds_a_merged_nested_block(tmp_path: Path) -> None:
+    # The defect of A2-19, put back: a nested .if that is the top-level if_block rule.
+    grammar = ROOT / "src" / "netlistmod" / "grammar"
+    for name in ("core.lark", "formula.lark"):
+        (tmp_path / name).write_bytes((grammar / name).read_bytes())
+    text = (grammar / "ngspice.lark").read_text(encoding="utf-8")
+    nested = "       | nested_if_block\n"
+    assert text.count(nested) == 1
+    (tmp_path / "ngspice.lark").write_text(
+        text.replace(nested, "       | if_block\n"), encoding="utf-8"
+    )
+    merged = Lark.open(str(tmp_path / "ngspice.lark"), parser="lalr", lexer="contextual")
+    mixed = _states_mixing_block_and_statement_starts(merged)
+    assert mixed
+    assert all("DOT_NAME" in starts for _, starts in mixed)
+
+
 def test_strict_mode_does_not_check_a_lookahead_terminal_for_collisions() -> None:
     # Documents the gap the list above tracks: these two terminals overlap on "a", yet strict mode
     # builds the grammar because the lookahead puts FIRST outside the collision check.

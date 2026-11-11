@@ -12,6 +12,9 @@
         "skip": "ngspice 47 stops at `.if {enabled}` (\"Bad syntax\"; it reads `.if (expr)`), which the library keeps as an opaque block, and no one file can be both included whole and read as the library section `typical` (a `.lib` section in a file included whole is \"unimplemented\"); the structure runs with a valid condition and two stubs in test_structure_sample_runs_with_a_valid_condition"
       }
     },
+    "nested_if.cir": {
+      "sha256": "069cd674cffcddf77990935bdadbe01031cb3512f15f41ab0737ff0fba34c6fe"
+    },
     "lib_block.cir": {
       "sha256": "d8ab3bb03c07301bdcb6af48fd9e57d823c0f03f1683432f65f428e29b0adc3d",
       "solver": {

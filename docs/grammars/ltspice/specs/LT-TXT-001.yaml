@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-01'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-11'
 grammar:
 - TEXT
 core_rules:
@@ -16,6 +19,10 @@ core_rules:
 - QUOTED
 tests:
 - tests/grammar/ltspice/test_ltspice_structure.py::test_dollar_and_slashes_in_names_and_statement_text
+- tests/roundtrip/test_lone_cr.py::test_a_lone_cr_before_a_crlf_is_text
+- tests/roundtrip/test_lone_cr.py::test_a_title_may_end_in_a_lone_cr
 - tests/solver/test_ltspice_validation.py::test_a_comment_ends_the_text_of_a_measurement
+- tests/solver/test_ltspice_value_probes.py::test_a_lone_cr_before_a_crlf_runs_and_loads
 - tests/solver/test_ltspice_validation.py::test_a_func_takes_effect_and_stays_text
-notes: Text of an untyped dot-command or a .meas body, kept verbatim up to a comment.
+notes: Text of an untyped dot-command or a .meas body, kept verbatim up to a comment. A lone CR is free
+  text here and in titles and comments, also right before a CRLF (decision 0001, M18 decision 12).

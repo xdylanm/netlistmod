@@ -153,6 +153,10 @@ def test_j_and_z_take_a_positional_area(line: str) -> None:
         ("Z1 d g s b zm", 14),
         ("Q1 c b e 2", 11),  # a number as the model
         ("J1 d g s jm 2 x", 16),  # a name after the area
+        # M18 A1-4: ngspice's NUMBER takes only ASCII letters and the micro sign, so a J or Z
+        # area with a Greek mu is refused (ngspice 47 reads 2μ as 2).
+        ("J1 d g 0 jm 2μ", 15),
+        ("Z1 d g 0 zm 2μ", 15),
     ],
 )
 def test_malformed_transistor_lines_are_rejected(line: str, column: int) -> None:
@@ -177,6 +181,38 @@ def test_a_positional_area_on_q_says_to_write_area_equals(line: str, column: int
     assert error.reason == (
         "`2` after the model is a positional area, and an ngspice Q writes its area as `area=2`"
     )
+
+
+# M18 A1-4: a number with a letter outside ngspice's NUMBER is never the model. After a Q's model
+# it is the area that ngspice 47 runs (ignoring the letters); an M has no area, and ngspice stops.
+@pytest.mark.parametrize(
+    ("line", "column"),
+    [
+        ("Q1 c b 0 qm 1μ", 13),
+        ("Q1 c b 0 qm 2Ω", 13),
+        ("Q1 c b 0 s qm 1μ off", 15),
+    ],
+)
+def test_a_q_area_with_another_letter_is_refused_as_an_area(line: str, column: int) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert "after the model is a positional area" in error.reason
+    assert "`area=` and a number" in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "column", "word"),
+    [
+        ("M1 d g s mm 1μ", 13, "1μ"),
+        ("M1 d g s b mm 2Ω", 15, "2Ω"),
+        ("Q1 c b e 1μ", 10, "1μ"),
+    ],
+)
+def test_a_number_with_another_letter_is_not_a_model(line: str, column: int, word: str) -> None:
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert error.reason.startswith(f"`{word}` is in the model's place")
+    assert "a model name cannot be a number" in error.reason
 
 
 @pytest.mark.parametrize(

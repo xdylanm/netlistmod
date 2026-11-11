@@ -18,6 +18,7 @@ from netlistmod import (
     OpaqueBlock,
     OpaqueStatement,
     ParseError,
+    Resistor,
     SourceText,
     Span,
     Title,
@@ -516,6 +517,38 @@ def test_nested_unterminated_if_reports_the_innermost_opener() -> None:
         _parse(text)
     assert (captured.value.line, captured.value.column) == (3, 1)
     assert captured.value.expected == ("`.endif`",)
+
+
+# M18 A2-19: after an inner .endif, any line of the outer block is block text, as before it.
+@pytest.mark.parametrize(
+    "follow",
+    ["R1 a b 1", ".foo bar", "* comment", ".param x=1", "plain text", ".else", "", "  indented"],
+)
+def test_any_line_may_follow_a_nested_if_block(follow: str) -> None:
+    text = f"title\n.if (1)\n.if (2)\n.endif\n{follow}\n.endif\n.end\n"
+    result = _parse(text)
+    assert [type(item) for item in result.items] == [Title, OpaqueBlock, End]
+    block = result.items[1]
+    assert isinstance(block, OpaqueBlock)
+    assert block.kind == "if"
+    assert text[block.span.start : block.span.end] == text[6 : text.index(".end\n", 30)]
+    _assert_spans_tile(text, result.items)
+
+
+def test_if_blocks_nest_three_deep_and_a_statement_follows_the_outer_block() -> None:
+    text = (
+        "title\n.if (1)\n.if (2)\n.if (3)\n.endif\nR1 a b 1\n.endif\n.foo bar\n.endif\n"
+        "R2 a 0 1\n.end\n"
+    )
+    result = _parse(text)
+    assert [type(item) for item in result.items] == [Title, OpaqueBlock, Resistor, End]
+    _assert_spans_tile(text, result.items)
+
+
+def test_an_unclosed_outer_block_after_a_nested_one_reports_its_opener() -> None:
+    with pytest.raises(ParseError) as captured:
+        _parse("title\n.if (1)\n.if (2)\n.endif\nR1 a b 1\n.end\n")
+    assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 @pytest.mark.parametrize("closer", [".endc", ".endif", ".else", ".elseif (1)"])

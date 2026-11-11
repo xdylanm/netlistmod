@@ -202,6 +202,8 @@ def test_poly_takes_m_on_f_and_g(line: str, param: str) -> None:
     ("line", "column", "reason"),
     [
         ("E1 out 0 POLY(1) vx 0 0 k", 25, "is a name where a coefficient goes"),
+        # M18 A1-4: ngspice 47 runs 2μ as 2 (it ignores the letter); refused, as on R.
+        ("E1 out 0 POLY(1) vx 0 0 2μ", 25, "is a name where a coefficient goes"),
         ("E1 out 0 POLY({1}) vx 0 0 2", 15, "is not a dimension"),
         ("E1 out 0 POLY(0) vx 0 0 2", 15, "is not a dimension"),
         ("E1 out 0 POLY(k) vx 0 0 2", 15, "is not a dimension"),

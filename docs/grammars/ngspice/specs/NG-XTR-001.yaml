@@ -8,6 +8,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-11-05'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-11'
 grammar:
 - body_line
 - t_name
@@ -23,5 +26,9 @@ tests:
 - tests/grammar/ngspice/test_transistors.py::test_a_model_name_cannot_be_a_number_or_a_keyword
 - tests/grammar/ngspice/test_transistors.py::test_ic_takes_a_comma_list
 - tests/grammar/ngspice/test_transistors.py::test_continued_transistor_lines_join
+- tests/grammar/ngspice/test_transistors.py::test_a_q_area_with_another_letter_is_refused_as_an_area
+- tests/grammar/ngspice/test_transistors.py::test_a_number_with_another_letter_is_not_a_model
 - tests/solver/test_ngspice_transistor_probes.py::test_transistor_probes
-notes: 'Decision 0014 items 1 to 5. The fixed nodes, then names, the last of which is the model; a field written as a number is a node before the model. Where only a name may follow, a number or the keyword off (thermal on M) is refused as the model at its token. ic= takes a comma list on every letter, with or without a blank after the comma.'
+- tests/solver/test_ngspice_value_probes.py::test_a_number_with_another_letter_runs_but_the_library_refuses_it
+- tests/solver/test_ngspice_value_probes.py::test_a_number_after_an_m_model_stops_ngspice_and_is_refused
+notes: 'Decision 0014 items 1 to 5. The fixed nodes, then names, the last of which is the model; a field written as a number is a node before the model. Where only a name may follow, a number or the keyword off (thermal on M) is refused as the model at its token. ic= takes a comma list on every letter, with or without a blank after the comma. M18 A1-4: a number followed by any letter (1μ with the Greek mu U+03BC, 2Ω) is a number in the model''s place, never a model name: after a Q''s model it gets the positional-area message (ngspice 47 runs it as the area and ignores the letter), and on M it is refused as the model (ngspice stops: could not find a valid modelname). A J or Z area, or a POLY coefficient, with such a letter stays refused, as a value with it is everywhere (NUMBER takes only ASCII letters and µ).'

@@ -13,6 +13,7 @@ grammar:
   - control_line
   - if_block
   - if_line
+  - nested_if_block
   - CONTROL_KW
   - ENDC_KW
   - IF_KW
@@ -22,6 +23,9 @@ grammar:
 tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
   - tests/grammar/ngspice/test_structure.py::test_unterminated_opaque_blocks_point_to_opening_line
+  - tests/grammar/ngspice/test_structure.py::test_any_line_may_follow_a_nested_if_block
+  - tests/grammar/ngspice/test_structure.py::test_if_blocks_nest_three_deep_and_a_statement_follows_the_outer_block
+  - tests/solver/test_ngspice_value_probes.py::test_a_line_after_a_nested_if_block_runs_and_loads
   - tests/solver/test_ngspice_solver_structure.py::test_valid_if_form_is_accepted_by_solver_and_parser
   - tests/solver/test_ngspice_validation.py::test_an_if_condition_in_braces_fails_in_ngspice_but_the_library_keeps_it
 validated_on:
@@ -31,4 +35,7 @@ validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-31"
-notes: A .control block is top-level only; inside a subcircuit it is rejected at .control (NG-SBD-001), while an .if block may stand in a subcircuit body. The form was validated with ngspice 47. The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded. The library keeps an .if block opaque and does not check its condition, so it accepts .if {enabled} (structure_basic.cir), which ngspice 47 stops at ("Bad syntax"); it reads .if (enabled). The condition is opaque text, so under the opaque-text rule of decision 0008 item 1 the difference does not decide the status; it is a row in discrepancies.md.
+  - solver: ngspice
+    version: "47"
+    date: "2026-11-11"
+notes: A .control block is top-level only; inside a subcircuit it is rejected at .control (NG-SBD-001), while an .if block may stand in a subcircuit body. The form was validated with ngspice 47. The accepted conditional form is .if (1) … .endif; the earlier .if 1 probe was invalid and is superseded. The library keeps an .if block opaque and does not check its condition, so it accepts .if {enabled} (structure_basic.cir), which ngspice 47 stops at ("Bad syntax"); it reads .if (enabled). The condition is opaque text, so under the opaque-text rule of decision 0008 item 1 the difference does not decide the status; it is a row in discrepancies.md. A nested .if is its own rule (nested_if_block), with the body of if_block, so that any line after an inner .endif is block text (M18 A2-19; structure_basic/nested_if.cir runs in ngspice 47).
