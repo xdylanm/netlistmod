@@ -1,7 +1,7 @@
 # M17 task list — Special and mixed-signal devices (ngspice A and N; LTspice A, `@` and `&`)
 
-> **Status:** READY FOR REVIEW — review round 1's R1 to R3 are made (section 6.5). Implemented on 2026-11-10 (T1 to T11; section 5). Approved by the maintainer on 2026-11-10, with section 2 decided and the provenance of the base files (section 3.2) confirmed
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M17). Governed by [architecture.md](../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./archive/phase-2/m16-tasks.md), [decision 0014](../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../decisions/0015-controlled-sources.md) (controlling references).
+> **Status:** COMPLETE (2026-11-10) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 and 7
+> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M17). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./m16-tasks.md), [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../../../decisions/0015-controlled-sources.md) (controlling references).
 
 ## 1. Scope
 
@@ -506,7 +506,7 @@ For the record, the open probes were:
 
 ### After the maintainer's approval
 
-[ ] **T12 — Close M17.** Archive this list, accept decision 0020, and update the plan and index.
+[x] **T12 — Close M17.** Archive this list, accept decision 0020, and update the plan and index.
 
 ## 5. Results
 
@@ -654,3 +654,26 @@ Decision 7 says that a comma between LTspice A's parameters is accepted "as on T
   - Full run with `--require-solver ngspice --require-solver ltspice`: 9,459 passed, 1 failed, 2 skipped, coverage 98.61%, 24 min 9 s. The failure was the new `comma-after-function` probe, which first expected LTspice to run the line. With the expectation corrected, `test_ltspice_special_probes.py` and `test_ltspice_discrepancies.py` pass (258 passed); the whole run was not repeated.
   - `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` and `pre-commit run --all-files`: clean.
   - CI on #17: read once after pushing `da2a059`, all five jobs were still pending. This docs-only commit runs them again.
+
+## 7. Review round 2 (2026-11-10, `d9f6476`, #17)
+
+### 7.1 Outcome
+
+**Approved.** R1 to R3 are made as section 6.2 asks, and nothing else changed. M17 can close (T12) once the maintainer agrees.
+
+- **Checks:**
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,460 passed, 2 skipped, 1,203 deselected, coverage 98.61%, in 24 min 43 s. This is the full run that 6.5 did not repeat after its probe fix, on the same 21 files that `da2a059` commits.
+  - CI on #17 at `d9f6476` is green on all five jobs.
+- **R1, by hand on LTspice:**
+  - A comma before an A parameter, between two (with or without blanks), at the start of a `+` line, and right after the function is refused with the new message.
+  - So is a comma before an `@` parameter, before or after `zm`, after a node (`out,zm`), before `refnode=`, and between the values of `flist=`, `pp=` and `nmax=`.
+  - `ac=1,0`, `ac=1, 0` and `ac=1 0` load. A comma inside braces (`Vhigh={1,2}`) and in a comment loads.
+  - A comma before an unknown name keeps the unknown-name message, which is the more useful of the two.
+  - LTspice 26.1.1 runs `ac=1,0,0` and `ac=1`. The library loads both, since it checks no list's count; this is consistent with decision 7.
+- **The 6.5 finding is right:** LTspice stops on `A1 … BUF, Vhigh=5` ("syntax error"), so 6.1's table was wrong to list that form as running. I had probed only the comma between parameters. The library refuses it either way.
+- **R2:** `remove_param("@1", "zm")` and `"ZM"` give `set_param`'s message, from one helper.
+- **R3:** section 5, T11, and the `.fra` row of the LTspice `discrepancies.md` are current.
+
+### 7.2 Exit
+
+1. **T12** (after the maintainer's approval): archive this list, accept decision 0020, update the plan (status and M17 heading) and the index, and carry 6.3's M18 items into the plan's M18 entry.
