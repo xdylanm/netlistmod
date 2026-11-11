@@ -187,4 +187,4 @@ All decided on 2026-11-03.
 6. **Stress testing: decided.** None is added, so limit 8's stress and performance part stays as it is.
 7. **v1 release: decided.** v1 is a beta, tagged `0.9.0`. Decision 0018 amends the original "no PyPI publication": alphas from `0.5.0` are published.
 
-**Needed from you:** netlists with BJTs, MOSFETs and behavioural sources from your own KiCad and LTspice projects for the corpus, ideally before M13.
+**Done:** the netlists with BJTs, MOSFETs and behavioural sources from your own KiCad and LTspice projects are in the corpus (`kicad_transistors`, `ltspice_transistors` and both `controlled_sources` families).
