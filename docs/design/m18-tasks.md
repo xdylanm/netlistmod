@@ -274,9 +274,35 @@ The two baseline failures (3.2) are host noise. The reviewers' scripts are in th
 
 ### 5.2 Evidence
 
-*Filled in T1.*
+Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` at `234ec15` holds the same tree as `6843d4c`, since #17 was merged by rebase).
 
-### 5.3 Subtask log
+- **Full local run with both solvers** (`python -m pytest --require-solver ngspice --require-solver ltspice`, nothing else using the solvers): **10,175 passed, 2 skipped**, 1,420 deselected, coverage **98.71%**, in 25 min 41 s. The baseline (3.2) was 9,458 passed.
+- `ruff check`, `ruff format --check`, `mypy --strict` (the package, and the named tests of `docs/testing.md`), `lint-imports` (1 contract kept) and `pre-commit run --all-files`: clean.
+- **Compatibility:** the signature snapshot is unchanged, and the compatibility test passes. No corpus file changed its parse. The ngspice tree snapshot gained `structure_basic/nested_if.cir` and D4's two files, and five reject entries lost their expected-token lists (D1).
+- **The plan's exit:** every spec entry cites a `def` and a non-solver accept test, except the three refusal entries. Each README's validation table shows its tests. No entry is `documented`: ngspice has 73 `validated` and 2 `observed`, and LTspice has 73 `validated`.
+- **CI:** recorded below after the push.
+
+### 5.3 Design points worth reviewing
+
+1. **Checks outside the grammar.** The grammar cannot see these without new terminals or lookarounds, so the loader handles them after the parse:
+   - **D1's own messages** (C1, C5, C6) read the parser's value stack after it has stopped, as the loader's older own messages do. They change no acceptance.
+   - **D2's comment-only `+` line** is checked from the physical lines after a successful LTspice parse (review R1).
+
+   P13 keeps syntax in the grammar; here the alternative was two core terminals leaving strict collision checking.
+2. **ngspice `Q1 c b 0 qm 1μ` is refused** (A1-4). ngspice 47 runs it as an area of 1, ignoring the letter. The library already refuses every positional area on an ngspice Q, so this keeps that rule.
+3. **An LTspice `.subckt` header with ports only, ending on a comment-only `+` line, is refused**, although LTspice runs that one form. Exempting it would need a separate separator rule for that header. It has a row.
+4. **Left as rows, not refused:**
+   - an unknown LTspice `.model` type (`.model x FOO(a=1)`), which LTspice stops on;
+   - a comma before `params:`, which LTspice runs.
+
+   Refusing unknown types would mean a closed list of LTspice model types, which decision 0009 does not give.
+5. **`FRA_RANGE_MISSING` skips an `@` with `enabled=`,** since the library does not read values.
+6. **What counts as an accept test** (D6) is decided by the test's name: one outside `tests/solver/` whose name has no `reject`, `refus` or `unsupported`. The refusal entries are constants in the checker, not a yaml field.
+7. **The oracle (D3) generates only forms the library accepts.** The refused shapes, the file and wave stimulus forms, and LTspice I's `tbl=`/`step` stay with their grammar tests. `μ`/`Ω` after a model and nested `.if` could now be added.
+8. **Left out:** the optional Spec column in `devices.md` (A4-15).
+9. **For M19:** README lines 56 and 64 ("the phase 1 elements", "phase 2 is under way").
+
+### 5.4 Subtask log
 
 | Subtask | Role | Reported | Lead's review | Commit |
 |---|---|---|---|---|
