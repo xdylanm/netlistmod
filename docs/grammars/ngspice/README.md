@@ -1,7 +1,6 @@
 # ngspice grammar
 
-The ngspice grammar (M2 structure, M3 elements and values) and its conformance
-records are tracked here:
+The ngspice grammar and its conformance records are tracked here:
 
 - [Device-letter matrix](./devices.md) and its packaged
   [machine-readable source](../../../src/netlistmod/grammar/ngspice-devices.json).

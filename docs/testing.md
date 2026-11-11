@@ -89,7 +89,7 @@ Tests follow architecture §10:
 | T6 | Negative tests for malformed input and forbidden operations. |
 | T7 | Architecture contracts: source boundaries, layering, strict grammars, and licensing. |
 | T8 | Optional local simulator validation. |
-| T9 | Differential testing against spicelib: optional, dev-only, not done in phase 1 (§12). |
+| T9 | Differential testing against spicelib: optional, dev-only, not done in v1 (§12). |
 
 Outside the tiers, the suite also runs the usage guides' examples and checks spec coverage and relative Markdown links.
 
@@ -224,7 +224,7 @@ checks that every accept fixture has a valid field. To add a stub:
 1. Write a small stand-in in `tests/corpus/ngspice/solver_stubs/` with a header comment saying
    what it replaces. Use `.lib`, `.inc` or `.sub` (not `.cir`: accept families are globbed
    for `*.cir`). A stub is only included by ngspice, never parsed by the library, so it may
-   use phase 2 elements. Give it a name different from the include it replaces.
+   use forms the library does not read. Give it a name different from the include it replaces.
 2. Add its SHA-256 to `solver_stubs/manifest.json`.
 3. Name it in the fixture's `solver` field and run the corpus test with
    `--require-solver ngspice`.
@@ -250,10 +250,25 @@ To re-validate on a new ngspice version:
 4. When the suite passes, append a `validated_on` item (`solver`, `version`, `date`) to every
    entry the run covered (never replace one), update the `Validated on:` line of `names.md`
    and `scoping.md`, and update the status table in the ngspice README (the checker
-   reports a stale row).
+   reports a stale row). Regenerate the table with
+   `uv run --env-file .env python -m tests.support.spec_coverage ngspice` (or `ltspice`) and paste it
+   over the README's; `tests/architecture/test_spec_coverage.py` checks that the README holds it
+   (decision 0021 item 8).
 
-The ngspice solver suite (334 tests) runs in about 75 seconds on the maintainer's
-machine (M7, ngspice 47); the corpus sweep is about a third of it.
+At M7 the ngspice solver suite ran in about 75 seconds on the maintainer's machine (ngspice 47),
+the corpus sweep about a third of it.
+
+Each element family also has its own probe files, `tests/solver/test_ngspice_*_probes.py` and
+`tests/solver/test_ltspice_*_probes.py` (transistors, controlled sources, behavioural and
+nonlinear forms, lines, special devices, values, and on LTspice the M18 forms), with
+`test_decision_0012_probes.py` for decision 0012. Each probe pairs what the solver does with what
+the library reads, and is named in the spec entries it backs.
+
+The OSDI probes (ngspice N) load the compiled models an ngspice install ships. The harness sets
+`NGSPICE_OSDI_DIR` to the install's `lib/ngspice` folder (beside `bin`), so a netlist's
+`pre_osdi r2_cmc.osdi` finds them, and `require_osdi` (`tests/support/solvers.py`) skips a test,
+with the reason, when the install ships no such model (decision 0020 item 6). A Linux package may
+build ngspice without them.
 
 ### The LTspice harness (M8)
 
@@ -288,7 +303,7 @@ GUI ([export guide](usage/ltspice-export.md)), then follow the ngspice steps abo
 `--require-solver ltspice`, and re-export with `tests/test_ltspice_export.py`, which shows version
 drift. Append `validated_on` items with `solver: ltspice`.
 
-The LTspice solver suite (800 tests) runs for much longer than a normal test run, so it is worth
+The LTspice solver suite runs for much longer than a normal test run, so it is worth
 starting on its own (`-m solver -k ltspice`). If a local LTspice timeout appears, close the GUI and rerun once.
 
 The document layer (M5) is tested in `tests/document/`: lines and insertion
@@ -306,18 +321,34 @@ discrepancies, title handling, `//` lines, quoted/braced include-path behavior,
 valid `.if (1)` syntax, and continuation behavior. The ngspice 47 probes were
 run locally; details and paired parser-rejection tests are documented in
 `docs/grammars/ngspice/discrepancies.md`. POSIX-only `SourceText.write()`
-mode/symlink tests skip on Windows and were not run anywhere during this
-rework. Ownership, hard-link relationships, and extended attributes are not
+mode/symlink tests skip on Windows and run in the Ubuntu jobs of CI. Ownership, hard-link relationships, and extended attributes are not
 preserved when an atomic write replaces a file.
+
+## Device letters: oracle, properties and the signature snapshot
+
+The element letters added after phase 1 are tested per family in `tests/grammar/ngspice/`,
+`tests/grammar/ltspice/` and `tests/edits/`, and across families by three files:
+
+- `tests/grammar/test_device_oracle.py` is an independent generator oracle (T5) on both dialects.
+  It writes each element line field by field and computes the expected spans, structure and
+  signature entries from what it wrote, never from the parser. It also checks the round trip, and
+  that changing one topology token changes the signature while changing a value does not.
+- `tests/edits/test_device_edit_properties.py` reuses that generator. It applies sequences of
+  allowed edits and checks at each step that the signature is unchanged, that the edit is
+  idempotent, and that the change stays inside the element's span or its `.model`'s.
+- `tests/document/test_signature_snapshot.py` keeps the digest of every corpus netlist that parsed
+  at the start of M11 (`signature_snapshot.json`), so saved digests stay valid. A new corpus file
+  needs no entry; changing one needs a decision record, and
+  `python -m tests.document.test_signature_snapshot` regenerates the file.
 
 ## Writing golden tests
 
-Golden edit cases (T4 tier) live in `tests/corpus/ngspice/edits_golden/`
-(`.gitattributes` keeps them byte-exact; pre-commit excludes `tests/corpus/`).
-Each case in that family's `manifest.json` names an input fixture, a list of
+Golden edit cases (T4 tier) live in `tests/corpus/ngspice/edits_golden/` and
+`tests/corpus/ltspice/edits_golden/` (`.gitattributes` keeps them byte-exact; pre-commit excludes
+`tests/corpus/`). Each case in a family's `manifest.json` names an input fixture, a list of
 steps and an expected fixture; `tests/edits/golden.py` documents the step format
-and `tests/edits/test_edit_golden.py` compares the result byte for byte, with a
-unified diff in the failure message. To add a case:
+and `tests/edits/test_edit_golden.py` (ngspice) and `tests/edits/test_ltspice_edits.py` (LTspice)
+compare the result byte for byte, with a unified diff in the failure message. To add a case:
 
 1. Add (or reuse) an input `.cir`; never edit an existing input in place.
 2. Add the case to `cases` in the manifest, with `"expected": "<case>.expected.cir"`.

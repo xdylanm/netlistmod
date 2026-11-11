@@ -1,9 +1,8 @@
 # LTspice device-letter matrix
 
-The letters of `[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Line Types by Leading Character"`. Since M8
-the phase 1 letters R, C, L, K, V, I, D and X are parsed into typed element nodes (spec entries
-`LT-RES-001` to `LT-SUB-001`); phase 2 added the others, the last of them A, `@` and `&` in M17
-(`LT-SPF-001`, `LT-FRA-001`, `LT-FRP-001`), so no letter is planned. The table is checked against
+The letters of `[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Line Types by Leading Character"`. Every
+letter is parsed into a typed element node; each has its spec entries. The Phase and Milestone
+columns record when a letter was added. The table is checked against
 [`ltspice-devices.json`](../../../src/netlistmod/grammar/ltspice-devices.json).
 
 | Letter | Status | Phase | Milestone |

@@ -21,7 +21,7 @@ every `scope=` argument accepts any case.
 | `from_text` | `(text, *, dialect, rkm=False) -> Netlist` | UTF-8, no BOM; `rkm=True` with `Dialect.LTSPICE` is a `ValueError` |
 | `from_source` | `(source: SourceText, *, dialect, rkm=False) -> Netlist` | |
 | `source`, `text`, `dialect`, `rkm` | properties | the source exactly as read (P1); `SourceText(text, encoding, bom)` |
-| `parse_result` | `ParseResult` | the M3/M4 items |
+| `parse_result` | `ParseResult` | the parsed items ([elements.md](./elements.md), [statements.md](./statements.md)) |
 | `to_bytes()` | `-> bytes` | the original bytes (P3) |
 | `slice(span)` | `-> str` | source text of a span |
 | `lines` | `Lines` | top-level logical lines |
@@ -60,16 +60,16 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 `Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is one of
 `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`. `span` covers the name as written,
 `owner` is the item holding it, `target` the resolved node or `None`. Deviation from task 3.2:
-`owner` is added (M6 needs the item to edit).
+`owner` is added (the edit layer needs the item to edit).
 
 | Kind | From | Target |
 |---|---|---|
-| `model` | R/C/L model slot, D model | `ModelStatement` |
+| `model` | the model of every element that names one (R, C, L, D, Q, M, J, Z, S, W, O, U, Y, P, ngspice A and N); LTspice `ako:` and `.step` model sweeps | `ModelStatement` |
 | `subckt` | X subcircuit name | `SubcktDefinition` |
 | `subckt_param` | X `name=value` (the name) | the definition's default `ParamAssignment`, or `None` (not diagnosed: ngspice 47 ignores an unknown one) |
-| `param` | a bare identifier in a `{…}` or `'…'` formula anywhere (values, parameters, `.param`, `.model`, defaults, X parameters, directive arguments) | the `ParamAssignment` (last in its scope) |
-| `element` | K inductors; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources; `i(src)` in a behavioural expression | `Component` |
-| `node` | each name in `v(a)` or `v(a,b)` in a behavioural expression | `Net`, or `None` |
+| `param` | a bare identifier in a formula anywhere (values, parameters, `.param`, `.model`, defaults, X parameters, directive arguments, expressions); an LTspice `.step param` name that a `.param` line also defines | the `ParamAssignment` (last in its scope) |
+| `element` | K inductors; the controlling sources of F, H and W, and an ngspice A's `%vnam` sources; an LTspice `&` probe's analyzer; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources; `i(src)` in a behavioural expression | `Component` |
+| `node` | each name in `v(a)` or `v(a,b)` in a behavioural expression; an LTspice `@`'s `refnode=` and `intnode=` | `Net`, or `None` |
 
 ### `TopologyView`
 
@@ -111,10 +111,11 @@ body's entries, then the following lines), with exact text everywhere; `scope` i
 
 | Entry | Form |
 |---|---|
-| element (R, C, L, V, I, D) | `("element", scope, designator, type name, (node, …))` |
+| element (every `Component` but X and K) | `("element", scope, designator, type name, (node, …))` |
+| ngspice A's ports | `("ports", scope, designator, structure)`, right after the element entry: for each port its position, whether it is a vector and its type, and each connection's type, nodes and `null`, as written (`~` is left out; decision 0020 item 4) |
 | X line | `("instance", scope, designator, (node, …), subckt name)` |
 | K line | `("coupling", scope, designator, (inductor, …))` |
-| controlling source (F, H, W) | `("control", scope, designator, source)`, one entry for each source after the element's own, in line order: one for the linear form, N for POLY, none for LTspice's `value=` (decision 0017 item 2). POLY's control nodes are in the element entry's `nodes`; swapping two POLY sources changes the order of the entries |
+| controlling source (F, H, W, and an ngspice A's `%vnam`) | `("control", scope, designator, source)`, one entry for each source after the element's own, in line order: one for the linear form, N for POLY, none for LTspice's `value=` (decision 0017 item 2), one for each `%vnam` of an A line. POLY's control nodes are in the element entry's `nodes`; swapping two POLY sources changes the order of the entries |
 | definition | `("subckt", scope, name, (port, …))` |
 | last entry | `("global", (sorted set of .global node names))` |
 
@@ -141,9 +142,8 @@ separators=(",", ":"))` encoded as UTF-8.
 | `FRA_RANGE_MISSING` | warning | the analyzer's designator | an LTspice `@`, in any scope, without `fstart=` or `fend=` and without `enabled=`, when the top level has a `.fra` command; LTspice stops in the `.fra` run (M18 D2) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
-the model name) was added by M6 ([edit-layer.md](./edit-layer.md) §6). It was **deferred** to
-M6 (T7): the element-to-model-type table belongs with §7.2's same-type rule for `set_model`, and
-M5 has no edit that needs it.
+the model name) is specified with the edit layer ([edit-layer.md](./edit-layer.md) §6), because
+its element-to-model-type table serves the same-type rule of `set_model`.
 
 ## 5. Formula scan
 
@@ -153,10 +153,10 @@ span is `formula.span.start + 1 + start`. Kinds: `parameter`, `reserved`, `funct
 `source`; only `parameter` tokens become references. `None` (no references, no error) when the
 grammar does not accept the text. Double-quoted strings are not scanned.
 
-## 6. For M6
+## 6. What the edit layer uses
 
-- Insertion points are physical-line boundaries; the inserted text (EOL style, a missing final
-  newline) is M6's decision.
+- Insertion points are physical-line boundaries; the edit layer chooses the inserted text (EOL
+  style, a missing final newline).
 - `Reference.owner` and `.span` give the item and the exact name span to replace.
 - The signature is compared after re-parse (§7.6); `digest()` is for logs.
 
@@ -170,11 +170,11 @@ The API and the signature encoding are the same; `$G_*` nodes count as global. W
 - **`PARAM_USED_BEFORE_DEFINITION`** and **`DUPLICATE_DEFINITION`** follow the solver: for `.param`, the latter is a warning, because LTspice stops at a repeated definition.
 - **`DIALECT_GATED_SYNTAX`** and **`RKM_SOLVER_MISMATCH`** are not used.
 
-## 8. Expression reads (M15, decision 0016)
+## 8. Expression reads (decision 0016)
 
 `expression_reads(designator, scope=())` returns the reads of the element's expressions in
 source order: B's expression, an expression form of E, F, G or H, C's charge, L's flux, and an
-R, C or L formula value, and the expression of an ngspice `TABLE` or `FREQ` (M15b, decision 0017). `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
+R, C or L formula value, and the expression of an ngspice `TABLE` or `FREQ` (decision 0017). `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
 name in `v(a)` or `v(a,b)`) or `"source"` (`i(Vx)`); `span` covers the name; `target` is the
 `Net` or the `Component`, or `None`. An element without an expression reads nothing; F's
 controlling source is topology (section 3), not a read.

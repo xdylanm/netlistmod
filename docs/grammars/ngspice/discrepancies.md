@@ -121,7 +121,7 @@ rejected by the library under P5; none appears in the maintainer's exports.
 | A stray `.endc` runs with "Warning: Missing .control statement!" (`NG-DIR-001`). | `ParseError` at `.endc`: a stray block terminator (§2.1.2.3). | `test_a_stray_endc_runs_with_a_warning_but_the_library_rejects_it` |
 | Node names with `[ ]`, `%`, `<`, `~` or `(` run (`o[1]`, `a%b`, `a<b`, `a~b`, `a(b`: 1.5 V) (`NG-NOD-001`). | `ParseError` at the name: §2.1.3.4 lists these characters as not allowed in a name. | `test_excluded_name_characters_run_but_the_library_rejects_them` |
 | `X1 in out div params: r=2k` runs (2.0 V) (`NG-UNS-001`). | `ParseError` at `params:`: not ngspice syntax per §2.11.3. | `test_params_keyword_on_an_x_line_runs_but_the_library_rejects_it` |
-| `SINE(0 1 1k)` runs and reads as `SIN` (`NG-FUN-003`). | Accepted, although the manual does not list it: the one exception to decision 0002 (decision 0013). | `test_sine_reads_as_sin` |
+| `SINE(0 1 1k)` runs and reads as `SIN` (`NG-FUN-003`). | Accepted, although the manual does not list it: an exception to decision 0002 (decision 0013 item 3), as is `Zo=` on T (decision 0019 item 3, below). | `test_sine_reads_as_sin` |
 | `PULSE 0 1 1u`, with no parentheses, runs (`NG-FUN-001`). | `ParseError`: the manual writes the parentheses. | `test_forms_that_run_and_the_library_refuses` |
 | `PULSE(0 x 1u)`, a bare parameter name, runs (`NG-FUN-001`). | `ParseError`: not in the manual, and the reference would be hidden. | `test_forms_that_run_and_the_library_refuses` |
 | `SIN(0 1 1k) 1` runs and the output is 0 (`NG-FUN-001`). | `ParseError`: a value after a function needs `DC`. | `test_forms_that_run_and_the_library_refuses` |

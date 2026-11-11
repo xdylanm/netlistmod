@@ -19,6 +19,8 @@ only syntax facts about LTspice: never its raw files, logs, or timing or perform
 
 ## Construct survey (M8 T1)
 
+This survey is a historical record of M8 and covers the phase 1 constructs only; the spec entries and the [device-letter matrix](./devices.md) describe the grammar as it is now.
+
 | Construct | Reference | ngspice form shared? | LTspice overlay |
 |---|---|---|---|
 | Title, `.end` | [SYNTAX] Netlist Structure | yes | `.end` takes a comment |
