@@ -9,7 +9,8 @@ architecture changes under `docs/decisions/` before implementing them.
 Do not copy or derive code, tests, or fixtures from GPL-licensed projects,
 including spicelib. Author fixtures independently or export them from a project
 you own. Each corpus family must have a manifest recording origin, license,
-author, date, and notes. Preserve fixture bytes exactly.
+author, date, and notes, and a row in [docs/provenance.md](docs/provenance.md).
+Preserve fixture bytes exactly.
 
 ## Development checks
 

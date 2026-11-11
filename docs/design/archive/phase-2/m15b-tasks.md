@@ -270,7 +270,7 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 
 ### 5.1 Evidence
 
-- **Full local check set** (2026-11-08): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,049 passed, 2 skipped**, 968 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.46%** (floor 90%), in 20 min 14 s. The two skips are the ones every run has.
+- **Full local check set** (2026-11-08): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,049 passed, 2 skipped**, 968 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.46%** (floor 90%). The two skips are the ones every run has.
 - `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests, `lint-imports` and `pre-commit run --all-files` pass.
 - **Exit criteria:** every form has golden diffs (`nonlinear_*` cases of both `edits_golden` families) and solver tests that an edited table, coefficient, FREQ point and `Laplace=` formula move the result. The signature snapshot is unchanged and its compatibility test passes. A negative test shows that changing any POLY control node, gate input or POLY controlling source is a `TopologyViolation` (`tests/document/test_nonlinear_topology.py`). Every M15b accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep (809 tests of the three sweeps pass).
 - The tree snapshot changed as 0017's task list says: ten files that M15 wrote as rejects now parse, `e_poly_too_few.cir` is a `ParseError` at the line's end, and 18 files are new. No rejected file's expected terminals changed, because M15b adds no element letter (the snapshot's docstring says so).
@@ -296,7 +296,7 @@ Each accept file is marked `pending: M15b` in its manifest, so the loaders and s
 M15b goes back for changes R1 to R5. Most of the work matches section 2 and holds up on review. One finding (R4) corrects a probe of the planning round: the `Hz` refusal of decision 4 rests on a misread stop.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,049 passed, 2 skipped, 968 deselected, coverage 98.46%, in 20 min 6 s. This matches section 5.1.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,049 passed, 2 skipped, 968 deselected, coverage 98.46%. This matches section 5.1.
   - CI on #14 at `9790826` is green on all five jobs.
 - **Nodes and topology:**
   - `Table`, `TablePoint` and the three `ControlledSource` fields are as decision 1 says, and so is `control` as a tuple on F, H and W (decision 2).
@@ -431,7 +431,7 @@ All five changes are made on branch `m15b-tables`. Each follows 6.2 as written; 
 - **R5.** `DB`/`MAG`, `DEG`/`RAD` and `R_I` with any other word are refused at the second word of the pair, in either order and also when other words stand between them (`DB DEG RAD`). `DB DB` loads. The probes show that ngspice runs all of them, and `test_what_ngspice_computes` has `DB MAG` at 8.03. A discrepancies row is added.
 - **6.3 items taken:** a `laplace=… ic=0` row in the LTspice `discrepancies.md`. Not taken: the own messages for the generic refusals, the braces in the quoted TABLE point and the `GAIN_KW` name, which the review marks as welcome only if cheap and which are not.
 
-**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,120 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 46 s; the one failure (the `editing.md` example showing the old `(0, 0)` separators) was fixed and `tests/test_usage_docs.py` passes. ruff, format, mypy, `mypy --strict` on the three new test files, `lint-imports` and pre-commit pass. CI: see the pull request after the push.
+**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,120 passed, 2 skipped, 986 deselected, coverage 98.50%; the one failure (the `editing.md` example showing the old `(0, 0)` separators) was fixed and `tests/test_usage_docs.py` passes. ruff, format, mypy, `mypy --strict` on the three new test files, `lint-imports` and pre-commit pass. CI: see the pull request after the push.
 
 ## 7. Review round 2 (2026-11-09, `eebd11b`)
 
@@ -440,7 +440,7 @@ All five changes are made on branch `m15b-tables`. Each follows 6.2 as written; 
 R1, R2, R3 and R5 are made as 6.5 reports. R4 is right for a numeric first frequency, but a braced one stops ngspice the same way and still loads. That is R6 below, the only change left.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,121 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 44 s. That is one more than 6.5 reports, which counted the run before its `editing.md` fix; this run has no failure.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,121 passed, 2 skipped, 986 deselected, coverage 98.50%. That is one more than 6.5 reports, which counted the run before its `editing.md` fix; this run has no failure.
   - CI on #14 at `eebd11b` is green on all five jobs.
 - **R1 (probed on LTspice 26.1.1):** `POLY(2) vx (in,0) 0 0 1 0` and `POLY(2) (vx,0) vx (in,0) 0 0 1 1` are refused at the pair, at the right column. Pairs on a pair boundary, mixed with flat ones (`POLY(3) (vx,0) vx 0 (in,0) 0 1 1 1`), load, and LTspice runs them (4.667).
 - **R2:** B's `laplace=V(vx)/…` and `laplace={I(Vsense)/…}` are refused at the reference, and `set_param("B1", "laplace", "V(vx)/(1+s)")` is refused through verification. Moving the scan into `_rules_base.py` is a good choice, since both families share one message.
@@ -484,7 +484,7 @@ Make R6. Run the full check set with `--require-solver ngspice --require-solver 
 
 R6 is made. `_check_first_frequency` now judges the first value as written (`source[span.start:span.end]`, braces or quotes included) and the character before it, so `({1e7}, …)` and `({f0}, …)` are refused at the value, with the message quoting it as written (`( {f0}, ...)`) and saying "braced or not". `( {f0}, …)` loads. The three rows are probes in `test_ngspice_nonlinear_probes.py` (`e-freq-first-braced`, `e-freq-first-parameter`, `e-freq-first-parameter-blank`; `{k}` stands for `{f0}`, with `.param k=2` in the probe base), the refusals have columns in `test_malformed_freq_lines_are_refused`, and the loading case is in `test_freq_first_frequency_and_format_words_that_run`. The ngspice `discrepancies.md` row and decision 0017 item 4 say "braced or not". A one-character braced value such as `{k}` is judged by its written length (3), as the review asks.
 
-**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%, in 20 min 4 s. ruff, format and mypy pass. CI: see the pull request after the push.
+**Evidence.** Full run with `--require-solver ngspice --require-solver ltspice`: 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%. ruff, format and mypy pass. CI: see the pull request after the push.
 
 ## 8. Review round 3 (2026-11-09, `19fea3c`) — no further changes required
 
@@ -493,7 +493,7 @@ R6 is made. `_check_first_frequency` now judges the first value as written (`sou
 R6 is made as 7.5 reports. Nothing else is required, and M15b is ready for the maintainer's approval (T12).
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%, in 19 min 49 s. This matches 7.5.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,127 passed, 2 skipped, 986 deselected, coverage 98.50%. This matches 7.5.
   - CI on #14 at `19fea3c` is green on all five jobs.
 - **R6 (probed on ngspice 47, `.param f0=1e7`):**
   - `({1e7}, …)` and `({f0}, …)` are refused at the value, with the message quoting it as written (`( {f0}, ...)`), and ngspice stops on both.

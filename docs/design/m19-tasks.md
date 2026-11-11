@@ -108,7 +108,7 @@ The developers' files do not overlap: D1 the README and `docs/usage/` apart from
 
 [x] **D2 — Error reference and CHANGELOG.** The error reference's fixes from A1, and the CHANGELOG per decision 9.
 
-[ ] **D3a — Architecture and rules.** Decision record 0022 for the normative fixes (5.1.1 point 3), the architecture's other stale text, `AGENTS.md` (point 4), `CONTRIBUTING.md`, and the run times (point 5).
+[x] **D3a — Architecture and rules.** Decision record 0022 for the normative fixes (5.1.1 point 3), the architecture's other stale text, `AGENTS.md` (point 4), `CONTRIBUTING.md`, and the run times (point 5).
 
 [ ] **D3b — Living references and records.** The four living references, `testing.md`, `provenance.md`, and the grammar READMEs, device matrices and `discrepancies.md` prose.
 
@@ -174,3 +174,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | A3 | Reviewer | 2026-11-11: complete with findings (15; coverage table) | Two loads reproduced; classified at G1 | — |
 | G1 | Lead | 2026-11-11 | Section 5.1; eight points for the maintainer (5.1.1), decided the same day | `6ef5023`, this commit |
 | D2 | Developer | 2026-11-11: complete with findings (the `.if` depth is 247, measured) | Diff read; operations in the v1 summary checked against `edit/api.py`; accepted | this commit |
+| D3a | Developer | 2026-11-11: complete (decision 0022 proposed; 40 run times removed) | Diff read; 0022 checked against its source decisions; the lead added the `.lib` block to §11.2's opaque list, which the developer reported; the 30 s LTspice timeout in `m8-tasks.md` is a setting, not a measured time, and stays; accepted | this commit |

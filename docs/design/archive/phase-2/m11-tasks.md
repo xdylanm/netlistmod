@@ -124,7 +124,7 @@ The manual agrees: blocks are "inside the *.lib file" (`[ngspice-manual] §2.10 
 
 The commit hashes below are those of the pull request's branch; "Rebase and merge" gives the commits new hashes on `main`.
 
-**Full local run on `26fc680` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4993 passed, 2 skipped, 455 deselected, 9 minutes 55 seconds, coverage 98.93%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (30 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
+**Full local run on `26fc680` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4993 passed, 2 skipped, 455 deselected, coverage 98.93%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (30 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
 
 **CI on `26fc680` ([PR 7](https://github.com/xdylanm/netlistmod/pull/7), run 41778186149): all five jobs green,** with no solver found.
 

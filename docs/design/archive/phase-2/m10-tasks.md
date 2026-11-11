@@ -108,7 +108,7 @@ The commit hashes below are those of the pull request's branch; "Rebase and merg
 | Failing test | [4](https://github.com/xdylanm/netlistmod/pull/4) | All four test jobs | `tests/test_m10_t6.py::test_m10_t6_fails` | Lint and types green |
 | Broken link in `docs/testing.md` | [5](https://github.com/xdylanm/netlistmod/pull/5) | All four test jobs | `test_relative_links_resolve[docs/testing.md]` | Lint and types green |
 
-**Full local run on `861dbbc` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4532 passed, 2 skipped, 446 deselected, 11 minutes 14 seconds, coverage 98.92%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (29 files), the import contract and `pre-commit run --all-files` are all clean.
+**Full local run on `861dbbc` (T10, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 4532 passed, 2 skipped, 446 deselected, coverage 98.92%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (29 files), the import contract and `pre-commit run --all-files` are all clean.
 
 **Not confirmed:**
 - **Dependabot (T5).** It only reads `.github/dependabot.yml` from the default branch, so the `uv` ecosystem cannot be confirmed until this pull request merges.

@@ -58,7 +58,7 @@ The library MUST NOT do the following, and agents MUST NOT add them without a de
 2. **Read simulation outputs** (`.raw`, `.log`) or plot anything.
 3. **Modify topology:** add, remove, reorder or reconnect elements; rename nets; change element types or designators; alter subcircuit port lists or structure. Test harnesses are built by a separate tool (Section 7.9).
 4. **Parse or edit schematic formats** (`.asc`, `.qsch`, KiCad schematics). LTspice schematics are converted by an external export step.
-5. **Convert between dialects** (v1). The architecture must not preclude it later (Section 9.4).
+5. **Convert between dialects** (v1). The architecture must not preclude it later (Section 9).
 6. **Evaluate expressions** or do unit arithmetic. The simulator does that.
 7. **Parse or edit `.control` / `.endc` scripting blocks.** They are preserved verbatim as opaque regions (Section 6.6).
 8. **Validate model parameter sets** (e.g. whether a diode model's parameters are physically sensible).
@@ -88,7 +88,7 @@ Node connections, element types and designators, and subcircuit structure cannot
 **P5 — Strict by default; fail loudly.**
 An element line the grammar does not recognise is an error with line, column and context, never a silent pass-through. Ambiguity in a grammar is a build failure (`strict=True`), never a silent default. Edits that are not provably safe raise.
 
-The producer of a netlist is responsible for well-formed input: the library edits a netlist, it does not repair one. The grammar follows the language **as written in the reference manuals**. A construct a solver tolerates but the manual does not allow (for example a netlist without `.end`) is rejected, even though the solver would run it. Exceptions are explicit and recorded; v1 has one, the RKM mode option (Section 19, decision 8).
+The producer of a netlist is responsible for well-formed input: the library edits a netlist, it does not repair one. The grammar follows the language **as written in the reference manuals**. A construct a solver tolerates but the manual does not allow (for example a netlist without `.end`) is rejected, even though the solver would run it. Exceptions are explicit and recorded in a decision; Section 19, decision 21 lists those of v1 ([decision 0022](decisions/0022-v1-record-corrections.md) item 1).
 
 **P6 — The grammar is a documented, checked artifact.**
 Each supported construct has a spec entry citing the reference manual and linking to its tests. CI fails if a supported construct lacks tests.
@@ -205,10 +205,14 @@ repo/
   tests/
     architecture/  document/  edits/  grammar/  roundtrip/  solver/   # by layer, with property and negative tests
     corpus/<dialect>/<family>/        # provenance-tracked fixtures
+    test_*.py                         # cross-cutting tests: docs, manifests, package, raw readers, ...
     support/solvers.py                # solver discovery (tests only)
+    support/ngspice.py, ltspice.py, raw.py   # solver harnesses and the raw reader (tests only)
+    support/corpus.py, dialects.py, spec_coverage.py   # corpus manifests, dialect helpers, spec-coverage report
   docs/
     architecture.md          # this file
-    design/  usage/  grammars/<dialect>/  testing.md  provenance.md  decisions/
+    design/  usage/  usage/examples/  grammars/<dialect>/  testing.md  provenance.md  references.md  decisions/
+  prototype/                 # exploratory; never imported by the package
 ```
 
 ---
@@ -226,10 +230,10 @@ repo/
 
 | Family | Examples | Notes |
 |---|---|---|
-| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (base `Transistor`), `Vcvs`, `Vccs`, `Cccs`, `Ccvs` (base `ControlledSource`), `VoltageSwitch`, `CurrentSwitch` (base `Switch`), `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling`, ... | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
-| Statement | `Title`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
-| Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/statements.md](design/statements.md). |
-| Opaque | `OpaqueBlock` | `.control` ... `.endc`; preserved verbatim, never edited. |
+| Element | `Resistor`, `Capacitor`, `Inductor`, `Diode`, `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (base `Transistor`), `Vcvs`, `Vccs`, `Cccs`, `Ccvs` (base `ControlledSource`), `VoltageSwitch`, `CurrentSwitch` (base `Switch`), `BehavioralSource`, `LosslessLine`, `LossyLine`, `RcLine`, `TxlLine`, `CoupledLine` (base `TransmissionLine`), `CodeModelDevice`, `OsdiDevice`, `SpecialFunction`, `FrequencyAnalyzer`, `FraProbe`, `VoltageSource`, `CurrentSource`, `SubcktInstance`, `MutualCoupling` | Subclass `Component`. Carry designator, nodes, value slot(s), instance params, span. |
+| Statement | `Title`, `TitleDirective`, `ParamStatement`, `ModelStatement`, `SubcktDefinition`, `GlobalDirective`, `End` | Dot-statements with structure the library understands. `SubcktDefinition` contains its body; body items tile the text between its header and its `.ends` line ([decision 0005](decisions/0005-statement-and-directive-grammar.md)). |
+| Directive | `Directive` subclasses (`TranDirective`, `AcDirective`, `DcDirective`, `OpDirective`, `OptionsDirective`, `TempDirective`, `IcDirective`, `NodesetDirective`, `SaveDirective`, `MeasureDirective`, and on LTspice `StepDirective`) and `UnknownDirective(raw)` | Unknown dot-commands are preserved verbatim (see 6.5). Shapes and spans: [docs/design/statements.md](design/statements.md). |
+| Opaque | `OpaqueBlock`, `OpaqueStatement` | `OpaqueBlock` is a `.control` … `.endc`, `.if` … `.endif` or `.lib name` … `.endl` block (`kind` `control`, `if` or `lib`); `OpaqueStatement` is an `.include` or `.lib` statement. Preserved verbatim, never edited. |
 
 ### 5.3 Value slots
 
@@ -248,6 +252,8 @@ class SourceSpec:        name: str; name_span: Span; args: tuple[Value]; params:
                                                             # PULSE(0 1 1u), PWL(...) r=0, wavefile=x.wav
 # A behavioural expression is a Formula; a bare one has delimiter "" (decision 0016)
 ```
+
+The sketch shows the main kinds. The others are `ValueList`, `Identifier`, `Flag`, `AcSpec`, `ElementReference` and `SubcktReference` (`model/values.py`).
 
 - `Resistor`/`Capacitor`/`Inductor`: `value: NumericValue | Formula | None`, `model: ModelReference | None`, `params: list[ParamAssignment]`. Both optional slots exist because ngspice allows a semiconductor-model form (`R1 a b rmodel w=2u l=10u`).
 - `Resistor`/`Capacitor`/`Inductor` also record `value_keyword` when the value is written `r=1k` (and similar).
@@ -297,7 +303,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 | 7 | Free-text terminals (e.g. title text) MUST start with a non-whitespace character. | Otherwise they collide with the ignored-whitespace terminal. Spans recover the leading whitespace. |
 | 8 | Delimited-expression terminals exclude their own delimiters (`\{[^{}]*\}`, not `[^"]*`). | Otherwise they swallow across multiple groups and lines. |
 | 9 | Net names use a permissive class (word chars plus `/ . + -`). Identifiers are distinguished by grammar position, not by lexer class. | KiCad emits hierarchical names like `/Vout`. |
-| 10 | Bare unquoted formulas (`R1 a b 1.1*Rx+1000`) are **not** accepted until validated against the solver. | A catch-all terminal would silently accept typos such as `1kk`. |
+| 10 | Bare unquoted formulas (`R1 a b 1.1*Rx+1000`) are **not** accepted in a value slot, nor in an ngspice `.param`. A bare expression is read only where a decision gives it an end: a behavioural expression ([decision 0016](decisions/0016-behavioral-expressions.md) item 2; LTspice `Laplace=`, [decision 0017](decisions/0017-tables-polynomials-and-transfer-functions.md)) and an LTspice `.param` value ([decision 0009](decisions/0009-ltspice-dialect.md) item 12) ([decision 0022](decisions/0022-v1-record-corrections.md) item 4). | A catch-all terminal would silently accept typos such as `1kk`. |
 | 11 | Transformer methods for rules with adjacent optional slots MUST dispatch on node *type*, not position. | Positions shift when slots are absent. |
 | 12 | Terminal priorities are used deliberately and commented in the grammar. Keywords share the priority of the generic name terminal so Lark re-types an exact match; block-scoped name terminals keep block terminators out of the top-level name. | Lark only collision-checks terminals of equal priority, so an accidental priority gap hides a conflict. |
 | 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\n)`, so a CR right before a CRLF is text); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md); [decision 0021](decisions/0021-completeness-audit.md) item 3). |
@@ -313,7 +319,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 ### 6.5 Directives
 
-- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1 phase 1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError`.
+- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError`.
 - `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
 - The first physical line is always the `Title` (implicit unless it is a `.title` statement; the node records which). `.title` may also occur later and replaces the displayed title; both source nodes are retained. `.end` is required (Section 6.3, rule 2). See [decision 0002](decisions/0002-grammar-structure-policy.md).
 - An **unknown dot-command** is preserved as `UnknownDirective(raw)` in ngspice: it is not topology, so preserving it is safe. LTspice stops at one and has a documented set, so its overlay has a **closed list**: the reference's untyped commands are `UnknownDirective`, anything else is a `ParseError`, and `.machine` is an `UnsupportedConstruct` ([decision 0009](decisions/0009-ltspice-dialect.md)).
@@ -331,7 +337,7 @@ Opaque blocks are matched by grammar rules (nesting by recursion for `.if`), not
 
 A per-dialect matrix at `docs/grammars/<dialect>/devices.md` lists every device letter with its status: `supported`, `planned`, or `error`. The same letter can mean different devices across dialects (e.g. `P`, `U`, `Y`), which is why a union grammar is not possible. Letters unique to a dialect (ngspice `N`; LTspice `@` and `&`; qspice's non-ASCII letters) live only in that dialect's overlay.
 
-**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. Until then, a netlist containing an element not yet supported fails with `UnsupportedConstruct` (P5). Since M17 no letter is `planned`; in v1, `UnsupportedConstruct` is raised only for the two constructs out of scope for v1, the ngspice digital U and LTspice `.machine` ([decision 0021](decisions/0021-completeness-audit.md) item 11).
+**Phasing.** Both phases are part of v1 (device letters per Section 19). Phase 1 is a gate: phase 2 starts only after the maintainer has confirmed the phase 1 result following a hands-on review. v1 is complete when every element type in the dialect's device matrix is **supported** and the full range of value specifications is covered (Section 6.4): by the end of phase 2, all ngspice and LTspice elements MUST be supported. While a letter was `planned`, a netlist containing it failed with `UnsupportedConstruct` (P5). Since M17 no letter is `planned`; in v1, `UnsupportedConstruct` is raised only for the two constructs out of scope for v1, the ngspice digital U and LTspice `.machine` ([decision 0021](decisions/0021-completeness-audit.md) item 11).
 
 ---
 
@@ -383,7 +389,7 @@ On every applied plan, and again on `save()` (and on request via `verify()`):
 
 1. Apply the plan to the original text.
 2. Re-parse the result with the same dialect and `rkm` option. A parse failure is an `EditError` carrying the `ParseError`, and nothing is written.
-3. Compute the topology signature of the result and compare with the signature taken when the original file was loaded. Any difference raises `TopologyViolation`. No edit may cut into an opaque item (`.control`/`.if` block, `.include`/`.lib` statement) of the original text: an edit leaves it alone or covers it whole (`TopologyViolation`; checked right after the splice, since the signature does not cover opaque content).
+3. Compute the topology signature of the result and compare with the signature taken when the original file was loaded. Any difference raises `TopologyViolation`. No edit may cut into an opaque item (`.control`/`.if`/`.lib` block, `.include`/`.lib` statement; [decision 0012](decisions/0012-carried-limits.md) item 1) of the original text: an edit leaves it alone or covers it whole (`TopologyViolation`; checked right after the splice, since the signature does not cover opaque content).
 4. Check that all text outside edited spans is identical to the original. This check is always on.
 5. Slot check: each edited slot re-parses as a node of the expected kind whose text is exactly the replacement. This verifies where an edit landed (`1k 2k` as a value would add a model); it does not validate the caller's value ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)).
 
@@ -391,7 +397,7 @@ On every applied plan, and again on `save()` (and on request via `verify()`):
 
 ### 7.7 Topology signature
 
-The signature is a canonical, hashable, ordered value built from typed nodes, using the **exact text** of every topology token (not the case-folded names): for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name; for every `K` line, its inductor references; for every F, H and W line, its controlling source ([decision 0015](decisions/0015-controlled-sources.md)); and the `.global` node set. Comments, whitespace, values, params, other directives and the contents of opaque blocks are excluded. Exact text is stricter than net identity, so a change that only alters case is caught at save. It has a stable `digest()` (SHA-256 of a canonical encoding) so it can be logged and compared across runs ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); encoding in [document-layer.md](design/document-layer.md)).
+The signature is a canonical, hashable, ordered value built from typed nodes, using the **exact text** of every topology token (not the case-folded names): for every element, `(scope_path, designator, element_type, ordered_nodes)`; for every subcircuit, `(name, ordered_ports)`; for every subcircuit instance, its connections and referenced subcircuit name; for every `K` line, its inductor references; for every F, H and W line, a `control` entry for each controlling source, in line order: one for the linear form, N for POLY, none for an expression form ([decision 0015](decisions/0015-controlled-sources.md) item 3, [decision 0017](decisions/0017-tables-polynomials-and-transfer-functions.md) item 2); for every ngspice A line, a `ports` entry (each port's position, vector flag and type, and each connection's type, nodes and `null`) and a `control` entry for each `%vnam` source ([decision 0020](decisions/0020-special-and-mixed-signal-devices.md) item 4); and the `.global` node set ([decision 0022](decisions/0022-v1-record-corrections.md) item 2). Comments, whitespace, values, params, other directives and the contents of opaque blocks are excluded. Exact text is stricter than net identity, so a change that only alters case is caught at save. It has a stable `digest()` (SHA-256 of a canonical encoding) so it can be logged and compared across runs ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); encoding in [document-layer.md](design/document-layer.md)).
 
 ### 7.8 Known limits (documented, not solved)
 
@@ -414,7 +420,7 @@ Adding sources, loads or probes changes the circuit and is out of scope. A separ
 
 In scope:
 
-- **Element index** by designator and definition scope. M5 addresses definition scopes, not expanded instances: a scope is a tuple of subcircuit names (`()` for the top level, `("amp",)`, `("amp", "inner")`). There is no string path form and no instance-expanded view ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)).
+- **Element index** by designator and definition scope. The index addresses definition scopes, not expanded instances: a scope is a tuple of subcircuit names (`()` for the top level, `("amp",)`, `("amp", "inner")`). There is no string path form and no instance-expanded view ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)).
 - **Symbol tables:** `params`, `models`, `subckts` with lookup by name.
 - **Reference resolution** (read-only): element → model; subcircuit instance → definition; formula → parameter names. Parameter-name extraction from a formula is a best-effort identifier scan, not an evaluator; function names are excluded using a per-dialect list; limits are documented.
 - **Topology queries:** `nets()`, `elements_on_net(net)`, `connections(designator)`, subcircuit ports. These let external tools (e.g. the harness tool, the controller's consistency checks) validate against the netlist without writing their own parser.
@@ -532,7 +538,7 @@ Status meanings (decision 0008), checked by `tests/architecture/test_spec_covera
 - `disputed`: the solver reads a form the library accepts differently from the library's model, and the library does not flag it. Needs a `discrepancies.md` row naming the id.
 - `documented`: no solver evidence. Needs a `validation_note:` saying why the solver cannot decide.
 
-The text inside an opaque item (`.control` and `.if` blocks, including the `.if` condition, and `.include`/`.lib` statements) is not part of the library's model (decision 0007 amendment 1: opaque contents are a black box). How the solver reads that text does not decide the status, and a difference goes in `discrepancies.md`. Opaque items are not checked: a netlist that is well-formed for the library but fails in the solver because of opaque text is the netlist's error, not the library's.
+The text inside an opaque item (`.control`, `.if` and `.lib` blocks, including the `.if` condition, and `.include`/`.lib` statements) is not part of the library's model (decision 0007 amendment 1: opaque contents are a black box). How the solver reads that text does not decide the status, and a difference goes in `discrepancies.md`. Opaque items are not checked: a netlist that is well-formed for the library but fails in the solver because of opaque text is the netlist's error, not the library's.
 
 `validated_on` items are appended when an entry is re-validated, never replaced. Rule tables (`names.md`, `scoping.md`) follow the same rules, with one `Validated on:` line per document.
 
@@ -561,8 +567,8 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
 ## 13. Project infrastructure
 
 - **Python:** minimum version per Section 19. Full type annotations; `py.typed` shipped.
-- **Packaging:** `pyproject.toml` (PEP 621), `src/` layout, Lark `.lark` files included as package data. Versioning: SemVer via git tags.
-- **Dev environment:** `uv` with a lockfile (proposed).
+- **Packaging:** `pyproject.toml` (PEP 621), `src/` layout, Lark `.lark` files included as package data. Versioning: SemVer; the version is set in `pyproject.toml`, and the release workflow refuses a tag that does not match it ([decision 0018](decisions/0018-pypi-publication.md) item 3).
+- **Dev environment:** `uv` with the committed lockfile `uv.lock`.
 - **Lint/format:** `ruff`. **Types:** `mypy --strict` (or pyright). **Tests:** `pytest`, `pytest-cov`, `hypothesis`.
 - **Pre-commit hooks:** ruff, ruff-format, mypy, YAML/TOML checks, merge-conflict check. Hooks that rewrite whitespace or line endings (`trailing-whitespace`, `end-of-file-fixer`, `mixed-line-ending`) MUST exclude `tests/corpus/` and golden files, because those files intentionally contain trailing whitespace, CRLF, and missing final newlines.
 - **`.gitattributes`:** `tests/corpus/** -text` (and golden outputs) so Git never converts line endings in fixtures.
@@ -581,11 +587,12 @@ The text inside an opaque item (`.control` and `.if` blocks, including the `.if`
 ```
 docs/
   architecture.md          this file
-  design/                  deeper design notes (edit plans, topology signature, lexing); archive/ holds completed work records
+  design/                  deeper design notes (edit plans, topology signature, lexing); README.md indexes them; archive/ holds completed work records
   usage/                   quick start, editing recipes, LTspice export, error reference
   grammars/<dialect>/      devices.md, names.md, numbers.md, scoping.md, discrepancies.md, spec entries
   testing.md               tiers, running solver tests locally, writing golden tests
   provenance.md            licensing policy, corpus origins
+  references.md            editions, commits and access dates of the cited references
   decisions/               short decision records (NNNN-title.md)
 ```
 
@@ -645,9 +652,9 @@ SpiceNetlistError
 └── EncodingError         (source bytes could not be decoded or text could not be encoded)
 ```
 
-Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNTYPED_DIRECTIVE_PRESERVED` ([decision 0012](decisions/0012-carried-limits.md)), `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)), `UNRESOLVED_NODE` (an expression reads a node no element connects to; [decision 0016](decisions/0016-behavioral-expressions.md)), `FRA_PROBE_IN_IMPEDANCE_MODE` and `FRA_RANGE_MISSING` (LTspice `&` and `@` lines that LTspice stops on; [decision 0021](decisions/0021-completeness-audit.md) item 5).
+Diagnostics (non-fatal, code + location): `UNRESOLVED_MODEL`, `UNRESOLVED_SUBCKT`, `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT`, `DUPLICATE_DEFINITION`, `DUPLICATE_ELEMENT`, `SUBCKT_PORT_MISMATCH`, `PARAM_USED_BEFORE_DEFINITION`, `MODEL_TYPE_MISMATCH` (an element's resolved model has a type not allowed for its letter; warning; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)), `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX`, `RKM_SOLVER_MISMATCH` (an RKM value the solver reads differently from IEC 60062; [decision 0004](decisions/0004-element-and-value-grammar.md)), `UNTYPED_DIRECTIVE_PRESERVED` ([decision 0012](decisions/0012-carried-limits.md)), `NODE_INTO_INSTANCE` (an LTspice node name that reaches into an instance; [decision 0009](decisions/0009-ltspice-dialect.md)), `CONTROL_SOURCE_MISMATCH` (an F, H or W controlling source that is not a V; warning; [decision 0015](decisions/0015-controlled-sources.md) item 5, listed by [decision 0022](decisions/0022-v1-record-corrections.md) item 3), `UNRESOLVED_NODE` (an expression reads a node no element connects to; [decision 0016](decisions/0016-behavioral-expressions.md)), `FRA_PROBE_IN_IMPEDANCE_MODE` and `FRA_RANGE_MISSING` (LTspice `&` and `@` lines that LTspice stops on; [decision 0021](decisions/0021-completeness-audit.md) item 5).
 
-A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `NODE_INTO_INSTANCE` is info when the definition is in an include, otherwise a warning; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNTYPED_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` stands in one of the scopes searched (the name may be defined there), otherwise a warning; the rest are warnings.
+A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)`; `severity` is `"warning"` or `"info"`. `Netlist.diagnostics` is computed once at load, in source order, and diagnostics are never raised. Severities ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)): `DUPLICATE_DEFINITION` is info for a repeated `.param` and a warning for a repeated `.model` or `.subckt`; `NODE_INTO_INSTANCE` is info when the definition is in an include, otherwise a warning; `ENDS_NAME_MISMATCH`, `DIALECT_GATED_SYNTAX` and `UNTYPED_DIRECTIVE_PRESERVED` are info; an `UNRESOLVED_*` diagnostic is info when an opaque `.include` or `.lib` statement or an opaque `.if` or `.lib` block (not a `.control` block) stands in one of the scopes searched, since the name may be defined there ([decision 0012](decisions/0012-carried-limits.md) item 5), or when the name reaches into a subcircuit instance of its scope, which the solver reads and the library does not resolve (LTspice `X1:Vq`, [decision 0015](decisions/0015-controlled-sources.md) item 4; the expression reads of [decision 0016](decisions/0016-behavioral-expressions.md) item 6), otherwise a warning ([decision 0022](decisions/0022-v1-record-corrections.md) item 5); the rest are warnings.
 
 ---
 
@@ -683,7 +690,7 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 | 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility). The write-time slot check (Section 7.6, step 5) verifies only that the text lands as a slot of the intended kind ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)) |
 | 19 | ngspice structural source policy | Strict, per the manual: the first line is always the title (flagged implicit or explicit); `.title` later replaces the displayed title; `.end` is required and last, with only blank lines after it; a missing final newline after `.end` is tolerated; `.control` after `.end` is rejected. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
 | 20 | Grammar composition and registry | Dialect overlays import `core.lark`; `grammar/loader.py` owns the registry; all syntax, including continuations and opaque blocks, is expressed in the grammar (P13). See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
-| 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The only exception in v1 is the RKM mode option (decision 8). Further exceptions need a decision record. |
+| 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The exceptions in v1, each recorded: the RKM mode option (decision 8); ngspice `SINE` read as `SIN` ([decision 0013](decisions/0013-stimulus-specs.md) item 3); `Z0` and `Zo` as one parameter ([decision 0019](decisions/0019-transmission-lines.md) item 3); the 13 LTspice A function names that LTspice's symbols write ([decision 0020](decisions/0020-special-and-mixed-signal-devices.md) item 3); and, stricter than the reference, LTspice's required `.end` ([decision 0009](decisions/0009-ltspice-dialect.md) item 4, [decision 0012](decisions/0012-carried-limits.md) item 3). A form the manual is silent on is an `observed` spec entry (§11.3 rule 3), not an exception. Further exceptions need a decision record ([decision 0022](decisions/0022-v1-record-corrections.md) item 1). |
 | 22 | Continuation and comments | Continuation is `+` on the immediately following line or a trailing double backslash; comment and blank lines may not intervene; `.title`, `.lib` and `.include` cannot be continued. End-of-line comment delimiters are `;`, `$` and `//` (a standalone `;`, `$` or `//` line is rejected; `.end` takes no trailing comment). All per the ngspice manual §2.4.4 and §2.4.5 (strict reading). |
 
 ---
@@ -703,9 +710,9 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 
 ## 21. Unresolved questions and deferred items
 
-**Unresolved (need a decision before the edit layer is designed)**
+**Resolved questions (kept for the record)**
 
-Both questions below are resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (M6); they are kept for the record.
+Both questions below, raised before the edit layer was designed, are resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (M6); they are kept for the record.
 
 1. ~~**Edit lifecycle.**~~ Resolved: immutable and eager, with batches. Section 3 says the document is re-parsed "after every edit set" and Section 7.6 verifies on `save()`. Open points:
    - Are edits staged (applied only at save or an explicit commit) or applied eagerly?
@@ -713,7 +720,7 @@ Both questions below are resolved by [decision 0007](decisions/0007-edit-lifecyc
    - What happens to element handles after a re-parse?
    - What is the boundary of an "edit set"?
    - How are two edits to the same span handled (error or last-wins), given that edits MUST NOT overlap?
-2. **Model references vs. includes.** Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`EditError`, or `allow_external=True` when an `.include`/`.lib` is in scope).
+2. ~~**Model references vs. includes.**~~ Resolved. Setting a model requires the new model to resolve (Section 7.2), but models defined in `.include`/`.lib` files are not visible (Section 7.8). Should `set_model` then fail, warn, or be allowed with a diagnostic? The diagnostics half is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (an `UNRESOLVED_*` diagnostic is info when an `.include` or `.lib` is in scope); the `set_model` half is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`EditError`, or `allow_external=True` when an `.include`/`.lib` is in scope).
 
 **Later candidates, not in v1**
 
@@ -724,6 +731,6 @@ Both questions below are resolved by [decision 0007](decisions/0007-edit-lifecyc
 - ~~Text conventions for inserted lines (EOL style, EOF without newline, keyword case, `.param` form) and placement semantics.~~ Resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md).
 - ~~Matching and upsert semantics of directive and `.param` operations (singleton vs. repeatable directives, existing names, subcircuit scope).~~ Resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md).
 - ~~The line model for continuation lines, interleaved comments and anchor-relative insertion.~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 5.4).
-- Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only). The read-only part (definition-scope tuples) is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); the edit argument is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`scope=` plus `in_definition=True`, Section 7.4); there is no string path form.
+- ~~Hierarchical addressing and scope selection for subcircuit elements (Section 16 is illustrative only).~~ The read-only part (definition-scope tuples) is resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md); the edit argument is resolved by [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md) (`scope=` plus `in_definition=True`, Section 7.4); there is no string path form.
 - ~~Interaction of the RKM mode option (a parser argument) with the grammar and diagnostics.~~ Resolved by [decision 0004](decisions/0004-element-and-value-grammar.md).
 - ~~The diagnostics API (delivery and severity).~~ Resolved by [decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md) (Section 17).

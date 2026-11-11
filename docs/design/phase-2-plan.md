@@ -166,7 +166,7 @@ You confirm v1 can be tagged when:
 | `transform.py` (about 1,300 lines) and `operations.py` become too large for P12 | Split by element family at the start of M13, with no change in behaviour. |
 | A solver cannot run a form: OSDI needs a compiled model, and some code models may be missing from the Windows build | Spec status stays `documented` with a `validation_note`, as §11.2 allows. Check availability in each milestone's first task. |
 | Model files and examples have mixed licences | Author fixtures here or export your own circuits (§12). Files from solver distributions need checking first. |
-| The local suite, about 11 minutes with solvers, gets much longer | CI runs solver-free, about a minute today. Split the local run if it becomes a burden, without dropping any test from the final run. |
+| The local suite with solvers gets much longer | CI runs solver-free, about a minute today. Split the local run if it becomes a burden, without dropping any test from the final run. |
 | Windows-only assumptions appear on the first Linux run | That is M10's job; fix them there, before the grammar grows. |
 | A solver test is the only check of a behaviour on Linux | Solver evidence stays on Windows by design, so the local run with both solvers remains part of every milestone and the gate. |
 

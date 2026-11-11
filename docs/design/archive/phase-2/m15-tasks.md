@@ -195,7 +195,7 @@ The M15b files are written now, so that one review confirms their provenance. Th
 
 **Full local run** at `77df2c7` (2026-11-06; Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`):
 - ruff, ruff format, mypy (src and the strict test set) and the import contract are clean.
-- pytest: 7,360 passed, 2 skipped, coverage 98.55%, in 18 min 20 s.
+- pytest: 7,360 passed, 2 skipped, coverage 98.55%.
 - Every M15 accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep; the M15b files are skipped there, marked `pending` in their manifests.
 - The signature snapshot is unchanged.
 - pre-commit's end-of-file hook removed an extra blank line at the end of `docs/grammars/ngspice/discrepancies.md`; that was the only finding, and CI's lint job failed on the same line. The fix is in the commit that sets this status.
@@ -218,7 +218,7 @@ The M15b files are written now, so that one review confirms their provenance. Th
 
 M15 goes back for changes R1 to R5. Most of the design holds up on review:
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,360 passed, 2 skipped, coverage 98.55%, in 18 min 32 s. This matches section 5.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,360 passed, 2 skipped, coverage 98.55%. This matches section 5.
   - ruff, ruff format and `mypy src` are clean.
   - CI on #12 at `32c0b3e` is green on all five jobs.
 - **Grammar:**
@@ -298,7 +298,7 @@ Make R1 to R5. Run the full check set with `--require-solver ngspice --require-s
 R1 to R5 are made in `7084360`.
 
 **Checks:**
-- Full local run at `7084360` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,410 passed, 2 skipped, coverage 98.54%, in 18 min 41 s.
+- Full local run at `7084360` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,410 passed, 2 skipped, coverage 98.54%.
 - CI on #12 at `7084360` is green on all five jobs.
 - The signature snapshot is unchanged. The tree snapshot adds `elements_rejects/e_value_node.cir` only.
 
@@ -322,7 +322,7 @@ R1 to R5 are made in `7084360`.
 
 R1, R3, R4 and R5 are made as 6.5 reports. R2 is right for the third field of every letter on both dialects. On ngspice, though, `value` is the keyword in every node position of E and G, not only in the third. That is R6 below, the only change left.
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,410 passed, 2 skipped, coverage 98.54%, in 18 min 30 s. This matches 6.5.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,410 passed, 2 skipped, coverage 98.54%. This matches 6.5.
   - ruff, ruff format and `mypy src` are clean.
   - CI on #12 at `cf8051b` is green on all five jobs.
 - **R1 (probed on both solvers):**
@@ -368,7 +368,7 @@ Make R6. Run the full check set with `--require-solver ngspice --require-solver 
 R6 is made in `8b5cfc8`.
 
 **Checks:**
-- Full local run at `8b5cfc8` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,429 passed, 2 skipped, coverage 98.54%, in 17 min 51 s.
+- Full local run at `8b5cfc8` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, `--require-solver ngspice --require-solver ltspice`): ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean. pytest: 7,429 passed, 2 skipped, coverage 98.54%.
 - CI on #12 at `8b5cfc8`: all five jobs were still pending at the one read after the push, which this round made after the local run rather than before it; the result is on the PR.
 - No corpus file changed, so both snapshots are unchanged.
 
@@ -384,7 +384,7 @@ R6 is made in `8b5cfc8`.
 
 R6 is made as 7.5 reports. Nothing else is required, and M15 is ready for the maintainer's approval (T12).
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,429 passed, 2 skipped, coverage 98.54%, in 18 min 20 s. This matches 7.5.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 7,429 passed, 2 skipped, coverage 98.54%. This matches 7.5.
   - ruff, ruff format and `mypy src` are clean.
   - CI on #12 at `55b975c` is green on all five jobs. This settles the CI read that 7.5 left pending.
 - **R6 (probed on ngspice 47):**
