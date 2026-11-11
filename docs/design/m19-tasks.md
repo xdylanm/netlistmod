@@ -1,6 +1,6 @@
 # M19 task list — v1 review package and beta tag
 
-> **Status:** ACTIVE — decisions 5 to 10 decided on 2026-11-11; stage 1 is done, and G1's points for the maintainer are in section 5.1.1
+> **Status:** ACTIVE — decisions 5 to 10 decided on 2026-11-11; stage 1 and G1 are done, and stage 2 is under way
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M19, v1 gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §6.7, §10, §11, §13, §14, §17, §18). Follows [M18](./archive/phase-2/m18-tasks.md), and carries its section 5.3 point 9 and [M13](./archive/phase-2/m13-tasks.md) T14.
 
 ## 1. Scope
@@ -102,19 +102,23 @@ Every task that changes a file ends with the checks green, run as `uv run --env-
 
 The briefs are written at G1 from the findings. Expected:
 
+The developers' files do not overlap: D1 the README and `docs/usage/` apart from `errors.md`; D2 `errors.md` and the CHANGELOG; D3a the architecture, decision 0022, `AGENTS.md`, `CONTRIBUTING.md` and the run times; D3b the living references, `testing.md`, `provenance.md` and the grammar documents; D4 and D5 `src/` docstrings, tests and `pyproject.toml`.
+
 [ ] **D1 — README and usage guides.** The README's v1 status and "What it does" list; the usage index; each guide's fixes from A1; executed examples where a v1 form has none.
 
 [ ] **D2 — Error reference and CHANGELOG.** The error reference's fixes from A1, and the CHANGELOG per decision 9.
 
-[ ] **D3 — Records.** The architecture, `testing.md` and other records from A2, through a decision record if a fix is normative.
+[ ] **D3a — Architecture and rules.** Decision record 0022 for the normative fixes (5.1.1 point 3), the architecture's other stale text, `AGENTS.md` (point 4), `CONTRIBUTING.md`, and the run times (point 5).
 
-[ ] **D4 — Source fixes,** only if the maintainer triages a `defect` into M19 (decision 6).
+[ ] **D3b — Living references and records.** The four living references, `testing.md`, `provenance.md`, and the grammar READMEs, device matrices and `discrepancies.md` prose.
 
-[ ] **D5 — Coverage tests.** A test for each reachable path of section 5.1 (A3-1), and the coverage floor if 5.1.1 point 8 is decided.
+[ ] **D4 — Source docstrings** (5.1.1 point 1): text only.
+
+[ ] **D5 — Coverage tests.** A test for each reachable path of section 5.1 (A3-1), and the coverage floor of 98 (5.1.1 point 8).
 
 ### Stage 3 — Evidence and handover (lead)
 
-[ ] **T1 — Final evidence.** The full check set with `--require-solver ngspice --require-solver ltspice` from a clean clone of the commit under review, with the wheel build and install of A3.
+[ ] **T1 — Final evidence.** The full check set with `--require-solver ngspice --require-solver ltspice` from a clean clone of the commit under review, with the wheel build and install of A3, and one solver-free run on `lark` 1.2.2 (5.1.1 point 7). No run times (point 5).
 
 [ ] **T2 — The review package, `v1-review.md`:** where things stand; T1's results; the coverage report with each uncovered line's disposition; the spec coverage per decision 8; the gate checklist with its evidence, marking the items only the maintainer can complete; the limits for the maintainer's decision; and a hands-on script for transistor and behavioural circuits.
 
@@ -149,11 +153,13 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 
 #### 5.1.1 For the maintainer
 
+**Decided (maintainer, 2026-11-11):** points 1 to 4, 6, 7 and 8 as recommended; point 5 as amended there.
+
 1. **Two `src/` docstrings** (A1-21, A2-28): "(review R3)" in `edit/api.py` (two places), and `ModelStatement`'s description of `flags`, which also holds LTRA's. *Recommendation:* fix in M19 as D4, text only.
 2. **Two loads that a reviewer questioned** (A3-14, A3-15), reproduced: on ngspice `R1 a 0 1k |` reads `|` as the model, and on both dialects `D1 a 0 2` reads `2` as the model. Each gives `UNRESOLVED_MODEL` (a warning), so neither is silent, and neither misreads a field that has another meaning. *Recommendation:* no change in M19; record both as limits for the 1.0 review.
 3. **Normative architecture fixes** (A2-1, 2, 3, 7, 11). *Recommendation:* one decision record, 0022, in D3: it corrects the text to what decisions 0013 to 0021 already decided, and changes no behaviour.
 4. **`AGENTS.md`** (A2-35): its constitution omits P8, P11, P12 and P13. *Recommendation:* add them, one line each, as the others.
-5. **Run times** (A2-41): archived task lists record whole-suite times that include LTspice runs; decision 0009 item 2 keeps LTspice timing numbers out of the repository. *Recommendation:* new records (T1 and the package) give no times; archived records stay as history, since an archived file is edited only to fix links.
+5. **Run times** (A2-41): archived task lists record whole-suite times that include LTspice runs; decision 0009 item 2 keeps LTspice timing numbers out of the repository. *Recommendation:* new records (T1 and the package) give no times; archived records stay as history, since an archived file is edited only to fix links. **Decided otherwise:** new records give no times, and the whole-suite and LTspice suite times are also removed from the archived task lists, the plan and `testing.md`, an exception to the archive rule made by the maintainer. A time for an ngspice-only run may stay.
 6. **README links on PyPI** (A1-8, A3-11): relative links are dead on PyPI, even once the repository is public. *Recommendation:* keep them for `0.9.0` (decision 0018 item 6), and make them absolute when the repository is made public.
 7. **The `lark` lower bound** (A3-6): `lark>=1.2.2`, with every run on 1.3.1; a smoke test passes on 1.2.2. *Recommendation:* one solver-free full run on 1.2.2 in T1.
 8. **The coverage floor** (A3-13): `fail_under = 90` while the suite is at 98.7%. *Recommendation:* raise it to 98 after D5.
@@ -166,4 +172,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | A1 | Reviewer | 2026-11-11: complete with findings (32, and 11 notes for 1.0) | Spot-checked; classified at G1 | — |
 | A2 | Reviewer | 2026-11-11: complete with findings (47; gate table; 38 limits) | Spot-checked; classified at G1 | — |
 | A3 | Reviewer | 2026-11-11: complete with findings (15; coverage table) | Two loads reproduced; classified at G1 | — |
-| G1 | Lead | 2026-11-11 | Section 5.1; eight points for the maintainer (5.1.1) | this commit |
+| G1 | Lead | 2026-11-11 | Section 5.1; eight points for the maintainer (5.1.1), decided the same day | `6ef5023`, this commit |
