@@ -29,6 +29,6 @@ notes: 'Fields are separated by blanks, a single comma (optionally with blanks) 
   blanks may surround =. Separators are tokens, so two fields written without a separator (1k5x) are an
   error rather than two values. A comma may only be the last separator before a field: a,,b, a trailing
   comma and a comma before a continuation are rejected (narrow reading of ''a comma''). Parentheses are
-  field separators in the manual but occur only in phase 2 forms outside formulas, so a parenthesis outside
-  a formula is a ParseError (decision 0004, item 5). Each physical line of a continued element may end
+  field separators in the manual but are accepted only in the forms that write them (source functions,
+  POLY, .model, v()); elsewhere a parenthesis outside a formula is a ParseError (decision 0004, item 5). Each physical line of a continued element may end
   in a comment, as for directives (NG-CNT-001, NG-TXT-001).'

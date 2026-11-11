@@ -19,5 +19,8 @@ tests:
 - tests/solver/test_ltspice_validation.py::test_blanks_tabs_and_the_equals_sign_separate_fields
 - tests/solver/test_ltspice_validation.py::test_the_commas_the_library_accepts_run
 - tests/solver/test_ltspice_discrepancies.py::test_other_commas_run_but_the_library_rejects_them
-notes: Blanks, a + line, and = with optional blanks. A comma separates only tc values, .model and X parameters,
-  .param assignments, .options items and .save vectors. LTspice tolerates a few more commas (discrepancies.md).
+notes: 'Blanks, a + line, and = with optional blanks. A comma separates only the forms that load with one
+  (discrepancies.md, "Comma forms"): documented, tc values, tbl= and step() lists, table= lists, POLY lists
+  and control pairs, and the @ line''s ac=1,0; observed, .model, X and .subckt parameters, .param
+  assignments, .options items, .save vectors and the values of a source function (PULSE(0,1,...)). A
+  comma inside a formula is formula text. LTspice tolerates a few more commas (discrepancies.md).'

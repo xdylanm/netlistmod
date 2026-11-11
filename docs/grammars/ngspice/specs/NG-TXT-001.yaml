@@ -11,6 +11,9 @@ validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-31"
+  - solver: ngspice
+    version: "47"
+    date: "2026-11-11"
 grammar:
   - rest
   - line_rest
@@ -24,7 +27,11 @@ tests:
   - tests/grammar/ngspice/test_structure.py::test_double_slash_in_opaque_statement_paths
   - tests/grammar/ngspice/test_structure.py::test_double_slash_does_not_split_titles
   - tests/grammar/ngspice/test_structure.py::test_r2_rejects_report_source_position_and_excerpt
+  - tests/roundtrip/test_lone_cr.py::test_a_lone_cr_before_a_crlf_is_text
+  - tests/roundtrip/test_lone_cr.py::test_a_title_may_end_in_a_lone_cr
+  - tests/roundtrip/test_lone_cr.py::test_a_block_line_may_end_in_a_lone_cr
   - tests/solver/test_ngspice_solver_structure.py::test_quoted_and_braced_include_paths_probe_free_text
+  - tests/solver/test_ngspice_value_probes.py::test_a_lone_cr_before_a_crlf_runs_and_loads
   - tests/solver/test_ngspice_solver_structure.py::test_double_slash_comment_needs_no_preceding_space
   - tests/solver/test_ngspice_solver_structure.py::test_include_path_is_cut_at_double_slash_unless_quoted
-notes: End-of-line comments start at ;, $ or // (§2.4.4) and run to the end of the line, so quotes inside a comment are text. Every line of a continued statement may carry one; nodes list them in trailing_comments, and raw ends at the last non-comment text. No whitespace is required before a marker; §2.4.4 only recommends a space, and ngspice 47 treats 2//3, 2// 3 and 2 // 3 alike. A single / is ordinary text. In .include a//b the path is a and //b is a comment, which matches ngspice 47 (it reports the file a as missing); a path containing // must be quoted. Titles are single tokens and are not split at //. Matched quote pairs protect comment markers in generic text; braces are ordinary text and do not protect them. The manual is silent on quoting in generic directive text; this narrow reading is consistent with the ngspice 47 include-path probe. A trailing comment on .end is rejected under §2.4.2 and §2.4.4; an otherwise empty ;, $ or // line is rejected under §2.4.4.
+notes: End-of-line comments start at ;, $ or // (§2.4.4) and run to the end of the line, so quotes inside a comment are text. Every line of a continued statement may carry one; nodes list them in trailing_comments, and raw ends at the last non-comment text. No whitespace is required before a marker; §2.4.4 only recommends a space, and ngspice 47 treats 2//3, 2// 3 and 2 // 3 alike. A single / is ordinary text. In .include a//b the path is a and //b is a comment, which matches ngspice 47 (it reports the file a as missing); a path containing // must be quoted. Titles are single tokens and are not split at //. Matched quote pairs protect comment markers in generic text; braces are ordinary text and do not protect them. The manual is silent on quoting in generic directive text; this narrow reading is consistent with the ngspice 47 include-path probe. A trailing comment on .end is rejected under §2.4.2 and §2.4.4; an otherwise empty ;, $ or // line is rejected under §2.4.4. A lone CR is free text wherever free text stands, also right before a CRLF (decision 0001, M18 decision 12), since the free-text terminals take a CR that is not followed by LF.

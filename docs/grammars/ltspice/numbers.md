@@ -13,7 +13,13 @@ value means; they decide only which forms are accepted.
   one milliohm. `Meg` is mega.
 - Other letters after a number are ignored by LTspice and are part of the value text: `10V`,
   `5Volts`, `1kOhm`, `1kΩ`. `4Farads` is 4 femto (the `F`). `a` is not a multiplier here: LTspice
-  reads `1a` as 1, unlike ngspice's atto.
+  reads `1a` as 1, unlike ngspice's atto, though the reference's SCHEMATIC-REFERENCE lists it
+  (`discrepancies.md`). `d` is not an exponent letter: `1d3` is refused, and LTspice reads it as 1.
+- Any letter counts, in every slot that takes a number, the positional ones included: a
+  transistor's area (`Q1 c b 0 qm 1μ` is an area of 1e-6) and a POLY coefficient (M18 A1-4).
+- `.options reject_number_tails` makes LTspice stop at letters after a number. The library does not
+  read `.options`, so with the option a netlist that holds `10V` still loads and LTspice stops
+  (`discrepancies.md`).
 - `µ` (U+00B5) and `μ` (U+03BC) are micro. An LTspice export writes either one, depending on how the
   schematic was encoded.
 
@@ -58,7 +64,9 @@ letters before the digits (`1x5`, `1a5`, `1l5`, `1kohm5`, `1V5`: LTspice drops t
   `ParseError` that suggests `{x}`.
 - A flag (`noiseless`, `load`, `off`) may take a number or a formula (`noiseless=0`). LTspice reads
   0.5 or more as on; the library keeps the text and does not interpret it.
-- **Bare expressions** are accepted only in `.param`, which the reference documents
-  (`.param x=2*pi*100`): `Formula` with an empty delimiter. An expression holds no blank except around
+- **Bare expressions** are accepted only where the reference writes one: `.param`
+  (`.param x=2*pi*100`), B's `V=`, `I=`, `R=` and `P=`, C's `Q=`, L's `Flux=`, `value=` on E, F, G
+  and H, and `Laplace=` (`laplace=` on B): `Formula` with an empty delimiter. Elsewhere a bare name
+  or expression is refused (`discrepancies.md`). In `.param` an expression holds no blank except around
   an operator or inside parentheses (up to three levels), so `.param x=1 + 1 y=2` is two assignments.
   A plain number stays a `NumericValue`.

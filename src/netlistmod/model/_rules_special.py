@@ -344,7 +344,7 @@ class SpecialRules(LinesRules):
                 last.span.start,
                 "an A line ends with its model, a plain name, after its ports",
             )
-        if _reads_as_number(model_name.name):
+        if _reads_as_number(model_name.name, any_letter=True):
             raise self._error_at(
                 model_name.span.start,
                 f"`{model_name.name}` is in the model's place (the last name on an A line), and "
@@ -389,7 +389,7 @@ class SpecialRules(LinesRules):
         element = _Element(children)
         names = [name.token for name in element.all(_Name)]
         last = names[-1]
-        if _reads_as_number(str(last)):
+        if _reads_as_number(str(last), any_letter=True):
             raise self._parse_error(
                 last,
                 f"`{last}` is in the model's place (the last name before any parameter), and a "

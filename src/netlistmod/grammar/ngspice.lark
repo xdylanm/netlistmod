@@ -67,7 +67,10 @@ lib_line: (BLOCK_DOT_NAME | BLOCK_TEXT) BLOCK_TEXT* NL
         | LINE_END
 
 // A .control block is top-level only; inside a subcircuit it is recognised and rejected
-// (decision 0005). An .if block may stand in a subcircuit body.
+// (decision 0005). An .if block may stand in a subcircuit body. A nested .if is its own rule, with
+// the same body: were it if_block, the LALR states after its .endif would merge with those after a
+// top-level block's, where a statement may start, and DOT_NAME, WORD or COMMENT_LINE would then
+// beat BLOCK_TEXT on the next line of the outer block (M18 A2-19).
 // spec: NG-OPA-001
 %extend top_statement: control_block
 %extend statement: if_block
@@ -80,12 +83,13 @@ if_block: IF_KW BLOCK_TEXT? NL if_line* ENDIF_KW BLOCK_TEXT? NL
 if_line: BLOCK_DOT_NAME BLOCK_TEXT? NL
        | BLOCK_TEXT NL
        | LINE_END
-       | if_block
+       | nested_if_block
+nested_if_block: IF_KW BLOCK_TEXT? NL if_line* ENDIF_KW BLOCK_TEXT? NL
 
 // spec: NG-OPA-002
 INCLUDE_KW.4: ".include"i
 LIB_KW.4: ".lib"i
-LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\r?\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
+LIB_BLOCK_KW.5: /\.lib(?=[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n(?:(?![ \t]*\.(?:end(?![a-z0-9_-])|lib[ \t]+[^ \t\r\n;$]+[ \t]*(?:(?:[;$]|\/\/)[^\r\n]*)?\r?\n))(?:[^\r\n]|\r(?!\n))*\r?\n)*?[ \t]*\.endl(?![a-z0-9_-]))/i
 ENDL_KW.4: ".endl"i
 
 // spec: NG-OPA-001
@@ -94,7 +98,7 @@ ENDC_KW.4: ".endc"i
 IF_KW.4: ".if"i
 ENDIF_KW.4: ".endif"i
 BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
-BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\r?\n))*/
+BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
 
 // Outside a block, a block delimiter name is not a directive: a stray .endc, .endif, .else,
 // .elseif or .ends at the top level must be a syntax error. Inside a subcircuit body .ends is
@@ -119,8 +123,8 @@ BS_CONT.7: /\\\\\r?\n(?=[ \t]*(?![*+;$]|\/\/)[^ \t\r\n])/
 // of the three markers; a single "/" (as in a path) is ordinary text. TEXT also stops before a
 // "\\" that ends the line (BS_CONT); other backslashes, and "\\" followed by spaces, are text.
 // spec: NG-TXT-001
-%override TRAILING_COMMENT.3: /(?:[;$]|\/\/)(?:[^\r\n]|\r(?!\r?\n))*/
-%override TEXT.2: /(?:[^ \t\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n))(?:[^\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n)|\r(?!\r?\n))*/
+%override TRAILING_COMMENT.3: /(?:[;$]|\/\/)(?:[^\r\n]|\r(?!\n))*/
+%override TEXT.2: /(?:[^ \t\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n))(?:[^\r\n;$'"\/\\]|\/(?!\/)|\\(?!\\\r?\n)|\r(?!\n))*/
 
 // spec: NG-FLD-001
 %extend eol: BS_CONT (NL | eol)

@@ -55,6 +55,8 @@ class of any other entry changed.
 M18 D1 gave five refusals their own message, so their entries lost their expected terminals:
 ``elements_rejects/e_poly_parens.cir``, ``g_and.cir``, ``g_table_nodes.cir``, ``p_param.cir``
 and ``y_param.cir``. No node, position or error class changed, and no other entry changed.
+M18 D5 added ``structure_basic/nested_if.cir`` (A2-19: a line after an inner ``.endif``), and no
+other entry changed.
 """
 
 from __future__ import annotations

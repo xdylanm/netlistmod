@@ -104,17 +104,17 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-NLS-001](./specs/LT-NLS-001.yaml) | expression forms of the dependent sources (value= on E, F, G and H) | validated | 6 + 1 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-NOD-001](./specs/LT-NOD-001.yaml) | node, element and subcircuit names | validated | 3 + 5 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-001](./specs/LT-NUM-001.yaml) | numbers | validated | 1 + 1 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-NUM-002](./specs/LT-NUM-002.yaml) | letters following a number | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-NUM-003](./specs/LT-NUM-003.yaml) | embedded decimal | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-NUM-004](./specs/LT-NUM-004.yaml) | micro signs | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPA-001](./specs/LT-OPA-001.yaml) | opaque .include, .inc and .lib, and .lib blocks | validated | 4 + 4 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPP-001](./specs/LT-OPP-001.yaml) | .op | validated | 1 + 1 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-OPT-001](./specs/LT-OPT-001.yaml) | .options, .option and .opt | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-PLY-001](./specs/LT-PLY-001.yaml) | POLY on E, F, G and H | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-08) |
+| [LT-PLY-001](./specs/LT-PLY-001.yaml) | POLY on E, F, G and H | validated | 6 + 4 solver | ltspice 26.1.1 (2026-11-08, 2026-11-11) |
 | [LT-PRM-001](./specs/LT-PRM-001.yaml) | .param assignments | validated | 4 + 4 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-RES-001](./specs/LT-RES-001.yaml) | resistor (R) lines | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-SAV-001](./specs/LT-SAV-001.yaml) | .save | validated | 3 + 4 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | 3 + 4 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-SBD-001](./specs/LT-SBD-001.yaml) | .subckt ... .ends definitions | validated | 3 + 6 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-SPF-001](./specs/LT-SPF-001.yaml) | special function (A) lines | validated | 6 + 3 solver | ltspice 26.1.1 (2026-11-10) |
 | [LT-SRC-001](./specs/LT-SRC-001.yaml) | independent sources (V, I) | validated | 9 + 12 solver | ltspice 26.1.1 (2026-11-01, 2026-11-10) |
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | 4 + 7 solver | ltspice 26.1.1 (2026-11-01) |
@@ -127,13 +127,13 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-TRN-001](./specs/LT-TRN-001.yaml) | .tran | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-TTL-001](./specs/LT-TTL-001.yaml) | implicit first-line title and .title | validated | 1 + 2 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | validated | 1 + 2 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-TXT-001](./specs/LT-TXT-001.yaml) | statement text | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
 | [LT-UNS-001](./specs/LT-UNS-001.yaml) | recognised but unsupported forms | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01, 2026-11-10) |
 | [LT-URC-001](./specs/LT-URC-001.yaml) | uniform RC line (U) lines | validated | 3 + 4 solver | ltspice 26.1.1 (2026-11-09) |
 | [LT-VAL-001](./specs/LT-VAL-001.yaml) | brace and quoted expressions | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-VCC-001](./specs/LT-VCC-001.yaml) | voltage-dependent current source (G) lines | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-VCV-001](./specs/LT-VCV-001.yaml) | voltage-dependent voltage source (E) lines | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-06) |
-| [LT-XTR-001](./specs/LT-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | 3 + 1 solver | ltspice 26.1.1 (2026-11-05) |
+| [LT-XTR-001](./specs/LT-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-05, 2026-11-11) |
 
 73 entries: 73 validated, 0 observed, 0 disputed, 0 documented.
 

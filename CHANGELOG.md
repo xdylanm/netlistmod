@@ -8,6 +8,9 @@ Changes:
 
 - Refused forms that gave only the list of expected tokens have their own message: on ngspice, POLY control pairs in parentheses, the four-node TABLE and the gates on G, a blank in `and (2)`, `m=` on Y and P, T's `IC=` with blanks, and an odd count in a differential vector (`%vd [in 0 out]`); on LTspice, `window=`, `nfft=` or `mtol=` in the gain's place names `Laplace=`. A formula refused in an ngspice TABLE point is quoted as written, with its braces or quotes, and the expected tokens name `gain=`. What loads and what is refused, and where, do not change (M18).
 - The edit message for a source with no source function reads "has no source function" (M18).
+- A number written with a letter outside ASCII after a transistor's model (`Q1 c b 0 qm 1μ`, `2Ω`) is never read as the model. On LTspice it is the area, as LTspice reads it, on Q, J and Z, and a POLY coefficient takes it too; on an M, and on ngspice, it is refused at the number. Before, such a line loaded with the model as a node and the number as the model (M18).
+- On ngspice, a line after a nested `.if` block inside the outer block loads; it was a `ParseError` (M18).
+- A lone CR right before a CRLF (`* abc` CR CR LF) is text in a title, a comment, statement text and a block line, on both dialects; it was a `ParseError` (M18).
 
 M17 (decision 0020): the special and mixed-signal devices load and edit, and no device letter is planned.
 

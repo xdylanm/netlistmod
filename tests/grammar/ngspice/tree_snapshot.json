@@ -3797,6 +3797,16 @@
    "nodes": 28
   }
  },
+ "structure_basic/nested_if.cir": {
+  "rkm": {
+   "digest": "50ff197464ad20aa450f5f7b751e7615f60f8e67a76dbfb1985a9c87e25b2b81",
+   "nodes": 8
+  },
+  "standard": {
+   "digest": "50ff197464ad20aa450f5f7b751e7615f60f8e67a76dbfb1985a9c87e25b2b81",
+   "nodes": 8
+  }
+ },
  "structure_basic/structure_basic.cir": {
   "rkm": {
    "digest": "ca2a1c11c8b3bd5ab9b396e2c61eed632cd0ea5441e07f0823e97fced6cf38d7",

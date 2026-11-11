@@ -1,0 +1,14 @@
+nested .if blocks (M18 A2-19)
+.if (1)
+.if (2)
+.param inner=1
+.else
+.param inner=2
+.endif
+R1 a 0 1k
+* a comment after the inner block
+.param x=1
+.endif
+V1 a 0 1
+.op
+.end

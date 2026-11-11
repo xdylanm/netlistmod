@@ -275,3 +275,22 @@ Decision 0020. Each evidence entry is a case of `tests/solver/test_ngspice_speci
 | Stops on three nodes on a two-terminal `r2_cmc`, an unknown instance parameter (`foo=1`), and an N line without `pre_osdi`. | Loads: the node count and the parameter names belong to the Verilog-A module (decision 0020 item 6). | `osdi-three-nodes`, `osdi-unknown`; `test_osdi_needs_pre_osdi` |
 | Runs one node on a two-terminal `r2_cmc` (`N1 out rmod`), leaving its second terminal open (0 V). | Loads, as one node. | `osdi-one-node` |
 | Ignores an `r2_cmc` model's `rsh=`: 0.3333 V with `rsh=100`, `200` or none; the instance's `l=` and `w=` move the result. | Loads; model contents are not checked. | `test_an_osdi_edit_moves_the_result` (its comment) |
+
+## Number form and block observations (ngspice 47, 2026-11-11; M18)
+
+Each number row is a case of `tests/solver/test_ngspice_value_probes.py::test_number_forms_ngspice_runs_but_the_library_refuses` (`R1 a 0 <value>` with `V1 a 0 DC 1`, reading `@r1[resistance]`), unless named. ngspice 47 reads a number up to the first character that is not part of its form and ignores the rest, so several of these give a value the text does not suggest. The library refuses each at the field: the manual writes none of them (§2.1.3.2), and some would be misreads (M18 A1-2).
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Reads `1d3` and `1D3` as 1000 and `1d-3` as −3: `d` is an exponent letter, and a negative resistance runs. `2.5D+2` is 2: `D+` is not read. | `ParseError`: `e` and `E` are the manual's exponent letters. | `1d3`, `1D3`, `1d-3`, `2.5D+2` |
+| Reads `1meg5` as 1e6 and `2.2k7` as 2200: the digits after the scale factor are ignored, as RKM notation would not read them. | `ParseError`; `1meg5` is not an RKM code either (NG-NUM-003). | `1meg5`, `2.2k7` |
+| Reads `1kOhm2` and `1k5x` as 1000. | `ParseError`: digits after letters, outside RKM (NG-NUM-002). | `1kOhm2`, `1k5x` |
+| Reads `1μ` and `1μF` (U+03BC, the Greek mu) as 1, not micro, and `1kΩ` as 1000. | `ParseError`: the letters of a number are ASCII and the micro sign `µ` (U+00B5, NG-NUM-004). LTspice reads `μ` as micro, so the same text means 1e-6 there. | `1μ`, `1μF`, `1kΩ` |
+| Reads `1_000` as 1, `1.5.3` as 1.5 and `1e+` as 1. | `ParseError`. | `1_000`, `1.5.3`, `1e+` |
+| Reads `0x10` as 0 and sets the resistor to 1e-12 ("Value of resistor r1 is too small"). | `ParseError`. | `0x10` |
+| Runs `R1 a 0 (1k)` as 1 kΩ, with "can't find model '(1k)'". | `ParseError`: a parenthesis outside a formula (NG-FLD-001). | `(1k)` |
+| Runs `Q1 c b 0 qm 1μ` with `qm` as the model and an area of 1 (the letter ignored; the result equals that of no area), and `Q1 c b 0 qm 2Ω` with an area of 2. | `ParseError` at the number, with the positional-area message (NG-XTR-001): never read as the model (M18 A1-4; before M18 the line loaded with `qm` as a fourth node and `1μ` as the model). | `tests/solver/test_ngspice_value_probes.py::test_a_number_with_another_letter_runs_but_the_library_refuses_it` (`q-greek-mu`, `q-ohm`) |
+| Runs `J1 d g 0 jm 2μ` with an area of 2 and `E1 o 0 POLY(1) c 0 0 2μ` with a coefficient of 2. | `ParseError`, as for any value written with `μ`. | `j-greek-mu`, `poly-greek-mu` |
+| Stops on `M1 d g s mm 1μ` and `M1 d g s mm 2` ("could not find a valid modelname"). | `ParseError`: a number in the model's place (`1μ` before M18 loaded as the model, with `mm` a fourth node). | `test_a_number_after_an_m_model_stops_ngspice_and_is_refused` |
+| Runs a line after a nested `.if` block inside the outer block (`.if (1)` / `.if (2)` / `.endif` / `R1 a 0 1k` / `.endif`). | Loads since M18 (A2-19): before, the line after the inner `.endif` was a `ParseError`. | `test_a_line_after_a_nested_if_block_runs_and_loads`; `structure_basic/nested_if.cir` |
+| Runs a line that holds a lone CR right before its CRLF (`* abc` CR CR LF, a title, a trailing comment). | Loads since M18 (decision 12): the CR is free text, as decision 0001 reads it. | `test_a_lone_cr_before_a_crlf_runs_and_loads` |
