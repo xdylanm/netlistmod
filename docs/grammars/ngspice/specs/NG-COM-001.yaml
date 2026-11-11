@@ -2,9 +2,10 @@ id: NG-COM-001
 dialect: ngspice
 construct: full-line star comments
 manual_ref:
+  - '[ngspice-manual] §2.1.1 "Input file structure"'
   - '[ngspice-manual] §2.4.3 "Comments"'
   - '[ngspice-manual] §2.4.4 "End-of-line comments"'
-status: observed
+status: validated
 validated_on:
   - solver: ngspice
     version: "47"
@@ -12,10 +13,15 @@ validated_on:
   - solver: ngspice
     version: "47"
     date: "2026-10-31"
+  - solver: ngspice
+    version: "47"
+    date: "2026-11-11"
 grammar:
   - COMMENT_LINE
 tests:
   - tests/grammar/ngspice/test_structure.py::test_structural_nodes_are_typed_and_spans_tile_source
+  - tests/grammar/ngspice/test_structure.py::test_star_comment_lines_may_be_indented
   - tests/grammar/ngspice/test_structure.py::test_standalone_end_of_line_comment_markers_are_rejected
+  - tests/solver/test_ngspice_solver_structure.py::test_indented_star_line_is_a_comment_probe
   - tests/solver/test_ngspice_solver_structure.py::test_double_slash_comment_probe
-notes: Star comments are accepted at the start of a line after optional indentation (§2.4.3). §2.4.4 defines ;, $ and // only as end-of-line comments after a command, so a line holding only an end-of-line comment (;, $ or //) is rejected at its marker. ngspice 47 accepts a standalone // line; that is recorded in discrepancies.md, not adopted.
+notes: A line whose first character is * is a comment (§2.4.3), and leading white space on a line is ignored (§2.1.1), so a * line indented with spaces or tabs is also a comment; ngspice 47 ignores both forms. §2.4.4 defines ;, $ and // only as end-of-line comments after a command, so a line holding only an end-of-line comment (;, $ or //) is rejected at its marker; that refusal is a strict reading of the manual (decision 0002), not a solver observation. ngspice 47 accepts a standalone // line; that is recorded in discrepancies.md, not adopted.

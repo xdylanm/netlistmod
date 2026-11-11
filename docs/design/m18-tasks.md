@@ -190,7 +190,7 @@ Revised at G1. **Order:** D1, D3 and D6 start at once, with disjoint files. D5 f
 
 [x] **D7 — A new parameter on an LTspice B line with `laplace=` (D3-1).** *Developer; after D5.* Accepted 2026-11-11 (`24f9788`). `set_param("B1", "ic", "1")` on `B1 o 0 V=2*V(vs) laplace=1/(1+s/1k)` writes `ic=1` after `laplace=…`, which the library refuses (it follows the reference's order, M15b), so the edit fails verification and writes nothing. A new parameter that is not `window=`, `nfft=` or `mtol=` goes before `laplace=`, as on E and G if they have the same gap. Probe whether LTspice runs `laplace=… ic=1` for the record. Golden diff, and D3's exclusion (`test_device_edit_properties.py`) removed.
 
-[~] **D8 — NG-COM-001 `validated` (decision 11).** *Developer.* An indented `*` line as a grammar test and an ngspice 47 probe; the entry cites §2.4.3 and §2.1.1; the README table is regenerated.
+[x] **D8 — NG-COM-001 `validated` (decision 11).** *Developer.* Accepted 2026-11-11. An indented `*` line as a grammar test and an ngspice 47 probe; the entry cites §2.4.3 and §2.1.1; the README table is regenerated.
 
 ### Stage 3 — Evidence and handover (lead)
 
@@ -294,3 +294,4 @@ The two baseline failures (3.2) are host noise. The reviewers' scripts are in th
 | D7 | developer | 2026-11-11, complete | accepted: diff read (a new parameter goes after the last field before `laplace=`; E and G take only `window=`, `nfft=` and `mtol=`, so they have no gap). LTspice 26.1.1 runs both orders. In a clean worktree of the commit, the edit, architecture, round-trip, manifest and doc tests with the CI profile: 3,050 passed. Its new golden case runs in the LTspice sweep | `24f9788` |
 | D2 | developer | 2026-11-11, complete with findings | **sent back (round 1):** C8, C9, C10 and `params:,` accepted as reported; R1, refuse C7 without the lookaheads it added to LTspice `CONT` and `SEP` (two core terminals out of strict checking, against decision 8); R2, a row and probe for `.subckt … , params:` (LTspice runs it). Its finding F1 (`remove_stimulus` can leave a comment-only `+` line) is D7b; F2 (unknown LTspice `.model` types load, LTspice stops) is a row and a design point for the maintainer | — |
 | D7b | developer | — | in progress: a removal on LTspice joins the comment of an emptied last `+` line onto the line before | — |
+| D8 | developer | 2026-11-11, complete | accepted: diff read; an indented and a tab-indented `*` line load as `CommentLine`, and ngspice 47 ignores both (a commented-out R3 leaves v(mid) at 1.0 V, 2/3 V when live). NG-COM-001 is `validated` (§2.4.3, §2.1.1); ngspice totals 73 validated, 2 observed. Architecture and doc tests pass in a clean worktree of the commit | this commit |
