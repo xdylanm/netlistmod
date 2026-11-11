@@ -1,9 +1,9 @@
 # 0021 — Completeness audit
 
-- **Status:** proposed (M18; accepted when M18 closes)
+- **Status:** accepted (2026-11-11, maintainer; M18 T2)
 - **Date:** 2026-11-11
 - **Amends:** architecture §6.3 rules 13 and 14, §6.6, §6.7, §10.4 and §17; decision 0017 item 4's edits.
-- **Context:** M18 audited the library against the phase 2 plan and the architecture before the v1 review package: value specifications (§6.4), the rejection paths and lookaround terminals, the corpus, the oracles and edit properties, and spec coverage. The findings and the maintainer's decisions are in sections 2 and 5.1 of [m18-tasks.md](../design/m18-tasks.md). Most findings were tests, records and wording. Two were defects: a number after a transistor's model could be read as the model, and a line after a nested `.if` block was refused. Four forms that LTspice stops on loaded. This record carries the normative changes. The probes are in `tests/solver/test_ngspice_value_probes.py`, `tests/solver/test_ltspice_value_probes.py` and the M18 LTspice probe tests, on ngspice 47 and LTspice 26.1.1.
+- **Context:** M18 audited the library against the phase 2 plan and the architecture before the v1 review package: value specifications (§6.4), the rejection paths and lookaround terminals, the corpus, the oracles and edit properties, and spec coverage. The findings and the maintainer's decisions are in sections 2 and 5.1 of [m18-tasks.md](../design/archive/phase-2/m18-tasks.md). Most findings were tests, records and wording. Two were defects: a number after a transistor's model could be read as the model, and a line after a nested `.if` block was refused. Four forms that LTspice stops on loaded. This record carries the normative changes. The probes are in `tests/solver/test_ngspice_value_probes.py`, `tests/solver/test_ltspice_value_probes.py` and the M18 LTspice probe tests, on ngspice 47 and LTspice 26.1.1.
 - **Decision:**
   1. **A number is never the model** (amends §6.3 rule 14).
      - **The rule:** a field written as a number (a mantissa, an optional exponent, then letters) is never the model of a transistor, U, T, O, A or N line, whatever its letters are.
