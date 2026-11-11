@@ -371,9 +371,9 @@ mesfet: Z_NAME node node node t_name t_area? _ng_ttail
 %override Z_NAME.4: /[Zz]/ _NG_UNIT*
 
 // Linear dependent sources and switches (§4.2, §3.3.15; decision 0015). The gain is one value;
-// F and G take m= (§4.2.1, §4.2.3), E and H nothing. The nonlinear forms of §5 that M15b adds
-// (TABLE, POLY, FREQ, AND/OR/NAND/NOR) are recognised after the output nodes only to be reported
-// as unsupported; their text runs to the line end.
+// F and G take m= (§4.2.1, §4.2.3), E and H nothing. The nonlinear forms of §5 (TABLE, POLY,
+// FREQ, AND/OR/NAND/NOR; decision 0017) follow the output nodes; their rules are below
+// (NG-TBL-001, NG-PLY-001, NG-XSP-001).
 // spec: NG-CTL-001
 %extend body_line: vcvs
                  | vccs

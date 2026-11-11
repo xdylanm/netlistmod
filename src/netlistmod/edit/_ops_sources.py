@@ -218,7 +218,7 @@ def _stimulus_of(
 ) -> SourceSpec:
     spec = element.stimulus if function is None else _distortion(element, function.upper())
     if spec is None:
-        what = "a source function" if function is None else f"`{function}`"
+        what = "source function" if function is None else f"`{function}`"
         raise EditError(f"`{designator}` has no {what}; use set_stimulus to add one")
     return spec
 

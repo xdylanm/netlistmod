@@ -301,7 +301,7 @@ Z_NAME.4: /[Zz]/ _WUNIT*
 // Linear dependent sources and switches (decision 0015). E, G and S write four nodes, the output
 // pair then the control pair; F, H and W write two nodes and a controlling source (ctl_ref), a
 // reference like K's inductors. A switch's initial state is one keyword. Each overlay spells out
-// its own lines, and the nonlinear keywords it recognises only to report them as unsupported.
+// its own lines, including the nonlinear forms it adds (decision 0017).
 // spec: NG-CTL-001
 ctl_ref: SEP WORD
        | (SEP | TRAILING_COMMENT) ctl_ref

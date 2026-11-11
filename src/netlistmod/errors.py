@@ -42,7 +42,7 @@ class UnsupportedConstruct(SpiceNetlistError):
         column: int,
         excerpt: str,
     ) -> None:
-        """Create an error for a recognized construct not implemented yet."""
+        """Create an error for a construct the dialect has and netlistmod does not read."""
         self.construct = construct
         self.line = line
         self.column = column

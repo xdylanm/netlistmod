@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Iterable
 from functools import lru_cache
 from importlib.resources import files
@@ -106,6 +107,7 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "W_NAME": "current-controlled switch (`W`)",
     "ON_KW": "`on`",
     "CTL_M_KW": "`m=`",
+    "GAIN_KW": "`gain=`",
     "E_FORM_KW": "`vol=` or `value`",
     "G_FORM_KW": "`cur=` or `value`",
     "VALUE_FORM_KW": "`value=`",
@@ -300,6 +302,15 @@ _AFTER_END = "the netlist ends at `.end`: only blank lines may follow it"
 _FIELD_PUNCTUATION: Final[frozenset[str]] = frozenset(
     {"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT"}
 )
+# The ngspice element lines with refused forms that no grammar rule recognises, which the loader
+# names after the parser stops (carried from M15b to M17 into M18): their designator terminals.
+_NAMED_REFUSAL_LINES: Final[frozenset[str]] = frozenset(
+    {"E_NAME", "G_NAME", "T_NAME", "Y_NAME", "P_NAME", "A_NAME"}
+)
+_GATE_WORD = re.compile(r"(?:and|or|nand|nor)", re.IGNORECASE)
+_FOUR_NODE_TABLE = re.compile(r"table[ \t]*[=(]", re.IGNORECASE)
+_M_PARAM = re.compile(r"m[ \t]*=", re.IGNORECASE)
+_VALUE_START: Final[frozenset[str]] = frozenset("0123456789+-.{'")
 
 
 @lru_cache(maxsize=None)
@@ -325,7 +336,8 @@ def parse_tree(source: SourceText, dialect: Dialect) -> Tree[Token]:
     """Parse source into a positioned Lark tree using an explicit dialect.
 
     Raises ``ParseError`` (or ``UnsupportedConstruct`` for a known but unsupported element
-    letter). Positions come only from ``SourceText``.
+    letter: a ``planned`` letter of the matrix; v1 has none). Positions come only from
+    ``SourceText``.
     """
     parser = build_parser(dialect)
     try:
@@ -461,6 +473,11 @@ def _map_error(
         missing = _missing_after_line_end(error, expected_terminals)
         if missing is not None:
             return _incomplete_line(source, dialect, offset, missing)
+        refusal = _named_refusal(source, dialect, offset, error)
+        if refusal is not None:
+            refused_at, reason = refusal
+            line, column = source.position(refused_at)
+            return ParseError(line, column, source.excerpt(refused_at), (), reason)
 
     line, column = source.position(offset)
     line_start = source.line_span(line).start
@@ -481,6 +498,151 @@ def _map_error(
             reason = f"`{name}` is not an LTspice dot-command, or is not allowed here"
             return ParseError(line, column, source.excerpt(offset), expected, reason)
     return ParseError(line, column, source.excerpt(offset), expected)
+
+
+def _element_values(error: UnexpectedToken) -> tuple[Token, list[object]] | None:
+    """The designator of the element line being read, and the parser's values after it."""
+    stack = _value_stack(error)
+    for index in range(len(stack) - 1, -1, -1):
+        value = stack[index]
+        if isinstance(value, Token) and value.type in _NAMED_REFUSAL_LINES:
+            return value, stack[index + 1 :]
+    return None
+
+
+def _is_token(value: object, kind: str) -> bool:
+    return isinstance(value, Token) and value.type == kind
+
+
+def _is_tree(value: object, rule: str) -> bool:
+    return isinstance(value, Tree) and value.data == rule
+
+
+def _token_text(tree: Tree[Token], kind: str, *, last: bool = False) -> str:
+    found = [str(v) for v in tree.scan_values(lambda v: _is_token(v, kind))]
+    return found[-1] if last else found[0]
+
+
+def _flattened(values: list[object]) -> list[object]:
+    """The values with Lark's own trees for a repetition (``__..._star_N``) opened."""
+    flat: list[object] = []
+    for value in values:
+        if isinstance(value, Tree) and str(value.data).startswith("__"):
+            flat.extend(_flattened(list(value.children)))
+        else:
+            flat.append(value)
+    return flat
+
+
+def _node_words(values: list[object]) -> list[str] | None:
+    """The names of the nodes read so far, or ``None`` if another field was read among them."""
+    words: list[str] = []
+    for value in values:
+        if isinstance(value, Tree) and value.data == "node":
+            words.append(_token_text(value, "WORD", last=True))
+        elif not _is_token(value, "SEP"):
+            return None
+    return words
+
+
+def _poly_controls_open(values: list[object]) -> bool:
+    """Whether an E or G POLY has read fewer names than its 2N control nodes."""
+    forms = [v for v in values if isinstance(v, Tree) and v.data == "poly_form"]
+    if len(forms) != 1:
+        return False
+    dimension = _token_text(forms[0], "POLY_DIM")
+    fields = sum(1 for v in values if _is_tree(v, "poly_field"))
+    return dimension.isdigit() and fields < 2 * int(dimension)
+
+
+def _ic_count(ic_param: object) -> int:
+    """How many values an ``IC=`` list read before the parser stopped."""
+    assert isinstance(ic_param, Tree)
+    kinds = {"NUMBER", "BRACE_FORMULA", "QUOTE_FORMULA"}
+    return sum(1 for _ in ic_param.scan_values(lambda v: isinstance(v, Token) and v.type in kinds))
+
+
+def _odd_differential_vector(values: list[object]) -> str | None:
+    """The port type of the differential vector whose last net has no partner, if any."""
+    if not values or not _is_tree(values[-1], "a_net"):
+        return None
+    opens = [index for index, value in enumerate(values) if _is_token(value, "VEC_OPEN")]
+    if not opens:
+        return None
+    before = [value for value in values[: opens[-1]] if not _is_token(value, "SEP")]
+    if before and _is_token(before[-1], "A_DTYPE"):
+        return str(before[-1])
+    return None
+
+
+def _named_refusal(
+    source: SourceText, dialect: Dialect, offset: int, error: UnexpectedToken
+) -> tuple[int, str] | None:
+    """Where and why, for an ngspice form that the grammar refuses with no rule of its own: each
+    gets its own message instead of the list of expected tokens. It runs only after the parser
+    has stopped, so it changes nothing that loads."""
+    if dialect is not Dialect.NGSPICE:
+        return None
+    found = _element_values(error)
+    if found is None:
+        return None
+    designator, values = found[0], _flattened(found[1])
+    letter = designator.type[0]
+    text = source.text[offset:]
+    nodes = _node_words(values)
+    if letter in "EG" and text.startswith("(") and _poly_controls_open(values):
+        return offset, (
+            "a POLY control pair in parentheses: ngspice runs it, but its manual does not show "
+            "it; write the control nodes as names, `POLY(1) a 0 ...`"
+        )
+    if letter == "G" and nodes is not None and len(nodes) == 4 and _FOUR_NODE_TABLE.match(text):
+        return offset, (
+            "the four-node TABLE is E's only, and ngspice stops on it on G; on G write "
+            "`TABLE {v(a, b)} = ...` after the two output nodes"
+        )
+    if nodes is not None and len(nodes) == 3 and _GATE_WORD.fullmatch(nodes[2]):
+        gate = nodes[2]
+        if letter == "G" and text.lstrip(" \t").startswith("("):
+            return offset, (
+                f"`{gate}(...)` on G: the gates (`AND`, `OR`, `NAND`, `NOR`) are E's only, and "
+                "ngspice stops on one on G"
+            )
+        if letter == "E" and text.startswith("(") and source.text[offset - 1] in " \t":
+            return offset, (
+                f"`{gate} (`: ngspice stops on a blank between a gate and its `(`; write "
+                f"`{gate}(N)`"
+            )
+    if letter in "YP":
+        # On P the parser reads `m` as a node and stops at its `=`; the position stays there.
+        last = values[-1] if values else None
+        after_m = error.token.type == "EQ" and isinstance(last, Token) and str(last).lower() == "m"
+        if after_m or _M_PARAM.match(text):
+            line_kind = (
+                "ngspice runs it and ignores it; a TXL line"
+                if letter == "Y"
+                else "ngspice stops on it; a CPL line"
+            )
+            return offset, f"`m=` on {letter}: {line_kind} takes only `len=` after its model"
+    if (
+        letter == "T"
+        and len(values) >= 2
+        and _is_tree(values[-2], "ic_param")
+        and _is_token(values[-1], "SEP")
+        and text[:1] in _VALUE_START
+        and _ic_count(values[-2]) < 4
+    ):
+        return offset, (
+            "`IC=` values separated by blanks: the manual writes the four values of `IC=` with "
+            "commas, `IC=v1, i1, v2, i2`, the only form the library reads"
+        )
+    if letter == "A" and error.token.type == "VEC_CLOSE":
+        port_type = _odd_differential_vector(values)
+        if port_type is not None:
+            return source.text.index("]", offset), (
+                f"a `{port_type}` vector holds an odd number of nets: each of its connections is "
+                "a pair, a `+` and a `-` net"
+            )
+    return None
 
 
 @lru_cache(maxsize=None)

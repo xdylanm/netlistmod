@@ -71,9 +71,9 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
     """Parse ``source`` with the strict grammar of ``dialect``.
 
     The dialect is required: there is no default and no auto-detection. An empty source, a
-    missing ``.end`` or any syntax the grammar does not accept raises ``ParseError``. An element
-    letter that is not supported yet, a source stimulus function, ``DISTOF`` and the charge form
-    ``q=`` of a capacitor raise ``UnsupportedConstruct``.
+    missing ``.end`` or any syntax the grammar does not accept raises ``ParseError``. The two
+    constructs out of scope for v1, the ngspice digital U (a U line that is not a URC line) and an
+    LTspice ``.machine`` block, raise ``UnsupportedConstruct``.
 
     ``rkm=True`` accepts RKM values (``2k7``, ``4R7``, ``4p7``) for ngspice resistors and
     capacitors, read per IEC 60062; without it they raise ``ParseError``. The option does not

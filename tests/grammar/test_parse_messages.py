@@ -70,6 +70,13 @@ def test_what_the_grammar_still_asks_for_stays_in_the_message() -> None:
     assert not any(word in name for name in error.expected for word in _PUNCTUATION)
 
 
+def test_the_gain_keyword_has_a_readable_name() -> None:
+    # M15b 6.3, carried to M18 C4: the expected tokens name `gain=`, not the terminal.
+    error = _reject("t\nE1 out 0 vx 0 gain 2\n.end\n", Dialect.NGSPICE)
+    assert "`gain=`" in error.expected
+    assert "GAIN_KW" not in error.expected
+
+
 @pytest.mark.parametrize("dialect", _BOTH)
 def test_a_complete_line_with_no_end_is_still_a_missing_end(dialect: Dialect) -> None:
     error = _reject("t\nR1 a 0 1k\n", dialect)

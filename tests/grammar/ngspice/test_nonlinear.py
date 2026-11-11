@@ -358,3 +358,59 @@ def test_malformed_gates_are_refused(line: str, column: int) -> None:
 def test_the_gate_count_message_names_the_inputs() -> None:
     reason = _reject("E1 out 0 and(1) vx 0 vx 0 (0.5, 0) (0.9, 2)").reason
     assert "ngspice ignores the dimension and counts the inputs" in reason
+
+
+# Forms of decision 0017 that the grammar refuses with no rule of their own: each has its own
+# message, at the same position, instead of the expected tokens (M15b 6.3, carried to M18 C1).
+@pytest.mark.parametrize(
+    ("line", "column", "reason"),
+    [
+        ("E1 out 0 POLY(1) (vx,0) 0 2", 18, "a POLY control pair in parentheses"),
+        ("E1 out 0 POLY(1) (vx 0) 0 2", 18, "a POLY control pair in parentheses"),
+        ("E1 out 0 POLY(2) vx 0 (vy,0) 0 1 1", 23, "a POLY control pair in parentheses"),
+        ("G1 0 out POLY(1) (vx,0) 0 2m", 18, "a POLY control pair in parentheses"),
+        ("E1 out 0 POLY(1)\n+ (vx,0) 0 2", 3, "a POLY control pair in parentheses"),
+        ("G1 0 out vx 0 TABLE = (0,0,2,4)", 15, "the four-node TABLE is E's only"),
+        ("G1 0 out vx 0 table (0,0) (2,4)", 15, "the four-node TABLE is E's only"),
+        ("G1 0 out and(2) vx 0 vx 0 (0.5, 0) (0.9, 2)", 13, "`and(...)` on G: the gates"),
+        ("G1 0 out NOR(2) vx 0 vx 0 (0.5, 0) (0.9, 2)", 13, "`NOR(...)` on G: the gates"),
+        ("G1 0 out and (2) vx 0 vx 0 (0.5, 0) (0.9, 2)", 14, "`and(...)` on G: the gates"),
+        ("E1 out 0 and (2) vx 0 vx 0 (0.5, 0) (0.9, 2)", 14, "`and (`: ngspice stops on a blank"),
+        ("E1 out 0 Nand (2) vx 0 vx 0 (0.5, 0) (0.9, 2)", 15, "write `Nand(N)`"),
+    ],
+)
+def test_refused_nonlinear_forms_have_their_own_message(
+    line: str, column: int, reason: str
+) -> None:
+    error = _reject(line)
+    assert (error.column, error.expected) == (column, ())
+    assert reason in error.reason
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "E1 out 0 POLY(1) vx 0 (1,2)",  # past the control nodes: not a control pair
+        "F1 0 out POLY(1) (Vs) 0 2",
+        "E1 out 0 and(2) (vx,0) (vx,0) (0.5, 0) (0.9, 2)",
+        "G1 0 out 0 and (2)",
+    ],
+)
+def test_other_malformed_lines_keep_the_expected_tokens(line: str) -> None:
+    error = _reject(line)
+    assert error.reason == ""
+    assert error.expected
+
+
+@pytest.mark.parametrize(
+    ("line", "written"),
+    [
+        ("E1 out 0 TABLE {v(vx)} = (0,0) (2,{2*k})", "{2*k}"),
+        ("E1 out 0 TABLE {v(vx)} = (0,0) ({4},2)", "{4}"),
+        ("E1 out 0 TABLE {v(vx)} = (0,0) (2,'4')", "'4'"),
+        ("E1 out 0 vx 0 TABLE = (0,0,2,{4})", "{4}"),
+    ],
+)
+def test_a_formula_in_a_table_point_is_quoted_as_written(line: str, written: str) -> None:
+    # M15b 6.3, carried to M18 C3: the braces or quotes stay in the quote.
+    assert _reject(line).reason.startswith(f"`{written}` in a TABLE point")
