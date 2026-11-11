@@ -5,7 +5,7 @@ The examples in these guides are executed by the test suite. Each guide says whi
 | Guide | Covers |
 |---|---|
 | [Parsing structural source](./structural-parse.md) | Titles, comments, continuations and opaque items |
-| [Parsing element lines](./elements.md) | R, C, L, K, V, I, D and X |
+| [Parsing element lines](./elements.md) | Every device letter of both dialects: R, C, L, K, V, I, D and X; the transistors Q, M, J and Z; the dependent sources and switches E, F, G, H, S and W; B; the transmission lines T, O, U, Y and P; and A, N, `@` and `&` |
 | [Parsing statements and directives](./statements.md) | `.param`, `.model`, `.subckt` and the directives |
 | [Reading a netlist](./document.md) | Lines, references, nets and diagnostics |
 | [Editing a netlist](./editing.md) | Every edit, verification and `save()` |
@@ -14,7 +14,7 @@ The examples in these guides are executed by the test suite. Each guide says whi
 
 Examples you can run:
 
-- [read_only_demo.py](./examples/read_only_demo.py): what the library sees in a KiCad export.
+- [read_only_demo.py](./examples/read_only_demo.py): load a netlist and print its elements, nets, connections, references, diagnostics and topology signature. Without a path it loads a KiCad export from a clone of the repository. It takes `--dialect` and `--rkm`, and `--help` describes them.
 - [edit_and_simulate.py](./examples/edit_and_simulate.py): load, edit, save and run `.op` in a solver, on a built-in divider or your own netlist, and print a net's voltage. It takes `--dialect`, `--edit-value`, `--probe` and `--rkm`.
 
 See [the architecture](../architecture.md) for the design and its constraints.

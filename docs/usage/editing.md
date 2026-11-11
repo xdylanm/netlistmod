@@ -1,8 +1,7 @@
 # Editing a netlist
 
 This guide's examples use ngspice; [LTspice](#ltspice) differs as noted at the end. `netlistmod.Netlist` edits values, parameters and directives in place and writes the netlist
-back with a minimal diff, without changing its topology (M6,
-[decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)). Every edit method
+back with a minimal diff, without changing its topology ([decision 0007](../decisions/0007-edit-lifecycle-and-edit-semantics.md)). Every edit method
 returns a **new** netlist that has been re-parsed and verified; the original is unchanged. The
 operations, the slots they edit and their errors are listed in
 [edit-layer.md](../design/edit-layer.md). The examples below are executed by the test suite.
@@ -91,6 +90,43 @@ R1 a 0 1k
 
 ```
 
+`set_value` on a V or I line replaces its DC value, as `set_dc` does, but it is an `EditError`
+on a line without one, where `set_dc` adds it. `remove_param` takes out a named parameter of the
+line, such as an ngspice port's `z0=` or LTspice's `Rser=`:
+
+```python
+>>> port = Netlist.from_text(
+...     "t\nV1 a 0 DC 2 portnum=1 z0=50\nI1 a 0 1m\nR1 a 0 1k\n.end\n", dialect=Dialect.NGSPICE
+... )
+>>> edited = port.set_value("V1", "3").set_value("I1", "2m").remove_param("V1", "z0")
+>>> print(edited.text, end="")
+t
+V1 a 0 DC 3 portnum=1
+I1 a 0 2m
+R1 a 0 1k
+.end
+
+```
+
+## Set a coupling
+
+A K line's coupling value is set with `set_coupling`; `set_value` on a K line is an `EditError`
+that points to it. The inductors it couples are topology.
+
+```python
+>>> coupled = Netlist.from_text(
+...     "t\nV1 a 0 AC 1\nL1 a 0 1u\nL2 b 0 1u\nR1 b 0 50\nK1 L1 L2 0.9\n.ac dec 10 1k 1meg\n.end\n",
+...     dialect=Dialect.NGSPICE,
+... )
+>>> print(coupled.set_coupling("K1", "0.95").text.splitlines()[5])
+K1 L1 L2 0.95
+>>> coupled.set_value("K1", "0.95")
+Traceback (most recent call last):
+...
+netlistmod.errors.EditError: `K1` is a coupling; use set_coupling to set its value
+
+```
+
 ## Replace a value with a formula and add the `.param`
 
 `set_formula` writes `{expression}`. `params.set` replaces the value of an existing parameter,
@@ -123,10 +159,10 @@ R22 out 0 1k
 adds one before `.end`. `directives.add` is different: it writes the line it is given even if one of
 its kind exists, because ngspice runs two `.ac` or `.dc` lines and gives a plot for each. LTspice stops
 on a second analysis, and the library does not check for that. Repeatable directives (`.options`, `.save`, `.ic`, …) are added,
-replaced or removed explicitly.
+replaced or removed explicitly: `directives.replace` writes a new line in place of a given one.
 
 ```python
->>> from netlistmod import OpDirective, Placement, TranDirective
+>>> from netlistmod import Placement, TranDirective
 >>> edited = netlist.directives.set(".tran 1u 10m").directives.add(".save v(out)")
 >>> print(edited.text, end="")
 amplifier
@@ -137,6 +173,8 @@ R22 out 0 1k
 .save v(out)
 .end
 >>> tran = edited.lines.find(TranDirective)
+>>> print(edited.directives.replace(tran, ".tran 1u 20m").text.splitlines()[4])
+.tran 1u 20m
 >>> print(edited.directives.remove(tran).directives.set(".op").text, end="")
 amplifier
 V1 in 0 DC 3
@@ -149,8 +187,8 @@ R22 out 0 1k
 ```
 
 An inserted line takes the line ending of the line before it, so a CRLF file gets CRLF lines.
-A placement can also be `Placement.AFTER_TITLE`, `Placement.AFTER_LAST_PARAM` or relative to a
-line: `Placement.before(line)` / `Placement.after(line)`, where `line` comes from the netlist
+`directives.add` writes before `.end` by default (`Placement.BEFORE_END`). A placement can also
+be `Placement.AFTER_TITLE`, `Placement.AFTER_LAST_PARAM` or relative to a line: `Placement.before(line)` / `Placement.after(line)`, where `line` comes from the netlist
 being edited.
 
 ## Sweep a parameter across runs
@@ -172,7 +210,7 @@ Each run is a separate single-shot netlist; the library never launches a simulat
 ## Add a test harness
 
 Sources, loads and probes are prepared in a separate file by a harness tool; the netlist only
-gains an `.include` of it (architecture §7.9). The path is written as given and never read.
+gains an `.include` of it ([architecture §7.9](../architecture.md#79-test-harnesses)). The path is written as given and never read.
 ngspice resolves a relative path from the netlist file's folder, not from the working
 directory (validated on ngspice 47).
 
@@ -256,6 +294,19 @@ netlistmod.errors.EditError: model `jn` has type `NJF`, but `Q1` takes a model o
 
 ```
 
+The new model must be defined where the element can see it. When an `.include`, a `.lib` or an
+opaque block is in scope, the model may be defined there, which the library does not read:
+`set_model(..., allow_external=True)` then sets it without a type check.
+
+```python
+>>> external = Netlist.from_text(
+...     "t\n.include models.lib\nV1 a 0 1\nD1 a 0 d1\n.end\n", dialect=Dialect.NGSPICE
+... )
+>>> print(external.set_model("D1", "d2", allow_external=True).text.splitlines()[3])
+D1 a 0 d2
+
+```
+
 ## Edit a dependent source or a switch
 
 The gain of E, F, G and H is the value, and `set_switch_state` sets or removes a switch's
@@ -269,10 +320,10 @@ controlling source cannot be edited: any change to one is a `TopologyViolation`.
 ...     dialect=Dialect.NGSPICE,
 ... )
 >>> with amp.batch() as batch:
-...     batch.set_formula("H1", "2*rt")
+...     batch.set_value("H1", "2k")
 ...     batch.set_switch_state("S1", "off")
 >>> print("\n".join(line for line in batch.result.text.splitlines() if line[:2] in ("H1", "S1")))
-H1 out 0 Vs {2*rt}
+H1 out 0 Vs 2k
 S1 out 0 a 0 sm off
 
 ```
@@ -343,13 +394,13 @@ A T keeps the spelling of its impedance, and its length form is switched in one 
 >>> line = Netlist.from_text(
 ...     "t\nT1 a 0 b 0 Zo=50 TD=1n\nR1 b 0 50\n.end\n", dialect=Dialect.NGSPICE
 ... )
->>> print(line.set_param("T1", "z0", "75").source.text.splitlines()[1])
+>>> print(line.set_param("T1", "z0", "75").text.splitlines()[1])
 T1 a 0 b 0 Zo=75 TD=1n
 >>> with line.batch() as batch:
 ...     batch.set_param("T1", "f", "100meg")
 ...     batch.set_param("T1", "nl", "0.1")
 ...     batch.remove_param("T1", "td")
->>> print(batch.result.source.text.splitlines()[1])
+>>> print(batch.result.text.splitlines()[1])
 T1 a 0 b 0 Zo=50 f=100meg nl=0.1
 
 ```
@@ -362,9 +413,9 @@ A CPL matrix is set as a whole list, and `remove_model_param` takes a parameter 
 ...     "+G=0 0 0\n+C=20p -2p 20p\n.model lm ltra(r=10 l=50n c=20p len=1)\n.end\n"
 ... )
 >>> cpl = Netlist.from_text(cpl_text, dialect=Dialect.NGSPICE)
->>> print(cpl.set_model_param("pmod", "L", "60n 6n 60n").source.text.splitlines()[4])
+>>> print(cpl.set_model_param("pmod", "L", "60n 6n 60n").text.splitlines()[4])
 +L=60n 6n 60n
->>> print(cpl.remove_model_param("lm", "r").source.text.splitlines()[7])
+>>> print(cpl.remove_model_param("lm", "r").text.splitlines()[7])
 .model lm ltra(l=50n c=20p len=1)
 
 ```
@@ -372,7 +423,7 @@ A CPL matrix is set as a whole list, and `remove_model_param` takes a parameter 
 A CPL matrix over `+` lines may hold a comment at a line's end. Then `set_model_param` with as
 many values replaces each value in place, so the comment stays; a different count, and
 `remove_model_param` of that matrix, are an `EditError` that names the comment, and the line is
-edited by hand (review R3, as for `set_table`):
+edited by hand, as for `set_table`:
 
 ```python
 >>> commented = Netlist.from_text(
@@ -380,7 +431,7 @@ edited by hand (review R3, as for `set_table`):
 ...     "+L=50n 5n 50n\n+G=0 0 0\n+C=20p -2p 20p\n.end\n",
 ...     dialect=Dialect.NGSPICE,
 ... )
->>> print(commented.set_model_param("pmod", "R", "20 0 20").source.text.splitlines()[3:5])
+>>> print(commented.set_model_param("pmod", "R", "20 0 20").text.splitlines()[3:5])
 ['+R=20 0 ; coupling', '+20']
 
 ```
@@ -408,15 +459,15 @@ A line's and an `@` line's are set with `set_param`; an `@` list is replaced who
 ...     dialect=Dialect.NGSPICE,
 ... )
 >>> edited = code.set_model_param("sum", "in_gain", "[2 0.5]").set_param("N1", "l", "20u")
->>> print(edited.source.text.splitlines()[4])
+>>> print(edited.text.splitlines()[4])
 .model sum summer(in_gain=[2 0.5] fraction=FALSE)
->>> print(edited.source.text.splitlines()[3])
+>>> print(edited.text.splitlines()[3])
 N1 out 0 rmod w=1u l=20u
 >>> lt = Netlist.from_text(
 ...     "t\n@1 in q fstart=1k fend=10k flist=1k 2k\n.end\n", dialect=Dialect.LTSPICE
 ... )
 >>> lt = lt.set_param("@1", "flist", "1k 2k 5k").set_param("@1", "fend", "20k")
->>> print(lt.source.text.splitlines()[1])
+>>> print(lt.text.splitlines()[1])
 @1 in q fstart=1k fend=20k flist=1k 2k 5k
 
 ```
@@ -475,10 +526,44 @@ netlistmod.errors.TopologyViolation: the edit changes the topology at signature 
 
 ```
 
+Parameters and models are edited, not added or removed as lines. A `.model` line can be neither
+added nor removed, and a `.param` line cannot be removed; `params.set` adds a `.param` line. So
+`set_model` can switch only to a model the netlist defines, or to one in an `.include` with
+`allow_external=True`.
+
+```python
+>>> netlist.directives.add(".model dm D")
+Traceback (most recent call last):
+...
+netlistmod.errors.EditError: directives.add: `.model dm D` is a `.model` line, not a directive; a `.model` line cannot be added, and set_model_param edits an existing one
+
+```
+
+## Verification
+
+`apply` applies a hand-built plan of `Edit`s with the same verification as every edit. The
+function `apply_edits(text, plan)` only splices a plan into a string: it re-parses nothing and
+does not check the topology, so use `Netlist.apply` on a netlist. `verify()` checks the current
+text again: it re-parses it and compares its signature with `baseline`, the signature of the
+original load.
+
+```python
+>>> from netlistmod import apply_edits
+>>> value = netlist.element("R22").value
+>>> apply_edits(netlist.text, [Edit(value.span, "3k")]).splitlines()[3]
+'R22 out 0 3k'
+>>> edited = netlist.apply([Edit(value.span, "3k")])
+>>> edited.verify()
+>>> edited.baseline == netlist.signature()
+True
+
+```
+
 ## Save
 
 `save(path)` verifies again and writes atomically in the original encoding, BOM and line
-endings; without a path it writes back to the file the netlist was loaded from. An unedited
+endings; without a path it writes back to the file the netlist was loaded from, its `path`
+(`None` for a netlist made from text). An unedited
 netlist saves its original bytes. Text that the original encoding cannot hold raises
 `EncodingError` before anything is written.
 
@@ -486,6 +571,8 @@ netlist saves its original bytes. Text that the original encoding cannot hold ra
 >>> path = folder / "amplifier.cir"
 >>> _ = path.write_bytes(text.replace("\n", "\r\n").encode("cp1252"))
 >>> loaded = Netlist.load(path, dialect=Dialect.NGSPICE)
+>>> loaded.path == path, netlist.path
+(True, None)
 >>> loaded.set_value("R22", "2.2k").save()
 >>> path.read_bytes().splitlines()[3]
 b'R22 out 0 2.2k'

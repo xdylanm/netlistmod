@@ -51,6 +51,51 @@ def test_read_only_demo_runs(
     assert "DIALECT_GATED_SYNTAX" in output
 
 
+def _run_read_only_demo(monkeypatch: pytest.MonkeyPatch, *args: str) -> None:
+    demo = USAGE / "examples" / "read_only_demo.py"
+    monkeypatch.setattr(sys, "argv", [str(demo), *args])
+    runpy.run_path(str(demo), run_name="__main__")
+
+
+def test_read_only_demo_help(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with pytest.raises(SystemExit) as exit_:
+        _run_read_only_demo(monkeypatch, "--help")
+    assert exit_.value.code == 0
+    assert "--dialect {ngspice,ltspice}" in capsys.readouterr().out
+
+
+def test_read_only_demo_takes_a_dialect_and_a_path(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "lt.net"
+    path.write_bytes(b"t\nV1 a 0 3\nR1 a 0 2k2\n.end\n")
+    _run_read_only_demo(monkeypatch, str(path), "--dialect", "ltspice")
+    assert "  R1 (Resistor) a 0 2k2" in capsys.readouterr().out
+
+
+def test_read_only_demo_needs_rkm_for_an_rkm_path(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "rkm.cir"
+    path.write_bytes(b"t\nV1 a 0 3\nR1 a 0 2k7\n.end\n")
+    with pytest.raises(SystemExit) as exit_:
+        _run_read_only_demo(monkeypatch, str(path))
+    assert "`2k7` is RKM notation" in str(exit_.value.code)
+    _run_read_only_demo(monkeypatch, str(path), "--rkm")
+    assert "  R1 (Resistor) a 0 2k7" in capsys.readouterr().out
+
+
+def test_read_only_demo_refuses_rkm_on_ltspice(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    with pytest.raises(SystemExit) as exit_:
+        _run_read_only_demo(monkeypatch, "--dialect", "ltspice", "--rkm")
+    assert exit_.value.code == 2
+    assert "--rkm applies only to ngspice" in capsys.readouterr().err
+
+
 def _demo() -> dict[str, Any]:
     return runpy.run_path(str(USAGE / "examples" / "edit_and_simulate.py"), run_name="demo")
 

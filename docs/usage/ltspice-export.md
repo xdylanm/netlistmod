@@ -1,7 +1,7 @@
 # LTspice netlist export and batch simulation
 
 The command-line behavior below was verified on Windows with LTspice 26.1.1 (file/product version
-26.1.1.0), on 2026-10-20 and again in M8 on 2026-11-01. The schematics are authored in this
+26.1.1.0), on 2026-10-20 and again on 2026-11-01. The schematics are authored in this
 repository; no schematic or code from another project is used. These are local findings, not a
 promise that all LTspice versions behave identically. Linux and macOS (wine) are not verified.
 
@@ -22,30 +22,15 @@ naming the bundled `lib\cmp\standard.dio` by absolute path.
 
 A running LTspice writes the setting to the file only when it exits, so a command-line export started
 while the GUI is open still uses the old value. Close LTspice after changing the setting.
-`tests/test_ltspice_export.py` fails with this explanation if an export has a `.lib` line into
-LTspice's `lib\cmp\` folder.
 
 ### The path comment
 
-The first comment of an export holds the absolute schematic path. The fixtures replace it with the
-file name and change nothing else:
-
-```text
-* C:\any\folder\r_divider.asc   ->   * r_divider.asc
-```
-
-The re-export test applies the same normalisation before comparing with the committed netlist, so it
-verifies the switch on every run and shows LTspice version drift. After an LTspice upgrade, run it
-first:
-
-```bash
-uv run --env-file .env python -m pytest tests/test_ltspice_export.py --require-solver ltspice --no-cov
-```
+The first line of an export is a comment that holds the absolute schematic path, such as
+`* C:\any\folder\r_divider.asc`. The library reads the first line as the title.
 
 ### What an export looks like
 
-The fixtures are in
-[`tests/corpus/ltspice/contributed_examples/`](../../tests/corpus/ltspice/contributed_examples/).
+The schematics named below are the repository's examples ([for contributors](#for-contributors)).
 
 - A subcircuit instance placed from a block symbol is `X§U1 ... ;§pnba r1)r2`: LTspice inserts `§`
   after the prefix and adds the pin names as a comment. Both parse as they are.
@@ -61,7 +46,7 @@ The fixtures are in
 
 ## Encoding
 
-Every export (the eight `contributed_examples`, whether the schematic is UTF-16 or 8-bit, and the M1
+Every export (the eight `contributed_examples`, whether the schematic is UTF-16 or 8-bit, and the
 samples in [`encoding_samples`](../../tests/corpus/ltspice/encoding_samples/)) is **UTF-8 without a
 BOM**, which is the reference's statement about the netlister. The source layer's order (BOM, then
 UTF-8, then `cp1252`, then Latin-1; [decision 0001](../decisions/0001-source-text-policy.md)) reads
@@ -95,4 +80,24 @@ input netlist, also when the working directory is another folder.
 - A warning can take the same form: `V1 a 0` (no value) runs, with exit code 0 and a
   `file(line): Missing value, assuming 0V` line.
 
-LTspice raw files, logs and timing are never committed (decision 0009 item 2).
+## For contributors
+
+The example exports are in
+[`tests/corpus/ltspice/contributed_examples/`](../../tests/corpus/ltspice/contributed_examples/).
+They replace the path comment with the file name and change nothing else:
+
+```text
+* C:\any\folder\r_divider.asc   ->   * r_divider.asc
+```
+
+`tests/test_ltspice_export.py` re-exports each schematic, applies the same normalisation and
+compares the result with the committed netlist, so it verifies the export on every run and shows
+LTspice version drift. It fails with an explanation if an export has a `.lib` line into
+LTspice's `lib\cmp\` folder (Default Libraries is on). After an LTspice upgrade, run it first:
+
+```bash
+uv run --env-file .env python -m pytest tests/test_ltspice_export.py --require-solver ltspice --no-cov
+```
+
+LTspice raw files, logs and timing are never committed
+([decision 0009](../decisions/0009-ltspice-dialect.md) item 2).
