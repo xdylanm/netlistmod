@@ -124,6 +124,14 @@ _PROBES = {
     "b-laplace-resistor": ("B1 out 0 R=1k laplace=1/(1+s/1k)", True, "refused"),
     "b-laplace-power": ("B1 out 0 P=1m laplace=1/(1+s/1k)", True, "refused"),
     "b-window-alone": ("B1 out 0 V=2*V(vx) window=1m", True, "refused"),
+    # M18 D7: B's own parameters stand before laplace=, where set_param adds a new one.
+    "b-laplace-ic-before": (
+        "B1 out 0 V=2*V(vx) ic=1 laplace=1/(1+s/1k)",
+        True,
+        "B v ic=1 laplace=1/(1+s/1k)",
+    ),
+    # LTspice runs this order too; the library follows the reference and refuses it.
+    "b-laplace-ic-after": ("B1 out 0 V=2*V(vx) laplace=1/(1+s/1k) ic=1", True, "refused"),
     "e-poly": ("E1 out 0 POLY(1) vx 0 0 2", True, "Vcvs poly N=1 c=0,2"),
     "e-poly-pair": ("E1 out 0 POLY(1) (vx,0) 0 2", True, "Vcvs poly N=1 c=0,2"),
     "e-poly-pair-blank": ("E1 out 0 POLY(1) (vx 0) 0 2", True, "Vcvs poly N=1 c=0,2"),

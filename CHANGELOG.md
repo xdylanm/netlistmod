@@ -11,6 +11,7 @@ Changes:
 - A number written with a letter outside ASCII after a transistor's model (`Q1 c b 0 qm 1μ`, `2Ω`) is never read as the model. On LTspice it is the area, as LTspice reads it, on Q, J and Z, and a POLY coefficient takes it too; on an M, and on ngspice, it is refused at the number. Before, such a line loaded with the model as a node and the number as the model (M18).
 - On ngspice, a line after a nested `.if` block inside the outer block loads; it was a `ParseError` (M18).
 - A lone CR right before a CRLF (`* abc` CR CR LF) is text in a title, a comment, statement text and a block line, on both dialects; it was a `ParseError` (M18).
+- On an LTspice B line with `laplace=`, `set_param` adds a new parameter before `laplace=` (`V=2*V(vs) ic=1 laplace=…`); only `window=`, `nfft=` and `mtol=` go after it. Before, the edit wrote it after `laplace=`, failed verification and wrote nothing (M18).
 
 M17 (decision 0020): the special and mixed-signal devices load and edit, and no device letter is planned.
 

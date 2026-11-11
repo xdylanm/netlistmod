@@ -283,7 +283,9 @@ S1 out 0 a 0 sm off
 or none ([decision 0016](../decisions/0016-behavioral-expressions.md)). It works on B, the
 expression forms of E, F, G and H, a capacitor's charge, an inductor's flux and an R, C or L
 formula value. The quantity (`V=`, `I=`) and the form (`vol=`, `value`) cannot be changed, and
-the trailing parameters use `set_param`. What the expression reads is not topology, so the
+the trailing parameters use `set_param`. On an LTspice B line with `laplace=`, a new parameter
+goes before `laplace=` (`V=2*V(vs) ic=1 laplace=…`), and `window=`, `nfft=` and `mtol=` after
+it. What the expression reads is not topology, so the
 signature does not change.
 
 ```python

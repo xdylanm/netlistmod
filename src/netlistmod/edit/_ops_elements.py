@@ -221,7 +221,24 @@ def set_param(
         if element.area is not None:
             return [Edit(element.area.span, value, reason, (_VALUE,))]
         return [_insert(element.model.span.end, conventions.field(value), reason, _VALUE, 1)]
+    if ltspice and isinstance(element, BehavioralSource):
+        after = _before_laplace(element, folded, found_fold)
+        return _assign(element.params, element, name, value, reason, after, folded=found_fold)
     return _assign(element.params, element, name, value, reason, folded=found_fold)
+
+
+def _before_laplace(
+    element: BehavioralSource, folded: str, fold: Callable[[str], str]
+) -> int | None:
+    """Where a new parameter of an LTspice B line goes when the line writes ``laplace=``: after
+    the last field before it, since only ``window=``, ``nfft=`` and ``mtol=`` follow
+    ``laplace=`` (decision 0017 item 4; M18 D7). ``None``: after the last field."""
+    if folded in {fold(word) for word in (*_LAPLACE_PARAMS, "laplace")}:
+        return None
+    laplace = [param for param in element.params if fold(param.name) == fold("laplace")]
+    if not laplace:
+        return None
+    return _last_field_end(element, before=laplace[0].span.start)
 
 
 def _analyzer_param(
