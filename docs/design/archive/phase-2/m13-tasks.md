@@ -166,7 +166,7 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 **Full local run** (2026-11-05, at `367b92c`, Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`, `OPENJELLYBEAN_LIB` set):
 
 - ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit: all clean.
-- pytest: 6,296 passed, 2 skipped, 1 failed, coverage 98.63%, in 15 min 18 s. The failure was a stale case in `test_ltspice_validation.py::test_other_forms_run_and_are_unsupported` that still expected a Q line to be unsupported. It is removed (Q is covered by `test_ltspice_transistor_probes.py`), and the test passes on LTspice 26.1.1.
+- pytest: 6,296 passed, 2 skipped, 1 failed, coverage 98.63%. The failure was a stale case in `test_ltspice_validation.py::test_other_forms_run_and_are_unsupported` that still expected a Q line to be unsupported. It is removed (Q is covered by `test_ltspice_transistor_probes.py`), and the test passes on LTspice 26.1.1.
 - Every file of `kicad_transistors` (29) and `ltspice_transistors` (22) loads, round-trips byte-exact and runs in its solver sweep. The signature snapshot is unchanged.
 
 **Design points worth reviewing:**
@@ -187,7 +187,7 @@ From the M12 handover probes (2026-11-04): `ic=` and `IC=1, -1` run on Q, M and 
 ### 6.1 Outcome
 
 M13 is accepted once the changes below are made. The design holds up on review:
-- **Checks:** pytest 6,296 passed, 2 skipped, coverage 98.63%, in 15 min 33 s, with ngspice 47 and LTspice 26.1.1 from `.env`. ruff, ruff format and `mypy src` are clean. CI on #10 is green on all five jobs.
+- **Checks:** pytest 6,296 passed, 2 skipped, coverage 98.63%, with ngspice 47 and LTspice 26.1.1 from `.env`. ruff, ruff format and `mypy src` are clean. CI on #10 is green on all five jobs.
 - **Grammar:** the grammar decides the boundary rule, as for X (P13). The number and keyword refusals in the transformer are limited to the positions where only a name may follow.
 - **Split (T3):** the tree and signature snapshots are unchanged.
 - **Edits:** the goldens and property tests cover each letter and every node count.
@@ -275,7 +275,7 @@ R1 to R8 are made in one commit, `1f09e40`.
 
 **Checks** at `1f09e40` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`, `OPENJELLYBEAN_LIB` set):
 - ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean.
-- pytest: 6,334 passed, 2 skipped, coverage 98.58%, in 15 min 44 s.
+- pytest: 6,334 passed, 2 skipped, coverage 98.58%.
 - The signature and tree snapshots are unchanged.
 
 **CI** on #10 at `1f09e40` is green on all five jobs.
@@ -288,7 +288,7 @@ Nothing is archived: T13 follows approval.
 
 R1 to R8 are made as 6.4 reports. Nothing else is required, and M13 is ready for the maintainer's approval (T13 and T14).
 - **Checks:**
-  - pytest: 6,334 passed, 2 skipped, coverage 98.58%, in 15 min 37 s, with ngspice 47 and LTspice 26.1.1 from `.env`.
+  - pytest: 6,334 passed, 2 skipped, coverage 98.58%, with ngspice 47 and LTspice 26.1.1 from `.env`.
   - ruff, ruff format and `mypy src` are clean.
   - CI on #10 is green on all five jobs.
 - **R1:**

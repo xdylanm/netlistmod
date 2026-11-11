@@ -423,7 +423,7 @@ Each is a test: `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_lin
 
 ### 5.1 Evidence
 
-- **Full local check set** (2026-11-09): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,824 passed, 2 skipped**, 1,072 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.52%** (floor 90%), in 21 min 24 s. The two skips are the ones every run has.
+- **Full local check set** (2026-11-09): `pytest --require-solver ngspice --require-solver ltspice` on ngspice 47 and LTspice 26.1.1: **8,824 passed, 2 skipped**, 1,072 deselected (the other dialect's `ngspice_only` and `ltspice_only` runs), coverage **98.52%** (floor 90%). The two skips are the ones every run has.
 - `ruff check`, `ruff format --check`, `mypy` (strict), `lint-imports` and `pre-commit run --all-files` pass.
 - **Exit criteria:**
   - every letter is `supported` in both device matrices (ngspice U at `M16, M17`), with spec entries validated on its solver (NG-TLL-001, NG-LTR-001, NG-URC-001, NG-TXL-001, NG-CPL-001, LT-TLL-001, LT-LTR-001, LT-URC-001; NG-MOD-001 and LT-MOD-001 extended);
@@ -454,7 +454,7 @@ Each is a test: `tests/solver/test_ngspice_line_probes.py` and `test_ltspice_lin
 M16 goes back for R1 and R2. The letters, the `.model` forms, the topology and the edits other than removal match section 2, and they held up when I checked them by hand on both dialects. R1 widens the removal rule, as section 5.2 point 5 asks. R2 corrects a sentence of decision 4 that I wrote wrongly in planning.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,824 passed, 2 skipped, 1,072 deselected, coverage 98.52%, in 21 min 8 s. This matches section 5.1.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,824 passed, 2 skipped, 1,072 deselected, coverage 98.52%. This matches section 5.1.
   - CI on #15 at `a9d386b` is green on all five jobs.
 - **By hand, both dialects (a scratch script outside the repository):**
   - **T:**
@@ -577,7 +577,7 @@ So the two letters disagree.
   - **Tests:** `test_a_bare_name_in_a_value_is_refused` covers T and U. The `u-bare` probe keeps "LTspice runs it" and now reads `refused`.
   - **Docs:** the LTspice bare-name row of `discrepancies.md` names T and U, and `LT-URC-001`, `LT-TLL-001`, `elements.md`, decision 0019 item 4 and section 2 decision 4 are corrected.
 - **Checks:**
-  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,890 passed, 2 skipped**, 1,089 deselected, coverage **98.52%**, in 21 min 29 s;
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,890 passed, 2 skipped**, 1,089 deselected, coverage **98.52%**;
   - `ruff`, `mypy` and `pre-commit run --all-files` pass;
   - **CI:** see the pull request.
 
@@ -588,7 +588,7 @@ So the two letters disagree.
 R1 and R2 are made as decided. M16 goes back for one more change, R3: a CPL list that holds a comment loses it under `set_model_param` and `remove_model_param`. The list span has crossed the comment since `a9d386b`; R1's new tests on `remove_model_param` brought it to light.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,890 passed, 2 skipped, 1,089 deselected, coverage 98.52%, in 21 min 28 s. This matches 6.5.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,890 passed, 2 skipped, 1,089 deselected, coverage 98.52%. This matches 6.5.
   - CI on #15 at `1a981fe` is green on all five jobs.
 - **R1, by hand on both dialects (a scratch script outside the repository):**
   - Every row of R1's table gives its result, CRLF included, and two comments join on one line.
@@ -664,7 +664,7 @@ This is the only list that can hold a comment. A comment inside an `IC=` or `tc=
 - **Docs:** decision 0019 items 9 and 11, the `set_model_param` and `remove_model_param` rows of `edit-layer.md`, the CPL paragraph of `docs/usage/editing.md` (a doctest of the same-count edit), the API docstrings and the CHANGELOG.
 - **7.3 tidied:** the `remove_param` docstring states the `+` line rule once and wraps evenly, and the paragraph in `docs/usage/editing.md` fits the line width.
 - **Checks:**
-  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,911 passed, 2 skipped**, 1,100 deselected, coverage **98.53%**, in 21 min 42 s. The first run failed only the P13 contract, on a regular expression I had used to split the list. The grammar probe replaced it, and the second run is the one above.
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,911 passed, 2 skipped**, 1,100 deselected, coverage **98.53%**. The first run failed only the P13 contract, on a regular expression I had used to split the list. The grammar probe replaced it, and the second run is the one above.
   - `ruff`, `mypy` and `pre-commit run --all-files` pass.
   - **CI:** see the pull request.
 
@@ -718,7 +718,7 @@ R3 is made as decided, and the 7.3 tidy-up is done. M16 goes back for one small 
   - **One case still differs**, as before R4. On a model in parentheses, the whole-list path refuses `"1 2 3 ; x"` as an unbalanced `(`, because the comment takes the `)`. The same-count path refuses it as not re-parsing as a value. Both are refusals, and nothing is dropped.
 - **Tests:** `test_a_cpl_list_value_is_read_whole_or_refused` runs the two rows with and without a comment in the list, and expects the same refusal from each.
 - **Checks:**
-  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,915 passed, 2 skipped**, 1,104 deselected, coverage **98.53%**, in 22 min 9 s;
+  - full local check set with `--require-solver ngspice --require-solver ltspice`: **8,915 passed, 2 skipped**, 1,104 deselected, coverage **98.53%**;
   - `ruff`, `mypy` and `pre-commit run --all-files` pass;
   - **CI:** see the pull request.
 
@@ -729,7 +729,7 @@ R3 is made as decided, and the 7.3 tidy-up is done. M16 goes back for one small 
 **Approved.** R4 is made as decided, and no change is required. T12 follows: archive this list, accept decision 0019, and update the plan and the index.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,915 passed, 2 skipped, 1,104 deselected, coverage 98.53%, in 21 min 51 s. This matches 8.4, and it covers round 3, whose run was stopped.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 8,915 passed, 2 skipped, 1,104 deselected, coverage 98.53%. This matches 8.4, and it covers round 3, whose run was stopped.
   - CI on #15 at `2b822fa` is green on all five jobs.
 - **R4, by hand on ngspice (the round 3 scratch script):**
   - With `; c` inside the list, `"1 2 3 ; x"`, `"1 2 ; x"` and `"1 2 x=3"` are refused with "does not re-parse as a value". That is the message they get without the comment, and the message `.model dm d` gets for `is="2 ; x"`.

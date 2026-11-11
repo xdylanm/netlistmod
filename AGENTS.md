@@ -12,9 +12,13 @@ This file summarizes working rules; it does not replace or duplicate that docume
 - **P5 (§2):** use strict grammar and fail loudly.
 - **P6 (§2):** every grammar construct needs a spec entry and tests.
 - **P7 (§2):** dialects are separate grammars; callers select a dialect.
+- **P8 (§2):** documented behavior is validated, not assumed.
 - **P9 (§2):** never launch a simulator from `src/`.
 - **P10 (§2, §12):** keep clean-room provenance; do not use GPL-derived code or tests,
   including material from spicelib.
+- **P11 (§2):** edits state their scope.
+- **P12 (§2):** build for agents as well as humans.
+- **P13 (§2):** syntax lives in the grammar.
 
 ## Working rules
 

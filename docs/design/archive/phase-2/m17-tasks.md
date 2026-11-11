@@ -399,7 +399,7 @@ For the record, the open probes were:
 - [ ] **`test_ltspice_fra_zm.asc`** (optional): an impedance measurement (`zm`), and `refnode=` or `intnode=` on an analyzer.
 
 **The LTspice set (received 2026-11-10):** `test_ltspice_gates`, `_schmitt`, `_ota`, `_functions` and `_fra` (the optional `_fra_zm` was left out). Each exports and runs in LTspice 26.1.1.
-- The FRA schematic was revised after review: a 1 kHz to 100 kHz sweep with `oct=1`, which runs in 2.9 s; the analyzer facing the op-amp output; the probe's input pair on the inverting input.
+- The FRA schematic was revised after review: a 1 kHz to 100 kHz sweep with `oct=1`; the analyzer facing the op-amp output; the probe's input pair on the inverting input.
 - Its `gain_1` is 1.75e3 at 92.7° at 1 kHz, and its `probe_1` is 3.49e3 at 90.9°.
 - LTspice leaves its Bode plot blank, because neither analyzer terminal is grounded and the circuit has a probe (the reference's "Results and Bode Plot"). The results are in the `.fra_1.raw` file.
 
@@ -524,7 +524,7 @@ Written in T11, 2026-11-10, on `m17-special-devices`: committed as `df38d82` and
 
 ### Evidence
 
-- Full local run with both solvers: `python -m pytest --require-solver ngspice --require-solver ltspice`: 9434 passed, 2 skipped, 1 failed (23 min 55 s; coverage 98.6 %). The failure was `tests/solver/test_ltspice_validation.py::test_fra_needs_its_device`, an M8 test that still expected `@` to be unsupported; it now checks that the line loads, and that file passes on its own (344 passed). The whole run was not repeated after that one-line test change.
+- Full local run with both solvers: `python -m pytest --require-solver ngspice --require-solver ltspice`: 9434 passed, 2 skipped, 1 failed (coverage 98.6 %). The failure was `tests/solver/test_ltspice_validation.py::test_fra_needs_its_device`, an M8 test that still expected `@` to be unsupported; it now checks that the line loads, and that file passes on its own (344 passed). The whole run was not repeated after that one-line test change.
 - `ruff check`, `ruff format --check`, `mypy --strict` (the package and the named tests), `lint-imports` and `pre-commit run --all-files`: clean.
 - CI on #17 at `df38d82`: green on all five jobs (the maintainer's check in 6.1). The full run that the line above did not repeat is the maintainer's in 6.1: 9,435 passed, 2 skipped.
 
@@ -547,7 +547,7 @@ Written in T11, 2026-11-10, on `m17-special-devices`: committed as `df38d82` and
 M17 goes back for R1 to R3. The letters, the code-model `.model` values, the topology, the diagnostics and the edits match section 2. They held up when I checked them by hand on both dialects, against the pre-M17 code (`13ebefb`) for compatibility. R1 corrects a sentence of decision 7 that I wrote wrong in planning; R2 and R3 are small.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,435 passed, 2 skipped, 1,201 deselected, coverage 98.60%, in 24 min 14 s. This is the full run that section 5's evidence did not repeat after its one-line test fix.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,435 passed, 2 skipped, 1,201 deselected, coverage 98.60%. This is the full run that section 5's evidence did not repeat after its one-line test fix.
   - CI on #17 at `df38d82` is green on all five jobs.
 - **Compatibility, by hand against `13ebefb`:** every line that reads differently was a `ParseError` before M17. It now loads, as `gain(in=true)` and `gain gain=[1 2]` do, or gets its own message, as `d(is="1e-14")` and `d(is=[1 2])` do. No line that loaded before reads differently.
 - **By hand, both dialects (a scratch script outside the repository):**
@@ -651,7 +651,7 @@ Decision 7 says that a comma between LTspice A's parameters is accepted "as on T
 - **R2.** `remove_param` on `@`'s `zm` (any case) gives `set_param`'s message, from one helper, `_refuse_impedance_flag` in `edit/_ops_common.py`. `test_ltspice_refusals` covers `zm` and `ZM`.
 - **R3.** Section 5 records `df38d82`, #17 and its green CI, and T11 is ticked. The LTspice `discrepancies.md` `.fra` row says that `@` loads since M17 (LT-FRA-001). The `phase-2-plan.md` edit of 6.3 was already committed separately (`6d3cba1`).
 - **Checks:**
-  - Full run with `--require-solver ngspice --require-solver ltspice`: 9,459 passed, 1 failed, 2 skipped, coverage 98.61%, 24 min 9 s. The failure was the new `comma-after-function` probe, which first expected LTspice to run the line. With the expectation corrected, `test_ltspice_special_probes.py` and `test_ltspice_discrepancies.py` pass (258 passed); the whole run was not repeated.
+  - Full run with `--require-solver ngspice --require-solver ltspice`: 9,459 passed, 1 failed, 2 skipped, coverage 98.61%. The failure was the new `comma-after-function` probe, which first expected LTspice to run the line. With the expectation corrected, `test_ltspice_special_probes.py` and `test_ltspice_discrepancies.py` pass (258 passed); the whole run was not repeated.
   - `ruff check`, `ruff format --check`, `mypy --strict`, `lint-imports` and `pre-commit run --all-files`: clean.
   - CI on #17: read once after pushing `da2a059`, all five jobs were still pending. This docs-only commit runs them again.
 
@@ -662,7 +662,7 @@ Decision 7 says that a comma between LTspice A's parameters is accepted "as on T
 **Approved.** R1 to R3 are made as section 6.2 asks, and nothing else changed. M17 can close (T12) once the maintainer agrees.
 
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,460 passed, 2 skipped, 1,203 deselected, coverage 98.61%, in 24 min 43 s. This is the full run that 6.5 did not repeat after its probe fix, on the same 21 files that `da2a059` commits.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 9,460 passed, 2 skipped, 1,203 deselected, coverage 98.61%. This is the full run that 6.5 did not repeat after its probe fix, on the same 21 files that `da2a059` commits.
   - CI on #17 at `d9f6476` is green on all five jobs.
 - **R1, by hand on LTspice:**
   - A comma before an A parameter, between two (with or without blanks), at the start of a `+` line, and right after the function is refused with the new message.

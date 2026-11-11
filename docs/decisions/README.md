@@ -24,3 +24,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0019 — Transmission lines](0019-transmission-lines.md)
 - [0020 — Special and mixed-signal devices](0020-special-and-mixed-signal-devices.md)
 - [0021 — Completeness audit](0021-completeness-audit.md)
+- [0022 — v1 record corrections](0022-v1-record-corrections.md)

@@ -147,7 +147,7 @@ Probes on ngspice 47 and LTspice 26.1.1: about 150 runs in a `.tran`, from a scr
 
 The commit hashes below are those of the pull request's branch; "Rebase and merge" gives the commits new hashes on `main`.
 
-**Full local run on `eaf36b1` (T10 and R9, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 5716 passed, 2 skipped, 613 deselected, 15 minutes 11 seconds, coverage 98.98%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (32 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
+**Full local run on `eaf36b1` (T10 and R9, Windows, Python 3.14.3, ngspice 47, LTspice 26.1.1.0):** 5716 passed, 2 skipped, 613 deselected, coverage 98.98%, with `--require-solver ngspice --require-solver ltspice`. `ruff check`, `ruff format --check`, `mypy` (26 files), the named `mypy --strict` (32 files), the import contract (1 kept, 0 broken) and `pre-commit run --all-files` are all clean.
 
 **CI on `eaf36b1` ([PR 8](https://github.com/xdylanm/netlistmod/pull/8), run 41865868384): all five jobs green,** with no solver found.
 

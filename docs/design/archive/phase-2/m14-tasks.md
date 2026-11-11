@@ -201,7 +201,7 @@ Each changes one thing from one of your files, named in a comment on its second 
 
 **Full local run** at `037dd37` (2026-11-06; Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`):
 - ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean.
-- pytest: 6,882 passed, 2 skipped, coverage 98.48%, in 16 min 30 s.
+- pytest: 6,882 passed, 2 skipped, coverage 98.48%.
 - Every accept file of both `controlled_sources` families loads, round-trips byte-exact and runs in its solver sweep. The two `diag_*` files are skipped there, with the manifest's reason.
 - The signature snapshot is unchanged.
 
@@ -226,7 +226,7 @@ Each changes one thing from one of your files, named in a comment on its second 
 ### 6.1 Outcome
 
 M14 is accepted once the changes below are made. The design holds up on review:
-- **Checks:** pytest 6,882 passed, 2 skipped, coverage 98.48%, in 16 min 50 s, with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`). ruff, ruff format and `mypy src` are clean. CI on #11 is green on all five jobs.
+- **Checks:** pytest 6,882 passed, 2 skipped, coverage 98.48%, with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`). ruff, ruff format and `mypy src` are clean. CI on #11 is green on all five jobs.
 - **Grammar:** each letter spells out its own line on each overlay, and the nonlinear keywords are recognised only where the dialect writes them. The `=`, `(` and `{` lookaheads keep a node named `value`, `table` or `on` a node (`E1 out 0 value 0 2` loads with four nodes).
 - **Topology:** control nodes are ordinary `nodes`, so the signature and the net queries needed no new code. The `control` entry is added beside the element's entry, and the signature snapshot is unchanged.
 - **Edits:** the goldens cover each letter on both dialects, and the negative test covers every control node and controlling source.
@@ -312,7 +312,7 @@ R1 to R5 are made in one commit, `ce9573e`.
 
 **Checks** at `ce9573e` (Windows, Python 3.14, ngspice 47 and LTspice 26.1.1 with `--require-solver ngspice --require-solver ltspice`):
 - ruff, ruff format, mypy (src and the strict test set), the import contract and pre-commit are clean.
-- pytest: 6,911 passed, 2 skipped, coverage 98.49%, in 16 min 24 s.
+- pytest: 6,911 passed, 2 skipped, coverage 98.49%.
 - The signature snapshot is unchanged.
 
 **CI** on #11 at `ce9573e` is green on all five jobs.
@@ -325,7 +325,7 @@ Nothing is archived: T12 follows approval.
 
 R1 to R5 are made as 6.5 reports. Nothing else is required, and M14 is ready for the maintainer's approval (T12).
 - **Checks:**
-  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 6,910 passed, 2 skipped, 1 failed, coverage 98.49%, in 27 min 28 s. The failure is `test_every_corpus_family_has_a_manifest_and_matching_hashes`, because `ltspice/controlled_sources/lt_test_esource.net` was deleted from the working tree during the run, at about 12:46. No test writes to the corpus, since the solver tests copy fixtures into `tmp_path`. On a clean checkout of `39e9d6f` the manifest tests pass (3 passed), so this is not a code failure. The 6,910 passing tests include every M14 test.
+  - pytest with ngspice 47 and LTspice 26.1.1 from `.env` (`--require-solver ngspice --require-solver ltspice`): 6,910 passed, 2 skipped, 1 failed, coverage 98.49%. The failure is `test_every_corpus_family_has_a_manifest_and_matching_hashes`, because `ltspice/controlled_sources/lt_test_esource.net` was deleted from the working tree during the run, at about 12:46. No test writes to the corpus, since the solver tests copy fixtures into `tmp_path`. On a clean checkout of `39e9d6f` the manifest tests pass (3 passed), so this is not a code failure. The 6,910 passing tests include every M14 test.
   - ruff, ruff format and `mypy src` are clean.
   - CI on #11 is green on all five jobs.
 - **R1:**

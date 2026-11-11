@@ -93,7 +93,7 @@ M17's pull request [#17](https://github.com/xdylanm/netlistmod/pull/17) is appro
 
 ### 3.2 Baseline run
 
-Full local run on `m18-completeness-audit` at `8f8c098` (the tree of `6843d4c` plus this list) with `--require-solver ngspice --require-solver ltspice`: 9,458 passed, 2 failed, 2 skipped, 1,203 deselected, coverage 98.61%, in 26 min 17 s. The two failures were LTspice corpus runs (`test_accept_fixture_runs_in_ltspice[special_functions/test_ltspice_fra_named.cir]` and `test_unedited_round_trip_gives_identical_results[ltspice_transistors/edges.net]`), while the stage 1 reviewers ran LTspice probes at the same time; both pass when rerun on their own (2 passed, 18 s). They are treated as host noise from the parallel solver runs, and T1's final run is made with no other solver work going on.
+Full local run on `m18-completeness-audit` at `8f8c098` (the tree of `6843d4c` plus this list) with `--require-solver ngspice --require-solver ltspice`: 9,458 passed, 2 failed, 2 skipped, 1,203 deselected, coverage 98.61%. The two failures were LTspice corpus runs (`test_accept_fixture_runs_in_ltspice[special_functions/test_ltspice_fra_named.cir]` and `test_unedited_round_trip_gives_identical_results[ltspice_transistors/edges.net]`), while the stage 1 reviewers ran LTspice probes at the same time; both pass when rerun on their own (2 passed). They are treated as host noise from the parallel solver runs, and T1's final run is made with no other solver work going on.
 
 ### 3.3 Carried items
 
@@ -276,7 +276,7 @@ The two baseline failures (3.2) are host noise. The reviewers' scripts are in th
 
 Written in T1, 2026-11-11, at `0dba478` (rebased onto `main` afterwards; `main` at `234ec15` holds the same tree as `6843d4c`, since #17 was merged by rebase).
 
-- **Full local run with both solvers** (`python -m pytest --require-solver ngspice --require-solver ltspice`, nothing else using the solvers): **10,175 passed, 2 skipped**, 1,420 deselected, coverage **98.71%**, in 25 min 41 s. The baseline (3.2) was 9,458 passed.
+- **Full local run with both solvers** (`python -m pytest --require-solver ngspice --require-solver ltspice`, nothing else using the solvers): **10,175 passed, 2 skipped**, 1,420 deselected, coverage **98.71%**. The baseline (3.2) was 9,458 passed.
 - `ruff check`, `ruff format --check`, `mypy --strict` (the package, and the named tests of `docs/testing.md`), `lint-imports` (1 contract kept) and `pre-commit run --all-files`: clean.
 - **Compatibility:** the signature snapshot is unchanged, and the compatibility test passes. No corpus file changed its parse. The ngspice tree snapshot gained `structure_basic/nested_if.cir` and D4's two files, and five reject entries lost their expected-token lists (D1).
 - **The plan's exit:** every spec entry cites a `def` and a non-solver accept test, except the three refusal entries. Each README's validation table shows its tests. No entry is `documented`: ngspice has 73 `validated` and 2 `observed`, and LTspice has 73 `validated`.
@@ -372,7 +372,7 @@ The maintainer asked for examples of section 5.3 point 1 (checks outside the gra
   - architecture §10.4 notes that an accept test is recognised by its name.
   - The lead's approval commits had swept R1's uncommitted files into them, so before pushing they were regrouped into `4b42972` (R1) and `2cd1a24` (the record).
 - **Checks:**
-  - full run with `--require-solver ngspice --require-solver ltspice`: 10,173 passed, 2 skipped, coverage 98.73%, in 25 min 21 s;
+  - full run with `--require-solver ngspice --require-solver ltspice`: 10,173 passed, 2 skipped, coverage 98.73%;
   - `pre-commit run --all-files`, `mypy --strict` on the named tests, and `lint-imports` (1 contract kept): clean;
   - CI on #18: read once after this push.
 | T2 | lead | — | the maintainer approved M18 on 2026-11-11, with CI green on all five jobs at `5ea254d`; this list is archived, decision 0021 is accepted, and the plan and index are updated | this commit |
