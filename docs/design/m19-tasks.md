@@ -1,6 +1,6 @@
 # M19 task list — v1 review package and beta tag
 
-> **Status:** ACTIVE — decisions 5 to 10 decided by the maintainer on 2026-11-11; stage 0 is under way
+> **Status:** ACTIVE — decisions 5 to 10 decided on 2026-11-11; stage 1 is done, and G1's points for the maintainer are in section 5.1.1
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M19, v1 gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §6.7, §10, §11, §13, §14, §17, §18). Follows [M18](./archive/phase-2/m18-tasks.md), and carries its section 5.3 point 9 and [M13](./archive/phase-2/m13-tasks.md) T14.
 
 ## 1. Scope
@@ -77,20 +77,20 @@ Every task that changes a file ends with the checks green, run as `uv run --env-
 
 ### Stage 1 — Reviews (independent reviewers, in parallel; read-only)
 
-[ ] **A1 — User documents, read as a new user.**
+[x] **A1 — User documents, read as a new user.**
 - The README, `docs/usage/README.md`, each usage guide, the error reference, `ltspice-export.md` and the examples' `--help`.
 - Is each device letter, editable property, exception and diagnostic code of v1 described, with the dialect it covers? Are LTspice's differences shown where they matter?
 - Stale wording about phases, milestones or what is "not yet" supported; links that would be dead on the PyPI page (decision 0018 item 6).
 - Each public name of `netlistmod.__all__` against the guides: named, or deliberately left to the living references.
 - API findings for the 1.0 review (section 1) are listed apart.
 
-[ ] **A2 — Records and the gate.**
+[x] **A2 — Records and the gate.**
 - Plan section 6: for each gate item, the evidence that shows it, or the gap.
 - The limits that remain: every limit named in the phase 1 review, decisions 0010 to 0021, the task lists' section 6.3 notes and the `discrepancies.md` files, each with its state (closed, accepted, open). This list becomes the package's limits section.
 - The architecture, `testing.md`, `provenance.md`, `AGENTS.md`, `CONTRIBUTING.md`, the four living references and the decision index, against the code, for wording written before phase 2.
 - Every corpus family has a manifest and a `provenance.md` row, and no LTspice raw file, log or timing number is in the repository.
 
-[ ] **A3 — Package and coverage.**
+[x] **A3 — Package and coverage.**
 - The coverage report of the baseline run: each uncovered line or branch, what it is, and whether it is reachable.
 - Build the wheel and the sdist; install the wheel in a new environment, then import, parse and edit on both dialects; check the sdist's contents and the wheel's data files (`*.lark`, `*.json`).
 - The package metadata: classifiers, URLs, `requires-python`, the runtime dependencies and their licences.
@@ -110,6 +110,8 @@ The briefs are written at G1 from the findings. Expected:
 
 [ ] **D4 — Source fixes,** only if the maintainer triages a `defect` into M19 (decision 6).
 
+[ ] **D5 — Coverage tests.** A test for each reachable path of section 5.1 (A3-1), and the coverage floor if 5.1.1 point 8 is decided.
+
 ### Stage 3 — Evidence and handover (lead)
 
 [ ] **T1 — Final evidence.** The full check set with `--require-solver ngspice --require-solver ltspice` from a clean clone of the commit under review, with the wheel build and install of A3.
@@ -126,7 +128,35 @@ The briefs are written at G1 from the findings. Expected:
 
 ### 5.1 Review findings (G1)
 
-*Filled in at G1.*
+The three reports were checked by the lead on 2026-11-11: every `defect` reproduced or read in the file, and a sample of the rest. Each report's full table stays with the lead's notes; this section classifies them.
+
+**The gate (A2).** G1 to G5 are met by tests and CI at `3000e95` (G2, G3 and G5 are repeated by T1 and the M19 pull request). G6 waits on T1. G7 (hands-on use, carried from M13 T14), G8 (the limits) and G9 (archiving) are the maintainer's.
+
+**Limits (A2).** 38 collected, deduplicated (L1 to L38). Open: library files (after the beta), the 1.0 API review, the hands-on checkpoint, and three cosmetic notes. The rest are closed or accepted by a decision. They become the package's limits section (T2).
+
+| Group | Findings | Classification | Goes to |
+|---|---|---|---|
+| README | A1-2 to 7, A3-12 | stale or gap: "the phase 1 elements", "phase 2 is under way", milestone tags in the element table, the edit list stops at phase 1, LTspice `.control`/`.if`, the plan link that moves at T4 | D1 |
+| Usage guides and examples | A1-9 to 20, 22 to 25, 28 to 30 | stale wording and milestone tags; gaps (LTspice values, stimulus and `.param` differences; `set_coupling`, `directives.replace`, `BEFORE_END`, `allow_external`; what cannot be added or removed; four public names); doc defects (`elements.md:306` says LTspice E and G take no parameter; `read_only_demo.py --help` crashes; an unused import and an undefined `rt` in `editing.md`) | D1 |
+| Error reference and CHANGELOG | A1-26, A1-27, A2-27 | "Since M17"; `DiagnosticCode` not named; the `.if` depth is 247 levels, not about 300 | D2 |
+| Architecture, normative | A2-1, 2, 3, 7, 11 | stale or gap: RKM as "the only exception" to decision 0002; §7.7 omits A's `ports` and `%vnam` entries and POLY's several `control` entries; §17 omits `CONTROL_SOURCE_MISMATCH`; rule 10 on bare formulas; the info rule's opaque scopes | D3, through decision record 0022 |
+| Other records | A2-4 to 6, 8 to 10, 12 to 16, 18 to 26, 29 to 34, 36, 37, 42 to 44; A1-31, A1-32 | stale wording, the living references' phase 2 gaps, `testing.md`, nine corpus families missing from `provenance.md`, the grammar READMEs and device matrices | D3 |
+| Coverage | A3-1, coverage table | 8 reachable paths with no test (about 13 lines and 2 branches), each probed and behaving as intended; the rest accepted as in phase 1 (defensive, packaging or internal faults, POSIX only) | D5 (tests are M19's own work) |
+| Package | A3-2 to 5, 7, 9 | ok: the wheel and sdist build, the wheel holds the grammars and data files, a clean install loads and edits both dialects, `twine check` passes, the release workflow fits a `0.9.0` | — |
+| Release checklist | A3-4, A3-8, A3-10 | for the `release-0.9.0` branch: `uv.lock`'s own version (CI runs `uv sync --locked`), the classifier, the CHANGELOG heading, the README's release line; optional: anchor the sdist's `README.md` and `LICENSE` patterns, and a phase 2 smoke step | T2's release checklist |
+| For the maintainer | A1-8/A3-11, A1-21/A2-28, A2-35, A2-41, A3-6, A3-13, A3-14, A3-15 | section 5.1.1 | — |
+| 1.0 notes | A1 N-1 to N-11 | recorded for the 1.0 review, not acted on (section 1) | T2 |
+
+#### 5.1.1 For the maintainer
+
+1. **Two `src/` docstrings** (A1-21, A2-28): "(review R3)" in `edit/api.py` (two places), and `ModelStatement`'s description of `flags`, which also holds LTRA's. *Recommendation:* fix in M19 as D4, text only.
+2. **Two loads that a reviewer questioned** (A3-14, A3-15), reproduced: on ngspice `R1 a 0 1k |` reads `|` as the model, and on both dialects `D1 a 0 2` reads `2` as the model. Each gives `UNRESOLVED_MODEL` (a warning), so neither is silent, and neither misreads a field that has another meaning. *Recommendation:* no change in M19; record both as limits for the 1.0 review.
+3. **Normative architecture fixes** (A2-1, 2, 3, 7, 11). *Recommendation:* one decision record, 0022, in D3: it corrects the text to what decisions 0013 to 0021 already decided, and changes no behaviour.
+4. **`AGENTS.md`** (A2-35): its constitution omits P8, P11, P12 and P13. *Recommendation:* add them, one line each, as the others.
+5. **Run times** (A2-41): archived task lists record whole-suite times that include LTspice runs; decision 0009 item 2 keeps LTspice timing numbers out of the repository. *Recommendation:* new records (T1 and the package) give no times; archived records stay as history, since an archived file is edited only to fix links.
+6. **README links on PyPI** (A1-8, A3-11): relative links are dead on PyPI, even once the repository is public. *Recommendation:* keep them for `0.9.0` (decision 0018 item 6), and make them absolute when the repository is made public.
+7. **The `lark` lower bound** (A3-6): `lark>=1.2.2`, with every run on 1.3.1; a smoke test passes on 1.2.2. *Recommendation:* one solver-free full run on 1.2.2 in T1.
+8. **The coverage floor** (A3-13): `fail_under = 90` while the suite is at 98.7%. *Recommendation:* raise it to 98 after D5.
 
 ### 5.2 Subtask log
 
@@ -135,3 +165,5 @@ The briefs are written at G1 from the findings. Expected:
 | T0 | Lead | 2026-11-11 | Baseline recorded (section 3.2); decisions 5 to 10 decided | this commit |
 | A1 | Reviewer | 2026-11-11: complete with findings (32, and 11 notes for 1.0) | Spot-checked; classified at G1 | — |
 | A2 | Reviewer | 2026-11-11: complete with findings (47; gate table; 38 limits) | Spot-checked; classified at G1 | — |
+| A3 | Reviewer | 2026-11-11: complete with findings (15; coverage table) | Two loads reproduced; classified at G1 | — |
+| G1 | Lead | 2026-11-11 | Section 5.1; eight points for the maintainer (5.1.1) | this commit |
