@@ -1,6 +1,6 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M18 are complete, and M19 is next
+> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M18 are complete, and M19 is ready for review
 > **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
 > **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
@@ -122,7 +122,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Carried from M17** ([m17-tasks](./archive/phase-2/m17-tasks.md) 6.3): a diagnostic for `zm` with an `&` probe, which LTspice stops on; `.fra`'s need for `fstart=`/`fend=` or `flist=`, which is not checked; LTspice `.model x BUF(…)`, which the library loads and LTspice stops on; and an own message for an odd count in a differential vector (`%vd [in 0 out]`).
 - **Exit:** the spec-coverage report shows every construct with tests, and each `documented` entry says why the solver cannot decide.
 
-### M19 — v1 review package and beta tag
+### M19 — v1 review package and beta tag (ready for review; [task list](./m19-tasks.md), [review package](./v1-review.md), [decision 0022](../decisions/0022-v1-record-corrections.md))
 
 - Update the usage guides, error reference, README and CHANGELOG. The README says the library is feature complete for v1.
 - Final evidence from a clean clone with both solvers, as in phase 1's T10, and a v1 review package.

@@ -1,6 +1,6 @@
 # v1 review package
 
-> **Status:** DRAFT — T1's results are filled in when the clean-clone run ends; then `READY FOR REVIEW`
+> **Status:** READY FOR REVIEW — T1 ran on 2026-11-11 from a clean clone of `745991e`; the gate items that are the maintainer's are recorded in sections 1, 5 and 7
 > **Part of:** [m19-tasks.md](./m19-tasks.md) (T2). The gate is [phase-2-plan.md](./phase-2-plan.md) section 6. Phase 1's package is [phase-1-review.md](./archive/phase-1/phase-1-review.md).
 
 ## 1. Where things stand
@@ -11,32 +11,46 @@
 | Completeness audit (M18) | Complete; [decision 0021](../decisions/0021-completeness-audit.md) |
 | Reviews (M19 A1 to A3) | Done; findings in [m19-tasks.md](./m19-tasks.md) section 5.1 |
 | Documents and tests (M19 D1 to D5) | Done and committed; [decision 0022](../decisions/0022-v1-record-corrections.md) is proposed |
-| Final evidence (T1) | Section 2 |
+| Final evidence (T1) | Done: section 2 |
 | Your own use (gate item 7) | Done (maintainer, 2026-11-11): "all good" |
 | Limits (gate item 8) | Section 5.1 decided (maintainer, 2026-11-11); 5.2 confirmed with the package's approval |
 | The `0.9.0` release | After the gate, on a `release-0.9.0` branch (m19 decision 5); checklist in section 9 |
 
 ## 2. Results
 
-*T1 is running: a clean clone of the commit under review, with a new environment, on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1, both solvers required. Run times are not recorded (m19 5.1.1 point 5).*
+T1, 2026-11-11: a clean clone of `745991e` (all of M19's code, tests and guides) with a new environment from `uv sync --locked`, on Windows with Python 3.14.3, ngspice 47 and LTspice 26.1.1, both solvers required. The run left the clone's working tree clean. Only records changed after it (this package, m19-tasks.md, decisions 0016 and 0022), and `tests/test_docs.py` and `tests/architecture` were re-run on them. Run times are not recorded (m19 5.1.1 point 5).
 
 | Check | Result |
 |---|---|
-| `pytest --require-solver ngspice --require-solver ltspice` | *pending* |
-| Coverage | *pending* (the floor is now 98%) |
-| `ruff check`, `ruff format --check` | *pending* |
-| `mypy` (configured `src/` scope), and `mypy --strict` on the named tests | *pending* |
-| `lint-imports` | *pending* |
-| `pre-commit run --all-files` | *pending* |
-| Wheel and sdist build; wheel installed in a new environment, then a parse and an edit on both dialects | *pending* |
-| Solver-free suite on `lark` 1.2.2, the declared lower bound | *pending* |
+| `pytest --require-solver ngspice --require-solver ltspice` | 10,205 passed, 2 skipped (POSIX only), 1,424 deselected (the other dialect's run of a one-dialect test) |
+| Coverage | 99.22% (28 lines and 24 branches uncovered); the floor is 98% |
+| `ruff check`, `ruff format --check` | Clean |
+| `mypy` (configured `src/` scope), and `mypy --strict` on the named tests | Clean |
+| `lint-imports` | 1 contract kept |
+| `pre-commit run --all-files` | Passed |
+| Wheel and sdist build; wheel installed in a new environment, then a parse and an edit on both dialects | Built (`0.5.0`); from outside the clone, ngspice Q and `.model` edits and an LTspice B, `.model` and R edit each changed only their own lines, and the CRLF file kept CRLF |
+| Solver-free suite on `lark` 1.2.2, the declared lower bound | 10,135 passed, 72 skipped (the solver tests and the POSIX tests), coverage 99.22% |
 | Linux, and Python 3.13 | CI on the M19 pull request (no solver; decision 0011) |
 
 ## 3. Coverage
 
-From the baseline run (m19 section 3.2), with D5's tests added. Modules not listed are at 100%.
+From T1. Modules not listed are at 100%.
 
-*The per-module table is filled in from T1's report.*
+| Module | Cover | Uncovered |
+|---|---|---|
+| `edit/_ops_common.py` | 99% | 262 |
+| `edit/_ops_directives.py` | 98% | 124, 126 |
+| `edit/_ops_elements.py` | 99% | branch 185→187 |
+| `edit/api.py` | 99% | 46, 49 |
+| `edit/verify.py` | 99% | branch 181→183 |
+| `grammar/formula.py` | 95% | 65, 82 |
+| `grammar/loader.py` | 95% | 328–329, 354–355, 375, 416, branch 466→490, 521, 592, 596, branch 631→636, 675 |
+| `model/_rules_nonlinear.py` | 99% | 404 |
+| `model/_rules_sources.py` | 99% | branch 99→87 |
+| `model/_tree.py` | 98% | 289, 298 |
+| `model/model_types.py` | 93% | 29 |
+| `model/transform.py` | 93% | 67, 99 |
+| `source.py` | 96% | 191, 211–212, 216, 228 |
 
 Each line left uncovered, from A3's review (each one read, and probed where it looked reachable):
 
@@ -144,11 +158,11 @@ Plan section 6.
 | Gate item | Evidence | State |
 |---|---|---|
 | Every element in both matrices is `supported`, and the full range of value specifications is covered | Both device matrices and their JSON files; `test_contracts.py::test_no_device_letter_is_planned`; decision 0021 items 1, 3 and 9 and the value probes | Met |
-| Every construct has a spec entry and tests; spec coverage and strict grammar checks pass | Section 4; `tests/architecture/test_spec_coverage.py`, `test_contracts.py` | Met; T1 repeats them |
-| Round trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `tests/test_corpus_manifests.py`, `test_edit_golden.py`, `test_ltspice_edits.py` | Met; T1 repeats them |
+| Every construct has a spec entry and tests; spec coverage and strict grammar checks pass | Section 4; `tests/architecture/test_spec_coverage.py`, `test_contracts.py`; T1 | Met |
+| Round trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `tests/test_corpus_manifests.py`, `test_edit_golden.py`, `test_ltspice_edits.py`; T1 | Met |
 | The topology guarantee covers the new elements, with controlling references, by negative and property tests | `test_controlled_edits.py`, `test_edit_negative.py`, `test_nonlinear_edits.py`, `test_device_edit_properties.py`, `test_device_oracle.py`, `test_signature_snapshot.py` | Met |
 | CI is green on Linux and Windows, on Python 3.13 and 3.14 | `.github/workflows/ci.yml`; green on `main` after M18 | The M19 pull request's run |
-| ngspice and LTspice solver tests pass on your machine | Section 2 | T1 |
+| ngspice and LTspice solver tests pass on your machine | Section 2 | Met (T1) |
 | You have used the library on your own netlists, including transistor and behavioural circuits | Section 8; the maintainer, 2026-11-11 | Met |
 | Remaining limits are documented and acceptable | Section 5 | 5.1 decided by the maintainer on 2026-11-11; 5.2's limits were each decided earlier, and are confirmed with the package's approval |
 | All task lists are archived, and the plan is archived as `COMPLETE` | M10 to M18 are archived; this package, m19 and the plan move at m19 T4 | After your approval |
