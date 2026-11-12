@@ -1,9 +1,9 @@
 # 0022 — v1 record corrections
 
-- **Status:** proposed (2026-11-11; M19 D3a)
+- **Status:** accepted (2026-11-11, maintainer; M19 T4)
 - **Date:** 2026-11-11
 - **Amends:** architecture §2 (P5), §6.3 rule 10, §7.7, §17 and §19 decision 21; the wording of decision 0016 item 1.
-- **Context:** M19 reviewed the records before the v1 review package ([m19-tasks.md](../design/m19-tasks.md), section 5.1, findings A2-1, 2, 3, 7 and 11). Five rules of the architecture had not kept up with decisions 0009 to 0021: each states less than those decisions decided. The maintainer chose one record that brings the text up to date (section 5.1.1 point 3). Every item restates an earlier decision. No behaviour changes: no grammar, code, diagnostic or test changes with this record.
+- **Context:** M19 reviewed the records before the v1 review package ([m19-tasks.md](../design/archive/phase-2/m19-tasks.md), section 5.1, findings A2-1, 2, 3, 7 and 11). Five rules of the architecture had not kept up with decisions 0009 to 0021: each states less than those decisions decided. The maintainer chose one record that brings the text up to date (section 5.1.1 point 3). Every item restates an earlier decision. No behaviour changes: no grammar, code, diagnostic or test changes with this record.
 - **Decision:**
   1. **The recorded exceptions to decision 0002** (amends §2 P5 and §19 decision 21). P5 and decision 21 named the RKM mode option as the only exception. The exceptions in v1 are:
      - the RKM mode option (§19 decision 8);

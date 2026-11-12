@@ -34,7 +34,7 @@ letter was added. The table is checked against
 | Y | supported | 2 | M16 |
 | Z | supported | 2 | M13 |
 
-The milestones are those of the [phase 2 plan](../../design/phase-2-plan.md). E, F, G and H have
+The milestones are those of the [phase 2 plan](../../design/archive/phase-2/phase-2-plan.md). E, F, G and H have
 linear forms in M14 and nonlinear forms in M15. U is a URC line since M16 (`[ngspice-manual] §10.1.3 "URC transmission
 line versus U devices"`). Every other U line is the ngspice digital U, a named v1 exclusion
 (decision 0020 item 1): it raises `UnsupportedConstruct` ("ngspice digital U device, out of scope

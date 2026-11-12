@@ -1,11 +1,11 @@
 # M19 task list — v1 review package and beta tag
 
-> **Status:** READY FOR REVIEW — stages 1 and 2 are done; T1's evidence and the review package are in [v1-review.md](./v1-review.md)
-> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M19, v1 gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §6.7, §10, §11, §13, §14, §17, §18). Follows [M18](./archive/phase-2/m18-tasks.md), and carries its section 5.3 point 9 and [M13](./archive/phase-2/m13-tasks.md) T14.
+> **Status:** COMPLETE (2026-11-11) — approved by the maintainer, with CI green on #19; the v1 gate passed, and the results are in [v1-review.md](./v1-review.md)
+> **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M19, v1 gate in section 6). Governed by [architecture.md](../../../architecture.md) (§2, §6.7, §10, §11, §13, §14, §17, §18). Follows [M18](./m18-tasks.md), and carries its section 5.3 point 9 and [M13](./m13-tasks.md) T14.
 
 ## 1. Scope
 
-M19 adds no construct. It brings the user-facing documents up to v1, gathers the evidence for the v1 gate, and assembles the review package the maintainer uses to decide the gate. As in [M9](./archive/phase-1/m9-tasks.md), phase 1's review package, most of the work is reading and writing. As in M18, it runs in **stages with review gates** (section 4): independent reviewers audit first, independent developers then fix what the audits find, and the lead reviews each report before the next stage starts.
+M19 adds no construct. It brings the user-facing documents up to v1, gathers the evidence for the v1 gate, and assembles the review package the maintainer uses to decide the gate. As in [M9](../phase-1/m9-tasks.md), phase 1's review package, most of the work is reading and writing. As in M18, it runs in **stages with review gates** (section 4): independent reviewers audit first, independent developers then fix what the audits find, and the lead reviews each report before the next stage starts.
 
 - **In (plan M19):**
   - **Documents:** the usage guides, the error reference, the README and the CHANGELOG. The README says the library is feature complete for v1.
@@ -34,12 +34,12 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M18. Decis
 3. **Report format.** As M18 decision 3: a one-line verdict (`complete`, `complete with findings` or `blocked`), then a table with ID, location, finding, kind (`ok`, `gap`, `stale`, `defect`, `question`) and proposed action.
 4. **Parallel work.** Stage 1's reviewers run in parallel and read only. Stage 2's developers run in parallel only when their files do not overlap.
 5. **The version and the tag.** **Decided (maintainer, 2026-11-11): as recommended.** The plan's M19 sets the version to `0.9.0` and tags `v0.9.0` after the gate. Since 2026-11-08 the maintainer decides each release apart from the milestones, and a milestone ends at its own merged pull request.
-   *Recommendation:* the M19 pull request does not change the version. After the gate passes, a `release-0.9.0` branch does what `release-0.5.0` did ([decision 0018](../decisions/0018-pypi-publication.md)): the version `0.9.0`, the classifier `Development Status :: 4 - Beta`, the CHANGELOG heading `0.9.0 — date`, and the README's release line. The maintainer then tags `v0.9.0` and publishes the GitHub Release, which publishes to PyPI. The plan's M19 entry is amended to say so.
+   *Recommendation:* the M19 pull request does not change the version. After the gate passes, a `release-0.9.0` branch does what `release-0.5.0` did ([decision 0018](../../../decisions/0018-pypi-publication.md)): the version `0.9.0`, the classifier `Development Status :: 4 - Beta`, the CHANGELOG heading `0.9.0 — date`, and the README's release line. The maintainer then tags `v0.9.0` and publishes the GitHub Release, which publishes to PyPI. The plan's M19 entry is amended to say so.
    *Alternative:* as the plan says, M19's pull request sets `0.9.0`, and the tag follows the gate.
 6. **Source changes.** **Decided (maintainer, 2026-11-11): as recommended.** As in M9 decision 3, M19 changes documents, tests and the examples, not `src/`.
    *Recommendation:* a reviewer's `defect` in `src/` becomes an entry in section 5.1 with a reproducer, for the maintainer to triage: fix in M19 (a developer subtask, reviewed at G2, with a decision record if it changes behaviour), or record it as a limit. A message or docstring fix found in reading is a `src/` change too, and is triaged the same way.
 7. **Where the package lives.** **Decided (maintainer, 2026-11-11): as recommended.** `docs/design/v1-review.md`, moved to `archive/phase-2/` with this list and the plan once the gate passes, as phase 1's package was.
-8. **Spec coverage in the package.** **Decided (maintainer, 2026-11-11): as recommended.** Since M18 each grammar README has a generated "Validation status" table ([decision 0021](../decisions/0021-completeness-audit.md) item 8).
+8. **Spec coverage in the package.** **Decided (maintainer, 2026-11-11): as recommended.** Since M18 each grammar README has a generated "Validation status" table ([decision 0021](../../../decisions/0021-completeness-audit.md) item 8).
    *Recommendation:* the package gives the totals per dialect and links to the two tables, with no third copy. *Alternative:* a generated section in the package, as phase 1's package had.
 9. **The CHANGELOG.** **Decided (maintainer, 2026-11-11): as recommended.** The `Unreleased` section holds one entry per milestone from M15b to M18.
    *Recommendation:* add a short v1 summary at the top of `Unreleased` (the dialects, every device letter, the editable properties, the guarantees and the named exclusions), keep the milestone entries under it, and fix the duplicated M15b heading. Nothing above `0.5.0` is rewritten.
@@ -126,7 +126,7 @@ The developers' files do not overlap: D1 the README and `docs/usage/` apart from
 
 ### After the maintainer's approval
 
-[ ] **T4 — The gate and the close.** The maintainer's hands-on use and decisions on the limits are recorded in the package. Then this list, the package and the plan become `COMPLETE (date)` and move to `archive/phase-2/`, with the links fixed. The release follows decision 5.
+[x] **T4 — The gate and the close.** The maintainer's hands-on use and decisions on the limits are recorded in the package. Then this list, the package and the plan become `COMPLETE (date)` and move to `archive/phase-2/`, with the links fixed. The release follows decision 5.
 
 ## 5. Results
 
@@ -181,3 +181,4 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | T1 | Lead | 2026-11-11 | Clean clone of `745991e`: 10,205 passed, 2 skipped, coverage 99.22%; all checks clean; wheel smoke on both dialects; `lark` 1.2.2 solver-free 10,135 passed | this commit |
 | T2 | Lead | 2026-11-11 | `v1-review.md`; the maintainer's hands-on use and section 5.1 recorded; decision 0016 item 1's wording corrected through decision 0022 item 6 | `db3e75d`, `d5edd30`, `2903dc9`, this commit |
 | T3 | Lead | 2026-11-11 | Plan, index and this list set; pull request opened | this commit |
+| T4 | Lead | 2026-11-11 | The maintainer approved M19 with CI green on #19, and the v1 gate passed; this list, the package and the plan are archived, decision 0022 is accepted, and the index is updated. The release follows decision 5 | this commit |

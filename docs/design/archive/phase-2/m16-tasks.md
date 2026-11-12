@@ -1,7 +1,7 @@
 # M16 task list — Transmission lines (T, O, U as URC, Y, P)
 
 > **Status:** COMPLETE (2026-11-09) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 9
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M16). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./m15b-tasks.md) and [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M16). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M15b](./m15b-tasks.md) and [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary).
 
 ## 1. Scope
 

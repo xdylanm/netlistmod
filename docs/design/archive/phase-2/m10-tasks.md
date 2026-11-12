@@ -1,7 +1,7 @@
 # M10 task list — CI and project infrastructure
 
 > **Status:** COMPLETE (2026-11-03) — approved by the maintainer; the results are in section 5
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M10). Governed by [architecture.md](../../../architecture.md) (§10, §13, §14, §19).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M10). Governed by [architecture.md](../../../architecture.md) (§10, §13, §14, §19).
 
 ## 1. Scope
 

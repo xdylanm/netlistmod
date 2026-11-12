@@ -1,8 +1,8 @@
 # Phase 2 development plan
 
-> **Status:** ACTIVE — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M18 are complete, and M19 is ready for review
-> **Governed by:** [architecture.md](../architecture.md). This plan sequences the work; it does not change the architecture.
-> **Follows:** [the phase 1 plan](./archive/phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
+> **Status:** COMPLETE (2026-11-11) — approved by the maintainer on 2026-11-03, with section 8 decided; M10 to M19 are complete, and the v1 gate passed on 2026-11-11 ([review package](./v1-review.md))
+> **Governed by:** [architecture.md](../../../architecture.md). This plan sequences the work; it does not change the architecture.
+> **Follows:** [the phase 1 plan](../phase-1/phase-1-plan.md), whose gate passed on 2026-11-03.
 
 ## 1. Objective
 
@@ -10,9 +10,9 @@ Reach v1 as architecture §6.7 defines it: every element type in the ngspice and
 
 This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngspice N, P and Y, LTspice `@` and `&`, and the forms of phase 1 letters that are still rejected, such as stimulus functions and LTspice's `tbl=`, `Q=` and `Flux=`.
 
-**v1 is a beta.** It is feature complete and tagged `0.9.0`, and is tagged at the end of phase 2. Alphas are published to PyPI from `0.5.0` ([decision 0018](../decisions/0018-pypi-publication.md)), so the maintainer can use it in practice; a 1.0 release is outside this plan.
+**v1 is a beta.** It is feature complete and tagged `0.9.0`, and is tagged at the end of phase 2. Alphas are published to PyPI from `0.5.0` ([decision 0018](../../../decisions/0018-pypi-publication.md)), so the maintainer can use it in practice; a 1.0 release is outside this plan.
 
-**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, LTspice `.machine` stays unsupported (section 8, point 4), and so does the ngspice digital U, which needs PSpice compatibility mode (section 8, point 2; [m17-tasks](./archive/phase-2/m17-tasks.md) decision 1). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./archive/phase-2/m11-tasks.md)).
+**Not in v1:** the non-goals of §1.4 still hold. qspice and xyce stay planned (§9.2), differential testing against spicelib (T9) stays optional, LTspice `.machine` stays unsupported (section 8, point 4), and so does the ngspice digital U, which needs PSpice compatibility mode (section 8, point 2; [m17-tasks](./m17-tasks.md) decision 1). Opening a library file, or editing a model inside a `.lib` block, is a later candidate to decide after using the beta ([M11 decision 1](./m11-tasks.md)).
 
 ## 2. Assumptions
 
@@ -20,7 +20,7 @@ This covers Q, J, M, Z, E, F, G, H, B, S, W, T, O, U and A in both dialects, ngs
 - **Each milestone covers both dialects.** Phase 1 built ngspice first to prove the design. With the shared core proven, a construct is designed once and validated on both solvers in the same milestone. Dialects remain separate grammars (P7).
 - **Platforms are Windows and Linux.** macOS is not required, tested or claimed; it may well work, but nothing is validated there.
 - Solver-backed tests stay local (§10.3): LTspice is only available on Windows, so the final evidence comes from the maintainer's Windows machine. CI runs only the solver-free tests and installs no solver.
-- The maintainer's order from the [phase 1 limits decision](./archive/phase-1/phase-1-review.md#6-limits-for-your-decision) is fixed: CI, then the `.lib` block and `directives.add` limits, then stimulus specs and Q and M devices, then the rest. The order after that (M14 onward) is this plan's proposal.
+- The maintainer's order from the [phase 1 limits decision](../phase-1/phase-1-review.md#6-limits-for-your-decision) is fixed: CI, then the `.lib` block and `directives.add` limits, then stimulus specs and Q and M devices, then the rest. The order after that (M14 onward) is this plan's proposal.
 
 ## 3. What makes phase 2 different
 
@@ -40,7 +40,7 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 
 **Closing procedure.** As in phase 1: a task list is written before the milestone starts, implementation ends at `READY FOR REVIEW`, and after the maintainer approves it becomes `COMPLETE (date)` and moves to `archive/phase-2/`. Decisions go in `docs/decisions/`, and any new risks go in the architecture or this plan.
 
-### M10 — CI and project infrastructure (complete; [task list](./archive/phase-2/m10-tasks.md), [decision 0011](../decisions/0011-ci-and-release-scope.md))
+### M10 — CI and project infrastructure (complete; [task list](./m10-tasks.md), [decision 0011](../../../decisions/0011-ci-and-release-scope.md))
 
 - GitHub Actions: lint and types; solver-free tests on Linux and Windows with Python 3.13 and 3.14; strict grammar build and spec coverage; docs links; coverage. Add Dependabot.
 - No solver is installed in CI, and there is no ngspice job (section 8, point 5). The solver tests skip, as §10.3 provides.
@@ -50,23 +50,23 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - Replace "milestone sequence TBD" in both device matrices and their JSON files with the milestones in section 5.
 - **Exit:** all checks are green on a pull request. Branch protection is on if the repository's GitHub plan allows it; otherwise the rule is to merge only on green.
 
-### M11 — Carried limits and messages (complete; [task list](./archive/phase-2/m11-tasks.md), [decision 0012](../decisions/0012-carried-limits.md))
+### M11 — Carried limits and messages (complete; [task list](./m11-tasks.md), [decision 0012](../../../decisions/0012-carried-limits.md))
 
-- **`.lib name` … `.endl` blocks** (limit 6): recognise the block in the grammar as opaque, and stop counting its body as top-level topology ([decision 0012](../decisions/0012-carried-limits.md)).
-- **`directives.add` over a singleton** (limit 9): it stays literal and is documented, because ngspice has a real use for two lines of one kind ([decision 0012](../decisions/0012-carried-limits.md)).
-- **H5–H8** from [phase-2-code-changes.md](./archive/phase-2/phase-2-code-changes.md): argument type errors, wording for listed LTspice commands, internal references in messages, and models defined in `.if` blocks. H6 and H8 change §17, so they need a decision. Doing H7 now means later messages start clean.
+- **`.lib name` … `.endl` blocks** (limit 6): recognise the block in the grammar as opaque, and stop counting its body as top-level topology ([decision 0012](../../../decisions/0012-carried-limits.md)).
+- **`directives.add` over a singleton** (limit 9): it stays literal and is documented, because ngspice has a real use for two lines of one kind ([decision 0012](../../../decisions/0012-carried-limits.md)).
+- **H5–H8** from [phase-2-code-changes.md](./phase-2-code-changes.md): argument type errors, wording for listed LTspice commands, internal references in messages, and models defined in `.if` blocks. H6 and H8 change §17, so they need a decision. Doing H7 now means later messages start clean.
 - **LTspice `.end`** (limit 2): record that it stays required, closing the question decision 0009 left open (section 8, point 3).
 - **Exit:** both limits are closed with tests, and `phase-2-code-changes.md` is archived.
 
-### M12 — Stimulus specs (complete; [task list](./archive/phase-2/m12-tasks.md), [decision 0013](../decisions/0013-stimulus-specs.md))
+### M12 — Stimulus specs (complete; [task list](./m12-tasks.md), [decision 0013](../../../decisions/0013-stimulus-specs.md))
 
 - A typed `SourceSpec` (§5.3) replaces the rejected `stimulus` rule. Each function has named or positional arguments with spans.
 - **ngspice** (manual §4.1): PULSE, SIN, EXP, PWL, SFFM, AM, TRNOISE, TRRANDOM, EXTERNAL, DISTOF1/2 and the RF port parameters.
 - **LTspice:** PULSE, SINE, EXP, SFFM, PWL with its file and repeat forms, the WAV file form and the trigger parameter; for I, also `tbl=`, `step(...)`, `load` and `R=`.
-- **Edit API:** set a whole stimulus, set one argument, and remove a stimulus. Setting one leaves DC and AC alone ([decision 0013](../decisions/0013-stimulus-specs.md)).
+- **Edit API:** set a whole stimulus, set one argument, and remove a stimulus. Setting one leaves DC and AC alone ([decision 0013](../../../decisions/0013-stimulus-specs.md)).
 - **Exit:** `half_rectifier.net` loads and edits, its solver test passes on LTspice, and each function has a spec entry, golden diff and solver test.
 
-### M13 — Transistors (Q, M, J, Z) (complete; [task list](./archive/phase-2/m13-tasks.md), [decision 0014](../decisions/0014-transistors.md))
+### M13 — Transistors (Q, M, J, Z) (complete; [task list](./m13-tasks.md), [decision 0014](../../../decisions/0014-transistors.md))
 
 - The node and model boundary rule of section 3, point 1, as a decision record before the grammar.
 - Typed nodes, instance parameters, flags (`off`), positional area and `ic=`. Extend `model-types.json` (Q → NPN, PNP; M → NMOS, PMOS, and LTspice's VDMOS form; J → NJF, PJF; Z → NMF, PMF, and LTspice's IGBT form).
@@ -74,13 +74,13 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Exit:** the milestone's spec entries are validated on both solvers, property tests cover the new elements, and the signature's compatibility test passes.
 - **Maintainer checkpoint:** hands-on use with your own transistor netlists. Most real circuits should now load, so this is the best time to change the order of what follows.
 
-### M14 — Linear dependent sources and switches (E, F, G, H, S, W) (complete; [task list](./archive/phase-2/m14-tasks.md), [decision 0015](../decisions/0015-controlled-sources.md))
+### M14 — Linear dependent sources and switches (E, F, G, H, S, W) (complete; [task list](./m14-tasks.md), [decision 0015](../../../decisions/0015-controlled-sources.md))
 
 - Linear forms, with controlling references per section 3, point 2: E and G control nodes in the signature and net queries; F, H and W source names resolved, and covered by the signature, with a diagnostic when unresolved.
 - S and W models (SW, CSW) with `on` and `off`.
 - **Exit:** a negative test shows that any change to a control node or controlling source is a `TopologyViolation`.
 
-### M15 — Behavioural forms (B, and nonlinear E, F, G, H) (complete; [task list](./archive/phase-2/m15-tasks.md), [decision 0016](../decisions/0016-behavioral-expressions.md); split into M15 and M15b, decision 1)
+### M15 — Behavioural forms (B, and nonlinear E, F, G, H) (complete; [task list](./m15-tasks.md), [decision 0016](../../../decisions/0016-behavioral-expressions.md); split into M15 and M15b, decision 1)
 
 - **B:** ngspice forms (manual §5.1); LTspice `V=`, `I=`, `R=` and `P=` with their parameters.
 - **E and G:** ngspice `vol=`, `cur=`, `VALUE`, `TABLE` and POLY (§5.2–§5.5); LTspice `table=`, `Laplace=`, `value=` and POLY. POLY control nodes are topology.
@@ -90,39 +90,39 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 - **Exit:** every form has golden diffs and solver tests showing results move as expected.
 - **Split (maintainer, 2026-11-06):** M15 holds B, the expression forms of E, F, G and H, C `Q=` and L `Flux=` and the hysteretic L, the formula scan, the expression edit and the query. M15b holds the rest.
 
-### M15b — Tables, polynomials and transfer functions (complete; [task list](./archive/phase-2/m15b-tasks.md), [decision 0017](../decisions/0017-tables-polynomials-and-transfer-functions.md))
+### M15b — Tables, polynomials and transfer functions (complete; [task list](./m15b-tasks.md), [decision 0017](../../../decisions/0017-tables-polynomials-and-transfer-functions.md))
 
 - TABLE and `table=`, POLY on E, F, G and H (its control nodes and sources are topology, counted from the dimension), `Laplace=` on E, G and LTspice's B, and ngspice's FREQ and AND, OR, NAND and NOR (manual §5.2.6, §5.2.7).
 - **Edit API:** set a table's points and a polynomial's coefficients.
 - **Exit:** as M15.
 
-### M16 — Transmission lines (T, O, U as URC, Y, P) (complete; [task list](./archive/phase-2/m16-tasks.md), [decision 0019](../decisions/0019-transmission-lines.md))
+### M16 — Transmission lines (T, O, U as URC, Y, P) (complete; [task list](./m16-tasks.md), [decision 0019](../../../decisions/0019-transmission-lines.md))
 
 - T with `Z0=` and `TD=`, or `F=` and `NL=`; O with LTRA; U as URC, in both dialects.
 - ngspice Y (TXL) and P (CPL). P has a variable node list up to the line count, so it follows the rule from M13.
 - **Also (maintainer, 2026-11-09):** `remove_param` and `remove_model_param` for every line and model with named parameters.
 - **Exit:** each letter is `supported`, with spec entries validated wherever the solver can run the form.
 
-### M17 — Special and mixed-signal devices (A, N, `@`, `&`) (complete; [task list](./archive/phase-2/m17-tasks.md), [decision 0020](../decisions/0020-special-and-mixed-signal-devices.md))
+### M17 — Special and mixed-signal devices (A, N, `@`, `&`) (complete; [task list](./m17-tasks.md), [decision 0020](../../../decisions/0020-special-and-mixed-signal-devices.md))
 
 - **ngspice A:** the port syntax of manual §8 and §22.2, in its own rules (section 3, point 4). Decide how vector ports appear in `nodes` and the signature.
-- **ngspice N:** OSDI devices (manual §9). The Windows build of ngspice 47 ships compiled models, so these entries can be `validated` ([m17-tasks](./archive/phase-2/m17-tasks.md) decision 6).
-- **ngspice U digital: dropped from v1** (maintainer, 2026-11-10; [m17-tasks](./archive/phase-2/m17-tasks.md) decision 1). Its libraries use `$` names that only PS mode reads, and its node counts depend on each basic type. It stays `UnsupportedConstruct` as a named exclusion.
+- **ngspice N:** OSDI devices (manual §9). The Windows build of ngspice 47 ships compiled models, so these entries can be `validated` ([m17-tasks](./m17-tasks.md) decision 6).
+- **ngspice U digital: dropped from v1** (maintainer, 2026-11-10; [m17-tasks](./m17-tasks.md) decision 1). Its libraries use `$` names that only PS mode reads, and its node counts depend on each basic type. It stays `UnsupportedConstruct` as a named exclusion.
 - **LTspice:** A (eight fixed nodes and a model), `@` and `&`. `.machine` stays an `UnsupportedConstruct`; record it as a named v1 exclusion (section 8, point 4).
-- **The planned-letter tests** use A after M16 ([m16-tasks](./archive/phase-2/m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
+- **The planned-letter tests** use A after M16 ([m16-tasks](./m16-tasks.md) decision 12). With no letter planned after M17, drop them or move them to a mocked matrix, as `test_structure.py` does for `"error"`.
 - **Exit:** no letter in either matrix is `planned`.
 
-### M18 — Completeness audit (complete; [task list](./archive/phase-2/m18-tasks.md), [decision 0021](../decisions/0021-completeness-audit.md))
+### M18 — Completeness audit (complete; [task list](./m18-tasks.md), [decision 0021](../../../decisions/0021-completeness-audit.md))
 
 - **Value specifications (§6.4):** check the manual's full range against the grammar, including the comma-separated lists recorded in LTspice's `discrepancies.md`.
 - **Architecture tests:** no matrix entry is `planned`, every `UnsupportedConstruct` path that remains is justified, and the lookaround terminal list is reviewed (limit 3).
 - **Corpus:** real circuits for each device group, with manifests and provenance. Extend the independent Hypothesis oracle and the edit properties to the new elements.
-- **Messages carried from M15b** ([m15b-tasks](./archive/phase-2/m15b-tasks.md) 6.3): own messages for the refusals that still give the generic list of expected tokens (ngspice POLY pairs in parentheses, G's four-node TABLE and gate, `and (2)`, LTspice `window=` before `Laplace=`), the braces in a refused TABLE point's message, and a readable name for `GAIN_KW`.
-- **Carried from M16** ([m16-tasks](./archive/phase-2/m16-tasks.md) 6.3): own messages for `m=` on Y and P and for ngspice T's `IC=0 0 0 0`, and an LTspice `+` line that holds only a comment, which the library loads and LTspice stops on.
-- **Carried from M17** ([m17-tasks](./archive/phase-2/m17-tasks.md) 6.3): a diagnostic for `zm` with an `&` probe, which LTspice stops on; `.fra`'s need for `fstart=`/`fend=` or `flist=`, which is not checked; LTspice `.model x BUF(…)`, which the library loads and LTspice stops on; and an own message for an odd count in a differential vector (`%vd [in 0 out]`).
+- **Messages carried from M15b** ([m15b-tasks](./m15b-tasks.md) 6.3): own messages for the refusals that still give the generic list of expected tokens (ngspice POLY pairs in parentheses, G's four-node TABLE and gate, `and (2)`, LTspice `window=` before `Laplace=`), the braces in a refused TABLE point's message, and a readable name for `GAIN_KW`.
+- **Carried from M16** ([m16-tasks](./m16-tasks.md) 6.3): own messages for `m=` on Y and P and for ngspice T's `IC=0 0 0 0`, and an LTspice `+` line that holds only a comment, which the library loads and LTspice stops on.
+- **Carried from M17** ([m17-tasks](./m17-tasks.md) 6.3): a diagnostic for `zm` with an `&` probe, which LTspice stops on; `.fra`'s need for `fstart=`/`fend=` or `flist=`, which is not checked; LTspice `.model x BUF(…)`, which the library loads and LTspice stops on; and an own message for an odd count in a differential vector (`%vd [in 0 out]`).
 - **Exit:** the spec-coverage report shows every construct with tests, and each `documented` entry says why the solver cannot decide.
 
-### M19 — v1 review package and beta tag (ready for review; [task list](./m19-tasks.md), [review package](./v1-review.md), [decision 0022](../decisions/0022-v1-record-corrections.md))
+### M19 — v1 review package and beta tag (complete; [task list](./m19-tasks.md), [review package](./v1-review.md), [decision 0022](../../../decisions/0022-v1-record-corrections.md))
 
 - Update the usage guides, error reference, README and CHANGELOG. The README says the library is feature complete for v1.
 - Final evidence from a clean clone with both solvers, as in phase 1's T10, and a v1 review package.
@@ -143,17 +143,17 @@ Each milestone is one pull request, merged after the maintainer's review (sectio
 
 ## 6. v1 gate
 
-You confirm v1 can be tagged when:
+You confirm v1 can be tagged when the items below hold. **Passed (maintainer, 2026-11-11);** the evidence is in [v1-review.md](./v1-review.md) section 7.
 
-- [ ] Every element in both device matrices is `supported`, and the full range of value specifications is covered.
-- [ ] Every construct has a spec entry and tests, and the spec-coverage and strict-grammar checks pass.
-- [ ] Round-trip is byte-exact across the corpus, and golden edit diffs show only intended changes.
-- [ ] The topology guarantee covers the new elements, including controlling references, with negative and property tests.
-- [ ] CI is green on Linux and Windows, on Python 3.13 and 3.14.
-- [ ] ngspice and LTspice solver-backed tests pass on your machine.
-- [ ] You have used the library on your own netlists, including transistor and behavioural circuits.
-- [ ] Remaining limits are documented and acceptable.
-- [ ] All task lists are archived, and this plan is archived as `COMPLETE`.
+- [x] Every element in both device matrices is `supported`, and the full range of value specifications is covered.
+- [x] Every construct has a spec entry and tests, and the spec-coverage and strict-grammar checks pass.
+- [x] Round-trip is byte-exact across the corpus, and golden edit diffs show only intended changes.
+- [x] The topology guarantee covers the new elements, including controlling references, with negative and property tests.
+- [x] CI is green on Linux and Windows, on Python 3.13 and 3.14.
+- [x] ngspice and LTspice solver-backed tests pass on your machine.
+- [x] You have used the library on your own netlists, including transistor and behavioural circuits.
+- [x] Remaining limits are documented and acceptable.
+- [x] All task lists are archived, and this plan is archived as `COMPLETE`.
 
 ## 7. Risks and mitigations
 
@@ -181,7 +181,7 @@ All decided on 2026-11-03.
 
    There is no parser option. The grammar tells the forms apart by shape, accepts the digital form only in a subcircuit body as the manual says, and reports `DIALECT_GATED_SYNTAX` (info) because it needs the flag. This needs no exception to P5, and it matches the rule that the library does not validate solver inputs. M17 checks the shapes against every basic type before relying on this.
 
-   **Amended (maintainer, 2026-11-10):** the digital U is out of v1 ([m17-tasks](./archive/phase-2/m17-tasks.md) decision 1). Its PS-mode `$` names and type-dependent node counts would need a reading mode. The URC shape rule stays, and every other U line stays `UnsupportedConstruct`.
+   **Amended (maintainer, 2026-11-10):** the digital U is out of v1 ([m17-tasks](./m17-tasks.md) decision 1). Its PS-mode `$` names and type-dependent node counts would need a reading mode. The URC shape rule stays, and every other U line stays `UnsupportedConstruct`.
 3. **LTspice `.end`: decided.** It stays required, and M11 records this as closing the question.
 4. **LTspice `.machine`: decided.** It stays `UnsupportedConstruct` in v1, as a named exclusion, because its `.output` lines drive nodes.
 5. **Workflow: decided.** One pull request per milestone, with Linux and Windows CI and no macOS. There is no ngspice job: the solver tests and spec entries are validated on ngspice 47, a distribution package may be a different version, and the required local run already covers ngspice.

@@ -1,19 +1,20 @@
 # v1 review package
 
-> **Status:** READY FOR REVIEW — T1 ran on 2026-11-11 from a clean clone of `745991e`; the gate items that are the maintainer's are recorded in sections 1, 5 and 7
-> **Part of:** [m19-tasks.md](./m19-tasks.md) (T2). The gate is [phase-2-plan.md](./phase-2-plan.md) section 6. Phase 1's package is [phase-1-review.md](./archive/phase-1/phase-1-review.md).
+> **Status:** COMPLETE (2026-11-11) — the maintainer passed the v1 gate. T1 ran on 2026-11-11 from a clean clone of `745991e`.
+> **Part of:** [m19-tasks.md](./m19-tasks.md) (T2). The gate is [phase-2-plan.md](./phase-2-plan.md) section 6. Phase 1's package is [phase-1-review.md](../phase-1/phase-1-review.md).
 
 ## 1. Where things stand
 
 | Item | State |
 |---|---|
 | Implementation (M10 to M17) | Complete: every device letter of both matrices is `supported`, apart from the two named exclusions |
-| Completeness audit (M18) | Complete; [decision 0021](../decisions/0021-completeness-audit.md) |
+| Completeness audit (M18) | Complete; [decision 0021](../../../decisions/0021-completeness-audit.md) |
+| v1 gate | **Passed** (maintainer, 2026-11-11) |
 | Reviews (M19 A1 to A3) | Done; findings in [m19-tasks.md](./m19-tasks.md) section 5.1 |
-| Documents and tests (M19 D1 to D5) | Done and committed; [decision 0022](../decisions/0022-v1-record-corrections.md) is proposed |
+| Documents and tests (M19 D1 to D5) | Done and committed; [decision 0022](../../../decisions/0022-v1-record-corrections.md) is accepted |
 | Final evidence (T1) | Done: section 2 |
 | Your own use (gate item 7) | Done (maintainer, 2026-11-11): "all good" |
-| Limits (gate item 8) | Section 5.1 decided (maintainer, 2026-11-11); 5.2 confirmed with the package's approval |
+| Limits (gate item 8) | Decided (maintainer, 2026-11-11) |
 | The `0.9.0` release | After the gate, on a `release-0.9.0` branch (m19 decision 5); checklist in section 9 |
 
 ## 2. Results
@@ -79,8 +80,8 @@ The eight reachable paths that had no test (A3-1) are tested by D5.
 
 Each grammar README holds the generated "Validation status" table, with every entry's status, test counts and validation dates (decision 0021 item 8; m19 decision 8):
 
-- **ngspice:** 75 entries: 73 `validated`, 2 `observed` ([table](../grammars/ngspice/README.md#validation-status)).
-- **LTspice:** 73 entries: 73 `validated` ([table](../grammars/ltspice/README.md#validation-status)).
+- **ngspice:** 75 entries: 73 `validated`, 2 `observed` ([table](../../../grammars/ngspice/README.md#validation-status)).
+- **LTspice:** 73 entries: 73 `validated` ([table](../../../grammars/ltspice/README.md#validation-status)).
 
 No entry is `documented` or `disputed`. `observed` means the solver's behaviour with no manual statement behind it (§11.3).
 
@@ -161,11 +162,11 @@ Plan section 6.
 | Every construct has a spec entry and tests; spec coverage and strict grammar checks pass | Section 4; `tests/architecture/test_spec_coverage.py`, `test_contracts.py`; T1 | Met |
 | Round trip is byte-exact across the corpus; golden edit diffs show only intended changes | `tests/roundtrip/`, `tests/test_corpus_manifests.py`, `test_edit_golden.py`, `test_ltspice_edits.py`; T1 | Met |
 | The topology guarantee covers the new elements, with controlling references, by negative and property tests | `test_controlled_edits.py`, `test_edit_negative.py`, `test_nonlinear_edits.py`, `test_device_edit_properties.py`, `test_device_oracle.py`, `test_signature_snapshot.py` | Met |
-| CI is green on Linux and Windows, on Python 3.13 and 3.14 | `.github/workflows/ci.yml`; green on `main` after M18 | The M19 pull request's run |
+| CI is green on Linux and Windows, on Python 3.13 and 3.14 | `.github/workflows/ci.yml`; green on `main` after M18 and on #19 | Met |
 | ngspice and LTspice solver tests pass on your machine | Section 2 | Met (T1) |
 | You have used the library on your own netlists, including transistor and behavioural circuits | Section 8; the maintainer, 2026-11-11 | Met |
-| Remaining limits are documented and acceptable | Section 5 | 5.1 decided by the maintainer on 2026-11-11; 5.2's limits were each decided earlier, and are confirmed with the package's approval |
-| All task lists are archived, and the plan is archived as `COMPLETE` | M10 to M18 are archived; this package, m19 and the plan move at m19 T4 | After your approval |
+| Remaining limits are documented and acceptable | Section 5 | Met: 5.1 decided by the maintainer and 5.2 confirmed with the package's approval, 2026-11-11 |
+| All task lists are archived, and the plan is archived as `COMPLETE` | M10 to M19, this package and the plan are archived | Done, 2026-11-11 |
 
 ## 8. Suggested hands-on script
 
