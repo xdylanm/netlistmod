@@ -1,7 +1,7 @@
 # M15b task list — Tables, polynomials and transfer functions (E, F, G, H and B)
 
 > **Status:** COMPLETE (2026-11-09) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./m15-tasks.md) and [decision 0016](../../../decisions/0016-behavioral-expressions.md).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M15b). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.3, §7.8, §10). Follows [M15](./m15-tasks.md) and [decision 0016](../../../decisions/0016-behavioral-expressions.md).
 
 ## 1. Scope
 

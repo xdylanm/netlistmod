@@ -1,7 +1,7 @@
 # M17 task list — Special and mixed-signal devices (ngspice A and N; LTspice A, `@` and `&`)
 
 > **Status:** COMPLETE (2026-11-10) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 and 7
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M17). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./m16-tasks.md), [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../../../decisions/0015-controlled-sources.md) (controlling references).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M17). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §6.3, §7.2, §7.7, §7.8, §10). Follows [M16](./m16-tasks.md), [decision 0014](../../../decisions/0014-transistors.md) (the node and model boundary) and [decision 0015](../../../decisions/0015-controlled-sources.md) (controlling references).
 
 ## 1. Scope
 

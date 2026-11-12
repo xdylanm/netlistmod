@@ -1,7 +1,7 @@
 # M11 task list — Carried limits and messages
 
 > **Status:** COMPLETE (2026-11-04) — approved by the maintainer; the results are in section 5
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M11). Governed by [architecture.md](../../../architecture.md) (§2, §7, §15, §17).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M11). Governed by [architecture.md](../../../architecture.md) (§2, §7, §15, §17).
 
 ## 1. Scope
 

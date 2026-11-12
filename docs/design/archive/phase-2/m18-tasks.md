@@ -1,7 +1,7 @@
 # M18 task list — Completeness audit
 
 > **Status:** COMPLETE (2026-11-11) — approved by the maintainer; the results are in section 5, and review round 1 in section 6
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M18). Governed by [architecture.md](../../../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./m17-tasks.md) and carries the items noted for M18 in [M15b](./m15b-tasks.md) 6.3, [M16](./m16-tasks.md) 6.3 and [M17](./m17-tasks.md) 6.3.
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M18). Governed by [architecture.md](../../../architecture.md) (§2, §6.3, §6.4, §6.7, §7.8, §10, §11, §17). Follows [M17](./m17-tasks.md) and carries the items noted for M18 in [M15b](./m15b-tasks.md) 6.3, [M16](./m16-tasks.md) 6.3 and [M17](./m17-tasks.md) 6.3.
 
 ## 1. Scope
 

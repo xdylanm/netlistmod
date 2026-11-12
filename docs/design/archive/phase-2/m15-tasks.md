@@ -1,7 +1,7 @@
 # M15 task list — Behavioural forms (B, and nonlinear E, F, G, H, C and L)
 
 > **Status:** COMPLETE (2026-11-06) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M15). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M15). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.2, §7.8, §8, §10).
 
 ## 1. Scope
 

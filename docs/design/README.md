@@ -20,13 +20,13 @@ Active plans and design notes live in this folder. Completed work records move t
 
 | Document | Status |
 |---|---|
-| [phase-2-plan.md](./phase-2-plan.md) | ACTIVE |
-| [m19-tasks.md](./m19-tasks.md) | READY FOR REVIEW |
-| [v1-review.md](./v1-review.md) | READY FOR REVIEW |
 | [elements.md](./elements.md) | ACTIVE (living reference) |
 | [statements.md](./statements.md) | ACTIVE (living reference) |
 | [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
 | [edit-layer.md](./edit-layer.md) | ACTIVE (living reference) |
+| [archive/phase-2/phase-2-plan.md](./archive/phase-2/phase-2-plan.md) | COMPLETE (2026-11-11) |
+| [archive/phase-2/v1-review.md](./archive/phase-2/v1-review.md) | COMPLETE (2026-11-11) |
+| [archive/phase-2/m19-tasks.md](./archive/phase-2/m19-tasks.md) | COMPLETE (2026-11-11) |
 | [archive/phase-2/m10-tasks.md](./archive/phase-2/m10-tasks.md) | COMPLETE (2026-11-03) |
 | [archive/phase-2/m12-tasks.md](./archive/phase-2/m12-tasks.md) | COMPLETE (2026-11-04) |
 | [archive/phase-2/m11-tasks.md](./archive/phase-2/m11-tasks.md) | COMPLETE (2026-11-04) |

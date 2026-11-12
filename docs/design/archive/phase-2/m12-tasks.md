@@ -1,7 +1,7 @@
 # M12 task list — Stimulus specs
 
 > **Status:** COMPLETE (2026-11-04) — approved by the maintainer; the results are in section 5, and the reviews in sections 6 to 8
-> **Part of:** [phase-2-plan.md](../../phase-2-plan.md) (milestone M12). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
+> **Part of:** [phase-2-plan.md](phase-2-plan.md) (milestone M12). Governed by [architecture.md](../../../architecture.md) (§2, §5.3, §7.1, §7.2, §10).
 
 ## 1. Scope
 
