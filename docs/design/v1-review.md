@@ -13,7 +13,7 @@
 | Documents and tests (M19 D1 to D5) | Done and committed; [decision 0022](../decisions/0022-v1-record-corrections.md) is proposed |
 | Final evidence (T1) | Section 2 |
 | Your own use (gate item 7) | Done (maintainer, 2026-11-11): "all good" |
-| Limits (gate item 8) | **For your decision:** section 5 |
+| Limits (gate item 8) | Section 5.1 decided (maintainer, 2026-11-11); 5.2 confirmed with the package's approval |
 | The `0.9.0` release | After the gate, on a `release-0.9.0` branch (m19 decision 5); checklist in section 9 |
 
 ## 2. Results
@@ -79,9 +79,9 @@ Collected by A2 from the phase 1 review, decisions 0010 to 0022, the task lists,
 1. **Library files** (decision 0012 item 6; §21): opening a library file, and editing a model inside a `.lib` section. To decide after using the beta. **Accepted (maintainer, 2026-11-11).**
 2. **What 1.0 commits to in the public API** (§18): reviewed after your practical use. Section 6 lists the notes for it. **Accepted (maintainer, 2026-11-11).**
 3. **Your hands-on checkpoint** (M13 T14; gate item 7), and whether anything you find changes what comes after v1. **Done (maintainer, 2026-11-11):** all good.
-4. **Two loads that a reviewer questioned** (A3-14, A3-15; m19 5.1.1 point 2): on ngspice `R1 a 0 1k |` reads `|` as the R's model, and on both dialects `D1 a 0 2` reads `2` as the diode's model. Each gives `UNRESOLVED_MODEL` (a warning), so neither is silent. Recorded for the 1.0 review.
-5. **Cosmetic:** `__all__` is not sorted; LTspice's message for an unset gain; a formula after a Q model gets the generic message.
-6. **Decision wording:** decision 0016 item 1 speaks of "the expression forms of E, F, G and H" on ngspice, but ngspice F and H have no such form (`F1 a 0 value={…}` is a `ParseError`, as the manual has it). The behaviour is right; the record's wording is loose (found in D3a).
+4. **Two loads that a reviewer questioned** (A3-14, A3-15; m19 5.1.1 point 2): on ngspice `R1 a 0 1k |` reads `|` as the R's model, and on both dialects `D1 a 0 2` reads `2` as the diode's model. Each gives `UNRESOLVED_MODEL` (a warning), so neither is silent. Recorded for the 1.0 review. **Accepted (maintainer, 2026-11-11).**
+5. **Cosmetic:** `__all__` is not sorted; LTspice's message for an unset gain; a formula after a Q model gets the generic message. **Accepted (maintainer, 2026-11-11).**
+6. **Decision wording:** decision 0016 item 1 speaks of "the expression forms of E, F, G and H" on ngspice, but ngspice F and H have no such form (`F1 a 0 value={…}` is a `ParseError`, as the manual has it). The behaviour is right; the record's wording is loose (found in D3a). **Fixed (maintainer, 2026-11-11):** decision 0016 item 1 now names the forms per letter, through decision 0022 item 6.
 
 ### 5.2 Decided, carried into v1
 
@@ -150,7 +150,7 @@ Plan section 6.
 | CI is green on Linux and Windows, on Python 3.13 and 3.14 | `.github/workflows/ci.yml`; green on `main` after M18 | The M19 pull request's run |
 | ngspice and LTspice solver tests pass on your machine | Section 2 | T1 |
 | You have used the library on your own netlists, including transistor and behavioural circuits | Section 8; the maintainer, 2026-11-11 | Met |
-| Remaining limits are documented and acceptable | Section 5 | **Yours** |
+| Remaining limits are documented and acceptable | Section 5 | 5.1 decided by the maintainer on 2026-11-11; 5.2's limits were each decided earlier, and are confirmed with the package's approval |
 | All task lists are archived, and the plan is archived as `COMPLETE` | M10 to M18 are archived; this package, m19 and the plan move at m19 T4 | After your approval |
 
 ## 8. Suggested hands-on script
