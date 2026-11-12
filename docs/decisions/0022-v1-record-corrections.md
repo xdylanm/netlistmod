@@ -2,7 +2,7 @@
 
 - **Status:** proposed (2026-11-11; M19 D3a)
 - **Date:** 2026-11-11
-- **Amends:** architecture §2 (P5), §6.3 rule 10, §7.7, §17 and §19 decision 21.
+- **Amends:** architecture §2 (P5), §6.3 rule 10, §7.7, §17 and §19 decision 21; the wording of decision 0016 item 1.
 - **Context:** M19 reviewed the records before the v1 review package ([m19-tasks.md](../design/m19-tasks.md), section 5.1, findings A2-1, 2, 3, 7 and 11). Five rules of the architecture had not kept up with decisions 0009 to 0021: each states less than those decisions decided. The maintainer chose one record that brings the text up to date (section 5.1.1 point 3). Every item restates an earlier decision. No behaviour changes: no grammar, code, diagnostic or test changes with this record.
 - **Decision:**
   1. **The recorded exceptions to decision 0002** (amends §2 P5 and §19 decision 21). P5 and decision 21 named the RKM mode option as the only exception. The exceptions in v1 are:
@@ -21,6 +21,7 @@
   5. **When an unresolved name is info** (amends §17). The rule named only an opaque `.include` or `.lib` statement. An `UNRESOLVED_*` diagnostic is also info when:
      - an opaque `.if` or `.lib` block stands in a scope searched, since it counts as an `.include` does; a `.control` block does not (decision 0012 item 5);
      - the name reaches into a subcircuit instance of its scope, which the solver reads and the library does not resolve: LTspice `X1:Vq` (decision 0015 item 4), and the expression reads of decision 0016 item 6.
+  6. **The expression forms by letter** (corrects the wording of decision 0016 item 1, at the maintainer's request in the v1 review). On ngspice, E takes `vol=` and `value=` and G takes `cur=` and `value=`; ngspice F and H have no expression form, as the manual has it, and `F1 a 0 value={…}` is a `ParseError`. On LTspice, E, F, G and H take `value=`. Probed on both dialects in M19; no behaviour changes.
 - **Consequences:**
   - **Architecture:** each amended place cites this record. Descriptive text was brought up to date in the same change (§1.4, §4, §5.2, §5.3, §6.5, §6.7, §7.6, §8, §11.2, §13, §14 and §21); it needs no decision.
   - **Run times:** the maintainer removed the whole-suite run times and the LTspice suite times from the archived task lists and the phase 2 plan on 2026-11-11 (m19-tasks.md section 5.1.1 point 5), since decision 0009 item 2 keeps LTspice timing numbers out of the repository. This is an exception to the rule that an archived file changes only to fix links. Times of ngspice-only and solver-free runs may stay. New records give no run times.
