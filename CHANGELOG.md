@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 — 2026-11-11
+
+The v1 beta: feature complete, published to PyPI after the v1 gate ([decision 0023](docs/decisions/0023-v1-beta-release.md)). It covers phase 2 from M15b to M19; the entries for M15b to M19 follow the summary.
 
 **v1 summary.** A source-preserving editor for SPICE netlists, feature complete for v1.
 

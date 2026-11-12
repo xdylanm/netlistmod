@@ -51,6 +51,13 @@ jobs:
               Netlist.load(path, dialect=Dialect.NGSPICE).set_value("R2", "3k").save()
               assert path.read_bytes() == b"divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 3k\n.op\n.end\n"
               Netlist.load(path, dialect=Dialect.LTSPICE)
+              # A phase 2 element on each dialect reads the packaged device matrices and model types.
+              path.write_bytes(b"amp\nQ1 c b 0 qn\n.model qn NPN(BF=100)\n.op\n.end\n")
+              Netlist.load(path, dialect=Dialect.NGSPICE).set_model_param("qn", "BF", "150").save()
+              assert path.read_bytes() == b"amp\nQ1 c b 0 qn\n.model qn NPN(BF=150)\n.op\n.end\n"
+              path.write_bytes(b"beh\nV1 a 0 1\nB1 b 0 V=V(a)*2\nR1 b 0 1k\n.op\n.end\n")
+              Netlist.load(path, dialect=Dialect.LTSPICE).set_expression("B1", "V(a)*3").save()
+              assert path.read_bytes() == b"beh\nV1 a 0 1\nB1 b 0 V=V(a)*3\nR1 b 0 1k\n.op\n.end\n"
           PY
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

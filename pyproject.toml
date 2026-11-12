@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "netlistmod"
-version = "0.5.0"
+version = "0.9.0"
 description = "A source-preserving SPICE netlist editing library"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -13,7 +13,7 @@ license-files = ["LICENSE"]
 authors = [{ name = "xdylanm" }]
 keywords = ["spice", "netlist", "ngspice", "ltspice", "parser", "editor"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: Microsoft :: Windows",
@@ -50,8 +50,8 @@ packages = ["src/netlistmod"]
 [tool.hatch.build.targets.sdist]
 include = [
     "src/netlistmod",
-    "README.md",
-    "LICENSE",
+    "/README.md",
+    "/LICENSE",
 ]
 
 [tool.ruff]
