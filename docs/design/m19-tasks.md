@@ -1,6 +1,6 @@
 # M19 task list — v1 review package and beta tag
 
-> **Status:** ACTIVE — decisions 5 to 10 decided on 2026-11-11; stage 1 and G1 are done, and stage 2 is under way
+> **Status:** READY FOR REVIEW — stages 1 and 2 are done; T1's evidence and the review package are in [v1-review.md](./v1-review.md)
 > **Part of:** [phase-2-plan.md](./phase-2-plan.md) (milestone M19, v1 gate in section 6). Governed by [architecture.md](../architecture.md) (§2, §6.7, §10, §11, §13, §14, §17, §18). Follows [M18](./archive/phase-2/m18-tasks.md), and carries its section 5.3 point 9 and [M13](./archive/phase-2/m13-tasks.md) T14.
 
 ## 1. Scope
@@ -118,11 +118,11 @@ The developers' files do not overlap: D1 the README and `docs/usage/` apart from
 
 ### Stage 3 — Evidence and handover (lead)
 
-[ ] **T1 — Final evidence.** The full check set with `--require-solver ngspice --require-solver ltspice` from a clean clone of the commit under review, with the wheel build and install of A3, and one solver-free run on `lark` 1.2.2 (5.1.1 point 7). No run times (point 5).
+[x] **T1 — Final evidence.** The full check set with `--require-solver ngspice --require-solver ltspice` from a clean clone of the commit under review, with the wheel build and install of A3, and one solver-free run on `lark` 1.2.2 (5.1.1 point 7). No run times (point 5).
 
-[ ] **T2 — The review package, `v1-review.md`:** where things stand; T1's results; the coverage report with each uncovered line's disposition; the spec coverage per decision 8; the gate checklist with its evidence, marking the items only the maintainer can complete; the limits for the maintainer's decision; and a hands-on script for transistor and behavioural circuits.
+[x] **T2 — The review package, `v1-review.md`:** where things stand; T1's results; the coverage report with each uncovered line's disposition; the spec coverage per decision 8; the gate checklist with its evidence, marking the items only the maintainer can complete; the limits for the maintainer's decision; and a hands-on script for transistor and behavioural circuits.
 
-[ ] **T3 — Hand over.** The pull request and CI; the plan's status line and M19 heading; `design/README.md`; this list `READY FOR REVIEW`. **Do not archive.**
+[x] **T3 — Hand over.** The pull request and CI; the plan's status line and M19 heading; `design/README.md`; this list `READY FOR REVIEW`. **Do not archive.**
 
 ### After the maintainer's approval
 
@@ -178,3 +178,6 @@ The three reports were checked by the lead on 2026-11-11: every `defect` reprodu
 | D3b | Developer | 2026-11-11: complete | Diff read; the lead completed the `ltspice_transistors` provenance row, which lacked its author and licence cells; the plan links in the device matrices are fixed at T4, and `testing.md`'s coverage floor with D5; accepted | this commit |
 | D1 | Developer | 2026-11-11: complete with findings (the brief's check ran the six solver-marked demo tests; they passed and wrote only to `tmp_path`) | Diff read; the README's edit list checked against `edit/api.py`; the lead noted in the CHANGELOG that a path given to `read_only_demo.py` is now read without RKM unless `--rkm` is given; accepted | this commit |
 | D4, D5 | Developer | 2026-11-11: complete (11 paths tested; solver-free run 10,205 passed, coverage 99.22%, floor 98) | Diff read; the touched tests and the fast checks rerun; the lead updated `testing.md`'s floor and the oracle's module note, which named review IDs. "(review R3)" in the private `edit/_ops_*` modules stays: point 1 covered the public docstrings; accepted | this commit |
+| T1 | Lead | 2026-11-11 | Clean clone of `745991e`: 10,205 passed, 2 skipped, coverage 99.22%; all checks clean; wheel smoke on both dialects; `lark` 1.2.2 solver-free 10,135 passed | this commit |
+| T2 | Lead | 2026-11-11 | `v1-review.md`; the maintainer's hands-on use and section 5.1 recorded; decision 0016 item 1's wording corrected through decision 0022 item 6 | `db3e75d`, `d5edd30`, `2903dc9`, this commit |
+| T3 | Lead | 2026-11-11 | Plan, index and this list set; pull request opened | this commit |
