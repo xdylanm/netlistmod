@@ -10,13 +10,13 @@ The caller always selects the dialect; there is no default and no detection.
 
 | Dialect | `Dialect` | Input | Elements | Reference | Validated on |
 |---|---|---|---|---|---|
-| ngspice | `NGSPICE` | `.cir`, `.sp`, `.net`, KiCad exports | R, C, L, K, V, I, D, X, Q, M, J, Z, E, F, G, H, S, W, B, T, O, U (URC), Y, P, A (code models) and N (OSDI), with the expression, TABLE, POLY, FREQ and gate forms | [ngspice manual](docs/references.md) | ngspice 47 |
-| LTspice | `LTSPICE` | `.net`, `.cir` (an `.asc` schematic is [exported first](docs/usage/ltspice-export.md)) | R, C, L, K, V, I, D, X, Q, M, J, Z, E, F, G, H, S, W, B, T, O, U, A (special functions), `@` and `&`, with the expression, `table=`, POLY and `Laplace=` forms | [ltspice-reference](docs/references.md) | LTspice 26.1.1, Windows |
+| ngspice | `NGSPICE` | `.cir`, `.sp`, `.net`, KiCad exports | R, C, L, K, V, I, D, X, Q, M, J, Z, E, F, G, H, S, W, B, T, O, U (URC), Y, P, A (code models) and N (OSDI), with the expression, TABLE, POLY, FREQ and gate forms | [ngspice manual](https://github.com/xdylanm/netlistmod/blob/main/docs/references.md) | ngspice 47 |
+| LTspice | `LTSPICE` | `.net`, `.cir` (an `.asc` schematic is [exported first](https://github.com/xdylanm/netlistmod/blob/main/docs/usage/ltspice-export.md)) | R, C, L, K, V, I, D, X, Q, M, J, Z, E, F, G, H, S, W, B, T, O, U, A (special functions), `@` and `&`, with the expression, `table=`, POLY and `Laplace=` forms | [ltspice-reference](https://github.com/xdylanm/netlistmod/blob/main/docs/references.md) | LTspice 26.1.1, Windows |
 
 Where a solver and the library differ, the file is `docs/grammars/<dialect>/discrepancies.md`. Every
 device letter is supported. Two constructs are out of scope for v1 and raise `UnsupportedConstruct`:
 the ngspice digital U (a U line that is not a URC line), whose libraries need PSpice compatibility
-mode, and LTspice's `.machine` ([decision 0020](docs/decisions/0020-special-and-mixed-signal-devices.md)).
+mode, and LTspice's `.machine` ([decision 0020](https://github.com/xdylanm/netlistmod/blob/main/docs/decisions/0020-special-and-mixed-signal-devices.md)).
 
 ## Quick start
 
@@ -49,7 +49,7 @@ R2 out 0 3k
 
 ```
 
-Every edit returns a new netlist that has been re-parsed and checked against the topology of the original. `save()` changes only the edited text: comments, spacing, line endings and encoding stay as they were. For the whole cycle with a solver, see [edit_and_simulate.py](docs/usage/examples/edit_and_simulate.py).
+Every edit returns a new netlist that has been re-parsed and checked against the topology of the original. `save()` changes only the edited text: comments, spacing, line endings and encoding stay as they were. For the whole cycle with a solver, see [edit_and_simulate.py](https://github.com/xdylanm/netlistmod/blob/main/docs/usage/examples/edit_and_simulate.py).
 
 ## What it does and does not do
 
@@ -61,10 +61,10 @@ Every edit returns a new netlist that has been re-parsed and checked against the
 
 ## Status
 
-The library is feature complete for v1: every device letter of both dialects is supported, and both dialects are validated on their solvers. The current release is the `0.5.0` alpha: the public API may still change before 1.0.
+The library is feature complete for v1: every device letter of both dialects is supported, and both dialects are validated on their solvers. The current release is the `0.9.0` beta: the public API may still change before 1.0, which is decided after practical use.
 
 Supported platforms are Linux and Windows, with Python 3.13 or newer. LTspice validation runs on Windows. macOS is not tested.
 
-- **Guides:** [usage](docs/usage/README.md), including the [error reference](docs/usage/errors.md).
-- **Design:** [architecture](docs/architecture.md) and the [decision records](docs/decisions/README.md).
-- **Development:** [testing](docs/testing.md), [changelog](CHANGELOG.md).
+- **Guides:** [usage](https://github.com/xdylanm/netlistmod/blob/main/docs/usage/README.md), including the [error reference](https://github.com/xdylanm/netlistmod/blob/main/docs/usage/errors.md).
+- **Design:** [architecture](https://github.com/xdylanm/netlistmod/blob/main/docs/architecture.md) and the [decision records](https://github.com/xdylanm/netlistmod/blob/main/docs/decisions/README.md).
+- **Development:** [testing](https://github.com/xdylanm/netlistmod/blob/main/docs/testing.md), [changelog](https://github.com/xdylanm/netlistmod/blob/main/CHANGELOG.md).
