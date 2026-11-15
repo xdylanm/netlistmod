@@ -80,12 +80,16 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
 
 1. **Growth (X1-18 to X1-20; Q1-5; X2).** A new dialect adds a `Dialect` member, node classes in `TopLevelItem`/`BodyItem`, `DiagnosticCode` members and values in `Literal` vocabularies (`StepDirective.kind` among them). Decision 0024 makes annotations, fields and diagnostics best-effort, but it says nothing about `Dialect` members or new node classes. A caller that matches exhaustively on `Dialect`, or on today's node classes, would break.
    *Recommendation:* one sentence in decision 0024 and §18, made in the fix milestone: minor releases may add `Dialect` members, node classes, union members and `Literal` values. Documentation only.
+   **Decided (maintainer, 2026-11-15): as recommended.**
 2. **What a designator is (X1-1; X2).** xyce's Y-type devices write the type and the name as two tokens (`YMEMRISTOR mr1 n1 n2 m`; Reference Guide Table 2-35), and the name is unique only together with the type (§2.3.29). A `str` still identifies such a device, so the signatures fit. But "designator" is nowhere defined as possibly more than one token.
    *Recommendation:* in the fix milestone, state in decision 0024 and `elements.md` that a designator is the string naming an element in its dialect and need not be a single token. The xyce milestone picks the convention: the two tokens as written, or xyce's own `Y<type>!<name>`. Documentation only.
+   **Decided (maintainer, 2026-11-15): as recommended.**
 3. **Load options (X1-9; X2).** xyce's command-line flags `-hspice-ext` and `-redefined_params` change how a netlist is read: what `a` means, the hierarchy separator, and which repeated `.param` wins.
    *Recommendation:* nothing before 1.0. If the library needs to model them, they become keyword arguments with defaults, which is additive. `rkm=True` on xyce is a `ValueError`, as on LTspice.
+   **Decided (maintainer, 2026-11-15): as recommended.**
 4. **Nets that reach into an instance, and `$G` globals (X1-2; X2).** xyce allows `X1:node` on device lines and treats every `$G…` node as global.
    *Recommendation:* nothing before 1.0. Net identity sits behind `nets()` and `Net`, whose fields are best-effort; the xyce milestone decides whether to refuse these forms or to model them.
+   **Decided (maintainer, 2026-11-15): as recommended.**
 
 The two reports are also the inventory for the xyce plan (P1): about 70% of the constructs reuse ngspice nodes. The five that do not fit the current model, each a plan risk rather than an API change:
 - the two-token designator;
@@ -104,6 +108,12 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
    - **C.** Defer qspice: 1.0 is audited against xyce only. For both open qspice points the reviewers found fall-backs that are additive (a designator defined per dialect, as item 2; a title exception as in decision 0009), so the risk is small.
 
    *Recommendation:* A if the maintainer is willing to register, otherwise C.
+   **Open (maintainer, 2026-11-15): investigating.** The maintainer can install QSPICE (and Xyce), and found a further source, the `KSKelvin-Github/Qspice` repository. The lead checked it on 2026-11-15:
+   - GitHub gives its licence as GPL-3.0.
+   - It describes itself as "Qspice Unofficial Guidelines".
+   - Its reference PDFs (Command, Device and General Reference Guides) are a third party's, not Qorvo's.
+
+   Using it would need a decision record. Decision 5 names qspice's own documentation, §11 makes the manual the authority, and §12 and P10 keep GPL material out of the project. It is not proposed as a reference.
 
 ### 5.2 Subtask log
 
