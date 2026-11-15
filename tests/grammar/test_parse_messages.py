@@ -146,8 +146,7 @@ def test_a_planned_letter_before_end_stays_an_unsupported_construct(dialect: Dia
     with _planned_matrix(), pytest.raises(UnsupportedConstruct) as captured:
         parse(SourceText("t\nΩ1 a b c m\n.end\n"), dialect)
     assert captured.value.construct == (
-        f"{dialect.display_name} Ω device, not yet supported on {dialect.display_name} "
-        "(planned for M99)"
+        f"Ω device, not yet supported on {dialect.display_name} (planned for M99)"
     )
     assert (captured.value.line, captured.value.column) == (2, 1)
 

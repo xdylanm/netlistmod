@@ -305,7 +305,9 @@ UNCHECKED_TERMINALS = {
             "TRAILING_COMMENT",
         }
     ),
-    _XYCE: frozenset({"COMMENT_LINE", "INDENTED_LINE", "REST_TEXT", "TITLE_TEXT"}),
+    _XYCE: frozenset(
+        {"COMMENT_LINE", "INDENTED_LINE", "PLUS_LINE", "REST_TEXT", "SEMICOLON_LINE", "TITLE_TEXT"}
+    ),
 }
 
 

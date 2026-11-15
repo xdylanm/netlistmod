@@ -6,6 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from lark.exceptions import VisitError
 
 from netlistmod import (
     BlankLine,
@@ -19,7 +20,8 @@ from netlistmod import (
     parse,
 )
 from netlistmod.dialects import _XYCE
-from netlistmod.grammar.loader import build_parser, device_matrix, registered_dialects
+from netlistmod.grammar.loader import build_parser, device_matrix, parse_tree, registered_dialects
+from netlistmod.model.transform import _NodeBuilder
 
 
 def _parse(text: str) -> Any:
@@ -114,7 +116,7 @@ def test_every_element_line_is_unsupported(letter: str) -> None:
         _parse(f"title\n{letter}1 a 0 1\n.END\n")
     error = captured.value
     assert (error.line, error.column) == (2, 1)
-    assert f"Xyce {letter} device" in error.construct
+    assert error.construct.startswith(f"{letter} device, not yet supported on Xyce (planned for ")
     assert str(device_matrix(_XYCE)[letter]["milestone"]) in error.construct
     with pytest.raises(UnsupportedConstruct):
         _parse(f"title\n{letter.lower()}1 a 0 1\n.END\n")
@@ -123,7 +125,7 @@ def test_every_element_line_is_unsupported(letter: str) -> None:
 def test_every_device_letter_is_planned() -> None:
     matrix = device_matrix(_XYCE)
     assert {entry["status"] for entry in matrix.values()} == {"planned"}
-    # A and N are not Xyce letters ([xyce-ref] Table 2-35 p177-178).
+    # A and N are not Xyce letters ([xyce-ref] Table 2-35 p177–178).
     assert "A" not in matrix
     assert "N" not in matrix
 
@@ -159,7 +161,7 @@ def test_every_other_dot_command_is_unsupported(statement: str) -> None:
         _parse(f"title\n{statement}\n.END\n")
     error = captured.value
     assert (error.line, error.column) == (2, 1)
-    assert f"`{statement.split()[0]}`" in error.construct
+    assert error.construct == f"dot-command `{statement.split()[0]}`, not yet supported on Xyce"
 
 
 def test_a_continued_dot_command_is_unsupported_whole() -> None:
@@ -174,6 +176,56 @@ def test_a_syntax_error_later_is_reported_before_an_unsupported_line() -> None:
         _parse("title\n.param x=1\n")
 
 
+@pytest.mark.parametrize("between", ["* a comment\n", "\n", "* a comment\n\n", "; c\n"])
+@pytest.mark.parametrize("plus", ["+ y=2", "  + y=2"])
+def test_a_continuation_after_comment_or_blank_lines_is_not_a_syntax_error(
+    between: str, plus: str
+) -> None:
+    # A `+` line joins the last non-comment line across comment and blank lines ([xyce-ug]
+    # §4.1.3.2 p43; probe test_a_continuation_joins_across_comments_and_blank_lines): the
+    # statement it joins is refused, not the `+` line.
+    with pytest.raises(UnsupportedConstruct, match="dot-command `.param`") as captured:
+        _parse(f"title\n.param x=1\n{between}{plus}\n.END\n")
+    assert (captured.value.line, captured.value.column) == (2, 1)
+
+
+def test_a_continuation_line_is_refused_by_its_own_rule() -> None:
+    # Every statement X-M0 recognises is refused before the `+` line that follows it, so the
+    # rule's own refusal is checked on its subtree.
+    source = SourceText("title\n.param x=1\n* c\n+ y=2\n.END\n")
+    (subtree,) = parse_tree(source, _XYCE).find_data("continuation_line")
+    with pytest.raises(VisitError) as captured:
+        _NodeBuilder(source, _XYCE).transform(subtree)
+    error = captured.value.orig_exc
+    assert isinstance(error, UnsupportedConstruct)
+    assert error.construct == (
+        "`+` continuation line after a comment or blank line; not yet supported on Xyce"
+    )
+    assert (error.line, error.column) == (4, 1)
+
+
+@pytest.mark.parametrize("before", ["", "* c\n", "\n", "; c\n", "* c\n\n"])
+def test_a_continuation_with_only_the_title_before_it_is_rejected(before: str) -> None:
+    # The title is a comment ([xyce-ug] §4.1.3.1 p42), so there is no line to join; Xyce fails
+    # too (probe test_a_continuation_never_joins_the_title).
+    text = f"title\n{before}+ x\n.END\n"
+    with pytest.raises(ParseError) as captured:
+        _parse(text)
+    assert captured.value.line == text.count("\n", 0, text.index("+")) + 1
+
+
+@pytest.mark.parametrize("line", [";", "; a comment", ";* not a star comment"])
+def test_a_line_that_begins_with_a_semicolon_is_unsupported(line: str) -> None:
+    # An in-line comment may occur on any line ([xyce-ug] §4.1.3.1 p43), so a line that begins
+    # with `;` is valid; X-M1 reads it.
+    with pytest.raises(UnsupportedConstruct) as captured:
+        _parse(f"title\n* c\n{line}\n.END\n")
+    assert captured.value.construct == (
+        "line that begins with `;`, an in-line comment; not yet supported on Xyce"
+    )
+    assert (captured.value.line, captured.value.column) == (3, 1)
+
+
 def test_an_indented_line_is_unsupported() -> None:
     # Xyce reads an indented line as a comment ([xyce-ug] §4.1.3.1 p43); decision X-D1 is X-M1's.
     for line in ("  .param x=1", "\tR1 a 0 1k", "  hello"):
@@ -185,8 +237,10 @@ def test_an_indented_line_is_unsupported() -> None:
         _parse("title\n  .END\n")
 
 
-@pytest.mark.parametrize("line", ["; comment", "$ comment", "// comment", "+ continued"])
+@pytest.mark.parametrize("line", ["$ comment", "// comment", "+ continued"])
 def test_other_line_starts_are_rejected(line: str) -> None:
+    # `$` and `//` start no comment on Xyce or in the manual's comment rules (probe
+    # test_dollar_and_double_slash_do_not_end_a_line); a `+` on line 2 joins only the title.
     with pytest.raises(ParseError) as captured:
         _parse(f"title\n{line}\n.END\n")
     assert (captured.value.line, captured.value.column) == (2, 1)

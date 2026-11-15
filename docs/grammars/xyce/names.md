@@ -3,7 +3,10 @@
 How the document layer compares names and decides which node names are the same net, for Xyce
 (architecture §8; [decision 0026](../../decisions/0026-the-xyce-dialect.md)). The functions are in
 `src/netlistmod/dialects.py` and `src/netlistmod/document/names.py`. Status words have the meanings
-of [decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md).
+of [decision 0008](../../decisions/0008-validation-status-and-solver-harnesses.md); `validated` rows
+cite a solver test, run on the version below (`-v` prints `XyceNF Release 7.10.0`).
+
+Validated on: xyce 7.10.0 (2026-11-15)
 
 X-M0 reads no node, so only the ground rule is implemented, for the dialect tables to be complete;
 the rest of this document is written in X-M1, with decision X-D3 (`$G` globals) and X-D2
@@ -11,7 +14,7 @@ the rest of this document is written in X-M1, with decision X-D3 (`$G` globals) 
 
 | ID | Rule | Manual | Status | Tests |
 |---|---|---|---|---|
-| N1 | `0` is the one ground net, canonical name `"0"`, shared by every scope. `GND` and the other names `.PREPROCESS REPLACEGROUND` makes synonyms of `0` are ordinary nets without that command, and `00` is a distinct net. | [xyce-ref] §2.3.1.1 p182 "Global nodes"; [xyce-ref] §2.1.28 p125 ".PREPROCESS REPLACEGROUND (Ground Synonym)"; [xyce-ug] §4.1.3 p42 "Elements" | documented | `tests/architecture/test_hidden_dialects.py::test_only_zero_is_ground_on_xyce`; validation_note: the X-M0 probe (A4, 2026-11-15) on XyceNF Release 7.10.0 found `0` the only ground without `.PREPROCESS REPLACEGROUND`; the row becomes validated when the probe is a tests/solver/ test (task B4). |
+| N1 | `0` is the one ground net, canonical name `"0"`, shared by every scope. `GND` and the other names `.PREPROCESS REPLACEGROUND` makes synonyms of `0` are ordinary nets without that command, and `00` is a distinct net. | [xyce-ref] §2.3.1.1 p182 "Global nodes"; [xyce-ref] §2.1.28 p125 ".PREPROCESS REPLACEGROUND (Ground Synonym)"; [xyce-ug] §4.1.3 p42 "Elements" | validated | `tests/architecture/test_hidden_dialects.py::test_only_zero_is_ground_on_xyce`; `tests/solver/test_xyce_structure_probes.py::test_gnd_is_not_ground_without_replaceground`; `tests/solver/test_xyce_structure_probes.py::test_double_zero_is_not_ground` |
 
 ## Provisional
 

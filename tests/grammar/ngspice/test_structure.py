@@ -253,7 +253,7 @@ def test_backslashes_that_do_not_end_a_statement_line_are_text(
 # No letter is planned after M17 (decision 0020 item 10): a mocked matrix marks "Ω", which has
 # no grammar rule, as planned.
 _PLANNED = {"Ω": {"status": "planned", "phase": 2, "milestone": "M99"}}
-_PLANNED_CONSTRUCT = "ngspice Ω device, not yet supported on ngspice (planned for M99)"
+_PLANNED_CONSTRUCT = "Ω device, not yet supported on ngspice (planned for M99)"
 
 
 @pytest.mark.parametrize("continued", ["Ω1 a 0 \\\\\nb 0 amod", "Ω1 a 0\n+ b 0 amod"])

@@ -47,6 +47,8 @@ def _hidden_member(value: str, name: str) -> Dialect:
     be pickled, since unpickling looks the value up.
     """
     member = str.__new__(Dialect, value)
+    # `_sort_order_` is the members' count, one past the last member's order. A public member
+    # added before X-M8 must keep the two distinct: define it in the class body, not later.
     member.__dict__.update(_name_=name, _value_=value, _sort_order_=len(Dialect.__members__))
     return member
 

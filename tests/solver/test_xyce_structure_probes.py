@@ -110,6 +110,18 @@ def test_a_semicolon_ends_a_line(solver: Solver, tmp_path: Path, comment: str) -
     assert op(solver, tmp_path, text)["v(2)"] == pytest.approx(1.0)
 
 
+def test_a_semicolon_line_is_a_comment(solver: Solver, tmp_path: Path) -> None:
+    """A line that begins with ``;`` is a comment: an in-line comment may occur on any line
+    ([xyce-ug] §4.1.3.1 p43). ``R3`` after it adds no node, silently, and a ``+`` line joins
+    ``R1`` across it as across a ``*`` line (§4.1.3.2 p43)."""
+    commented = "semicolon line\nV1 1 0 2\nR1 1 0 1k\n;R3 3 0 1k\n; another\n;\n.op\n.end\n"
+    assert nodes(solver, tmp_path / "names", commented) == {"1"}
+    result = run(solver, tmp_path / "run", commented)
+    assert result.ok and all(item.line is None for item in result.diagnostics)
+    continued = "semicolon line\nV1 1 0 2\nR1 1 2\n; a comment\n+ 1k\nR2 2 0 1k\n.op\n.end\n"
+    assert op(solver, tmp_path / "op", continued)["v(2)"] == pytest.approx(1.0)
+
+
 @pytest.mark.parametrize("comment", ["$ a comment", "// a comment"], ids=["dollar", "slashes"])
 def test_dollar_and_double_slash_do_not_end_a_line(
     solver: Solver, tmp_path: Path, comment: str
@@ -172,3 +184,11 @@ def test_gnd_is_not_ground_without_replaceground(solver: Solver, tmp_path: Path)
     replaced = "gnd\n.preprocess replaceground true\nV1 1 0 2\nR1 1 gnd 1k\nR2 1 0 1k\n.op\n.end\n"
     assert nodes(solver, tmp_path / "replaced", replaced) == {"1"}
     assert op(solver, tmp_path / "replaced-op", replaced)["v1#branch"] == pytest.approx(-4e-3)
+
+
+def test_double_zero_is_not_ground(solver: Solver, tmp_path: Path) -> None:
+    """Only ``0`` is ground ([xyce-ref] §2.3.1.1 p182): ``00`` is an ordinary node, here the middle
+    of a divider; node names are strings, not numbers."""
+    text = "double zero\nV1 1 0 2\nR1 1 00 1k\nR2 00 0 1k\n.op\n.end\n"
+    assert nodes(solver, tmp_path / "names", text) == {"1", "00"}
+    assert op(solver, tmp_path / "op", text)["v(00)"] == pytest.approx(1.0)

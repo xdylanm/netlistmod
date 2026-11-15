@@ -1,10 +1,14 @@
 // xyce overlay on core.lark (X-M0, decision 0026). The dialect is hidden until X-M8, and X-M0 reads
 // only the structure of a netlist: the title line, `*` comment lines, blank lines and the final
-// `.END` ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42-43). Everything else is recognised only to be refused:
-// a dot-command other than `.END`, and an indented line, which Xyce reads as a comment (decision
-// X-D1 settles it in X-M1), raise UnsupportedConstruct from the transformer. An element line has no
-// rule: its letter is `planned` in xyce-devices.json, so the loader raises UnsupportedConstruct, and
-// A and N, which are not Xyce letters, are a ParseError.
+// `.END` ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42–43). Everything else is recognised only to be refused:
+// a dot-command other than `.END`; an indented line, which Xyce reads as a comment (decision X-D1
+// settles it in X-M1); a line that begins with `;`, an in-line comment, which may occur on any line
+// (§4.1.3.1 p43); and a `+` line after comment or blank lines that follow a statement, which joins
+// that statement (§4.1.3.2 p43). They raise UnsupportedConstruct from the transformer. A `+` line
+// with only the title, comments and blank lines before it is a ParseError: the title is a comment,
+// so there is no line for it to join. An element line has no rule: its letter is `planned` in
+// xyce-devices.json, so the loader raises UnsupportedConstruct, and A and N, which are not Xyce
+// letters, are a ParseError.
 //
 // The rules of core.lark that a later milestone reuses are imported by that milestone; X-M0 imports
 // only the terminals of the structure and the `.end` rule, and defines its own `start`, so no core
@@ -20,8 +24,9 @@
 %ignore WS
 %ignore CONT
 
+// The lines before the first statement are `lead` lines, which a `+` line cannot follow.
 // spec: XY-STR-001
-start: first_line line* end_stmt
+start: first_line lead* (statement line*)? end_stmt
 
 // The first line is always the title, even when it is blank or looks like a statement: Xyce has
 // no `.TITLE`, so there is no explicit title.
@@ -30,10 +35,19 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
           | LINE_END                        -> empty_title
 
 // spec: XY-STR-001
-?line: LINE_END                             -> blank_line
+?lead: LINE_END                             -> blank_line
      | COMMENT_LINE LINE_END                -> comment_line
-     | unsupported_directive
+     | semicolon_line
      | indented_line
+
+// spec: XY-STR-001
+?line: lead
+     | statement
+     | continuation_line
+
+// The statements X-M0 recognises, all refused.
+// spec: XY-UNS-001
+?statement: unsupported_directive
 
 // A dot-command other than `.END`, continued by `+` lines; refused whole.
 // spec: XY-UNS-001
@@ -42,6 +56,18 @@ unsupported_directive: DOT_NAME REST_TEXT* NL
 // spec: XY-UNS-001
 indented_line: INDENTED_LINE LINE_END
 
+// A line that begins with `;`, an in-line comment on a line of its own.
+// spec: XY-UNS-001
+semicolon_line: SEMICOLON_LINE LINE_END
+
+// A `+` line after comment or blank lines, which joins the statement before them.
+// spec: XY-UNS-001
+continuation_line: PLUS_LINE LINE_END
+
 // spec: XY-UNS-001
 REST_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
 INDENTED_LINE.10: /[ \t]+[^ \t\r\n+*](?:[^\r\n]|\r(?!\n))*/
+// spec: XY-UNS-001
+SEMICOLON_LINE.3: /;(?:[^\r\n]|\r(?!\n))*/
+// spec: XY-UNS-001
+PLUS_LINE.3: /\+(?:[^\r\n]|\r(?!\n))*/
