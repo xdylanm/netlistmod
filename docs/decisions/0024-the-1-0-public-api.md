@@ -1,6 +1,6 @@
 # 0024 — The 1.0 public API
 
-- **Status:** accepted (2026-11-14, maintainer; M20 gate G1)
+- **Status:** accepted (2026-11-14, maintainer; M20 gate G1). Item 11 added 2026-11-15 (maintainer; M21 section 5.1 items 1 and 2).
 - **Date:** 2026-11-14
 - **Amends:** decision 0004 item 5, decision 0006 item 2, decision 0007 items 10 and 11, decision 0021 item 1; architecture §4, §5.4, §6.3 rule 14, §18, §19 decision 21 and §21.
 - **Context:** Decisions 0018 and 0023 left one question for after practical use of the beta: what 1.0 commits to in the public API (§18). The maintainer reported on 2026-11-14 that the `0.9.0` beta works as expected. M20 ([m20-tasks.md](../design/archive/v1.0/m20-tasks.md)) reviewed the public surface, the contract and the open behaviour items. The maintainer decided each point at gate G1 (m20 section 5.1). This record holds the outcome. Breaking changes are made directly before 1.0, with no deprecation shim (m20 decision 6).
@@ -75,6 +75,9 @@
 
      **The rule for vocabularies:** an open, growing set (`DiagnosticCode`) is an enum; a small closed vocabulary is a `Literal` string.
   10. **Library files** stay a candidate after 1.0. They need their own entry point and result type, so a minor release can add them without changing 1.0 behaviour.
+  11. **Growth and designators** (from the xyce and qspice audit, [m21-tasks.md](../design/archive/v1.0/m21-tasks.md) section 5.1 items 1 and 2).
+      - **Growth is minor.** A minor release may add `Dialect` members, node classes, members of the public unions (`TopLevelItem`, `BodyItem` and others) and values of `Literal` vocabularies. Code that matches exhaustively on any of them keeps a default case.
+      - **A designator** is the string that names an element in its dialect. It need not be a single token: a dialect may name a device with more than one, as xyce's Y devices write a type and a name. The dialect that needs such a name decides how it is written.
 - **Consequences:**
   - §18 states items 1 to 5, and the README and the usage guides say to import from `netlistmod`. This closes the question left open by decisions 0018 and 0023.
   - **0.9.0 callers must update** for the removed names, the keyword-only arguments, `set_formula(text=…)`, `point_before`/`point_after`, and the refused number model names.
