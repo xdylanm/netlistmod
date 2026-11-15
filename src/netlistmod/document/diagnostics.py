@@ -1,6 +1,6 @@
 """Non-fatal findings about a netlist, delivered as data (architecture §8, §17).
 
-Diagnostics are computed once when a :class:`~netlistmod.document.Netlist` is built and are
+Diagnostics are computed once when a :class:`~netlistmod.document.document.Netlist` is built and are
 never raised. Their codes and severities are fixed by decision 0006.
 """
 

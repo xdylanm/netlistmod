@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from netlistmod import DiagnosticCode, Dialect, Netlist, StepDirective
-from netlistmod.document import fold, is_ground, net_name
+from netlistmod.document.names import fold, is_ground, net_name
 from netlistmod.grammar.formula import parse_formula, reserved_words
 
 pytestmark = pytest.mark.ltspice_only
@@ -63,12 +63,12 @@ def test_dollar_g_nodes_are_global_by_name(name: str) -> None:
     netlist = _netlist(f"R1 {name} 0 1\nX1 a s\n.subckt s p\nR1 p $G_X 1\n.ends")
     net = netlist.topology.net(name)
     assert net.scope == () and net.global_
-    assert netlist.topology.net("$g_x", ("s",)) == net
+    assert netlist.topology.net("$g_x", scope=("s",)) == net
 
 
 def test_other_dollar_names_stay_local() -> None:
     netlist = _netlist("R1 $x 0 1\nX1 a s\n.subckt s p\nR1 p $x 1\n.ends")
-    assert netlist.topology.net("$x", ("s",)).scope == ("s",)
+    assert netlist.topology.net("$x", scope=("s",)).scope == ("s",)
 
 
 def test_global_and_local_nets() -> None:
@@ -76,8 +76,8 @@ def test_global_and_local_nets() -> None:
         ".global VCC\nV1 vcc 0 3\nX1 in out div\nR9 mid 0 1\n"
         ".subckt div a b\nR1 a mid 1k\nR2 mid b 1k\nR3 vcc 0 1\n.ends"
     )
-    assert netlist.topology.net("VCC", ("div",)).scope == ()
-    assert netlist.topology.net("mid", ("div",)).scope == ("div",)
+    assert netlist.topology.net("VCC", scope=("div",)).scope == ()
+    assert netlist.topology.net("mid", scope=("div",)).scope == ("div",)
     assert netlist.topology.net("mid").scope == ()
 
 

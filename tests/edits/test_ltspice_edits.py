@@ -257,7 +257,7 @@ def test_two_lines_for_one_quantity_are_ambiguous() -> None:
 
 def test_a_step_can_be_added_at_a_placement_and_removed() -> None:
     netlist = _netlist(".op")
-    added = netlist.directives.add(".step temp 1 2 1", Placement.AFTER_TITLE)
+    added = netlist.directives.add(".step temp 1 2 1", placement=Placement.AFTER_TITLE)
     assert _body(added) == ".step temp 1 2 1\n.op"
     assert _body(added.directives.remove(added.lines[1])) == ".op"
 

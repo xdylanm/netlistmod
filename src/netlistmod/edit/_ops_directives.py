@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from netlistmod.document import Line, Netlist
+from netlistmod.document import Line
+from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DIRECTIVE_LINES,

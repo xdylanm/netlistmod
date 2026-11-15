@@ -35,7 +35,7 @@ def test_document_basic_queries_match_the_manifest(name: str) -> None:
     netlist = Netlist.load(FAMILY / name, dialect=Dialect.NGSPICE, rkm=expected.get("rkm", False))
     assert {"/".join(scope.path) for scope in netlist.scopes} == set(expected["nets"])
     for scope, nets in expected["nets"].items():
-        found = netlist.nets(_path(scope))
+        found = netlist.nets(scope=_path(scope))
         assert [[net.name, "/".join(net.scope)] for net in found] == nets
     for designator, nets in expected["connections"].items():
         assert [c.net.name for c in netlist.connections(designator)] == nets
@@ -69,9 +69,11 @@ def test_queries_run_on_every_accept_corpus_file(path: Path) -> None:
         if reference.target is None and reference.kind in _UNRESOLVED:
             assert (_UNRESOLVED[reference.kind], reference.span) in diagnosed, reference
     for scope in netlist.scopes:
-        for net in netlist.nets(scope.path):
-            assert netlist.elements_on_net(net, scope.path) or scope.definition is not None
-        for element in netlist.elements(scope.path):
-            assert len(netlist.connections(element.designator, scope.path)) == len(element.nodes)
+        for net in netlist.nets(scope=scope.path):
+            assert netlist.elements_on_net(net, scope=scope.path) or scope.definition is not None
+        for element in netlist.elements(scope=scope.path):
+            assert len(netlist.connections(element.designator, scope=scope.path)) == len(
+                element.nodes
+            )
     assert len(netlist.signature().digest()) == 64
     assert netlist.to_bytes() == path.read_bytes()

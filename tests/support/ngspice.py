@@ -153,7 +153,7 @@ def run(
         prepared = with_stubs(source, folder, stubs or {})
         if harness is not None:
             (folder / "run_harness.inc").write_bytes(harness.encode("utf-8"))
-            prepared = prepared.add_include("run_harness.inc", Placement.BEFORE_END)
+            prepared = prepared.add_include("run_harness.inc", placement=Placement.BEFORE_END)
         ensure_runs(prepared).save(netlist_path)
     else:
         if harness is not None or stubs:
@@ -214,7 +214,7 @@ def with_stubs(netlist: Netlist, folder: Path, stubs: Mapping[str, Path]) -> Net
                 continue
             with netlist.batch() as batch:
                 batch.directives.remove(line)
-                batch.add_include(stub.name, Placement.after(netlist.lines[index - 1]))
+                batch.add_include(stub.name, placement=Placement.after(netlist.lines[index - 1]))
             netlist = batch.result
     return netlist
 

@@ -86,25 +86,25 @@ _CASES: list[tuple[str, str, Operation, str]] = [
     (
         "add after title",
         "t\nR1 a 0 1k\n.end\n",
-        lambda n: n.directives.add(".options reltol=1e-4", Placement.AFTER_TITLE),
+        lambda n: n.directives.add(".options reltol=1e-4", placement=Placement.AFTER_TITLE),
         "t\n.options reltol=1e-4\nR1 a 0 1k\n.end\n",
     ),
     (
         "add after last param",
         "t\n.param a=1\nR1 a 0 {a}\n.end\n",
-        lambda n: n.directives.add(".op", Placement.AFTER_LAST_PARAM),
+        lambda n: n.directives.add(".op", placement=Placement.AFTER_LAST_PARAM),
         "t\n.param a=1\n.op\nR1 a 0 {a}\n.end\n",
     ),
     (
         "add before anchor",
         "t\nR1 a 0 1k\n.op\n.end\n",
-        lambda n: n.directives.add(".save all", Placement.before(_find(n, OpDirective))),
+        lambda n: n.directives.add(".save all", placement=Placement.before(_find(n, OpDirective))),
         "t\nR1 a 0 1k\n.save all\n.op\n.end\n",
     ),
     (
         "add after anchor",
         "t\nR1 a 0 1k\n.op\n.end\n",
-        lambda n: n.directives.add(".save all", Placement.after(_find(n, OpDirective))),
+        lambda n: n.directives.add(".save all", placement=Placement.after(_find(n, OpDirective))),
         "t\nR1 a 0 1k\n.op\n.save all\n.end\n",
     ),
     (
@@ -158,7 +158,7 @@ _CASES: list[tuple[str, str, Operation, str]] = [
     (
         "include with blanks and slashes",
         "t\r\n.end\r\n",
-        lambda n: n.add_include("my dir//h.inc", Placement.BEFORE_END),
+        lambda n: n.add_include("my dir//h.inc", placement=Placement.BEFORE_END),
         't\r\n.include "my dir//h.inc"\r\n.end\r\n',
     ),
     # Review round 1: continued text as a list of lines, and whole opaque items.
@@ -189,7 +189,7 @@ _CASES: list[tuple[str, str, Operation, str]] = [
     (
         "add an if block",
         "t\n.end\n",
-        lambda n: n.directives.add([".if (1)", ".endif"], Placement.AFTER_TITLE),
+        lambda n: n.directives.add([".if (1)", ".endif"], placement=Placement.AFTER_TITLE),
         "t\n.if (1)\n.endif\n.end\n",
     ),
     (
@@ -273,12 +273,12 @@ def test_set_is_idempotent() -> None:
         ("t\n.end\n", lambda n: n.directives.remove(n.lines[1]), "`.end` line"),
         (
             "t\n.end\n",
-            lambda n: n.directives.add(".op", Placement.before(n.lines[0])),
+            lambda n: n.directives.add(".op", placement=Placement.before(n.lines[0])),
             "before the title",
         ),
         (
             "t\n.end\n",
-            lambda n: n.directives.add(".op", Placement.after(n.lines[1])),
+            lambda n: n.directives.add(".op", placement=Placement.after(n.lines[1])),
             "after `.end`",
         ),
         (
@@ -288,7 +288,7 @@ def test_set_is_idempotent() -> None:
         ),
         (
             "t\n.subckt s a\nR1 a 0 1\n.ends\n.end\n",
-            lambda n: n.directives.add(".op", Placement.after(n.scope(("s",)).lines[0])),
+            lambda n: n.directives.add(".op", placement=Placement.after(n.scope(("s",)).lines[0])),
             "is inside subcircuit `s`",
         ),
         ('t\n.include "h.cir"\n.end\n', lambda n: n.add_include("h.cir"), "already includes"),

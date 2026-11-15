@@ -2,6 +2,10 @@
 
 The examples in these guides are executed by the test suite. Each guide says which dialect it covers.
 
+Import every name from `netlistmod` (`from netlistmod import Dialect, Netlist`): `netlistmod.__all__` is
+the public API, and its submodules (`netlistmod.document`, `netlistmod.edit`, `netlistmod.model`, …) are
+internal.
+
 | Guide | Covers |
 |---|---|
 | [Parsing structural source](./structural-parse.md) | Titles, comments, continuations and opaque items |

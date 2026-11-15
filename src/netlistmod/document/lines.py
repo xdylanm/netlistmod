@@ -37,7 +37,7 @@ class Line:
 
 
 class Lines(Sequence[Line]):
-    """An immutable sequence of lines with type search and insertion points."""
+    """An immutable sequence of lines with type search and zero-width points at line boundaries."""
 
     __slots__ = ("_lines",)
 
@@ -100,16 +100,19 @@ class Lines(Sequence[Line]):
                 return index
         raise ValueError("the line is not in this sequence")
 
-    def insert_before(self, line: Line) -> Span:
-        """A zero-width insertion point at the start of ``line`` (a physical line boundary)."""
+    def point_before(self, line: Line) -> Span:
+        """A zero-width ``Span`` at the start of ``line`` (a physical line boundary).
+
+        Nothing is inserted: to insert a line, pass ``Placement.before(line)`` to an edit.
+        """
         self._check(line)
         return Span(line.span.start, line.span.start)
 
-    def insert_after(self, line: Line) -> Span:
-        """A zero-width insertion point at the end of ``line``, after its terminator.
+    def point_after(self, line: Line) -> Span:
+        """A zero-width ``Span`` at the end of ``line``, after its terminator.
 
-        For a last line without a final newline this is the end of the text; M6 decides the
-        text inserted there.
+        Nothing is inserted: to insert a line, pass ``Placement.after(line)`` to an edit. An edit
+        cannot insert after ``.end``.
         """
         self._check(line)
         return Span(line.span.end, line.span.end)

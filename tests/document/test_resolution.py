@@ -58,7 +58,7 @@ def test_element_lookup_is_per_scope_and_case_insensitive() -> None:
     assert local.designator == "r1"
     assert [element.designator for element in netlist.elements()] == ["R1"]
     assert [e.designator for e in netlist.elements(recursive=True)] == ["R1", "r1", "R2"]
-    assert [e.designator for e in netlist.elements(("div",))] == ["r1", "R2"]
+    assert [e.designator for e in netlist.elements(scope=("div",))] == ["r1", "R2"]
     with pytest.raises(KeyError, match="no element 'R2' in top level"):
         netlist.element("R2")
 
@@ -226,7 +226,7 @@ def test_references_to_param_follow_masking() -> None:
     )
     top = netlist.references_to_param("RX")
     assert [ref.scope for ref in top] == [(), ("other",)]
-    assert [ref.scope for ref in netlist.references_to_param("rx", ("div",))] == [("div",)]
+    assert [ref.scope for ref in netlist.references_to_param("rx", scope=("div",))] == [("div",)]
     assert netlist.references_to_param("nope") == ()
 
 

@@ -134,7 +134,7 @@ def run(
         prepared = with_stubs(source, folder, stubs or {})
         if harness is not None:
             (folder / "run_harness.inc").write_bytes(harness.encode("utf-8"))
-            prepared = prepared.add_include("run_harness.inc", Placement.BEFORE_END)
+            prepared = prepared.add_include("run_harness.inc", placement=Placement.BEFORE_END)
         ensure_runs(prepared).save(netlist_path)
     else:
         if harness is not None or stubs:

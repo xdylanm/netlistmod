@@ -5,6 +5,8 @@ import pkgutil
 from importlib.metadata import version
 
 import netlistmod
+import netlistmod.document.document
+import netlistmod.grammar
 
 
 def test_package_and_subpackages_import() -> None:
@@ -98,6 +100,11 @@ def test_public_exports_and_version() -> None:
         "Net",
         "Netlist",
         "Reference",
+        "ReferenceKind",
+        "ScopePath",
+        "Severity",
+        "BodyItem",
+        "TopLevelItem",
         "Scope",
         "TopologySignature",
         "TopologyView",
@@ -129,12 +136,22 @@ def test_public_exports_and_version() -> None:
         "ParamTable",
         "Placement",
         "SlotCheck",
-        "apply_edits",
         "__version__",
         "parse",
     }
     assert set(netlistmod.__all__) == expected
+    assert netlistmod.__all__ == sorted(netlistmod.__all__)
+    assert len(netlistmod.__all__) == len(expected)
     assert netlistmod.__version__ == version("netlistmod")
     assert all(hasattr(netlistmod, name) for name in expected)
     assert netlistmod.Netlist is netlistmod.edit.Netlist
-    assert issubclass(netlistmod.Netlist, netlistmod.document.Netlist)
+    assert issubclass(netlistmod.Netlist, netlistmod.document.document.Netlist)
+
+
+def test_internal_names_do_not_leak() -> None:
+    assert not hasattr(netlistmod, "version")
+    assert not hasattr(netlistmod, "apply_edits")
+    assert not hasattr(netlistmod.document, "Netlist")
+    for package in (netlistmod.document, netlistmod.edit, netlistmod.model):
+        assert set(package.__all__) <= set(netlistmod.__all__)
+    assert netlistmod.grammar.__all__ == []

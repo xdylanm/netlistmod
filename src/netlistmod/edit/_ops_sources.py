@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import fields
 
 from netlistmod.dialects import Dialect
-from netlistmod.document import Netlist, ScopePath
+from netlistmod.document import ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DISTORTION_NAMES,

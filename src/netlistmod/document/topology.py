@@ -129,7 +129,7 @@ class TopologyView:
             for key, names in spellings.items()
         }
 
-    def nets(self, scope: ScopePath = ()) -> tuple[Net, ...]:
+    def nets(self, *, scope: ScopePath = ()) -> tuple[Net, ...]:
         """The nets used in a scope, in first-use order (ports first in a definition).
 
         A scope's nets come from its ports, its elements' nodes and, at the top level, the
@@ -138,7 +138,7 @@ class TopologyView:
         found = self._index.scope(scope)
         return tuple(self._nets[key] for key in self._scope_nets[id(found)])
 
-    def net(self, name: str, scope: ScopePath = ()) -> Net:
+    def net(self, name: str, *, scope: ScopePath = ()) -> Net:
         """The net a node name denotes in a scope; ``KeyError`` if no element uses it there."""
         found = self._index.scope(scope)
         key = self._key(found, name)
@@ -146,7 +146,7 @@ class TopologyView:
             raise KeyError(f"no net {name!r} in {found.describe()}")
         return self._nets[key]
 
-    def elements_on_net(self, net: Net | str, scope: ScopePath = ()) -> tuple[Component, ...]:
+    def elements_on_net(self, net: Net | str, *, scope: ScopePath = ()) -> tuple[Component, ...]:
         """The elements of a scope with at least one terminal on ``net``, in source order."""
         found = self._index.scope(scope)
         key = (net.scope, net.name) if isinstance(net, Net) else self._key(found, net)
@@ -157,7 +157,7 @@ class TopologyView:
         )
 
     def expression_reads(
-        self, designator: str, scope: ScopePath = ()
+        self, designator: str, *, scope: ScopePath = ()
     ) -> tuple[ExpressionRead, ...]:
         """The nets and elements an element's expressions read, in source order; empty for an
         element with no expression. ``KeyError`` if there is no such element."""
@@ -183,7 +183,7 @@ class TopologyView:
                 reads.append(ExpressionRead("source", reference.name, reference.span, target))
         return tuple(sorted(reads, key=lambda read: read.span.start))
 
-    def connections(self, designator: str, scope: ScopePath = ()) -> tuple[Connection, ...]:
+    def connections(self, designator: str, *, scope: ScopePath = ()) -> tuple[Connection, ...]:
         """The terminals of one element (a ``K`` line has none); ``KeyError`` if absent."""
         found = self._index.scope(scope)
         elements = found.elements.get(found.fold(designator))
@@ -195,7 +195,7 @@ class TopologyView:
             for terminal, node in enumerate(element.nodes)
         )
 
-    def ports(self, subckt: str, scope: ScopePath = ()) -> tuple[Net, ...]:
+    def ports(self, subckt: str, *, scope: ScopePath = ()) -> tuple[Net, ...]:
         """The port nets of the definition ``subckt`` visible from ``scope``, in order.
 
         The name is resolved like an ``X`` line's (own scope, then enclosing scopes); the nets

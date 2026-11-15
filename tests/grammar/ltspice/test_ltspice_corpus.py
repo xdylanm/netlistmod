@@ -86,11 +86,13 @@ def test_every_text_slot_slices_back_to_its_text(path: Path) -> None:
 def test_queries_run_on_every_accept_file(path: Path) -> None:
     netlist = Netlist.load(path, dialect=Dialect.LTSPICE)
     for scope in netlist.scopes:
-        for net in netlist.nets(scope.path):
-            used = netlist.elements_on_net(net, scope.path)
+        for net in netlist.nets(scope=scope.path):
+            used = netlist.elements_on_net(net, scope=scope.path)
             assert used or scope.definition is not None or net.global_
-        for element in netlist.elements(scope.path):
-            assert len(netlist.connections(element.designator, scope.path)) == len(element.nodes)
+        for element in netlist.elements(scope=scope.path):
+            assert len(netlist.connections(element.designator, scope=scope.path)) == len(
+                element.nodes
+            )
     assert len(netlist.signature().digest()) == 64
     assert netlist.to_bytes() == path.read_bytes()
 

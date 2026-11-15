@@ -156,7 +156,7 @@ class Netlist:
         """Top-level subcircuit definitions by folded name."""
         return self._index.root.subckts
 
-    def element(self, designator: str, scope: ScopePath = ()) -> Component:
+    def element(self, designator: str, *, scope: ScopePath = ()) -> Component:
         """The element with this designator in a scope (the first one if it is repeated).
 
         ``KeyError`` if there is none; elements of enclosing or nested scopes are not searched.
@@ -167,7 +167,7 @@ class Netlist:
             raise KeyError(f"no element {designator!r} in {found.describe()}")
         return elements[0]
 
-    def elements(self, scope: ScopePath = (), *, recursive: bool = False) -> tuple[Component, ...]:
+    def elements(self, *, scope: ScopePath = (), recursive: bool = False) -> tuple[Component, ...]:
         """The elements of a scope in source order; ``recursive`` adds nested definitions."""
         found = self._index.scope(scope)
         lines = found.lines.walk() if recursive else iter(found.lines)
@@ -180,7 +180,7 @@ class Netlist:
         """Every reference in the netlist, in source order, each resolved or not."""
         return self._index.references
 
-    def references_to_param(self, name: str, scope: ScopePath = ()) -> tuple[Reference, ...]:
+    def references_to_param(self, name: str, *, scope: ScopePath = ()) -> tuple[Reference, ...]:
         """The references that resolve to the parameter ``name`` defined in ``scope``.
 
         A reference from a nested definition is included unless that definition masks the
@@ -216,28 +216,28 @@ class Netlist:
         """The read-only topology view."""
         return self._topology
 
-    def nets(self, scope: ScopePath = ()) -> tuple[Net, ...]:
+    def nets(self, *, scope: ScopePath = ()) -> tuple[Net, ...]:
         """The nets used in a scope (see :meth:`TopologyView.nets`)."""
-        return self._topology.nets(scope)
+        return self._topology.nets(scope=scope)
 
-    def elements_on_net(self, net: Net | str, scope: ScopePath = ()) -> tuple[Component, ...]:
+    def elements_on_net(self, net: Net | str, *, scope: ScopePath = ()) -> tuple[Component, ...]:
         """The elements of a scope connected to ``net``."""
-        return self._topology.elements_on_net(net, scope)
+        return self._topology.elements_on_net(net, scope=scope)
 
-    def connections(self, designator: str, scope: ScopePath = ()) -> tuple[Connection, ...]:
+    def connections(self, designator: str, *, scope: ScopePath = ()) -> tuple[Connection, ...]:
         """The terminals of one element and their nets."""
-        return self._topology.connections(designator, scope)
+        return self._topology.connections(designator, scope=scope)
 
     def expression_reads(
-        self, designator: str, scope: ScopePath = ()
+        self, designator: str, *, scope: ScopePath = ()
     ) -> tuple[ExpressionRead, ...]:
         """The nets and sources an element's expressions read (``V(a)``, ``I(Vx)``), which its
         node list does not show; see :class:`ExpressionRead` (decision 0016 item 6)."""
-        return self._topology.expression_reads(designator, scope)
+        return self._topology.expression_reads(designator, scope=scope)
 
-    def ports(self, subckt: str, scope: ScopePath = ()) -> tuple[Net, ...]:
+    def ports(self, subckt: str, *, scope: ScopePath = ()) -> tuple[Net, ...]:
         """The port nets of a subcircuit definition visible from ``scope``."""
-        return self._topology.ports(subckt, scope)
+        return self._topology.ports(subckt, scope=scope)
 
     def signature(self) -> TopologySignature:
         """The topology signature that M6's write-time check compares (§7.7)."""

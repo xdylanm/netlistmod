@@ -96,7 +96,7 @@ def _bind(value: _T, run: Callable[[Netlist, _T], Netlist]) -> Operation:
 
 
 def _names(netlist: Netlist, designator: str, scope: tuple[str, ...]) -> list[str]:
-    return [param.name for param in netlist.element(designator, scope).params]
+    return [param.name for param in netlist.element(designator, scope=scope).params]
 
 
 def _model_names(netlist: Netlist, model: str) -> list[str]:
@@ -172,7 +172,7 @@ def _operations(netlist: Netlist, line: Line, scope: tuple[str, ...]) -> list[_O
                     )
                 )
 
-    item = netlist.element(d, scope)
+    item = netlist.element(d, scope=scope)
     if form == "stimulus":
         for text in ("SIN(0 2 1k)", "PULSE(0 1 2n)"):
             add(
@@ -377,7 +377,7 @@ def _span(netlist: Netlist, target: tuple[str, str], scope: tuple[str, ...]) -> 
     if kind == "model":
         span = netlist.models[name][0].span
     else:
-        span = netlist.element(name, scope).span
+        span = netlist.element(name, scope=scope).span
     return span.start, span.end
 
 

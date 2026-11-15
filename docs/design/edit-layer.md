@@ -9,10 +9,11 @@
 ## 1. Layering and lifecycle
 
 - `document/` does not import `edit/` (import-linter). `netlistmod.edit.Netlist` subclasses
-  the read-only `netlistmod.document.Netlist` and adds the edit methods (a facade by
-  inheritance, not a protocol); `netlistmod.Netlist` is the editable class. The base class's
-  constructors return `Self`, so `Netlist.load(...)` builds the editable class.
-- Package layout (architecture §4): `plan.py` (`Edit`, `EditPlan`, `SlotCheck`, `apply_edits`),
+  the read-only `netlistmod.document.document.Netlist` and adds the edit methods (a facade by
+  inheritance, not a protocol); `netlistmod.Netlist` is the editable class, and the only one
+  exported (the subpackages are internal). The base class's constructors return `Self`, so
+  `Netlist.load(...)` builds the editable class.
+- Package layout (architecture §4): `plan.py` (`Edit`, `EditPlan`, `SlotCheck`, and the internal splice `apply_edits`),
   `conventions.py` (decision 0007 item 4), `placement.py` (`Placement`, `insertion_point`),
   `verify.py` (`apply_plan` and the checks), `operations.py` (one plan builder per operation, kept by family in `_ops_*.py` since M13 and imported from `operations.py`)
   and `api.py` (`Netlist`, `Batch`, `ParamTable`, `DirectiveEditor`). `operations.py` is an
@@ -48,10 +49,11 @@
 ## 2. API
 
 `ScopePath` is a tuple of subcircuit names, `()` for the top level. Every element operation
-takes `scope: ScopePath = ()` and `in_definition: bool = False`; a non-empty `scope` without
+takes the keyword-only `scope: ScopePath = ()` and `in_definition: bool = False`; a non-empty `scope` without
 `in_definition=True` is an `EditError` (P11). Elements are found in their own scope only; an
 unknown scope, an unknown designator and a repeated designator are `EditError`s. On a
-`Netlist` every operation returns a new `Netlist`; on a `Batch` it returns `None`.
+`Netlist` every operation returns a new `Netlist`; on a `Batch` it returns `None`. `placement`
+is keyword-only too (`add_include`, `directives.add`, `params.set`).
 
 ### Element operations
 
@@ -60,13 +62,13 @@ unknown scope, an unknown designator and a repeated designator are `EditError`s.
 | `set_value(d, value)` | R, C, L | `value.span` (for `r=1k`: `1k`) | after the last node: ` value` | D, X: no value slot; K: use `set_coupling` |
 | | E, F, G, H | `value.span` (the gain) | — (the gain is mandatory) | — |
 | | V, I | `dc.span` | — (replace only; never adds `DC`) | no DC value: use `set_dc` |
-| `set_formula(d, expr)` | as `set_value` | as `set_value`, text `{expr}` | as `set_value` | as `set_value` |
+| `set_formula(d, text)` | as `set_value` | as `set_value`, text `{text}` | as `set_value` | as `set_value` |
 | `set_param(d, name, value)` | R, C, L, D, Q, M, J, Z, B; `m=` on an ngspice F or G; `window=`, `nfft=` and `mtol=` on an LTspice E or G written with `Laplace=`; T, U, Y and P (decision 0019: a T keeps its spelling of `Z0=` or `Zo=`, and `IC=` is set as a whole list); ngspice N, LTspice A and `@` (decision 0020: an `@` list is set whole, and refused with a comment inside it; `refnode=` and `intnode=` take a net name) | `params[i].value.span`; `area` on J and Z edits or adds the positional `area.span` (right after the model) unless the line writes `area=`, and on an ngspice Q it is a parameter; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value`; on an LTspice B line with `laplace=`, after the last field before `laplace=`, except `window=`, `nfft=` and `mtol=`, which follow it (decision 0017 item 4) | X: use `set_instance_param`; V, I, K: no parameters; O: its values are in its LTRA model; ngspice A: its values are on its `.model`; `&`: no parameters; `@`'s `zm`: not editable; value keyword on a positional value: use `set_value`; repeated name; a result that breaks a line's rules (`TD=` beside `F=`, `m=` on Y) through verification |
 | `set_model(d, model, allow_external=False)` | R, C, L, D, Q, M, J, Z, S, W, O, U, Y, P; ngspice A and N (decision 0020: any type that is not built in) | `model.span` | R, C, L without a model: after the value: ` model` | model type not allowed for the letter (table in `model/model-types.json`); an LTspice A line's function (not a model, not editable); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; a value written `r=1k` (that form takes no model) |
 | `set_expression(d, text)` | B; the expression forms of E, F, G and H; ngspice TABLE and FREQ's expression and LTspice's `Laplace=` formula; C's charge, L's flux; an R, C or L formula value | `expression.span`, `charge.span`, `flux.span` or `value.span`, with its delimiters kept (`{…}`, `'…'` or none) | — | a gain (use `set_value`); a value that is not a formula (use `set_formula`); a line with no expression, including the four-node TABLE, `table=`, POLY and the gates, which name `set_table` or `set_poly_coefficients` (decisions 0016 item 7 and 0017) |
 | `set_table(d, points)` | an ngspice TABLE, FREQ or gate line; an LTspice `table=` | each value's span when the number of points is the same; otherwise `table.span`, rewritten in the layout already there (`"pairs"` or `"flat"`), reusing as written the text between the first two values, between the first two points and after the first `(`; with several lines, one new point on each continuation line with the first one's prefix | — | not a table form (POLY: `set_poly_coefficients`); a point of the wrong width (two values, three for FREQ); fewer points than the form takes (two for a gate or `table=`, one for ngspice TABLE and FREQ; exactly two for a gate); a value that is not a number on an ngspice TABLE; a count change over a comment among the points, or over lines that do not each hold one point (decision 0017 item 6). A FREQ table that ngspice stops on (first frequency of several characters right after the `(`) is refused through verification |
 | `set_poly_coefficients(d, values)` | a POLY line of E, F, G or H | each coefficient's span when the count is the same; otherwise the run from the first to the last, joined with the separator already between them | — | not a POLY line; fewer coefficients than the dialect takes (two on ngspice, one on LTspice); a comment among the coefficients, or a continuation line in the run, when the count changes (decision 0017 item 6) |
-| `set_switch_state(d, state)` | S, W | `flags[0].span`, with an LTspice value (`off=1`) | after the model: ` on` or ` off`; `None` removes the state and the gap before it | not a switch; a state other than `on`, `off` or `None` (decision 0015 item 10) |
+| `set_switch_state(d, state: Literal["on", "off"] \| None)` | S, W | `flags[0].span`, with an LTspice value (`off=1`) | after the model: ` on` or ` off`; `None` removes the state and the gap before it | not a switch; a state other than `on`, `off` or `None` (decision 0015 item 10) |
 | `remove_param(d, name)` | every line on which `set_param` sets a named parameter: R, C, L, D, Q, M, J, Z, B, `m=` on ngspice F and G, ngspice V's port parameters, LTspice V and I, T, U, Y and P, ngspice N, LTspice A and `@` | deletes `params[i].span` with a separator chosen from where the field sits on its physical line: after another field, the separator before it; first on its line with more after it, the separator after it; alone on its line, the line break before it (a comment after the field moves to the end of the line before); a list (`IC=`, `tc=`) goes whole; `z0` and `zo` name one T parameter | — | X: instance parameters are not removable; O: no parameters; a value keyword (`r=1k`: use `remove_value`); a positional area; a flag; a parameter the line does not have; a repeated name; a required parameter (T's `Z0=` and length, U's `l=`) through verification (decision 0019 item 11) |
 | `remove_value(d)` | R, C, L with a model | deletes `value.span` (the separator before it stays) | — | no value; no model (the line would have neither); not R, C or L |
 | `set_dc(d, value)` | V, I | `dc.span` | after the last node: ` DC value` | not a source |
@@ -82,9 +84,9 @@ goes right after it, so a trailing comment or a continuation stays after the new
 
 | Method | Edit | Insertion | Errors |
 |---|---|---|---|
-| `params.set(name, value, scope=(), in_definition=False, placement=None)` | the value of the **last** assignment of `name` in `scope` (defaults count) | `.param name=value` + terminator at `placement` (default `AFTER_LAST_PARAM`) | scope rules; on ngspice a bare expression (`2*3`) is an `EditError`, whose cause is the `ParseError` suggesting braces; LTspice accepts it |
-| `set_model_param(model, name, value, scope=(), in_definition=False)` | the value of parameter `name` of the first `.model model` in `scope`; a CPL matrix is replaced as a whole list (`"50n 10n 50n"`), and a code model's vector as a whole with its brackets (`"[2 1]"`, decision 0020); over a comment inside it (`+` lines), a list of as many values replaces each value in place, so the comment stays (review R3, as decision 0017 item 6); LTRA's flags stay as written | after the last parameter (inside `( … )`); in empty parentheses right after `open_paren_span`: `name=value`; without parentheses after the type: ` name=value` | no such model in `scope`; repeated parameter; a CPL matrix with a comment inside it, given another number of values |
-| `remove_model_param(model, name, scope=(), in_definition=False)` | deletes parameter `name` of the first `.model model` in `scope`, with the separator chosen as for `remove_param`; the first parameter inside `( … )` goes with the separator after it, a field first on its `+` line before the `)` leaves `+ )`, and the last one leaves `()`; a CPL matrix goes whole | — | no such model; no such parameter; a flag (not removable); a repeated parameter; a CPL matrix with a comment inside it, which the removal would lose (decision 0019 item 11, reviews R1 and R3) |
+| `params.set(name, value, *, scope=(), in_definition=False, placement=None)` | the value of the **last** assignment of `name` in `scope` (defaults count) | `.param name=value` + terminator at `placement` (default `None`: after the last `.param` of `scope`, as `AFTER_LAST_PARAM`; a sentinel because the default depends on `scope`) | scope rules; on ngspice a bare expression (`2*3`) is an `EditError`, whose cause is the `ParseError` suggesting braces; LTspice accepts it |
+| `set_model_param(model, name, value, *, scope=(), in_definition=False)` | the value of parameter `name` of the first `.model model` in `scope`; a CPL matrix is replaced as a whole list (`"50n 10n 50n"`), and a code model's vector as a whole with its brackets (`"[2 1]"`, decision 0020); over a comment inside it (`+` lines), a list of as many values replaces each value in place, so the comment stays (review R3, as decision 0017 item 6); LTRA's flags stay as written | after the last parameter (inside `( … )`); in empty parentheses right after `open_paren_span`: `name=value`; without parentheses after the type: ` name=value` | no such model in `scope`; repeated parameter; a CPL matrix with a comment inside it, given another number of values |
+| `remove_model_param(model, name, *, scope=(), in_definition=False)` | deletes parameter `name` of the first `.model model` in `scope`, with the separator chosen as for `remove_param`; the first parameter inside `( … )` goes with the separator after it, a field first on its `+` line before the `)` leaves `+ )`, and the last one leaves `()`; a CPL matrix goes whole | — | no such model; no such parameter; a flag (not removable); a repeated parameter; a CPL matrix with a comment inside it, which the removal would lose (decision 0019 item 11, reviews R1 and R3) |
 
 `params` is still the read-only mapping of top-level parameters (a `ParamTable`, which is a
 `Mapping`); `set` is its only addition.
@@ -93,11 +95,11 @@ goes right after it, so a trailing comment or a continuation stays after the new
 
 | Method | Edit | Errors |
 |---|---|---|
-| `add(text, placement=BEFORE_END)` | insert `text` + terminator | text classification below; placement errors |
+| `add(text, *, placement=BEFORE_END)` | insert `text` + terminator | text classification below; placement errors |
 | `replace(line, text)` | replace the whole `line.span` with `text` + the line's terminator | line targets below |
 | `remove(line)` | delete `line.span` | as `replace` |
 | `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end`. LTspice `.step`: the same, by swept quantity | two or more lines of the kind (or quantity); a repeatable kind |
-| `add_include(path, placement=AFTER_TITLE)` (on the netlist) | insert `.include "path"` + terminator | an include with the same statement text; a path that does not parse (a `"` or a line break) |
+| `add_include(path, *, placement=AFTER_TITLE)` (on the netlist) | insert `.include "path"` + terminator | an include with the same statement text; a path that does not parse (a `"` or a line break) |
 
 **Text.** `text` is one physical line (a `str`) or a sequence of physical lines (a continued
 statement or a block, `[".tran 1u 10m", "+ 0 1u"]`); written, the lines are joined with the
@@ -147,7 +149,9 @@ names the part `text[start:end]` that must re-parse as a node of one of `kinds`.
 `EditPlan(edits)` keeps submission order; `ordered()` sorts by start, puts an insertion before
 a replacement at the same offset, keeps the order of insertions at one point, and raises
 `EditError` for overlapping edits (two replacements sharing a character, or an insertion
-strictly inside a replacement). `apply_edits(text, plan) -> str` splices; it never mutates.
+strictly inside a replacement). `apply` is the only public way to apply a plan. Internally,
+`plan.apply_edits(text, plan) -> str` splices; it never mutates, and it neither parses nor
+verifies (it is not exported).
 
 ## 3. Verification
 

@@ -13,8 +13,9 @@ from pathlib import Path
 from hypothesis import given, settings
 from hypothesis import strategies as st
 
-from netlistmod import EditPlan, Netlist, Placement, apply_edits
+from netlistmod import EditPlan, Netlist, Placement
 from netlistmod.edit import operations
+from netlistmod.edit.plan import apply_edits
 from netlistmod.edit.verify import check_outside
 from tests.document.test_topology import _STYLES, _Circuit, _circuits, _render, _Style
 from tests.support.dialects import current_dialect

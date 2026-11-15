@@ -1,6 +1,6 @@
 """The restricted public edit API (architecture §7.2, decision 0007).
 
-:class:`Netlist` extends the read-only :class:`netlistmod.document.Netlist` with the edit
+:class:`Netlist` extends the read-only :class:`netlistmod.document.document.Netlist` with the edit
 operations. Editing is immutable and eager: each operation builds a plan against the current
 text, applies and verifies it (:mod:`netlistmod.edit.verify`) and returns a **new** netlist;
 the old one is unchanged. :meth:`Netlist.batch` collects several operations into one plan with
@@ -13,11 +13,11 @@ import os
 from collections.abc import Iterable, Iterator, Mapping, Sequence
 from pathlib import Path
 from types import TracebackType
-from typing import Generic, Self, TypeVar
+from typing import Generic, Literal, Self, TypeVar
 
 from netlistmod.dialects import Dialect
 from netlistmod.document import Line, ScopePath, TopologySignature
-from netlistmod.document import Netlist as ReadOnlyNetlist
+from netlistmod.document.document import Netlist as ReadOnlyNetlist
 from netlistmod.edit import conventions, operations
 from netlistmod.edit.operations import DirectiveText, UpsertTarget
 from netlistmod.edit.placement import Placement
@@ -68,17 +68,17 @@ class _Operations(Generic[_R]):
     def set_formula(
         self,
         designator: str,
-        expression: str,
+        text: str,
         *,
         scope: ScopePath = (),
         in_definition: bool = False,
     ) -> _R:
-        """Like :meth:`set_value`, writing the value as the brace formula ``{expression}``."""
+        """Like :meth:`set_value`, writing the value as the brace formula ``{text}``."""
         return self._submit(
             operations.set_value(
                 self._target(),
                 designator,
-                conventions.formula(expression),
+                conventions.formula(text),
                 scope=scope,
                 in_definition=in_definition,
                 reason=f"set_formula {designator}",
@@ -227,7 +227,7 @@ class _Operations(Generic[_R]):
     def set_switch_state(
         self,
         designator: str,
-        state: str | None,
+        state: Literal["on", "off"] | None,
         *,
         scope: ScopePath = (),
         in_definition: bool = False,
@@ -464,11 +464,12 @@ class _Operations(Generic[_R]):
             operations.upsert_target(self._target(), "set_model_param", scope, model, name),
         )
 
-    def add_include(self, path: str, placement: Placement = Placement.AFTER_TITLE) -> _R:
+    def add_include(self, path: str, *, placement: Placement = Placement.AFTER_TITLE) -> _R:
         """Add ``.include "path"`` for a harness file (architecture §7.9).
 
         The path is written as given and never read; ngspice resolves a relative path from the
         netlist file's folder. An include with the same statement text is an ``EditError``.
+        The line goes to ``placement`` (keyword-only; after the title by default).
         """
         return self._submit(
             operations.add_include(self._target(), path, placement),
@@ -516,7 +517,9 @@ class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
         or add ``.param name=value`` (decision 0007 item 7).
 
         A new line goes to ``placement``: by default after the last ``.param`` of the scope
-        (after the title, or at the start of a definition's body, when there is none).
+        (after the title, or at the start of a definition's body, when there is none). The
+        default is ``None`` rather than a ``Placement`` because it depends on ``scope``, which no
+        fixed ``Placement`` can express.
         ``value`` is written as given; a bare expression does not parse (write ``{…}``).
         """
         return self._operations._submit(
@@ -551,7 +554,7 @@ class DirectiveEditor(Generic[_R]):
         """Bind the editor to the operations that submit edits."""
         self._operations = operations_
 
-    def add(self, text: DirectiveText, placement: Placement = Placement.BEFORE_END) -> _R:
+    def add(self, text: DirectiveText, *, placement: Placement = Placement.BEFORE_END) -> _R:
         """Insert one directive or opaque item (before ``.end`` by default). The line is written
         even if one of its kind exists; ``set`` is the upsert (decision 0012)."""
         return self._operations._submit(

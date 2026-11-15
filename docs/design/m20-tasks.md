@@ -71,7 +71,7 @@ Every task that changes a file ends with the checks green, run as `uv run --env-
 
 D1 and D3 run in parallel (their files do not overlap); D2 follows D1, and D4 follows D2 and D3. A developer that needs a file outside its list reports it instead.
 
-[ ] **D1 — The public boundary and the signatures (5.1 points 2, 3 and 4.1–4.5, 4.7).** `src/netlistmod/__init__.py` and the subpackage `__init__.py`s, `edit/api.py`, `edit/plan.py`, `document/document.py`, `document/lines.py`, `dialects.py`, the tests that use what changes, `tests/test_package.py`, `document-layer.md`, `edit-layer.md`, `statements.md` and the usage guides.
+[x] **D1 — The public boundary and the signatures (5.1 points 2, 3 and 4.1–4.5, 4.7).** `src/netlistmod/__init__.py` and the subpackage `__init__.py`s, `edit/api.py`, `edit/plan.py`, `document/document.py`, `document/lines.py`, `dialects.py`, the tests that use what changes, `tests/test_package.py`, `document-layer.md`, `edit-layer.md`, `statements.md` and the usage guides.
 
 [ ] **D3 — A number as a model name; `|` validated (5.1 points 6 and 7).** The transformer checks (`model/_rules_*.py`), `tests/grammar/`, `tests/solver/` (probe cases), the spec entries and `discrepancies.md` of both dialects, `names.md`, and `elements.md`.
 
@@ -205,7 +205,7 @@ ngspice's own test is stricter than the library's: only a field that is entirely
 - [x] A2: `complete with findings`, 18 items, with a draft §18; claims checked by the lead.
 - [x] A3: `complete with findings`, 18 items; both loads reproduced; the lead probed both solvers (5.1, 5.1.1).
 - [x] G1: ten points; all decided by the maintainer on 2026-11-14 (point 1 the narrower contract, point 6 uniform refusal, the rest as recommended).
-- [ ] D1
+- [x] D1: `complete with findings`. Points 2, 3, 4.1–4.5 and 4.7 made as decided. Lead decisions at G2: `Netlist.scope(path)` stays positional (its argument is the path asked about, not a filter; D1-n4); the slot-check examples that `1k 2k` no longer reaches (D3 refuses it first) use `1k rmod` (D1-n2); D1-n5 and D1-n6 (architecture §4, §5.4, decision 0007 items 10 and 11) go to T2.
 - [ ] D3
 - [ ] D2
 - [ ] D4

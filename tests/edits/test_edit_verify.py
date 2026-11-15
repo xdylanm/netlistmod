@@ -76,8 +76,8 @@ def test_rkm_text_names_the_option() -> None:
 @pytest.mark.ngspice_only
 def test_the_slot_check_rejects_text_that_lands_as_more_than_the_slot() -> None:
     netlist = _netlist("R1 a b 1k")
-    with pytest.raises(EditError, match="`1k 2k` does not re-parse as a value"):
-        netlist.set_value("R1", "1k 2k")
+    with pytest.raises(EditError, match="`1k rmod` does not re-parse as a value"):
+        netlist.set_value("R1", "1k rmod")
 
 
 def test_slot_checks_follow_shifted_positions() -> None:
