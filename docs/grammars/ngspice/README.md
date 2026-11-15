@@ -25,7 +25,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-ACA-001](./specs/NG-ACA-001.yaml) | .ac small-signal analysis | validated | 6 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-BEH-001](./specs/NG-BEH-001.yaml) | behavioral source (B) lines | validated | 6 + 2 solver | ngspice 47 (2026-11-06) |
 | [NG-BJT-001](./specs/NG-BJT-001.yaml) | bipolar transistor (Q) lines | validated | 4 + 4 solver | ngspice 47 (2026-11-05) |
-| [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | 5 + 3 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-06) |
+| [NG-CAP-001](./specs/NG-CAP-001.yaml) | capacitor (C) lines | validated | 8 + 5 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-06, 2026-11-14) |
 | [NG-CCC-001](./specs/NG-CCC-001.yaml) | current-controlled current source (F) lines | validated | 2 + 3 solver | ngspice 47 (2026-11-06) |
 | [NG-CCV-001](./specs/NG-CCV-001.yaml) | current-controlled voltage source (H) lines | validated | 2 + 3 solver | ngspice 47 (2026-11-06) |
 | [NG-CNT-001](./specs/NG-CNT-001.yaml) | immediately adjacent continuation lines (+ and trailing \\) | validated | 7 + 5 solver | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -34,7 +34,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-CPL-001](./specs/NG-CPL-001.yaml) | coupled transmission line (P) lines | validated | 5 + 4 solver | ngspice 47 (2026-11-09) |
 | [NG-CTL-001](./specs/NG-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | 4 + 1 solver | ngspice 47 (2026-11-06) |
 | [NG-DCA-001](./specs/NG-DCA-001.yaml) | .dc transfer function | validated | 6 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-DIO-001](./specs/NG-DIO-001.yaml) | junction diode (D) lines | validated | 2 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-DIO-001](./specs/NG-DIO-001.yaml) | junction diode (D) lines | validated | 4 + 3 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-14) |
 | [NG-DIR-001](./specs/NG-DIR-001.yaml) | unknown dot-commands and stray block terminators | validated | 4 + 5 solver | ngspice 47 (2026-10-31) |
 | [NG-END-001](./specs/NG-END-001.yaml) | required final .end statement | validated | 3 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-FLD-001](./specs/NG-FLD-001.yaml) | element field separators: blanks, one comma, = with blanks, continuation | validated | 6 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -53,7 +53,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-FUN-012](./specs/NG-FUN-012.yaml) | RF port parameters | validated | 2 + 1 solver | ngspice 47 (2026-11-04) |
 | [NG-GLB-001](./specs/NG-GLB-001.yaml) | .global node declarations | validated | 4 + 1 solver | ngspice 47 (2026-10-31) |
 | [NG-ICN-001](./specs/NG-ICN-001.yaml) | .ic and .nodeset | validated | 6 + 4 solver | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-IND-001](./specs/NG-IND-001.yaml) | inductor (L) lines | validated | 3 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-IND-001](./specs/NG-IND-001.yaml) | inductor (L) lines | validated | 5 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-14) |
 | [NG-JFT-001](./specs/NG-JFT-001.yaml) | junction FET (J) lines | validated | 2 + 2 solver | ngspice 47 (2026-11-05) |
 | [NG-LTR-001](./specs/NG-LTR-001.yaml) | lossy transmission line (O) lines | validated | 4 + 3 solver | ngspice 47 (2026-11-09) |
 | [NG-MEA-001](./specs/NG-MEA-001.yaml) | .meas / .measure (shallow) | validated | 6 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -62,7 +62,7 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-MOS-001](./specs/NG-MOS-001.yaml) | MOSFET and VDMOS (M) lines | validated | 3 + 3 solver | ngspice 47 (2026-11-05) |
 | [NG-MUT-001](./specs/NG-MUT-001.yaml) | mutual coupling (K) lines | validated | 2 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NLS-001](./specs/NG-NLS-001.yaml) | expression forms of the dependent sources (E vol= and value, G cur= and value) | validated | 8 + 1 solver | ngspice 47 (2026-11-06) |
-| [NG-NOD-001](./specs/NG-NOD-001.yaml) | node, model, subcircuit and parameter names | validated | 5 + 4 solver | ngspice 47 (2026-10-31) |
+| [NG-NOD-001](./specs/NG-NOD-001.yaml) | node, model, subcircuit and parameter names | validated | 6 + 6 solver | ngspice 47 (2026-10-31, 2026-11-14) |
 | [NG-NUM-001](./specs/NG-NUM-001.yaml) | numbers: sign, mantissa, exponent and scale factor | validated | 4 + 3 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-11) |
 | [NG-NUM-002](./specs/NG-NUM-002.yaml) | letters following a number | validated | 1 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-NUM-003](./specs/NG-NUM-003.yaml) | RKM notation for R and C values (parser option rkm) | validated | 5 + 4 solver | ngspice 47 (2026-10-30, 2026-10-31) |
@@ -75,14 +75,14 @@ which run only where the solver is installed. The table and its totals line are 
 | [NG-PAR-001](./specs/NG-PAR-001.yaml) | instance parameters, model references and the off flag | validated | 4 + 4 solver | ngspice 47 (2026-10-31) |
 | [NG-PLY-001](./specs/NG-PLY-001.yaml) | POLY on E, F, G and H | validated | 10 + 3 solver | ngspice 47 (2026-11-08) |
 | [NG-PRM-001](./specs/NG-PRM-001.yaml) | .param assignments | validated | 6 + 4 solver | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-RES-001](./specs/NG-RES-001.yaml) | resistor (R) lines | validated | 4 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |
+| [NG-RES-001](./specs/NG-RES-001.yaml) | resistor (R) lines | validated | 7 + 4 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-14) |
 | [NG-SAV-001](./specs/NG-SAV-001.yaml) | .save output vectors | validated | 7 + 3 solver | ngspice 47 (2026-10-31) |
 | [NG-SBD-001](./specs/NG-SBD-001.yaml) | .subckt ... .ends definitions and their bodies | validated | 13 + 5 solver | ngspice 47 (2026-10-30, 2026-10-31) |
 | [NG-SRC-001](./specs/NG-SRC-001.yaml) | independent sources (V, I): DC value and AC magnitude and phase | validated | 4 + 3 solver | ngspice 47 (2026-10-30, 2026-10-31, 2026-11-10) |
 | [NG-STR-001](./specs/NG-STR-001.yaml) | top-level source structure | validated | 4 + 2 solver | ngspice 47 (2026-10-31) |
 | [NG-SUB-001](./specs/NG-SUB-001.yaml) | subcircuit calls (X) | validated | 4 + 1 solver | ngspice 47 (2026-10-30, 2026-10-31) |
-| [NG-SWC-001](./specs/NG-SWC-001.yaml) | current-controlled switch (W) lines | validated | 2 + 2 solver | ngspice 47 (2026-11-06) |
-| [NG-SWV-001](./specs/NG-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | 3 + 3 solver | ngspice 47 (2026-11-06) |
+| [NG-SWC-001](./specs/NG-SWC-001.yaml) | current-controlled switch (W) lines | validated | 4 + 3 solver | ngspice 47 (2026-11-06, 2026-11-14) |
+| [NG-SWV-001](./specs/NG-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | 5 + 4 solver | ngspice 47 (2026-11-06, 2026-11-14) |
 | [NG-TBL-001](./specs/NG-TBL-001.yaml) | TABLE on E and G, and E's four-node TABLE | validated | 11 + 3 solver | ngspice 47 (2026-11-08) |
 | [NG-TLL-001](./specs/NG-TLL-001.yaml) | lossless transmission line (T) lines | validated | 6 + 5 solver | ngspice 47 (2026-11-09) |
 | [NG-TMP-001](./specs/NG-TMP-001.yaml) | .temp | validated | 6 + 2 solver | ngspice 47 (2026-10-30, 2026-10-31) |

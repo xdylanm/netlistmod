@@ -294,3 +294,16 @@ Each number row is a case of `tests/solver/test_ngspice_value_probes.py::test_nu
 | Stops on `M1 d g s mm 1μ` and `M1 d g s mm 2` ("could not find a valid modelname"). | `ParseError`: a number in the model's place (`1μ` before M18 loaded as the model, with `mm` a fourth node). | `test_a_number_after_an_m_model_stops_ngspice_and_is_refused` |
 | Runs a line after a nested `.if` block inside the outer block (`.if (1)` / `.if (2)` / `.endif` / `R1 a 0 1k` / `.endif`). | Loads since M18 (A2-19): before, the line after the inner `.endif` was a `ParseError`. | `test_a_line_after_a_nested_if_block_runs_and_loads`; `structure_basic/nested_if.cir` |
 | Runs a line that holds a lone CR right before its CRLF (`* abc` CR CR LF, a title, a trailing comment). | Loads since M18 (decision 12): the CR is free text, as decision 0001 reads it. | `test_a_lone_cr_before_a_crlf_runs_and_loads` |
+
+## Model name observations (ngspice 47, 2026-11-14; M20)
+
+Decision 0024, extending decision 0021 item 1: a field the grammar reads as a number (digits, then letters only: `2`, `4093`, `1k`, `4093B`) is never a model name, on every letter. Each row is a case of `tests/solver/test_ngspice_number_model_probes.py::test_number_model_probes` unless named.
+
+| Solver behavior | Library behavior | Evidence |
+|---|---|---|
+| Stops on a D line whose model is a number, with the `.model` defined (`D1 a 0 2`, `4093`, `1k`, `1e3`): "could not find a valid modelname". | `ParseError` at the model (before M20 the line loaded with the model `2`). | `d-number`, `d-number-4093`, `d-number-scaled`, `d-number-exponent` |
+| Stops on `S1 a 0 c 0 2` with `.model 2 SW` and `W1 a 0 V2 2` with `.model 2 CSW`: "Unable to find definition of model 2". | `ParseError` at the model. | `s-number`, `w-number` |
+| Runs `D1 a 0 4093B` with `.model 4093B D` and `D1 a 0 1kohm` with `.model 1kohm D`: its model-name check refuses only a field that is entirely a number with a scale factor. | `ParseError`: the library's number reading (digits, then letters) is wider than ngspice's check, and one rule holds on both dialects. | `d-number-letters`, `d-number-unit` |
+| Reads `R1 a 0 1k 2` with `.model 2 R` as a 2 Ω resistor and `R1 a 0 1k 4093` as 4093 Ω: a number after the value is the value, not the model. It reads `C1 a 0 1p 2p` as 2 pF and runs `L1 a 0 1u 2`. | `ParseError` at the number (before M20 the library read a model `4093`, a misread). | `test_a_number_after_a_value_is_the_value`; `r-number-after-value`, `r-4093-after-value`, `c-number-after-value`, `l-number-after-value` |
+
+These agree: a part number such as `1n4148`, `1N4148_OJ`, `CD4093`, `74HC00`, `4N25` or `2N2` is a model name on D, S and after an R value, and a subcircuit named `4093` runs and loads (`d-part-*`, `s-part`, `r-part-after-value`, `x-number-subcircuit`). A `|` in a node name (`a|b`) and a model name (`d|x`) runs and loads; the manual's excluded list does not contain it (NG-NOD-001; `test_a_bar_in_a_node_and_a_model_name_runs_and_loads`).

@@ -218,6 +218,14 @@ def test_external_model_needs_an_include_and_the_flag() -> None:
         _netlist("D1 a k dm\n.model dm d").set_model("D1", "dm2", allow_external=True)
 
 
+def test_set_model_refuses_a_number_as_the_model_name() -> None:
+    # A field that reads as a number is never a model name (decision 0024); a part name is.
+    netlist = _netlist("D1 a k dm\n.model dm d\n.model 2 d\n.model 1n4148 d")
+    with pytest.raises(EditError, match="a model name cannot be a number"):
+        netlist.set_model("D1", "2")
+    assert "D1 a k 1n4148\n" in netlist.set_model("D1", "1n4148").text
+
+
 def test_set_model_resolves_through_enclosing_scopes() -> None:
     body = ".model dm2 d\n.subckt amp a b\nD1 a b dm\n.model dm d\n.ends"
     edited = _netlist(body).set_model("D1", "dm2", scope=("amp",), in_definition=True)

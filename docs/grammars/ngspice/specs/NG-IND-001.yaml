@@ -12,6 +12,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-14'
 grammar:
 - inductor
 - l_keyword_value
@@ -23,5 +26,12 @@ tests:
 - tests/grammar/ngspice/test_elements.py::test_keyword_value_forms_fill_the_value_slot
 - tests/grammar/ngspice/test_elements.py::test_malformed_capacitor_and_inductor_lines_are_rejected
 - tests/solver/test_ngspice_solver_elements.py::test_accept_corpus_runs_in_ngspice
+- tests/grammar/test_number_model_names.py::test_a_number_after_an_ngspice_value_is_not_a_model_name
+- tests/grammar/test_number_model_names.py::test_a_part_number_after_an_ngspice_value_is_a_model_name
+- tests/solver/test_ngspice_number_model_probes.py::test_number_model_probes
 notes: Same shape as R with l= / inductance=; nt= is an ordinary parameter. RKM is not accepted for L
   (4u7 is a ParseError in both modes).
+  A field read as a number (digits, then letters only, as in 2, 2p or 4093) after the value is never
+  the model and is a ParseError (decision 0024, extending decision 0021 item 1); ngspice 47 reads it
+  as the value (R1 a 0 1k 4093 is 4093 ohms), which the library read as a model before 1.0
+  (discrepancies.md). A part number such as 1n4148 or 2N2222 there stays a model.

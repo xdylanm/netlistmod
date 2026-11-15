@@ -9,6 +9,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-10-31'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-14'
 grammar:
 - _WCHAR
 - _WUNIT
@@ -26,11 +29,18 @@ tests:
 - tests/solver/test_ngspice_validation.py::test_excluded_name_characters_run_but_the_library_rejects_them
 - tests/solver/test_ngspice_validation.py::test_quote_and_equals_in_a_node_name_fail_in_both
 - tests/solver/test_ngspice_solver_elements.py::test_digit_leading_model_name_agrees_with_solver
+- tests/grammar/ngspice/test_elements.py::test_a_number_is_never_a_model_where_no_value_can_stand
+- tests/solver/test_ngspice_number_model_probes.py::test_number_model_probes
+- tests/solver/test_ngspice_number_model_probes.py::test_a_bar_in_a_node_and_a_model_name_runs_and_loads
 notes: 'A name excludes blanks and the characters the manual lists (= % ( ) , [ ] < > ~ { } ''), plus
   the comment starters ; $ //, a double quote and a backslash. A / must be followed by another name character,
   so // starts a comment and a name cannot end in / (a/ is rejected). Numeric node names (1, 12) are names:
   in a node position no number terminal is offered. Ground aliases and case rules are M5 (names.md). In
   a value position a digit-leading field is a value; where no value can stand (diode model, after a value)
-  a digit-leading field is a model name, as ngspice 47 accepts 1n4148. ngspice 47 (M7) reads a/b, n+1,
+  a digit-leading name such as 1n4148 is a model name, as ngspice 47 accepts, but not a number (below). ngspice 47 (M7) reads a/b, n+1,
   n-1, a#b, 1n and N_OUT.2 as node names, as the library does; a quote or = in a name fails in both. It
-  also accepts o[1], a%b, a<b, a~b and a(b, which the library rejects per the manual''s list (discrepancies.md).'
+  also accepts o[1], a%b, a<b, a~b and a(b, which the library rejects per the manual''s list (discrepancies.md).
+  A field read as a number (digits, then letters only, as in 2, 1n, 4093B) is never a model name on
+  any letter (decision 0024, extending decision 0021 item 1), also where no value can stand (diode
+  model, after a value); a subcircuit name is not checked. A | in a node or model name (a|b, d|x) is
+  a name character, which the manual does not exclude and ngspice 47 runs (M20 5.1 point 7).'

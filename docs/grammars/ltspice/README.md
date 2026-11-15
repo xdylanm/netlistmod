@@ -74,7 +74,7 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-COM-002](./specs/LT-COM-002.yaml) | end-of-line comments (; and space-$-space) | validated | 3 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-CTL-001](./specs/LT-CTL-001.yaml) | shared shape of the linear dependent sources and switches | validated | 3 + 1 solver | ltspice 26.1.1 (2026-11-06) |
 | [LT-DCA-001](./specs/LT-DCA-001.yaml) | .dc | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-01) |
-| [LT-DIO-001](./specs/LT-DIO-001.yaml) | diode (D) lines | validated | 3 + 4 solver | ltspice 26.1.1 (2026-11-01) |
+| [LT-DIO-001](./specs/LT-DIO-001.yaml) | diode (D) lines | validated | 5 + 5 solver | ltspice 26.1.1 (2026-11-01, 2026-11-14) |
 | [LT-DIR-001](./specs/LT-DIR-001.yaml) | closed list of dot-commands | validated | 3 + 9 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-END-001](./specs/LT-END-001.yaml) | required final .end | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-FLD-001](./specs/LT-FLD-001.yaml) | field separators | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-01) |
@@ -122,8 +122,8 @@ where LTspice is installed. The table and its totals line are the output of
 | [LT-STP-001](./specs/LT-STP-001.yaml) | .step | validated | 4 + 7 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-STR-001](./specs/LT-STR-001.yaml) | top-level source structure | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-01) |
 | [LT-SUB-001](./specs/LT-SUB-001.yaml) | subcircuit calls (X) | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-01, 2026-11-11) |
-| [LT-SWC-001](./specs/LT-SWC-001.yaml) | current-controlled switch (W) lines | validated | 1 + 2 solver | ltspice 26.1.1 (2026-11-06) |
-| [LT-SWV-001](./specs/LT-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | 2 + 3 solver | ltspice 26.1.1 (2026-11-06) |
+| [LT-SWC-001](./specs/LT-SWC-001.yaml) | current-controlled switch (W) lines | validated | 3 + 3 solver | ltspice 26.1.1 (2026-11-06, 2026-11-14) |
+| [LT-SWV-001](./specs/LT-SWV-001.yaml) | voltage-controlled switch (S) lines | validated | 4 + 4 solver | ltspice 26.1.1 (2026-11-06, 2026-11-14) |
 | [LT-TBL-001](./specs/LT-TBL-001.yaml) | table= on E and G | validated | 4 + 3 solver | ltspice 26.1.1 (2026-11-08) |
 | [LT-TLL-001](./specs/LT-TLL-001.yaml) | lossless transmission line (T) lines | validated | 4 + 4 solver | ltspice 26.1.1 (2026-11-09) |
 | [LT-TMP-001](./specs/LT-TMP-001.yaml) | .temp | validated | 2 + 2 solver | ltspice 26.1.1 (2026-11-01) |
