@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.10.0 — 2026-11-14
 
-M20: the 1.0 API review ([decision 0024](docs/decisions/0024-the-1-0-public-api.md)). From 1.0.0 the project follows SemVer as architecture §18 states. The next release, `0.10.0`, is a second beta, and 1.0 follows an audit of the planned xyce and qspice dialects against the contract. The public API is `netlistmod.__all__` and submodules are internal, so import from `netlistmod`. Public names, signatures and the exception raised for a condition are covered; fields, diagnostics, the signature digest, inserted text, annotations and messages are best-effort. The changes below update callers of 0.9.0.
+The second beta: it ships M20's API changes, which update callers of 0.9.0. 1.0 follows an audit of the planned xyce and qspice dialects against the contract.
+
+M20: the 1.0 API review ([decision 0024](docs/decisions/0024-the-1-0-public-api.md)). From 1.0.0 the project follows SemVer as architecture §18 states. The public API is `netlistmod.__all__` and submodules are internal, so import from `netlistmod`. Public names, signatures and the exception raised for a condition are covered; fields, diagnostics, the signature digest, inserted text, annotations and messages are best-effort. The changes below update callers of 0.9.0.
 
 Breaking:
 
