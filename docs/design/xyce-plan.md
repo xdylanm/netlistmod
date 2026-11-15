@@ -39,13 +39,13 @@ Kinds: **reuse** (an existing node as it is), **reuse with differences**, **new 
 | E, G | gain; `VALUE={}` (`VOL` and `CUR` synonyms); `TABLE {expr} = …`, with the expression allowed unbraced; `POLY(n)` | ref §2.3.12 p232–233, §2.3.14 p235 | Reuse with differences: the unbraced TABLE expression |
 | F, H | gain, which may be a brace expression; `POLY(n)` | ref §2.3.13 p234, §2.3.15 p237 | Reuse with differences |
 | B | `V=expr` or `I=expr`; also `tablefile("f")` with a quoted string | ref §2.3.16 p238–240 | Reuse with differences |
-| Q | `Q c b e [sub] <model> [area]`, 3 to 5 nodes; a named substrate is written in square brackets; VBIC and HICUM add a thermal node | ref §2.3.17 p241–242 | Reuse with differences: the `[node]` form is new; the manual's VBIC example writes the thermal node unbracketed, which needs a probe |
+| Q | `Q c b e [sub] <model> [area]`, 3 to 5 nodes; a named substrate is written in square brackets; VBIC and HICUM add a thermal node | ref §2.3.17 p241–242 | Reuse with differences: the manual brackets a named substrate, but Xyce 7.10 reads `[s]` as a node literally named `[s]` (X-M0 probe; a discrepancy for X-M4); the manual's VBIC example writes the thermal node unbracketed, which needs a probe |
 | M | 4 nodes and a model; BSIM-SOI 4 to 7 nodes (a `TNODEOUT` flag changes the last node's meaning); MVS 3 or 5; `IC=` lists | ref §2.3.20 p292–294 | Reuse with differences: the node counts |
 | S | (a) `S s+ s- c+ c- <model> [ON] [OFF]` (VSWITCH); (b) a generic `S s+ s- <model> [ON][OFF] CONTROL={expr}` (SWITCH model) | ref §2.3.22 p762, §2.3.23 p766 | (a) reuse; (b) a new form with two nodes, whose `CONTROL=` is edited with `set_expression` |
 | T | `T a+ a- b+ b- Z0= [TD=] [F= [NL=]]`, `ZO` a synonym | ref §2.3.25 p769 | Reuse with differences |
 | U | digital gates: `U <type>[(<n>)] <dpwr> <dgnd> <in>* <out>* <model>`, types INV, BUF, AND, NAND, OR, NOR, XOR, NXOR, DFF, JKFF, TFF, DLTCH, ADD; model DIG | ref §2.3.28 p775–777 | New node. Collides with ngspice's URC; xyce has no URC |
 | X | `X [node]* <subckt> [PARAMS: n=v …]`; `M=` without `PARAMS:` | ref §2.3.33 p803 | Reuse with differences: `PARAMS:` on X (ngspice refuses it) |
-| Y\<type\> | `Y<type> <name> [node]* <model>`; the name is unique only with the type | ref Table 2-35 p178, §2.3.29 p780 | **A new designator form** (section 6, decision X-D4). The letter collides with ngspice's TXL |
+| Y\<type\> | `Y<type> <name> [node]* <model>`; the name is unique only with the type | ref Table 2-35 p177–178, §2.3.29 p780 | **A new designator form** (section 6, decision X-D4). The letter collides with ngspice's TXL |
 | YTRANSLINE, YDELAY, YLIN, YACC, YMEMRISTOR | lumped line; delay (four nodes, no model); linear N-port from a Touchstone file; accelerometer (three nodes, no model); memristor | ref §2.3.26 p771, §2.3.27 p773, §2.3.24 p767, §2.3.30 p785, §2.3.32 p797 | New nodes |
 | YPGBR, YPGBS, YPGTR, YPGGB | power-grid devices, four or five nodes, no model | ref §2.3.31 p786–796 | Exclusion candidate (niche); decide in X-M7 |
 | Y digital (YAND, YNOT, …), deprecated | which nodes appear depends on the model card | ref §2.3.29 p780–782 | Exclusion candidate: the library cannot see the model card |
@@ -77,13 +77,13 @@ Model types for `model-types.json`: R/RES, C/CAP, L/IND, CORE, D, NPN, PNP, NJF,
 | `.PRINT`, `.FOUR`, `.FFT`, `.NOISE`, `.HB`, `.LIN`, `.SENS`, `.RESULT`, the sampling analyses | outputs and further analyses | ref §2.1 | Unknown directive in a closed list, typed later where needed |
 | `.END` | must be the last line | ug §4.1.1 p40 | Reuse |
 
-Not in xyce: `.TEMP`, `.TF`, `.PROBE`, `.PZ`, `.DISTO`, `.MC`, `.PLOT`, `.control`, `.if` and `.title` (ref Table 6-1 p847). The plan proposes a closed list of dot-commands, as decision 0009 did for LTspice. The manuals do not say what xyce does with an unknown one, so X-M0 probes it.
+Not in xyce: `.TEMP`, `.TF`, `.PROBE`, `.PZ`, `.DISTO`, `.MC` and `.PLOT` (ref Table 6-1 p847–848, which says `.TEMP` is ignored). `.control`, `.if` and `.title` are not in the manual at all. The plan proposes a closed list of dot-commands, as decision 0009 did for LTspice. X-M0 probed an unknown one: Xyce 7.10 warns and ignores the line, and reads an unknown block's body as ordinary lines (a discrepancy row; the list is decided in X-M2).
 
 ## 5. Names, numbers, scoping and structure
 
 - **Case:** case-insensitive, except file names (ug §4.1.3 p41). ASCII folding, as on ngspice.
 - **Characters:** printable ASCII, except whitespace, parentheses, braces, comma, colon, semicolon and quotes (ref §2.3.2 p184). Parameter names start with a letter or `_` (ug §4.3.1 p46).
-- **Ground and globals:** only `0` is ground; `GND` and the rest only with `.PREPROCESS REPLACEGROUND` (ref §2.3.1.1 p182). Every node beginning `$G` is global (decision X-D3).
+- **Ground and globals:** only `0` is ground (ref §2.3.1.1 p182); `GND` and the rest only with `.PREPROCESS REPLACEGROUND` (ref §2.1.28 p125). Every node beginning `$G` is global (decision X-D3).
 - **Hierarchy:** `:` separates instance paths (`Xmain:Xnot1:A`), or `.` with the `-hspice-ext separator` flag. `X1:node` may stand on a device line (ref §2.3.1.2 p182–183; decision X-D2).
 - **Numbers:** the scale factors T, G, Meg, **X** (1e6), K, mil, m, u, n, p, f (ug Table 4-1 p42). There is **no `a`**: it means amperes unless `-hspice-ext units` is given (ref §3.1 p835). There is no RKM, so `rkm=True` on xyce is a `ValueError` (m21 5.1 item 3).
 - **Scoping:** as on ngspice: a body `.param` is local and masks outer names. A repeated `.param` takes the last definition by default; `-redefined_params` changes that (ref §2.1.26 p120, §3.2 p835).
@@ -120,7 +120,7 @@ Each is a decision record in the milestone named, before its implementation.
   - `-r <file>` writes a raw file (`-a` for ASCII);
   - `-namesfile` lists the qualified node names, a node-list check like ngspice's;
   - `-v` gives the version for `validated_on`.
-- **Raw format:** SPICE3-style, without the Commands and Options lines (ref §8 p857). `tests/support/raw.py` should mostly serve.
+- **Raw format:** SPICE3-style, without the Commands and Options lines (ref §8 p857–858). `tests/support/raw.py` reads it after three changes made in X-M0: blank lines between points, complex values written `re, im`, and one `Title:` for several plots.
 - **To check first (X-M0):** whether Smart App Control lets the installer and the binary run (AGENTS.md), and the install path for `XYCE_EXE`.
 
 ## 8. Milestones
@@ -129,7 +129,7 @@ One pull request each, in the style of the phase plans. Sizes are rough.
 
 | Milestone | Content | Size |
 |---|---|---|
-| **X-M0 — Set-up and solver spike** | `[xyce-ref]` and `[xyce-ug]` in `references.md`; the install and Smart App Control; `tests/support/xyce.py` and `XYCE_EXE` discovery; `Dialect.XYCE` with an empty overlay; the `docs/grammars/xyce/` skeleton (§9.3); decision X-D0. Probes: an unknown dot-command, leading whitespace, `+` after a comment, `[node]`, `//` in the manual's examples | S |
+| **X-M0 — Set-up and solver spike** | `[xyce-ref]` and `[xyce-ug]` in `references.md`; the install and Smart App Control; `tests/support/xyce.py` and `XYCE_EXE` discovery; a hidden xyce dialect with a structure-only overlay ([decision 0026](../decisions/0026-the-xyce-dialect.md)); the `docs/grammars/xyce/` skeleton (§9.3); decision X-D0. Probes: an unknown dot-command, leading whitespace, `+` after a comment, `[node]`, `//` in the manual's examples | S |
 | **X-M1 — Structure, names, numbers; R, C, L, V, I, D, X, K** | Title and `.END`; comments and continuation; names, `$G`, `:`; scale factors and the `rkm` refusal; expressions; `.param`, `.global_param`, `.func`, `.model`, `.subckt`, includes and `.lib`, `.global`, `.preprocess replaceground`; names.md and scoping.md; the elements, with R, C and L's model before the value; decisions X-D1, X-D2, X-D3, X-D5 | L |
 | **X-M2 — Directives** | Typed `.tran`, `.ac`, `.dc`, `.op`, `.options`, `.ic`/`.dcvolt`/`.nodeset`, `.step`, `.meas`; the opaque `.data` block; the closed list of the rest | M |
 | **X-M3 — Stimulus and the port** | PULSE, SIN, EXP, PAT, PWL (with FILE, `TD=`, `R=`), SFFM, with and without parentheses; the P port device | M |
