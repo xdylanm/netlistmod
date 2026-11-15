@@ -25,6 +25,10 @@ All are frozen, slotted dataclasses (`netlistmod.model`, exported from `netlistm
 | `AcSpec` | `magnitude: Value`, `phase: Value \| None`, `span` (keyword to last value) |
 | `Node` | `name`, `span` |
 
+A **designator** is the string that names an element in its dialect (decision 0024 item 11).
+In ngspice and LTspice it is the line's first token; another dialect may name a device with
+more than one token, and decides how that name is written.
+
 `Component` (keyword-only fields) is the base of every element: `designator`,
 `designator_span`, `nodes`, `params`, `span`, `trailing_comments`. Subclasses:
 

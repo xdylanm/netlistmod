@@ -1,7 +1,7 @@
 # M21 task list — the xyce and qspice audit
 
-> **Status:** READY FOR REVIEW — the audit and both plan drafts; the maintainer reviews the pull request
-> **Follows:** [M20](./archive/v1.0/m20-tasks.md) and [decision 0024](../decisions/0024-the-1-0-public-api.md), whose contract takes effect at `1.0.0`. Governed by [architecture.md](../architecture.md) (§2, §9.2, §9.3, §11, §12, §18).
+> **Status:** COMPLETE (2026-11-15) — approved by the maintainer and merged as #23; the outcome is [decision 0025](../../../decisions/0025-qspice-help-as-reference.md) and the draft [xyce](../../xyce-plan.md) and [qspice](../../qspice-plan.md) plans
+> **Follows:** [M20](./m20-tasks.md) and [decision 0024](../../../decisions/0024-the-1-0-public-api.md), whose contract takes effect at `1.0.0`. Governed by [architecture.md](../../../architecture.md) (§2, §9.2, §9.3, §11, §12, §18).
 
 ## 1. Scope
 
@@ -115,7 +115,7 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
 
    Using it would need a decision record. Decision 5 names qspice's own documentation, §11 makes the manual the authority, and §12 and P10 keep GPL material out of the project. It is not proposed as a reference.
 
-   **Decided (maintainer, 2026-11-15): QSPICE's own help, paraphrased** ([decision 0025](../decisions/0025-qspice-help-as-reference.md)). The maintainer installed QSPICE and Xyce. The help (`QSPICE.chm`, build of 2026-11-05) is cited by topic and paraphrased, and is never committed; its licence terms are respected. The maintainer's reading: the manual is the reference because behaviour can be confirmed against it, which needs no verbatim quotation. Q1 and Q2 run again from the help (Q1b, Q2b).
+   **Decided (maintainer, 2026-11-15): QSPICE's own help, paraphrased** ([decision 0025](../../../decisions/0025-qspice-help-as-reference.md)). The maintainer installed QSPICE and Xyce. The help (`QSPICE.chm`, build of 2026-11-05) is cited by topic and paraphrased, and is never committed; its licence terms are respected. The maintainer's reading: the manual is the reference because behaviour can be confirmed against it, which needs no verbatim quotation. Q1 and Q2 run again from the help (Q1b, Q2b).
 
 **qspice, from the help (Q1b, Q2b; 2026-11-15).** Q1b found nothing that would change a covered name, signature or exception class. The lead checked the key citations in the help:
 - expressions need no braces or quotes (`[qspice-help] "General Conventions"` item 1);
@@ -148,6 +148,6 @@ So the audit's outcome for 1.0 is the two documentation sentences of items 1 and
 - [x] Q2: `gap`, for the same reason as Q1. The official pages establish that QSPICE is free, Windows-only, and can export and run a netlist without the GUI; architecture §12 does not allow citing a proprietary built-in help (as for LTspice), so qspice's sources need a maintainer decision (5.1).
 - [x] Q1b, Q2b: re-run from QSPICE's help under decision 0025; Q1b `complete`, no finding disruptive; Q2b `complete with findings`, the inventory for the qspice plan, with a probe list. The lead checked five key citations (5.1).
 - [x] G1: items 1 to 8 decided by the maintainer on 2026-11-14 and 2026-11-15. The outcome for 1.0 is two documentation sentences (items 1 and 2), made in a fix milestone before 1.0; neither dialect needs a covered change.
-- [x] P1: [xyce-plan.md](./xyce-plan.md) (DRAFT), from X1, X2 and the G1 decisions.
-- [x] P2: [qspice-plan.md](./qspice-plan.md) (DRAFT), from Q1b, Q2b and the G1 decisions.
+- [x] P1: [xyce-plan.md](../../xyce-plan.md) (DRAFT), from X1, X2 and the G1 decisions.
+- [x] P2: [qspice-plan.md](../../qspice-plan.md) (DRAFT), from Q1b, Q2b and the G1 decisions.
 - [x] T1: docs, architecture and link checks and pre-commit clean; the pull request.

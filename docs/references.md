@@ -17,6 +17,7 @@ adopted, update the edition and access date and re-check every citation.
 - **URL (PDF):** https://ngspice.sourceforge.io/docs/ngspice-manual.pdf
 - **Edition:** Version 47+ (ngspice development version); preface "as of Mar 2026"
 - **Accessed:** 2026-10-30 (HTML edition; section numbers verified against it)
+- **License:** CC-BY-SA 4.0 (the manual sources' `COPYING`, https://sourceforge.net/p/ngspice/ngspice-manuals/ci/master/tree/COPYING). Cite and paraphrase only (architecture §11.3 rule 4, §12).
 
 ## [iec-60062]
 

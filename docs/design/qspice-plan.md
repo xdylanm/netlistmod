@@ -1,6 +1,6 @@
 # qspice dialect plan (draft)
 
-> **Status:** DRAFT. Written in [M21](./m21-tasks.md) (P2) from reviews Q1b and Q2b and the G1 decisions; for the maintainer's review. It plans work after 1.0 and changes nothing in the library.
+> **Status:** DRAFT. Written in [M21](./archive/v1.0/m21-tasks.md) (P2) from reviews Q1b and Q2b and the G1 decisions; for the maintainer's review. It plans work after 1.0 and changes nothing in the library.
 > **Governed by:** [architecture.md](../architecture.md) §2, §6, §9.3, §10, §11 and §12; [decision 0024](../decisions/0024-the-1-0-public-api.md), the 1.0 contract; [decision 0025](../decisions/0025-qspice-help-as-reference.md), QSPICE's help as the reference.
 
 ## 1. Summary

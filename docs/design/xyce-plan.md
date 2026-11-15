@@ -1,6 +1,6 @@
 # xyce dialect plan (draft)
 
-> **Status:** DRAFT. Written in [M21](./m21-tasks.md) (P1) from reviews X1 and X2; for the maintainer's review. It plans work after 1.0 and changes nothing in the library.
+> **Status:** DRAFT. Written in [M21](./archive/v1.0/m21-tasks.md) (P1) from reviews X1 and X2; for the maintainer's review. It plans work after 1.0 and changes nothing in the library.
 > **Governed by:** [architecture.md](../architecture.md) §2, §6, §9.3, §10, §11 and §12, and the 1.0 contract of [decision 0024](../decisions/0024-the-1-0-public-api.md).
 
 ## 1. Summary

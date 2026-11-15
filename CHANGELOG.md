@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+M21 audited the planned xyce and qspice dialects against the 1.0 contract: neither needs a change to a covered name, signature or exception ([m21-tasks.md](docs/design/archive/v1.0/m21-tasks.md)). M22 records what the audit found.
+
+Documentation:
+
+- **Growth is minor** (decision 0024 item 11, architecture §18). A minor release may add `Dialect` members, node classes, members of the public unions and `Literal` values, so exhaustive matches should keep a default case.
+- **A designator** is the string naming an element in its dialect, and need not be a single token (decision 0024 item 11, `elements.md`).
+- **QSPICE's built-in help** is the qspice reference, paraphrased and never committed ([decision 0025](docs/decisions/0025-qspice-help-as-reference.md)).
+- **The ngspice manual's licence**, CC-BY-SA 4.0, is recorded in `docs/references.md` and architecture §12; the manual is cited and paraphrased, never copied.
+- **Draft plans** for the [xyce](docs/design/xyce-plan.md) and [qspice](docs/design/qspice-plan.md) dialects, for work after 1.0.
+
 ## 0.10.0 — 2026-11-14
 
 The second beta: it ships M20's API changes, which update callers of 0.9.0. 1.0 follows an audit of the planned xyce and qspice dialects against the contract.
