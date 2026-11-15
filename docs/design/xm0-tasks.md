@@ -1,6 +1,6 @@
 # X-M0 task list — xyce set-up and solver spike
 
-> **Status:** ACTIVE — R1 fixed; the full run and the pull request
+> **Status:** READY FOR REVIEW — the maintainer reviews the pull request
 > **Follows:** [the xyce plan](./xyce-plan.md) section 8 and the 1.0 release ([decision 0024](../decisions/0024-the-1-0-public-api.md)). Governed by [architecture.md](../architecture.md) (§2, §3, §9.2, §9.3, §10, §11, §12, §18).
 
 ## 1. Scope
@@ -109,3 +109,4 @@ From the stage 1 reports (A2, the dialect audit; A1, A3 and A4, the references, 
 - 2026-11-15: stage 1 reports in (A1 to A4); G1 points 1 to 3 decided as recommended.
 - 2026-11-15: stage 2 done (B1 to B5). Lead's additions: indented non-comment lines are refused until X-D1 (decision 0026 item 6); XY-STR, XY-TTL and XY-COM validated by the B4 probes; the plan's section 8.1 lists the branches for later milestones.
 - 2026-11-15: R1 (independent review): no blockers; 4 should-fix and 6 nits, all fixed. Manual-valid `;` lines and `+` lines after comments are refused as unsupported (decision 0026 item 6); the raw reader's Xyce relaxations are behind `xyce=True`; the hidden-name guard scans every module and `Dialect` itself.
+- 2026-11-15: full run with ngspice, LTspice and Xyce: 10797 passed, 2 skipped; coverage 99.21%. READY FOR REVIEW.
