@@ -144,9 +144,7 @@ class StructureRules(_Rules):
     def unsupported_directive(self, children: list[Any]) -> NoReturn:
         name = children[0]
         raise self._unsupported(
-            name,
-            f"{self._dialect.display_name} `{name}` statement, not yet supported on "
-            f"{self._dialect.display_name}",
+            name, f"dot-command `{name}`, not yet supported on {self._dialect.display_name}"
         )
 
     def indented_line(self, children: list[Any]) -> NoReturn:
@@ -154,4 +152,18 @@ class StructureRules(_Rules):
             children[0],
             f"indented line, which {self._dialect.display_name} reads as a comment; not yet "
             f"supported on {self._dialect.display_name}",
+        )
+
+    def semicolon_line(self, children: list[Any]) -> NoReturn:
+        raise self._unsupported(
+            children[0],
+            f"line that begins with `;`, an in-line comment; not yet supported on "
+            f"{self._dialect.display_name}",
+        )
+
+    def continuation_line(self, children: list[Any]) -> NoReturn:
+        raise self._unsupported(
+            children[0],
+            f"`+` continuation line after a comment or blank line; not yet supported on "
+            f"{self._dialect.display_name}",
         )

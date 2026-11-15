@@ -63,8 +63,8 @@ pytest treats warnings as errors (`filterwarnings` in `pyproject.toml`; [decisio
 
 **CI does not replace the local run.** It installs no solver, so the solver tests skip and no
 solver behaviour is checked. Each milestone also runs the full suite locally with
-`--require-solver ngspice --require-solver ltspice`, and with `--require-solver xyce` once the
-xyce suite exists (X-M0). macOS is not tested.
+`--require-solver ngspice --require-solver ltspice`, and the xyce suite (from X-M0) with
+`--require-solver xyce`. macOS is not tested.
 
 CI runs Hypothesis with `--hypothesis-profile=ci`, which is derandomized, so a pull request fails
 only on examples that its change affects. Local runs stay random. If CI fails where a local run
@@ -337,8 +337,9 @@ entries record in `validated_on`.
   stdout as `Netlist error in file <f> at or near line N` (or `Netlist warning …`) and a message
   line that starts with a space, or `Netlist warning: <message>` with no place; a long path wraps
   the first line. stderr holds the abort summary.
-- Xyce's raw file is read by the shared reader (`tests/support/raw.py`), which accepts its three
-  differences and nothing more: a blank line after each point, complex values `re, im`, and
+- Xyce's raw file is read by the shared reader (`tests/support/raw.py`) with `xyce=True`, which
+  accepts its three differences and nothing more (without it the reader stays as strict as for
+  ngspice and LTspice): a blank line after each point, complex values `re, im`, and
   `Title:` and `Date:` only before the first of several plots (`.step`). `.op` is a one-point
   `DC transfer characteristic` plot whose first variable is `sweep`; values have 9 significant
   digits.

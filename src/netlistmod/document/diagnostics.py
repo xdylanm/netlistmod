@@ -95,7 +95,7 @@ _INSTANCE_NODES: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE:
 # What the solver does with a `.ends` that names another subcircuit.
 _ENDS_NAME_RULE: dict[Dialect, str] = {
     Dialect.NGSPICE: "ngspice does not check the name (ngspice manual §2.6.2)",
-    Dialect.LTSPICE: "LTspice 26.1.1 does not check the name",
+    Dialect.LTSPICE: f"{_SOLVER[Dialect.LTSPICE]} does not check the name",
 }
 # Whether a numeric value is checked against the dialect's number rules (ngspice only).
 _VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False}

@@ -108,7 +108,7 @@ class Run:
 
     @property
     def plots(self) -> tuple[Plot, ...]:
-        return () if self.raw_bytes is None else read_raw(self.raw_bytes)
+        return () if self.raw_bytes is None else read_raw(self.raw_bytes, xyce=True)
 
     @property
     def names(self) -> frozenset[str]:
@@ -176,12 +176,13 @@ def read_names(data: bytes) -> frozenset[str]:
     if not lines or lines[0].strip() != "HEADER":
         raise AssertionError(f"a names file starts with HEADER: {lines[:1]}")
     found: list[str] = []
-    for position, line in enumerate(lines[1:]):
+    for number, line in enumerate(lines[1:], start=2):
         if not line.strip():
             continue
         fields = line.split()
-        if len(fields) != 2 or fields[0] != str(position):
-            raise AssertionError(f"names file line {position + 2}: {line!r}")
+        # The index counts the names, not the lines: a blank line takes no index.
+        if len(fields) != 2 or fields[0] != str(len(found)):
+            raise AssertionError(f"names file line {number}: {line!r}")
         found.append(fields[1])
     if len(set(found)) != len(found):
         raise AssertionError(f"a name is listed twice: {found}")

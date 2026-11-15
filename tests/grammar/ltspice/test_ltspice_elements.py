@@ -575,7 +575,7 @@ def test_a_planned_letter_is_unsupported() -> None:
     planned = {"N": {"status": "planned", "phase": 2, "milestone": "M99"}}
     with patch("netlistmod.grammar.loader.device_matrix", return_value=planned):
         error = _unsupported("N1 a b c")
-    assert "LTspice N device" in str(error)
+    assert "N device, not yet supported on LTspice (planned for M99)" in str(error)
     assert (error.line, error.column) == (2, 1)
 
 

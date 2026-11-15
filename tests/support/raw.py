@@ -3,10 +3,11 @@
 The reader is clean-room: it was written from the ASCII files ngspice 47 produces (m7-tasks.md
 section 7; samples in ``tests/corpus/ngspice/solver_stubs/raw/``) and reads LTspice's ``-ascii``
 files unchanged (m8-tasks.md L0). Xyce's ``-r <file> -a`` files (X-M0 B3) differ in three ways,
-which it accepts and nothing else: a blank line after each point, complex values written ``re, im``
-with a space after the comma, and ``Title:`` and ``Date:`` given once, before the first of several
-plots (``.step``); a later plot takes them from the one before. It is test code reading solver
-output, not netlist syntax, so it uses ``str`` methods (P13 governs ``src/``).
+which ``read_raw(..., xyce=True)`` accepts and nothing else: a blank line after each point, complex
+values written ``re, im`` with a space after the comma, and ``Title:`` and ``Date:`` given once,
+before the first of several plots (``.step``), a later plot taking them from the one before.
+Without ``xyce=True`` the reader is as strict as before X-M0, for ngspice and LTspice. It is test
+code reading solver output, not netlist syntax, so it uses ``str`` methods (P13 governs ``src/``).
 """
 
 from __future__ import annotations
@@ -48,8 +49,9 @@ class Plot:
         return tuple(float(value.real) for value in values)
 
 
-def read_raw(data: bytes | str) -> tuple[Plot, ...]:
-    """Parse an ASCII raw file into its plots, in file order."""
+def read_raw(data: bytes | str, *, xyce: bool = False) -> tuple[Plot, ...]:
+    """Parse an ASCII raw file into its plots, in file order. ``xyce=True`` accepts the three
+    forms of Xyce's raw files that ngspice and LTspice do not write (the module docstring)."""
     text = data.decode("utf-8", errors="replace") if isinstance(data, bytes) else data
     lines = text.splitlines()
     plots: list[Plot] = []
@@ -59,16 +61,16 @@ def read_raw(data: bytes | str) -> tuple[Plot, ...]:
         if not lines[position].strip():
             position += 1
             continue
-        plot, position, inherited = _read_plot(lines, position, inherited)
+        plot, position, inherited = _read_plot(lines, position, inherited, xyce=xyce)
         plots.append(plot)
     return tuple(plots)
 
 
 def _read_plot(
-    lines: list[str], position: int, inherited: dict[str, str]
+    lines: list[str], position: int, inherited: dict[str, str], *, xyce: bool
 ) -> tuple[Plot, int, dict[str, str]]:
     """One plot from ``position``. ``inherited`` holds the ``Title:`` and ``Date:`` of the plot
-    before, which Xyce writes only once; the first plot has none."""
+    before, which Xyce writes only once (used only with ``xyce``); the first plot has none."""
     header: dict[str, str] = {}
     while True:
         if position >= len(lines):
@@ -82,7 +84,7 @@ def _read_plot(
         if key.strip() == "Variables":
             break
         header[key.strip()] = value.strip()
-    if "Title" not in header and inherited:
+    if xyce and "Title" not in header and inherited:
         header = {**inherited, **header}
     for required in ("Title", "Plotname", "Flags", "No. Variables", "No. Points"):
         if required not in header:
@@ -107,15 +109,17 @@ def _read_plot(
     convert = _complex if "complex" in flags else float
     rows: list[tuple[Value, ...]] = []
     for point in range(points):
-        if point > 0 and not _line(lines, position).strip():
+        if xyce and point > 0 and not _line(lines, position).strip():
             position += 1  # Xyce: a blank line after each point
-        fields = _fields(_line(lines, position), complex_values="complex" in flags)
+        fields = _fields(_line(lines, position), complex_values=xyce and "complex" in flags)
         position += 1
         if not fields or fields[0] != str(point):
             raise RawFileError(f"line {position}: expected point {point}, got {fields}")
         values = fields[1:]
         while len(values) < count:
-            values.extend(_fields(_line(lines, position), complex_values="complex" in flags))
+            values.extend(
+                _fields(_line(lines, position), complex_values=xyce and "complex" in flags)
+            )
             position += 1
         if len(values) != count:
             raise RawFileError(f"point {point}: {len(values)} values for {count} variables")
@@ -133,8 +137,8 @@ def _read_plot(
 
 
 def _fields(line: str, *, complex_values: bool) -> list[str]:
-    """The whitespace-separated fields of a value line. In a complex plot, ``re, im`` (Xyce) is
-    one field, as ``re,im`` (ngspice, LTspice) is."""
+    """The whitespace-separated fields of a value line. With ``complex_values`` (a complex plot of
+    an Xyce file), ``re, im`` is one field, as ``re,im`` (ngspice, LTspice) always is."""
     fields = line.split()
     if not complex_values:
         return fields

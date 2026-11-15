@@ -33,6 +33,12 @@ def test_xyce_is_not_a_member() -> None:
     assert "xyce" not in [member.value for member in Dialect]
     assert "xyce" not in Dialect._value2member_map_
     assert len(Dialect) == 2
+    assert "XYCE" not in vars(Dialect)
+    assert not hasattr(Dialect, "XYCE")
+    # `EnumType.__contains__` accepts any instance of the enum, so the pseudo-member is `in
+    # Dialect` while it is hidden (decision 0026 item 4); its value is not.
+    assert _XYCE in Dialect
+    assert "xyce" not in Dialect
 
 
 @pytest.mark.parametrize("name", ["xyce", "XYCE", "Xyce"])
@@ -46,10 +52,26 @@ def test_xyce_is_not_found_by_name_or_value(name: str) -> None:
 
 
 def test_no_public_name_is_bound_to_xyce() -> None:
+    # Every non-underscore name in every module, whether listed in `__all__` or not.
     for module in _modules():
-        public = getattr(module, "__all__", ())
-        bound = [name for name in public if getattr(module, name, None) is _XYCE]
+        bound = [
+            name
+            for name, value in vars(module).items()
+            if not name.startswith("_") and value is _XYCE
+        ]
         assert bound == [], module
+    # The class attributes of the public top-level objects.
+    for public_name in netlistmod.__all__:
+        obj = getattr(netlistmod, public_name)
+        if not isinstance(obj, type):
+            continue
+        for klass in obj.__mro__:
+            bound = [
+                name
+                for name, value in vars(klass).items()
+                if not name.startswith("_") and value is _XYCE
+            ]
+            assert bound == [], (public_name, klass)
     assert "_XYCE" not in netlistmod.__all__
     assert not hasattr(netlistmod, "_XYCE")
 

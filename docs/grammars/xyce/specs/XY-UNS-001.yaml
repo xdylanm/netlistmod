@@ -1,16 +1,22 @@
 id: XY-UNS-001
 dialect: xyce
-construct: lines X-M0 does not read (element lines, dot-commands other than .END, indented lines)
+construct: lines X-M0 does not read (element lines, dot-commands other than .END, indented lines, `;` lines, `+` lines after comments)
 manual_ref:
 - '[xyce-ug] §4.1.3 p41 "Elements"'
 - '[xyce-ug] §4.1.3.3 p43 "Netlist Commands"'
 - '[xyce-ug] §4.1.3.1 p43 "Title, Comments and End"'
+- '[xyce-ug] §4.1.3.2 p43 "Continuation Lines"'
 status: documented
 grammar:
+- statement
 - unsupported_directive
 - indented_line
+- semicolon_line
+- continuation_line
 - REST_TEXT
 - INDENTED_LINE
+- SEMICOLON_LINE
+- PLUS_LINE
 core_rules:
 - DOT_NAME
 tests:
@@ -18,7 +24,11 @@ tests:
 - tests/grammar/xyce/test_xyce_structure.py::test_every_other_dot_command_is_unsupported
 - tests/grammar/xyce/test_xyce_structure.py::test_a_continued_dot_command_is_unsupported_whole
 - tests/grammar/xyce/test_xyce_structure.py::test_an_indented_line_is_unsupported
+- tests/grammar/xyce/test_xyce_structure.py::test_a_line_that_begins_with_a_semicolon_is_unsupported
+- tests/grammar/xyce/test_xyce_structure.py::test_a_continuation_after_comment_or_blank_lines_is_not_a_syntax_error
+- tests/grammar/xyce/test_xyce_structure.py::test_a_continuation_line_is_refused_by_its_own_rule
+- tests/grammar/xyce/test_xyce_structure.py::test_a_continuation_with_only_the_title_before_it_is_rejected
 - tests/grammar/xyce/test_xyce_structure.py::test_a_letter_xyce_does_not_have_is_rejected
 - tests/architecture/test_hidden_dialects.py::test_the_public_loaders_refuse_an_element_line
-validation_note: A refusal of the library's own (decision 0026), not a reading of the solver, so solver evidence cannot decide it; each construct gets its own entry in the milestone that reads it.
-notes: An element line whose letter is in devices.md raises UnsupportedConstruct, naming the letter and its milestone; A and N are not Xyce letters, so they are a ParseError. A dot-command other than `.END`, with its `+` lines, raises UnsupportedConstruct; Xyce warns on an unknown one and ignores it (discrepancies.md). An indented line other than a `*` comment raises UnsupportedConstruct, since Xyce reads it as a comment and decision X-D1 (X-M1) settles how the library reads it. The whole source is parsed first, so a syntax error anywhere is reported before a refused line.
+validation_note: A refusal of the library's own (decision 0026), not a reading of the solver, so solver evidence cannot decide it; each construct gets its own entry in the milestone that reads it. The probes show the refused `;` and `+` lines are valid on XyceNF Release 7.10.0 (tests/solver/test_xyce_structure_probes.py::test_a_semicolon_line_is_a_comment and ::test_a_continuation_joins_across_comments_and_blank_lines).
+notes: An element line whose letter is in devices.md raises UnsupportedConstruct, naming the letter and its milestone; A and N are not Xyce letters, so they are a ParseError. A dot-command other than `.END`, with its `+` lines, raises UnsupportedConstruct; Xyce warns on an unknown one and ignores it (discrepancies.md). An indented line other than a `*` comment raises UnsupportedConstruct, since Xyce reads it as a comment and decision X-D1 (X-M1) settles how the library reads it. A line that begins with `;` is an in-line comment, which may occur on any line (the manual, p43), and raises UnsupportedConstruct until X-M1 reads it. A `+` line after comment or blank lines joins the last statement before them (p43) and is accepted by the grammar; the statement it joins is refused first. A `+` line with only the title, comments and blank lines before it joins nothing, as the title is a comment, and is a ParseError, as on Xyce. `$` and `//` at the start of a line are a ParseError, since neither is a comment in the manual's rules or on Xyce. The whole source is parsed first, so a syntax error anywhere is reported before a refused line.

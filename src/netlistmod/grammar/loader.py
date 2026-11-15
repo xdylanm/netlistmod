@@ -301,6 +301,8 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
     _XYCE: {
         "END_KW": "`.END`",
         "INDENTED_LINE": "indented line",
+        "SEMICOLON_LINE": "`;` comment line",
+        "PLUS_LINE": "continuation line (`+`)",
         "REST_TEXT": "text",
     },
 }
@@ -515,8 +517,8 @@ def _map_error(
         entry = device_matrix(dialect).get(letter, {})
         if entry.get("status") == "planned":
             construct = (
-                f"{dialect.display_name} {letter} device, not yet supported on "
-                f"{dialect.display_name} (planned for {entry.get('milestone')})"
+                f"{letter} device, not yet supported on {dialect.display_name} "
+                f"(planned for {entry.get('milestone')})"
             )
             return UnsupportedConstruct(construct, line, column, source.excerpt(offset))
         if letter == "." and _CLOSED_DOT_COMMANDS[dialect]:
