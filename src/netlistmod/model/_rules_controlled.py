@@ -119,7 +119,9 @@ class ControlledRules(ElementsRules):
 
     def vswitch(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        model = element.all(ModelReference)[0]
+        model = self._model_not_number(
+            element.all(ModelReference)[0], "the name after the four nodes"
+        )
         return _Item(
             element.end,
             lambda span: VoltageSwitch(
@@ -129,7 +131,9 @@ class ControlledRules(ElementsRules):
 
     def cswitch(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        model = element.all(ModelReference)[0]
+        model = self._model_not_number(
+            element.all(ModelReference)[0], "the name after the controlling source"
+        )
         control = element.all(ElementReference)[:1]
         return _Item(
             element.end,

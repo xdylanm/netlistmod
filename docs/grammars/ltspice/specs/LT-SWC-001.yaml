@@ -8,6 +8,9 @@ validated_on:
 - solver: ltspice
   version: 26.1.1
   date: '2026-11-06'
+- solver: ltspice
+  version: 26.1.1
+  date: '2026-11-14'
 grammar:
 - cswitch
 - W_NAME
@@ -15,4 +18,11 @@ tests:
 - tests/grammar/ltspice/test_ltspice_controlled_sources.py::test_switches_take_a_model_and_an_optional_state
 - tests/solver/test_ltspice_controlled_probes.py::test_controlled_source_probes
 - tests/solver/test_ltspice_solver_corpus.py::test_accept_fixture_runs_in_ltspice
-notes: 'Two nodes, the controlling source, a CSW model, then on or off.'
+- tests/grammar/test_number_model_names.py::test_a_number_is_not_a_model_name_on_d_s_and_w
+- tests/grammar/test_number_model_names.py::test_a_part_number_is_a_model_name
+- tests/solver/test_ltspice_number_model_probes.py::test_number_model_probes
+notes: 'Two nodes, the controlling source, a CSW model, then on or off.
+  A field read as a number (digits, then letters only, as in 2, 4093 or 4093B) is never the model
+  and is a ParseError (decision 0024, extending decision 0021 item 1). LTspice 26.1.1 runs it, and
+  the reference allows any string without blanks, so this is a recorded exception
+  (discrepancies.md). A part number such as 1n4148, CD4093 or 4N25 stays a model.'

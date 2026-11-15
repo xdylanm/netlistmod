@@ -105,6 +105,17 @@ material) and returns one slot. `[x]` is optional and `x*` repeats.
 
 An element line ends with `NL`, or with `eol` (blanks, comments or continuations, then `NL`).
 
+**A model name is never a number** (decision 0024, extending decision 0021 item 1 and amending
+decision 0004 item 5), on every letter of both dialects. Where only a name can stand (D's, S's and
+W's model, ngspice's model after an R, C or L value, the last name of Q, M, J, Z, P and N, and the
+model of O, U, Y and A), the lexer reads `2` or `4093` as a `WORD`, so the transformer refuses a
+model that reads as `FIELD_NUMBER` (digits, then letters only: `2`, `4093`, `1k`, `4093B`, `1e3`,
+`.5`, and with any Unicode letter, as `1μ`) with a `ParseError` at the model: "`2` is in the model's place
+(…), and a model name cannot be a number". A digit-leading part number with digits after its
+letters (`1n4148`, `2N2222`, `1N4148_OJ`, `4N25`) stays a model, and a subcircuit name is not
+checked (`X1 a 4093` loads). ngspice reads a number after an R or C value as the value, and LTspice
+runs a number as a D, S or W model; `discrepancies.md` of each dialect records both.
+
 ## 4. Spans
 
 - The item `span` tiles the source like every top-level item: from the end of the previous

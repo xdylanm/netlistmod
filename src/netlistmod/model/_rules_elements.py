@@ -255,7 +255,9 @@ class ElementsRules(_Rules):
 
     def diode(self, children: list[Any]) -> _Item:
         element = _Element(children)
-        model = element.all(ModelReference)[0]
+        model = self._model_not_number(
+            element.all(ModelReference)[0], "the name after the two nodes"
+        )
         area = next(iter(element.values()), None)
         return _Item(
             element.end,
@@ -366,6 +368,22 @@ class ElementsRules(_Rules):
                 f"parameter), and a model name cannot be the keyword `{text.lower()}`",
             )
 
+    def _model_not_number(self, model: ModelReference, place: str) -> ModelReference:
+        """Refuse a number as the model of a D, S, W, or ngspice R, C or L line (decision 0021
+        item 1, decision 0024).
+
+        Where only a name may follow, the lexer reads ``2`` or ``4093`` as a name, so the grammar
+        cannot refuse it as the model (as for Q, decision 0014 item 1). A field that reads as a
+        number (digits, then letters only) is never a model name; ``1n4148`` and ``2N2222`` are.
+        """
+        if _reads_as_number(model.model_name, any_letter=True):
+            raise self._error_at(
+                model.span.start,
+                f"`{model.model_name}` is in the model's place ({place}), and a model name "
+                "cannot be a number",
+            )
+        return model
+
     def _expression(self, children: list[Any]) -> Formula:
         """An expression written directly in a rule: a delimited formula, or a bare one over
         its pieces, whose text runs across their continuation lines as written."""
@@ -426,6 +444,10 @@ class ElementsRules(_Rules):
             value = next(iter(element.values()), None)
             keyword = None
         model = element.optional(ModelReference)
+        if model is not None:
+            # Only an ngspice R, C or L has a model (decision 0024).
+            place = "the name after the value" if value is not None else "the name after the nodes"
+            model = self._model_not_number(model, place)
         return _Item(
             element.end,
             lambda span: kind(

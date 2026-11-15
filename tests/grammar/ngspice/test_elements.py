@@ -444,18 +444,37 @@ def test_subcircuit_call_nodes_name_and_parameters(
 
 
 @pytest.mark.parametrize(
+    ("line", "column", "place"),
+    [
+        ("R1 a b 1k 2k", 11, "the name after the value"),
+        ("C1 a b 1p 2p", 11, "the name after the value"),
+        ("D1 a b 1n", 8, "the name after the two nodes"),
+    ],
+)
+def test_a_number_is_never_a_model_where_no_value_can_stand(
+    line: str, column: int, place: str
+) -> None:
+    # Decision 0024 (amending decisions 0004 item 5 and 0021 item 1): after a value, and in the
+    # diode's model slot, the lexer reads a number as a name, and the transformer refuses it as
+    # the model. ngspice reads `R1 a b 1k 2k` as a 2k resistor and stops on `D1 a b 1n`.
+    error = _reject(line)
+    assert (error.line, error.column) == (2, column)
+    assert f"is in the model's place ({place}), and a model name cannot be" in error.reason
+
+
+@pytest.mark.parametrize(
     ("line", "kind", "model"),
     [
-        ("R1 a b 1k 2k", Resistor, "2k"),
-        ("C1 a b 1p 2p", Capacitor, "2p"),
-        ("D1 a b 1n", Diode, "1n"),
+        ("R1 a b 1k 1n4148", Resistor, "1n4148"),
+        ("C1 a b 1p 2N2222", Capacitor, "2N2222"),
+        ("D1 a b 1N4148_OJ", Diode, "1N4148_OJ"),
     ],
 )
 def test_a_digit_leading_name_is_a_model_where_no_value_can_stand(
     line: str, kind: type, model: str
 ) -> None:
-    # Decision 0004: after a value (and in the diode's model slot) only a name can follow, so
-    # a digit-leading field there is a model name (ngspice accepts 1n4148 as a model name).
+    # A digit-leading name with digits after its letters is not a number (ngspice accepts
+    # 1n4148 as a model name), so it stays the model (decision 0024).
     element = _element(line)
     assert isinstance(element, kind)
     assert element.model == ModelReference(model, element.model.span)  # type: ignore[attr-defined]

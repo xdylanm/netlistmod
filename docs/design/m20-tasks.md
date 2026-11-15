@@ -73,7 +73,7 @@ D1 and D3 run in parallel (their files do not overlap); D2 follows D1, and D4 fo
 
 [x] **D1 — The public boundary and the signatures (5.1 points 2, 3 and 4.1–4.5, 4.7).** `src/netlistmod/__init__.py` and the subpackage `__init__.py`s, `edit/api.py`, `edit/plan.py`, `document/document.py`, `document/lines.py`, `dialects.py`, the tests that use what changes, `tests/test_package.py`, `document-layer.md`, `edit-layer.md`, `statements.md` and the usage guides.
 
-[ ] **D3 — A number as a model name; `|` validated (5.1 points 6 and 7).** The transformer checks (`model/_rules_*.py`), `tests/grammar/`, `tests/solver/` (probe cases), the spec entries and `discrepancies.md` of both dialects, `names.md`, and `elements.md`.
+[x] **D3 — A number as a model name; `|` validated (5.1 points 6 and 7).** The transformer checks (`model/_rules_*.py`), `tests/grammar/`, `tests/solver/` (probe cases), the spec entries and `discrepancies.md` of both dialects, `names.md`, and `elements.md`.
 
 [ ] **D2 — Defects and the remaining types (5.1 points 5 and 4.6).** `document/index.py` (`Scope`), `edit/placement.py`, `edit/_ops_common.py`, `edit/_ops_elements.py`, `model/nodes.py` (`form`, `quantity`), their tests, `errors.md` and the living references.
 
@@ -206,7 +206,7 @@ ngspice's own test is stricter than the library's: only a field that is entirely
 - [x] A3: `complete with findings`, 18 items; both loads reproduced; the lead probed both solvers (5.1, 5.1.1).
 - [x] G1: ten points; all decided by the maintainer on 2026-11-14 (point 1 the narrower contract, point 6 uniform refusal, the rest as recommended).
 - [x] D1: `complete with findings`. Points 2, 3, 4.1–4.5 and 4.7 made as decided. Lead decisions at G2: `Netlist.scope(path)` stays positional (its argument is the path asked about, not a filter; D1-n4); the slot-check examples that `1k 2k` no longer reaches (D3 refuses it first) use `1k rmod` (D1-n2); D1-n5 and D1-n6 (architecture §4, §5.4, decision 0007 items 10 and 11) go to T2.
-- [ ] D3
+- [x] D3: `complete with findings`. Point 6 by the transformer check of decision 0021 item 1 on D, S, W and ngspice R/C/L (no grammar change); point 7 validated; solver probes on both dialects; the lead added the `set_model` test (D3 suggestion) and moved LTspice's `q-number-model` row under "Exceptions to the reference" (D3-3). D3-2 (a `.model` named with a number still loads, though no element can now use it) and D3-4 (`.step` and `ako:` model references are not checked) are recorded in decision 0024; D3-5 is existing behaviour, no change.
 - [ ] D2
 - [ ] D4
 - [ ] T2

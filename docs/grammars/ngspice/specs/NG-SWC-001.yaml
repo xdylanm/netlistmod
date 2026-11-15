@@ -9,6 +9,9 @@ validated_on:
 - solver: ngspice
   version: '47'
   date: '2026-11-06'
+- solver: ngspice
+  version: '47'
+  date: '2026-11-14'
 grammar:
 - W_NAME
 - cswitch
@@ -17,4 +20,10 @@ tests:
 - tests/grammar/ngspice/test_controlled_sources.py::test_malformed_lines_are_rejected
 - tests/solver/test_ngspice_controlled_probes.py::test_controlled_source_probes
 - tests/solver/test_ngspice_corpus.py::test_accept_fixture_runs_in_ngspice
-notes: 'Two nodes, the controlling source, a mandatory CSW model, then ON or OFF.'
+- tests/grammar/test_number_model_names.py::test_a_number_is_not_a_model_name_on_d_s_and_w
+- tests/grammar/test_number_model_names.py::test_a_part_number_is_a_model_name
+- tests/solver/test_ngspice_number_model_probes.py::test_number_model_probes
+notes: 'Two nodes, the controlling source, a mandatory CSW model, then ON or OFF.
+  A field read as a number (digits, then letters only, as in 2, 4093, 1k or 4093B) is never the
+  model and is a ParseError (decision 0024, extending decision 0021 item 1); ngspice 47 stops on a
+  pure number there ("Unable to find definition of model"). A part number such as 2N2 stays a model.'
