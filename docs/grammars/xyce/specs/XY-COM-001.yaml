@@ -1,0 +1,20 @@
+id: XY-COM-001
+dialect: xyce
+construct: full-line star comments
+manual_ref:
+- '[xyce-ug] §4.1.3.1 p43 "Title, Comments and End"'
+- '[xyce-ref] §2.1.39.1 p163 "* (Comment)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar: []
+core_rules:
+- COMMENT_LINE
+tests:
+- tests/grammar/xyce/test_xyce_structure.py::test_title_comments_blank_lines_and_end_tile_the_source
+- tests/solver/test_xyce_structure_probes.py::test_a_continuation_joins_across_comments_and_blank_lines
+- tests/solver/test_xyce_structure_probes.py::test_an_indented_element_line_is_a_comment
+validation_note: 'Validated by the X-M0 probes on XyceNF Release 7.10.0: `*` lines are comments, and a `+` line joins across them. An indented line is also a silent comment on the binary; X-M0 refuses an indented line that is not a `*` comment until decision X-D1 (X-M1).'
+notes: A line that starts with `*` is a comment. A `*` line after blanks is also read as a comment, as Xyce reads any indented line (the manual, p43); every other indented line is refused until decision X-D1 (X-M1). `;` (the only in-line comment), `$` and `//` are X-M1's; `$` and `//` are not comments on Xyce 7.10 (discrepancies.md).

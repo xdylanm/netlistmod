@@ -15,7 +15,7 @@ import pytest
 from lark import Lark
 from lark.exceptions import LexError
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.grammar.loader import (
     build_parser,
     device_matrix,
@@ -259,7 +259,8 @@ def test_every_package_grammar_builds_in_strict_mode() -> None:
 
 def test_parser_registry_accounts_for_each_dialect() -> None:
     assert registered_dialects().isdisjoint(pending_dialects())
-    assert registered_dialects() | pending_dialects() == frozenset(Dialect)
+    # The hidden xyce dialect has a grammar but is not a member until X-M8 (decision 0026).
+    assert registered_dialects() | pending_dialects() == frozenset(Dialect) | {_XYCE}
 
 
 def test_strict_mode_rejects_a_deliberate_terminal_collision() -> None:
@@ -271,9 +272,9 @@ def test_strict_mode_rejects_a_deliberate_terminal_collision() -> None:
 
 # Terminals whose lookarounds interegular cannot model. Lark's strict mode skips them in the
 # collision check without an error, so each one must be reviewed by hand (decision 0003). The
-# reviews are the "Lookaround terminals" tables of docs/grammars/ngspice/README.md and
-# docs/grammars/ltspice/README.md (M18). Adding a terminal here is a deliberate act: review it and
-# add its row there; this list must not grow silently.
+# reviews are the "Lookaround terminals" tables of docs/grammars/ngspice/README.md,
+# docs/grammars/ltspice/README.md (M18) and docs/grammars/xyce/README.md (X-M0). Adding a terminal
+# here is a deliberate act: review it and add its row there; this list must not grow silently.
 UNCHECKED_TERMINALS = {
     Dialect.NGSPICE: frozenset(
         {
@@ -304,6 +305,7 @@ UNCHECKED_TERMINALS = {
             "TRAILING_COMMENT",
         }
     ),
+    _XYCE: frozenset({"COMMENT_LINE", "INDENTED_LINE", "REST_TEXT", "TITLE_TEXT"}),
 }
 
 

@@ -15,6 +15,8 @@ GRAMMAR_RESOURCES = {
     "netlistmod/grammar/ngspice-devices.json",
     "netlistmod/grammar/ltspice.lark",
     "netlistmod/grammar/ltspice-devices.json",
+    "netlistmod/grammar/xyce.lark",
+    "netlistmod/grammar/xyce-devices.json",
     "netlistmod/grammar/formula.lark",
     "netlistmod/grammar/formula_ltspice.lark",
     "netlistmod/grammar/formula-reserved.json",
@@ -69,7 +71,11 @@ def test_wheel_contains_and_loads_grammar_resources(tmp_path: Path) -> None:
                 "from netlistmod import Dialect, SourceText, parse; "
                 "assert Path(netlistmod.__file__).resolve().is_relative_to(Path(sys.prefix)); "
                 "assert any(type(item).__name__ == 'End' for item in "
-                "parse(SourceText('title\\n.end\\n'), Dialect.NGSPICE).items)"
+                "parse(SourceText('title\\n.end\\n'), Dialect.NGSPICE).items); "
+                # The hidden xyce dialect loads from an installed copy (xm0-tasks G1 point 3).
+                "from netlistmod.dialects import _XYCE; "
+                "assert any(type(item).__name__ == 'End' for item in "
+                "parse(SourceText('title\\n.END\\n'), _XYCE).items)"
             ),
         ],
         cwd=tmp_path,

@@ -1,0 +1,47 @@
+// xyce overlay on core.lark (X-M0, decision 0026). The dialect is hidden until X-M8, and X-M0 reads
+// only the structure of a netlist: the title line, `*` comment lines, blank lines and the final
+// `.END` ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42-43). Everything else is recognised only to be refused:
+// a dot-command other than `.END`, and an indented line, which Xyce reads as a comment (decision
+// X-D1 settles it in X-M1), raise UnsupportedConstruct from the transformer. An element line has no
+// rule: its letter is `planned` in xyce-devices.json, so the loader raises UnsupportedConstruct, and
+// A and N, which are not Xyce letters, are a ParseError.
+//
+// The rules of core.lark that a later milestone reuses are imported by that milestone; X-M0 imports
+// only the terminals of the structure and the `.end` rule, and defines its own `start`, so no core
+// statement can be reached. %ignore is not carried by %import, so it is declared again here.
+//
+// Lexer priorities: INDENTED_LINE (10) outranks the ignored WS (9) at the start of a line, so an
+// indented line other than a `*` comment or a `+` line is one token; a blank line is still WS and
+// LINE_END. REST_TEXT (2) is the text after a refused dot-command, to the end of the line.
+
+%import .core (end_stmt, trailer)
+%import .core (WS, LINE_END, CONT, NL, TITLE_TEXT, COMMENT_LINE, END_KW, DOT_NAME)
+
+%ignore WS
+%ignore CONT
+
+// spec: XY-STR-001
+start: first_line line* end_stmt
+
+// The first line is always the title, even when it is blank or looks like a statement: Xyce has
+// no `.TITLE`, so there is no explicit title.
+// spec: XY-TTL-001
+first_line: TITLE_TEXT LINE_END             -> implicit_title
+          | LINE_END                        -> empty_title
+
+// spec: XY-STR-001
+?line: LINE_END                             -> blank_line
+     | COMMENT_LINE LINE_END                -> comment_line
+     | unsupported_directive
+     | indented_line
+
+// A dot-command other than `.END`, continued by `+` lines; refused whole.
+// spec: XY-UNS-001
+unsupported_directive: DOT_NAME REST_TEXT* NL
+
+// spec: XY-UNS-001
+indented_line: INDENTED_LINE LINE_END
+
+// spec: XY-UNS-001
+REST_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
+INDENTED_LINE.10: /[ \t]+[^ \t\r\n+*](?:[^\r\n]|\r(?!\n))*/

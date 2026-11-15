@@ -145,7 +145,10 @@ def test_a_planned_letter_after_end_says_the_netlist_ends_there(
 def test_a_planned_letter_before_end_stays_an_unsupported_construct(dialect: Dialect) -> None:
     with _planned_matrix(), pytest.raises(UnsupportedConstruct) as captured:
         parse(SourceText("t\nΩ1 a b c m\n.end\n"), dialect)
-    assert captured.value.construct == f"{dialect.display_name} Ω device"
+    assert captured.value.construct == (
+        f"{dialect.display_name} Ω device, not yet supported on {dialect.display_name} "
+        "(planned for M99)"
+    )
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 

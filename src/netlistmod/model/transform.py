@@ -29,7 +29,7 @@ from typing import Any, NoReturn
 from lark import Token, Transformer
 from lark.exceptions import VisitError
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
 from netlistmod.grammar.loader import parse_tree
 from netlistmod.model._rules_behavioral import BehavioralRules
@@ -43,6 +43,13 @@ from netlistmod.model.nodes import (
     ParseResult,
 )
 from netlistmod.source import SourceText
+
+# Why ``rkm=True`` is refused on a dialect, or ``None`` where it is accepted.
+_RKM_REFUSAL: dict[Dialect, str | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: "LTspice reads its embedded decimal natively",
+    _XYCE: "the Xyce manuals define no RKM notation",
+}
 
 
 class _NodeBuilder(
@@ -79,17 +86,16 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
     capacitors, read per IEC 60062; without it they raise ``ParseError``. The option does not
     change the grammar, and standard notation parses the same either way (decision 0004). LTspice
     reads its embedded decimal natively, so ``rkm=True`` with ``Dialect.LTSPICE`` is a
-    ``ValueError`` (decision 0009).
+    ``ValueError`` (decision 0009), as it is on any dialect but ngspice.
 
     The whole source is parsed first, so a syntax error anywhere is reported before an RKM
     value, an unsupported form or ``params:`` that the transformer rejects.
     """
     if not isinstance(source, SourceText):
         raise TypeError(f"parse takes a SourceText, not {type(source).__name__}")
-    if rkm and dialect is Dialect.LTSPICE:
-        raise ValueError(
-            "rkm=True applies only to ngspice: LTspice reads its embedded decimal natively"
-        )
+    refusal = _RKM_REFUSAL[dialect]
+    if rkm and refusal is not None:
+        raise ValueError(f"rkm=True applies only to ngspice: {refusal}")
     tree = parse_tree(source, dialect)
     try:
         return _NodeBuilder(source, dialect, rkm=rkm).transform(tree)

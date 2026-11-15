@@ -139,6 +139,24 @@ One pull request each, in the style of the phase plans. Sizes are rough.
 | **X-M7 — Digital U and exclusions** | The U gates; decision X-D6 | M |
 | **X-M8 — Completeness audit and review** | As M18 and M19: the value-spec audit, the corpus with manifests, property tests, a review package | M |
 
+### 8.1 Dialect branches for later milestones
+
+X-M0 keyed every dialect branch that an xyce load reaches ([decision 0026](../decisions/0026-the-xyce-dialect.md) item 6). These sites are not reachable until the milestone named; each gets its xyce entry or branch there, from the manuals (X-M0 audit A2, line numbers at `xm0-xyce-setup`).
+
+- **X-M1:**
+  - names and nets: `document/names.py:45` (`$G`, X-D3); `document/diagnostics.py:94` `_INSTANCE_NODES` and `:351` `_into_instance` (`X1:node`, X-D2); `dialects.py` `_FOLDS` (the case fold is provisional);
+  - diagnostics: `document/diagnostics.py:97` `_ENDS_NAME_RULE`, `:101` `_VALUE_CHECKS`, `:103` `_REPEAT_STOPS`, and the citations at `:185` and `:198`;
+  - the index: `document/index.py:557`, `:565` (use before definition) and `:604` (`_context_words`);
+  - formulas: `grammar/formula.py:24` `_GRAMMARS` and `formula-reserved.json`;
+  - models: `model/model_types.py:38`, which gives xyce no model types of its own without an entry;
+  - elements: `model/_rules_elements.py:321`;
+  - edits: `edit/_ops_common.py:254`; `edit/_ops_elements.py:147`, `:359` and `:412`, and the model placed after the value (`:397`; xyce writes R, C and L's model first); `edit/_ops_remove.py:75`.
+- **X-M1 and X-M2 (statements):** `model/_rules_statements.py:180` and `:279`.
+- **X-M3 (sources):** `model/_rules_sources.py:244`; `edit/_ops_sources.py:171`.
+- **X-M4 (transistors):** the positional area of Q (`edit/_ops_elements.py:234`).
+- **X-M5 (controlled and behavioural sources):** `model/_rules_controlled.py:70`, `:171` and `:185`; `model/_rules_nonlinear.py:46` and `:206`; `edit/_ops_nonlinear.py:23`, `:98`, `:105` and `:185`; `document/diagnostics.py:325` `_CONTROL_RUNS`.
+- **X-M6 (lines):** `model/_rules_lines.py:85`, `:135` and `:174`.
+
 ## 9. Risks
 
 1. **Leading whitespace.** An indented element line is a comment to xyce. The manual's own TCAD examples are indented, so X-M0 probes the rule before anything relies on it.

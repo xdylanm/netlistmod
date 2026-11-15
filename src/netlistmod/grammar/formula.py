@@ -19,6 +19,8 @@ from lark.exceptions import LarkError
 from netlistmod.dialects import Dialect
 
 _RESERVED = "formula-reserved.json"
+# The formula grammar of each dialect. Xyce has none until X-M1; its X-M0 grammar reads no
+# formula, and a lookup for it fails loudly instead of scanning with another dialect's rules.
 _GRAMMARS = {Dialect.NGSPICE: "formula.lark", Dialect.LTSPICE: "formula_ltspice.lark"}
 
 FormulaTokenKind = Literal["parameter", "reserved", "function", "node", "source"]
@@ -42,9 +44,12 @@ class FormulaToken:
 @lru_cache(maxsize=None)
 def build_formula_parser(dialect: Dialect) -> Lark:
     """Build or retrieve the strict LALR parser of a dialect's formula grammar."""
+    grammar = _GRAMMARS.get(dialect)
+    if grammar is None:
+        raise ValueError(f"No formula grammar is defined for {dialect.display_name}")
     return Lark.open_from_package(
         "netlistmod.grammar",
-        _GRAMMARS[dialect],
+        grammar,
         parser="lalr",
         lexer="contextual",
         propagate_positions=True,
@@ -60,7 +65,11 @@ def reserved_words(dialect: Dialect) -> frozenset[str]:
     """
     resource = files("netlistmod.grammar") / _RESERVED
     parsed = json.loads(resource.read_text(encoding="utf-8"))
-    table = parsed.get(dialect.value) if isinstance(parsed, dict) else None
+    if not isinstance(parsed, dict):
+        raise ValueError("formula-reserved.json must contain a list of words per dialect")
+    if dialect.value not in parsed:
+        raise ValueError(f"No formula reserved words are defined for {dialect.display_name}")
+    table = parsed[dialect.value]
     if not isinstance(table, dict) or not isinstance(table.get("words"), list):
         raise ValueError("formula-reserved.json must contain a list of words per dialect")
     return frozenset(str(word).lower() for word in table["words"])

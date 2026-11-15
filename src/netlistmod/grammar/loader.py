@@ -12,18 +12,21 @@ from typing import Final
 from lark import Lark, Token, Tree
 from lark.exceptions import UnexpectedCharacters, UnexpectedToken
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.errors import ParseError, UnsupportedConstruct
 from netlistmod.source import SourceText
 
 GRAMMARS: Final[dict[Dialect, tuple[str, ...]]] = {
     Dialect.NGSPICE: ("core.lark", "ngspice.lark"),
     Dialect.LTSPICE: ("core.lark", "ltspice.lark"),
+    # Hidden until X-M8 (decision 0026): reachable only through the internal name.
+    _XYCE: ("core.lark", "xyce.lark"),
 }
 _PENDING_DIALECTS: Final[frozenset[Dialect]] = frozenset()
 _DEVICE_MATRICES: Final[dict[Dialect, str]] = {
     Dialect.NGSPICE: "ngspice-devices.json",
     Dialect.LTSPICE: "ltspice-devices.json",
+    _XYCE: "xyce-devices.json",
 }
 
 # Opener terminal, or the rule whose first token is the opener -> (block name, closing keyword).
@@ -40,6 +43,7 @@ _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
         "SUBCKT_KW": (".subckt", ".ends"),
         "subckt_header": (".subckt", ".ends"),
     },
+    _XYCE: {},
 }
 # Opening parenthesis terminals; an unclosed one is reported at the opener when the line ends.
 _OPEN_PARENS: Final[frozenset[str]] = frozenset(
@@ -294,6 +298,18 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "COMMENT_LINE": "comment line (`*` or `;`)",
         "VOLTAGE_OPEN": "`v(`",
     },
+    _XYCE: {
+        "END_KW": "`.END`",
+        "INDENTED_LINE": "indented line",
+        "REST_TEXT": "text",
+    },
+}
+# Whether a dot-command that no terminal matches at the start of a line is outside the dialect's
+# closed list (decision 0009). Xyce refuses every dot-command but `.END` in its grammar (X-M0).
+_CLOSED_DOT_COMMANDS: Final[dict[Dialect, bool]] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: True,
+    _XYCE: False,
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 _INCOMPLETE_LINE = "this line ends too early"
@@ -378,7 +394,7 @@ def _value_stack(error: UnexpectedToken) -> list[object]:
 def _unterminated_block(
     dialect: Dialect, error: UnexpectedToken
 ) -> tuple[Token, tuple[str, str]] | None:
-    blocks = _BLOCKS.get(dialect, {})
+    blocks = _BLOCKS[dialect]
     for value in reversed(_value_stack(error)):
         if isinstance(value, Token) and value.type in blocks:
             return value, blocks[value.type]
@@ -496,14 +512,19 @@ def _map_error(
         # unsupported construct.
         if _after_end(error, expected_terminals):
             return ParseError(line, column, source.excerpt(offset), expected, _AFTER_END)
-        if device_matrix(dialect).get(letter, {}).get("status") == "planned":
-            return UnsupportedConstruct(
-                f"{dialect.display_name} {letter} device", line, column, source.excerpt(offset)
+        entry = device_matrix(dialect).get(letter, {})
+        if entry.get("status") == "planned":
+            construct = (
+                f"{dialect.display_name} {letter} device, not yet supported on "
+                f"{dialect.display_name} (planned for {entry.get('milestone')})"
             )
-        if letter == "." and dialect is Dialect.LTSPICE:
+            return UnsupportedConstruct(construct, line, column, source.excerpt(offset))
+        if letter == "." and _CLOSED_DOT_COMMANDS[dialect]:
             # The closed list of decision 0009: no terminal of this place matches the command.
             name = source.text[offset:].split(maxsplit=1)[0]
-            reason = f"`{name}` is not an LTspice dot-command, or is not allowed here"
+            reason = (
+                f"`{name}` is not an {dialect.display_name} dot-command, or is not allowed here"
+            )
             return ParseError(line, column, source.excerpt(offset), expected, reason)
     return ParseError(line, column, source.excerpt(offset), expected)
 

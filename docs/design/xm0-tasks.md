@@ -53,11 +53,11 @@ X-M0 is the first of the xyce milestones (X-M0 to X-M8). It sets up the dialect,
 
 ### Stage 2
 
-- [ ] **B1 — Decision X-D0** (`docs/decisions/0026-…`): items 1, 2 and 4 of section 2; the hiding mechanism and the reading of X-M0's xyce as decided at G1; the closed dot-command list as a goal for X-M2. Architecture §9.2 and §12 updated.
-- [ ] **B2 — The hidden dialect:** the internal name, the loader registry, `xyce.lark` on `core.lark` and `xyce-devices.json`, as decided at G1. Tests: a load with the hidden dialect; `Dialect` has no public xyce member; the audit's wrong branches raise or refuse instead of reading as ngspice.
-- [ ] **B3 — The solver harness:** `solvers.py` discovery of `XYCE_EXE`; `tests/support/xyce.py` (run, a `Run` with exit code, log and raw file); `--require-solver xyce`; `.env.example`; `docs/testing.md`.
-- [ ] **B4 — The probes as solver tests** (`tests/solver/test_xyce_*_probes.py`), skipping with a reason when Xyce is absent, with spec entries or `discrepancies.md` rows for what they show.
-- [ ] **B5 — `docs/grammars/xyce/`:** README, `devices.md`, `names.md`, `numbers.md`, `scoping.md`, `discrepancies.md` and `specs/`, as §9.3 requires, with what X-M0 knows and the rest marked for its milestone.
+- [x] **B1 — Decision X-D0** (`docs/decisions/0026-…`): items 1, 2 and 4 of section 2; the hiding mechanism and the reading of X-M0's xyce as decided at G1; the closed dot-command list as a goal for X-M2. Architecture §9.2 and §12 updated.
+- [x] **B2 — The hidden dialect:** the internal name, the loader registry, `xyce.lark` on `core.lark` and `xyce-devices.json`, as decided at G1. Tests: a load with the hidden dialect; `Dialect` has no public xyce member; the audit's wrong branches raise or refuse instead of reading as ngspice.
+- [x] **B3 — The solver harness:** `solvers.py` discovery of `XYCE_EXE`; `tests/support/xyce.py` (run, a `Run` with exit code, log and raw file); `--require-solver xyce`; `.env.example`; `docs/testing.md`.
+- [x] **B4 — The probes as solver tests** (`tests/solver/test_xyce_*_probes.py`), skipping with a reason when Xyce is absent, with spec entries or `discrepancies.md` rows for what they show.
+- [x] **B5 — `docs/grammars/xyce/`:** README, `devices.md`, `names.md`, `numbers.md`, `scoping.md`, `discrepancies.md` and `specs/`, as §9.3 requires, with what X-M0 knows and the rest marked for its milestone.
 
 ## 5. Findings and log
 
@@ -107,3 +107,4 @@ From the stage 1 reports (A2, the dialect audit; A1, A3 and A4, the references, 
 
 - 2026-11-15: task list written; decisions 1 to 3 taken by the maintainer.
 - 2026-11-15: stage 1 reports in (A1 to A4); G1 points 1 to 3 decided as recommended.
+- 2026-11-15: stage 2 done (B1 to B5). Lead's additions: indented non-comment lines are refused until X-D1 (decision 0026 item 6); XY-STR, XY-TTL and XY-COM validated by the B4 probes; the plan's section 8.1 lists the branches for later milestones.
