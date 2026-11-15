@@ -43,6 +43,31 @@ adopted, update the edition and access date and re-check every citation.
   numbers. Paraphrase only (architecture §11.3 rule 4). The built-in LTspice Help is proprietary and
   is not cited or copied (decision 0009).
 
+## [xyce-ref]
+
+- **Title:** *Xyce Parallel Electronic Simulator Reference Guide*, Version 7.10
+- **Publisher:** Sandia National Laboratories (National Technology & Engineering Solutions of
+  Sandia, NTESS, for the US Department of Energy)
+- **Report number:** SAND2025-05993, printed May 2025
+- **URL:** https://xyce.sandia.gov/download/2068/ (linked from
+  https://xyce.sandia.gov/documentation-tutorials/ as the current release)
+- **License:** the report carries the NTESS copyright (2002–2025) and the US Government report
+  notice, and grants no licence for its text. Cite and paraphrase only (architecture §11.3 rule 4,
+  §12). Xyce itself is GPLv3; its source code is never read (P10, [decision 0026](decisions/0026-the-xyce-dialect.md))
+- **Accessed:** 2026-11-15
+- **Citation form:** section and printed page, for example `[xyce-ref] §2.3.1.1 p182`; the PDF's
+  page numbers equal the printed ones
+
+## [xyce-ug]
+
+- **Title:** *Xyce Parallel Electronic Simulator Users' Guide*, Version 7.10
+- **Publisher:** Sandia National Laboratories (NTESS, for the US Department of Energy)
+- **Report number:** SAND2025-05995, printed May 2025
+- **URL:** https://xyce.sandia.gov/download/1756/
+- **License:** as `[xyce-ref]`
+- **Accessed:** 2026-11-15
+- **Citation form:** as `[xyce-ref]`, for example `[xyce-ug] §4.1.1 p40`
+
 ## [qspice-help]
 
 - **Title:** QSPICE help (`QSPICE.chm`)
