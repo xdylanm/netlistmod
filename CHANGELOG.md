@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 1.0.0 — 2026-11-15
+
+The first stable release. From 1.0.0 the project follows SemVer under the contract of [decision 0024](docs/decisions/0024-the-1-0-public-api.md) (architecture §18). The API is that of 0.10.0; this release changes documentation only.
 
 M21 audited the planned xyce and qspice dialects against the 1.0 contract: neither needs a change to a covered name, signature or exception ([m21-tasks.md](docs/design/archive/v1.0/m21-tasks.md)). M22 records what the audit found.
 
