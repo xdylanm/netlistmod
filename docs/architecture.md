@@ -195,7 +195,7 @@ repo/
       diagnostics.py         # Diagnostic, DiagnosticCode
       models.py              # element-to-model-type checks, on model/model_types.py (decision 0020)
     edit/
-      plan.py                # Edit, EditPlan, apply_edits
+      plan.py                # Edit, EditPlan; apply_edits (internal)
       api.py                 # restricted public editing operations
       operations.py          # one plan builder per operation
       _ops_*.py              # the builders by family; operations.py re-exports them
@@ -271,7 +271,7 @@ The sketch shows the main kinds. The others are `ValueList`, `Identifier`, `Flag
 
 ### 5.4 Lines
 
-A `Line` is one **logical** item: a statement with all its continuation lines and end-of-line comments (the node's `trailing_comments`), a blank line, a comment line, or a whole opaque block. Its span is the item span the parser tiles, so it covers the item including its terminator; `first_line`/`last_line` are the 1-based physical lines it spans, and `scope` is its definition scope. A subcircuit definition is one `Line` whose `body` is a nested `Lines`. `Lines` is the ordered, searchable sequence: `find`, `find_all`, `index_of` (identity-based), with `recursive=True` entering bodies, and anchor-relative insertion points (`insert_before`, `insert_after`), which are zero-width spans at the line's span start and end, both physical-line boundaries ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md)).
+A `Line` is one **logical** item: a statement with all its continuation lines and end-of-line comments (the node's `trailing_comments`), a blank line, a comment line, or a whole opaque block. Its span is the item span the parser tiles, so it covers the item including its terminator; `first_line`/`last_line` are the 1-based physical lines it spans, and `scope` is its definition scope. A subcircuit definition is one `Line` whose `body` is a nested `Lines`. `Lines` is the ordered, searchable sequence: `find`, `find_all`, `index_of` (identity-based), with `recursive=True` entering bodies, and anchor-relative points (`point_before`, `point_after`), which are zero-width spans at the line's span start and end, both physical-line boundaries; they insert nothing ([decision 0006](decisions/0006-document-layer-names-scope-and-diagnostics.md), renamed by [decision 0024](decisions/0024-the-1-0-public-api.md) item 6).
 
 ---
 
@@ -307,7 +307,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 | 11 | Transformer methods for rules with adjacent optional slots MUST dispatch on node *type*, not position. | Positions shift when slots are absent. |
 | 12 | Terminal priorities are used deliberately and commented in the grammar. Keywords share the priority of the generic name terminal so Lark re-types an exact match; block-scoped name terminals keep block terminators out of the top-level name. | Lark only collision-checks terminals of equal priority, so an accidental priority gap hides a conflict. |
 | 13 | A lone `\r` is ordinary text only inside free-text terminals (written `\r(?!\n)`, so a CR right before a CRLF is text); `\r?\n` is the only terminator. Anywhere else a lone `\r` is a syntax error. | Preserves the source-layer rule that only LF and CRLF end a line ([decision 0001](decisions/0001-source-text-policy.md); [decision 0021](decisions/0021-completeness-audit.md) item 3). |
-| 14 | On a transistor line, and on an ngspice P or N line, the model is the last name before the first area, flag or parameter ([decision 0019](decisions/0019-transmission-lines.md)); the overlay spells out the name sequences each letter's node counts allow. A field written as a number is a node before the model and an area after it, and a number or a flag keyword in the model's place is refused at its token. A field written as a number is never the model, whatever its letters ([decision 0021](decisions/0021-completeness-audit.md) item 1). | Both solvers decide by looking up defined models, which the library cannot do for included files; syntax stays in the grammar (P13). See [decision 0014](decisions/0014-transistors.md). |
+| 14 | On a transistor line, and on an ngspice P or N line, the model is the last name before the first area, flag or parameter ([decision 0019](decisions/0019-transmission-lines.md)); the overlay spells out the name sequences each letter's node counts allow. A field written as a number is a node before the model and an area after it, and a number or a flag keyword in the model's place is refused at its token. A field written as a number is never the model of any element line, whatever its letters ([decision 0021](decisions/0021-completeness-audit.md) item 1, [decision 0024](decisions/0024-the-1-0-public-api.md) item 7): that covers D, S and W, and the model after an ngspice R, C or L value, where it is refused at its token. A subcircuit name is not a model and is not checked. | Both solvers decide by looking up defined models, which the library cannot do for included files; syntax stays in the grammar (P13). See [decision 0014](decisions/0014-transistors.md). |
 
 ### 6.4 Numeric literals
 
@@ -576,8 +576,9 @@ The text inside an opaque item (`.control`, `.if` and `.lib` blocks, including t
   - lint + type check;
   - test matrix across Linux and Windows and supported Python versions, which includes the strict grammar build, spec-coverage, docs link and coverage checks;
   - Dependabot for actions and dependencies.
-- **Merging:** one pull request per milestone, merged after review and only when CI is green. Branch protection enforces this where the repository's plan allows.
-- **Not in v1:** macOS and a solver in CI. v1 is a beta tagged `0.9.0`. A release workflow publishes a GitHub Release to PyPI through Trusted Publishing ([decision 0018](decisions/0018-pypi-publication.md)); `0.5.0` is the first, an alpha.
+- **Merging:** one pull request per milestone, merged after review and only when CI is green. A ruleset protects `main`: changes arrive by pull request, and the CI jobs must pass before a merge ([decision 0023](decisions/0023-v1-beta-release.md) item 3).
+- **Not in v1:** macOS and a solver in CI.
+- **Releases:** a release workflow publishes a GitHub Release to PyPI through Trusted Publishing ([decision 0018](decisions/0018-pypi-publication.md)); the first was the `0.5.0` alpha. What a version number promises is in §18.
 - **LTspice:** no CI job in v1; local procedure documented in `docs/testing.md`.
 
 ---
@@ -613,30 +614,9 @@ Rules: documentation changes ship in the same change as the code; usage examples
 
 ---
 
-## 16. Public API sketch (illustrative, not frozen)
+## 16. Public API
 
-The implemented API is specified in [docs/design/edit-layer.md](design/edit-layer.md) ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)); edit methods return a new `Netlist`. The sketch below is the original illustration.
-
-```python
-from netlistmod import Netlist, Dialect, Placement
-
-nl = Netlist.load("amp.cir", dialect=Dialect.NGSPICE)
-
-nl.element("R22").set_value("2.2k")
-nl.element("R1").set_value_formula("Rx")            # R1 a b {Rx}
-nl.params.add("Rx", "22k", placement=Placement.AFTER_TITLE)
-nl.directives.set(".tran 1u 10m")                    # replaces an existing .tran or adds one
-nl.directives.add_include("harness.cir")
-
-nl.element("D1").set_model("dmod2")                  # EditError if types differ
-
-nl.element("amp/R1", scope="definition")             # explicit scope inside subcircuits
-
-nl.nets()                                            # read-only topology queries
-nl.references_to_param("Rx")
-
-nl.save("amp.edited.cir")                            # re-parses and verifies topology
-```
+The public API is specified in [docs/design/edit-layer.md](design/edit-layer.md) (editing; [decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)) and [docs/design/document-layer.md](design/document-layer.md) (loading and queries). Its runnable examples are in the usage guides, chiefly [docs/usage/editing.md](usage/editing.md), which `tests/test_usage_docs.py` executes. Every edit method returns a new, verified `Netlist`. What is public, and what SemVer covers, is in §18.
 
 ---
 
@@ -660,9 +640,18 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 
 ## 18. Compatibility and versioning
 
-- SemVer. Before 1.0 the public API may change; changes are listed in `CHANGELOG.md`.
-- Grammar changes that alter what parses are changelog-worthy.
-- Supported solver versions for validated behaviors are listed per spec entry.
+From 1.0.0 the project follows SemVer ([decision 0024](decisions/0024-the-1-0-public-api.md)); every change is listed in `CHANGELOG.md`.
+
+- **Public API:** the names in `netlistmod.__all__`, with the documented attributes, methods and parameters of those objects. Submodules are internal, even where a name has no underscore; import from `netlistmod`.
+- **Covered:** public names; the signatures of public functions, classes and methods (parameter names, keyword-only parameters, defaults); the exception classes, their hierarchy and the class raised for a documented condition. A change to these needs a major version.
+- **Best-effort, not covered:** dataclass fields and their types, diagnostics (codes, severities and when they are reported), the topology signature's entries and `digest()`, the exact text an edit inserts, type annotations, message text, `repr` and `str`. A change is listed in the CHANGELOG.
+- **Grammar:** the grammar follows the reference editions in `docs/references.md` (P5).
+  - **Minor:** accepting a new form, or reading one that raised `UnsupportedConstruct`. Refusing a form the reference does not allow is a correction; it ships in a minor release (never a patch), listed as "Refused".
+  - **Major:** refusing a form the reference allows, changing the node type of a correct reading, or removing an exception of §19 decision 21.
+  - **Misreads:** fixing one is minor and listed.
+- **Deprecation:** a public name or behaviour to be removed raises `DeprecationWarning` for at least one minor release, with its replacement in the CHANGELOG, and is removed only in the next major.
+- **Python:** every CPython release from 3.13 in bugfix or security support, tested on Linux and Windows. A version is added in a minor release, and dropped only after its end of life, in a minor release, with `requires-python` raised.
+- **Solvers:** `validated_on` in each spec entry records where a behaviour was checked. It is evidence, not a support promise. A new solver version is re-validated by appending to it; a difference is a `discrepancies.md` row, and changes the grammar only under the rule above.
 
 ---
 
@@ -690,7 +679,7 @@ A `Diagnostic` is a frozen record `(code, severity, message, span, line, column)
 | 18 | Validation of caller-supplied replacement text | None in v1 (caller's responsibility). The write-time slot check (Section 7.6, step 5) verifies only that the text lands as a slot of the intended kind ([decision 0007](decisions/0007-edit-lifecycle-and-edit-semantics.md)) |
 | 19 | ngspice structural source policy | Strict, per the manual: the first line is always the title (flagged implicit or explicit); `.title` later replaces the displayed title; `.end` is required and last, with only blank lines after it; a missing final newline after `.end` is tolerated; `.control` after `.end` is rejected. See [decision 0002](decisions/0002-grammar-structure-policy.md). |
 | 20 | Grammar composition and registry | Dialect overlays import `core.lark`; `grammar/loader.py` owns the registry; all syntax, including continuations and opaque blocks, is expressed in the grammar (P13). See [decision 0003](decisions/0003-grammar-composition-and-opaque-regions.md). |
-| 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The exceptions in v1, each recorded: the RKM mode option (decision 8); ngspice `SINE` read as `SIN` ([decision 0013](decisions/0013-stimulus-specs.md) item 3); `Z0` and `Zo` as one parameter ([decision 0019](decisions/0019-transmission-lines.md) item 3); the 13 LTspice A function names that LTspice's symbols write ([decision 0020](decisions/0020-special-and-mixed-signal-devices.md) item 3); and, stricter than the reference, LTspice's required `.end` ([decision 0009](decisions/0009-ltspice-dialect.md) item 4, [decision 0012](decisions/0012-carried-limits.md) item 3). A form the manual is silent on is an `observed` spec entry (§11.3 rule 3), not an exception. Further exceptions need a decision record ([decision 0022](decisions/0022-v1-record-corrections.md) item 1). |
+| 21 | Strictness policy | The grammar follows the reference manuals; solver leniency is not accepted (P5, P8, §11.3). The exceptions in v1, each recorded: the RKM mode option (decision 8); ngspice `SINE` read as `SIN` ([decision 0013](decisions/0013-stimulus-specs.md) item 3); `Z0` and `Zo` as one parameter ([decision 0019](decisions/0019-transmission-lines.md) item 3); the 13 LTspice A function names that LTspice's symbols write ([decision 0020](decisions/0020-special-and-mixed-signal-devices.md) item 3); and, stricter than the reference, LTspice's required `.end` ([decision 0009](decisions/0009-ltspice-dialect.md) item 4, [decision 0012](decisions/0012-carried-limits.md) item 3) and a number as a model name on LTspice, which LTspice and its reference accept ([decision 0014](decisions/0014-transistors.md) item 4, [decision 0024](decisions/0024-the-1-0-public-api.md) item 7). A form the manual is silent on is an `observed` spec entry (§11.3 rule 3), not an exception. Further exceptions need a decision record ([decision 0022](decisions/0022-v1-record-corrections.md) item 1). |
 | 22 | Continuation and comments | Continuation is `+` on the immediately following line or a trailing double backslash; comment and blank lines may not intervene; `.title`, `.lib` and `.include` cannot be continued. End-of-line comment delimiters are `;`, `$` and `//` (a standalone `;`, `$` or `//` line is rejected; `.end` takes no trailing comment). All per the ngspice manual §2.4.4 and §2.4.5 (strict reading). |
 
 ---
@@ -724,7 +713,7 @@ Both questions below, raised before the edit layer was designed, are resolved by
 
 **Later candidates, not in v1**
 
-- **Library files.** Opening a library file, with no title or `.end`, and editing a model inside a `.lib` section. The caller would choose, because the file cannot tell ([decision 0012](decisions/0012-carried-limits.md)). Decided after using the beta.
+- **Library files.** Opening a library file, with no title or `.end`, and editing a model inside a `.lib` section. The caller would choose, because the file cannot tell ([decision 0012](decisions/0012-carried-limits.md)). A candidate after 1.0: it needs its own entry point and result type, so a minor release can add it without changing 1.0 behaviour ([decision 0024](decisions/0024-the-1-0-public-api.md) item 10).
 
 **Deferred to design documents and implementation (resolve with tests)**
 

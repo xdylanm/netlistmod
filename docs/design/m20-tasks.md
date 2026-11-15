@@ -79,7 +79,7 @@ D1 and D3 run in parallel (their files do not overlap); D2 follows D1, and D4 fo
 
 [x] **D4 — Stale text, docs and CI (5.1 point 10).** Docstrings, architecture §13 and §16, README, CONTRIBUTING, `errors.md`, `document-layer.md`, `.github/workflows/release.yml` (`py.typed`), `.github/workflows/ci.yml` (`mypy` on the examples), and the pytest `filterwarnings` setting (point 1, deprecation policy).
 
-[ ] **T2 — The record (lead).** Decision 0024 (the contract and every outcome of 5.1, amending decisions 0004 item 5, 0007 item 10 and 0021 item 1), architecture §18, §19 decision 21 and §21, the CHANGELOG (each change with its replacement), and this list.
+[x] **T2 — The record (lead).** Decision 0024 (the contract and every outcome of 5.1, amending decisions 0004 item 5, 0007 item 10 and 0021 item 1), architecture §18, §19 decision 21 and §21, the CHANGELOG (each change with its replacement), and this list.
 
 ### Gate G3 (lead)
 
@@ -209,5 +209,5 @@ ngspice's own test is stricter than the library's: only a field that is entirely
 - [x] D3: `complete with findings`. Point 6 by the transformer check of decision 0021 item 1 on D, S, W and ngspice R/C/L (no grammar change); point 7 validated; solver probes on both dialects; the lead added the `set_model` test (D3 suggestion) and moved LTspice's `q-number-model` row under "Exceptions to the reference" (D3-3). D3-2 (a `.model` named with a number still loads, though no element can now use it) and D3-4 (`.step` and `ako:` model references are not checked) are recorded in decision 0024; D3-5 is existing behaviour, no change.
 - [x] D2: `complete`. Point 5 (a to e) and point 4.6 made as decided, with D1-n7's internal tidy; `_rules_behavioral.py` gained a `cast` for the `quantity` type (D2-n4, accepted). Lead decisions at G2: D2-n1 (`remove_param` on an LTspice `Laplace`) and D2-n2 (the `set_param` docstring) go to D4; D2-n3, `set_switch_state` accepting `"ON"` at run time, stays lenient (outside the typed contract, no change).
 - [x] D4: `complete with findings`. Point 10 and the deprecation setting made as decided (§13 and §16 are committed with T2, in the same file as the lead's edits); `remove_param` on an LTspice `Laplace` names `set_expression` (D2-n1); `filterwarnings = ["error"]` needed no ignores, and the solver run with it raised no warning; the release smoke script with the `py.typed` check passed against a fresh wheel. The lead did D4-n1 (`testing.md`), D4-n2 (a B line's `set_value` names `set_expression`, with a test) and D4-n3 (messages say "an OSDI device"; `element_phrase` also no longer gives "an uniform RC line"); D4-n5 is accepted.
-- [ ] T2
+- [x] T2: decision 0024 (accepted, the maintainer's G1 decisions), indexed; architecture §4, §5.4, §6.3 rule 14, §18, §19 decision 21 and §21 (with D4's §13 and §16); the CHANGELOG's `Unreleased` entry for M20.
 - [ ] T1
