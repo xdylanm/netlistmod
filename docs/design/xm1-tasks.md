@@ -1,6 +1,6 @@
 # X-M1 task list — xyce structure, names, numbers; R, C, L, V, I, D, X, K
 
-> **Status:** ACTIVE — G1 (the maintainer reviews section 5.1)
+> **Status:** ACTIVE — stage 2 (implementation)
 > **Follows:** [X-M0](./archive/xyce/xm0-tasks.md) and [decision 0026](../decisions/0026-the-xyce-dialect.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 3 to 6 and 8. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12).
 
 ## 1. Scope
@@ -40,9 +40,9 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 
 ### Stage 1
 
-- [ ] **A1 — Structure and names.** From the manuals and probes: indented lines (X-D1) and what the library should do with them; `.END` strictness; `;` and `+` lines; name characters and case; ground and `.PREPROCESS REPLACEGROUND`; `$G` globals (X-D3); `:` hierarchy, `X1:node` on device lines and in expressions (X-D2), against today's nets layer and LTspice's `NODE_INTO_INSTANCE`; `.GLOBAL`. Options for each decision, with a recommendation.
-- [ ] **A2 — Numbers, parameters and expressions.** Scale factors (`X`, `mil`, `a`, `Meg` case), suffixes after scale factors; `.PARAM` forms (braced, quoted, bare; commas; functions), `.GLOBAL_PARAM`, `.FUNC`; bare expressions in instance `name=` values (X-D5); scoping (body `.param` local, last definition wins, `.func` scope); the formula grammar: operators, functions, reserved words, accessors; how far the existing `formula.lark`/`formula_ltspice.lark` serve. Options for X-D5, with a recommendation.
-- [ ] **A3 — Statements and elements.** `.MODEL`, `.SUBCKT`/`.ENDS`, includes, `.LIB` call and block, and R, C, L, V, I (DC/AC), D, X, K: each form in the manual against today's ngspice rules and nodes (reuse, reuse with differences, new); the R/C/L model-before-value order and what it means for the nodes and for edits (`set_value`, `set_model`, insertion order); xyce's model types; binned model names. Probes for anything the manual leaves unclear.
+- [x] **A1 — Structure and names.** From the manuals and probes: indented lines (X-D1) and what the library should do with them; `.END` strictness; `;` and `+` lines; name characters and case; ground and `.PREPROCESS REPLACEGROUND`; `$G` globals (X-D3); `:` hierarchy, `X1:node` on device lines and in expressions (X-D2), against today's nets layer and LTspice's `NODE_INTO_INSTANCE`; `.GLOBAL`. Options for each decision, with a recommendation.
+- [x] **A2 — Numbers, parameters and expressions.** Scale factors (`X`, `mil`, `a`, `Meg` case), suffixes after scale factors; `.PARAM` forms (braced, quoted, bare; commas; functions), `.GLOBAL_PARAM`, `.FUNC`; bare expressions in instance `name=` values (X-D5); scoping (body `.param` local, last definition wins, `.func` scope); the formula grammar: operators, functions, reserved words, accessors; how far the existing `formula.lark`/`formula_ltspice.lark` serve. Options for X-D5, with a recommendation.
+- [x] **A3 — Statements and elements.** `.MODEL`, `.SUBCKT`/`.ENDS`, includes, `.LIB` call and block, and R, C, L, V, I (DC/AC), D, X, K: each form in the manual against today's ngspice rules and nodes (reuse, reuse with differences, new); the R/C/L model-before-value order and what it means for the nodes and for edits (`set_value`, `set_model`, insertion order); xyce's model types; binned model names. Probes for anything the manual leaves unclear.
 
 ### Stage 2
 
@@ -58,7 +58,7 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 
 ### 5.1 G1 decisions
 
-From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and expressions) and A3 (statements and elements). All probes are on XyceNF Release 7.10.0 and are kept outside the repository. Each point gives *Recommendation:*, then the decision.
+From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and expressions) and A3 (statements and elements). All probes are on XyceNF Release 7.10.0 and are kept outside the repository. Each point gives *Recommendation:*, then the decision. **Every point not marked otherwise was decided as recommended (maintainer, 2026-11-16).**
 
 **Structure and names (A1)**
 
@@ -128,6 +128,7 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
     - A positional value together with `R=`, or a value together with `Q=`, raises `ParseError`; Xyce silently prefers one (P5).
 
     *Recommendation:* as listed. R with no value gets a warning diagnostic.
+    **Decided (maintainer, 2026-11-16): as recommended, except that R requires a value.** An R line with no positional value and no `R=` raises `ParseError`, although Xyce runs it as 1 kΩ with a warning (a discrepancy row). This also refuses R's model-geometry form (`R1 a b rmod L=… W=…`, which takes its value from the model's `RSH`), and `remove_value` on R is refused, as on L.
 11. **The edits follow the order.**
     - `set_value` inserts after the model.
     - `set_model` inserts right after the nodes, and is allowed with `R=`.
@@ -211,3 +212,4 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
 - 2026-11-15: task list written; X-M0 archived (approved and merged as #26).
 - 2026-11-16: stage 1 reports in (A1 to A3; resumed after a usage limit); section 5.1 written.
 - 2026-11-16: G1, first round: points 1 (X-D1), 7 (X-D2), 9 (the R, C and L order), 19 (numbers), 21 (X-D5) and 22 (repeated `.param`) decided as recommended. The maintainer reviews the remaining points before stage 2.
+- 2026-11-16: G1, second round: every other point decided as recommended, except point 10: an R line requires a value.
