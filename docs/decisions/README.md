@@ -26,3 +26,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0021 — Completeness audit](0021-completeness-audit.md)
 - [0022 — v1 record corrections](0022-v1-record-corrections.md)
 - [0023 — The v1 beta release and a public repository](0023-v1-beta-release.md)
+- [0024 — The 1.0 public API](0024-the-1-0-public-api.md)

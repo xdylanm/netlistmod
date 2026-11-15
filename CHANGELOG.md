@@ -1,5 +1,43 @@
 # Changelog
 
+## Unreleased
+
+M20: the 1.0 API review ([decision 0024](docs/decisions/0024-the-1-0-public-api.md)). From 1.0.0 the project follows SemVer as architecture §18 states. The public API is `netlistmod.__all__` and submodules are internal, so import from `netlistmod`. Public names, signatures and the exception raised for a condition are covered; fields, diagnostics, the signature digest, inserted text, annotations and messages are best-effort. The changes below update callers of 0.9.0.
+
+Breaking:
+
+- **Removed `netlistmod.apply_edits`.** Use `Netlist.apply(plan)` or a `Batch`, which verify.
+- **Removed `netlistmod.version`**, a stray import. Use `netlistmod.__version__`.
+- **Removed `netlistmod.document.Netlist`**, the read-only base. Use `netlistmod.Netlist`.
+- **Trimmed the subpackage `__all__`s** to what `netlistmod` imports. `netlistmod.document` no longer lists `GROUND`, `fold`, `is_ground`, `net_name` or `Netlist`, and `netlistmod.grammar` lists nothing.
+- **`placement` is keyword-only** on `add_include` and `directives.add`: `add_include("h.cir", placement=Placement.BEFORE_END)`.
+- **`scope` is keyword-only** on every read method that takes it: `element`, `elements`, `references_to_param`, `nets`, `elements_on_net`, `connections`, `expression_reads` and `ports`, on `Netlist` and on `TopologyView`. Write `netlist.nets(scope=("amp",))`. `Netlist.scope(path)` is unchanged.
+- **`set_formula(designator, text, …)`:** the second parameter is renamed from `expression`.
+- **`Lines.insert_before` and `Lines.insert_after` are renamed `point_before` and `point_after`.** They return a zero-width `Span` and insert nothing; to insert a line, pass `Placement.before/after(line)` to an edit.
+- **`Scope`'s attributes are read-only.** Assigning one raises `AttributeError`.
+- **`Placement(...)` checks its arguments.** An unknown kind, `"before"`/`"after"` without a line, or a constant's kind with an anchor raises `ValueError`. Use `Placement.AFTER_TITLE`, `AFTER_LAST_PARAM`, `BEFORE_END`, `Placement.before(line)` or `Placement.after(line)`.
+- **`in_definition=True` with `scope=()` is an `EditError`** on every edit and on `params.set`; it used to be ignored. Drop it, or pass a definition scope.
+- **A `Scope` passed as `scope=`** (or to `Netlist.scope`) raises a `TypeError` that says to pass `Scope.path`.
+
+Refused (decision 0024 item 7, extending decision 0021 item 1):
+
+- **A number as the model of a D, S or W line** on both dialects (`D1 a 0 2`, `D1 a 0 4093`, `D1 a 0 1k`, `D1 a 0 4093B`, `S1 a b c d 2`, `W1 a b v1 2`) is a `ParseError`, as on Q. `set_model` to such a name is an `EditError`. Part names such as `1n4148`, `2N2222`, `CD4093` and `4N25` stay models, and a subcircuit may still be named `4093`. On LTspice this is stricter than the reference, and is recorded as an exception (architecture §19 decision 21).
+- **A number after the value of an ngspice R, C or L** (`R1 a 0 1k 2`, `C1 a 0 1p 2p`, `L1 a 0 1u 2`) is a `ParseError`. The library read it as the model, while ngspice reads it as the value (`R1 a 0 1k 4093` is 4093 Ω).
+
+Changed:
+
+- **New exports from `netlistmod`:** `ScopePath`, `Severity`, `ReferenceKind`, `BodyItem` and `TopLevelItem`. `netlistmod.__all__` is sorted.
+- **`Dialect` is a `StrEnum`:** `str(Dialect.NGSPICE)` is `"ngspice"`.
+- **Narrower types, same runtime values:**
+  - `set_switch_state` takes `state: Literal["on", "off"] | None`.
+  - `ControlledSource.form` and `BehavioralSource.quantity` are `Literal` types.
+- **On LTspice, `set_param` and `remove_param` on an E or G `Laplace`** are refused with a message naming `set_expression`.
+- **`|` in ngspice node and model names** is validated on ngspice 47 (NG-NOD-001); nothing changes.
+- **`set_value` on a B line** names `set_expression` in its refusal.
+- **The docs** list every built-in exception the API raises, and document `Scope.may_define_elsewhere` and `Scope.dialect`.
+- **Docstrings and §16:** docstrings that named milestones or contradicted behaviour are corrected. For example, `OutputVector`'s now says that only `i(src)` is resolved. Architecture §16 points to the specified API instead of an illustrative sketch.
+- **Release smoke test and CI:** the smoke test checks that `py.typed` ships, CI type-checks `docs/usage/examples` with `mypy --strict`, and the project's tests treat warnings as errors.
+
 ## 0.9.0 — 2026-11-11
 
 The v1 beta: feature complete, published to PyPI after the v1 gate ([decision 0023](docs/decisions/0023-v1-beta-release.md)). It covers phase 2 from M15b to M19; the entries for M15b to M19 follow the summary.
