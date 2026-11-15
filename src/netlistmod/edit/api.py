@@ -472,7 +472,7 @@ class _Operations(Generic[_R]):
         The line goes to ``placement`` (keyword-only; after the title by default).
         """
         return self._submit(
-            operations.add_include(self._target(), path, placement),
+            operations.add_include(self._target(), path, placement=placement),
             operations.include_target(path),
         )
 
@@ -558,7 +558,7 @@ class DirectiveEditor(Generic[_R]):
         """Insert one directive or opaque item (before ``.end`` by default). The line is written
         even if one of its kind exists; ``set`` is the upsert (decision 0012)."""
         return self._operations._submit(
-            operations.add_directive(self._operations._target(), text, placement)
+            operations.add_directive(self._operations._target(), text, placement=placement)
         )
 
     def replace(self, line: Line | object, text: DirectiveText) -> _R:

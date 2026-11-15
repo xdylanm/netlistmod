@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
@@ -19,7 +21,7 @@ _STATE = SlotCheck((Flag,), "a switch state")
 def set_switch_state(
     netlist: Netlist,
     designator: str,
-    state: str | None,
+    state: Literal["on", "off"] | None,
     *,
     scope: ScopePath = (),
     in_definition: bool = False,

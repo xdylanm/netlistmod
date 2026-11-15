@@ -29,7 +29,7 @@ every `scope=` argument is keyword-only and accepts any case.
 | `slice(span)` | `-> str` | source text of a span |
 | `lines` | `Lines` | top-level logical lines |
 | `scopes` | `tuple[Scope, ...]` | depth first, top level first |
-| `scope(path=())` | `-> Scope` | `KeyError` if absent |
+| `scope(path=())` | `-> Scope` | `KeyError` if absent; `TypeError` for a `str` or a `Scope` (section 1, `Scope`) |
 | `params`, `models`, `subckts` | `Mapping[str, tuple[...]]` | top-level tables (folded name → definitions) |
 | `element(designator, *, scope=())` | `-> Component` | first of a repeated designator; `KeyError` |
 | `elements(*, scope=(), recursive=False)` | `-> tuple[Component, ...]` | source order |
@@ -56,9 +56,17 @@ sequence or its bodies). They insert nothing: an edit inserts a line through
 
 ### `Scope`
 
-`path`, `display` (names as written), `definition: SubcktDefinition | None`, `lines`, `parent`,
-`children`, `params`, `models`, `subckts`, `elements` (each `Mapping[folded name, tuple in source
-order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()`, `describe()`.
+Read-only properties: `path: ScopePath`, `display` (names as written), `definition:
+SubcktDefinition | None`, `lines`, `parent`, `children`, `dialect`, `params`, `models`,
+`subckts`, `elements` (each `Mapping[folded name, tuple in source order]`) and
+`may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
+`.lib` block, whose names the tables do not show; §7.8). Methods: `fold(name)` (the dialect's
+folded form), `chain()` (self, then enclosing scopes), `walk()`, `describe()`. Assigning an
+attribute is an `AttributeError`.
+
+A `scope=` argument, and `Netlist.scope(path)`, take the path, not a `Scope`: a `Scope` is a
+`TypeError` that says to pass `Scope.path`, and a `str` is a `TypeError` that says to write a
+one-name tuple (`("amp",)`).
 
 ### `Reference`
 

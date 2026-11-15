@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 import pytest
 
@@ -153,3 +153,18 @@ def test_the_flux_and_hysteretic_forms_of_l() -> None:
     core = _element("L9 out n9 Hc=16 Bs=.44 Br=.10 A=0.0000251 Lm=0.0198 Lg=0.0006858 N=1000")
     assert (core.value, core.flux) == (None, None)
     assert [param.name for param in core.params] == ["Hc", "Bs", "Br", "A", "Lm", "Lg", "N"]
+
+
+@pytest.mark.parametrize(
+    ("line", "quantity"),
+    [
+        ("B1 o 0 V=v(a)", "v"),
+        ("B1 o 0 I=v(a)", "i"),
+        ("B1 o 0 R=v(a)+1", "r"),
+        ("B1 o 0 P=v(a)", "p"),
+    ],
+)
+def test_quantity_is_one_of_its_literal(line: str, quantity: str) -> None:
+    # M20 D2 (point 4 item 6): the LTspice quantities are BehavioralSource.quantity's Literal.
+    assert _element(line).quantity == quantity
+    assert get_args(get_type_hints(BehavioralSource)["quantity"]) == ("v", "i", "r", "p")

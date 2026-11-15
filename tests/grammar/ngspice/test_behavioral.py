@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 import pytest
 
@@ -223,3 +223,10 @@ def test_the_charge_form_of_c(line: str, text: str, params: list[str]) -> None:
     assert isinstance(item, Capacitor)
     assert (item.value, item.charge.text) == (None, text)
     assert [param.name for param in item.params] == params
+
+
+@pytest.mark.parametrize(("line", "quantity"), [("B1 o 0 V={v(a)}", "v"), ("B1 o 0 i={v(a)}", "i")])
+def test_quantity_is_one_of_its_literal(line: str, quantity: str) -> None:
+    # M20 D2 (point 4 item 6): `quantity` is typed as a Literal; LTspice adds `r` and `p`.
+    assert _element(line).quantity == quantity
+    assert get_args(get_type_hints(BehavioralSource)["quantity"]) == ("v", "i", "r", "p")

@@ -50,8 +50,11 @@
 
 `ScopePath` is a tuple of subcircuit names, `()` for the top level. Every element operation
 takes the keyword-only `scope: ScopePath = ()` and `in_definition: bool = False`; a non-empty `scope` without
-`in_definition=True` is an `EditError` (P11). Elements are found in their own scope only; an
-unknown scope, an unknown designator and a repeated designator are `EditError`s. On a
+`in_definition=True` is an `EditError` (P11), and so is `in_definition=True` with `scope=()`
+(the top level is not a definition). `scope` is the path: a `Scope` object is a `TypeError`
+that says to pass `Scope.path`, and a `str` a `TypeError` that says to write a one-name tuple.
+Elements are found in their own scope only; an unknown scope, an unknown designator and a
+repeated designator are `EditError`s. On a
 `Netlist` every operation returns a new `Netlist`; on a `Batch` it returns `None`. `placement`
 is keyword-only too (`add_include`, `directives.add`, `params.set`).
 
@@ -63,7 +66,7 @@ is keyword-only too (`add_include`, `directives.add`, `params.set`).
 | | E, F, G, H | `value.span` (the gain) | — (the gain is mandatory) | — |
 | | V, I | `dc.span` | — (replace only; never adds `DC`) | no DC value: use `set_dc` |
 | `set_formula(d, text)` | as `set_value` | as `set_value`, text `{text}` | as `set_value` | as `set_value` |
-| `set_param(d, name, value)` | R, C, L, D, Q, M, J, Z, B; `m=` on an ngspice F or G; `window=`, `nfft=` and `mtol=` on an LTspice E or G written with `Laplace=`; T, U, Y and P (decision 0019: a T keeps its spelling of `Z0=` or `Zo=`, and `IC=` is set as a whole list); ngspice N, LTspice A and `@` (decision 0020: an `@` list is set whole, and refused with a comment inside it; `refnode=` and `intnode=` take a net name) | `params[i].value.span`; `area` on J and Z edits or adds the positional `area.span` (right after the model) unless the line writes `area=`, and on an ngspice Q it is a parameter; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value`; on an LTspice B line with `laplace=`, after the last field before `laplace=`, except `window=`, `nfft=` and `mtol=`, which follow it (decision 0017 item 4) | X: use `set_instance_param`; V, I, K: no parameters; O: its values are in its LTRA model; ngspice A: its values are on its `.model`; `&`: no parameters; `@`'s `zm`: not editable; value keyword on a positional value: use `set_value`; repeated name; a result that breaks a line's rules (`TD=` beside `F=`, `m=` on Y) through verification |
+| `set_param(d, name, value)` | R, C, L, D, Q, M, J, Z, B; `m=` on an ngspice F or G; `window=`, `nfft=` and `mtol=` on an LTspice E or G written with `Laplace=`; T, U, Y and P (decision 0019: a T keeps its spelling of `Z0=` or `Zo=`, and `IC=` is set as a whole list); ngspice N, LTspice A and `@` (decision 0020: an `@` list is set whole, and refused with a comment inside it; `refnode=` and `intnode=` take a net name) | `params[i].value.span`; `area` on J and Z edits or adds the positional `area.span` (right after the model) unless the line writes `area=`, and on an ngspice Q it is a parameter; a value keyword (`r`, `resistance`, `c`, `capacitance`, `l`, `inductance`) edits `value.span` when the value is written that way | after the last field: ` name=value`; on an LTspice B line with `laplace=`, after the last field before `laplace=`, except `window=`, `nfft=` and `mtol=`, which follow it (decision 0017 item 4) | X: use `set_instance_param`; V, I, K: no parameters; O: its values are in its LTRA model; on LTspice, `Laplace` on an E or G line, whose `Laplace=` is the form (use `set_expression`); ngspice A: its values are on its `.model`; `&`: no parameters; `@`'s `zm`: not editable; value keyword on a positional value: use `set_value`; repeated name; a result that breaks a line's rules (`TD=` beside `F=`, `m=` on Y) through verification |
 | `set_model(d, model, allow_external=False)` | R, C, L, D, Q, M, J, Z, S, W, O, U, Y, P; ngspice A and N (decision 0020: any type that is not built in) | `model.span` | R, C, L without a model: after the value: ` model` | model type not allowed for the letter (table in `model/model-types.json`); an LTspice A line's function (not a model, not editable); model not visible; not visible and `allow_external` with no `.include`/`.lib` in scope; a value written `r=1k` (that form takes no model) |
 | `set_expression(d, text)` | B; the expression forms of E, F, G and H; ngspice TABLE and FREQ's expression and LTspice's `Laplace=` formula; C's charge, L's flux; an R, C or L formula value | `expression.span`, `charge.span`, `flux.span` or `value.span`, with its delimiters kept (`{…}`, `'…'` or none) | — | a gain (use `set_value`); a value that is not a formula (use `set_formula`); a line with no expression, including the four-node TABLE, `table=`, POLY and the gates, which name `set_table` or `set_poly_coefficients` (decisions 0016 item 7 and 0017) |
 | `set_table(d, points)` | an ngspice TABLE, FREQ or gate line; an LTspice `table=` | each value's span when the number of points is the same; otherwise `table.span`, rewritten in the layout already there (`"pairs"` or `"flat"`), reusing as written the text between the first two values, between the first two points and after the first `(`; with several lines, one new point on each continuation line with the first one's prefix | — | not a table form (POLY: `set_poly_coefficients`); a point of the wrong width (two values, three for FREQ); fewer points than the form takes (two for a gate or `table=`, one for ngspice TABLE and FREQ; exactly two for a gate); a value that is not a number on an ngspice TABLE; a count change over a comment among the points, or over lines that do not each hold one point (decision 0017 item 6). A FREQ table that ngspice stops on (first frequency of several characters right after the `(`) is refused through verification |
@@ -130,6 +133,11 @@ the solver's view; that is not verified (§7.8).
 
 An anchor that is not a line of the target sequence (another netlist, another scope) is an
 `EditError`. All points are physical-line boundaries; nothing is inserted after `.end`.
+
+Callers use the three constants and `Placement.before(line)` / `Placement.after(line)`, not the
+constructor. Constructing a `Placement` directly is checked at once: an unknown kind, `"before"`
+or `"after"` without a `Line` as anchor, and a constant's kind with an anchor are each a
+`ValueError`.
 
 ### Netlist-only members
 

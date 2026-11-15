@@ -7,6 +7,7 @@ Topology has no setter, so each forbidden operation is attempted with a crafted 
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from pathlib import Path
 
@@ -288,3 +289,109 @@ def test_a_stale_body_line_as_an_anchor_says_to_look_it_up_again() -> None:
 def test_misuse_is_an_edit_error(misuse: Misuse, message: str) -> None:
     with pytest.raises(EditError, match=message):
         misuse(_netlist())
+
+
+# --- scope and placement arguments (M20 D2: A1-6, A1-10, A1-14) --------------------------------
+
+_SCOPED = "t\n.subckt amp a b\nR1 a b 1k\n.model dm D\n.ends\nR1 a 0 1k\n.model dm D\n.end\n"
+
+# Every edit method that takes in_definition, with arguments that would otherwise reach it.
+_IN_DEFINITION: dict[str, Callable[..., object]] = {
+    "set_value": lambda n, **k: n.set_value("R1", "2k", **k),
+    "set_formula": lambda n, **k: n.set_formula("R1", "rx", **k),
+    "set_param": lambda n, **k: n.set_param("R1", "tc1", "1", **k),
+    "set_model": lambda n, **k: n.set_model("R1", "dm", **k),
+    "set_expression": lambda n, **k: n.set_expression("R1", "1", **k),
+    "set_table": lambda n, **k: n.set_table("R1", [("0", "0"), ("1", "1")], **k),
+    "set_poly_coefficients": lambda n, **k: n.set_poly_coefficients("R1", ["0", "1"], **k),
+    "set_switch_state": lambda n, **k: n.set_switch_state("R1", "on", **k),
+    "remove_value": lambda n, **k: n.remove_value("R1", **k),
+    "remove_param": lambda n, **k: n.remove_param("R1", "tc1", **k),
+    "remove_model_param": lambda n, **k: n.remove_model_param("dm", "is", **k),
+    "set_dc": lambda n, **k: n.set_dc("R1", "1", **k),
+    "set_ac": lambda n, **k: n.set_ac("R1", "1", **k),
+    "set_stimulus": lambda n, **k: n.set_stimulus("R1", "SIN(0 1 1k)", **k),
+    "set_stimulus_arg": lambda n, **k: n.set_stimulus_arg("R1", 0, "1", **k),
+    "remove_stimulus": lambda n, **k: n.remove_stimulus("R1", **k),
+    "set_coupling": lambda n, **k: n.set_coupling("R1", "1", **k),
+    "set_instance_param": lambda n, **k: n.set_instance_param("R1", "k", "1", **k),
+    "set_model_param": lambda n, **k: n.set_model_param("dm", "is", "1", **k),
+    "params.set": lambda n, **k: n.params.set("k", "1", **k),
+}
+
+
+def test_the_in_definition_cases_cover_every_edit_method() -> None:
+    taking = {
+        name
+        for name, member in inspect.getmembers(Netlist, inspect.isfunction)
+        if "in_definition" in inspect.signature(member).parameters
+    }
+    assert taking | {"params.set"} == set(_IN_DEFINITION)
+
+
+@pytest.mark.parametrize("edit", list(_IN_DEFINITION.values()), ids=list(_IN_DEFINITION))
+def test_in_definition_at_the_top_level_is_an_edit_error(edit: Callable[..., object]) -> None:
+    netlist = Netlist.from_text(_SCOPED, dialect=current_dialect())
+    with pytest.raises(EditError, match=r"in_definition=True needs a definition scope"):
+        edit(netlist, in_definition=True)
+    with pytest.raises(EditError, match=r"in_definition=True needs a definition scope"):
+        edit(netlist, scope=(), in_definition=True)
+    with (
+        pytest.raises(EditError, match=r"in_definition=True needs a definition scope"),
+        netlist.batch() as batch,
+    ):
+        edit(batch, in_definition=True)
+
+
+@pytest.mark.parametrize("edit", list(_IN_DEFINITION.values()), ids=list(_IN_DEFINITION))
+def test_a_scope_object_as_scope_names_its_path(edit: Callable[..., object]) -> None:
+    netlist = Netlist.from_text(_SCOPED, dialect=current_dialect())
+    scope = netlist.scope(("amp",))
+    with pytest.raises(TypeError, match=r"not a Scope object: pass Scope\.path \(\('amp',\)\)"):
+        edit(netlist, scope=scope, in_definition=True)
+    with pytest.raises(TypeError, match=r"write \('amp',\)"):
+        edit(netlist, scope="amp", in_definition=True)
+
+
+def test_in_definition_with_a_definition_scope_still_edits() -> None:
+    netlist = Netlist.from_text(_SCOPED, dialect=current_dialect())
+    edited = netlist.set_value("R1", "2k", scope=("amp",), in_definition=True)
+    assert "R1 a b 2k\n" in edited.text
+    assert "R1 a 0 1k\n" in edited.text
+
+
+@pytest.mark.parametrize(
+    ("build", "message"),
+    [
+        (lambda: Placement("bogus"), "unknown placement kind 'bogus'"),  # type: ignore[arg-type]
+        (lambda: Placement("before"), r"Placement\('before'\) needs an anchor line"),
+        (lambda: Placement("after"), r"Placement\('after'\) needs an anchor line"),
+        (
+            lambda: Placement("after", "R1 a 0 1k"),  # type: ignore[arg-type]
+            r"Placement\('after'\) needs an anchor line",
+        ),
+        (
+            lambda: Placement("before_end", _netlist().lines[0]),
+            r"Placement\('before_end'\) takes no anchor line; use Placement\.BEFORE_END",
+        ),
+    ],
+    ids=[
+        "unknown kind",
+        "before without a line",
+        "after without a line",
+        "a str anchor",
+        "a constant with a line",
+    ],
+)
+def test_a_placement_is_checked_when_built(build: Callable[[], Placement], message: str) -> None:
+    with pytest.raises(ValueError, match=message):
+        build()
+
+
+def test_the_placement_constants_and_constructors_build() -> None:
+    line = _netlist().lines[1]
+    assert Placement.AFTER_TITLE.kind == "after_title"
+    assert Placement.AFTER_LAST_PARAM.kind == "after_last_param"
+    assert Placement.BEFORE_END.kind == "before_end"
+    assert Placement.before(line).anchor is line
+    assert Placement.after(line).kind == "after"

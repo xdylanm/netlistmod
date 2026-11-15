@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 import pytest
 
@@ -171,3 +171,30 @@ def test_refused_gain_forms_name_the_form(line: str, column: int, reason: str) -
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
     assert reason in error.reason
+
+
+_FORMS = [
+    ("E1 o 0 vol='v(a)'", "vol"),
+    ("G1 o 0 cur='v(a)'", "cur"),
+    ("E1 o 0 value={v(a)}", "value"),
+    ("E1 o 0 TABLE {v(a)} = (0,0) (1,1)", "table"),
+    ("E1 o 0 POLY(1) a 0 0 1", "poly"),
+    ("E1 o 0 FREQ {v(a)}= DB (1, 6.02, 0) (1e9, 6.02, 0)", "freq"),
+    ("E1 o 0 AND(2) a 0 b 0 (0.5, 0) (0.9, 2)", "and"),
+    ("E1 o 0 OR(2) a 0 b 0 (0.5, 0) (0.9, 2)", "or"),
+    ("E1 o 0 NAND(2) a 0 b 0 (0.5, 0) (0.9, 2)", "nand"),
+    ("E1 o 0 NOR(2) a 0 b 0 (0.5, 0) (0.9, 2)", "nor"),
+    ("E1 o 0 a 0 2", None),
+]
+
+
+@pytest.mark.parametrize(("line", "form"), _FORMS, ids=[str(form) for _, form in _FORMS])
+def test_form_is_one_of_its_literal(line: str, form: str | None) -> None:
+    # M20 D2 (point 4 item 6): `form` is typed as the Literal of its closed set; LTspice adds
+    # only `laplace` (tests/grammar/ltspice/test_ltspice_controlled_sources.py).
+    element = _element(line)
+    assert element.form == form
+    hint = get_type_hints(ControlledSource)["form"]
+    (literal, none) = get_args(hint)
+    assert none is type(None)
+    assert set(get_args(literal)) == {f for _, f in _FORMS if f is not None} | {"laplace"}

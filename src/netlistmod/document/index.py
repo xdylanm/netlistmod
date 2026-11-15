@@ -111,17 +111,17 @@ class Scope:
 
     __slots__ = (
         "_children",
-        "definition",
-        "dialect",
-        "display",
-        "elements",
-        "may_define_elsewhere",
-        "lines",
-        "models",
-        "params",
-        "parent",
-        "path",
-        "subckts",
+        "_definition",
+        "_dialect",
+        "_display",
+        "_elements",
+        "_lines",
+        "_may_define_elsewhere",
+        "_models",
+        "_params",
+        "_parent",
+        "_path",
+        "_subckts",
     )
 
     def __init__(
@@ -134,12 +134,12 @@ class Scope:
         dialect: Dialect,
     ) -> None:
         """Build the tables of one scope; the builder adds the children."""
-        self.dialect = dialect
-        self.path = path
-        self.display = display
-        self.definition = definition
-        self.lines = lines
-        self.parent = parent
+        self._dialect = dialect
+        self._path = path
+        self._display = display
+        self._definition = definition
+        self._lines = lines
+        self._parent = parent
         self._children: tuple[Scope, ...] = ()
         params: dict[str, list[ParamAssignment]] = {}
         for assignment in definition.params if definition is not None else ():
@@ -163,11 +163,67 @@ class Scope:
                 isinstance(item, OpaqueBlock) and item.kind != "control"
             ):
                 elsewhere = True
-        self.params = _frozen(params)
-        self.models = _frozen(models)
-        self.subckts = _frozen(subckts)
-        self.elements = _frozen(elements)
-        self.may_define_elsewhere = elsewhere
+        self._params = _frozen(params)
+        self._models = _frozen(models)
+        self._subckts = _frozen(subckts)
+        self._elements = _frozen(elements)
+        self._may_define_elsewhere = elsewhere
+
+    @property
+    def path(self) -> ScopePath:
+        """The folded subcircuit names from the top level; ``()`` for the top level."""
+        return self._path
+
+    @property
+    def display(self) -> tuple[str, ...]:
+        """The subcircuit names of ``path`` as the definitions write them."""
+        return self._display
+
+    @property
+    def definition(self) -> SubcktDefinition | None:
+        """The ``.subckt`` definition of this scope; ``None`` for the top level."""
+        return self._definition
+
+    @property
+    def lines(self) -> Lines:
+        """The logical lines of this scope (for a definition, its body)."""
+        return self._lines
+
+    @property
+    def parent(self) -> Scope | None:
+        """The enclosing scope; ``None`` for the top level."""
+        return self._parent
+
+    @property
+    def dialect(self) -> Dialect:
+        """The dialect of the netlist, which sets how names are folded."""
+        return self._dialect
+
+    @property
+    def params(self) -> Mapping[str, tuple[ParamAssignment, ...]]:
+        """Parameters by folded name: the definition's defaults, then ``.param`` assignments."""
+        return self._params
+
+    @property
+    def models(self) -> Mapping[str, tuple[ModelStatement, ...]]:
+        """Models by folded name, in source order."""
+        return self._models
+
+    @property
+    def subckts(self) -> Mapping[str, tuple[SubcktDefinition, ...]]:
+        """Subcircuit definitions by folded name, in source order."""
+        return self._subckts
+
+    @property
+    def elements(self) -> Mapping[str, tuple[Component, ...]]:
+        """The components of this scope (not of nested definitions) by folded designator."""
+        return self._elements
+
+    @property
+    def may_define_elsewhere(self) -> bool:
+        """Whether this scope holds an opaque item that may define names its tables do not show:
+        an ``.include`` or ``.lib`` statement, or an ``.if`` or ``.lib`` block (§7.8)."""
+        return self._may_define_elsewhere
 
     def fold(self, name: str) -> str:
         """``name`` in the form this netlist's dialect compares names in."""
@@ -230,9 +286,16 @@ class Index:
         self.late_param_uses = frozenset(late)
 
     def scope(self, path: ScopePath = ()) -> Scope:
-        """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``."""
+        """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``.
+
+        ``TypeError`` for a ``str`` (write a one-name tuple) or a ``Scope`` (pass its ``path``).
+        """
         if isinstance(path, str):
             raise TypeError(f"a scope is a sequence of subcircuit names: write ({path!r},)")
+        if isinstance(path, Scope):
+            raise TypeError(
+                f"a scope is given by its path, not a Scope object: pass Scope.path ({path.path!r})"
+            )
         folded = tuple(fold(name, self.dialect) for name in path)
         try:
             return self._by_path[folded]

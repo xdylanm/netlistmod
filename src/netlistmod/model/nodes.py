@@ -303,7 +303,12 @@ class ControlledSource(Component):
 
     value: Value | None = None
     expression: Formula | None = None
-    form: str | None = None
+    form: (
+        Literal[
+            "vol", "cur", "value", "table", "poly", "laplace", "freq", "and", "or", "nand", "nor"
+        ]
+        | None
+    ) = None
     table: Table | None = None
     dimension: int | None = None
     coefficients: tuple[Value, ...] = ()
@@ -450,7 +455,7 @@ class BehavioralSource(Component):
     trailing parameters (ngspice ``tc1=`` …, LTspice ``ic=`` …).
     """
 
-    quantity: str
+    quantity: Literal["v", "i", "r", "p"]
     expression: Formula
 
 

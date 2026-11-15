@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args, get_type_hints
 
 import pytest
 
 from netlistmod import (
     Cccs,
     Ccvs,
+    ControlledSource,
     CurrentSwitch,
     Dialect,
     Netlist,
@@ -140,3 +141,22 @@ def test_refused_gain_forms_name_the_form(line: str, column: int, reason: str) -
     error = _reject(line)
     assert (error.line, error.column) == (2, column)
     assert reason in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "form"),
+    [
+        ("E1 o 0 a 0 Laplace=1/(1+s)", "laplace"),
+        ("G1 0 o a 0 Laplace=1/(1+s)", "laplace"),
+        ("E1 o 0 value={v(a)}", "value"),
+        ("E1 o 0 a 0 table=(0, 0, 2, 4)", "table"),
+        ("E1 o 0 POLY(1) a 0 0 1", "poly"),
+        ("E1 o 0 a 0 2", None),
+    ],
+)
+def test_form_is_one_of_its_literal(line: str, form: str | None) -> None:
+    # M20 D2 (point 4 item 6): the LTspice forms are in ControlledSource.form's Literal.
+    element = _element(line)
+    assert element.form == form
+    (literal, _) = get_args(get_type_hints(ControlledSource)["form"])
+    assert form is None or form in get_args(literal)
