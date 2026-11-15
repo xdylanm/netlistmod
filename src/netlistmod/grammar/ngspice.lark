@@ -39,7 +39,8 @@
 %ignore WS
 %ignore CONT
 
-// Element lines of the phase 1 letters (M3, decision 0004); other letters stay errors. They
+// Element lines of the phase 1 letters (M3, decision 0004); each later letter extends
+// `body_line` beside its own rules, and a letter outside the grammar is an error. They
 // extend `body_line` directly rather than `statement`, which saves a unit reduction per line.
 // spec: NG-STR-001
 %extend body_line: resistor

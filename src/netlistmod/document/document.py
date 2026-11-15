@@ -240,7 +240,10 @@ class Netlist:
         return self._topology.ports(subckt, scope=scope)
 
     def signature(self) -> TopologySignature:
-        """The topology signature that M6's write-time check compares (§7.7)."""
+        """The topology signature (§7.7).
+
+        ``verify()`` and ``save()`` compare it with the one taken at load.
+        """
         return self._topology.signature()
 
     # Diagnostics.

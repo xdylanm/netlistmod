@@ -242,6 +242,21 @@ def test_laplace_as_a_parameter_names_set_expression() -> None:
     assert "set_expression sets the transfer function" in str(captured.value)
 
 
+@pytest.mark.ltspice_only
+def test_removing_laplace_names_set_expression() -> None:
+    # M20 D4 (D2-n1): remove_param gives set_param's pointer for an E/G line's `Laplace=`.
+    netlist = _netlist()
+    with pytest.raises(EditError) as captured:
+        netlist.remove_param("E3", "LAPLACE")
+    assert str(captured.value) == (
+        "`Laplace=` of `E3` is its transfer function, not a parameter, and cannot be removed; "
+        "use set_expression to change it"
+    )
+    with pytest.raises(EditError, match="`E1` has no parameter `Laplace`"):
+        netlist.remove_param("E1", "Laplace")
+    assert _line(netlist.remove_param("E3", "window"), "E3") == "E3 d 0 vx 0 Laplace=2/(1+s/1k)"
+
+
 @pytest.mark.ngspice_only
 def test_m_is_set_on_g_and_on_f_poly_and_nowhere_else() -> None:
     netlist = _netlist()

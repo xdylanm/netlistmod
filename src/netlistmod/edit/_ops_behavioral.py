@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
-from netlistmod.edit._ops_common import _TWO_TERMINAL, _element, _kind
+from netlistmod.edit._ops_common import _TWO_TERMINAL, _a_kind, _element
 from netlistmod.edit._ops_nonlinear import use_instead
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
@@ -66,4 +66,4 @@ def _expression_of(element: Component, designator: str) -> Formula:
         raise EditError(
             f"`{designator}` has no expression: its value is not a formula; use set_formula"
         )
-    raise EditError(f"`{designator}` is a {_kind(element)} line and has no expression")
+    raise EditError(f"`{designator}` is {_a_kind(element)} line and has no expression")

@@ -8,7 +8,7 @@ from collections.abc import Sequence
 from netlistmod.dialects import Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
-from netlistmod.edit._ops_common import _VALUE, _element, _kind
+from netlistmod.edit._ops_common import _VALUE, _a_kind, _element
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model._rules_elements import _reads_as_number
@@ -59,7 +59,7 @@ def set_table(
         what = (
             "has POLY coefficients, not a table; use set_poly_coefficients"
             if isinstance(element, ControlledSource) and element.form == "poly"
-            else f"is a {_kind(element)} line and has no table"
+            else f"is {_a_kind(element)} line and has no table"
         )
         raise EditError(f"`{designator}` {what}")
     table = element.table

@@ -62,7 +62,7 @@ class UnknownDirective:
     ``raw`` runs from the name to the end of the last non-comment text, so it excludes comments
     after that text but includes those on earlier lines of a continued statement.
     ``trailing_comments`` holds every end-of-line comment of the statement in source order.
-    ``name_span`` covers the name (the parser always sets it; M5 places diagnostics there).
+    ``name_span`` covers the name (the parser always sets it; diagnostics are placed there).
     """
 
     name: str
@@ -99,7 +99,11 @@ class End:
 
 @dataclass(frozen=True, slots=True)
 class Node:
-    """An element terminal as written; net identity (ground aliases, case) is defined in M5."""
+    """An element terminal as written.
+
+    Net identity (ground aliases, case) is the document layer's: see the dialect's ``names.md``
+    and ``Netlist.nets``.
+    """
 
     name: str
     span: Span
@@ -624,7 +628,8 @@ class ModelStatement(_DotCommand):
 
     ``model_type`` is the type as written (``D``, ``npn``, an XSPICE type); it is not checked.
     ``open_paren_span`` and ``close_paren_span`` cover the ``(`` and ``)`` tokens of a
-    parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (M6).
+    parenthesized line (``None`` otherwise), so a parameter can be added to ``d()`` (by
+    ``set_model_param``).
     ``ako`` is the base model of an LTspice ``.model slow ako:fast d(...)``. ``flags`` holds the
     bare flags in source order: ``pchan`` or ``nchan`` (decision 0014) and, on an ngspice
     ``LTRA`` model, LTRA's flags (``nosteplimit``, ``steplimit``, ``nocontrol``, ``lininterp``,
@@ -802,9 +807,10 @@ class OutputVector:
 
     For the standard forms ``v(n)``, ``v(n1, n2)``, their AC variants (``vr``, ``vi``, ``vm``,
     ``vp``, ``vdb``) and ``i(src)``, ``function`` is the function name as written and
-    ``nodes`` (voltages) or ``source`` (current) hold the arguments with their spans. A plain
-    name (a node, ``src#branch`` or ``all``) and ``@dev[param]`` have ``function=None`` and are
-    resolved in M5 from ``text``.
+    ``nodes`` (voltages) or ``source`` (current) hold the arguments with their spans. Only
+    ``source`` is resolved: it is an element reference (``Netlist.references``). A plain name (a
+    node, ``src#branch`` or ``all``) and ``@dev[param]`` have ``function=None``; they are kept
+    as ``text`` and are not resolved.
     """
 
     text: str
@@ -991,4 +997,5 @@ def element_name(element: Component) -> str:
 def element_phrase(element: Component) -> str:
     """:func:`element_name` with its article: ``"an inductor"``, ``"a MOSFET"``."""
     name = element_name(element)
-    return f"{'an' if name[0] in 'aeiou' else 'a'} {name}"
+    vowel_sound = name.startswith("OSDI") or (name[0] in "aeiou" and not name.startswith("uni"))
+    return f"{'an' if vowel_sound else 'a'} {name}"

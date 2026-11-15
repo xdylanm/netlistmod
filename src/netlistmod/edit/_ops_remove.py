@@ -18,9 +18,9 @@ from netlistmod.edit._ops_common import (
     _TRANSISTORS,
     _TWO_TERMINAL,
     _VALUE_KEYWORDS,
+    _a_kind,
     _comment_inside,
     _element,
-    _kind,
     _refuse_impedance_flag,
     _refuse_over_comment,
     _removal_edit,
@@ -47,6 +47,8 @@ from netlistmod.model.nodes import (
     SpecialFunction,
     SubcktInstance,
     TransmissionLine,
+    Vccs,
+    Vcvs,
     VoltageSource,
 )
 from netlistmod.model.values import ParamAssignment
@@ -100,7 +102,18 @@ def remove_param(
         FrequencyAnalyzer,
     )
     if not isinstance(element, takes):
-        raise EditError(f"`{designator}` is a {_kind(element)} line and takes no parameters")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line and takes no parameters")
+    if (
+        ltspice
+        and isinstance(element, Vcvs | Vccs)
+        and element.form == "laplace"
+        and folded == fold("Laplace")
+    ):
+        # As set_param (M20 D2): `Laplace=` is the line's form, which set_expression edits.
+        raise EditError(
+            f"`Laplace=` of `{designator}` is its transfer function, not a parameter, and cannot "
+            "be removed; use set_expression to change it"
+        )
     if (
         isinstance(element, _TWO_TERMINAL)
         and not ltspice

@@ -8,7 +8,7 @@ A definition's ports are nets of its own scope. Elements inside opaque ``.if`` b
 included files are not seen (§7.8).
 
 The signature, unlike the queries, uses the exact text of every topology token, so a change
-that only alters case (``GND`` to ``gnd``) is caught by M6's write-time check.
+that only alters case (``GND`` to ``gnd``) is caught by ``Netlist.verify()`` and ``save()``.
 """
 
 from __future__ import annotations

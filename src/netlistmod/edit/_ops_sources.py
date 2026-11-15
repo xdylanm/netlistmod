@@ -14,9 +14,9 @@ from netlistmod.edit._ops_common import (
     _SOURCES,
     _VALUE,
     UpsertTarget,
+    _a_kind,
     _element,
     _insert,
-    _kind,
     _removal_edit,
     _spans,
     upsert_target,
@@ -91,7 +91,7 @@ def _source(
 ) -> VoltageSource | CurrentSource:
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _SOURCES):
-        raise EditError(f"`{designator}` is a {_kind(element)} line, not an independent source")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line, not an independent source")
     return element
 
 

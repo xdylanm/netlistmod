@@ -476,7 +476,7 @@ OCT_KW.2: "oct"i
 LIN_KW.2: "lin"i
 
 // .dc source start stop increment [source2 start2 stop2 increment2] (§11.3.2). The source is
-// any name (a source, a resistor or TEMP); references are resolved in M5.
+// any name (a source, a resistor or TEMP); references are resolved by the document layer.
 // spec: NG-DCA-001
 dc_stmt: DOT_DC_KW dc_sweep dc_sweep? (NL | eol)
 dc_sweep: x_name value value value

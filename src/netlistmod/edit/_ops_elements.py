@@ -19,10 +19,10 @@ from netlistmod.edit._ops_common import (
     _TWO_TERMINAL,
     _VALUE,
     _VALUE_KEYWORDS,
+    _a_kind,
     _comment_inside,
     _element,
     _insert,
-    _kind,
     _last_field_end,
     _refuse_impedance_flag,
     _refuse_over_comment,
@@ -104,20 +104,25 @@ def set_value(
         raise EditError(f"`{designator}` is a coupling; use set_coupling to set its value")
     if isinstance(element, LossyLine):
         raise EditError(
-            f"`{designator}` is a {_kind(element)} and has no value slot; its values are in its "
+            f"`{designator}` is {_a_kind(element)} and has no value slot; its values are in its "
             "LTRA model (use set_model_param)"
         )
     if isinstance(element, TransmissionLine | OsdiDevice | SpecialFunction | FrequencyAnalyzer):
         raise EditError(
-            f"`{designator}` is a {_kind(element)} and has no value slot; use set_param to set "
+            f"`{designator}` is {_a_kind(element)} and has no value slot; use set_param to set "
             "its parameters"
         )
     if isinstance(element, CodeModelDevice):
         raise EditError(
-            f"`{designator}` is a {_kind(element)} and has no value slot; its values are on its "
+            f"`{designator}` is {_a_kind(element)} and has no value slot; its values are on its "
             "`.model` line (use set_model_param)"
         )
-    raise EditError(f"`{designator}` is a {_kind(element)} line and has no value slot")
+    if isinstance(element, BehavioralSource):
+        raise EditError(
+            f"`{designator}` is {_a_kind(element)} line and has no value slot; use "
+            "set_expression to change its expression"
+        )
+    raise EditError(f"`{designator}` is {_a_kind(element)} line and has no value slot")
 
 
 def set_param(
@@ -173,17 +178,17 @@ def set_param(
         return _assign(element.params, element, name, value, reason, folded=found_fold)
     if isinstance(element, LossyLine):
         raise EditError(
-            f"`{designator}` is a {_kind(element)} and takes no parameter; its values are in its "
+            f"`{designator}` is {_a_kind(element)} and takes no parameter; its values are in its "
             "LTRA model (use set_model_param)"
         )
     if isinstance(element, CodeModelDevice):
         raise EditError(
-            f"`{designator}` is a {_kind(element)} and takes no parameter on its line; a code "
+            f"`{designator}` is {_a_kind(element)} and takes no parameter on its line; a code "
             "model's parameters are on its `.model` line (use set_model_param)"
         )
     if isinstance(element, FraProbe):
         raise EditError(
-            f"`{designator}` is a {_kind(element)}: four nodes and no parameters; its analyzer's "
+            f"`{designator}` is {_a_kind(element)}: four nodes and no parameters; its analyzer's "
             "parameters are on the `@` line"
         )
     if isinstance(element, FrequencyAnalyzer):
@@ -202,7 +207,7 @@ def set_param(
     if not isinstance(element, takes_params) or (
         not ltspice and isinstance(element, _SOURCES) and not port
     ):
-        raise EditError(f"`{designator}` is a {_kind(element)} line and takes no parameters")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line and takes no parameters")
     if (
         isinstance(element, _TWO_TERMINAL)
         and not ltspice
@@ -331,10 +336,10 @@ def set_model(
     LTRA, U URC, Y TXL and P CPL; decision 0020: A and N take any type that is not built in)."""
     element = _element(netlist, designator, scope, in_definition)
     if isinstance(element, LosslessLine):
-        raise EditError(f"`{designator}` is a {_kind(element)} and has no model")
+        raise EditError(f"`{designator}` is {_a_kind(element)} and has no model")
     if isinstance(element, SpecialFunction):
         raise EditError(
-            f"`{designator}` is a {_kind(element)}: its function `{element.function.name}` is not "
+            f"`{designator}` is {_a_kind(element)}: its function `{element.function.name}` is not "
             "a model and is not editable, because it changes what the device is; edit the line "
             "by hand"
         )
@@ -350,7 +355,7 @@ def set_model(
             OsdiDevice,
         ),
     ):
-        raise EditError(f"`{designator}` is a {_kind(element)} line and has no model")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line and has no model")
     if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
     if (
@@ -403,7 +408,7 @@ def remove_value(
     applies (review round 1). The separator before the value stays."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _TWO_TERMINAL):
-        raise EditError(f"`{designator}` is a {_kind(element)} line; only R, C and L have a value")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line; only R, C and L have a value")
     if netlist.dialect is Dialect.LTSPICE:
         raise EditError(f"`{designator}` needs its value: {_NO_LTSPICE_MODEL}")
     if element.value is None:
@@ -426,5 +431,5 @@ def set_coupling(
     """Replace the coupling value of a ``K`` line."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, MutualCoupling):
-        raise EditError(f"`{designator}` is a {_kind(element)} line, not a coupling")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line, not a coupling")
     return [Edit(element.value.span, value, f"set_coupling {designator}", (_VALUE,))]

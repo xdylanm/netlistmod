@@ -49,14 +49,17 @@ executables; on Windows with Smart App Control the unsigned shims can be blocked
 
 | Job | Runs on | What it does |
 |---|---|---|
-| Lint and types | Ubuntu, Python 3.13 | `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests below, `lint-imports`, `pre-commit run --all-files` |
+| Lint and types | Ubuntu, Python 3.13 | `ruff check`, `ruff format --check`, `mypy`, `mypy --strict` on the named tests below and on `docs/usage/examples`, `lint-imports`, `pre-commit run --all-files` |
 | Test | Ubuntu and Windows, Python 3.13 and 3.14 | The whole suite with the 98% coverage gate, including strict grammar builds, spec coverage and link checks |
 
 The named test command, which runs locally too:
 
 ```powershell
 uv run --env-file .env python -m mypy --strict tests/support tests/solver tests/conftest.py tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
+uv run --env-file .env python -m mypy --strict docs/usage/examples
 ```
+
+pytest treats warnings as errors (`filterwarnings` in `pyproject.toml`; [decision 0024](decisions/0024-the-1-0-public-api.md) item 4).
 
 **CI does not replace the local run.** It installs no solver, so the solver tests skip and no
 solver behaviour is checked. Each milestone also runs the full suite locally with

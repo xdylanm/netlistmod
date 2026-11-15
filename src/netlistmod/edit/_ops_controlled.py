@@ -7,7 +7,7 @@ from typing import Literal
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
-from netlistmod.edit._ops_common import _element, _insert, _kind, _removal_edit
+from netlistmod.edit._ops_common import _a_kind, _element, _insert, _removal_edit
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import Switch
@@ -34,7 +34,7 @@ def set_switch_state(
     """
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, Switch):
-        raise EditError(f"`{designator}` is a {_kind(element)} line and has no switch state")
+        raise EditError(f"`{designator}` is {_a_kind(element)} line and has no switch state")
     if state is not None and state.lower() not in _STATES:
         raise EditError(f"a switch state is `on`, `off` or None, not {state!r}")
     reason = f"set_switch_state {designator}"

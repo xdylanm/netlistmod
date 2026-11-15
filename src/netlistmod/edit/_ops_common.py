@@ -43,6 +43,7 @@ from netlistmod.model.nodes import (
     UnknownDirective,
     VoltageSource,
     element_name,
+    element_phrase,
 )
 from netlistmod.model.values import (
     Formula,
@@ -177,6 +178,11 @@ _ITEM_NAMES: dict[type, str] = {
 
 def _kind(element: Component) -> str:
     return element_name(element)
+
+
+def _a_kind(element: Component) -> str:
+    """:func:`_kind` with its article, for messages: ``an OSDI device``, ``a diode``."""
+    return element_phrase(element)
 
 
 def resolve_line(netlist: Netlist, target: Line | object) -> Line:

@@ -39,12 +39,15 @@ jobs:
           "$RUNNER_TEMP/smoke/bin/python" -I - <<'PY'
           import tempfile
           from importlib.metadata import version
+          from importlib.resources import files
           from pathlib import Path
 
           import netlistmod
           from netlistmod import Dialect, Netlist
 
           assert netlistmod.__version__ == version("netlistmod")
+          # The typing marker ships, so type checkers read the package's annotations (§13).
+          assert files("netlistmod").joinpath("py.typed").is_file()
           with tempfile.TemporaryDirectory() as folder:
               path = Path(folder) / "divider.cir"
               path.write_bytes(b"divider\nV1 in 0 DC 3\nR1 in out 1k\nR2 out 0 1k\n.op\n.end\n")
