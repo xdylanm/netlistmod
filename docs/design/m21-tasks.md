@@ -1,7 +1,7 @@
 # M21 task list — the xyce and qspice audit
 
 > **Status:** ACTIVE
-> **Follows:** [M20](./m20-tasks.md) and [decision 0024](../decisions/0024-the-1-0-public-api.md), whose contract takes effect at `1.0.0`. Governed by [architecture.md](../architecture.md) (§2, §9.2, §9.3, §11, §12, §18).
+> **Follows:** [M20](./archive/v1.0/m20-tasks.md) and [decision 0024](../decisions/0024-the-1-0-public-api.md), whose contract takes effect at `1.0.0`. Governed by [architecture.md](../architecture.md) (§2, §9.2, §9.3, §11, §12, §18).
 
 ## 1. Scope
 
