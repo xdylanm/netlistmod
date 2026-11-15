@@ -64,7 +64,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
 
 ### Gate G1 (lead, then the maintainer)
 
-[ ] **G1 — Classification and decisions.** Section 5.1 written; the maintainer decides each API finding.
+[x] **G1 — Classification and decisions.** Section 5.1 written; the maintainer decides each API finding.
 
 ### Stage 2 — Plans (lead)
 
@@ -117,6 +117,28 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
 
    **Decided (maintainer, 2026-11-15): QSPICE's own help, paraphrased** ([decision 0025](../decisions/0025-qspice-help-as-reference.md)). The maintainer installed QSPICE and Xyce. The help (`QSPICE.chm`, build of 2026-11-05) is cited by topic and paraphrased, and is never committed; its licence terms are respected. The maintainer's reading: the manual is the reference because behaviour can be confirmed against it, which needs no verbatim quotation. Q1 and Q2 run again from the help (Q1b, Q2b).
 
+**qspice, from the help (Q1b, Q2b; 2026-11-15).** Q1b found nothing that would change a covered name, signature or exception class. The lead checked the key citations in the help:
+- expressions need no braces or quotes (`[qspice-help] "General Conventions"` item 1);
+- `.end` is an "archaic" directive that is still implemented (`"End Netlist(.end)"`);
+- R's model comes before its value (`"R. Resistor"`);
+- the ¥ device takes 16 pins and a type (`"¥-Device"`);
+- the Q page writes the substrate as required (`"Q. Bipolar Transistor"`).
+
+6. **Designators (Q1-1).** Every qspice device is one leading token: an ASCII letter, or one of six extended characters (¥, Ã, €, £, ×, Ø) for the mixed-mode devices. The `«…»` pin groups of Ø and × are node syntax, not identity. This fits, and items 1 and 2 already cover the growth and the wording.
+   *Recommendation:* nothing more before 1.0.
+   **Decided (maintainer, 2026-11-15): as recommended.**
+7. **An optional `.end` (Q1-2b).** The help calls `.end` archaic, so a qspice netlist may lack it, which bears on `Placement.BEFORE_END` and the `directives.add` default. Both choices are additive and leave ngspice and LTspice unchanged:
+   - **(a)** require `.end`, as an exception recorded in §19 decision 21, as for LTspice (this needs QUX's export to always write it);
+   - **(b)** accept a netlist without it, with `BEFORE_END` meaning the end of the text.
+
+   *Recommendation:* decide in the qspice set-up milestone, after probing what `QUX -Netlist` writes; nothing before 1.0.
+   **Decided (maintainer, 2026-11-15): as recommended.**
+8. **Pins that are not nets, and grouped pins (Q1-3g; Q2b).** A ¥ pin is a no-connect placeholder, and Ø and × group their pins. Both live in `nodes`, `Net` and the topology signature, which are best-effort.
+   *Recommendation:* nothing before 1.0; the mixed-mode milestone decides the representation.
+   **Decided (maintainer, 2026-11-15): as recommended.**
+
+So the audit's outcome for 1.0 is the two documentation sentences of items 1 and 2, made in the fix milestone. Neither dialect needs a covered change.
+
 ### 5.2 Subtask log
 
 - [x] T0: branch, this list and the stage 1 briefs.
@@ -124,7 +146,8 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
 - [x] Q1: `gap`. Qorvo publishes no qspice reference online; the help ships inside the installer, behind a registration form. On the API side nothing is disruptive by construction; two points depend on unverified qspice facts (5.1).
 - [x] X2: `complete with findings`. The inventory for the xyce plan (devices, statements, names, numbers, scoping, solver evidence, milestones). The lead checked the leading-whitespace comment rule (Users' Guide §4.1.3.1) and R's model-before-value form.
 - [x] Q2: `gap`, for the same reason as Q1. The official pages establish that QSPICE is free, Windows-only, and can export and run a netlist without the GUI; architecture §12 does not allow citing a proprietary built-in help (as for LTspice), so qspice's sources need a maintainer decision (5.1).
-- [ ] G1
+- [x] Q1b, Q2b: re-run from QSPICE's help under decision 0025; Q1b `complete`, no finding disruptive; Q2b `complete with findings`, the inventory for the qspice plan, with a probe list. The lead checked five key citations (5.1).
+- [x] G1: items 1 to 8 decided by the maintainer on 2026-11-14 and 2026-11-15. The outcome for 1.0 is two documentation sentences (items 1 and 2), made in a fix milestone before 1.0; neither dialect needs a covered change.
 - [x] P1: [xyce-plan.md](./xyce-plan.md) (DRAFT), from X1, X2 and the G1 decisions.
 - [ ] P2: waits for 5.1 item 5 (qspice's sources).
 - [ ] T1
