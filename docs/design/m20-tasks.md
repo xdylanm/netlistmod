@@ -16,7 +16,7 @@ Decisions 0018 and 0023 leave one question open before 1.0: what 1.0 commits to 
   - Anything else the stage 1 audits find that would be a breaking change after 1.0.
 - **Not in M20:**
   - new constructs, and the limits of v1-review 5.2;
-  - the version, the classifier and the release, which follow on a `release-1.0.0` branch after M20 is merged (decision 5).
+  - the version, the classifier and the release, which follow on their own branch after M20 is merged (decision 5).
 
 ## 2. Decisions
 
@@ -30,6 +30,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M19. Decis
 3. **Report format.** As M19 decision 3: a one-line verdict, then a table with ID, location, finding, kind (`ok`, `gap`, `stale`, `defect`, `question`, `api`) and proposed action. An `api` finding gives the options, what each breaks for a caller, and a recommendation.
 4. **Parallel work.** Stage 1's reviewers run in parallel and read only. Stage 2's developers run in parallel only when their files do not overlap.
 5. **The release.** **Decided (maintainer, 2026-11-14): as recommended.** *Recommendation:* as for `0.9.0`, M20's pull request does not change the version. After it is merged, a `release-1.0.0` branch sets `1.0.0`, the classifier `Development Status :: 5 - Production/Stable`, `uv.lock`, the CHANGELOG heading and the README's release line, and the maintainer tags `v1.0.0` and publishes the GitHub Release (decision 0018). *Alternative:* a `0.9.1` or `1.0.0rc1` first, when M20 changes the API enough to want a second beta.
+   **Amended (maintainer, 2026-11-14), after M20 was ready for review:** the next release is `0.10.0`, a second beta with the classifier unchanged, on a `release-0.10.0` branch. `1.0.0` waits for a read-only audit of the planned xyce and qspice dialects against decision 0024's contract, so that adding either does not need a 2.0 (decision 0024, consequences).
 6. **Breaking changes in M20.** **Decided (maintainer, 2026-11-14): as recommended.** *Recommendation:* §18 allows them before 1.0, and this is the last cheap point to make them. A decided change is made directly, with no deprecation shim, and the CHANGELOG lists it with the replacement (as M15b did for `control`). *Alternative:* keep 0.9.0's API and ship each change as a deprecation that 2.0 removes.
 7. **The record.** **Decided (maintainer, 2026-11-14): as recommended.** *Recommendation:* one decision record (0024, "The 1.0 public API") holds the contract and every API item's outcome; §18 and the living references follow it in the same change.
 8. **Where this list lives.** **Decided (maintainer, 2026-11-14): as recommended.** *Recommendation:* once approved, it moves to a new `archive/v1.0/` with this list's status `COMPLETE`, since phase 2 is closed. *Alternative:* `archive/phase-2/`.

@@ -78,4 +78,4 @@
 - **Consequences:**
   - §18 states items 1 to 5, and the README and the usage guides say to import from `netlistmod`. This closes the question left open by decisions 0018 and 0023.
   - **0.9.0 callers must update** for the removed names, the keyword-only arguments, `set_formula(text=…)`, `point_before`/`point_after`, and the refused number model names.
-  - The version `1.0.0` and the classifier `Development Status :: 5 - Production/Stable` follow on a `release-1.0.0` branch (m20 decision 5).
+  - The contract takes effect at `1.0.0`. The next release is `0.10.0`, a second beta that ships these changes. `1.0.0` waits for a read-only audit of the planned xyce and qspice dialects (§9.2) against this contract, so that adding either does not need a 2.0 (maintainer, 2026-11-14; amends m20 decision 5).
