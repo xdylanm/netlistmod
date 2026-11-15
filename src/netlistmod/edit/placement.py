@@ -16,6 +16,9 @@ from netlistmod.model.nodes import End, ParamStatement, SubcktDefinition, Title
 
 PlacementKind = Literal["after_title", "after_last_param", "before_end", "before", "after"]
 
+_FIXED_KINDS = frozenset({"after_title", "after_last_param", "before_end"})
+_ANCHORED_KINDS = frozenset({"before", "after"})
+
 
 @dataclass(frozen=True, slots=True, eq=False)
 class Placement:
@@ -36,6 +39,27 @@ class Placement:
     AFTER_TITLE: ClassVar[Placement]
     AFTER_LAST_PARAM: ClassVar[Placement]
     BEFORE_END: ClassVar[Placement]
+
+    def __post_init__(self) -> None:
+        """Refuse an unknown kind, an anchored kind without a line and a fixed kind with one."""
+        if self.kind in _ANCHORED_KINDS:
+            if not isinstance(self.anchor, Line):
+                raise ValueError(
+                    f"Placement({self.kind!r}) needs an anchor line; write "
+                    f"Placement.{self.kind}(line) with a Line of the netlist being edited"
+                )
+        elif self.kind in _FIXED_KINDS:
+            if self.anchor is not None:
+                raise ValueError(
+                    f"Placement({self.kind!r}) takes no anchor line; use "
+                    f"Placement.{self.kind.upper()}"
+                )
+        else:
+            raise ValueError(
+                f"unknown placement kind {self.kind!r}; use Placement.AFTER_TITLE, "
+                "Placement.AFTER_LAST_PARAM, Placement.BEFORE_END, Placement.before(line) or "
+                "Placement.after(line)"
+            )
 
     @classmethod
     def before(cls, line: Line) -> Placement:

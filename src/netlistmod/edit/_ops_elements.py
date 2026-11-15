@@ -153,6 +153,17 @@ def set_param(
         )
         meter = not ltspice and isinstance(element, Cccs | Vccs) and folded == found_fold("m")
         if not (laplace or meter):
+            if ltspice and isinstance(element, Vcvs | Vccs) and folded == found_fold("laplace"):
+                if element.form == "laplace":
+                    raise EditError(
+                        f"`Laplace=` of `{designator}` is its transfer function, not a "
+                        "parameter; use set_expression to set it"
+                    )
+                raise EditError(
+                    f"`{designator}` takes no parameter `{name}`: `Laplace=` is a form of an E or "
+                    "G line, not a parameter. set_expression sets the transfer function of a line "
+                    "written with `Laplace=`; to change the line's form, edit it by hand"
+                )
             if ltspice:
                 named = folded in {found_fold(word) for word in _LAPLACE_PARAMS}
                 only = "; only a line with `Laplace=` takes it" if named else ""

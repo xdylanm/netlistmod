@@ -123,7 +123,7 @@ def test_text_outside_the_edited_spans_is_unchanged(
         else operations.set_param(netlist, element.designator, "temp", "0")
     )
     edits += operations.set_param_statement(netlist, "rnew", value)
-    edits += operations.add_directive(netlist, ".save v(in)", Placement.AFTER_TITLE)
+    edits += operations.add_directive(netlist, ".save v(in)", placement=Placement.AFTER_TITLE)
     plan = EditPlan(edits)
     edited = netlist.apply(plan)
     assert edited.text == apply_edits(netlist.text, plan)

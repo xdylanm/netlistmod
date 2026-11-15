@@ -222,6 +222,26 @@ def test_laplace_uses_set_expression_and_set_param() -> None:
         netlist.set_value("E3", "2")
 
 
+@pytest.mark.ltspice_only
+def test_laplace_as_a_parameter_names_set_expression() -> None:
+    # M20 D2 (A1-20): `Laplace=` is the E/G line's form, which set_expression edits.
+    netlist = _netlist()
+    with pytest.raises(EditError) as captured:
+        netlist.set_param("E3", "Laplace", "1/(1+s)")
+    assert str(captured.value) == (
+        "`Laplace=` of `E3` is its transfer function, not a parameter; use set_expression to set it"
+    )
+    with pytest.raises(EditError, match="`Laplace=` of `G2` .*use set_expression"):
+        Netlist.from_text(
+            "t\nG2 0 c vx 0 laplace=1/(1+s)\nR1 vx 0 1k\nRc c 0 1k\n.end\n",
+            dialect=Dialect.LTSPICE,
+        ).set_param("G2", "LAPLACE", "1/(1+s)")
+    with pytest.raises(EditError) as captured:
+        netlist.set_param("E1", "laplace", "1/(1+s)")
+    assert "`Laplace=` is a form of an E or G line, not a parameter" in str(captured.value)
+    assert "set_expression sets the transfer function" in str(captured.value)
+
+
 @pytest.mark.ngspice_only
 def test_m_is_set_on_g_and_on_f_poly_and_nowhere_else() -> None:
     netlist = _netlist()

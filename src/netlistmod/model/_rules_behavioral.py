@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, NoReturn
+from typing import Any, Literal, NoReturn, cast
 
 from lark import Token
 
@@ -56,7 +56,8 @@ class BehavioralRules(ElementsRules):
         element = _Element(children)
         quantity = element.all(_Quantity)[0]
         expression = self._expression(children)
-        kind = str(quantity.token).lower()
+        # B_QUANTITY_KW is one of `v`, `i` (and on LTspice `r`, `p`), so the cast holds.
+        kind = cast(Literal["v", "i", "r", "p"], str(quantity.token).lower())
         for param in element.all(ParamAssignment):
             if param.name.lower() == "rpar" and kind in ("v", "p"):
                 # LTspice stops on it: "only allowed for behavioral current sources".

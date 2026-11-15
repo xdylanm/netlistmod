@@ -129,7 +129,7 @@ def _describe_item(item: object) -> str:
 
 
 def add_directive(
-    netlist: Netlist, text: DirectiveText, placement: Placement = Placement.BEFORE_END
+    netlist: Netlist, text: DirectiveText, *, placement: Placement = Placement.BEFORE_END
 ) -> list[Edit]:
     """Insert one directive, a whole ``.control``, ``.if`` or ``.lib`` block or a ``.lib``
     statement at ``placement`` (top level), even if a line of its kind exists (decision 0012)."""
@@ -221,7 +221,7 @@ def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
 
 
 def add_include(
-    netlist: Netlist, path: str, placement: Placement = Placement.AFTER_TITLE
+    netlist: Netlist, path: str, *, placement: Placement = Placement.AFTER_TITLE
 ) -> list[Edit]:
     """Insert ``.include "path"`` (architecture §7.9); the path is never read."""
     lines = (conventions.include_statement(path),)

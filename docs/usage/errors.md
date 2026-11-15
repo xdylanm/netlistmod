@@ -97,7 +97,7 @@ LTspice .machine state machine, out of scope for v1
 
 ### `EditError`
 
-The edit cannot be applied: the target does not exist or is ambiguous, the value is the wrong kind, or the new text would not land as one value. The original netlist is unchanged.
+The edit cannot be applied: the target does not exist or is ambiguous, the value is the wrong kind, the new text would not land as one value, or the scope is misstated (a definition scope without `in_definition=True`, or `in_definition=True` at the top level). The original netlist is unchanged.
 
 ```python
 >>> netlist = Netlist.from_text("t\nR1 a 0 1k\n.end\n", dialect=Dialect.NGSPICE)
@@ -181,7 +181,7 @@ True
 
 ```
 
-**What to do:** use characters the file's encoding has. For a file that fails to decode, pass `fallback_encodings` to `Netlist.load`, or `encoding` to `SourceText.load`.
+**What to do:** use characters the file's encoding has. For a file that fails to decode, pass `fallback_encodings` to `Netlist.load`, or to `SourceText.read(path, *, fallback_encodings)`.
 
 ### Outside `SpiceNetlistError`
 
@@ -189,8 +189,10 @@ A wrong call, as opposed to a problem with the netlist, gets a standard Python e
 
 | Exception | When |
 |---|---|
-| `ValueError` | An unknown dialect; `rkm=True` with `Dialect.LTSPICE`; a `Reference` from another netlist passed to `resolve` |
-| `KeyError` | `element`, `scope` or `net` of a name that does not exist (a read, where an edit would give `EditError`) |
+| `ValueError` | An unknown dialect; `rkm=True` with `Dialect.LTSPICE`; a `Reference` from another netlist passed to `resolve`; a line that is not in the sequence passed to `Lines.index_of`, `point_before` or `point_after`; a `Placement` built with an unknown kind, `"before"` or `"after"` without a `Line`, or a constant's kind with one (use the constants and `Placement.before(line)`/`after(line)`); a `Span` with negative or reversed offsets, and a line, column or offset outside the text passed to a `SourceText` method |
+| `TypeError` | A `str` passed as `scope=` or to `Netlist.scope` (write a one-name tuple, `("amp",)`); a `Scope` object passed there (pass `Scope.path`); `parse` given something other than a `SourceText` |
+| `KeyError` | `element`, `scope`, `net`, `connections`, `expression_reads` or `ports` of a name that does not exist (a read, where an edit would give `EditError`) |
+| `AttributeError` | Assigning an attribute of a `Scope` or of another read-only object (a frozen dataclass raises `dataclasses.FrozenInstanceError`, a subclass) |
 | `FileNotFoundError`, `OSError` | `Netlist.load` or `save` on a path that cannot be read or written |
 | `RecursionError` | `.if` blocks nested about 240 levels deep in ngspice (a known limit; the exact depth depends on the Python stack) |
 

@@ -128,11 +128,18 @@ _DIRECTIVE_LINES = (Directive, UnknownDirective, OpaqueBlock, OpaqueStatement)
 
 
 def resolve_scope(netlist: Netlist, scope: ScopePath, in_definition: bool) -> Scope:
-    """The scope an edit addresses; a non-empty ``scope`` needs ``in_definition=True`` (P11)."""
+    """The scope an edit addresses; a non-empty ``scope`` needs ``in_definition=True``, and
+    ``in_definition=True`` needs a non-empty ``scope`` (P11). A ``str`` or a ``Scope`` given as
+    ``scope`` is the ``TypeError`` of ``Netlist.scope``."""
     try:
         found = netlist.scope(scope)
     except KeyError:
         raise EditError(f"no subcircuit definition scope {tuple(scope)!r}") from None
+    if in_definition and not scope:
+        raise EditError(
+            "in_definition=True needs a definition scope, and scope=() is the top level; pass "
+            "scope=(<subcircuit name>, ...) to edit a definition, or leave in_definition out"
+        )
     if scope and not in_definition:
         raise EditError(
             f"scope {tuple(scope)!r} edits the definition of {found.describe()}, which changes "
