@@ -73,7 +73,7 @@ addopts = ["--strict-markers", "--cov=netlistmod", "--cov-report=term-missing"]
 # Warnings are errors (decision 0024 item 4), so a deprecation is seen in the run that causes it.
 filterwarnings = ["error"]
 markers = [
-    "solver(name): test requiring a local solver (ngspice or ltspice)",
+    "solver(name): test requiring a local solver (ngspice, ltspice or xyce)",
     "ngspice_only: text only ngspice accepts; deselected in the LTspice run (M8 decision 16)",
     "ltspice_only: text only LTspice accepts; deselected in the ngspice run (M8 decision 16)",
 ]

@@ -8,7 +8,7 @@ import pytest
 from hypothesis import settings
 
 from tests.support.dialects import deselect_other_dialect
-from tests.support.solvers import Solver, SolverName, discover_solver
+from tests.support.solvers import SOLVER_NAMES, Solver, SolverName, discover_solver
 
 # CI selects this with --hypothesis-profile=ci; local runs stay random (decision 0011).
 settings.register_profile("ci", derandomize=True)
@@ -18,7 +18,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
         "--require-solver",
         action="append",
-        choices=("ngspice", "ltspice"),
+        choices=SOLVER_NAMES,
         default=[],
         help="fail instead of skipping tests when this solver is unavailable (may be repeated)",
     )
@@ -27,7 +27,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 def pytest_report_header(config: pytest.Config) -> list[str]:
     """Name each solver the solver tests will use, with its version (architecture §10.3)."""
     lines = []
-    for name in ("ngspice", "ltspice"):
+    for name in SOLVER_NAMES:
         try:
             found = discover_solver(name)
         except (OSError, RuntimeError) as error:
@@ -43,7 +43,7 @@ def pytest_report_header(config: pytest.Config) -> list[str]:
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers",
-        "solver(name): test requiring a local solver (ngspice or ltspice)",
+        "solver(name): test requiring a local solver (ngspice, ltspice or xyce)",
     )
 
 
@@ -54,17 +54,9 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
 @pytest.fixture
 def solver(request: pytest.FixtureRequest) -> Iterator[Solver]:
     marker = request.node.get_closest_marker("solver")
-    if (
-        marker is None
-        or len(marker.args) != 1
-        or marker.args[0]
-        not in (
-            "ngspice",
-            "ltspice",
-        )
-    ):
+    if marker is None or len(marker.args) != 1 or marker.args[0] not in SOLVER_NAMES:
         raise pytest.UsageError(
-            "The solver fixture requires @pytest.mark.solver('ngspice'|'ltspice')"
+            "The solver fixture requires @pytest.mark.solver('ngspice'|'ltspice'|'xyce')"
         )
 
     name: SolverName = marker.args[0]
