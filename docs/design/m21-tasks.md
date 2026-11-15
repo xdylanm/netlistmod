@@ -37,7 +37,7 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
    - **G2 (stage 2):** the lead writes the plan drafts from the reports; the maintainer reviews them in the pull request.
 3. **Report format.** As M20 decision 3. The kinds are `fits`, `additive`, `disruptive`, `question` and `gap` (a manual silent or unavailable). Every claim cites the manual's section or page.
 4. **Parallel work.** The four stage 1 reviewers run in parallel and read only.
-5. **Sources.** **Decided (maintainer, 2026-11-14): manuals only.** These are the Xyce Reference Guide and Users' Guide (current release), and qspice's own help and documentation, with each edition and access date recorded. No source code: Xyce is GPL, and P10 also excludes spicelib. Nothing from a source is copied beyond a short citation.
+5. **Sources.** **Decided (maintainer, 2026-11-14): manuals only.** *Amended (maintainer, 2026-11-15):* for qspice, the manual is QSPICE's built-in help, paraphrased (decision 0025). These are the Xyce Reference Guide and Users' Guide (current release), and qspice's own help and documentation, with each edition and access date recorded. No source code: Xyce is GPL, and P10 also excludes spicelib. Nothing from a source is copied beyond a short citation.
 6. **Where fixes go.** **Decided (maintainer, 2026-11-14): audit only.** M21 reports, and G1 decides each finding. The fixes are a separate milestone before 1.0.
 7. **Depth.** **Decided (maintainer, 2026-11-14): also draft the dialect plans.** Besides the API points, each dialect gets a draft plan (section 1).
 
@@ -114,6 +114,8 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
    - Its reference PDFs (Command, Device and General Reference Guides) are a third party's, not Qorvo's.
 
    Using it would need a decision record. Decision 5 names qspice's own documentation, §11 makes the manual the authority, and §12 and P10 keep GPL material out of the project. It is not proposed as a reference.
+
+   **Decided (maintainer, 2026-11-15): QSPICE's own help, paraphrased** ([decision 0025](../decisions/0025-qspice-help-as-reference.md)). The maintainer installed QSPICE and Xyce. The help (`QSPICE.chm`, build of 2026-11-05) is cited by topic and paraphrased, and is never committed; its licence terms are respected. The maintainer's reading: the manual is the reference because behaviour can be confirmed against it, which needs no verbatim quotation. Q1 and Q2 run again from the help (Q1b, Q2b).
 
 ### 5.2 Subtask log
 

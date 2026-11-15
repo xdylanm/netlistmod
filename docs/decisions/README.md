@@ -27,3 +27,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0022 — v1 record corrections](0022-v1-record-corrections.md)
 - [0023 — The v1 beta release and a public repository](0023-v1-beta-release.md)
 - [0024 — The 1.0 public API](0024-the-1-0-public-api.md)
+- [0025 — QSPICE's built-in help as the qspice reference](0025-qspice-help-as-reference.md)

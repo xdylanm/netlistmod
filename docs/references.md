@@ -41,3 +41,16 @@ adopted, update the edition and access date and re-check every citation.
 - **Citation form:** `[ltspice-ref] <FILE>.md "<heading>"`, because the reference has no section
   numbers. Paraphrase only (architecture §11.3 rule 4). The built-in LTspice Help is proprietary and
   is not cited or copied (decision 0009).
+
+## [qspice-help]
+
+- **Title:** QSPICE help (`QSPICE.chm`)
+- **Publisher:** Qorvo, Inc.
+- **License:** proprietary; Qorvo's "Software License Agreement for QSPICE Software" (in the help).
+  Used under [decision 0025](decisions/0025-qspice-help-as-reference.md): cited by topic and
+  paraphrased; the help and extracts from it are never committed or distributed
+- **Copy cited:** the help installed with QSPICE (QUX.exe) under `%LOCALAPPDATA%\Programs\QSPICE\`;
+  build of 2026-11-05, the latest entry in the installed `RevisionHistory.txt`
+- **Accessed:** 2026-11-15
+- **Citation form:** `[qspice-help] "<topic>"`, the help's topic title, because the help has no
+  section numbers
