@@ -10,7 +10,7 @@ uv sync
 Copy-Item .env.example .env
 ```
 
-Edit `.env` to set `NGSPICE_EXE` and `LTSPICE_EXE` to local executable paths.
+Edit `.env` to set `NGSPICE_EXE`, `LTSPICE_EXE` and `XYCE_EXE` to local executable paths.
 Quote values that contain special characters; forward slashes work in Windows
 paths and avoid dotenv backslash escaping. `.env` is ignored by Git and is not
 needed when a solver is available on `PATH` or in a standard install location.
@@ -55,7 +55,7 @@ executables; on Windows with Smart App Control the unsigned shims can be blocked
 The named test command, which runs locally too:
 
 ```powershell
-uv run --env-file .env python -m mypy --strict tests/support tests/solver tests/conftest.py tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
+uv run --env-file .env python -m mypy --strict tests/support tests/solver tests/conftest.py tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py tests/test_xyce_raw_reader.py tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
 uv run --env-file .env python -m mypy --strict docs/usage/examples
 ```
 
@@ -63,7 +63,8 @@ pytest treats warnings as errors (`filterwarnings` in `pyproject.toml`; [decisio
 
 **CI does not replace the local run.** It installs no solver, so the solver tests skip and no
 solver behaviour is checked. Each milestone also runs the full suite locally with
-`--require-solver ngspice --require-solver ltspice`. macOS is not tested.
+`--require-solver ngspice --require-solver ltspice`, and with `--require-solver xyce` once the
+xyce suite exists (X-M0). macOS is not tested.
 
 CI runs Hypothesis with `--hypothesis-profile=ci`, which is derandomized, so a pull request fails
 only on examples that its change affects. Local runs stay random. If CI fails where a local run
@@ -156,8 +157,8 @@ PyYAML is a MIT-licensed development dependency used only by this checker.
 ## Solver tests
 
 Solver tests are local-only. Mark a test with
-`@pytest.mark.solver("ngspice")` or `@pytest.mark.solver("ltspice")` and request
-the `solver` fixture. Discovery checks the corresponding environment variable,
+`@pytest.mark.solver("ngspice")`, `@pytest.mark.solver("ltspice")` or `@pytest.mark.solver("xyce")`
+and request the `solver` fixture. Discovery checks the corresponding environment variable,
 then `PATH`, then standard install locations. The fixture skips with a reason
 when its solver is absent. To make absence fail instead:
 
@@ -176,6 +177,7 @@ path:
 ```text
 solver ngspice: 47 at C:\...\Spice64\bin\ngspice_con.exe
 solver ltspice: 26.1.1.0 at C:\...\LTspice\LTspice.exe
+solver xyce: 7.10.0 at C:\Program Files\XyceNF_7.10\bin\xyce.exe
 ```
 
 ### The ngspice harness (M7)
@@ -308,6 +310,49 @@ drift. Append `validated_on` items with `solver: ltspice`.
 
 The LTspice solver suite runs for much longer than a normal test run, so it is worth
 starting on its own (`-m solver -k ltspice`). If a local LTspice timeout appears, close the GUI and rerun once.
+
+### The Xyce harness (X-M0)
+
+Every Xyce solver test goes through `tests/support/xyce.py`. Xyce is GPLv3: only the binary is run,
+and its source, including the headers installed under `include/`, is never read (P10). Discovery
+checks `XYCE_EXE`, then `Xyce`/`Xyce.exe` on `PATH`, then `XyceNF_*/bin/Xyce.exe` and
+`Xyce_*/bin/Xyce.exe` under Program Files and `LOCALAPPDATA`, the newest version first. The
+version is the number in the line `Xyce -v` prints (`XyceNF Release 7.10.0`), the value spec
+entries record in `validated_on`.
+
+- `run(solver, folder, source, *, mode="run", name="probe.cir")` writes `source` (text, bytes or a
+  path; no `Netlist` while the dialect is hidden) to `folder/probe.cir` and runs Xyce there. The
+  modes: `run` (`-r probe.cir.raw -a`, an ASCII raw file), `print` (no switch, so `.print` lines
+  write `probe.cir.prn`; `-r` writes none), `syntax` (`-syntax`), `norun` (`-norun`) and
+  `namesfile` (`-namesfile probe.cir.names`, which lists the solution variables without
+  simulating). It returns a `Run`: `returncode`, `log` (stdout), `stderr`, `raw_bytes`,
+  `prn_bytes`, `names_bytes`, `plots`, `plot(name)`, `names`, `diagnostics`, `errors`,
+  `warnings`, `errors_at(line)`, `warnings_at(line)` and `ok` (exit code 0 and no `Netlist
+  error`).
+- `syntax`, `norun`, `names` and `nodes` are shorthands; `names` gives every solution variable in
+  lower case (nodes, without ground, and branch currents such as `v1_branch`), `nodes` leaves out
+  the `*_branch` names. `op` and `dc` run a netlist that must succeed and return its results
+  (`{"v(2)": 1.0, "v1#branch": -0.001}`; one mapping per sweep point).
+- Xyce exits with 0, or 1 on any error; a warning does not change the code. Diagnostics go to
+  stdout as `Netlist error in file <f> at or near line N` (or `Netlist warning …`) and a message
+  line that starts with a space, or `Netlist warning: <message>` with no place; a long path wraps
+  the first line. stderr holds the abort summary.
+- Xyce's raw file is read by the shared reader (`tests/support/raw.py`), which accepts its three
+  differences and nothing more: a blank line after each point, complex values `re, im`, and
+  `Title:` and `Date:` only before the first of several plots (`.step`). `.op` is a one-point
+  `DC transfer characteristic` plot whose first variable is `sweep`; values have 9 significant
+  digits.
+
+**Never commit an Xyce raw file, log or timing number** (X-M0 section 2 item 2): tests run Xyce
+locally and write everything to temporary folders. The reader's and parsers' unit tests
+(`tests/test_xyce_raw_reader.py`) use synthetic strings written in the test.
+`tests/solver/test_xyce_harness.py` checks what the harness relies on, and
+`tests/solver/test_xyce_structure_probes.py` holds the X-M0 probes (comments, continuation, title,
+`.END`, brackets, ground). Run them with:
+
+```powershell
+uv run --env-file .env python -m pytest tests/solver -k xyce --no-cov --require-solver xyce
+```
 
 The document layer (M5) is tested in `tests/document/`: lines and insertion
 points, resolution, topology (with Hypothesis properties of the signature and an

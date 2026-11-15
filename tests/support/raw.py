@@ -2,8 +2,11 @@
 
 The reader is clean-room: it was written from the ASCII files ngspice 47 produces (m7-tasks.md
 section 7; samples in ``tests/corpus/ngspice/solver_stubs/raw/``) and reads LTspice's ``-ascii``
-files unchanged (m8-tasks.md L0). It is test code reading solver output, not netlist syntax, so it
-uses ``str`` methods (P13 governs ``src/``).
+files unchanged (m8-tasks.md L0). Xyce's ``-r <file> -a`` files (X-M0 B3) differ in three ways,
+which it accepts and nothing else: a blank line after each point, complex values written ``re, im``
+with a space after the comma, and ``Title:`` and ``Date:`` given once, before the first of several
+plots (``.step``); a later plot takes them from the one before. It is test code reading solver
+output, not netlist syntax, so it uses ``str`` methods (P13 governs ``src/``).
 """
 
 from __future__ import annotations
@@ -51,16 +54,21 @@ def read_raw(data: bytes | str) -> tuple[Plot, ...]:
     lines = text.splitlines()
     plots: list[Plot] = []
     position = 0
+    inherited: dict[str, str] = {}
     while position < len(lines):
         if not lines[position].strip():
             position += 1
             continue
-        plot, position = _read_plot(lines, position)
+        plot, position, inherited = _read_plot(lines, position, inherited)
         plots.append(plot)
     return tuple(plots)
 
 
-def _read_plot(lines: list[str], position: int) -> tuple[Plot, int]:
+def _read_plot(
+    lines: list[str], position: int, inherited: dict[str, str]
+) -> tuple[Plot, int, dict[str, str]]:
+    """One plot from ``position``. ``inherited`` holds the ``Title:`` and ``Date:`` of the plot
+    before, which Xyce writes only once; the first plot has none."""
     header: dict[str, str] = {}
     while True:
         if position >= len(lines):
@@ -74,6 +82,8 @@ def _read_plot(lines: list[str], position: int) -> tuple[Plot, int]:
         if key.strip() == "Variables":
             break
         header[key.strip()] = value.strip()
+    if "Title" not in header and inherited:
+        header = {**inherited, **header}
     for required in ("Title", "Plotname", "Flags", "No. Variables", "No. Points"):
         if required not in header:
             raise RawFileError(f"plot header without `{required}:`")
@@ -97,13 +107,15 @@ def _read_plot(lines: list[str], position: int) -> tuple[Plot, int]:
     convert = _complex if "complex" in flags else float
     rows: list[tuple[Value, ...]] = []
     for point in range(points):
-        fields = _line(lines, position).split()
+        if point > 0 and not _line(lines, position).strip():
+            position += 1  # Xyce: a blank line after each point
+        fields = _fields(_line(lines, position), complex_values="complex" in flags)
         position += 1
         if not fields or fields[0] != str(point):
             raise RawFileError(f"line {position}: expected point {point}, got {fields}")
         values = fields[1:]
         while len(values) < count:
-            values.extend(_line(lines, position).split())
+            values.extend(_fields(_line(lines, position), complex_values="complex" in flags))
             position += 1
         if len(values) != count:
             raise RawFileError(f"point {point}: {len(values)} values for {count} variables")
@@ -116,7 +128,23 @@ def _read_plot(lines: list[str], position: int) -> tuple[Plot, int]:
         tuple(kinds),
         tuple(rows),
     )
-    return plot, position
+    inherited = {key: header[key] for key in ("Title", "Date") if key in header}
+    return plot, position, inherited
+
+
+def _fields(line: str, *, complex_values: bool) -> list[str]:
+    """The whitespace-separated fields of a value line. In a complex plot, ``re, im`` (Xyce) is
+    one field, as ``re,im`` (ngspice, LTspice) is."""
+    fields = line.split()
+    if not complex_values:
+        return fields
+    joined: list[str] = []
+    for field in fields:
+        if joined and joined[-1].endswith(",") and "," not in field:
+            joined[-1] += field
+        else:
+            joined.append(field)
+    return joined
 
 
 def _line(lines: list[str], position: int) -> str:

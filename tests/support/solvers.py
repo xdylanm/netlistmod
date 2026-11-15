@@ -15,7 +15,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
 
-SolverName = Literal["ngspice", "ltspice"]
+SolverName = Literal["ngspice", "ltspice", "xyce"]
+SOLVER_NAMES: tuple[SolverName, ...] = ("ngspice", "ltspice", "xyce")
+
+_ENV_KEYS: dict[SolverName, str] = {
+    "ngspice": "NGSPICE_EXE",
+    "ltspice": "LTSPICE_EXE",
+    "xyce": "XYCE_EXE",
+}
 
 _GENERIC_ALL = 0x10000000
 
@@ -30,6 +37,8 @@ class Solver:
 def _executable_names(name: SolverName) -> tuple[str, ...]:
     if name == "ngspice":
         return ("ngspice_con.exe", "ngspice.exe", "ngspice")
+    if name == "xyce":
+        return ("Xyce.exe", "Xyce")
     return ("LTspice.exe", "XVIIx64.exe", "ltspice")
 
 
@@ -59,6 +68,13 @@ def _default_paths(name: SolverName, environ: Mapping[str, str]) -> list[Path]:
                     "ngspice/bin/ngspice.exe",
                 )
             )
+    elif name == "xyce":
+        # Sandia's Windows installers use `XyceNF_<version>` (and `Xyce_<version>`) folders;
+        # the newest version comes first.
+        for root in roots:
+            installs = [*root.glob("XyceNF_*"), *root.glob("Xyce_*")]
+            for install in sorted(installs, key=_version_key, reverse=True):
+                paths.append(install / "bin" / "Xyce.exe")
     else:
         for root in roots:
             paths.extend(
@@ -73,12 +89,17 @@ def _default_paths(name: SolverName, environ: Mapping[str, str]) -> list[Path]:
     return paths
 
 
+def _version_key(folder: Path) -> tuple[int, ...]:
+    """The numbers in an install folder's name (``XyceNF_7.10`` gives ``(7, 10)``)."""
+    return tuple(int(number) for number in re.findall(r"\d+", folder.name))
+
+
 def _candidate_paths(
     name: SolverName,
     environ: Mapping[str, str],
     search_path: str | None,
 ) -> list[Path]:
-    env_key = "NGSPICE_EXE" if name == "ngspice" else "LTSPICE_EXE"
+    env_key = _ENV_KEYS[name]
     candidates: list[Path] = []
     configured = environ.get(env_key)
     if configured:
@@ -161,6 +182,8 @@ def _windows_file_version(path: Path) -> str:
 def _version_string(name: SolverName, path: Path) -> str:
     if name == "ltspice":
         return _windows_file_version(path)
+    if name == "xyce":
+        return _xyce_version(path)
 
     # The GUI build (ngspice.exe) does not exit on `-v`, so query the console build.
     console = path.with_name("ngspice_con.exe")
@@ -183,6 +206,33 @@ def _version_string(name: SolverName, path: Path) -> str:
     return match.group(1)
 
 
+def xyce_version_line(path: Path) -> str:
+    """The one line ``Xyce -v`` prints, such as ``XyceNF Release 7.10.0`` (X-M0 G1 item 5)."""
+    result = subprocess.run(
+        [str(path), "-v"],
+        capture_output=True,
+        check=False,
+        stdin=subprocess.DEVNULL,
+        text=True,
+        timeout=10,
+    )
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    if result.returncode != 0 or len(lines) != 1:
+        raise RuntimeError(
+            f"Could not determine Xyce version from {path} "
+            f"(exit code {result.returncode}): {result.stdout.strip()} {result.stderr.strip()}"
+        )
+    return lines[0]
+
+
+def _xyce_version(path: Path) -> str:
+    line = xyce_version_line(path)
+    match = re.fullmatch(r"Xyce(?:NF)? Release (\d+(?:\.\d+)+)", line)
+    if match is None:
+        raise RuntimeError(f"Unexpected Xyce version line from {path}: {line!r}")
+    return match.group(1)
+
+
 def discover_solver(
     name: SolverName,
     *,
@@ -190,7 +240,7 @@ def discover_solver(
     search_path: str | None = None,
 ) -> Solver | None:
     """Find a local solver by environment, PATH, then standard install locations."""
-    if name not in ("ngspice", "ltspice"):
+    if name not in SOLVER_NAMES:
         raise ValueError(f"Unsupported solver name: {name}")
     env = os.environ if environ is None else environ
     path_value = os.environ.get("PATH", "") if search_path is None else search_path
