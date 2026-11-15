@@ -123,5 +123,6 @@ The two reports are also the inventory for the xyce plan (P1): about 70% of the 
 - [x] X2: `complete with findings`. The inventory for the xyce plan (devices, statements, names, numbers, scoping, solver evidence, milestones). The lead checked the leading-whitespace comment rule (Users' Guide §4.1.3.1) and R's model-before-value form.
 - [x] Q2: `gap`, for the same reason as Q1. The official pages establish that QSPICE is free, Windows-only, and can export and run a netlist without the GUI; architecture §12 does not allow citing a proprietary built-in help (as for LTspice), so qspice's sources need a maintainer decision (5.1).
 - [ ] G1
-- [ ] P1, P2
+- [x] P1: [xyce-plan.md](./xyce-plan.md) (DRAFT), from X1, X2 and the G1 decisions.
+- [ ] P2: waits for 5.1 item 5 (qspice's sources).
 - [ ] T1
