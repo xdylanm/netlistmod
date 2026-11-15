@@ -1,7 +1,7 @@
 # M20 task list — the 1.0 API review
 
-> **Status:** READY FOR REVIEW — implemented; the maintainer reviews the pull request
-> **Follows:** the v1 gate ([v1-review.md](./archive/phase-2/v1-review.md), section 5.1 point 2 and section 6) and the `0.9.0` beta ([decision 0023](../decisions/0023-v1-beta-release.md)). Governed by [architecture.md](../architecture.md) (§2, §14, §16, §17, §18, §21).
+> **Status:** COMPLETE (2026-11-14) — approved by the maintainer and merged as #21; the outcome is [decision 0024](../../../decisions/0024-the-1-0-public-api.md)
+> **Follows:** the v1 gate ([v1-review.md](../phase-2/v1-review.md), section 5.1 point 2 and section 6) and the `0.9.0` beta ([decision 0023](../../../decisions/0023-v1-beta-release.md)). Governed by [architecture.md](../../../architecture.md) (§2, §14, §16, §17, §18, §21).
 
 ## 1. Scope
 
@@ -9,7 +9,7 @@ Decisions 0018 and 0023 leave one question open before 1.0: what 1.0 commits to 
 
 - **In:**
   - **The 1.0 contract:** what is public, what SemVer covers (names, fields, diagnostic codes and severities, exceptions, messages, what parses), the deprecation policy and the supported Python versions. It is recorded in a decision record and in §18.
-  - **The eleven API notes** of [v1-review.md](./archive/phase-2/v1-review.md) section 6, each kept, changed or documented.
+  - **The eleven API notes** of [v1-review.md](../phase-2/v1-review.md) section 6, each kept, changed or documented.
   - **The two questioned loads** (v1-review 5.1 point 4): ngspice `R1 a 0 1k |` and `D1 a 0 2` on both dialects.
   - **Library files** (§21): confirmed as a candidate after 1.0, or not.
   - **Stale API text found in the 1.0 reading:** §16's sketch and docstrings such as `Lines.insert_after`'s.

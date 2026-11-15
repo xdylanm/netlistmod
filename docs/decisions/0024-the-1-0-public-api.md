@@ -3,7 +3,7 @@
 - **Status:** accepted (2026-11-14, maintainer; M20 gate G1)
 - **Date:** 2026-11-14
 - **Amends:** decision 0004 item 5, decision 0006 item 2, decision 0007 items 10 and 11, decision 0021 item 1; architecture §4, §5.4, §6.3 rule 14, §18, §19 decision 21 and §21.
-- **Context:** Decisions 0018 and 0023 left one question for after practical use of the beta: what 1.0 commits to in the public API (§18). The maintainer reported on 2026-11-14 that the `0.9.0` beta works as expected. M20 ([m20-tasks.md](../design/m20-tasks.md)) reviewed the public surface, the contract and the open behaviour items. The maintainer decided each point at gate G1 (m20 section 5.1). This record holds the outcome. Breaking changes are made directly before 1.0, with no deprecation shim (m20 decision 6).
+- **Context:** Decisions 0018 and 0023 left one question for after practical use of the beta: what 1.0 commits to in the public API (§18). The maintainer reported on 2026-11-14 that the `0.9.0` beta works as expected. M20 ([m20-tasks.md](../design/archive/v1.0/m20-tasks.md)) reviewed the public surface, the contract and the open behaviour items. The maintainer decided each point at gate G1 (m20 section 5.1). This record holds the outcome. Breaking changes are made directly before 1.0, with no deprecation shim (m20 decision 6).
 - **Decision:**
   1. **What is public.** The public API is the names in `netlistmod.__all__`, with the documented attributes, methods and parameters of those objects. Submodules and subpackages are internal, even where a name in them has no underscore, and so are their `__all__` lists. Callers import from `netlistmod`.
   2. **What SemVer covers from 1.0.0.** This is a narrower contract.

@@ -14,7 +14,7 @@ Active plans and design notes live in this folder. Completed work records move t
 - Archived files are history: do not edit them except to fix links. Changes to
   normative behavior go through a decision record in `../decisions/`.
 - **Living references** (`elements.md`, `statements.md`, `document-layer.md`, `edit-layer.md`) describe the library as it is, not a piece of work. They stay `ACTIVE` in this folder and are not archived. A change to the public API updates them in the same commit; `tests/architecture/test_design_notes.py` fails if a public name is missing. Their state at each milestone is in Git history. They were renamed in M9 from `m3-elements.md`, `m4-statements.md`, `m5-document.md` and `m6-edits.md`, the names the archived task lists still use in prose.
-- `archive/` is grouped by phase: phase 1's records are in `archive/phase-1/` and phase 2's in `archive/phase-2/`.
+- `archive/` is grouped by phase: phase 1's records are in `archive/phase-1/` and phase 2's in `archive/phase-2/`; the 1.0 work after phase 2 is in `archive/v1.0/`.
 
 ## Index
 
@@ -24,9 +24,9 @@ Active plans and design notes live in this folder. Completed work records move t
 | [statements.md](./statements.md) | ACTIVE (living reference) |
 | [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
 | [edit-layer.md](./edit-layer.md) | ACTIVE (living reference) |
-| [m20-tasks.md](./m20-tasks.md) | READY FOR REVIEW |
 | [m21-tasks.md](./m21-tasks.md) | ACTIVE |
 | [xyce-plan.md](./xyce-plan.md) | DRAFT |
+| [archive/v1.0/m20-tasks.md](./archive/v1.0/m20-tasks.md) | COMPLETE (2026-11-14) |
 | [archive/phase-2/phase-2-plan.md](./archive/phase-2/phase-2-plan.md) | COMPLETE (2026-11-11) |
 | [archive/phase-2/v1-review.md](./archive/phase-2/v1-review.md) | COMPLETE (2026-11-11) |
 | [archive/phase-2/m19-tasks.md](./archive/phase-2/m19-tasks.md) | COMPLETE (2026-11-11) |

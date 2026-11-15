@@ -22,3 +22,11 @@ Examples you can run:
 - [edit_and_simulate.py](./examples/edit_and_simulate.py): load, edit, save and run `.op` in a solver, on a built-in divider or your own netlist, and print a net's voltage. It takes `--dialect`, `--edit-value`, `--probe` and `--rkm`.
 
 See [the architecture](../architecture.md) for the design and its constraints.
+
+## Related tools
+
+netlistmod edits a netlist in its own dialect and does not translate between dialects. These third-party tools may help with tasks outside its scope. They are listed for reference only: netlistmod does not use or test them, so check each tool's documentation and licence yourself.
+
+| Tool | What it does |
+|---|---|
+| [XDM](https://github.com/Xyce/XDM) (Sandia) | Converts PSpice and HSPICE netlists into Xyce's format |
