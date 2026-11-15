@@ -27,6 +27,10 @@ LTSPICE_SHARED_FILES = [
     ROOT / "src" / "netlistmod" / "grammar" / "core.lark",
     ROOT / "src" / "netlistmod" / "grammar" / "formula.lark",
 ]
+XYCE_DIRECTORY = ROOT / "docs" / "grammars" / "xyce"
+XYCE_SPEC_DIRECTORY = XYCE_DIRECTORY / "specs"
+XYCE_GRAMMAR_FILES = [ROOT / "src" / "netlistmod" / "grammar" / "xyce.lark"]
+XYCE_SHARED_FILES = [ROOT / "src" / "netlistmod" / "grammar" / "core.lark"]
 SPEC_MARKER = re.compile(r"^\s*//\s*spec:\s*([A-Z0-9-]+)\s*$", re.MULTILINE)
 GRAMMAR_DECLARATION = re.compile(
     r"^\s*(?:(?:%extend|%override)\s+)?"
@@ -34,8 +38,10 @@ GRAMMAR_DECLARATION = re.compile(
 )
 # `[<key>] §<number> "<title>"`, for example `[ngspice-manual] §2.4.4 "End-of-line comments"`.
 # The LTspice reference has files and headings, not numbers: `[ltspice-ref] <FILE>.md "<heading>"`.
+# The Xyce manuals add the printed page, or a range: `[xyce-ref] §2.3.1.1 p182 "Global nodes"`.
 MANUAL_REF = re.compile(
-    r'\[([a-z0-9][a-z0-9-]*)\] (?:§\d+(?:\.\d+)*|[A-Z][A-Z0-9-]*\.md) "([^"\r\n]+)"'
+    r"\[([a-z0-9][a-z0-9-]*)\] (?:§\d+(?:\.\d+)*(?: p\d+(?:–\d+)?)?|[A-Z][A-Z0-9-]*\.md) "
+    r'"([^"\r\n]+)"'
 )
 REFERENCE_KEY = re.compile(r"^## \[([a-z0-9][a-z0-9-]*)\]\s*$", re.MULTILINE)
 # The citation forms F1 replaced. F1 also rejected §5.1.1 and §5.2.1 to §5.2.4, which phase 1
@@ -47,6 +53,7 @@ CITATION_SCAN = [ROOT / "docs" / "decisions", ROOT / "docs" / "grammars", ROOT /
 # forms it refuses, so it needs no accept test.
 NGSPICE_REFUSALS = frozenset({"NG-UNS-001"})
 LTSPICE_REFUSALS = frozenset({"LT-UNS-001", "LT-MCH-001"})
+XYCE_REFUSALS = frozenset({"XY-UNS-001"})
 TEST_SELECTOR = re.compile(r"test_\w+")
 # A test whose name says it refuses a form is not an accept test.
 REJECTION_TEST = re.compile(r"reject|refus|unsupported")
@@ -795,3 +802,47 @@ def test_stale_citation_check_accepts_reference_form(tmp_path: Path) -> None:
         'See `[ngspice-manual] §2.4.4 "End-of-line comments"`.\n', encoding="utf-8"
     )
     check_no_stale_citations([tmp_path])
+
+
+def test_xyce_specs_reference_tests_and_grammar_rules() -> None:
+    # The hidden xyce dialect (decision 0026); X-M0 reads only the structure of a netlist.
+    check_spec_coverage(
+        ROOT,
+        XYCE_SPEC_DIRECTORY,
+        XYCE_GRAMMAR_FILES,
+        shared_files=XYCE_SHARED_FILES,
+        refusals=XYCE_REFUSALS,
+    )
+    check_manual_references(XYCE_SPEC_DIRECTORY, REFERENCES_FILE)
+    check_device_matrix(
+        ROOT / "src" / "netlistmod" / "grammar" / "xyce-devices.json",
+        XYCE_DIRECTORY / "devices.md",
+    )
+
+
+def test_xyce_statuses_are_backed_by_their_evidence() -> None:
+    discrepancies = XYCE_DIRECTORY / "discrepancies.md"
+    check_validation_status(ROOT, XYCE_SPEC_DIRECTORY, discrepancies, solver="xyce")
+    check_rule_tables(ROOT, [XYCE_DIRECTORY / "names.md"], discrepancies)
+    check_status_summary(XYCE_DIRECTORY / "README.md", XYCE_SPEC_DIRECTORY)
+
+
+@pytest.mark.parametrize(
+    "citation",
+    [
+        '[xyce-ref] §2.3.1.1 p182 "Global nodes"',
+        '[xyce-ug] §4.1.3.1 p42–43 "Title, Comments and End"',
+        '[ngspice-manual] §2.4.4 "End-of-line comments"',
+        '[ltspice-ref] SPICE-SYNTAX-REFERENCE.md "Netlist Structure"',
+    ],
+)
+def test_manual_ref_accepts_section_page_and_file_citations(citation: str) -> None:
+    assert MANUAL_REF.fullmatch(citation)
+
+
+@pytest.mark.parametrize(
+    "citation",
+    ['[xyce-ref] p182 "Global nodes"', '[xyce-ref] §2.3.1.1 182 "x"', "[xyce-ref] §2.3.1.1 p182"],
+)
+def test_manual_ref_rejects_a_page_without_a_section_or_title(citation: str) -> None:
+    assert not MANUAL_REF.fullmatch(citation)

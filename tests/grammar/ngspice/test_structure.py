@@ -27,6 +27,7 @@ from netlistmod import (
     UnsupportedConstruct,
     parse,
 )
+from netlistmod.dialects import _XYCE
 from netlistmod.grammar.loader import (
     GRAMMARS,
     build_parser,
@@ -58,7 +59,7 @@ def test_loader_builds_and_caches_registered_ngspice_grammar() -> None:
     assert parser.options.strict is True
     assert build_parser(Dialect.NGSPICE) is parser
     assert GRAMMARS[Dialect.NGSPICE] == ("core.lark", "ngspice.lark")
-    assert registered_dialects() == frozenset({Dialect.NGSPICE, Dialect.LTSPICE})
+    assert registered_dialects() == frozenset({Dialect.NGSPICE, Dialect.LTSPICE, _XYCE})
     assert pending_dialects() == frozenset()
     with pytest.raises(ValueError, match="Unknown dialect"):
         build_parser("ngspice")  # type: ignore[arg-type]
@@ -252,6 +253,7 @@ def test_backslashes_that_do_not_end_a_statement_line_are_text(
 # No letter is planned after M17 (decision 0020 item 10): a mocked matrix marks "Ω", which has
 # no grammar rule, as planned.
 _PLANNED = {"Ω": {"status": "planned", "phase": 2, "milestone": "M99"}}
+_PLANNED_CONSTRUCT = "ngspice Ω device, not yet supported on ngspice (planned for M99)"
 
 
 @pytest.mark.parametrize("continued", ["Ω1 a 0 \\\\\nb 0 amod", "Ω1 a 0\n+ b 0 amod"])
@@ -261,7 +263,7 @@ def test_continued_element_line_is_reported_at_its_first_line(continued: str) ->
         pytest.raises(UnsupportedConstruct) as captured,
     ):
         _parse(f"title\n{continued}\n.end\n")
-    assert captured.value.construct == "ngspice Ω device"
+    assert captured.value.construct == _PLANNED_CONSTRUCT
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
@@ -577,7 +579,7 @@ def test_a_planned_element_line_is_a_positioned_unsupported_construct() -> None:
         pytest.raises(UnsupportedConstruct) as captured,
     ):
         _parse("title\nΩ1 a b 1k\n.end\n")
-    assert captured.value.construct == "ngspice Ω device"
+    assert captured.value.construct == _PLANNED_CONSTRUCT
     assert (captured.value.line, captured.value.column) == (2, 1)
     assert captured.value.excerpt == "Ω1 a b 1k\n^"
 

@@ -1,0 +1,23 @@
+id: XY-END-001
+dialect: xyce
+construct: required final .END statement
+manual_ref:
+- '[xyce-ug] §4.1.1 p40 "Introduction"'
+- '[xyce-ug] §4.1.3.1 p42 "Title, Comments and End"'
+- '[xyce-ref] §2.1.6 p33 ".END (End of Circuit)"'
+status: documented
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar: []
+core_rules:
+- end_stmt
+- trailer
+- END_KW
+tests:
+- tests/grammar/xyce/test_xyce_structure.py::test_end_is_case_insensitive
+- tests/grammar/xyce/test_xyce_structure.py::test_end_is_required
+- tests/grammar/xyce/test_xyce_structure.py::test_end_is_last_with_only_blank_lines_after_it
+validation_note: 'The X-M0 probes (A4, 2026-11-15) on XyceNF Release 7.10.0 ran netlists ending in `.END`; Xyce also runs one without it and ignores text after it, both rows in discrepancies.md. It stays documented: the binary is more lenient than the manual (tests/solver/test_xyce_structure_probes.py::test_a_netlist_without_end_runs and ::test_text_after_end_is_ignored), and X-M1 decides the strictness.'
+notes: The manual says the last line must be `.END`. As on ngspice (decision 0002) and LTspice (decision 0009 item 4), `.END` is required and only blank lines may follow it, with no comment or text on its line; it is case-insensitive, and its newline may be missing at the end of input. Whether X-M1 keeps this strictness is decided there.

@@ -1,0 +1,22 @@
+id: XY-TTL-001
+dialect: xyce
+construct: first-line title
+manual_ref:
+- '[xyce-ug] §4.1.1 p40 "Introduction"'
+- '[xyce-ug] §4.1.3.1 p42 "Title, Comments and End"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- first_line
+core_rules:
+- TITLE_TEXT
+tests:
+- tests/grammar/xyce/test_xyce_structure.py::test_the_first_line_is_always_the_title
+- tests/solver/test_xyce_structure_probes.py::test_line_one_is_the_title_even_when_it_reads_as_an_element
+- tests/solver/test_xyce_structure_probes.py::test_a_blank_line_one_is_the_title
+- tests/solver/test_xyce_structure_probes.py::test_a_continuation_never_joins_the_title
+validation_note: 'Validated by the X-M0 probes on XyceNF Release 7.10.0: line 1 is always the title, even when it is blank or looks like an element, and a `+` line never joins it.'
+notes: The manual treats the first line as a comment whatever it holds. Xyce has no `.TITLE` (it is not in the manual), so there is no explicit title; a blank first line is an empty title, which the manual does not mention (observed).

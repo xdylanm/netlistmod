@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
 from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground
@@ -83,7 +83,24 @@ _UNRESOLVED: dict[str, tuple[DiagnosticCode, str]] = {
 }
 _ORDER = {code: position for position, code in enumerate(DiagnosticCode)}
 # The solver version whose behaviour a message states (validated_on of the rule tables).
-_SOLVER: dict[Dialect, str] = {Dialect.NGSPICE: "ngspice 47", Dialect.LTSPICE: "LTspice 26.1.1"}
+_SOLVER: dict[Dialect, str] = {
+    Dialect.NGSPICE: "ngspice 47",
+    Dialect.LTSPICE: "LTspice 26.1.1",
+    _XYCE: "Xyce 7.10",
+}
+# The rules below are looked up only when a netlist has what they judge, so a dialect without an
+# entry (xyce, until its milestone defines the construct) fails loudly instead of reading as
+# another dialect. Whether a node named `<instance>:<node>` reaches into an instance (LTspice).
+_INSTANCE_NODES: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: True}
+# What the solver does with a `.ends` that names another subcircuit.
+_ENDS_NAME_RULE: dict[Dialect, str] = {
+    Dialect.NGSPICE: "ngspice does not check the name (ngspice manual §2.6.2)",
+    Dialect.LTSPICE: "LTspice 26.1.1 does not check the name",
+}
+# Whether a numeric value is checked against the dialect's number rules (ngspice only).
+_VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False}
+# Whether a repeated `.param`, `.model` or `.subckt` in one scope stops the solver.
+_REPEAT_STOPS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: True}
 
 
 def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, ...]:
@@ -93,18 +110,14 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         found.extend(_reference_findings(index, reference))
     for scope in index.scopes:
         found.extend(_duplicate_findings(scope))
-        if index.dialect is Dialect.LTSPICE:
+        if scope.elements and _INSTANCE_NODES[index.dialect]:
             found.extend(_instance_node_findings(index, scope))
     for line in index.lines.walk():
         item = line.item
         if isinstance(item, SubcktDefinition) and item.ends.name is not None:
             if index.root.fold(item.ends.name) != index.root.fold(item.name):
                 assert item.ends.name_span is not None
-                checks = (
-                    "ngspice does not check the name (ngspice manual §2.6.2)"
-                    if index.dialect is Dialect.NGSPICE
-                    else f"{_SOLVER[index.dialect]} does not check the name"
-                )
+                checks = _ENDS_NAME_RULE[index.dialect]
                 found.append(
                     (
                         DiagnosticCode.ENDS_NAME_MISMATCH,
@@ -125,7 +138,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
             )
         # Bodies are walked as their own lines, so a definition contributes only its header.
         for value in walk_nodes(item, NumericValue, bodies=False):
-            if index.dialect is Dialect.NGSPICE:
+            if _VALUE_CHECKS[index.dialect]:
                 found.extend(_value_findings(value))
     if index.dialect is Dialect.LTSPICE:
         found.extend(_fra_range_findings(index))
@@ -283,14 +296,29 @@ def _fra_range_findings(index: Index) -> list[tuple[DiagnosticCode, Severity, st
     return findings
 
 
-# What each solver does with a controlling source that is not a V (decision 0015 item 5).
-_MANUAL_SECTION: dict[type, str] = {Cccs: "4.2.3", Ccvs: "4.2.4", CurrentSwitch: "3.3.15"}
+# What each solver does with a controlling source that is not a V (decision 0015 item 5): where
+# the dialect's manual describes the F, H or W line.
+_CONTROL_REFERENCES: dict[Dialect, dict[type, str]] = {
+    Dialect.NGSPICE: {
+        Cccs: "ngspice manual §4.2.3",
+        Ccvs: "ngspice manual §4.2.4",
+        CurrentSwitch: "ngspice manual §3.3.15",
+    },
+    Dialect.LTSPICE: {
+        Cccs: "LTspice reference",
+        Ccvs: "LTspice reference",
+        CurrentSwitch: "LTspice reference",
+    },
+    _XYCE: {
+        Cccs: "Xyce reference manual §2.3.13 p234",
+        Ccvs: "Xyce reference manual §2.3.15 p237",
+        CurrentSwitch: "Xyce reference manual §2.3.22 p762",
+    },
+}
 
 
 def _reference_for(owner: Component, dialect: Dialect) -> str:
-    if dialect is Dialect.LTSPICE:
-        return "LTspice reference"
-    return f"ngspice manual §{_MANUAL_SECTION[type(owner)]}"
+    return _CONTROL_REFERENCES[dialect][type(owner)]
 
 
 _CONTROL_RUNS: dict[Dialect, tuple[type, ...]] = {
@@ -441,17 +469,18 @@ def _is_global(index: Index, name: str) -> bool:
 def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     where = scope.describe()
-    fatal = scope.dialect is Dialect.LTSPICE
-    tables: tuple[tuple[Mapping[str, tuple[object, ...]], str, Severity], ...] = (
-        # LTspice stops at a repeated .param; ngspice uses the last one silently.
-        (scope.params, "parameter", "warning" if fatal else "info"),
-        (scope.models, "model", "warning"),
-        (scope.subckts, "subcircuit", "warning"),
+    tables: tuple[tuple[Mapping[str, tuple[object, ...]], str], ...] = (
+        (scope.params, "parameter"),
+        (scope.models, "model"),
+        (scope.subckts, "subcircuit"),
     )
-    for table, noun, severity in tables:
+    for table, noun in tables:
         for definitions in table.values():
             for repeated in definitions[1:]:
                 name, span = _name_of(repeated)
+                fatal = _REPEAT_STOPS[scope.dialect]
+                # LTspice stops at a repeated .param; ngspice uses the last one silently.
+                severity: Severity = "warning" if fatal or noun != "parameter" else "info"
                 if fatal:
                     rule = f"{_SOLVER[scope.dialect]} stops with an error"
                     if noun == "model":

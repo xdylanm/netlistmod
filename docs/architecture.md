@@ -170,11 +170,12 @@ repo/
     py.typed
     errors.py
     source.py                # SourceText, Span
-    dialects.py              # Dialect enum
+    dialects.py              # Dialect enum, the hidden _XYCE (decision 0026), name rules
     grammar/
       core.lark
       ngspice.lark
       ltspice.lark
+      xyce.lark              # hidden until X-M8: structure only in X-M0 (decision 0026)
       loader.py              # dialect registry and strict parser builder
       formula.lark           # formula expression syntax, for reference scans (decision 0006)
       formula.py             # parse_formula: the names a formula refers to
@@ -281,7 +282,7 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 - `core.lark`: terminals and rules for what the supported dialects share (comments, title, `.end`, R/C/L/V/I/D and other letters with common form, `.param`, `.model`, `.subckt`, common directives). It compiles on its own. Where a terminal differs per dialect (names, comments, text), it holds the common subset and each overlay overrides it ([decision 0009](decisions/0009-ltspice-dialect.md)).
 - `<dialect>.lark`: dialect overlay adding or overriding constructs (device letters with dialect-specific meaning, dialect-only directives, numeric-notation differences).
-- `grammar/loader.py` owns the dialect-to-grammar registry; `dialects.py` defines only the `Dialect` enum.
+- `grammar/loader.py` owns the dialect-to-grammar registry; `dialects.py` defines the `Dialect` enum and the name rules both the model and the document layers use. While a dialect is being built it is hidden: `dialects.py` holds it as an unregistered `Dialect` instance (`_XYCE`) that no public name binds, and the registry and the per-dialect tables key it like a member ([decision 0026](decisions/0026-the-xyce-dialect.md)).
 - Each dialect grammar is composed from core + overlay with Lark relative `%import` and MUST compile independently under `strict=True`.
 
 ### 6.2 Parser configuration
@@ -445,11 +446,11 @@ LTspice generates a netlist from the command line with `-netlist`, verified on W
 
 ### 9.2 Planned
 
-**qspice** and **xyce**, matching spicelib's dialect list. Both have device letters that collide with other dialects; each is a separate overlay.
+**qspice** and **xyce**, matching spicelib's dialect list. Both have device letters that collide with other dialects; each is a separate overlay. Their plans are [xyce-plan.md](design/xyce-plan.md) (ACTIVE; the dialect is built hidden, [decision 0026](decisions/0026-the-xyce-dialect.md)) and [qspice-plan.md](design/qspice-plan.md) (DRAFT).
 
 ### 9.3 Adding a dialect (checklist)
 
-1. Add a `Dialect` enum member and registry entry.
+1. Add a registry entry and, while the dialect is built, a hidden `Dialect` instance in `dialects.py`, reachable only by an internal name and guarded by `tests/architecture/test_hidden_dialects.py`; every per-dialect table that a load of the dialect reaches gets an entry, so a missing one fails loudly. The public enum member is added after the dialect's completeness review ([decision 0026](decisions/0026-the-xyce-dialect.md); xyce: `_XYCE` until X-M8).
 2. Create `grammar/<dialect>.lark` (overlay on `core.lark`); build under `strict=True`.
 3. Create `docs/grammars/<dialect>/` with `devices.md`, `names.md`, `scoping.md`, `numbers.md`, and one spec entry per construct.
 4. Add dialect-specific nodes only where semantics differ; reuse common nodes otherwise.
@@ -559,6 +560,7 @@ The text inside an opaque item (`.control`, `.if` and `.lib` blocks, including t
 - **Needs verification before use:** any file from ngspice or LTspice distributions (licenses are mixed per directory/file). `analogdevicesinc/ltspice-reference` is Apache-2.0 (verified 2026-10-31).
 - **The ngspice manual is CC-BY-SA 4.0.** ShareAlike applies to adaptations of the manual, so its tables, examples and passages are not copied into the repository. Spec entries cite sections and state facts in the project's own words (§11.3 rule 4), which keeps the MIT-licensed repository outside ShareAlike.
 - **LTspice evidence** ([decision 0009](decisions/0009-ltspice-dialect.md)): only syntax facts are recorded. LTspice raw files, logs, and timing or performance numbers are never committed; the built-in LTspice Help is not cited or copied.
+- **Xyce** ([decision 0026](decisions/0026-the-xyce-dialect.md)) is GPLv3: its source code, including the headers installed with it, is never read. Its manuals, `[xyce-ref]` and `[xyce-ug]`, are cited by section and page and paraphrased. Running the binary is allowed; its raw files and logs are made at test time and not committed.
 - **QSPICE's built-in help** ([decision 0025](decisions/0025-qspice-help-as-reference.md)) is the qspice manual, cited by topic and paraphrased, with quotations of a few words at most. The help and extracts from it are never committed or distributed, and QSPICE's raw files, logs and timing numbers are not committed.
 - **Optional oracle:** spicelib MAY be installed as a dev-only dependency group for differential tests (T9). It MUST NOT appear in runtime requirements or published extras, its code MUST NOT be vendored, and T9 tests skip when it is absent.
 - **Contributors and agents:** `CONTRIBUTING.md` and `AGENTS.md` MUST state that GPL-derived code or tests are not accepted and that sources are declared in the corpus manifest. Clean-room discipline is process hygiene and an audit trail, not a legal guarantee; training-data exposure of agents cannot be fully excluded. Consider a legal review of this policy.
