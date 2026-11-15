@@ -33,21 +33,21 @@ def main(path: Path, dialect: Dialect = Dialect.NGSPICE, *, rkm: bool = False) -
     for scope in netlist.scopes:
         print(f"\n[{scope.describe()}]")
         print("elements:")
-        for element in netlist.elements(scope.path):
+        for element in netlist.elements(scope=scope.path):
             value = getattr(element, "value", None) or getattr(element, "dc", None)
             text = f" {value.text}" if value is not None else ""
             nodes = " ".join(node.name for node in element.nodes)
             print(f"  {element.designator} ({type(element).__name__}) {nodes}{text}")
         print("nets:")
-        for net in netlist.nets(scope.path):
-            on = ", ".join(e.designator for e in netlist.elements_on_net(net, scope.path))
+        for net in netlist.nets(scope=scope.path):
+            on = ", ".join(e.designator for e in netlist.elements_on_net(net, scope=scope.path))
             shared = " (shared)" if net.global_ else ""
             print(f"  {net.name}{shared}: {on}  spelled {', '.join(net.spellings)}")
         print("connections:")
-        for element in netlist.elements(scope.path):
+        for element in netlist.elements(scope=scope.path):
             terminals = ", ".join(
                 f"{c.terminal}->{c.net.name}"
-                for c in netlist.connections(element.designator, scope.path)
+                for c in netlist.connections(element.designator, scope=scope.path)
             )
             print(f"  {element.designator}: {terminals}")
     print("\nreferences:")

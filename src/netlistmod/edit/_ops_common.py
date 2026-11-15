@@ -7,7 +7,8 @@ from dataclasses import dataclass, fields, is_dataclass
 from dataclasses import field as dataclass_field
 
 from netlistmod.dialects import Dialect
-from netlistmod.document import Line, Netlist, Scope, ScopePath
+from netlistmod.document import Line, Scope, ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (

@@ -40,10 +40,10 @@ The value is written as given into exactly the value's span: blanks, comments an
 the line stay as they were. Text that would not land as one value is rejected:
 
 ```python
->>> netlist.set_value("R22", "1k 2k")
+>>> netlist.set_value("R22", "1k rmod")
 Traceback (most recent call last):
 ...
-netlistmod.errors.EditError: set_value R22: `1k 2k` does not re-parse as a value; the text would change more than the intended slot
+netlistmod.errors.EditError: set_value R22: `1k rmod` does not re-parse as a value; the text would change more than the intended slot
 
 ```
 
@@ -129,7 +129,7 @@ netlistmod.errors.EditError: `K1` is a coupling; use set_coupling to set its val
 
 ## Replace a value with a formula and add the `.param`
 
-`set_formula` writes `{expression}`. `params.set` replaces the value of an existing parameter,
+`set_formula(designator, text)` writes `{text}`. `params.set` replaces the value of an existing parameter,
 or adds a `.param` line after the last one (after the title when there is none). A batch makes
 both edits one plan with one verification; if any operation fails, nothing is applied.
 
@@ -187,7 +187,8 @@ R22 out 0 1k
 ```
 
 An inserted line takes the line ending of the line before it, so a CRLF file gets CRLF lines.
-`directives.add` writes before `.end` by default (`Placement.BEFORE_END`). A placement can also
+`directives.add` writes before `.end` by default (`Placement.BEFORE_END`); another place is
+passed as the keyword `placement=`, as for `add_include` and `params.set`. A placement can also
 be `Placement.AFTER_TITLE`, `Placement.AFTER_LAST_PARAM` or relative to a line: `Placement.before(line)` / `Placement.after(line)`, where `line` comes from the netlist
 being edited.
 
@@ -541,18 +542,16 @@ netlistmod.errors.EditError: directives.add: `.model dm D` is a `.model` line, n
 
 ## Verification
 
-`apply` applies a hand-built plan of `Edit`s with the same verification as every edit. The
-function `apply_edits(text, plan)` only splices a plan into a string: it re-parses nothing and
-does not check the topology, so use `Netlist.apply` on a netlist. `verify()` checks the current
-text again: it re-parses it and compares its signature with `baseline`, the signature of the
-original load.
+`apply` applies a hand-built plan of `Edit`s with the same verification as every edit: it
+splices the plan, re-parses the text and checks the slots and the topology. It is the only way a
+plan reaches a netlist. `verify()` checks the current text again: it re-parses it and compares
+its signature with `baseline`, the signature of the original load.
 
 ```python
->>> from netlistmod import apply_edits
 >>> value = netlist.element("R22").value
->>> apply_edits(netlist.text, [Edit(value.span, "3k")]).splitlines()[3]
-'R22 out 0 3k'
 >>> edited = netlist.apply([Edit(value.span, "3k")])
+>>> edited.text.splitlines()[3]
+'R22 out 0 3k'
 >>> edited.verify()
 >>> edited.baseline == netlist.signature()
 True

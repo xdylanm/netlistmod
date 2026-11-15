@@ -1,8 +1,11 @@
-"""Topology-preserving edits (architecture §3 layers [4] and [5], §7; decision 0007)."""
+"""Topology-preserving edits (architecture §3 layers [4] and [5], §7; decision 0007).
+
+Internal: ``__all__`` lists only what :mod:`netlistmod` exports from here.
+"""
 
 from netlistmod.edit.api import Batch, DirectiveEditor, Netlist, ParamTable
 from netlistmod.edit.placement import Placement
-from netlistmod.edit.plan import Edit, EditPlan, SlotCheck, apply_edits
+from netlistmod.edit.plan import Edit, EditPlan, SlotCheck
 
 __all__ = [
     "Batch",
@@ -13,5 +16,4 @@ __all__ = [
     "ParamTable",
     "Placement",
     "SlotCheck",
-    "apply_edits",
 ]

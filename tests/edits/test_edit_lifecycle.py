@@ -70,7 +70,7 @@ def test_a_batch_that_fails_verification_changes_nothing() -> None:
     with pytest.raises(EditError, match="does not re-parse"):
         with netlist.batch() as batch:
             batch.set_value("R1", "2k")
-            batch.set_value("R2", "1k 2k")
+            batch.set_value("R2", "1k rmod")
     assert netlist.text == _TEXT
 
 
@@ -260,7 +260,7 @@ def test_a_stale_line_is_an_edit_error() -> None:
     with pytest.raises(EditError, match="does not belong to this netlist"):
         edited.directives.replace(old.item, ".op")
     with pytest.raises(EditError, match="not a line of the top level of this netlist"):
-        edited.directives.add(".save v(out)", Placement.before(old))
+        edited.directives.add(".save v(out)", placement=Placement.before(old))
     current = edited.lines.find(OpDirective)
     assert current is not None
     assert edited.directives.remove(current).lines.find(OpDirective) is None
@@ -326,7 +326,7 @@ def test_save_re_verifies_against_the_load_baseline(tmp_path: Path) -> None:
 
 
 def test_the_read_only_netlist_has_no_edit_methods() -> None:
-    from netlistmod.document import Netlist as ReadOnly
+    from netlistmod.document.document import Netlist as ReadOnly
 
     read_only = ReadOnly.from_text(_TEXT, dialect=current_dialect())
     assert not hasattr(read_only, "set_value")

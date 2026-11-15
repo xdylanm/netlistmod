@@ -107,6 +107,8 @@ def _describe(edit: Edit) -> str:
 def apply_edits(text: str, plan: EditPlan | Iterable[Edit]) -> str:
     """Splice ``plan`` into ``text`` and return the new text; ``text`` is not changed.
 
+    Internal: it neither parses the result nor verifies it (no slot, outside-text or topology
+    check). Callers apply a plan to a netlist with :meth:`netlistmod.Netlist.apply`, which does.
     ``EditError`` if two edits overlap or a span lies outside the text.
     """
     edits = (plan if isinstance(plan, EditPlan) else EditPlan(plan)).ordered()

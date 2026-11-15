@@ -137,7 +137,7 @@ def test_a_net_in_a_definition_is_local(solver: Solver, tmp_path: Path) -> None:
     assert abs(plot.real("Ix(x1:a)")[0]) == pytest.approx(1.5e-3, rel=LINEAR)
     assert result.voltage("n") == pytest.approx(0, abs=1e-6)
     assert {net.name for net in netlist(text).nets()} == {"in", "0", "n"}
-    assert {net.name for net in netlist(text).nets(("cell",))} >= {"a", "n", "0"}
+    assert {net.name for net in netlist(text).nets(scope=("cell",))} >= {"a", "n", "0"}
 
 
 def test_ports_bind_by_position(solver: Solver, tmp_path: Path) -> None:
@@ -159,7 +159,7 @@ def test_global_nodes_join_every_scope(
         f".subckt s b\nR1 {node} b 1k\n.ends\n.op\n.end\n"
     )
     assert succeeds(solver, tmp_path, text).voltage("out") == pytest.approx(1.5, rel=LINEAR)
-    assert any(net.name.lower().endswith("vcc") for net in netlist(text).nets(("s",)))
+    assert any(net.name.lower().endswith("vcc") for net in netlist(text).nets(scope=("s",)))
 
 
 def test_bus_names_are_nets(solver: Solver, tmp_path: Path) -> None:

@@ -1,7 +1,7 @@
 """SPICE dialect names supported by netlistmod, and the name rules both the model and the document
 layers use (``docs/grammars/<dialect>/names.md``)."""
 
-from enum import Enum
+from enum import StrEnum
 from string import ascii_lowercase, ascii_uppercase
 from typing import Final
 from unicodedata import normalize
@@ -11,8 +11,11 @@ GROUND_NAMES: Final = frozenset({"0", "gnd"})
 """The folded names of the ground net (names.md N2)."""
 
 
-class Dialect(str, Enum):
-    """A supported SPICE dialect; callers must select one explicitly."""
+class Dialect(StrEnum):
+    """A supported SPICE dialect; callers must select one explicitly.
+
+    A ``StrEnum``: ``str(Dialect.NGSPICE)`` and ``f"{Dialect.NGSPICE}"`` give ``"ngspice"``.
+    """
 
     NGSPICE = "ngspice"
     LTSPICE = "ltspice"

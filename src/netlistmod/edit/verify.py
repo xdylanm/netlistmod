@@ -27,7 +27,8 @@ from dataclasses import fields, is_dataclass
 from typing import TypeVar
 
 from netlistmod.dialects import Dialect
-from netlistmod.document import Netlist, TopologySignature
+from netlistmod.document import TopologySignature
+from netlistmod.document.document import Netlist
 from netlistmod.edit.plan import Edit, EditPlan, apply_edits
 from netlistmod.errors import EditError, ParseError, TopologyViolation, UnsupportedConstruct
 from netlistmod.model.nodes import OpaqueBlock, OpaqueStatement, ParseResult

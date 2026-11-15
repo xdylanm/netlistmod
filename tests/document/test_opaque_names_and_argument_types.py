@@ -34,13 +34,13 @@ def test_a_string_is_not_a_scope() -> None:
     with pytest.raises(TypeError, match=r"\('ab',\)"):
         netlist.scope("ab")
     with pytest.raises(TypeError, match=r"\('ab',\)"):
-        netlist.nets("ab")
+        netlist.nets(scope="ab")
 
 
 @pytest.mark.parametrize("path", [("ab",), ["ab"]], ids=["tuple", "list"])
 def test_a_sequence_is_a_scope(path: tuple[str, ...] | list[str]) -> None:
     netlist = Netlist.from_text(_NESTED, dialect=current_dialect())
-    assert [net.name for net in netlist.nets(path)] == ["r", "0"]
+    assert [net.name for net in netlist.nets(scope=path)] == ["r", "0"]
 
 
 def test_parse_names_source_text() -> None:

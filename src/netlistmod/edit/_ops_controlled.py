@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from netlistmod.document import Netlist, ScopePath
+from netlistmod.document import ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import _element, _insert, _kind, _removal_edit
 from netlistmod.edit.plan import Edit, SlotCheck

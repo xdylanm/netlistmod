@@ -1,10 +1,12 @@
-"""Netlist document and read-only indexes."""
+"""Netlist document and read-only indexes.
+
+Internal: ``__all__`` lists only what :mod:`netlistmod` exports from here. The read-only base
+class is ``netlistmod.document.document.Netlist``; callers use the editable ``netlistmod.Netlist``.
+"""
 
 from netlistmod.document.diagnostics import Diagnostic, DiagnosticCode, Severity
-from netlistmod.document.document import Netlist
 from netlistmod.document.index import Reference, ReferenceKind, Scope
 from netlistmod.document.lines import Line, Lines, ScopePath
-from netlistmod.document.names import GROUND, fold, is_ground, net_name
 from netlistmod.document.topology import (
     Connection,
     ExpressionRead,
@@ -14,15 +16,13 @@ from netlistmod.document.topology import (
 )
 
 __all__ = [
-    "GROUND",
     "Connection",
-    "ExpressionRead",
     "Diagnostic",
     "DiagnosticCode",
+    "ExpressionRead",
     "Line",
     "Lines",
     "Net",
-    "Netlist",
     "Reference",
     "ReferenceKind",
     "Scope",
@@ -30,7 +30,4 @@ __all__ = [
     "Severity",
     "TopologySignature",
     "TopologyView",
-    "fold",
-    "is_ground",
-    "net_name",
 ]

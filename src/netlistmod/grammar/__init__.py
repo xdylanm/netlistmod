@@ -1,5 +1,3 @@
-"""Strict, dialect-specific grammar support."""
+"""Strict, dialect-specific grammar support (internal; the package exports nothing from here)."""
 
-from netlistmod.grammar.loader import build_parser, parse_tree
-
-__all__ = ["build_parser", "parse_tree"]
+__all__: list[str] = []

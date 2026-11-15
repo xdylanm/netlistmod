@@ -9,7 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import ClassVar, Literal
 
-from netlistmod.document import Line, Lines, Netlist, ScopePath
+from netlistmod.document import Line, Lines, ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import End, ParamStatement, SubcktDefinition, Title
 

@@ -42,7 +42,8 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 Values are `Value` (`NumericValue | Formula`, M3); `Identifier(name, span)` is new, for an
 option value such as `gear`. `ParamAssignment` (M3) serves `.param`, `.model` parameters and
 `.subckt` defaults. `BodyItem` is the union of items allowed in a body; `TopLevelItem` adds
-`Title`, `TitleDirective`, `End` and the directives. Deviations from task 3.1: `Identifier`
+`Title`, `TitleDirective`, `End` and the directives. Both unions are exported from `netlistmod`
+(`SubcktDefinition.body` and `Line.item` use them). Deviations from task 3.1: `Identifier`
 (decision 0005 item 6), `DcSweep.span`, `EndsLine.trailing_comments`, and `SubcktDefinition`
 also carries the keyword fields.
 

@@ -5,7 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 
 from netlistmod.dialects import Dialect
-from netlistmod.document import Netlist, ScopePath
+from netlistmod.document import ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (

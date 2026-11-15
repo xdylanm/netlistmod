@@ -9,9 +9,12 @@
 
 ## 1. Public API
 
-Everything is exported from `netlistmod` (and `netlistmod.document`). Nothing is mutable.
+Everything below is exported from `netlistmod`; import it from there (submodules such as
+`netlistmod.document` are internal). Nothing is mutable.
 `ScopePath = tuple[str, ...]`: folded subcircuit names from the top level, `()` for the top level;
-every `scope=` argument accepts any case.
+every `scope=` argument is keyword-only and accepts any case.
+`Dialect` is a `StrEnum` (`Dialect.NGSPICE`, `Dialect.LTSPICE`): `str(Dialect.NGSPICE)` is
+`"ngspice"`.
 
 ### `Netlist`
 
@@ -28,15 +31,15 @@ every `scope=` argument accepts any case.
 | `scopes` | `tuple[Scope, ...]` | depth first, top level first |
 | `scope(path=())` | `-> Scope` | `KeyError` if absent |
 | `params`, `models`, `subckts` | `Mapping[str, tuple[...]]` | top-level tables (folded name → definitions) |
-| `element(designator, scope=())` | `-> Component` | first of a repeated designator; `KeyError` |
-| `elements(scope=(), *, recursive=False)` | `-> tuple[Component, ...]` | source order |
+| `element(designator, *, scope=())` | `-> Component` | first of a repeated designator; `KeyError` |
+| `elements(*, scope=(), recursive=False)` | `-> tuple[Component, ...]` | source order |
 | `references` | `tuple[Reference, ...]` | every reference, source order |
-| `references_to_param(name, scope=())` | `-> tuple[Reference, ...]` | those resolving to that scope's definitions |
+| `references_to_param(name, *, scope=())` | `-> tuple[Reference, ...]` | those resolving to that scope's definitions |
 | `resolve(reference)` | `-> object \| None` | `reference.target`; `ValueError` for a foreign reference |
 | `topology` | `TopologyView` | |
 | `nets`, `elements_on_net`, `connections`, `ports`, `signature` | delegate to `topology` | |
 | `diagnostics` | `tuple[Diagnostic, ...]` | computed once at load |
-| `expression_reads(designator, scope=())` | `-> tuple[ExpressionRead, ...]` | delegates to `topology`; section 8 |
+| `expression_reads(designator, *, scope=())` | `-> tuple[ExpressionRead, ...]` | delegates to `topology`; section 8 |
 
 ### `Line`, `Lines`
 
@@ -46,8 +49,10 @@ every `scope=` argument accepts any case.
 `Lines` is a `Sequence[Line]` (slicing returns `Lines`) with `walk()` (depth first, a body after
 its definition line), `find(kind, *, recursive=False) -> Line | None`, `find_all(kind, *,
 recursive=False) -> tuple[Line, ...]`, `index_of(line_or_item) -> int` (identity, this sequence
-only; `ValueError`), `insert_before(line) -> Span` and `insert_after(line) -> Span` (zero-width;
-`ValueError` unless the line is in this sequence or its bodies).
+only; `ValueError`), `point_before(line) -> Span` and `point_after(line) -> Span` (zero-width
+spans at the line's start and end, after its terminator; `ValueError` unless the line is in this
+sequence or its bodies). They insert nothing: an edit inserts a line through
+`Placement.before(line)` or `Placement.after(line)`, and cannot insert after `.end`.
 
 ### `Scope`
 
@@ -57,8 +62,8 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 
 ### `Reference`
 
-`Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is one of
-`"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`. `span` covers the name as written,
+`Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is a
+`ReferenceKind`, the `Literal` of `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`. `span` covers the name as written,
 `owner` is the item holding it, `target` the resolved node or `None`. Deviation from task 3.2:
 `owner` is added (the edit layer needs the item to edit).
 
@@ -75,13 +80,13 @@ order]`), `has_opaque_include`, `chain()` (self, then enclosing scopes), `walk()
 
 | Member | Notes |
 |---|---|
-| `nets(scope=()) -> tuple[Net, ...]` | first-use order: ports, element nodes, top-level `.global` nodes, in line order |
-| `net(name, scope=()) -> Net` | `KeyError` if no element of the scope uses it |
-| `elements_on_net(net: Net \| str, scope=())` | elements of that scope only |
-| `connections(designator, scope=()) -> tuple[Connection, ...]` | `K` has none; `KeyError` |
-| `ports(subckt, scope=()) -> tuple[Net, ...]` | definition resolved like an X line; nets of the definition's scope |
+| `nets(*, scope=()) -> tuple[Net, ...]` | first-use order: ports, element nodes, top-level `.global` nodes, in line order |
+| `net(name, *, scope=()) -> Net` | `KeyError` if no element of the scope uses it |
+| `elements_on_net(net: Net \| str, *, scope=())` | elements of that scope only |
+| `connections(designator, *, scope=()) -> tuple[Connection, ...]` | `K` has none; `KeyError` |
+| `ports(subckt, *, scope=()) -> tuple[Net, ...]` | definition resolved like an X line; nets of the definition's scope |
 | `signature() -> TopologySignature` | section 3 |
-| `expression_reads(designator, scope=()) -> tuple[ExpressionRead, ...]` | section 8; `KeyError` |
+| `expression_reads(designator, *, scope=()) -> tuple[ExpressionRead, ...]` | section 8; `KeyError` |
 
 `Net(name, scope, spellings, global_)`: `name` folded (`"0"` for ground); `scope` `()` for a
 shared net (ground or `.global`, `global_=True`), else the definition scope; `spellings` as
@@ -90,7 +95,8 @@ written, first-seen order, across all scopes. Nets compare by `(name, scope)`.
 
 ### `Diagnostic`
 
-`Diagnostic(code: DiagnosticCode, severity: "warning" | "info", message, span, line, column)`.
+`Diagnostic(code: DiagnosticCode, severity: Severity, message, span, line, column)`, where
+`Severity` is the `Literal` `"warning" | "info"`.
 
 ## 2. Resolution order
 
@@ -172,7 +178,7 @@ The API and the signature encoding are the same; `$G_*` nodes count as global. W
 
 ## 8. Expression reads (decision 0016)
 
-`expression_reads(designator, scope=())` returns the reads of the element's expressions in
+`expression_reads(designator, *, scope=())` returns the reads of the element's expressions in
 source order: B's expression, an expression form of E, F, G or H, C's charge, L's flux, and an
 R, C or L formula value, and the expression of an ngspice `TABLE` or `FREQ` (decision 0017). `ExpressionRead(kind, name, span, target)`: `kind` is `"node"` (each
 name in `v(a)` or `v(a,b)`) or `"source"` (`i(Vx)`); `span` covers the name; `target` is the

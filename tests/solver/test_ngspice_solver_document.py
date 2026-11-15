@@ -120,7 +120,7 @@ def test_local_parameters_mask_global_ones(solver: Solver, tmp_path: Path) -> No
     result = run(solver, tmp_path, text)
     assert result.returncode == 0, result.log
     assert result.voltage("out") == pytest.approx(1.5)
-    (reference,) = _netlist(text).references_to_param("rx", ("div",))
+    (reference,) = _netlist(text).references_to_param("rx", scope=("div",))
     assert reference.scope == ("div",)
 
 
@@ -187,7 +187,7 @@ def test_global_nodes_are_shared_and_other_nets_are_local(solver: Solver, tmp_pa
     assert result.voltage("mid") == pytest.approx(0.0)
     assert result.voltage("x1.mid") == pytest.approx(2.0)
     netlist = _netlist(local)
-    assert netlist.topology.net("mid") != netlist.topology.net("mid", ("div",))
+    assert netlist.topology.net("mid") != netlist.topology.net("mid", scope=("div",))
 
     shared = (
         "probe\n.global vcc\nV1 vcc 0 DC 3\nX1 out div\nR2 out 0 1k\n"
@@ -197,7 +197,7 @@ def test_global_nodes_are_shared_and_other_nets_are_local(solver: Solver, tmp_pa
     assert result.returncode == 0, result.log
     assert result.voltage("out") == pytest.approx(1.5)
     netlist = _netlist(shared)
-    assert netlist.topology.net("vcc") is netlist.topology.net("VCC", ("div",))
+    assert netlist.topology.net("vcc") is netlist.topology.net("VCC", scope=("div",))
 
     unshared = shared.replace(".global vcc\n", "")
     result = run(solver, tmp_path, unshared)
@@ -271,7 +271,7 @@ def _ngspice_nodes(solver: Solver, tmp_path: Path, netlist: Netlist, harness: st
     """
     end = netlist.lines.find(End)
     assert end is not None
-    at = netlist.lines.insert_before(end).start
+    at = netlist.lines.point_before(end).start
     control = ".control\nsave all\nop\ndisplay\n.endc\n"
     text = netlist.text[:at] + harness + control + netlist.text[at:]
     result = run(solver, tmp_path, text)

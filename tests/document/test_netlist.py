@@ -21,7 +21,7 @@ from netlistmod import (
     SubcktDefinition,
     Title,
 )
-from netlistmod.document import fold, is_ground, net_name
+from netlistmod.document.names import fold, is_ground, net_name
 from tests.support.corpus import accept_files
 from tests.support.dialects import current_dialect
 
@@ -146,27 +146,27 @@ def test_insertion_points_are_physical_line_boundaries() -> None:
     lines = netlist.lines
     text = netlist.text
     first_item = lines[1]
-    assert lines.insert_before(first_item) == Span(8, 8)
+    assert lines.point_before(first_item) == Span(8, 8)
     assert text[:8] == "divider\n"
     end = lines[-1]
-    before_end = lines.insert_before(end)
+    before_end = lines.point_before(end)
     assert text[before_end.start :] == ".end\n"
-    assert lines.insert_after(lines[-2]) == before_end
+    assert lines.point_after(lines[-2]) == before_end
     body = lines[4].body
     assert body is not None
-    inside = body.insert_after(body[-1])
+    inside = body.point_after(body[-1])
     assert text[inside.start :].startswith(".ends div\n")
-    assert lines.insert_before(body[0]) == Span(body[0].span.start, body[0].span.start)
+    assert lines.point_before(body[0]) == Span(body[0].span.start, body[0].span.start)
     stranger = Line(end.item, end.span, 1, 1, ())
     with pytest.raises(ValueError):
-        lines.insert_after(stranger)
+        lines.point_after(stranger)
 
 
 def test_insertion_after_a_last_line_without_final_newline() -> None:
     netlist = _netlist("title\nR1 a 0 1\n.end")
     last = netlist.lines[-1]
-    assert netlist.lines.insert_after(last) == Span(len(netlist.text), len(netlist.text))
-    assert netlist.lines.insert_before(last) == Span(15, 15)
+    assert netlist.lines.point_after(last) == Span(len(netlist.text), len(netlist.text))
+    assert netlist.lines.point_before(last) == Span(15, 15)
     assert (last.first_line, last.last_line) == (3, 3)
 
 

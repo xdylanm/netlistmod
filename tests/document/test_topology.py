@@ -41,7 +41,7 @@ def test_local_nets_ports_and_global_nodes() -> None:
     )
     top = netlist.nets()
     assert _names(top) == [("vcc", ()), ("0", ()), ("in", ()), ("out", ()), ("mid", ())]
-    local = netlist.nets(("div",))
+    local = netlist.nets(scope=("div",))
     assert _names(local) == [
         ("a", ("div",)),
         ("b", ("div",)),
@@ -52,9 +52,9 @@ def test_local_nets_ports_and_global_nodes() -> None:
     assert top[0] is local[3]
     assert top[0].global_ and top[0].spellings == ("VCC", "vcc")
     assert netlist.elements_on_net("mid") == (netlist.element("R9"),)
-    assert [e.designator for e in netlist.elements_on_net("mid", ("div",))] == ["R1", "R2"]
+    assert [e.designator for e in netlist.elements_on_net("mid", scope=("div",))] == ["R1", "R2"]
     assert _names(netlist.ports("DIV")) == [("a", ("div",)), ("b", ("div",))]
-    assert netlist.ports("div", ("div",)) == netlist.ports("div")
+    assert netlist.ports("div", scope=("div",)) == netlist.ports("div")
     with pytest.raises(KeyError, match="no subcircuit 'nope'"):
         netlist.ports("nope")
 
@@ -63,8 +63,8 @@ def test_global_nodes_are_shared_across_scopes() -> None:
     netlist = _netlist(
         ".global vdd\n.subckt a x\nR1 x vdd 1\n.ends\n.subckt b y\nR1 y VDD 1\n.ends"
     )
-    (shared,) = [net for net in netlist.nets(("a",)) if net.name == "vdd"]
-    assert shared in netlist.nets(("b",))
+    (shared,) = [net for net in netlist.nets(scope=("a",)) if net.name == "vdd"]
+    assert shared in netlist.nets(scope=("b",))
     assert shared.scope == () and shared.global_
     assert shared.spellings == ("vdd", "VDD")
 
@@ -301,7 +301,7 @@ def _oracle(circuit: _Circuit, scope: tuple[str, ...]) -> list[tuple[str, tuple[
 def test_nets_agree_with_the_generator(circuit: _Circuit, style: _Style) -> None:
     netlist = _load(circuit, style)
     assert _names(netlist.nets()) == _oracle(circuit, ())
-    assert _names(netlist.nets(("sub",))) == _oracle(circuit, ("sub",))
+    assert _names(netlist.nets(scope=("sub",))) == _oracle(circuit, ("sub",))
     for element in circuit.top:
         found = netlist.element(element.designator)
         assert [c.node.name for c in netlist.connections(element.designator)] == list(element.nodes)

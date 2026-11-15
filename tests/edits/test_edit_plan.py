@@ -6,7 +6,8 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from netlistmod import Edit, EditError, EditPlan, Span, apply_edits
+from netlistmod import Edit, EditError, EditPlan, Span
+from netlistmod.edit.plan import apply_edits
 
 
 def test_replacements_and_insertions_use_original_offsets() -> None:

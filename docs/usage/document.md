@@ -52,7 +52,7 @@ line, a blank line or an opaque block. A subcircuit definition is one line with 
 (8, 12)
 >>> [(line.scope, line.item.designator) for line in netlist.lines.find_all(Resistor, recursive=True)]
 [((), 'RL'), (('amp',), 'R1'), (('amp',), 'R2'), (('amp',), 'R3')]
->>> point = netlist.lines.insert_after(amp)  # a zero-width span at a physical line boundary
+>>> point = netlist.lines.point_after(amp)  # a zero-width span at a physical line boundary
 >>> point.is_empty, netlist.text[point.start :]
 (True, '.op\n.end\n')
 
@@ -85,7 +85,7 @@ a port or a `.global` node.
 ```python
 >>> [(net.name, net.scope) for net in netlist.nets()]
 [('vcc', ()), ('0', ()), ('in', ()), ('out', ())]
->>> [(net.name, net.scope) for net in netlist.nets(("amp",))]
+>>> [(net.name, net.scope) for net in netlist.nets(scope=("amp",))]
 [('a', ('amp',)), ('y', ('amp',)), ('mid', ('amp',)), ('vcc', ())]
 >>> netlist.topology.net("gnd").spellings
 ('0', 'GND')
@@ -100,7 +100,7 @@ elements of the scope asked for.
 ```python
 >>> [e.designator for e in netlist.elements_on_net("vcc")]
 ['VCC']
->>> [e.designator for e in netlist.elements_on_net("vcc", ("amp",))]
+>>> [e.designator for e in netlist.elements_on_net("vcc", scope=("amp",))]
 ['R3']
 >>> [(c.terminal, c.node.name, c.net.name) for c in netlist.connections("XA")]
 [(0, 'in', 'in'), (1, 'out', 'out')]

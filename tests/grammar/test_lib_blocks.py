@@ -101,7 +101,7 @@ def test_two_blocks_stand_side_by_side(both_dialects: Dialect) -> None:
 def test_a_block_may_stand_in_a_subcircuit_body(both_dialects: Dialect) -> None:
     body = ".subckt s p\n.lib x\nR9 p hidden 1k\n.endl\nR8 p 0 1k\n.ends\nX1 out s\n"
     netlist = _load(both_dialects, body)
-    assert [net.name for net in netlist.nets(("s",))] == ["p", "0"]
+    assert [net.name for net in netlist.nets(scope=("s",))] == ["p", "0"]
 
 
 def test_a_stray_endl_is_unchanged() -> None:

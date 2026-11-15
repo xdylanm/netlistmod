@@ -51,6 +51,8 @@ R2 out 0 3k
 
 Every edit returns a new netlist that has been re-parsed and checked against the topology of the original. `save()` changes only the edited text: comments, spacing, line endings and encoding stay as they were. For the whole cycle with a solver, see [edit_and_simulate.py](https://github.com/xdylanm/netlistmod/blob/main/docs/usage/examples/edit_and_simulate.py).
 
+Import everything from `netlistmod` (`netlistmod.__all__` is the public API); its submodules are internal.
+
 ## What it does and does not do
 
 - **Reads** titles, comments, every device letter of both dialects, `.param`, `.model`, `.subckt`, `.global`, the analysis, option and output directives, and LTspice's `.step`, into typed nodes with exact source spans. It answers queries about lines, references, nets and connections.

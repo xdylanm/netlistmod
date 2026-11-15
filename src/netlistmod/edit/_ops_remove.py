@@ -12,7 +12,8 @@ from __future__ import annotations
 from dataclasses import fields, is_dataclass
 
 from netlistmod.dialects import Dialect
-from netlistmod.document import Netlist, ScopePath
+from netlistmod.document import ScopePath
+from netlistmod.document.document import Netlist
 from netlistmod.edit._ops_common import (
     _TRANSISTORS,
     _TWO_TERMINAL,
