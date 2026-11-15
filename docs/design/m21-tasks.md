@@ -54,13 +54,13 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
 
 ### Stage 1 — Reviews (independent reviewers, in parallel; read-only)
 
-[ ] **X1 — xyce against the API.** The covered surface (decision 0024 items 1 and 2), the five candidate points, and anything else, checked against the Xyce Reference Guide.
+[x] **X1 — xyce against the API.** The covered surface (decision 0024 items 1 and 2), the five candidate points, and anything else, checked against the Xyce Reference Guide.
 
-[ ] **Q1 — qspice against the API.** The same, against qspice's documentation.
+[x] **Q1 — qspice against the API.** The same, against qspice's documentation.
 
-[ ] **X2 — xyce inventory for the plan.** Device letters and their forms, statements, names, numbers, scoping, structure, expressions, the solver's availability and its command line.
+[x] **X2 — xyce inventory for the plan.** Device letters and their forms, statements, names, numbers, scoping, structure, expressions, the solver's availability and its command line.
 
-[ ] **Q2 — qspice inventory for the plan.** The same for qspice.
+[x] **Q2 — qspice inventory for the plan.** The same for qspice.
 
 ### Gate G1 (lead, then the maintainer)
 
@@ -76,15 +76,42 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
 
 ### 5.1 Items for the maintainer
 
-To come (G1).
+**xyce.** The two xyce reviews found nothing that would change a covered name, signature or exception class. Every point of decision 0024's covered surface `fits` or is `additive`. These are the points the reviews raise for 1.0:
+
+1. **Growth (X1-18 to X1-20; Q1-5; X2).** A new dialect adds a `Dialect` member, node classes in `TopLevelItem`/`BodyItem`, `DiagnosticCode` members and values in `Literal` vocabularies (`StepDirective.kind` among them). Decision 0024 makes annotations, fields and diagnostics best-effort, but it says nothing about `Dialect` members or new node classes. A caller that matches exhaustively on `Dialect`, or on today's node classes, would break.
+   *Recommendation:* one sentence in decision 0024 and §18, made in the fix milestone: minor releases may add `Dialect` members, node classes, union members and `Literal` values. Documentation only.
+2. **What a designator is (X1-1; X2).** xyce's Y-type devices write the type and the name as two tokens (`YMEMRISTOR mr1 n1 n2 m`; Reference Guide Table 2-35), and the name is unique only together with the type (§2.3.29). A `str` still identifies such a device, so the signatures fit. But "designator" is nowhere defined as possibly more than one token.
+   *Recommendation:* in the fix milestone, state in decision 0024 and `elements.md` that a designator is the string naming an element in its dialect and need not be a single token. The xyce milestone picks the convention: the two tokens as written, or xyce's own `Y<type>!<name>`. Documentation only.
+3. **Load options (X1-9; X2).** xyce's command-line flags `-hspice-ext` and `-redefined_params` change how a netlist is read: what `a` means, the hierarchy separator, and which repeated `.param` wins.
+   *Recommendation:* nothing before 1.0. If the library needs to model them, they become keyword arguments with defaults, which is additive. `rkm=True` on xyce is a `ValueError`, as on LTspice.
+4. **Nets that reach into an instance, and `$G` globals (X1-2; X2).** xyce allows `X1:node` on device lines and treats every `$G…` node as global.
+   *Recommendation:* nothing before 1.0. Net identity sits behind `nets()` and `Net`, whose fields are best-effort; the xyce milestone decides whether to refuse these forms or to model them.
+
+The two reports are also the inventory for the xyce plan (P1): about 70% of the constructs reuse ngspice nodes. The five that do not fit the current model, each a plan risk rather than an API change:
+- the two-token designator;
+- `X1:node` on device lines;
+- `$G` globals;
+- a line that starts with whitespace is a comment;
+- bare expressions in `.param` and instance parameters.
+
+**qspice.** Both qspice reviews are `gap`. Qorvo publishes no reference online. The help ships inside the installer, which needs a registration with an email address. Architecture §12 says a proprietary built-in help is not cited, as was decided for LTspice's. On the API side, nothing is disruptive by construction. Two points depend on facts the help would settle:
+- whether an instance name is always one token (designator, as item 2);
+- whether a netlist's first line is always a title (`AFTER_TITLE`).
+
+5. **qspice's sources.** *Options:*
+   - **A.** The maintainer installs QSPICE; the lead checks the help's terms. If they allow paraphrase with citation, a decision record extends §12 to it and Q1 and Q2 run again.
+   - **B.** Evidence only: the grammar comes from solver probes, each behaviour an `observed` entry. §12 allows this, but it departs from the manual-driven policy (P5, §11).
+   - **C.** Defer qspice: 1.0 is audited against xyce only. For both open qspice points the reviewers found fall-backs that are additive (a designator defined per dialect, as item 2; a title exception as in decision 0009), so the risk is small.
+
+   *Recommendation:* A if the maintainer is willing to register, otherwise C.
 
 ### 5.2 Subtask log
 
 - [x] T0: branch, this list and the stage 1 briefs.
-- [ ] X1
-- [ ] Q1
-- [ ] X2
-- [ ] Q2
+- [x] X1: `complete with findings`. Sources: the Xyce Reference Guide and Users' Guide, version 7.10 (SAND2025-05993 and SAND2025-05995, May 2025; xyce.sandia.gov, accessed 2026-11-14). No finding is `disruptive`; two documentation-only questions (5.1). The lead checked the Y-type form (Reference Guide Table 2-35) and the title and `.END` rule (Users' Guide §4.1.1).
+- [x] Q1: `gap`. Qorvo publishes no qspice reference online; the help ships inside the installer, behind a registration form. On the API side nothing is disruptive by construction; two points depend on unverified qspice facts (5.1).
+- [x] X2: `complete with findings`. The inventory for the xyce plan (devices, statements, names, numbers, scoping, solver evidence, milestones). The lead checked the leading-whitespace comment rule (Users' Guide §4.1.3.1) and R's model-before-value form.
+- [x] Q2: `gap`, for the same reason as Q1. The official pages establish that QSPICE is free, Windows-only, and can export and run a netlist without the GUI; architecture §12 does not allow citing a proprietary built-in help (as for LTspice), so qspice's sources need a maintainer decision (5.1).
 - [ ] G1
 - [ ] P1, P2
 - [ ] T1
