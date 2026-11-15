@@ -1,6 +1,6 @@
 # M20 task list — the 1.0 API review
 
-> **Status:** ACTIVE
+> **Status:** READY FOR REVIEW — implemented; the maintainer reviews the pull request
 > **Follows:** the v1 gate ([v1-review.md](./archive/phase-2/v1-review.md), section 5.1 point 2 and section 6) and the `0.9.0` beta ([decision 0023](../decisions/0023-v1-beta-release.md)). Governed by [architecture.md](../architecture.md) (§2, §14, §16, §17, §18, §21).
 
 ## 1. Scope
@@ -83,7 +83,7 @@ D1 and D3 run in parallel (their files do not overlap); D2 follows D1, and D4 fo
 
 ### Gate G3 (lead)
 
-[ ] **T1 — Full run and pull request.** The full check set with both solvers; the pull request; CI green; `READY FOR REVIEW`.
+[x] **T1 — Full run and pull request.** The full check set with both solvers; the pull request; CI green; `READY FOR REVIEW`.
 
 ## 5. Findings and log
 
@@ -210,4 +210,4 @@ ngspice's own test is stricter than the library's: only a field that is entirely
 - [x] D2: `complete`. Point 5 (a to e) and point 4.6 made as decided, with D1-n7's internal tidy; `_rules_behavioral.py` gained a `cast` for the `quantity` type (D2-n4, accepted). Lead decisions at G2: D2-n1 (`remove_param` on an LTspice `Laplace`) and D2-n2 (the `set_param` docstring) go to D4; D2-n3, `set_switch_state` accepting `"ON"` at run time, stays lenient (outside the typed contract, no change).
 - [x] D4: `complete with findings`. Point 10 and the deprecation setting made as decided (§13 and §16 are committed with T2, in the same file as the lead's edits); `remove_param` on an LTspice `Laplace` names `set_expression` (D2-n1); `filterwarnings = ["error"]` needed no ignores, and the solver run with it raised no warning; the release smoke script with the `py.typed` check passed against a fresh wheel. The lead did D4-n1 (`testing.md`), D4-n2 (a B line's `set_value` names `set_expression`, with a test) and D4-n3 (messages say "an OSDI device"; `element_phrase` also no longer gives "an uniform RC line"); D4-n5 is accepted.
 - [x] T2: decision 0024 (accepted, the maintainer's G1 decisions), indexed; architecture §4, §5.4, §6.3 rule 14, §18, §19 decision 21 and §21 (with D4's §13 and §16); the CHANGELOG's `Unreleased` entry for M20.
-- [ ] T1
+- [x] T1: 2026-11-14, at `cda1e4b`, in a clean worktree of the branch, Windows, Python 3.14, ngspice 47 and LTspice 26.1.1, with `--require-solver ngspice --require-solver ltspice`: **10,634 passed, 2 skipped** (POSIX only), 1,427 deselected; coverage **99.24%**. ruff, mypy (the package, the named tests and the examples), lint-imports and pre-commit are clean.
