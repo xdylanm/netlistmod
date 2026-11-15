@@ -4,7 +4,7 @@
 - **Date:** 2026-11-15
 - **Amends:** architecture §4 (`dialects.py`), §9.2, §9.3 item 1 and §12, for the xyce dialect planned in [xyce-plan.md](../design/xyce-plan.md).
 - **Context:**
-  - **The plan.** xyce is the third dialect (§9.2). M21 found that adding it changes nothing the 1.0 contract covers ([decision 0024](0024-the-1-0-public-api.md) item 11), and planned it as milestones X-M0 to X-M8. X-M0 ([xm0-tasks.md](../design/xm0-tasks.md)) sets up the dialect, the solver harness and the documentation.
+  - **The plan.** xyce is the third dialect (§9.2). M21 found that adding it changes nothing the 1.0 contract covers ([decision 0024](0024-the-1-0-public-api.md) item 11), and planned it as milestones X-M0 to X-M8. X-M0 ([xm0-tasks.md](../design/archive/xyce/xm0-tasks.md)) sets up the dialect, the solver harness and the documentation.
   - **The contract binds what is released.** Once a release reads an xyce form, changing that reading needs a major version (decision 0024 item 3). Releases are made independently of milestones, so a half-built grammar could be released between X-M0 and X-M8.
   - **Xyce is GPLv3,** and its manuals are Sandia reports with the NTESS copyright and no licence for their text (X-M0 task A1). The solver is a free download that runs on the maintainer's Windows machine (task A3).
   - **The binary is more lenient than the manual** in places (X-M0 section 5.1 point 4): `.END` is not required, text after `.END` and unknown dot-commands are ignored with a warning at most, and `//` (which the manual's examples use) is not a comment.

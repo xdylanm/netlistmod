@@ -1,7 +1,7 @@
 # X-M0 task list — xyce set-up and solver spike
 
-> **Status:** READY FOR REVIEW — the maintainer reviews the pull request
-> **Follows:** [the xyce plan](./xyce-plan.md) section 8 and the 1.0 release ([decision 0024](../decisions/0024-the-1-0-public-api.md)). Governed by [architecture.md](../architecture.md) (§2, §3, §9.2, §9.3, §10, §11, §12, §18).
+> **Status:** COMPLETE (2026-11-15) — approved by the maintainer and merged as #26; the outcome is [decision 0026](../../../decisions/0026-the-xyce-dialect.md)
+> **Follows:** [the xyce plan](../../xyce-plan.md) section 8 and the 1.0 release ([decision 0024](../../../decisions/0024-the-1-0-public-api.md)). Governed by [architecture.md](../../../architecture.md) (§2, §3, §9.2, §9.3, §10, §11, §12, §18).
 
 ## 1. Scope
 
