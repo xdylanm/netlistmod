@@ -24,7 +24,6 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 ## 2. Decisions
 
 1. **Workflow as X-M0** (decision 0026; X-M0 decision 3): developer and reviewer subagents report to the lead; gates carry the maintainer's decisions; one commit per completed task; one pull request.
-   **Decided (maintainer, 2026-11-16): as recommended.**
 2. **Provenance** as decision 0026 items 2 and 3. Xyce source and headers are never read; the manuals are paraphrased and cited by section and page; nothing produced by Xyce is committed.
 3. **The grammar follows the manual** (decision 0026 item 5). Where the binary is more lenient, the difference is a `discrepancies.md` row; where the manual is silent, the solver decides and the entry is `observed` (§11.3 rule 3).
 4. **Reuse first.** An xyce construct reuses the ngspice node and rule where the reading is the same (§9.3 item 4), and gets a dialect-specific node only where its meaning differs.
@@ -69,6 +68,7 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
    - (c) read it as a comment of its own kind and report it.
 
    *Recommendation:* (c). The grammar has a distinct node for an indented line (P13), and a new `DiagnosticCode` (warning) says that Xyce reads it as a comment. An indented `*` or `;` line is a plain comment. An indented `+` continues. Edits refuse inserted statement text that begins with whitespace.
+   **Decided (maintainer, 2026-11-16): as recommended.**
 2. **`.END`.** The manual says it is required and last (ug §4.1.1 p40). The binary runs without it, ignores text after it, and accepts `.end junk`.
 
    *Recommendation:* required, last, with only blank lines after it, as on the other dialects. A `;` comment is allowed on its line, since `;` may end any line (ug p43). `.end <text>` is refused. Each difference is a discrepancy row.
