@@ -63,7 +63,7 @@ Import everything from `netlistmod` (`netlistmod.__all__` is the public API); it
 
 ## Status
 
-The library is feature complete for v1: every device letter of both dialects is supported, and both dialects are validated on their solvers. The current release is the `0.9.0` beta: the public API may still change before 1.0, which is decided after practical use.
+The library is feature complete for v1: every device letter of both dialects is supported, and both dialects are validated on their solvers. The current release is `0.9.0`. The public API is the names in `netlistmod.__all__`; what SemVer covers and how a name is deprecated are in [compatibility and versioning](https://github.com/xdylanm/netlistmod/blob/main/docs/architecture.md#18-compatibility-and-versioning).
 
 Supported platforms are Linux and Windows, with Python 3.13 or newer. LTspice validation runs on Windows. macOS is not tested.
 

@@ -32,6 +32,8 @@ jobs:
           tests/support tests/solver tests/conftest.py
           tests/test_ngspice_raw_reader.py tests/test_ltspice_raw_reader.py
           tests/test_corpus_manifests.py tests/test_usage_docs.py tests/test_docs.py
+      # The usage examples are what callers copy, so they are typed as strictly as the package.
+      - run: uv run python -m mypy --strict docs/usage/examples
       - run: uv run lint-imports
       - run: uv run python -m pre_commit run --all-files
 

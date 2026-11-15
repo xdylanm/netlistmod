@@ -147,3 +147,9 @@ def test_no_expression_edit_changes_the_signature(
         assert edited.signature() == signature
         assert step(edited).to_bytes() == edited.to_bytes()
         netlist = edited
+
+
+def test_set_value_on_a_b_line_names_set_expression() -> None:
+    # A B line has no value slot; the refusal names the edit that changes it (M20 D4-n2).
+    with pytest.raises(EditError, match="has no value slot; use set_expression"):
+        _netlist().set_value("B1", "2")

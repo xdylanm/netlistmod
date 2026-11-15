@@ -42,7 +42,8 @@
 %ignore WS
 %ignore CONT
 
-// Element lines of the phase 1 letters; other letters stay errors (devices.md).
+// Element lines of the phase 1 letters; each later letter extends `body_line` beside its own
+// rules, and a letter outside the grammar is an error (devices.md).
 // spec: LT-STR-001
 %extend body_line: resistor
                  | capacitor

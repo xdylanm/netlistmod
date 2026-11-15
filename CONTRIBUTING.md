@@ -22,5 +22,15 @@ Solver tests must skip cleanly when the corresponding solver is unavailable.
 
 Each milestone is one pull request. CI runs lint, types and the solver-free tests on Linux and
 Windows. It does not run solvers, so the local run with both solvers is still required. Merge with
-"Rebase and merge" after the maintainer's review, and only when CI is green; on the current
-repository plan this is a convention, not enforced by branch protection.
+"Rebase and merge" after the maintainer's review, and only when CI is green. A ruleset protects
+`main`: changes arrive by pull request, and the CI jobs must pass before a merge
+([decision 0023](docs/decisions/0023-v1-beta-release.md) item 3).
+
+## Compatibility
+
+The public API and what SemVer covers are set in
+[architecture §18](docs/architecture.md#18-compatibility-and-versioning). Removing or renaming a
+public name, or changing a public signature, needs a major version; deprecate first, with a
+`DeprecationWarning` for at least one minor release, as §18 describes. The tests treat warnings
+as errors. Label each `CHANGELOG.md` entry **Breaking**, **Deprecated**, **Refused** or
+**Accepted** where it applies.

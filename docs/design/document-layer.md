@@ -14,7 +14,9 @@ Everything below is exported from `netlistmod`; import it from there (submodules
 `ScopePath = tuple[str, ...]`: folded subcircuit names from the top level, `()` for the top level;
 every `scope=` argument is keyword-only and accepts any case.
 `Dialect` is a `StrEnum` (`Dialect.NGSPICE`, `Dialect.LTSPICE`): `str(Dialect.NGSPICE)` is
-`"ngspice"`.
+`"ngspice"`. `Dialect.display_name` is the conventional spelling (`"ngspice"`, `"LTspice"`), and
+`Dialect.from_name(name)` accepts a value or a member name in any case, with blanks around it
+(`ValueError` otherwise).
 
 ### `Netlist`
 

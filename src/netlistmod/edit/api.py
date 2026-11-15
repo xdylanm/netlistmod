@@ -56,8 +56,12 @@ class _Operations(Generic[_R]):
         G or H line.
 
         ``value`` is written as given into exactly the value's span (for ``r=1k``, only
-        ``1k``). ``EditError`` for a line without a value slot (D, Q, M, J, Z, S, W, X; K: use
-        :meth:`set_coupling`) or a source without a DC value (use :meth:`set_dc`).
+        ``1k``). ``EditError`` for a line without a value slot: D, Q, M, J, Z, S, W, X and B;
+        K (use :meth:`set_coupling`); T, U, Y, P, ngspice N and LTspice A and ``@`` (use
+        :meth:`set_param`); O and ngspice A (use :meth:`set_model_param`). Also an
+        ``EditError``: a source without a DC value (use :meth:`set_dc`), and an E, F, G or H
+        line written without a gain, whose message names :meth:`set_expression`,
+        :meth:`set_poly_coefficients` or :meth:`set_table`.
         """
         return self._submit(
             operations.set_value(
@@ -105,8 +109,10 @@ class _Operations(Generic[_R]):
         LTspice D or Q), unless the line already writes ``area=``. A name that is the line's
         value keyword (``r``, ``resistance``, …) sets the value when it is written that way,
         otherwise ``EditError`` (use :meth:`set_value`). E, H, S and W, and on LTspice F and G,
-        take no parameter, nor does an O line (its values are in its LTRA model). A repeated
-        parameter is an ``EditError``; an X line takes :meth:`set_instance_param`.
+        take no parameter, nor does an O line (its values are in its LTRA model). On LTspice,
+        ``Laplace`` on an E or G line is its form, not a parameter: ``EditError`` (use
+        :meth:`set_expression` for its transfer function). A repeated parameter is an
+        ``EditError``; an X line takes :meth:`set_instance_param`.
         """
         return self._submit(
             operations.set_param(
@@ -131,12 +137,11 @@ class _Operations(Generic[_R]):
         (R → ``R``, C → ``C``, L → ``L``, D → ``D``, Q → ``NPN`` or ``PNP``, M → ``NMOS``,
         ``PMOS`` or ``VDMOS``, J → ``NJF`` or ``PJF``, Z → ``NMF`` or ``PMF`` and on LTspice
         ``NIGBT`` or ``PIGBT``, S → ``SW``, W → ``CSW``, O → ``LTRA``, U → ``URC``, Y → ``TXL``,
-        P → ``CPL``), otherwise ``EditError``. An unresolved
-        model is accepted only with ``allow_external=True`` when an ``.include``, ``.lib`` or
-        opaque ``.if`` or ``.lib`` block is in a searched scope (decision 0007 item 3). A value
-        written ``r=1k`` takes no model. ngspice uses a given value over the model's geometry; see
-        :meth:`remove_value`. LTspice has no R, C or L model, so there only a D line takes one,
-        and an R, C or L line is an ``EditError``.
+        P → ``CPL``), otherwise ``EditError``. An unresolved model is accepted only with
+        ``allow_external=True`` when an ``.include``, ``.lib`` or opaque ``.if`` or ``.lib`` block
+        is in a searched scope (decision 0007 item 3). A value written ``r=1k`` takes no model.
+        ngspice uses a given value over the model's geometry; see :meth:`remove_value`. LTspice
+        has no R, C or L model, so there an R, C or L line is an ``EditError``.
         """
         return self._submit(
             operations.set_model(
@@ -537,7 +542,7 @@ class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
 
 class DirectiveEditor(Generic[_R]):
     """Add, replace, remove and upsert top-level directives and whole opaque items
-    (decision 0007 items 6 and 7, review round 1).
+    (decision 0007 items 6 and 7).
 
     ``text`` is one physical line, or a sequence of physical lines for a continued statement
     or a block (``[".tran 1u 10m", "+ 0 1u"]``); the lines are joined with the line ending of
