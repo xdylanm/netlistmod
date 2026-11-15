@@ -1,6 +1,6 @@
 # M21 task list — the xyce and qspice audit
 
-> **Status:** ACTIVE
+> **Status:** READY FOR REVIEW — the audit and both plan drafts; the maintainer reviews the pull request
 > **Follows:** [M20](./archive/v1.0/m20-tasks.md) and [decision 0024](../decisions/0024-the-1-0-public-api.md), whose contract takes effect at `1.0.0`. Governed by [architecture.md](../architecture.md) (§2, §9.2, §9.3, §11, §12, §18).
 
 ## 1. Scope
@@ -68,9 +68,9 @@ Decisions 1 to 4 set how the milestone runs and are the lead's, as in M20. Decis
 
 ### Stage 2 — Plans (lead)
 
-[ ] **P1 — The xyce plan draft** and **P2 — the qspice plan draft**, from X2 and Q2 and the G1 decisions.
+[x] **P1 — The xyce plan draft** and **P2 — the qspice plan draft**, from X2 and Q2 and the G1 decisions.
 
-[ ] **T1 — Pull request.** Docs checks, the pull request, CI green, `READY FOR REVIEW`.
+[x] **T1 — Pull request.** Docs checks, the pull request, CI green, `READY FOR REVIEW`.
 
 ## 5. Findings and log
 
@@ -149,5 +149,5 @@ So the audit's outcome for 1.0 is the two documentation sentences of items 1 and
 - [x] Q1b, Q2b: re-run from QSPICE's help under decision 0025; Q1b `complete`, no finding disruptive; Q2b `complete with findings`, the inventory for the qspice plan, with a probe list. The lead checked five key citations (5.1).
 - [x] G1: items 1 to 8 decided by the maintainer on 2026-11-14 and 2026-11-15. The outcome for 1.0 is two documentation sentences (items 1 and 2), made in a fix milestone before 1.0; neither dialect needs a covered change.
 - [x] P1: [xyce-plan.md](./xyce-plan.md) (DRAFT), from X1, X2 and the G1 decisions.
-- [ ] P2: waits for 5.1 item 5 (qspice's sources).
-- [ ] T1
+- [x] P2: [qspice-plan.md](./qspice-plan.md) (DRAFT), from Q1b, Q2b and the G1 decisions.
+- [x] T1: docs, architecture and link checks and pre-commit clean; the pull request.
