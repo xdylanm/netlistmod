@@ -272,23 +272,27 @@ The conventions, verification and placement are the same (decision 0009 item 17)
 
 The hidden dialect (`netlistmod.dialects._XYCE`, decision 0026) has the same API, conventions,
 verification and placement. The dialect branches of the operations are tables keyed by dialect
-(`_RCL_FORMS`, `_POSITIONAL_AREAS`, `_PORT_PARAMS`, `_LTSPICE_FORMS`, `_JOIN_TRAILING_COMMENTS`
-and `_INDENT_IS_COMMENT` in `edit/_ops_common.py`, `_FIRST_PARAM_WINS` in
-`edit/_ops_statements.py`), so a dialect without an entry fails loudly. What differs (decision
+(`_RCL_FORMS`, `_POSITIONAL_AREAS`, `_PORT_PARAMS`, `_LTSPICE_FORMS` and
+`_JOIN_TRAILING_COMMENTS` in `edit/_ops_common.py`, and the index's `_FIRST_PARAM_WINS`, which
+`edit/_ops_statements.py` reads), so a dialect without an entry fails loudly. What differs (decision
 0027 items 1, 3, 5 and 9; xm1-tasks 5.1 points 9 to 11):
 
 - **R, C and L write the model right after the nodes, then the value** (positional or `R=`,
   `C=`, `L=`). `set_value` on a line without a value inserts it after the model (the geometry
-  forms: an R with a model, `L=` and `W=`; a C with `L=`); on a C written with a charge `Q=` it is
+  forms: an R with a model and `L=`; a C with `L=`); on a C written with a charge `Q=` it is
   an `EditError` (use `set_expression`). `set_model` inserts the model right after the nodes, also
   beside a value written `R=`, `C=` or `L=`; the types are xyce's own (R: `R`, `RES`; C: `C`,
   `CAP`; L: `L`, `IND`).
 - **`remove_value`** removes the whole field and the separator before it (as `remove_param`
-  chooses it), with its keyword when the value is written `R=…`. It is refused on L, which has no form
-  without a value; on R unless the line keeps its model and both `L=` and `W=`; on C unless it
-  keeps `L=`, with or without a model (xm1-tasks 5.1 point 30; Xyce computes the value then). `remove_param`
-  refuses to take `L=` or `W=` from a line that has no value and needs them.
-- **`set_param`**: `R`, `C` and `L` edit the value written that way; a D's `area` is positional,
+  chooses it), with its keyword when the value is written `R=…` (the keyword's span is
+  `value_keyword_span`, kept by the parse). It is refused on L, which has no form without a
+  value; on R unless the line keeps its model and `L=` (`W=` is optional: Xyce then takes the
+  model's `DEFW`; point 10 as corrected at R1); on C unless it keeps `L=`, with or without a model
+  (xm1-tasks 5.1 point 30; Xyce computes the value then). `remove_param` refuses to take `L=` from
+  a line that has no value and needs it.
+- **`set_param`**: `R`, `C` and `L` edit the value written that way; `q` on a C is refused,
+  by `set_param` and `remove_param` alike, since the charge `Q=` is a form of the line, not a
+  parameter: `set_expression` changes a charge the line writes (R1 review); a D's `area` is positional,
   right after the model, unless the line writes `AREA=`; V and I take no parameters (no port
   parameters on Xyce's V).
 - **`params.set`** edits the **first** assignment of the name, the one Xyce 7.10 uses (scoping.md
@@ -296,8 +300,10 @@ and `_INDENT_IS_COMMENT` in `edit/_ops_common.py`, `_FIRST_PARAM_WINS` in
   `.PARAM`. A `.GLOBAL_PARAM` value is edited in place; a new line is always a `.param`. A name
   that a visible `.FUNC` or `.PARAM` function defines is an `EditError`: the library does not
   edit functions, and `directives.*` refuses a `.FUNC` or `.GLOBAL_PARAM` line.
-- **Inserted statement text** (`directives.*`, `add_include`) that has a line beginning with
-  blanks is an `EditError` (decision 0027 item 1): Xyce would read it as a comment. A later
+- **Inserted statement text** (`directives.*`, `add_include`) that holds an indented line is an
+  `EditError` (decision 0027 item 1): Xyce would read it as a comment. The refusal reads the parse
+  of the text, an `IndentedLine` item or an indented line inside a continued statement
+  (`indented_comments` of the parse), so an indented `*` or `;` comment line may stand in it. A later
   `+` line may be indented.
 - **`.PREPROCESS REPLACEGROUND`** is topology (P4): `directives.add`, `replace` and `remove` raise
   `TopologyError` on it, and its value is in the signature.

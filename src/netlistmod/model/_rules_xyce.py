@@ -4,12 +4,13 @@ dialects (X-M1 B5; decision 0027 items 5 and 6)."""
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, NoReturn
 
 from lark import Token
 
 from netlistmod.dialects import _XYCE, Dialect, fold_name
-from netlistmod.model._rules_elements import _reads_as_number
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._tree import (
     _common,
@@ -18,6 +19,7 @@ from netlistmod.model._tree import (
     _field_token,
     _Item,
     _span,
+    _XRest,
 )
 from netlistmod.model.nodes import (
     Capacitor,
@@ -45,8 +47,14 @@ _MODEL_FIRST: dict[Dialect, bool] = {
     Dialect.LTSPICE: False,
     _XYCE: True,
 }
-# The parameter that holds each letter's value ([xyce-ref] Tables 2-37, 2-39 and 2-42).
-_VALUE_KEYWORDS: dict[type, str] = {Resistor: "r", Capacitor: "c", Inductor: "l"}
+# Whether an instance parameter written twice on an element line is refused (xyce: Xyce 7.10 runs
+# `R1 a 0 1k L=1u L=2u` and `X1 a s PARAMS: r=1 r=2`, silently using one of the values; R1
+# review). The other dialects read such a line as they always have.
+_INSTANCE_REPEAT_REFUSED: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
 # The long value keywords of ngspice, which Xyce stops on ("Unrecognized parameter").
 _LONG_KEYWORDS = {"resistance": "R", "capacitance": "C", "inductance": "L"}
 # Each letter's closed instance-parameter list, as the grammar's R_PARAM_KW, C_PARAM_KW,
@@ -77,10 +85,19 @@ _PARAM_LISTS: dict[str, tuple[str, str, str]] = {
 }
 # What a line of each letter needs when it has no value (decision 0027 item 5, as amended).
 _VALUE_FORMS: dict[type, str] = {
-    Resistor: "a value, positional or `R=`, or a model with both `L=` and `W=`",
+    Resistor: "a value, positional or `R=`, or a model with `L=`",
     Capacitor: "a value, positional or `C=`, a charge `Q=`, or `L=`",
     Inductor: "a value, positional or `L=`",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class _ValueKeyword:
+    """An xyce R, C or L value written as its parameter (`R=`, `C=`, `L=`), or a C's charge
+    `Q=` (``charge``): the whole assignment, which keeps the keyword's span for the edits."""
+
+    assignment: ParamAssignment
+    charge: bool
 
 
 class XyceRules(StatementsRules):
@@ -88,6 +105,15 @@ class XyceRules(StatementsRules):
 
     def subckt_param(self, children: list[Any]) -> _Field:
         return self.param(children)
+
+    def reserved_default(self, children: list[Any]) -> NoReturn:
+        name = _field_token(children)
+        raise self._parse_error(
+            name,
+            f"`{name}` is a reserved word (time, freq, hertz, vt, temp, temper, gmin, pi and exp) "
+            "and cannot be a subcircuit parameter (Xyce reference manual §2.1.26 p121); Xyce "
+            "stops on time, vt, temp and gmin, and ignores the others",
+        )
 
     def path_field(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: Identifier(str(token), _span(token)))
@@ -150,6 +176,23 @@ class XyceRules(StatementsRules):
     def r_param(self, children: list[Any]) -> _Field:
         return self.param(children)
 
+    def r_keyword(self, children: list[Any]) -> _Field:
+        return self._value_keyword(children, charge=False)
+
+    c_keyword = r_keyword
+
+    l_keyword = r_keyword
+
+    def q_charge(self, children: list[Any]) -> _Field:
+        return self._value_keyword(children, charge=True)
+
+    def _value_keyword(self, children: list[Any], *, charge: bool) -> _Field:
+        field = self.param(children)
+        if isinstance(field.node, _ValueKeyword):
+            return field  # the gap before a field on a `+` line, around the inner field
+        assert isinstance(field.node, ParamAssignment)
+        return _Field(_ValueKeyword(field.node, charge=charge), field.comments)
+
     def c_param(self, children: list[Any]) -> _Field:
         return self.param(children)
 
@@ -200,9 +243,35 @@ class XyceRules(StatementsRules):
     def x_name_node(self, children: list[Any]) -> _Field:
         return self.x_name(children)
 
+    def x_last(self, children: list[Any]) -> _XRest:
+        rest = super().x_last(children)
+        if _INSTANCE_REPEAT_REFUSED[self._dialect]:
+            self._refuse_repeats(rest.params)
+        return rest
+
+    def diode(self, children: list[Any]) -> _Item:
+        if _INSTANCE_REPEAT_REFUSED[self._dialect]:
+            self._refuse_repeats(_Element(children).all(ParamAssignment))
+        return super().diode(children)
+
+    def _refuse_repeats(self, params: tuple[ParamAssignment, ...]) -> None:
+        """Refuse an instance parameter written twice: Xyce 7.10 runs the line and silently uses
+        one of the values (the last on R, the first on X; R1 review)."""
+        seen: set[str] = set()
+        for param in params:
+            folded = fold_name(param.name, self._dialect)
+            if folded in seen:
+                raise self._error_at(
+                    param.name_span.start,
+                    f"`{param.name}=` is written twice on this line; "
+                    f"{self._dialect.display_name} silently uses one of the values, so write it "
+                    "once",
+                )
+            seen.add(folded)
+
     def late_model(self, children: list[Any]) -> NoReturn:
         name = _field_token(children)
-        if _reads_as_number(str(name)):
+        if reads_as_number(str(name)):
             raise self._parse_error(name, f"`{name}` is a second value; the line takes one")
         raise self._parse_error(
             name,
@@ -242,20 +311,16 @@ class XyceRules(StatementsRules):
         return self._model_first(Inductor, _Element(children))
 
     def _model_first(self, kind: type[Resistor | Capacitor | Inductor], element: _Element) -> _Item:
-        """An xyce R, C or L: the model if any, then the value, positional or as a keyword."""
-        params: list[ParamAssignment] = []
-        keyword: ParamAssignment | None = None
-        charge: ParamAssignment | None = None
-        names: set[str] = set()
-        for param in element.all(ParamAssignment):
-            name = fold_name(param.name, self._dialect)
-            if name == _VALUE_KEYWORDS[kind] and keyword is None:
-                keyword = param
-            elif kind is Capacitor and name == "q" and charge is None:
-                charge = param
-            else:
-                params.append(param)
-            names.add(name)
+        """An xyce R, C or L: the model if any, then the value, positional or as its keyword."""
+        params = element.all(ParamAssignment)
+        written = element.all(_ValueKeyword)
+        keywords = tuple(field.assignment for field in written if not field.charge)
+        charges = tuple(field.assignment for field in written if field.charge)
+        # Xyce 7.10 runs a parameter or a keyword written twice and silently uses one of them.
+        self._refuse_repeats((*params, *keywords, *charges))
+        keyword = keywords[0] if keywords else None
+        charge = charges[0] if charges else None
+        names = {fold_name(param.name, self._dialect) for param in params}
         positional = next(iter(element.values()), None)
         if positional is not None and keyword is not None:
             raise self._error_at(
@@ -264,11 +329,9 @@ class XyceRules(StatementsRules):
                 "silently uses one of them, so write only one",
             )
         value: Value | None = positional
-        value_keyword: str | None = None
         if keyword is not None:
             assert isinstance(keyword.value, NumericValue | Formula)
             value = keyword.value
-            value_keyword = keyword.name
         model = element.optional(ModelReference)
         if model is not None:
             model = self._model_not_number(model, "the name after the nodes")
@@ -293,9 +356,10 @@ class XyceRules(StatementsRules):
         return _Item(
             element.end,
             lambda span: kind(
-                **_common(element, span, params=tuple(params)),
+                **_common(element, span, params=params),
                 value=value,
-                value_keyword=value_keyword,
+                value_keyword=keyword.name if keyword is not None else None,
+                value_keyword_span=keyword.name_span if keyword is not None else None,
                 model=model,
                 flags=element.all(Flag),
                 **extra,
@@ -310,9 +374,10 @@ class XyceRules(StatementsRules):
         element: _Element,
     ) -> None:
         """Refuse an R, C or L line without its value, except the geometry forms: an R with a
-        model and both `L=` and `W=` (Xyce takes RSH x L / W from the model), and a C with `L=`
-        (decision 0027 item 5, as amended)."""
-        if kind is Resistor and model is not None and {"l", "w"} <= names:
+        model and `L=` (Xyce takes RSH x L / W from the model, and the model's DEFW for a missing
+        `W=`; [xyce-ref] §2.3.7 p203), and a C with `L=` (decision 0027 item 5, as amended and
+        corrected at R1)."""
+        if kind is Resistor and model is not None and "l" in names:
             return
         if kind is Capacitor and "l" in names:
             return

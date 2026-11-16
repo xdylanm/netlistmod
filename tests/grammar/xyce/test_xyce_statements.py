@@ -105,6 +105,32 @@ def test_a_comma_in_params_is_rejected() -> None:
         assert "comma" in error.reason
 
 
+@pytest.mark.parametrize(
+    "word", ["time", "freq", "hertz", "vt", "TEMP", "temper", "gmin", "pi", "exp"]
+)
+def test_a_reserved_word_is_rejected_as_a_default(word: str) -> None:
+    # As on `.PARAM` (scoping.md S7): Xyce stops on time, vt, temp and gmin ("not allowed in
+    # subcircuit parameter list") and ignores the others (discrepancies.md).
+    for header in (f".subckt s a params: {word}=1", f".subckt s a {word} = 1"):
+        error = _error(f"{header}\n.ends\n")
+        assert "reserved word" in error.reason
+        assert (error.line, error.column) == (2, header.index(word) + 1)
+
+
+@pytest.mark.parametrize("name", ["1x", "a$b", "x#"])
+def test_a_default_takes_a_parameter_name(name: str) -> None:
+    # Xyce stops on `1x=1` ("contains illegal character(s)"); a default's name is a parameter
+    # name (XY-PRM-001), a letter or `_`, then letters, digits, `_` and `.`.
+    error = _error(f".subckt s a params: {name}=1\n.ends\n")
+    assert error.line == 2
+
+
+def test_a_default_name_may_hold_a_dot_and_a_port_may_look_like_a_reserved_word() -> None:
+    (definition,) = _items(".subckt s temp time params: a.b=2 _c=3\n.ends\n")
+    assert [port.name for port in definition.ports] == ["temp", "time"]
+    assert [param.name for param in definition.params] == ["a.b", "_c"]
+
+
 def test_a_bare_default_is_rejected() -> None:
     # Xyce stops on a bare default ("Cannot convert"; decision X-D5).
     error = _error(".subckt s a params: r=2*1k\n.ends\n")
@@ -328,7 +354,7 @@ def test_a_lib_call_with_several_entries_is_reported() -> None:
     # Xyce loads only the first entry, with a warning (probe test_lib_forms).
     netlist = Netlist.from_text('t\n.lib "m.lib" low high\n.END\n', dialect=_XYCE)
     (diagnostic,) = netlist.diagnostics
-    assert diagnostic.code is DiagnosticCode.DIALECT_GATED_SYNTAX
+    assert diagnostic.code is DiagnosticCode.LIB_EXTRA_ENTRIES
     assert diagnostic.severity == "info"
     assert "loads only the first, `low`" in diagnostic.message
     assert (diagnostic.line, diagnostic.column) == (2, 18)

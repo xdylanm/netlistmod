@@ -29,6 +29,7 @@ from netlistmod.model.nodes import (
     ParseResult,
     StepDirective,
     SubcktDefinition,
+    indented_comments,
 )
 from netlistmod.model.transform import parse
 from netlistmod.model.values import ParamAssignment
@@ -63,7 +64,9 @@ class Netlist:
         self._rkm = rkm
         self._index = Index(result.items, source, result.dialect)
         self._topology = TopologyView(self._index)
-        self._diagnostics = collect_diagnostics(self._index, source)
+        self._diagnostics = collect_diagnostics(
+            self._index, source, indented=indented_comments(result)
+        )
 
     @classmethod
     def load(

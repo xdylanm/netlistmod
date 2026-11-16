@@ -1,0 +1,7 @@
+reject: a PARAMS: name outside the parameter class
+.subckt s a params: 1x=1
+R1 a 0 1k
+.ends
+V1 n 0 1
+X1 n s
+.END

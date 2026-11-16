@@ -21,6 +21,7 @@ from netlistmod.edit._ops_common import (
     _VALUE,
     _VALUE_KEYWORDS,
     _a_kind,
+    _charge_is_not_a_param,
     _comment_inside,
     _element,
     _insert,
@@ -236,6 +237,12 @@ def set_param(
                 f"`{name}=…`; use set_value"
             )
         return [Edit(element.value.span, value, reason, (_VALUE,))]
+    if (
+        isinstance(element, Capacitor)
+        and _RCL_FORMS[netlist.dialect].model_first
+        and folded == found_fold("q")
+    ):
+        raise _charge_is_not_a_param(element, name)
     for flag in getattr(element, "flags", ()):
         # A flag takes its value in place: `noiseless=1` -> `noiseless=0`, `off` -> `off=1`.
         if found_fold(flag.name) == folded:
@@ -436,8 +443,8 @@ def remove_value(
     On xyce (decision 0027 item 5; xm1-tasks 5.1 points 10 and 11) the whole field goes with the
     separator before it, a value written ``R=``, ``C=`` or ``L=`` with its keyword. It is
     refused on L, which needs its value; on R unless the line keeps the geometry form, the
-    model with both ``L=`` and ``W=``; and on C unless ``L=`` remains (point 30; a C written
-    with ``Q=`` has no value to remove)."""
+    model with ``L=`` (point 10 as corrected at R1); and on C unless ``L=`` remains (point 30; a
+    C written with ``Q=`` has no value to remove)."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` is {_a_kind(element)} line; only R, C and L have a value")
@@ -464,10 +471,9 @@ def remove_value(
     field = element.value.span
     name = "value"
     if element.value_keyword is not None:
-        # The keyword as written is the only text between the field before and the value.
-        before = _last_field_end(element, before=field.start)
-        start = netlist.source.text.rindex(element.value_keyword, before, field.start)
-        field = Span(start, field.end)
+        # The keyword goes with its value; the parse keeps its span (`value_keyword_span`).
+        assert element.value_keyword_span is not None
+        field = Span(element.value_keyword_span.start, field.end)
         name = element.value_keyword
     held = ParamAssignment(name, element.value, field, Span(field.start, field.start))
     return [_removal_edit(netlist, element, _removal(netlist, element, held), reason)]
@@ -483,17 +489,18 @@ _XYCE_RCL_CITED = {
 
 def _refuse_without_geometry(netlist: Netlist, element: Resistor | Capacitor | Inductor) -> None:
     """Refuse to leave an xyce R or C without a value unless the line keeps the form whose value
-    Xyce computes from the model (decision 0027 item 5, as amended): an R with both ``L=`` and
-    ``W=``, a C with ``L=``."""
+    Xyce computes from the model (decision 0027 item 5, as amended and corrected at R1): an R
+    with ``L=`` (``W=`` defaults to the model's ``DEFW``), a C with ``L=``."""
     fold = netlist.scope().fold
     given = {fold(param.name) for param in element.params}
     designator = element.designator
     cited = _XYCE_RCL_CITED[type(element)]
-    if isinstance(element, Resistor) and not {"l", "w"} <= given:
+    if isinstance(element, Resistor) and "l" not in given:
         raise EditError(
             f"`{designator}` needs its value: without one, Xyce computes the resistance from the "
-            f"model only when the line writes both `L=` and `W=` ({cited}), and otherwise uses a "
-            "default of 1 kOhm, which the library refuses; set `L=` and `W=` first"
+            f"model only when the line writes `L=` ({cited}; a missing `W=` is the model's "
+            "`DEFW`), and otherwise uses a default of 1 kOhm, which the library refuses; set "
+            "`L=` first"
         )
     if isinstance(element, Capacitor) and "l" not in given:
         raise EditError(

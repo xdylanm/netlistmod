@@ -7,7 +7,7 @@ status: validated
 validated_on:
 - solver: xyce
   version: XyceNF Release 7.10.0
-  date: '2026-11-15'
+  date: '2026-11-16'
 grammar:
 - subckt_def
 - subckt_header
@@ -17,6 +17,8 @@ grammar:
 - not_in_subckt
 - params_marker
 - PARAMS_KW
+- DEFAULT_NAME
+- RESERVED_DEFAULT
 core_rules:
 - SUBCKT_KW
 - ENDS_KW
@@ -44,5 +46,11 @@ tests:
 - tests/solver/test_xyce_statement_probes.py::test_definitions_nest_and_are_local
 - tests/solver/test_xyce_statement_probes.py::test_xyce_stops_on
 - tests/solver/test_xyce_param_probes.py::test_a_body_param_is_shadowed_by_a_params_default
-validation_note: 'Validated on XyceNF Release 7.10.0: `PARAMS:` is optional and may stand alone or on a `+` line, a default reads as a device field or a braced expression, `.ENDS` may name any subcircuit, and a nested definition is local. Xyce stops on a subcircuit without ports, on `0` as a port, on a comma or a bare default in `PARAMS:`, on `.GLOBAL` or `.GLOBAL_PARAM` in a body, and on a subcircuit defined twice.'
-notes: '`SubcktDefinition`, reused from ngspice (decision 0027 item 7; xm1-tasks 5.1 points 16 and 28). At least one port, a WORD (no `:`), never `0`; the manual calls the ports optional (p159), but Xyce stops without one. `PARAMS:` (one token, above WORD) is optional and adds nothing to the node; the defaults are `ParamAssignment`s whose values are a NUMBER of the device reader (XY-NUM-001), a braced or a quoted expression, with no comma (the manual''s own example writes one, on which Xyce stops; discrepancies.md) and no bare value (decision X-D5). A body holds the lead lines and the body statements, nested definitions included, which are local; `.GLOBAL`, `.GLOBAL_PARAM` and `.END` are recognised in a body only to be refused (not_in_subckt), and a dot-command the dialect does not read yet stays UnsupportedConstruct there. The manual says a body should hold only devices, `.MODEL`, `.PARAM` and `.FUNC` (p160); Xyce runs `.tran` there, which X-M2 decides. A stray `.ENDS` is a ParseError. `.ENDS` may name a subcircuit; the document layer reports a mismatch (ENDS_NAME_MISMATCH, info), which Xyce does not check.'
+- tests/grammar/xyce/test_xyce_statements.py::test_a_reserved_word_is_rejected_as_a_default
+- tests/grammar/xyce/test_xyce_statements.py::test_a_default_takes_a_parameter_name
+- tests/grammar/xyce/test_xyce_statements.py::test_a_default_name_may_hold_a_dot_and_a_port_may_look_like_a_reserved_word
+- tests/solver/test_xyce_statement_probes.py::test_a_reserved_default_stops_xyce
+- tests/solver/test_xyce_statement_probes.py::test_some_reserved_defaults_are_ignored
+- tests/solver/test_xyce_statement_probes.py::test_a_default_name_outside_the_parameter_class_stops_xyce
+validation_note: 'Validated on XyceNF Release 7.10.0: `PARAMS:` is optional and may stand alone or on a `+` line, a default reads as a device field or a braced expression, `.ENDS` may name any subcircuit, and a nested definition is local. Xyce stops on a subcircuit without ports, on `0` as a port, on a comma or a bare default in `PARAMS:`, on `.GLOBAL` or `.GLOBAL_PARAM` in a body, on a subcircuit defined twice, on a default named `time`, `vt`, `temp` or `gmin`, and on a default name outside the parameter class (`1x`); it ignores a default named `freq`, `hertz`, `temper`, `pi` or `exp`, which the library refuses (discrepancies.md).'
+notes: '`SubcktDefinition`, reused from ngspice (decision 0027 item 7; xm1-tasks 5.1 points 16 and 28). At least one port, a WORD (no `:`), never `0`; the manual calls the ports optional (p159), but Xyce stops without one. `PARAMS:` (one token, above WORD) is optional and adds nothing to the node; the defaults are `ParamAssignment`s whose names are parameter names (XY-PRM-001''s class, DEFAULT_NAME, whose lookahead finds the `=`, so that a port is never read as one; a reserved word, RESERVED_DEFAULT, is recognised only to be refused, as on `.PARAM`, scoping.md S7) and whose values are a NUMBER of the device reader (XY-NUM-001), a braced or a quoted expression, with no comma (the manual''s own example writes one, on which Xyce stops; discrepancies.md) and no bare value (decision X-D5). A body holds the lead lines and the body statements, nested definitions included, which are local; `.GLOBAL`, `.GLOBAL_PARAM` and `.END` are recognised in a body only to be refused (not_in_subckt), and a dot-command the dialect does not read yet stays UnsupportedConstruct there. The manual says a body should hold only devices, `.MODEL`, `.PARAM` and `.FUNC` (p160); Xyce runs `.tran` there, which X-M2 decides. A stray `.ENDS` is a ParseError. `.ENDS` may name a subcircuit; the document layer reports a mismatch (ENDS_NAME_MISMATCH, info), which Xyce does not check.'

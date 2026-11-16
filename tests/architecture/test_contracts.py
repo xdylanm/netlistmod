@@ -313,6 +313,7 @@ UNCHECKED_TERMINALS = {
             "COMMENT_LINE",
             "DOT_NAME",
             "INDENTED_LINE",
+            "INDENTED_TRAILING",
             "PLUS_LINE",
             "REST_TEXT",
             "SEP",

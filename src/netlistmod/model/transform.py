@@ -41,8 +41,10 @@ from netlistmod.model._rules_special import SpecialRules
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._rules_structure import StructureRules
 from netlistmod.model._rules_xyce import XyceRules
+from netlistmod.model._tree import _span
 from netlistmod.model.nodes import (
     ParseResult,
+    _IndentedParseResult,
 )
 from netlistmod.source import SourceText
 
@@ -51,6 +53,13 @@ _RKM_REFUSAL: dict[Dialect, str | None] = {
     Dialect.NGSPICE: None,
     Dialect.LTSPICE: "LTspice reads its embedded decimal natively",
     _XYCE: "the Xyce manuals define no RKM notation",
+}
+# Whether the grammar reads an indented line inside a continued statement as its own token,
+# INDENTED_TRAILING (xyce, decision X-D1), which the parse records for the document layer.
+_INDENTED_TRAILING: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
 }
 
 
@@ -102,8 +111,24 @@ def parse(source: SourceText, dialect: Dialect, *, rkm: bool = False) -> ParseRe
         raise ValueError(f"rkm=True applies only to ngspice: {refusal}")
     tree = parse_tree(source, dialect)
     try:
-        return _NodeBuilder(source, dialect, rkm=rkm).transform(tree)
+        result = _NodeBuilder(source, dialect, rkm=rkm).transform(tree)
     except VisitError as error:
         if isinstance(error.orig_exc, ParseError | UnsupportedConstruct):
             raise error.orig_exc from None
         raise
+    if not _INDENTED_TRAILING[dialect]:
+        return result
+    # An xyce indented line inside a continued statement is one of its trailing comments, and its
+    # own token (INDENTED_TRAILING, decision X-D1), which the document layer reports.
+    indented = sorted(
+        (
+            _span(token)
+            for token in tree.scan_values(
+                lambda value: isinstance(value, Token) and value.type == "INDENTED_TRAILING"
+            )
+        ),
+        key=lambda span: span.start,
+    )
+    if indented:
+        return _IndentedParseResult(result.items, result.dialect, tuple(indented))
+    return result

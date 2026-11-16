@@ -34,7 +34,7 @@ more than one token, and decides how that name is written.
 
 | Node | Extra fields |
 |---|---|
-| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`); `Capacitor.charge` and `Inductor.flux`: `Formula \| None`, the behavioural forms (ngspice `q=`, LTspice `Q=` and `Flux=`), with `value` `None`; LTspice's hysteretic L has no value and its core parameters in `params` (decision 0016 item 4) |
+| `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`), `value_keyword_span: Span \| None = None` (the span of `value_keyword` on xyce, which the edits remove with the value; `None` for a positional value and on ngspice and LTspice); `Capacitor.charge` and `Inductor.flux`: `Formula \| None`, the behavioural forms (ngspice `q=`, LTspice `Q=` and `Flux=`), with `value` `None`; LTspice's hysteretic L has no value and its core parameters in `params` (decision 0016 item 4) |
 | `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`, `model: ModelReference \| None = None` (an xyce CORE model, decision 0027 item 6; `None` on ngspice and LTspice); `nodes == ()` |
 | `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
 | `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
@@ -167,8 +167,11 @@ reads R, C, L, K, D, V, I and X with the shapes above. What differs:
   designator, a model and a subcircuit name may not. An instance value may be a bare expression
   without blanks, a `Formula` with no delimiter (decision X-D5). No comma separates fields.
 - **R, C, L:** the model right after the nodes, then the value; the value may be the parameter
-  `R=`, `C=` or `L=` instead, recorded in `value` and `value_keyword` and left out of `params`.
-  `R` needs a value unless it has a model and both `L=` and `W=` (its `value` is then `None`); C
+  `R=`, `C=` or `L=` instead, recorded in `value`, `value_keyword` and `value_keyword_span` and
+  left out of `params`; each has its own keyword terminal, and so has C's charge `Q=`. A second
+  value keyword, a second charge and any instance parameter written twice are refused (Xyce
+  silently uses one of the values; R1 review), on D and X too.
+  `R` needs a value unless it has a model and `L=`, `W=` optional (its `value` is then `None`); C
   needs a value, `C=`, `Q=` (the expression in `charge`) or `L=`; L needs a value. `TC=a,b` is a
   `ValueList`. The ngspice order, a value written twice and the long keywords are refused.
 - **K:** one or more inductors, the coupling, then an optional CORE `model`; one inductor needs

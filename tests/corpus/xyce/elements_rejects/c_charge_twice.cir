@@ -1,0 +1,5 @@
+reject: a charge written twice
+V1 a 0 1
+R1 a 0 1k
+C1 a 0 Q={1p*V(a)} Q={2p*V(a)}
+.END

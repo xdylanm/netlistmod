@@ -15,8 +15,8 @@ from typing import Any, Literal, NoReturn
 from lark import Token
 
 from netlistmod.dialects import Dialect
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_controlled import ControlledRules
-from netlistmod.model._rules_elements import _reads_as_number
 from netlistmod.model._tree import (
     _comment_spans,
     _Element,
@@ -443,7 +443,7 @@ class NonlinearRules(ControlledRules):
     def _coefficients(self, tokens: list[Token], end: int) -> tuple[Value, ...]:
         values: list[Value] = []
         for token in tokens:
-            if token.type == "WORD" and not _reads_as_number(str(token)):
+            if token.type == "WORD" and not reads_as_number(str(token)):
                 raise self._parse_error(
                     token,
                     f"`{token}` is a name where a coefficient goes: a coefficient is a number "

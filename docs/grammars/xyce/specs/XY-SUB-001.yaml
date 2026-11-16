@@ -8,7 +8,7 @@ status: validated
 validated_on:
 - solver: xyce
   version: XyceNF Release 7.10.0
-  date: '2026-11-15'
+  date: '2026-11-16'
 grammar:
 - subckt_instance
 - x_node
@@ -22,5 +22,7 @@ tests:
 - tests/grammar/xyce/test_xyce_elements.py::test_subcircuit_call_forms_are_refused
 - tests/solver/test_xyce_element_probes.py::test_subcircuit_call_forms
 - tests/solver/test_xyce_element_probes.py::test_xyce_stops_on
+- tests/grammar/xyce/test_xyce_elements.py::test_a_value_keyword_or_parameter_written_twice_is_refused
+- tests/solver/test_xyce_element_probes.py::test_a_repeated_keyword_or_parameter_takes_one_value
 validation_note: 'Validated on XyceNF Release 7.10.0: nodes, the subcircuit, `PARAMS:` (or not, or on a `+` line), then parameters, bare values without blanks and `M=` among them. Xyce stops on a comma in the parameters.'
-notes: 'The ngspice `SubcktInstance` node (decision 0027 item 6; point 15). The names are right-recursive, as in core.lark, and each is a NODE_WORD until the parser knows the last, the subcircuit, so the transformer refuses a `:` in that one. `PARAMS:` (PARAMS_KW, XY-SBD-001) is optional and adds nothing to the node; the parameters are instance parameters (XY-ELM-001) with no comma, `M=` an ordinary one. At least one node.'
+notes: 'The ngspice `SubcktInstance` node (decision 0027 item 6; point 15). The names are right-recursive, as in core.lark, and each is a NODE_WORD until the parser knows the last, the subcircuit, so the transformer refuses a `:` in that one. `PARAMS:` (PARAMS_KW, XY-SBD-001) is optional and adds nothing to the node; the parameters are instance parameters (XY-ELM-001) with no comma, `M=` an ordinary one; one written twice is a ParseError, while Xyce runs it with the first value (discrepancies.md; R1 review). At least one node.'

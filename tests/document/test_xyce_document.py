@@ -181,8 +181,8 @@ def test_a_model_name_that_reads_as_a_number_is_a_warning() -> None:
     # xm1-tasks 5.1 point 9(c): the library reads `2k` on R1 as the value; Xyce as the model.
     netlist = _netlist(".model 2k R\n.model 1e3 RES\n.model r1k R\nR1 a 0 2k\n")
     assert _codes(netlist) == [
-        (2, DiagnosticCode.DIALECT_GATED_SYNTAX, "warning"),
-        (3, DiagnosticCode.DIALECT_GATED_SYNTAX, "warning"),
+        (2, DiagnosticCode.NUMERIC_MODEL_NAME, "warning"),
+        (3, DiagnosticCode.NUMERIC_MODEL_NAME, "warning"),
     ]
     assert "reads as a number" in netlist.diagnostics[0].message
 

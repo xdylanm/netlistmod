@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
+from netlistmod.document.index import _FIRST_PARAM_WINS
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _VALUE,
@@ -28,14 +28,6 @@ from netlistmod.model.values import (
 )
 from netlistmod.source import SourceText, Span
 
-# Which assignment of a repeated parameter is the effective one, which params.set replaces: the
-# last on ngspice and LTspice, the first on Xyce 7.10 (xyce scoping.md S3; the index's rule).
-_FIRST_PARAM_WINS: dict[Dialect, bool] = {
-    Dialect.NGSPICE: False,
-    Dialect.LTSPICE: False,
-    _XYCE: True,
-}
-
 
 def set_param_statement(
     netlist: Netlist,
@@ -55,7 +47,7 @@ def set_param_statement(
     found = resolve_scope(netlist, scope, in_definition)
     reason = f"params.set {name}"
     key = found.fold(name)
-    function = next((where for where in found.chain() if key in where.functions), None)
+    function = next((where for where in found.chain() if key in where._functions), None)
     if function is not None:
         raise EditError(
             f"params.set: `{name}` is a function defined in {function.describe()}, not a "

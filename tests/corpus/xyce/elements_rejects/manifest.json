@@ -6,6 +6,14 @@
   "date": "2026-11-16",
   "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
   "fixtures": {
+    "c_charge_twice.cir": {
+      "sha256": "6b2df8b996eed9266aec75c216a66c9fc01fe2a2c00d18ad5300384db4475081",
+      "line": 4,
+      "column": 20,
+      "error": "ParseError",
+      "note": "the charge `Q=` written twice (XY-RCL-001)",
+      "xyce": "runs"
+    },
     "c_numeric_charge.cir": {
       "sha256": "afdae8afa5f2d3c24292c62b77f4cdbe5d352c9ae43e97a59d06a207f03f6636",
       "line": 4,
@@ -86,6 +94,14 @@
       "note": "an L needs a value",
       "xyce": "stops"
     },
+    "r_keyword_twice.cir": {
+      "sha256": "048e9f81a60b78566475571234897fb8cb046ffc49e4b7c941d09a2adaa06a09",
+      "line": 3,
+      "column": 13,
+      "error": "ParseError",
+      "note": "a value keyword written twice (XY-RCL-001); Xyce uses the last",
+      "xyce": "runs"
+    },
     "r_long_keyword.cir": {
       "sha256": "4d6d8af8844f062918aa1972a89b2b7530d001d53a20da53d5b852ec33f67fd6",
       "line": 3,
@@ -100,6 +116,14 @@
       "column": 11,
       "error": "ParseError",
       "note": "the model before the value (XY-RCL-001)",
+      "xyce": "runs"
+    },
+    "r_param_twice.cir": {
+      "sha256": "71b3f8ac2ca75e21b2f1a22d138a3e4a1a0683fad2d36865854a0a5f660f7091",
+      "line": 3,
+      "column": 15,
+      "error": "ParseError",
+      "note": "an instance parameter written twice (XY-RCL-001)",
       "xyce": "runs"
     },
     "r_three_tc_values.cir": {

@@ -75,7 +75,7 @@ def test_function_calls_are_function_references() -> None:
     (f, g) = (netlist.references[1].target, netlist.references[2].target)
     assert isinstance(f, FunctionDefinition) and f.name == "f"
     assert isinstance(g, FunctionDefinition) and g.name == "g"
-    assert list(netlist.scope().functions) == ["f", "g"]
+    assert list(netlist.scope()._functions) == ["f", "g"]
 
 
 def test_a_function_argument_shadows_a_parameter_in_its_body() -> None:

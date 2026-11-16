@@ -212,7 +212,7 @@ True
 
 ### `UNRESOLVED_MODEL`
 
-A model name that no visible `.model` defines. A warning, or `info` when a searched scope has an `.include`, a `.lib`, or an opaque `.if` or `.lib` block, which may define it. On the hidden xyce dialect, when an R, C or L's model name is a visible parameter, the message adds that Xyce reads the word as the value.
+A model name that no visible `.model` defines. A warning, or `info` when a searched scope has an `.include`, a `.lib`, or an opaque `.if` or `.lib` block, which may define it.
 
 ```python
 >>> report("t\nD1 a 0 dm\n.end\n")
@@ -236,7 +236,7 @@ An `X` line's subcircuit is not defined. Severity as for `UNRESOLVED_MODEL`.
 
 ### `UNRESOLVED_PARAM`
 
-A name in a formula that no visible `.param` or default defines. Severity as for `UNRESOLVED_MODEL`. On the hidden xyce dialect, a call to a function that no visible `.FUNC` (or `.PARAM` function) defines is reported the same way, with a message that names a function.
+A name in a formula that no visible `.param` or default defines. Severity as for `UNRESOLVED_MODEL`.
 
 ```python
 >>> report("t\nR1 a 0 {rx}\n.end\n")
@@ -334,7 +334,7 @@ The name on `.ends` differs from the `.subckt` name.
 
 ### `DIALECT_GATED_SYNTAX`
 
-An ngspice value in RKM notation, which needs `rkm=True` and `ngbehavior=lt` in ngspice. Not used for LTspice, where it is native. On the hidden xyce dialect, a `.LIB` call that names more than one entry, of which Xyce loads only the first; and, as a warning, a `.model` whose name reads as a number (`.model 2k R`): the library reads `2k` on an element line as a value, while Xyce takes it as that model.
+An ngspice value in RKM notation, which needs `rkm=True` and `ngbehavior=lt` in ngspice. Not used for LTspice, where it is native.
 
 ```python
 >>> report("t\nR1 a 0 2k7\n.end\n", rkm=True)
@@ -371,7 +371,7 @@ A dot-command the library does not type. It may well be a documented command, su
 
 ### `NODE_INTO_INSTANCE`
 
-LTspice, and the hidden xyce dialect. A node named `<instance>:<node>` connects to that node inside the instance, which the library does not model: it treats the name as a net of its own. On xyce only an internal node of the definition is joined (not a port or a global), and `X1:X2:m` reaches through both instances. A warning, or `info` when the definition is in an include.
+LTspice only. A node named `<instance>:<node>` connects to that node inside the instance, which the library does not model: it treats the name as a net of its own. A warning, or `info` when the definition is in an include.
 
 ```python
 >>> report("t\nX1 a s\n.subckt s p\nR1 p n 1k\n.ends\nR2 x1:n 0 1k\n.end\n", Dialect.LTSPICE)
@@ -432,6 +432,12 @@ LTspice only. An `@` without `fstart=` or `fend=`, in a netlist with a `.fra` co
 
 ### `INDENTED_LINE_IGNORED`
 
-Xyce only (a dialect still being built, which `Dialect` does not list yet). A line that begins with blanks and is not a `*`, `;` or `+` line: Xyce reads it as a comment and ignores it, even an element line or a dot-command, so the library reads it as a comment too. A warning, on the line.
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
 
-**What to do:** remove the indentation if the line is meant as a statement; to keep it as a comment, begin it with `*`.
+### `LIB_EXTRA_ENTRIES`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `NUMERIC_MODEL_NAME`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.

@@ -114,6 +114,18 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         "R1 a 0 rmod L=30u W=1u\n",
     ),
     (
+        "remove-value-keeping-length-only",
+        "R1 a 0 rmod 1k L=1u\n",
+        lambda n: n.remove_value("R1"),
+        "R1 a 0 rmod L=1u\n",
+    ),
+    (
+        "remove-keyword-across-a-plus-line",
+        "R1 a 0 rmod L=30u\n* old value\n+ R=2k ; ohms\n",
+        lambda n: n.remove_value("R1"),
+        "R1 a 0 rmod L=30u\n* old value ; ohms\n",
+    ),
+    (
         "remove-semiconductor-c",
         "C1 a 0 cmod 1p L=1u W=1u\n",
         lambda n: n.remove_value("C1"),
@@ -153,6 +165,12 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         "R1 a 0 rmod 2k L=30u W=1u\n",
         lambda n: n.remove_param("R1", "W"),
         "R1 a 0 rmod 2k L=30u\n",
+    ),
+    (
+        "remove-width-from-geometry",
+        "R1 a 0 rmod L=30u W=1u\n",
+        lambda n: n.remove_param("R1", "W"),
+        "R1 a 0 rmod L=30u\n",
     ),
     # Sources, couplings and instances.
     ("dc", "V1 a 0 DC 1 AC 1\n", lambda n: n.set_dc("V1", "2"), "V1 a 0 DC 2 AC 1\n"),
@@ -261,14 +279,35 @@ REFUSED: list[tuple[str, str, Op, type[Exception], str]] = [
         "R1 a 0 rmod 1k\n",
         lambda n: n.remove_value("R1"),
         EditError,
-        "both `L=` and `W=`",
+        "writes `L=`",
     ),
     (
-        "remove-r-with-length-only",
-        "R1 a 0 rmod 1k L=1u\n",
+        "remove-r-with-width-only",
+        "R1 a 0 rmod 1k W=1u\n",
         lambda n: n.remove_value("R1"),
         EditError,
-        "both `L=` and `W=`",
+        "writes `L=`",
+    ),
+    (
+        "set-charge-as-param",
+        "C1 a 0 Q={1p*V(a)}\n",
+        lambda n: n.set_param("C1", "q", "{2p*V(a)}"),
+        EditError,
+        "use set_expression",
+    ),
+    (
+        "add-charge-as-param",
+        "C1 a 0 1p\n",
+        lambda n: n.set_param("C1", "Q", "{2p*V(a)}"),
+        EditError,
+        "has no charge",
+    ),
+    (
+        "remove-charge-as-param",
+        "C1 a 0 Q={1p*V(a)}\n",
+        lambda n: n.remove_param("C1", "Q"),
+        EditError,
+        "use set_expression",
     ),
     (
         "remove-c-without-length",
@@ -338,7 +377,14 @@ REFUSED: list[tuple[str, str, Op, type[Exception], str]] = [
     (
         "indented-later-line",
         "R1 a 0 1k\n",
-        lambda n: n.directives.add([".lib 'x.lib'", "  tt"]),
+        lambda n: n.directives.add([".lib 'x.lib' tt", "  junk"]),
+        EditError,
+        "begins with blanks",
+    ),
+    (
+        "indented-line-inside-a-statement",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add([".lib 'x.lib'", "  junk", "+ tt"]),
         EditError,
         "begins with blanks",
     ),
@@ -408,6 +454,13 @@ def test_refused(before: str, edit: Op, error: type[Exception], message: str) ->
 def test_a_plus_line_may_follow_an_indented_line_in_inserted_text() -> None:
     edited = _netlist("R1 a 0 1k\n").directives.add([".lib 'x.lib'", "  + tt"])
     assert ".lib 'x.lib'\n  + tt\n" in edited.text
+
+
+def test_an_indented_comment_may_stand_in_inserted_text() -> None:
+    # An indented `*` or `;` line is a plain comment to Xyce, not an indented line (decision
+    # 0027 item 1): the grammar tells them apart, so it may stand inside inserted text.
+    edited = _netlist("R1 a 0 1k\n").directives.add([".lib 'x.lib'", "  * corner", "+ tt"])
+    assert ".lib 'x.lib'\n  * corner\n+ tt\n" in edited.text
 
 
 # Invariant: every allowed R, C or L edit keeps the topology and the text outside the line, and

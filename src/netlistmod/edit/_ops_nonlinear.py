@@ -11,7 +11,7 @@ from netlistmod.document.document import Netlist
 from netlistmod.edit._ops_common import _VALUE, _a_kind, _element
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
-from netlistmod.model._rules_elements import _reads_as_number
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model.nodes import ControlledSource, Table
 from netlistmod.model.values import Formula
 from netlistmod.source import Span
@@ -105,7 +105,7 @@ def _check_points(dialect: Dialect, element: ControlledSource, rows: list[tuple[
     if element.form == "table" and dialect is Dialect.NGSPICE:
         for row in rows:
             for value in row:
-                if not _reads_as_number(value):
+                if not reads_as_number(value):
                     raise EditError(
                         f"`{value}` is not a number: the points of an ngspice TABLE are numbers "
                         "(parameters are not allowed)"

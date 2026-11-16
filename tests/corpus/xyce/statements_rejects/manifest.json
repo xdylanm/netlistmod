@@ -109,6 +109,22 @@
       "note": "`PARAMS:` defaults take no comma",
       "xyce": "stops"
     },
+    "subckt_params_name.cir": {
+      "sha256": "9c7b8277347dfa2655194123ebaf6679867a0404eede5acce37720326b931041",
+      "line": 2,
+      "column": 21,
+      "error": "ParseError",
+      "note": "a default's name is a parameter name (XY-SBD-001)",
+      "xyce": "stops"
+    },
+    "subckt_params_reserved.cir": {
+      "sha256": "9c8d04f41a8897d1e21ca98fa690e129544d404d3cfd7fae488d3267c028426a",
+      "line": 2,
+      "column": 21,
+      "error": "ParseError",
+      "note": "a reserved word cannot be a subcircuit parameter (XY-SBD-001; scoping.md S7)",
+      "xyce": "stops"
+    },
     "subckt_without_ports.cir": {
       "sha256": "b4327f6c84e69c4a2648356d660585f48002077381075e3543d7f1acfe88035b",
       "line": 2,

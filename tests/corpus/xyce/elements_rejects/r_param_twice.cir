@@ -1,0 +1,4 @@
+reject: an instance parameter written twice
+V1 a 0 1
+R1 a 0 1k M=1 M=2
+.END

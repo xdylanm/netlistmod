@@ -20,6 +20,7 @@ from netlistmod.edit._ops_common import (
     _TWO_TERMINAL,
     _VALUE_KEYWORDS,
     _a_kind,
+    _charge_is_not_a_param,
     _comment_inside,
     _element,
     _refuse_impedance_flag,
@@ -128,6 +129,12 @@ def remove_param(
             f"`{name}` names the value of `{designator}` (`{element.value_keyword}=…`), not a "
             "parameter; use remove_value"
         )
+    if (
+        isinstance(element, Capacitor)
+        and _RCL_FORMS[netlist.dialect].model_first
+        and folded == fold("q")
+    ):
+        raise _charge_is_not_a_param(element, name)
     for flag in getattr(element, "flags", ()):
         if fold(flag.name) == folded:
             raise EditError(
@@ -172,7 +179,7 @@ def remove_param(
 
 # The parameters an xyce R or C without a value needs: the geometry Xyce computes the value from.
 _GEOMETRY: dict[type, frozenset[str]] = {
-    Resistor: frozenset({"l", "w"}),
+    Resistor: frozenset({"l"}),
     Capacitor: frozenset({"l"}),
     Inductor: frozenset(),
 }

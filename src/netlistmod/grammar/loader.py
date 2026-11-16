@@ -307,6 +307,7 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "COMMENT_LINE": "comment line (`*` or `;`)",
         "TRAILING_COMMENT": "comment (`;`)",
         "INDENTED_LINE": "indented line",
+        "INDENTED_TRAILING": "indented line",
         "PLUS_LINE": "continuation line (`+`)",
         "REST_TEXT": "text",
         "GLOBAL_KW": "`.GLOBAL`",
@@ -334,6 +335,12 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "ENDL_KW": "`.ENDL`",
         "PATH_FIELD": "file path or name",
         "INST_KEY": "parameter name and `=`",
+        "DEFAULT_NAME": "parameter name and `=`",
+        "RESERVED_DEFAULT": "reserved word",
+        "R_VALUE_KW": "`R=`",
+        "C_VALUE_KW": "`C=`",
+        "L_VALUE_KW": "`L=`",
+        "Q_KW": "`Q=`",
         "OFF_VALUE_KW": "`OFF=`",
         "SRC_FN_KW": "source function",
         "DC_KW": "`DC`",
@@ -362,7 +369,7 @@ _INCOMPLETE_LINE = "this line ends too early"
 _AFTER_END = "the netlist ends at `.end`: only blank lines may follow it"
 # May stand after any field, so they do not tell a reader what a line that ended early is missing.
 _FIELD_PUNCTUATION: Final[frozenset[str]] = frozenset(
-    {"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT"}
+    {"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT", "INDENTED_TRAILING"}
 )
 # The ngspice element lines with refused forms that no grammar rule recognises, which the loader
 # names after the parser stops (carried from M15b to M17 into M18): their designator terminals.

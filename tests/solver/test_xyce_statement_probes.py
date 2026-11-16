@@ -217,3 +217,31 @@ def test_a_directive_runs_in_a_body(solver: Solver, tmp_path: Path) -> None:
     should not hold ([xyce-ref] §2.1.37 p160); the library refuses it there (discrepancies.md)."""
     lines = ".subckt s a\nR1 a 0 1k\n.options timeint reltol=1e-3\n.ends\nX1 2 s\n"
     assert _v2(solver, tmp_path, lines) == pytest.approx(1.0)
+
+
+@pytest.mark.parametrize("word", ["time", "vt", "temp", "gmin"])
+def test_a_reserved_default_stops_xyce(solver: Solver, tmp_path: Path, word: str) -> None:
+    """Four reserved words stop Xyce as a `PARAMS:` name ("not allowed in subcircuit parameter
+    list"; scoping.md S7), with or without `PARAMS:`."""
+    for folder, marker in (("marked", "params: "), ("unmarked", "")):
+        lines = f".subckt s a {marker}{word}=1\nR1 a 0 1k\n.ends\nX1 2 s\n"
+        assert run(solver, tmp_path / folder, _divider(lines)).returncode == 1
+
+
+@pytest.mark.parametrize("word", ["freq", "hertz", "temper", "pi", "exp"])
+def test_some_reserved_defaults_are_ignored(solver: Solver, tmp_path: Path, word: str) -> None:
+    """`freq`, `hertz`, `temper`, `pi` and `exp` as a `PARAMS:` name are silently ignored: the
+    netlist runs, which the library refuses (discrepancies.md; scoping.md S7)."""
+    lines = f".subckt s a params: {word}=2\nR1 a 0 1k\n.ends\nX1 2 s\n"
+    assert _v2(solver, tmp_path, lines) == pytest.approx(1.0)
+
+
+def test_a_default_name_outside_the_parameter_class_stops_xyce(
+    solver: Solver, tmp_path: Path
+) -> None:
+    """`PARAMS: 1x=1` stops Xyce ("contains illegal character(s)"); `a.b` is a name (XY-PRM-001,
+    observed)."""
+    bad = ".subckt s a params: 1x=1\nR1 a 0 1k\n.ends\nX1 2 s\n"
+    assert run(solver, tmp_path / "digit", _divider(bad)).returncode == 1
+    dotted = ".subckt s a params: a.b=1k\nR1 a 0 {a.b}\n.ends\nX1 2 s\n"
+    assert _v2(solver, tmp_path / "dot", dotted) == pytest.approx(1.0)

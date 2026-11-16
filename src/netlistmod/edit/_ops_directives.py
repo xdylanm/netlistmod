@@ -7,7 +7,6 @@ from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DIRECTIVE_LINES,
-    _INDENT_IS_COMMENT,
     _ITEM_NAMES,
     _TOPOLOGY_ITEMS,
     SINGLETON_DIRECTIVES,
@@ -23,12 +22,14 @@ from netlistmod.model.nodes import (
     Component,
     End,
     FuncStatement,
+    IndentedLine,
     ModelStatement,
     OpaqueBlock,
     OpaqueStatement,
     ParamStatement,
     StepDirective,
     TopLevelItem,
+    indented_comments,
 )
 from netlistmod.model.transform import parse
 from netlistmod.source import SourceText, Span
@@ -63,16 +64,23 @@ def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLev
     lines (an element of ``lines`` may not hold a line break); a single topology item is
     returned whatever its length, for the caller to reject.
     """
-    if _INDENT_IS_COMMENT[netlist.dialect]:
-        _refuse_indented(lines, what)
     newline = conventions.DEFAULT_TERMINATOR
     probe = SourceText(f"probe{newline}{newline.join(lines)}{newline}.end{newline}")
     try:
-        items = parse(probe, netlist.dialect, rkm=netlist.rkm).items
+        result = parse(probe, netlist.dialect, rkm=netlist.rkm)
     except (ParseError, UnsupportedConstruct) as error:
         raise EditError(
             f"{what}: {_show(lines)} does not parse as a netlist line: {error}"
         ) from error
+    items = result.items
+    if indented_comments(result) or any(isinstance(item, IndentedLine) for item in items):
+        # Xyce reads a line that begins with blanks as a comment (decision 0027 item 1): the
+        # statement would be ignored, or the line would join it as a comment. The grammar tells
+        # such a line from an indented `*`, `;` or `+` line, which may stand in inserted text.
+        raise EditError(
+            f"{what}: {_show(lines)} has a line that begins with blanks, which Xyce reads as a "
+            "comment and ignores (Xyce users' manual §4.1.3.1 p43); remove the indentation"
+        )
     body = [item for item in items[1:] if not isinstance(item, End)]
     if len(body) == 1 and isinstance(body[0], _TOPOLOGY_ITEMS):
         return body[0]  # rejected by the caller as topology, whatever its length
@@ -89,20 +97,6 @@ def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLev
         )
         raise EditError(f"{what}: {_show(lines)} must be exactly one statement or block{hint}")
     return body[0]
-
-
-def _refuse_indented(lines: tuple[str, ...], what: str) -> None:
-    """Refuse statement text with a line that begins with blanks where the dialect reads such a
-    line as a comment (xyce; decision 0027 item 1): the statement would be ignored, or the line
-    would join it as a comment. A later line may still be an indented ``+`` line."""
-    for number, line in enumerate(lines):
-        stripped = line.lstrip(" \t")
-        if stripped == line or (number > 0 and stripped.startswith("+")):
-            continue
-        raise EditError(
-            f"{what}: {_show(lines)} has a line that begins with blanks, which Xyce reads as a "
-            "comment and ignores (Xyce users' manual §4.1.3.1 p43); remove the indentation"
-        )
 
 
 def _addable(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelItem:
