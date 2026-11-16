@@ -284,9 +284,9 @@ and `_INDENT_IS_COMMENT` in `edit/_ops_common.py`, `_FIRST_PARAM_WINS` in
   beside a value written `R=`, `C=` or `L=`; the types are xyce's own (R: `R`, `RES`; C: `C`,
   `CAP`; L: `L`, `IND`).
 - **`remove_value`** removes the whole field and the separator before it (as `remove_param`
-  chooses it), with its keyword when the value is written `R=…`. It needs a model, as on ngspice,
-  and is refused on L, which has no form without a value; on R unless the line keeps both `L=`
-  and `W=`; on C unless it keeps `L=` (Xyce computes the value from the model then). `remove_param`
+  chooses it), with its keyword when the value is written `R=…`. It is refused on L, which has no form
+  without a value; on R unless the line keeps its model and both `L=` and `W=`; on C unless it
+  keeps `L=`, with or without a model (xm1-tasks 5.1 point 30; Xyce computes the value then). `remove_param`
   refuses to take `L=` or `W=` from a line that has no value and needs them.
 - **`set_param`**: `R`, `C` and `L` edit the value written that way; a D's `area` is positional,
   right after the model, unless the line writes `AREA=`; V and I take no parameters (no port

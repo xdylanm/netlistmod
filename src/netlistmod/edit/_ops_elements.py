@@ -436,7 +436,8 @@ def remove_value(
     On xyce (decision 0027 item 5; xm1-tasks 5.1 points 10 and 11) the whole field goes with the
     separator before it, a value written ``R=``, ``C=`` or ``L=`` with its keyword. It is
     refused on L, which needs its value; on R unless the line keeps the geometry form, the
-    model with both ``L=`` and ``W=``; and on C unless it keeps the model and ``L=``."""
+    model with both ``L=`` and ``W=``; and on C unless ``L=`` remains (point 30; a C written
+    with ``Q=`` has no value to remove)."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` is {_a_kind(element)} line; only R, C and L have a value")
@@ -450,7 +451,9 @@ def remove_value(
             f"`{designator}` needs its value: an inductor has no other form "
             f"({_XYCE_RCL_CITED[Inductor]})"
         )
-    if element.model is None:
+    # On xyce a C keeps a form without its value while `L=` remains, model or not (xm1-tasks 5.1
+    # point 30); an R's geometry form needs its model.
+    if element.model is None and not (form.model_first and isinstance(element, Capacitor)):
         raise EditError(
             f"`{designator}` has no model, so it needs its value; add a model with set_model first"
         )
