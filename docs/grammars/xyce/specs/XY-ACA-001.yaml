@@ -1,0 +1,22 @@
+id: XY-ACA-001
+dialect: xyce
+construct: .AC small-signal analysis (a sweep, or DATA=)
+manual_ref:
+- '[xyce-ref] §2.1.1 p24 ".AC (AC Analysis)"'
+status: documented
+grammar:
+- xy_ac_stmt
+core_rules:
+- DOT_AC_KW
+- ac_variation
+- DEC_KW
+- OCT_KW
+- LIN_KW
+- value
+tests:
+- tests/grammar/xyce/test_xyce_analyses.py::test_ac_takes_a_variation_and_three_values
+- tests/grammar/xyce/test_xyce_analyses.py::test_ac_takes_a_data_table
+- tests/grammar/xyce/test_xyce_analyses.py::test_malformed_ac_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+validation_note: Read from the manual (decision 0028 item 3; xm2-tasks 5.1 points 10 and 11). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests are X-M2 B6's.
+notes: '`AcDirective`: `LIN|OCT|DEC points fstart fstop` (`variation` as written), or `DATA=table` alone (XY-DCA-002; `data`, `variation` is `data` as written, the range fields `None`). No `list` and no `file=` (LTspice''s). The point count is not checked to be an integer. Top level only. The `%extend` of `ac_variation` (an indented line between its gap and the keyword) is XY-IND-001''s.'

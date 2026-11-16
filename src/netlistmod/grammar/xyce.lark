@@ -39,6 +39,8 @@
 %import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, PARAM_KW, RPAR)
 %import .core (x_name, ends_line, param, rparen, MODEL_KW, LPAR, SUBCKT_KW, ENDS_KW, ZERO_PORT)
 %import .core (value, model, dc_spec, dc_keyword, ac_spec, DC_KW, AC_KW, OFF_KW)
+%import .core (TRAN_KW, UIC_KW, DOT_AC_KW, ac_variation, DEC_KW, OCT_KW, LIN_KW, DOT_DC_KW)
+%import .core (op_stmt, OP_KW)
 
 %ignore WS
 %ignore CONT
@@ -87,6 +89,11 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | subckt_instance
 ?top_statement: global_stmt
               | global_param_stmt
+              | xy_tran_stmt
+              | xy_ac_stmt
+              | xy_dc_stmt
+              | op_stmt
+              | xy_step_stmt
 
 // A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
 // (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
@@ -120,6 +127,7 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 %extend rparen: INDENTED_TRAILING rparen
 %extend dc_keyword: INDENTED_TRAILING dc_keyword
 %extend ac_spec: INDENTED_TRAILING ac_spec
+%extend ac_variation: INDENTED_TRAILING ac_variation
 
 // `.END` may end with a `;` comment, since `;` may end any line (§4.1.3.1 p43); nothing else may
 // follow it on its line.
@@ -174,6 +182,91 @@ pp_word: SEP WORD
 %override global_stmt: GLOBAL_KW global_node+ (NL | eol)
 global_node: SEP WORD
            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) global_node
+
+// ---------------------------------------------------------------------------------------------
+// Analyses and sweeps (X-M2 B2; decision 0028 items 3 and 4; xm2-tasks 5.1 points 7 to 17). Each
+// is a top statement: in a subcircuit body Xyce silently ignores it, so it is refused there
+// (not_in_subckt). Unbraced numbers are the device-field reader's (NUMBER, XY-NUM-001); `.TRAN`,
+// `.AC` and `.DC` also take an expression in braces or quotes (`value`), `.STEP` takes none.
+// Keywords fold case.
+
+// .TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] [{schedule(...)}] ([xyce-ref] §2.1.38 p161):
+// tstep is required; NOOP and UIC (synonyms) stand after the numbers, in either order, each at
+// most once (the transformer refuses a repeat); then at most one schedule, an expression in braces
+// or quotes whose head is `schedule(` in any case (blanks may stand around `schedule`, which Xyce
+// runs), a field of its own (SCHEDULE_FORMULA outranks BRACE_FORMULA and QUOTE_FORMULA). The
+// transformer refuses a schedule in a number's place. No comma, and none of LTspice's modifiers.
+// spec: XY-TRN-001
+xy_tran_stmt: TRAN_KW value value (value value?)? tran_flag* tran_schedule? (NL | eol)
+tran_flag: SEP (NOOP_KW | UIC_KW)
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_flag
+tran_schedule: SEP SCHEDULE_FORMULA
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_schedule
+NOOP_KW.2: "noop"i
+SCHEDULE_FORMULA.4: /\{[ \t]*schedule[ \t]*\([^{};\r\n]*\}|'[ \t]*schedule[ \t]*\([^'{};\r\n]*'/i
+
+// .AC LIN|OCT|DEC points fstart fstop, or .AC DATA=table ([xyce-ref] §2.1.1 p24). No `list` and
+// no `file=`.
+// spec: XY-ACA-001
+xy_ac_stmt: DOT_AC_KW ac_variation value value value (NL | eol)
+          | DOT_AC_KW data_ref (NL | eol)
+
+// DATA=table on .AC, .DC and .STEP ([xyce-ref] §2.1.1 p24, §2.1.3 p27, §2.1.36 p156): the
+// keyword, whose lookahead finds the `=` (so a sweep target named `data` stays a name), blanks
+// allowed around the `=`, then the table's name. It stands alone on its line.
+// spec: XY-DCA-002
+data_ref: SEP DATA_KW EQ WORD
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_ref
+DATA_KW.4: /data(?=[ \t]*=)/i
+
+// .DC: one or more sweeps, the first innermost ([xyce-ref] §2.1.3 p27–28), each
+// `[LIN|DEC|OCT] target start stop step` or `target LIST v1 v2 ...` (at least two values), in
+// any order; or DATA=table alone. The sweeps are right-recursive, so that a list's next value and
+// the next sweep are told apart by the token after the separator, with nothing to reduce before
+// it; the transformer groups the fields into sweeps.
+// spec: XY-DCA-001
+xy_dc_stmt: DOT_DC_KW _dc_sweeps
+          | DOT_DC_KW data_ref (NL | eol)
+_dc_sweeps: ac_variation? sweep_target value value value _dc_next
+          | sweep_target list_keyword value value _dc_list
+_dc_list: value _dc_list
+        | _dc_next
+_dc_next: _dc_sweeps
+        | NL
+        | eol
+list_keyword: SEP LIST_KW
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) list_keyword
+LIST_KW.2: "list"i
+
+// A sweep target of .DC and .STEP: a source or device, `dev:param`, `model:param`, a path into
+// an instance (`X1:R5:R`), TEMP or a parameter ([xyce-ref] §2.1.3 p27, §2.1.36 p155), in the
+// name class with `:` (NODE_WORD). The transformer refuses a target that reads as a number, and
+// an empty part around a `:`.
+// spec: XY-STP-002
+sweep_target: SEP NODE_WORD
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) sweep_target
+
+// .STEP ([xyce-ref] §2.1.36 p155–158): one sweep per line, `[LIN|DEC|OCT] target start stop
+// step`, `target LIST v1 v2 ...` (at least two values) or DATA=table, with plain numbers only.
+// There is no `param` keyword: STEP_PARAM_KW, `param` before a name, is recognised with the rest
+// of the line only to be refused, and so is a second sweep on the line (step_second), since
+// Xyce runs only the last one.
+// spec: XY-STP-001
+xy_step_stmt: STEP_KW ac_variation? sweep_target step_value step_value step_value _step_end
+            | STEP_KW sweep_target list_keyword step_value step_value+ _step_end
+            | STEP_KW data_ref _step_end
+            | STEP_KW xy_step_param
+_step_end: step_second
+         | NL
+         | eol
+step_value: SEP NUMBER
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) step_value
+step_second: SEP NODE_WORD REST_TEXT* NL
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) step_second
+xy_step_param: SEP STEP_PARAM_KW REST_TEXT* NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xy_step_param
+STEP_KW.4: ".step"i
+STEP_PARAM_KW.3: /param(?=[ \t]+[A-Za-z_])/i
 
 // Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
 // XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
@@ -287,6 +380,7 @@ subckt_param: SEP DEFAULT_NAME EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
             | continuation_line
             | not_in_subckt
 not_in_subckt: (GLOBAL_KW | GLOBAL_PARAM_KW | END_KW) REST_TEXT* NL
+             | (TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | STEP_KW) REST_TEXT* NL
 
 // `PARAMS:` is one token, above WORD, which holds no `:`.
 // spec: XY-SBD-001

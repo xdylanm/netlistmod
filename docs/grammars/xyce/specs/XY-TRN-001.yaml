@@ -1,0 +1,29 @@
+id: XY-TRN-001
+dialect: xyce
+construct: .TRAN transient analysis (NOOP, UIC and a schedule)
+manual_ref:
+- '[xyce-ref] §2.1.38 p161 ".TRAN (Transient Analysis)"'
+status: documented
+grammar:
+- xy_tran_stmt
+- tran_flag
+- tran_schedule
+- NOOP_KW
+- SCHEDULE_FORMULA
+core_rules:
+- TRAN_KW
+- UIC_KW
+- value
+tests:
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_takes_two_to_four_numbers
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_values_are_device_numbers_or_delimited_expressions
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_takes_noop_and_uic_after_the_numbers
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_takes_a_schedule_last
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_takes_the_manuals_whole_form
+- tests/grammar/xyce/test_xyce_analyses.py::test_tran_continues_across_plus_comment_and_indented_lines
+- tests/grammar/xyce/test_xyce_analyses.py::test_malformed_tran_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_a_repeated_tran_flag_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_a_schedule_in_a_numbers_place_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+validation_note: Read from the manual (decision 0028 item 3; xm2-tasks 5.1 points 7 to 10). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (a schedule after tstart, the full form with both flags, a repeated flag) are X-M2 B6's.
+notes: '`TranDirective`: `tstep tstop [tstart [tmax]]`, tstep required, numbers of the device-field reader (XY-NUM-001) or expressions in braces or quotes; then `NOOP` and `UIC` (`noop`, `uic`), synonyms, in either order and each at most once (a repeat is a ParseError); then at most one schedule (`schedule`, a `Formula` whose text is `schedule(...)`), braced or quoted, `schedule` in any case with blanks allowed around it. A schedule in a number''s place is refused. No comma, no LTspice modifier (`modifiers` stays empty). Top level only: in a body Xyce silently ignores it, so it is a ParseError there.'

@@ -1,0 +1,30 @@
+id: XY-STP-001
+dialect: xyce
+construct: .STEP parametric sweep (one sweep per line)
+manual_ref:
+- '[xyce-ref] §2.1.36 p155 ".STEP (Step Parametric Analysis)"'
+- '[xyce-ref] §2.1.36.4 p157 "List Sweeps"'
+status: documented
+grammar:
+- xy_step_stmt
+- _step_end
+- step_value
+- step_second
+- xy_step_param
+- STEP_KW
+- STEP_PARAM_KW
+core_rules:
+- ac_variation
+- NUMBER
+tests:
+- tests/grammar/xyce/test_xyce_analyses.py::test_step_takes_a_range
+- tests/grammar/xyce/test_xyce_analyses.py::test_step_takes_a_variation
+- tests/grammar/xyce/test_xyce_analyses.py::test_step_takes_a_list
+- tests/grammar/xyce/test_xyce_analyses.py::test_step_takes_a_data_table
+- tests/grammar/xyce/test_xyce_analyses.py::test_step_continues_across_plus_lines
+- tests/grammar/xyce/test_xyce_analyses.py::test_malformed_step_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_the_param_keyword_is_rejected_with_a_hint
+- tests/grammar/xyce/test_xyce_analyses.py::test_a_second_sweep_on_one_step_line_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+validation_note: Read from the manual (decision 0028 item 4; xm2-tasks 5.1 points 10, 12, 14 and 17). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (a second sweep on a line, which Xyce runs silently keeping the last; a LIST of one value) are X-M2 B6's.
+notes: '`StepDirective`, one sweep per line: `[LIN|DEC|OCT] target start stop step` (`start`, `stop`, `increment`; `variation` as written), `target LIST v1 v2 ...` with at least two values (`values`), or `DATA=table` (XY-DCA-002). The values are plain numbers of the device-field reader: braces and quotes are a ParseError, as Xyce stops on them. There is no `param` keyword: `param` before a name is a ParseError with a hint (a target named `param` is read). A second sweep on the line is a ParseError. The target and `kind` are XY-STP-002''s. Repeated quantities, `DATA=` beside other steps and steps with `.OP` are the document layer''s (X-M2 B5). Top level only.'

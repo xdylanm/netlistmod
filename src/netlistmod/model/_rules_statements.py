@@ -91,6 +91,14 @@ _MODEL_REPEAT_REFUSED: dict[Dialect, bool] = {
     Dialect.LTSPICE: False,
     _XYCE: True,
 }
+# The keywords of the statements that the solver silently ignores in a subcircuit body, which the
+# refusal there says (xyce: the analyses and `.STEP`, decision 0028 item 2). Empty on ngspice and
+# LTspice, whose message is unchanged.
+_IGNORED_IN_BODY: dict[Dialect, frozenset[str]] = {
+    Dialect.NGSPICE: frozenset(),
+    Dialect.LTSPICE: frozenset(),
+    _XYCE: frozenset({"TRAN_KW", "DOT_AC_KW", "DOT_DC_KW", "OP_KW", "STEP_KW"}),
+}
 _CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
 # The LTspice special function names (decision 0020 item 3) and DIGITAL: LTspice 26.1.1 stops on a
 # `.model` line of one of these types on its own ("Expected model definition", M18 D2), since an
@@ -370,10 +378,16 @@ class StatementsRules(ElementsRules):
     @v_args(meta=True)
     def not_in_subckt(self, meta: Meta, children: list[Any]) -> NoReturn:
         keyword = str(children[0]) if isinstance(children[0], Token) else ".control"
-        raise self._error_at(
-            meta.start_pos,
-            f"`{keyword}` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)",
+        reason = (
+            f"`{keyword}` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)"
         )
+        ignored = _IGNORED_IN_BODY[self._dialect]
+        if isinstance(children[0], Token) and children[0].type in ignored:
+            reason += (
+                f": {self._dialect.display_name} silently ignores it there, so write it at the "
+                "top level"
+            )
+        raise self._error_at(meta.start_pos, reason)
 
     def ends_line(self, children: list[Any]) -> _Ends:
         element = _Element(children)

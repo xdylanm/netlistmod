@@ -733,7 +733,9 @@ class TranDirective(Directive):
     """``.tran tstep tstop [tstart [tmax]] [uic]``.
 
     In LTspice ``tstep`` may be left out (``.tran 1m``), and ``modifiers`` holds the other
-    keywords (``startup``, ``steady``, ``savestate=...``).
+    keywords (``startup``, ``steady``, ``savestate=...``). Xyce also has ``NOOP`` (``noop``), a
+    synonym of ``UIC`` that may stand beside it, and a ``{schedule(...)}`` expression after the
+    flags (``schedule``, whose text is ``schedule(...)``); both are ``None`` on the other dialects.
     """
 
     tstep: Value | None
@@ -742,6 +744,8 @@ class TranDirective(Directive):
     tmax: Value | None
     uic: Flag | None
     modifiers: tuple[OptionItem, ...] = ()
+    noop: Flag | None = None
+    schedule: Formula | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -749,7 +753,8 @@ class AcDirective(Directive):
     """``.ac dec|oct|lin points fstart fstop``; ``variation`` is the keyword as written.
 
     LTspice also has ``.ac list f1 f2 ...`` (``frequencies``, the range fields ``None``) and
-    ``.ac file=name`` (``file``, ``variation`` is ``file``).
+    ``.ac file=name`` (``file``, ``variation`` is ``file``). Xyce has ``.AC DATA=table``
+    (``data``, the table's name; ``variation`` is ``data`` as written, the range fields ``None``).
     """
 
     variation: str
@@ -759,6 +764,7 @@ class AcDirective(Directive):
     fstop: Value | None
     frequencies: tuple[Value, ...] = ()
     file: Identifier | None = None
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -782,9 +788,14 @@ class DcSweep:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DcDirective(Directive):
-    """``.dc`` with one or two sweeps (up to three in LTspice)."""
+    """``.dc`` with one or two sweeps (up to three in LTspice, any number in Xyce, the first
+    innermost).
+
+    Xyce's ``.DC DATA=table`` has no sweeps: ``data`` is the table's name, ``None`` otherwise.
+    """
 
     sweeps: tuple[DcSweep, ...]
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -892,7 +903,7 @@ class MeasureDirective(Directive):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class StepDirective(Directive):
-    """An LTspice ``.step`` (decision 0009): one nested sweep of one quantity.
+    """An LTspice or Xyce ``.step`` (decisions 0009 and 0028): one nested sweep of one quantity.
 
     ``kind`` says what ``name`` is: a parameter (``.step param x``), a source (``.step V1``), the
     temperature (``.step temp``) or a model parameter (``.step NPN 2N2222(VAF)``; ``model_type``
@@ -900,9 +911,15 @@ class StepDirective(Directive):
     ``variation`` is ``oct``, ``dec`` or ``lin``
     as written, if any. The sweep is a range (``start``, ``stop``, ``increment``), a ``values``
     list or a ``file``.
+
+    An Xyce target has no keyword, and its form does not tell a device from a parameter: ``kind``
+    is ``name`` for a plain name (``R1``, ``p``), ``qualified`` for a name with ``:``
+    (``R2:R``, ``dm:IS``, ``X1:R5:R``; ``parameter`` is the part after the last ``:``), ``temp``
+    for ``TEMP``, and ``data`` for ``DATA=table`` (``data`` and ``name`` are the table's name, the
+    sweep fields ``None`` and empty). ``parameter`` and ``data`` are ``None`` on LTspice.
     """
 
-    kind: Literal["param", "source", "temp", "model"]
+    kind: Literal["param", "source", "temp", "model", "name", "qualified", "data"]
     name: str
     name_span: Span
     model_type: Identifier | None
@@ -914,6 +931,8 @@ class StepDirective(Directive):
     increment: Value | None
     values: tuple[Value, ...]
     file: Identifier | None
+    parameter: str | None = None
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

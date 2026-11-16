@@ -49,7 +49,7 @@ X-M2 makes the hidden xyce dialect read its analysis, option, initial-condition,
 ### Stage 2
 
 - [x] **B1 — Decision record** for the G1 decisions, and the architecture sections they amend.
-- [ ] **B2 — Analyses and sweeps** in `xyce.lark` and the statement rules: `.TRAN`, `.AC`, `.DC`, `.OP`, `.STEP`.
+- [x] **B2 — Analyses and sweeps** in `xyce.lark` and the statement rules: `.TRAN`, `.AC`, `.DC`, `.OP`, `.STEP`.
 - [ ] **B3 — Options, initial conditions, measurements** and the `.DATA` block.
 - [ ] **B4 — The closed list** of the other dot-commands, and directives in a body as decided at G1.
 - [ ] **B5 — The document and edit layers:** the X-M2 line of the plan's section 8.1; references from `DATA=`, diagnostics, and the directive edits on xyce.
@@ -153,3 +153,4 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
 - 2026-11-16: G1 in progress: points 1, 9 (the manual's form), 12 and 14 decided; the other points wait for the maintainer's review.
 - 2026-11-16: G1 done: the maintainer accepted every other point as recommended.
 - 2026-11-16: B1 done: [decision 0028](../decisions/0028-xyce-directives.md); architecture §6.5 and the plan's section 4 amended.
+- 2026-11-16: B2 done: `.TRAN` (`NOOP`, `UIC`, a schedule), `.AC`, `.DC` (any number of sweeps, `LIST`), `DATA=`, `.OP` and `.STEP` read on xyce, top level only; new fields `TranDirective.noop` and `.schedule`, `AcDirective.data`, `DcDirective.data`, `StepDirective.parameter` and `.data`, and the `kind` values `name`, `qualified` and `data`; spec entries `XY-TRN-001`, `XY-ACA-001`, `XY-DCA-001`, `XY-DCA-002`, `XY-OPP-001`, `XY-STP-001` and `XY-STP-002`, `documented` until B6's solver tests.
