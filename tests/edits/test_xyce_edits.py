@@ -120,6 +120,12 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         "C1 a 0 cmod L=1u W=1u\n",
     ),
     (
+        "remove-c-value-keeping-length-without-model",
+        "C1 a 0 C=1p L=1u\n",
+        lambda n: n.remove_value("C1"),
+        "C1 a 0 L=1u\n",
+    ),
+    (
         "remove-value-on-its-own-line",
         "C1 a 0 cmod L=1u\n+ C=1p ; was 1p\n",
         lambda n: n.remove_value("C1"),
