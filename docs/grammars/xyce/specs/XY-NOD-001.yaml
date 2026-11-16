@@ -1,0 +1,17 @@
+id: XY-NOD-001
+dialect: xyce
+construct: .NODESET (the forms of .IC)
+manual_ref:
+- '[xyce-ref] §2.1.22 p92 ".NODESET (Approximate Initial Condition, Bias point)"'
+status: documented
+grammar:
+- xy_nodeset_stmt
+core_rules:
+- NODESET_KW
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_nodeset_takes_voltage_conditions
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_may_be_node_value_pairs
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_are_allowed_in_a_body
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_conditions_are_rejected
+validation_note: Read from the manual (decision 0028 items 2 and 6; xm2-tasks 5.1 points 24 and 25). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (`all=` and `I(...)`, which stop Xyce, and the forms of XY-ICN-001) are X-M2 B6's.
+notes: '`NodesetDirective` with `NodeCondition`s, read as XY-ICN-001 (the same rules): `V(node)=value` or `node value` pairs, one form per statement; `all=` and `I(...)` are a ParseError. Allowed in a subcircuit body.'

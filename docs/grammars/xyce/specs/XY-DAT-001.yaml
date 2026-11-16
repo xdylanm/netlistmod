@@ -1,0 +1,28 @@
+id: XY-DAT-001
+dialect: xyce
+construct: the .DATA ... .ENDDATA table (an opaque named block)
+manual_ref:
+- '[xyce-ref] §2.1.2 p26 ".DATA (Data Table for sweeps)"'
+status: documented
+grammar:
+- data_block
+- data_field
+- data_open_end
+- data_close
+- data_close_name
+- stray_enddata
+- DATA_BLOCK_KW
+- ENDDATA_KW
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_data_reads_a_table
+- tests/grammar/xyce/test_xyce_directives.py::test_data_columns_may_follow_the_name_and_rows_are_a_stream
+- tests/grammar/xyce/test_xyce_directives.py::test_comment_blank_and_indented_lines_may_stand_in_a_table
+- tests/grammar/xyce/test_xyce_directives.py::test_tables_and_directives_tile_the_source
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_tables_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_an_unterminated_table_is_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_a_table_without_end_at_end_of_input_names_its_opener
+- tests/grammar/xyce/test_xyce_directives.py::test_options_measures_and_tables_are_refused_in_a_body
+- tests/edits/test_xyce_edits.py::test_golden
+validation_note: Read from the manual (decision 0028 item 8; xm2-tasks 5.1 point 27). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (a missing, named or doubled `.ENDDATA`, which Xyce runs; a count that is not a multiple of the columns) are X-M2 B6's.
+notes: '`DataTable`, an `OpaqueBlock` of `kind` `data`: the `.DATA` statement, continued by `+` lines (comment, blank and indented lines may stand between them), holds the required name (`name`; the first word, as Xyce reads it), at least one column name (`columns`, on the `.DATA` line or `+` lines), then plain numbers of the device-field reader read as a stream, whose count must be a non-zero multiple of the columns (`rows`). `body_text` is the slice of `body_span`, from the first column to the last value; `end_span` covers `.ENDDATA`, which is required and bare; comment, blank and indented lines may stand before it. An expression, a word after the values, a name that reads as a number, a name after `.ENDDATA` and a `.ENDDATA` that closes no table are a ParseError. Top level only. Directive edits add, replace and remove the block whole. The `data` reference kind and a repeated or unresolved name are the document layer''s (X-M2 B5).'

@@ -161,7 +161,7 @@ def test_a_letter_xyce_does_not_have_is_rejected(letter: str) -> None:
     "statement",
     [
         ".four 1k v(1)",
-        ".options timeint method=gear",
+        ".sens objfunc={V(1)} param=R1:R",
         ".print tran v(1) ; comment $ and // are text here",
         ".title other",
         ".unknown_command",

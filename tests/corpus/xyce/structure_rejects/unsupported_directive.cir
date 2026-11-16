@@ -1,5 +1,5 @@
-reject: .options is X-M2 B3's
+reject: .print is X-M2 B4's
 V1 a 0 1
 R1 a 0 1k
-.options timeint method=gear
+.print dc v(a)
 .END

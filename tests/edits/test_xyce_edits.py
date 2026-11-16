@@ -243,6 +243,39 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         lambda n: n.directives.add(".lib 'models.lib' tt", placement=Placement.AFTER_TITLE),
         ".lib 'models.lib' tt\nR1 a 0 1k\n",
     ),
+    # X-M2 B3: options, conditions and the `.DATA` table, which directive edits treat whole.
+    (
+        "options-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".options timeint reltol=1e-3", placement=Placement.AFTER_TITLE),
+        ".options timeint reltol=1e-3\nR1 a 0 1k\n",
+    ),
+    (
+        "ic-pairs-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".ic a 0.5", placement=Placement.AFTER_TITLE),
+        ".ic a 0.5\nR1 a 0 1k\n",
+    ),
+    (
+        "data-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(
+            [".data t r1:r", "+ 1k", "+ 2k", ".enddata"], placement=Placement.AFTER_TITLE
+        ),
+        ".data t r1:r\n+ 1k\n+ 2k\n.enddata\nR1 a 0 1k\n",
+    ),
+    (
+        "data-replaced",
+        ".data t r1:r\n* rows\n+ 1k\n.enddata\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], [".DATA t r1:r", "+ 3k 4k", ".ENDDATA"]),
+        ".DATA t r1:r\n+ 3k 4k\n.ENDDATA\nR1 a 0 1k\n",
+    ),
+    (
+        "data-removed",
+        ".data t r1:r\n+ 1k\n\n.enddata\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
 ]
 
 # The cases whose change is outside the body: the model or the `.include` line.

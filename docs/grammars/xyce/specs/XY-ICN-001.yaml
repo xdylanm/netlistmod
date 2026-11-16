@@ -1,0 +1,32 @@
+id: XY-ICN-001
+dialect: xyce
+construct: .IC and .DCVOLT initial conditions (V(node)=value or node value pairs)
+manual_ref:
+- '[xyce-ref] §2.1.14 p48 ".IC (Initial Condition, Bias point)"'
+- '[xyce-ref] §2.1.4 p29 ".DCVOLT (Initial Condition, Bias point)"'
+status: documented
+grammar:
+- xy_ic_stmt
+- _ic_conditions
+- ic_voltage
+- ic_refused
+- DCVOLT_KW
+- V_OPEN
+- IC_CURRENT_OPEN
+- ALL_KW
+core_rules:
+- IC_KW
+- RPAR
+- EQ
+- value
+- node
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_ic_takes_voltage_conditions
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_may_be_node_value_pairs
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_continue_across_plus_lines
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_are_allowed_in_a_body
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_conditions_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_condition_syntax_errors_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_the_directives_round_trip
+validation_note: Read from the manual (decision 0028 items 2 and 6; xm2-tasks 5.1 points 24 and 25). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (mixed forms, commas, `I(...)`, `V(a,b)` and `2=0.5`, which Xyce ignores with a warning; an odd pair count, which hangs Xyce and is recorded, not probed) are X-M2 B6's.
+notes: '`IcDirective` (`.DCVOLT` too, `keyword` as written) with one `NodeCondition` per condition: `V(node)=value` (`form` `v`, `V(` in any case, blanks allowed around the `=`) or a `node value` pair (`form` `pair`, the span from the node to the value), several per line, one form per statement (a mix is a ParseError). A node is a NODE_WORD, so it may be a `:` path into an instance or a `$G` global; a value is a number of the device-field reader or an expression in braces or quotes. `I(...)`, `all=`, `V(a,b)`, commas, an empty statement and a node without its value are a ParseError. Allowed in a subcircuit body, read per definition (Xyce applies it in every instance). Resolving the nodes, a repeated node, `.IC` with `.NODESET` and a `$G` node in a body are the document layer''s (X-M2 B5).'

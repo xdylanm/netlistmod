@@ -202,7 +202,7 @@ class Scope:
             elif isinstance(item, Component):
                 elements.setdefault(self.fold(item.designator), []).append(item)
             elif isinstance(item, OpaqueStatement) or (
-                isinstance(item, OpaqueBlock) and item.kind != "control"
+                isinstance(item, OpaqueBlock) and item.kind not in ("control", "data")
             ):
                 elsewhere = True
         for assignment in late_params:

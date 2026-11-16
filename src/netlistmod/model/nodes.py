@@ -75,10 +75,34 @@ class UnknownDirective:
 
 @dataclass(frozen=True, slots=True)
 class OpaqueBlock:
-    """A preserved ``.control``, conditional or ``.lib`` … ``.endl`` block."""
+    """A preserved ``.control``, conditional or ``.lib`` … ``.endl`` block, or an xyce
+    ``.DATA`` … ``.ENDDATA`` table (``kind`` ``data``, a :class:`DataTable`)."""
 
-    kind: Literal["control", "if", "lib"]
+    kind: Literal["control", "if", "lib", "data"]
     span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DataTable(OpaqueBlock):
+    """An xyce ``.DATA name col... value... .ENDDATA`` table ([xyce-ref] §2.1.2 p26), an opaque
+    block (``kind`` is ``data``) that ``DATA=`` on ``.AC``, ``.DC`` and ``.STEP`` names.
+
+    ``keyword`` and ``keyword_span`` are the ``.DATA`` keyword as written; ``name`` is the table's
+    name; ``columns`` its column names in order; ``rows`` the number of rows (the values divided by
+    the columns). ``body_text`` is the source slice of ``body_span``, which runs from the first
+    column to the last value, across ``+``, comment and blank lines; ``end_span`` covers the
+    ``.ENDDATA`` keyword. The values are not typed. xyce only; internal while the dialect is hidden
+    (decision 0026).
+    """
+
+    keyword: str
+    keyword_span: Span
+    name: Identifier
+    columns: tuple[Identifier, ...]
+    rows: int
+    body_text: str
+    body_span: Span
+    end_span: Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -725,7 +749,8 @@ class SubcktDefinition(_DotCommand):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Directive(_DotCommand):
-    """Base of the typed analysis, option and output directives (top level only)."""
+    """Base of the typed analysis, option and output directives (top level only, except xyce's
+    ``.IC``, ``.DCVOLT`` and ``.NODESET``, which may stand in a subcircuit body)."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -805,19 +830,32 @@ class OpDirective(Directive):
 
 @dataclass(frozen=True, slots=True)
 class OptionItem:
-    """One ``.options`` item, ``name`` or ``name=value``; ``span`` covers both."""
+    """One ``.options`` item, ``name`` or ``name=value``; ``span`` covers both.
+
+    Xyce also has a comma list (``OUTPUTTIMEPOINTS=1n,2n``): ``values`` holds its two or more
+    values in order and ``value`` is ``None``; and the ``INITIAL_INTERVAL=i t1 i1 ...`` of the
+    OUTPUT and RESTART packages: ``value`` is the interval and ``pairs`` the ``(t, i)`` pairs after
+    it, which ``span`` covers. Both are empty on the other dialects and for a single value.
+    """
 
     name: str
     name_span: Span
     value: Value | Identifier | None
     span: Span
+    values: tuple[Value | Identifier, ...] = ()
+    pairs: tuple[tuple[Value, Value], ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OptionsDirective(Directive):
-    """``.options`` or ``.option`` with one or more items."""
+    """``.options`` or ``.option`` with one or more items.
+
+    ``package`` is an xyce ``.OPTIONS`` package as written (``TIMEINT``, ``DEVICE``, ...); it is
+    ``None`` for xyce's ``.OPTION SCALE=v`` and on the other dialects, which have no packages.
+    """
 
     options: tuple[OptionItem, ...]
+    package: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -833,18 +871,21 @@ class NodeCondition:
     """``v(node)=value``, ``all=value`` (``node is None``, ngspice ``.nodeset`` only), or an
     inductor current ``i(L1)=value`` (``current`` is set, LTspice ``.ic`` only).
 
-    ``span`` runs from ``v(`` (or ``all``, or ``i(``) to the end of the value.
+    ``span`` runs from ``v(`` (or ``all``, or ``i(``) to the end of the value. ``form`` is ``v``
+    for those; xyce also writes a condition as a ``node value`` pair (``form`` ``pair``), whose
+    ``span`` runs from the node to the end of the value.
     """
 
     node: Node | None
     value: Value
     span: Span
     current: ElementReference | None = None
+    form: Literal["v", "pair"] = "v"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class IcDirective(Directive):
-    """``.ic v(node)=value …``."""
+    """``.ic v(node)=value …``; also xyce's ``.DCVOLT``, a synonym (``keyword`` as written)."""
 
     conditions: tuple[NodeCondition, ...]
 
@@ -980,6 +1021,8 @@ BodyItem: TypeAlias = (
     | IndentedLine
     | PreprocessDirective
     | FuncStatement
+    | IcDirective
+    | NodesetDirective
     | UnknownDirective
     | OpaqueBlock
     | OpaqueStatement
@@ -1016,7 +1059,8 @@ BodyItem: TypeAlias = (
     | FraProbe
     | SubcktInstance
 )
-"""An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
+"""An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block.
+``IcDirective`` and ``NodesetDirective`` stand in a body on xyce only (decision 0028 item 2)."""
 
 TopLevelItem: TypeAlias = (
     BodyItem

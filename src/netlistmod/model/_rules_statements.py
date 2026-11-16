@@ -92,12 +92,25 @@ _MODEL_REPEAT_REFUSED: dict[Dialect, bool] = {
     _XYCE: True,
 }
 # The keywords of the statements that the solver silently ignores in a subcircuit body, which the
-# refusal there says (xyce: the analyses and `.STEP`, decision 0028 item 2). Empty on ngspice and
-# LTspice, whose message is unchanged.
+# refusal there says (xyce: the analyses, `.STEP`, `.OPTIONS`, `.MEAS` and `.DATA`, decision 0028
+# item 2). Empty on ngspice and LTspice, whose message is unchanged.
 _IGNORED_IN_BODY: dict[Dialect, frozenset[str]] = {
     Dialect.NGSPICE: frozenset(),
     Dialect.LTSPICE: frozenset(),
-    _XYCE: frozenset({"TRAN_KW", "DOT_AC_KW", "DOT_DC_KW", "OP_KW", "STEP_KW"}),
+    _XYCE: frozenset(
+        {
+            "TRAN_KW",
+            "DOT_AC_KW",
+            "DOT_DC_KW",
+            "OP_KW",
+            "STEP_KW",
+            "OPTIONS_KW",
+            "OPTION_KW",
+            "MEAS_KW",
+            "MEASURE_KW",
+            "DATA_BLOCK_KW",
+        }
+    ),
 }
 _CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
 # The LTspice special function names (decision 0020 item 3) and DIGITAL: LTspice 26.1.1 stops on a

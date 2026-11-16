@@ -41,6 +41,7 @@
 %import .core (value, model, dc_spec, dc_keyword, ac_spec, DC_KW, AC_KW, OFF_KW)
 %import .core (TRAN_KW, UIC_KW, DOT_AC_KW, ac_variation, DEC_KW, OCT_KW, LIN_KW, DOT_DC_KW)
 %import .core (op_stmt, OP_KW)
+%import .core (OPTIONS_KW, OPTION_KW, IC_KW, NODESET_KW, V_OPEN, MEAS_KW, MEASURE_KW)
 
 %ignore WS
 %ignore CONT
@@ -87,6 +88,9 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | current_source
                | diode
                | subckt_instance
+               | xy_ic_stmt
+               | xy_nodeset_stmt
+               | stray_enddata
 ?top_statement: global_stmt
               | global_param_stmt
               | xy_tran_stmt
@@ -94,6 +98,9 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
               | xy_dc_stmt
               | op_stmt
               | xy_step_stmt
+              | xy_options_stmt
+              | xy_meas_stmt
+              | data_block
 
 // A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
 // (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
@@ -268,6 +275,109 @@ xy_step_param: SEP STEP_PARAM_KW REST_TEXT* NL
 STEP_KW.4: ".step"i
 STEP_PARAM_KW.3: /param(?=[ \t]+[A-Za-z_])/i
 
+// ---------------------------------------------------------------------------------------------
+// Options, initial conditions, measurements and the .DATA block (X-M2 B3; decision 0028 items 2
+// and 5 to 8; xm2-tasks 5.1 points 18 to 27). `.OPTIONS`, `.MEAS` and `.DATA` are top statements,
+// which Xyce silently ignores in a subcircuit body (not_in_subckt); `.IC`, `.DCVOLT` and
+// `.NODESET` are body statements, since Xyce applies them in every instance. Keywords fold case.
+
+// .OPTIONS pkg name=value ... and .OPTION, a full synonym ([xyce-ref] §2.1.25 p96): a package of
+// the manual's 21, in any case (OPT_PACKAGE_KW, whose lookahead makes it end where its word
+// ends). Another word in its place is recognised only to be refused with the closest package,
+// and so is a line without a package (an item or nothing after the keyword), except
+// `.OPTION SCALE=v`, singular with one item (§2.1.25.21 p119), which the transformer reads with
+// no package. A package with no item is refused too.
+// spec: XY-OPT-001
+xy_options_stmt: (OPTIONS_KW | OPTION_KW) opt_package (opt_item | opt_extra)* (NL | eol)
+               | (OPTIONS_KW | OPTION_KW) opt_item (opt_item | opt_extra)* (NL | eol)
+               | (OPTIONS_KW | OPTION_KW) (NL | eol)
+opt_package: SEP (OPT_PACKAGE_KW | WORD)
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_package
+OPT_PACKAGE_KW.4: /(?:device|diagnostic|timeint|nonlin-tran|nonlin-hb|nonlin|loca|linsol-hb|linsol-ac|linsol|output|restart|samples|embeddedsamples|pces|sensitivity|hbint|dist|fft|measure|parser)(?![^ \t\r\n;])/i
+
+// An item is name=value, its name open (OPT_KEY, a letter or `_` and name characters, whose
+// lookahead finds the `=`), blanks allowed around the `=`. A value is a number of the
+// device-field reader, a word, an expression in braces or quotes, or a comma list of them (blanks
+// after a comma allowed); the transformer refuses braces and quotes outside SAMPLES and
+// EMBEDDEDSAMPLES. A field after an item that is not name=value (opt_extra) is recognised so that
+// the transformer reads OUTPUT's and RESTART's `INITIAL_INTERVAL=i [t i]*` pairs, and refuses it
+// anywhere else, as a bare word or value.
+// spec: XY-OPT-002
+opt_item: SEP OPT_KEY EQ _opt_value (CSEP _opt_value)*
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_item
+opt_extra: SEP _opt_value
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_extra
+_opt_value: NUMBER | WORD | BRACE_FORMULA | QUOTE_FORMULA
+OPT_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
+
+// .IC and .DCVOLT, a synonym that builds the same node ([xyce-ref] §2.1.14 p48, §2.1.4 p29):
+// `V(node)=value` conditions (blanks allowed around the `=`) or `node value` pairs, several on a
+// line; the transformer refuses a line that mixes the two forms, a line with none, and a last
+// node without its value (Xyce hangs on an odd count). A node is a NODE_WORD (a `:` path into an
+// instance, a `$G` global); a value is a number of the device-field reader or an expression in
+// braces or quotes. A current `I(...)`, `all=` and a differential `V(a,b)` are recognised with
+// the rest of the line only to be refused (ic_refused). V_OPEN outranks NODE_WORD, so `v(` opens
+// a condition while a node named `v` is a name.
+// spec: XY-ICN-001
+xy_ic_stmt: (IC_KW | DCVOLT_KW) _ic_conditions
+_ic_conditions: (ic_voltage | node value)* (node? (NL | eol) | ic_refused)
+ic_voltage: SEP V_OPEN NODE_WORD RPAR EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ic_voltage
+ic_refused: SEP (IC_CURRENT_OPEN | ALL_KW) REST_TEXT* NL
+          | SEP V_OPEN NODE_WORD CSEP REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ic_refused
+DCVOLT_KW.4: ".dcvolt"i
+%override V_OPEN.4: /[vV]\(/
+IC_CURRENT_OPEN.4: /[iI]\(/
+ALL_KW.4: /all(?=[ \t]*=)/i
+
+// .NODESET: the forms of .IC ([xyce-ref] §2.1.22 p92).
+// spec: XY-NOD-001
+xy_nodeset_stmt: NODESET_KW _ic_conditions
+
+// .MEASURE and .MEAS ([xyce-ref] §2.1.18 p54, §2.1.19 p78, §2.1.20 p84), typed shallowly as on the
+// other dialects: a mode of the manual's closed list (TRAN, DC, AC, NOISE, FFT and their `_CONT`
+// forms but FFT's), required, in any case (MEAS_MODE_KW, which ends where its word ends; another
+// word in its place is recognised with the rest of the line only to be refused); the result name;
+// then at least one field of the body, kept as text (each field a run of characters other than
+// blanks and `;`), across `+` lines.
+// spec: XY-MEA-001
+xy_meas_stmt: (MEAS_KW | MEASURE_KW) meas_mode x_name meas_field+ (NL | eol)
+            | (MEAS_KW | MEASURE_KW) meas_bad_mode
+meas_mode: SEP MEAS_MODE_KW
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_mode
+meas_bad_mode: SEP WORD REST_TEXT* NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_bad_mode
+meas_field: SEP MEAS_TEXT
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_field
+MEAS_MODE_KW.4: /(?:tran_cont|dc_cont|ac_cont|noise_cont|tran|dc|ac|noise|fft)(?![^ \t\r\n;])/i
+MEAS_TEXT.2: /[^ \t\r\n;]+/
+
+// .DATA name column... value... and .ENDDATA ([xyce-ref] §2.1.2 p26), a block read as opaque. The
+// .DATA statement, continued by `+` lines (comment, blank and indented lines may stand between
+// them), holds the table's name, its column names, then its values, read as a stream. A field is
+// a NODE_WORD, since a column is a sweep target (a parameter, a device, `dev:param` or
+// `model:param`, XY-STP-002), or a number, which outranks it. The transformer checks that the
+// name is a name without `:` and the columns are sweep targets, that the values are plain numbers
+// of the device-field reader (an expression in braces or quotes is recognised only to be
+// refused), and that their count is a non-zero multiple of the columns. Comment, blank and
+// indented lines may stand before `.ENDDATA`, which is required and bare (a name after it is
+// recognised only to be refused). The statement ends with its own NL (data_open_end), never the
+// shared eol, so the state after it offers only the block's lines. A `.ENDDATA` that closes no
+// `.DATA` is recognised with the rest of its line only to be refused (stray_enddata).
+// spec: XY-DAT-001
+data_block: DATA_BLOCK_KW data_field+ data_open_end lead* data_close
+data_field: SEP (NODE_WORD | NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_field
+data_open_end: NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_open_end
+data_close: ENDDATA_KW data_close_name? (NL | eol)
+data_close_name: SEP WORD
+               | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_close_name
+stray_enddata: ENDDATA_KW REST_TEXT* NL
+DATA_BLOCK_KW.4: ".data"i
+ENDDATA_KW.4: ".enddata"i
+
 // Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
 // XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
 // milli), then a unit (a, amp, c, f, farad, h, henry, hertz, hy, hz, m, ohm, s, v, vdc, volt), in
@@ -381,6 +491,7 @@ subckt_param: SEP DEFAULT_NAME EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
             | not_in_subckt
 not_in_subckt: (GLOBAL_KW | GLOBAL_PARAM_KW | END_KW) REST_TEXT* NL
              | (TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | STEP_KW) REST_TEXT* NL
+             | (OPTIONS_KW | OPTION_KW | MEAS_KW | MEASURE_KW | DATA_BLOCK_KW) REST_TEXT* NL
 
 // `PARAMS:` is one token, above WORD, which holds no `:`.
 // spec: XY-SBD-001
