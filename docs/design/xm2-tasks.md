@@ -1,6 +1,6 @@
 # X-M2 task list — xyce directives
 
-> **Status:** ACTIVE — stage 1 (research and probes)
+> **Status:** ACTIVE — G1 (the maintainer decides section 5.1)
 > **Follows:** [X-M1](./archive/xyce/xm1-tasks.md) and decisions [0026](../decisions/0026-the-xyce-dialect.md) and [0027](../decisions/0027-xyce-structure-names-and-values.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 4, 6 and 8. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12).
 
 ## 1. Scope
@@ -42,9 +42,9 @@ X-M2 makes the hidden xyce dialect read its analysis, option, initial-condition,
 
 ### Stage 1
 
-- [ ] **A1 — Analyses and sweeps.** `.TRAN`, `.AC`, `.DC`, `.OP` and `.STEP`: each form in the manual against today's `TranDirective`, `AcDirective`, `DcDirective`, `OpDirective` and `StepDirective` and their ngspice and LTspice rules (reuse, reuse with differences, new); `NOOP`, `UIC`, `{schedule(…)}`; `DATA=`; `.DC` with three or more sweeps and `LIST`; `.STEP`'s targets and what `kind` gains; repeated analyses; probes for anything the manual leaves unclear. Options for each question, with a recommendation.
-- [ ] **A2 — Options, initial conditions, measurements and `.DATA`.** `.OPTIONS` packages and items (closed list or open; values; what the edit layer's `set_option` means with a package); `.IC`, `.DCVOLT` and `.NODESET` (forms, `V(node)` paths with `:`, globals); `.MEAS` forms and how far the shallow typing serves; the `.DATA … .ENDDATA` block (header, rows, the name, how `DATA=` refers to it, case and scope). Probes; options with a recommendation.
-- [ ] **A3 — The closed list and the edit layer.** Every dot-command in the manual's section 2.1 and its Table 6-1, sorted into: typed in X-M2, opaque statement, unknown directive with a diagnostic, or refused; what Xyce does with an unknown dot-command and an unknown block (X-M0's probe); `.SAVE`, `.PRINT` and the other outputs; the other `.PREPROCESS` forms; directives in a subcircuit body; the directive edits and the X-M2 site of the plan's section 8.1 (`model/_rules_statements.py`). Options with a recommendation.
+- [x] **A1 — Analyses and sweeps.** `.TRAN`, `.AC`, `.DC`, `.OP` and `.STEP`: each form in the manual against today's `TranDirective`, `AcDirective`, `DcDirective`, `OpDirective` and `StepDirective` and their ngspice and LTspice rules (reuse, reuse with differences, new); `NOOP`, `UIC`, `{schedule(…)}`; `DATA=`; `.DC` with three or more sweeps and `LIST`; `.STEP`'s targets and what `kind` gains; repeated analyses; probes for anything the manual leaves unclear. Options for each question, with a recommendation.
+- [x] **A2 — Options, initial conditions, measurements and `.DATA`.** `.OPTIONS` packages and items (closed list or open; values; what the edit layer's `set_option` means with a package); `.IC`, `.DCVOLT` and `.NODESET` (forms, `V(node)` paths with `:`, globals); `.MEAS` forms and how far the shallow typing serves; the `.DATA … .ENDDATA` block (header, rows, the name, how `DATA=` refers to it, case and scope). Probes; options with a recommendation.
+- [x] **A3 — The closed list and the edit layer.** Every dot-command in the manual's section 2.1 and its Table 6-1, sorted into: typed in X-M2, opaque statement, unknown directive with a diagnostic, or refused; what Xyce does with an unknown dot-command and an unknown block (X-M0's probe); `.SAVE`, `.PRINT` and the other outputs; the other `.PREPROCESS` forms; directives in a subcircuit body; the directive edits and the X-M2 site of the plan's section 8.1 (`model/_rules_statements.py`). Options with a recommendation.
 
 ### Stage 2
 
@@ -59,8 +59,91 @@ X-M2 makes the hidden xyce dialect read its analysis, option, initial-condition,
 
 ### 5.1 G1 decisions
 
-(Written at G1.)
+From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditions, measurements and `.DATA`) and A3 (the closed list and the edit layer). All probes are on XyceNF Release 7.10.0 and are kept outside the repository. Each point gives the evidence, then *Recommendation:*. The decisions are recorded at G1.
+
+**Dot-commands and where they stand (A3)**
+
+1. **Closed or open.** Xyce warns on any unknown dot-command ("Unrecognized dot line will be ignored") and runs without it: a misspelling (`.tarn`, `.optoins`, `.opt`; no prefix matching) too, so a misspelt `.tran` leaves "No analysis specified". An unknown "block" is no block: its end lines each warn, and the lines between are read as circuit lines (`.foo / R3 2 0 1k / .endfoo` loads R3; a `.control` block stops on device `RUN`). Options:
+   - (a) a closed list: the manual's commands, everything else `ParseError` with hints (as decision 0009);
+   - (b) open, as on ngspice, with a warning "Xyce ignores this line";
+   - (c) the manual's untyped commands open, the rest refused.
+
+   *Recommendation:* (a). One discrepancy row for Xyce's leniency replaces `XY-UNS-001`'s. The closed-list `UnknownDirective` lines are continuable with `+`, as Xyce joins them.
+2. **Commands that are not Xyce's.** `.TEMP`, `.TF`, `.PROBE`, `.PZ`, `.DISTO`, `.MC`, `.PLOT`, `.WCASE` and the rest of [xyce-ref] Table 6-1 (p847–848), `.title`, `.backanno`, `.control`/`.if`, `.ALIASES`: each is ignored with that warning, and the lines of a block are read. `.step param` stops Xyce. The binary also knows `.MOR`, `.INITCOND` (it hangs with no arguments), `.LOAD` and a lone `.ENDDATA`, none in the manual.
+
+   *Recommendation:* `ParseError` "not an Xyce dot-command" for all of them, with hints for `.TEMP` (use `.STEP TEMP` or `.OPTIONS DEVICE TEMP=`), `.PROBE` (`.PRINT … FORMAT=PROBE`), `.title` (the first line is the title), `.opt` (`.OPTIONS`) and `.step param` (no `param` keyword). Discrepancy rows for each one Xyce runs.
+3. **Outputs and further analyses.** `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`, `.HB`, `.LIN`, `.SAMPLING`, `.EMBEDDEDSAMPLING` and `.PCE` run (`.PCE` is ignored by this build: "unrecognized"). None changes the circuit; `.SAVE` writes an `.IC`/`.NODESET` file at the operating point and has no vectors, and ngspice's `.save v(2)` stops Xyce.
+
+   *Recommendation:* `UnknownDirective` (with `UNTYPED_DIRECTIVE_PRESERVED`), top level only; typed later where needed. `.SAVE` never builds `SaveDirective`. A discrepancy row for `.PCE`.
+4. **The other `.PREPROCESS` forms.** `REMOVEUNUSED` deletes devices whose terminals share one node, so it changes the circuit (P4); a second line stops Xyce. `ADDRESISTORS` writes `<netlist>_xyce.cir` and leaves the run unchanged; two of one kind stop Xyce.
+
+   *Recommendation:* `REMOVEUNUSED` stays `UnsupportedConstruct` (revisited at X-M4, when M and Q exist). `ADDRESISTORS` is an `UnknownDirective`, allowed wherever `.PREPROCESS` is, and a second of the same kind is a `ParseError`.
+5. **Directives in a subcircuit body.** X-M1 point 16 and its discrepancy row said Xyce runs them; it does not. In a body Xyce silently ignores the analyses, `.OPTIONS`, `.STEP`, `.MEAS`, `.DATA` (a body table is invisible to the top level) and the outputs. It applies `.IC`, `.DCVOLT` and `.NODESET` to every instance, and `.PREPROCESS` netlist-wide; it stops on `.GLOBAL`, `.GLOBAL_PARAM` and `.END`. The manual allows only devices, `.MODEL`, `.PARAM` and `.FUNC` in a body ([xyce-ref] §2.1.37 p160), but its `.IC` text (§2.1.14 p48) implies `.IC` may stand there.
+
+   *Recommendation:* `ParseError` in a body ("Xyce ignores it there") for the analyses, `.OPTIONS`, `.STEP`, `.MEAS`, `.DATA` and every closed-list `UnknownDirective` except `ADDRESISTORS`. `.IC`, `.DCVOLT` and `.NODESET` are allowed in a body, read per definition (§7.8); a `$G` node in a body condition gets a warning, since Xyce ignores it. The X-M1 row and point 16 are corrected.
+6. **The plan's section 8.1 sites** (`model/_rules_statements.py`, now `:192` and `:302`) are `.MODEL` checks keyed `is Dialect.LTSPICE`, false on xyce. *Recommendation:* per-dialect tables, so a missing entry fails loudly (decision 0026 item 6).
+
+**Analyses and sweeps (A1)**
+
+7. **`.TRAN` fields** ([xyce-ref] §2.1.38 p161). `tstep tstop [tstart [tmax]]`, tstep required; one value, five numbers, a comma or a word such as `startup` stop Xyce. *Recommendation:* the core field order, no LTspice modifiers, no comma (`XY-TRN-001`).
+8. **`NOOP` and `UIC`.** The manual makes them synonyms (§2.1.38; [xyce-ug] §13.6 p205); Table 6-1 says UIC is ignored with a warning, but the binary treats it as `NOOP`, silently. Either order, case-insensitive; the binary caps the field count, so `tstep tstop tstart tmax NOOP UIC` stops it.
+
+   *Recommendation:* a new field `TranDirective.noop` beside `uic`; each at most once, after the numbers, either order. The manual's full form is read, with a row (Xyce stops on it); a repeated flag or a flag before a number is refused, with rows. The plan's section 4 is corrected.
+9. **`{schedule(…)}`.** The binary takes it only where tstart would be: with tstart or tmax, the manual's own form stops Xyce ("Maximum Time step is invalid"). Braced or quoted, any case, an even number of arguments, one per line. Options:
+   - (a) the manual's form (tstart, tmax and the schedule together), with a row;
+   - (b) only what both allow: `tstep tstop [NOOP] [UIC] {schedule(…)}`, without tstart and tmax, refused otherwise with a hint;
+   - (c) keep the line opaque.
+
+   *Recommendation:* (b), as a new field `TranDirective.schedule: Formula | None` with its own terminal (P13); a row for the manual's form.
+10. **Numbers and expressions in analysis fields.** Unbraced fields take the device-field reader (decision 0027 item 8: `1kohm`, `10meghz` and `10x` run; `1j`, `10z` and `µ` stop Xyce). Braces and quotes run on `.TRAN`, `.AC` and `.DC` (the manual's own examples use them, though §2.1.36 p157 says analyses take no expressions); `.STEP` stops on any. A stepped parameter in a `.TRAN` field is read once.
+
+    *Recommendation:* that reading; `.STEP` takes plain numbers only. A warning when an analysis field names a parameter that a `.STEP` sweeps (Xyce reads it once).
+11. **`.AC`** (§2.1.1 p24). `LIN|OCT|DEC points fstart fstop` or `DATA=table`; `list` stops Xyce, points must be an integer. *Recommendation:* a new field `AcDirective.data` (`variation` = `data` as written); no `list` or `file=` (`XY-ACA-001`).
+12. **`.DC`** (§2.1.3 p27). Any number of sweeps, first innermost, each with its own `LIN|DEC|OCT` (`LIN` optional) or `LIST`, in any position; `DATA=table` stands alone. Targets: a source, a device (its primary parameter), `dev:param`, `model:param`, `TEMP`, a `.param` or `.global_param`. `LIST` with one value runs, though the manual requires two. Options for `LIST`: (a) at least two values, as the manual, with a row; (b) at least one, as the binary.
+
+    *Recommendation:* (a); a sweep-target terminal that allows `:`; a new field `DcDirective.data` with empty `sweeps` (`XY-DCA-001`, `-002`).
+13. **`.OP`.** Extra fields run with a warning. *Recommendation:* refused, with a row (`XY-OPP-001`).
+14. **`.STEP` forms** (§2.1.36 p155–158). `[LIN|DEC|OCT] target start stop step`, `target LIST v…` or `DATA=table`; no `param` keyword; one sweep per line (two on one line run only the last, silently); `LIST` as point 12. Targets as `.DC`, plus `X1:R5:R` (not `X1:R5`). Xyce resolves a name as a parameter first, then a device; the form of a target does not tell a device from a parameter, nor `dev:param` from `model:param`.
+
+    *Recommendation:* a second sweep on a line is a `ParseError`, with a row. `StepDirective.kind` gains `name`, `qualified` and `data` (a best-effort widening), with new fields `parameter` (after the last `:`) and `data`; the document layer resolves each target against the scope, parameter first (`XY-STP-001`, `-002`).
+15. **Repeated analyses** (observed; the manual is silent). Among `.TRAN`, `.AC` and `.DC`, only the last line runs, silently; `.OP` gives way to any other; two `.TRAN` or two `.AC` lines: the last wins. **Two `.DC` lines join into one nested sweep.** Options: (a) no diagnostic; (b) a warning on each analysis Xyce will not run, and on a second `.DC` line; (c) `ParseError` on more than one analysis.
+
+    *Recommendation:* (b), a new `DiagnosticCode` (for example `ANALYSIS_IGNORED`, warning), with per-dialect entries (none on ngspice and LTspice). The directive upsert (`SINGLETON_DIRECTIVES`) needs no change.
+16. **Repeated and nested `.STEP`.** Several lines nest, first innermost (manual). The same quantity twice nests silently; a `DATA=` step makes Xyce drop every other `.STEP` line; two `.STEP` lines with `.OP` crash Xyce 7.10.
+
+    *Recommendation:* key the quantity by the folded target, with the primary parameter of R, C, L (R, C, L) and V, I (`DCV0`) so that `R2` and `R2:R` are one; warnings for a repeated quantity, for `DATA=` with other steps, and for several steps with `.OP`. `DUPLICATE_DEFINITION`'s "stops with an error" text becomes per dialect. `directives.set` replaces by the same key.
+17. **Case.** Every keyword folds case, and `DATA` takes blanks around `=`. *Recommendation:* `"…"i` terminals; `variation` as written.
+
+**Options, initial conditions, measurements and `.DATA` (A2)**
+
+18. **`.OPTIONS` packages** (§2.1.25 p96, 21 packages). Every listed package runs except `PCES` (unrecognized by this build); an unknown package warns and is ignored; the binary also knows `LINSOL-ES`, `NONLIN-TWOLEVEL` and `PRINT` (which crashes it); a line with no package is ignored ("SPICE-style option not supported") or, bare, stops Xyce. `.OPTION` is a full synonym. Options: (a) the manual's closed list; (b) open; (c) closed with a warning.
+
+    *Recommendation:* (a), case-folded; any other package or a missing one is a `ParseError` with a hint; `PCES` is read, with a row; `.OPTION` is read as a spelling, `observed` (`XY-OPT-001`).
+19. **Item names.** Hundreds, per package; an unknown one is ignored with a warning. *Recommendation:* open in X-M2 (a closed list would copy the manual's tables).
+20. **Values.** Numbers (device fields), words, comma lists (`2n,4n,6n`, blanks after a comma allowed), blanks around `=`; braced lists in `SAMPLES` (`OUTPUTS={V(1)},{V(2)}`). Braces elsewhere, commas between items, a blank-separated list and a leading bare word stop Xyce; a bare word after an item is dropped silently. `OUTPUT` and `RESTART` take `INITIAL_INTERVAL=i [t i]*`.
+
+    *Recommendation:* `name=value` items, values as listed; braces only in `SAMPLES` and `EMBEDDEDSAMPLES`; the interval pairs as a new field `OptionItem.pairs`, an odd count refused; a list as a new field `OptionItem.values`; everything else a `ParseError`, with rows for the silent drops (`XY-OPT-002`).
+21. **Repeats and place.** A repeated item: Xyce uses the **first** value, with a warning; two `OUTPUT` lines both apply (the manual says once only). *Recommendation:* `DUPLICATE_DEFINITION` (warning, the first value is used); top level only (point 5).
+22. **`.OPTION SCALE`** without a package (§2.1.25.21 p119) runs, singular or plural. *Recommendation:* read `.OPTION SCALE=v`, singular, one item, as `package=None`; the plural refused, with a row.
+23. **Nodes and edits.** A new field `OptionsDirective.package` (`None` on ngspice and LTspice). There is no `set_option` edit: X-M2 adds none, and `directives.add`, `replace` and `remove` work as they are. Section 1's "`set_tran`, `set_option`" is corrected.
+24. **`.IC`, `.DCVOLT` and `.NODESET` forms** (§2.1.14 p48, §2.1.4 p29, §2.1.22 p92). `V(node)=value` (blanks around `=`) or `node value` pairs, several per line; values as numbers, braces or quotes. Mixed forms, commas, `I(…)`, `V(a,b)` and `2=0.5` are ignored with a warning; `all=` and `.NODESET I(…)` stop Xyce; **an odd number of pair fields hangs Xyce**. A repeated node: the last wins. `.IC` and `.NODESET` in one netlist: Xyce aborts.
+
+    *Recommendation:* reuse `IcDirective`, `NodesetDirective` and `NodeCondition`, with a new field `NodeCondition.form` (`"v"` or `"pair"`); one form per statement; everything else a `ParseError`, with rows (the hang is recorded, not probed). `.DCVOLT` builds `IcDirective`. A new warning code for `.IC` with `.NODESET` (for example `IC_WITH_NODESET`); `DUPLICATE_DEFINITION` for a repeated node (the last is used) (`XY-ICN-001`, `XY-NOD-001`).
+25. **Nodes in conditions.** `v(x1:m)` reaches an internal node; `$G` globals work at the top level; a condition in a body applies in every instance. *Recommendation:* the node field takes `:` paths, resolved as decision 0027 item 4 (`NODE_INTO_INSTANCE`), and `UNRESOLVED_NODE` (warning) for a node that nothing in the scope connects. Topology is unchanged (P4).
+26. **`.MEAS`** (§2.1.18–2.1.20 p54–84). Modes TRAN, DC, AC, NOISE, FFT and the four `_CONT` forms, required; `TR` runs, though not in the manual; `HB`, `OP`, `SP` and a missing mode stop Xyce, as does a mode with no matching analysis. A repeated result name: the last is used, with a warning.
+
+    *Recommendation:* reuse `MeasureDirective`; a closed, required mode list, `TR` refused with a row; at least one body field; top level only. A new warning code for a mode with no matching analysis (for example `MEASURE_MODE_MISMATCH`), and `DUPLICATE_DEFINITION` for a repeated result (`XY-MEA-001`).
+27. **`.DATA … .ENDDATA`** (§2.1.2 p26). The binary reads the first word as the name, so the manual's optional name cannot work; column names follow on the `.DATA` line or `+` lines; values are read as a stream, and a count that is not a multiple of the columns stops Xyce even when nothing uses the table; `.ENDDATA` is a no-op to the binary (missing, named or doubled runs); a repeated name: the last wins; order is free; `DATA=` on `.DC`, `.AC`, `.NOISE` and `.STEP`, not `.TRAN`; an unknown name stops Xyce.
+
+    *Recommendation:* a new opaque block node (for example `DataTable`): the name required, at least one column, plain numbers only in a multiple of the columns, `.ENDDATA` required and bare, top level only, each strictness a row. A `data` namespace: `DATA=` fields are references of a new kind `data`, a new `UNRESOLVED_DATA` (warning), and `DUPLICATE_DEFINITION` for a repeated name (the last is used). Directive edits treat the block whole (`XY-DAT-001`, `-002`).
+
+**Across the milestone**
+
+28. **New best-effort names** (decision 0024 item 11), each on the X-M8 release-notes checklist: the fields `TranDirective.noop` and `.schedule`, `AcDirective.data`, `DcDirective.data`, `StepDirective.parameter` and `.data`, `OptionsDirective.package`, `OptionItem.values` and `.pairs`, `NodeCondition.form`; the `kind` values `name`, `qualified` and `data`; the `.DATA` node and the `data` reference kind; the `DiagnosticCode` members of points 15, 16, 24, 26 and 27.
+29. **Corrections:** the plan's section 4 (UIC), X-M1's point 16 and its discrepancy row (archived record: only links are fixed there, so the correction goes in the discrepancy row and decision record), and this list's section 1.
+30. **Evidence** as the reports propose: solver tests per directive (accept, reject, and the binary's leniencies), corpus files with manifests (`.IC` and `.NODESET` in separate files, since together they abort), and no probe that hangs Xyce (`.IC` with odd pairs, `.INITCOND` with no arguments).
 
 ### 5.2 Log
 
 - 2026-11-16: task list written; X-M1 archived (approved and merged as #27).
+- 2026-11-16: A1, A2 and A3 done (reports to the lead; nothing in `src/` changed); section 5.1 written for G1.
