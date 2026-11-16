@@ -48,7 +48,7 @@ X-M2 makes the hidden xyce dialect read its analysis, option, initial-condition,
 
 ### Stage 2
 
-- [ ] **B1 — Decision record** for the G1 decisions, and the architecture sections they amend.
+- [x] **B1 — Decision record** for the G1 decisions, and the architecture sections they amend.
 - [ ] **B2 — Analyses and sweeps** in `xyce.lark` and the statement rules: `.TRAN`, `.AC`, `.DC`, `.OP`, `.STEP`.
 - [ ] **B3 — Options, initial conditions, measurements** and the `.DATA` block.
 - [ ] **B4 — The closed list** of the other dot-commands, and directives in a body as decided at G1.
@@ -152,3 +152,4 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
 - 2026-11-16: A1, A2 and A3 done (reports to the lead; nothing in `src/` changed); section 5.1 written for G1.
 - 2026-11-16: G1 in progress: points 1, 9 (the manual's form), 12 and 14 decided; the other points wait for the maintainer's review.
 - 2026-11-16: G1 done: the maintainer accepted every other point as recommended.
+- 2026-11-16: B1 done: [decision 0028](../decisions/0028-xyce-directives.md); architecture §6.5 and the plan's section 4 amended.
