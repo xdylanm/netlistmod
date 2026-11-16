@@ -16,12 +16,16 @@ from typing import Literal
 from lark import Lark, Token, Tree
 from lark.exceptions import LarkError
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 
 _RESERVED = "formula-reserved.json"
-# The formula grammar of each dialect. Xyce has none until X-M1; its X-M0 grammar reads no
-# formula, and a lookup for it fails loudly instead of scanning with another dialect's rules.
-_GRAMMARS = {Dialect.NGSPICE: "formula.lark", Dialect.LTSPICE: "formula_ltspice.lark"}
+# The formula grammar of each dialect; a dialect without one fails loudly instead of scanning with
+# another dialect's rules.
+_GRAMMARS = {
+    Dialect.NGSPICE: "formula.lark",
+    Dialect.LTSPICE: "formula_ltspice.lark",
+    _XYCE: "formula_xyce.lark",
+}
 
 FormulaTokenKind = Literal["parameter", "reserved", "function", "node", "source"]
 
@@ -73,6 +77,19 @@ def reserved_words(dialect: Dialect) -> frozenset[str]:
     if not isinstance(table, dict) or not isinstance(table.get("words"), list):
         raise ValueError("formula-reserved.json must contain a list of words per dialect")
     return frozenset(str(word).lower() for word in table["words"])
+
+
+@lru_cache(maxsize=None)
+def builtin_functions(dialect: Dialect) -> frozenset[str]:
+    """The lower-case names of a dialect's built-in functions, for a dialect whose formulas may
+    call user-defined functions (xyce's ``.FUNC``): a call to one of these is not a reference.
+    ``ValueError`` for a dialect that lists none."""
+    resource = files("netlistmod.grammar") / _RESERVED
+    parsed = json.loads(resource.read_text(encoding="utf-8"))
+    table = parsed.get(dialect.value) if isinstance(parsed, dict) else None
+    if not isinstance(table, dict) or not isinstance(table.get("functions"), list):
+        raise ValueError(f"No built-in functions are listed for {dialect.display_name}")
+    return frozenset(str(name).lower() for name in table["functions"])
 
 
 def parse_formula(text: str, dialect: Dialect) -> tuple[FormulaToken, ...] | None:

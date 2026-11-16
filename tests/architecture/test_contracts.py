@@ -307,6 +307,8 @@ UNCHECKED_TERMINALS = {
     ),
     _XYCE: frozenset(
         {
+            "BARE_FORMULA",
+            "BLANK_TAIL",
             "COMMENT_LINE",
             "INDENTED_LINE",
             "PLUS_LINE",

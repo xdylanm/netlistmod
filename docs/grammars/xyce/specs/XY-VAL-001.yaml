@@ -1,0 +1,28 @@
+id: XY-VAL-001
+dialect: xyce
+construct: expression values (braces, single quotes, bare expressions without blanks)
+manual_ref:
+- '[xyce-ref] §2.2 p164 "Expressions"'
+- '[xyce-ref] §2.1.26 p120 ".PARAM (Parameter)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- BRACE_FORMULA
+- QUOTE_FORMULA
+- BARE_FORMULA
+- BLANK_TAIL
+- blank_tail
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_params.py::test_param_value_forms
+- tests/grammar/xyce/test_xyce_params.py::test_a_string_or_a_bad_number_is_rejected
+- tests/grammar/xyce/test_xyce_params.py::test_a_blank_inside_a_bare_value_is_rejected_with_a_hint
+- tests/document/test_xyce_scoping.py::test_a_bare_value_is_scanned_from_its_start
+- tests/solver/test_xyce_param_probes.py::test_param_forms
+- tests/solver/test_xyce_param_probes.py::test_a_bare_value_loses_its_blanks
+- tests/solver/test_xyce_param_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0: braced, quoted and bare values give the same value. Xyce deletes the blanks inside a bare `.PARAM` value, which the library refuses (discrepancies.md).'
+notes: 'A braced or single-quoted expression is a `Formula` with its delimiter; the terminals exclude only `{`, `}`, `;` and line ends (and a quote its own delimiter). On `.PARAM` and `.GLOBAL_PARAM` a value may also be a bare expression without blanks (decision X-D5, an exception to architecture §6.3 rule 10), a `Formula` with an empty delimiter, which ends at a blank, a comma outside parentheses, `;` or the line end; a word that begins like a number is a number (XY-NUM-002), so `1kohm` is refused rather than read as an expression. A blank inside a value is a ParseError with the hint to use braces (BLANK_TAIL); a blank inside parentheses ends the value too, a plain ParseError. Instance `name=` values (X-M1 B5) take the same bare value; `PARAMS:` defaults and V/I DC values take none (xm1-tasks 5.1 point 21).'

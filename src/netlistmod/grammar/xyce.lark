@@ -2,9 +2,9 @@
 // It reads the structure of a netlist ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42–43): the title line,
 // comment lines (`*`, or `;`, which may also end any line), blank lines, indented lines (a comment
 // to Xyce, decision X-D1), `+` continuation across those lines (§4.1.3.2 p43), the final `.END`;
-// and the statements X-M1 B2 reads: `.PREPROCESS REPLACEGROUND` and `.GLOBAL`. The names and the
-// two number readers of decision 0027 items 3 and 8 are defined here for the statements and element
-// lines that use them.
+// the statements X-M1 B2 reads, `.PREPROCESS REPLACEGROUND` and `.GLOBAL`; and those of B3,
+// `.PARAM`, `.GLOBAL_PARAM` and `.FUNC`. The names and the two number readers of decision 0027
+// items 3 and 8 are defined here for the statements and element lines that use them.
 //
 // Every other line is refused: a dot-command the overlay does not read yet, and the other
 // `.PREPROCESS` forms, raise UnsupportedConstruct from the transformer; an element line has no
@@ -31,6 +31,7 @@
 %import .core (end_stmt, trailer, eol, global_stmt)
 %import .core (WS, LINE_END, CONT, NL, TITLE_TEXT, COMMENT_LINE, END_KW, DOT_NAME)
 %import .core (SEP, TRAILING_COMMENT, WORD, NUMBER, GLOBAL_KW)
+%import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, PARAM_KW, RPAR)
 
 %ignore WS
 %ignore CONT
@@ -63,7 +64,10 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
 ?body_statement: unsupported_directive
                | preprocess_stmt
                | preprocess_other
+               | param_stmt
+               | func_stmt
 ?top_statement: global_stmt
+              | global_param_stmt
 
 // A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
 // (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
@@ -138,16 +142,88 @@ global_node: SEP WORD
 // Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
 // XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
 // milli), then a unit (a, amp, c, f, farad, h, henry, hertz, hy, hz, m, ohm, s, v, vdc, volt), in
-// any case. A letter that begins a scale factor is the scale factor, as Xyce reads it (an atomic
-// group, so `1farad` is femto followed by `arad`, refused, while `1pfarad` is a picofarad); the
-// longer alternatives come first, and the lookahead makes the token end where its word ends, so a
-// letter, digit or `.` after the closed lists is refused (`1kk`, `1keg`, `1e`, `2k7`, `µ`). The
-// element lines of X-M1 B5 read their values with it.
+// any case. A letter that begins a scale factor is the scale factor, as Xyce reads it: a unit
+// without a scale factor may not begin with one, so `1farad` is femto followed by `arad`, refused,
+// while `1pfarad` is a picofarad. The longer alternatives come first, and the lookahead makes the
+// token end where its word ends, so a letter, digit or `.` after the closed lists is refused
+// (`1kk`, `1keg`, `1e`, `2k7`, `µ`). The element lines of X-M1 B5 read their values with it.
 // spec: XY-NUM-001
-%override NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?>(?:meg|mil|[tgxkmunpf])?)(?:amp|farad|henry|hertz|ohm|vdc|volt|hy|hz|[acfhmsv])?(?![a-z0-9.])/i
+%override NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:(?:meg|mil|[tgxkmunpf])(?:amp|farad|henry|hertz|ohm|vdc|volt|hy|hz|[acfhmsv])?|(?![tgxkmunpf])(?:amp|farad|henry|hertz|ohm|vdc|volt|hy|hz|[acfhmsv]))?(?![a-z0-9.])/i
 
 // Numbers in an expression and a .PARAM value (decision 0027 item 8, observed): the same scale
 // factors, then a unit of a, f, h, hz, m, s or v, then an optional `j`, the imaginary part
 // ([xyce-ref] §2.2.1 p172). `1kohm` is refused here.
 // spec: XY-NUM-002
-EXPR_NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?>(?:meg|mil|[tgxkmunpf])?)(?:hz|[afhmsv])?j?(?![a-z0-9.])/i
+EXPR_NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:(?:meg|mil|[tgxkmunpf])(?:hz|[afhmsv])?|(?![tgxkmunpf])(?:hz|[afhmsv]))?j?(?![a-z0-9.])/i
+
+// Expressions in braces or single quotes ([xyce-ref] §2.2 p164): the contents are not parsed here
+// (formula_xyce.lark finds their names), and exclude only `{`, `}`, `;` and line ends (decision
+// 0027 item 11), besides a quote's own delimiter.
+// spec: XY-VAL-001
+%override BRACE_FORMULA.3: /\{[^{};\r\n]+\}/
+%override QUOTE_FORMULA.3: /'[^'{};\r\n]+'/
+
+// A bare expression (decision X-D5, an exception to architecture §6.3 rule 10): in a .PARAM or
+// .GLOBAL_PARAM value, an expression without blanks, which ends at a blank, a comma outside
+// parentheses, `;` or the line end. Its lookahead refuses a word that begins like a number (a
+// number, then letters, digits and dots, up to the end of the field), so a number stays
+// EXPR_NUMBER and a number form the readers refuse (`1kohm`, `1kk`) is not taken as an expression.
+// Parentheses nest three levels, and hold no blank either; non-ASCII is not an expression
+// character. BLANK_TAIL is a blank inside a value, which is recognised only to be refused with a
+// hint: blanks followed by something that is neither the next assignment, nor a comma, `;` or
+// the line end.
+// spec: XY-VAL-001
+BARE_FORMULA.5: /(?![+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?[A-Za-z0-9.]*(?:[ \t\r\n,;]|$))(?:[<>!=]=|[^ \t\r\n=,;(){}'"\x80-\U0010ffff]|\((?:[^() \t\r\n;{}'"\x80-\U0010ffff]|\((?:[^() \t\r\n;{}'"\x80-\U0010ffff]|\([^() \t\r\n;{}'"\x80-\U0010ffff]*\))*\))*\))+/
+BLANK_TAIL.12: /[ \t]+(?![ \t\r\n,;]|$)(?![A-Za-z_][A-Za-z0-9_.#@`]*(?:\([^()\r\n]*\))?[ \t]*=)(?:[^\r\n]|\r(?!\n))*/
+blank_tail: BLANK_TAIL (NL | eol)
+
+// .PARAM name=value, separated by blanks or commas (a comma may stand before a `+` line), and
+// function assignments name(args)={body} ([xyce-ref] §2.1.26 p120, §2.1.10 p42). A value is a
+// number (EXPR_NUMBER), a braced or quoted expression or a bare one; no strings. A reserved word,
+// or a built-in function's name, is recognised only to be refused.
+// spec: XY-PRM-001
+param_stmt: PARAM_KW (param_def | func_def) (param_def | param_next | func_def | func_next)* _param_end
+_param_end: NL | eol | blank_tail
+_param_value: EXPR_NUMBER | BRACE_FORMULA | QUOTE_FORMULA | BARE_FORMULA
+param_def: SEP PARAM_NAME EQ _param_value
+         | SEP RESERVED_NAME EQ _param_value          -> reserved_def
+         | (SEP | TRAILING_COMMENT) param_def
+param_next: CSEP PARAM_NAME EQ _param_value
+          | CSEP RESERVED_NAME EQ _param_value        -> reserved_def
+          | CSEP param_def
+          | (SEP | TRAILING_COMMENT) param_next
+
+// Parameter names (decision 0027 item 9; point 27): a letter or `_`, then letters, digits, `_` and
+// `.`. The reserved words ([xyce-ref] §2.1.26 p121, §2.1.10 p42) end where a name would.
+// spec: XY-PRM-001
+PARAM_NAME.2: /[A-Za-z_][A-Za-z0-9_.]*/
+RESERVED_NAME.3: /(?:time|freq|hertz|vt|temp|temper|gmin|pi|exp)(?![A-Za-z0-9_.(])/i
+
+// .GLOBAL_PARAM: as .PARAM, top level only, without functions (the transformer refuses one;
+// [xyce-ref] §2.1.12 p45).
+// spec: XY-PRM-002
+global_param_stmt: GLOBAL_PARAM_KW (param_def | func_def) (param_def | param_next | func_def | func_next)* _param_end
+GLOBAL_PARAM_KW.4: ".global_param"i
+
+// A function: its name and `(`, one token, so no blank may stand between them; the arguments; then
+// the body in braces or quotes. On .PARAM the `=` is required; on .FUNC it is optional, and
+// one .FUNC defines one function ([xyce-ref] §2.1.10 p42–43). Function names may also hold `#`, `@`
+// and the backtick. A built-in function or a reserved word ([xyce-ref] Tables 2-33 and 2-34
+// p166–171) is recognised as BUILTIN_OPEN only to be refused, and so is a reserved word as an
+// argument.
+// spec: XY-FUN-001
+func_stmt: FUNC_KW func_name func_args func_body (NL | eol)
+func_name: SEP (FUNC_OPEN | BUILTIN_OPEN)
+         | (SEP | TRAILING_COMMENT) func_name
+func_args: ((PARAM_NAME | RESERVED_NAME) (CSEP (PARAM_NAME | RESERVED_NAME))*)? RPAR
+func_body: (BRACE_FORMULA | QUOTE_FORMULA)
+         | EQ (BRACE_FORMULA | QUOTE_FORMULA)
+         | (SEP | TRAILING_COMMENT) func_body
+func_def: SEP (FUNC_OPEN | BUILTIN_OPEN) func_args EQ (BRACE_FORMULA | QUOTE_FORMULA)
+        | (SEP | TRAILING_COMMENT) func_def
+func_next: CSEP (FUNC_OPEN | BUILTIN_OPEN) func_args EQ (BRACE_FORMULA | QUOTE_FORMULA)
+         | CSEP func_def
+         | (SEP | TRAILING_COMMENT) func_next
+FUNC_KW.4: ".func"i
+FUNC_OPEN.3: /[A-Za-z_][A-Za-z0-9_.#@`]*\(/
+BUILTIN_OPEN.4: /(?:abs|ceil|ddt|ddx|floor|fmod|if|int|limit|m|min|max|nint|pwr|pow|pwrs|sdt|sgn|sign|stp|sqrt|uramp|table|fasttable|spline|akima|cubic|wodicka|bli|tablefile|db|img|ph|r|re|acos|acosh|arctan|asin|asinh|atan|atanh|atan2|cos|cosh|exp|ln|log|log10|sin|sinh|tan|tanh|agauss|gauss|aunif|unif|rand|spice_exp|spice_pulse|spice_sffm|spice_sin|time|freq|hertz|vt|temp|temper|gmin|pi)\(/i

@@ -23,6 +23,7 @@ from netlistmod.model.nodes import (
     FraProbe,
     FrequencyAnalyzer,
     GlobalDirective,
+    GlobalParamStatement,
     IndentedLine,
     Inductor,
     ModelStatement,
@@ -101,8 +102,21 @@ _ENDS_NAME_RULE: dict[Dialect, str] = {
 }
 # Whether a numeric value is checked against the dialect's number rules (ngspice only).
 _VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False, _XYCE: False}
-# Whether a repeated `.param`, `.model` or `.subckt` in one scope stops the solver.
-_REPEAT_STOPS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: True}
+# What a repeated `.param`, `.model`, `.subckt` or (xyce) function in one scope stops the solver.
+_REPEAT_STOPS: dict[Dialect, frozenset[str]] = {
+    Dialect.NGSPICE: frozenset(),
+    Dialect.LTSPICE: frozenset({"parameter", "model", "subcircuit"}),
+    _XYCE: frozenset({"model", "subcircuit", "function"}),
+}
+# The severity and the rule of a repeated parameter where the solver runs on.
+_PARAM_REPEATS: dict[Dialect, tuple[Severity, str]] = {
+    Dialect.NGSPICE: ("info", "the last assignment is used"),
+    _XYCE: (
+        "warning",
+        "Xyce 7.10 uses the first definition, as its own warning says (the Xyce reference manual "
+        "§2.1.26 p120 says the last)",
+    ),
+}
 
 
 def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, ...]:
@@ -487,22 +501,40 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
         (scope.params, "parameter"),
         (scope.models, "model"),
         (scope.subckts, "subcircuit"),
+        (scope.functions, "function"),
     )
+    defaults = {id(p) for p in (scope.definition.params if scope.definition is not None else ())}
+    global_params = {
+        id(assignment)
+        for line in scope.lines
+        if isinstance(line.item, GlobalParamStatement)
+        for assignment in line.item.assignments
+    }
     for table, noun in tables:
         for definitions in table.values():
             for repeated in definitions[1:]:
                 name, span = _name_of(repeated)
-                fatal = _REPEAT_STOPS[scope.dialect]
-                # LTspice stops at a repeated .param; ngspice uses the last one silently.
-                severity: Severity = "warning" if fatal or noun != "parameter" else "info"
+                fatal = noun in _REPEAT_STOPS[scope.dialect]
+                severity: Severity = "warning"
                 if fatal:
                     rule = f"{_SOLVER[scope.dialect]} stops with an error"
-                    if noun == "model":
+                    if scope.dialect is Dialect.LTSPICE and noun == "model":
                         rule += " if an element uses it and the definitions differ"
-                    elif noun == "subcircuit":
+                    elif scope.dialect is Dialect.LTSPICE and noun == "subcircuit":
                         rule += " if an instance uses it"
                 elif noun == "parameter":
-                    rule = "the last assignment is used"
+                    severity, rule = _PARAM_REPEATS[scope.dialect]
+                    if scope.dialect is _XYCE and id(definitions[0]) in defaults:
+                        rule = (
+                            "Xyce 7.10 uses the `PARAMS:` default, or an instance's value, so "
+                            "this `.param` is shadowed"
+                        )
+                    elif (
+                        scope.dialect is _XYCE
+                        and id(repeated) in global_params
+                        and id(definitions[0]) not in global_params
+                    ):
+                        rule = "Xyce 7.10 uses the `.param`, not the `.global_param`"
                 else:
                     rule = "ngspice uses the first definition"
                 findings.append(

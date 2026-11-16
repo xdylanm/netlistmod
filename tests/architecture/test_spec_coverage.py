@@ -29,7 +29,10 @@ LTSPICE_SHARED_FILES = [
 ]
 XYCE_DIRECTORY = ROOT / "docs" / "grammars" / "xyce"
 XYCE_SPEC_DIRECTORY = XYCE_DIRECTORY / "specs"
-XYCE_GRAMMAR_FILES = [ROOT / "src" / "netlistmod" / "grammar" / "xyce.lark"]
+XYCE_GRAMMAR_FILES = [
+    ROOT / "src" / "netlistmod" / "grammar" / "xyce.lark",
+    ROOT / "src" / "netlistmod" / "grammar" / "formula_xyce.lark",
+]
 XYCE_SHARED_FILES = [ROOT / "src" / "netlistmod" / "grammar" / "core.lark"]
 SPEC_MARKER = re.compile(r"^\s*//\s*spec:\s*([A-Z0-9-]+)\s*$", re.MULTILINE)
 GRAMMAR_DECLARATION = re.compile(
@@ -823,7 +826,9 @@ def test_xyce_specs_reference_tests_and_grammar_rules() -> None:
 def test_xyce_statuses_are_backed_by_their_evidence() -> None:
     discrepancies = XYCE_DIRECTORY / "discrepancies.md"
     check_validation_status(ROOT, XYCE_SPEC_DIRECTORY, discrepancies, solver="xyce")
-    check_rule_tables(ROOT, [XYCE_DIRECTORY / "names.md"], discrepancies)
+    check_rule_tables(
+        ROOT, [XYCE_DIRECTORY / "names.md", XYCE_DIRECTORY / "scoping.md"], discrepancies
+    )
     check_status_summary(XYCE_DIRECTORY / "README.md", XYCE_SPEC_DIRECTORY)
 
 

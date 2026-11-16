@@ -148,13 +148,20 @@ def test_xyce_names_fold_case() -> None:
     assert fold_name("RaResistor", _XYCE) == "raresistor"
 
 
-def test_xyce_formula_lookups_fail_loudly() -> None:
-    # X-M0's grammar reads no formula; a scan must not fall back to another dialect's rules.
-    from netlistmod.grammar.formula import build_formula_parser, parse_formula, reserved_words
+def test_xyce_has_its_own_formula_grammar() -> None:
+    # X-M1 B3 (decision 0027 item 11): formula_xyce.lark and its reserved words, not another
+    # dialect's rules; the other dialects list no built-in functions, so the lookup fails loudly.
+    from netlistmod.grammar.formula import (
+        build_formula_parser,
+        builtin_functions,
+        parse_formula,
+        reserved_words,
+    )
 
-    with pytest.raises(ValueError, match="No formula grammar is defined for Xyce"):
-        build_formula_parser(_XYCE)
-    with pytest.raises(ValueError, match="No formula reserved words are defined for Xyce"):
-        reserved_words(_XYCE)
-    with pytest.raises(ValueError, match="Xyce"):
-        parse_formula("a+1", _XYCE)
+    assert build_formula_parser(_XYCE) is not build_formula_parser(Dialect.NGSPICE)
+    assert "freq" in reserved_words(_XYCE)
+    assert "sin" in builtin_functions(_XYCE)
+    assert parse_formula("x1:a+1", Dialect.LTSPICE) is None
+    assert [token.text for token in parse_formula("x1:a+1", _XYCE) or ()] == ["x1:a"]
+    with pytest.raises(ValueError, match="No built-in functions are listed for ngspice"):
+        builtin_functions(Dialect.NGSPICE)

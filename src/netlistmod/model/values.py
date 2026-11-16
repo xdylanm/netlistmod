@@ -99,6 +99,23 @@ class ParamAssignment:
 
 
 @dataclass(frozen=True, slots=True)
+class FunctionDefinition:
+    """A user-defined function: an xyce ``.FUNC f(x) {body}``, or ``f(x)={body}`` on a ``.PARAM``
+    line ([xyce-ref] §2.1.10 p42; decision 0027 item 9).
+
+    ``name`` and ``name_span`` are the name without its ``(``; ``args`` the argument names, which
+    are local to ``body``; ``span`` runs from the name to the end of the body. xyce only; internal
+    while the dialect is hidden (decision 0026).
+    """
+
+    name: str
+    name_span: Span
+    args: tuple[Identifier, ...]
+    body: Formula
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
 class Identifier:
     """A bare name used as a value, such as the ``gear`` of ``.options method=gear``."""
 

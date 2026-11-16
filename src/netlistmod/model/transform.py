@@ -35,6 +35,7 @@ from netlistmod.grammar.loader import parse_tree
 from netlistmod.model._rules_behavioral import BehavioralRules
 from netlistmod.model._rules_lines import LinesRules
 from netlistmod.model._rules_nonlinear import NonlinearRules
+from netlistmod.model._rules_params import ParamRules
 from netlistmod.model._rules_sources import SourcesRules
 from netlistmod.model._rules_special import SpecialRules
 from netlistmod.model._rules_statements import StatementsRules
@@ -59,6 +60,7 @@ class _NodeBuilder(
     BehavioralRules,
     SpecialRules,
     LinesRules,
+    ParamRules,
     StatementsRules,
     Transformer[Token, ParseResult],
 ):

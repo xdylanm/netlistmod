@@ -1,0 +1,74 @@
+// The xyce expression syntax of brace, quoted and bare formulas ([xyce-ref] §2.2 p164–171), used
+// only to find the names a formula refers to (decision 0027 item 11; xm1-tasks 5.1 point 26). It is
+// not an evaluator and not a validator: text it cannot parse gives no references and no error.
+//
+// Built from formula.lark, with xyce's operators (Table 2-32 p164): `**` is the power, and `^` a
+// boolean XOR at the level of `|`; `&` is AND and `~` unary NOT; there is no unary `!`, no `\`
+// and no `||` or `&&`; `%` is the modulus. Precedence, from loosest to tightest: the ternary
+// `c ? x : y`, `|` and `^`, `&`, comparisons, `+` and `-`, `*` `/` `%`, `**` (right-associative),
+// unary `-` `+` `~`. An identifier directly followed by "(" is a function call. The accessors
+// v(...) and i(...) (and the AC variants of v) are one token each, so their arguments are node
+// and source names, not parameters; a node name may be a path into an instance, `V(X1:A)`.
+// Identifiers are a letter or `_`, then letters, digits and `_ . # @ $ :` and the backtick, not
+// `[` or `]`. As in Xyce, a name directly before the ternary's `:` takes the colon (the manual's
+// own warning, p165), so `a?b:c` does not parse; `a?b :c` does.
+//
+// Numbers are the expression reader of xyce.lark (XY-NUM-002) without a sign: scale factors, a
+// unit of a, f, h, hz, m, s or v, and the imaginary `j`.
+
+%ignore WS
+
+// spec: XY-FML-001
+?start: ternary
+
+// spec: XY-FML-001
+?ternary: or_expr
+        | or_expr QUESTION ternary COLON ternary
+?or_expr: and_expr
+        | or_expr (BAR | CARET) and_expr
+?and_expr: comparison
+         | and_expr AMP comparison
+?comparison: sum
+           | comparison COMPARE sum
+?sum: product
+    | sum (PLUS | MINUS) product
+?product: power
+        | product (STAR | SLASH | PERCENT) power
+?power: unary
+      | unary POWER power
+?unary: atom
+      | (MINUS | PLUS | TILDE) unary
+
+// spec: XY-FML-001
+?atom: NUMBER                                   -> number
+     | STRING                                   -> string
+     | IDENT                                    -> identifier
+     | IDENT LPAR (ternary (COMMA ternary)*)? RPAR -> call
+     | VOLTAGE_OPEN NAME (COMMA NAME)? RPAR     -> voltage
+     | CURRENT_OPEN NAME RPAR                   -> current
+     | LPAR ternary RPAR
+
+// spec: XY-FML-001
+WS: /[ \t]+/
+NUMBER: /(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?:(?:meg|mil|[tgxkmunpf])(?:hz|[afhmsv])?|(?![tgxkmunpf])(?:hz|[afhmsv]))?j?(?![a-z0-9.])/i
+STRING: /"[^"]*"/
+IDENT.2: /[A-Za-z_][A-Za-z0-9_.#@$:`]*/
+VOLTAGE_OPEN.3: /(?:v|vr|vi|vm|vp|vdb)\(/i
+CURRENT_OPEN.3: /i\(/i
+NAME: /[^ \t\r\n(),]+/
+LPAR: "("
+RPAR: ")"
+COMMA: ","
+QUESTION: "?"
+COLON: ":"
+BAR: "|"
+CARET: "^"
+AMP: "&"
+TILDE: "~"
+COMPARE: "==" | "!=" | "<=" | ">=" | "<" | ">"
+PLUS: "+"
+MINUS: "-"
+STAR: "*"
+SLASH: "/"
+PERCENT: "%"
+POWER: "**"

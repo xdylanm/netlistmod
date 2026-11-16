@@ -69,6 +69,7 @@ from netlistmod.model.values import (
     ElementReference,
     Flag,
     Formula,
+    FunctionDefinition,
     Identifier,
     ModelReference,
     NumericValue,
@@ -136,9 +137,13 @@ class StatementsRules(ElementsRules):
         bare = element.optional(_Bare)
         if bare is not None:
             raise self._error_at(assignments[-1].value.span.start, _BARE_EXPRESSION)
+        # An xyce `.PARAM` may also define functions (decision 0027 item 9).
+        functions = element.all(FunctionDefinition)
         return _Item(
             element.end,
-            lambda span: ParamStatement(**_dot(element, span), assignments=assignments),
+            lambda span: ParamStatement(
+                **_dot(element, span), assignments=assignments, functions=functions
+            ),
         )
 
     def param_def(self, children: list[Any]) -> _Field:

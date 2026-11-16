@@ -45,6 +45,7 @@ not take is refused, at the start of the number.
 ## Expressions
 
 A value in braces (`{...}`) or single quotes (`'...'`), or, on `.PARAM` and `.GLOBAL_PARAM` only, a
-bare expression without blanks (decision X-D5), is a `Formula`; the formula grammar
-(`formula_xyce.lark`) reads it only to find the names it refers to. X-M1 B3 reads them; see
-[scoping.md](./scoping.md).
+bare expression without blanks (decision X-D5), is a `Formula` (`XY-VAL-001`); the formula grammar
+(`formula_xyce.lark`, `XY-FML-001`) reads it only to find the names it refers to, with the
+expression reader's numbers. A word that begins like a number is a number, never a bare
+expression, so `.param r=1kohm` stays refused. See [scoping.md](./scoping.md).
