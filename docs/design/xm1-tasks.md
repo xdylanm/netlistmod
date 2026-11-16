@@ -52,7 +52,7 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 - [x] **B4 — Statements:** `.MODEL` and model types, `.SUBCKT`/`.ENDS`, includes, `.LIB`, `.GLOBAL`, `.PREPROCESS REPLACEGROUND`.
 - [x] **B5 — Elements:** R, C, L, V, I (DC/AC), D, X, K; `devices.md`.
 - [ ] **B6 — The document and edit layers:** the X-M1 lines of the plan's section 8.1; topology, diagnostics and edits on xyce for the letters read.
-- [ ] **B7 — Evidence:** spec entries for every construct, corpus files with manifests, solver tests (accept and reject probes, values and nets compared with Xyce), the README status table.
+- [ ] **B7 — Evidence and the parameter lists:** closed instance-parameter lists per letter (5.1 point 29); spec entries for every construct, corpus files with manifests, solver tests (accept and reject probes, values and nets compared with Xyce), the README status table.
 
 ## 5. Findings and log
 
@@ -206,6 +206,11 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
     A call to a `.FUNC` resolves as a reference of kind `function`, scoped like a parameter. `V(X1:A)` goes through point 7's reading. `dev:param` accessors appear only in `.print`, which is X-M2's.
 27. **Parameter names:** a letter or `_`, then letters, digits, `_` and `.`; `.` is accepted but undocumented, a discrepancy row. Function names may also hold `#`, `@` and the backtick (ref p43).
 28. **Commas in `PARAMS:`** are refused by 7.10, including the manual's own example (point 16), on both `.subckt` and instance lines. *Recommendation:* refused, with a discrepancy row.
+
+**Questions from stage 2**
+
+29. **Instance parameter names (B5).** Xyce stops on an unknown instance parameter (`R1 a 0 1k foo=1`), but B5 left the names open, which is more lenient than Xyce. **Decided (maintainer, 2026-11-16): close the lists per letter,** as LTspice's are. Each letter accepts only the instance parameters its manual section lists, with spec entries, and an unknown name raises `ParseError`. Done in B7.
+30. **C's value rule (B5).** B5 followed Xyce's own message: a C needs a value, `C=`, `Q=` or `L=` (the length), so a model-only C raises `ParseError` (Xyce stops on it). That is stricter than point 10's "model-only is grammatical". **Decided (maintainer, 2026-11-16): keep Xyce's rule.** `remove_value` on C is allowed only while `Q=` or `L=` remains.
 
 ### 5.2 Log
 
