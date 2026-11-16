@@ -1,0 +1,26 @@
+id: XY-SUB-001
+dialect: xyce
+construct: X subcircuit calls (nodes, optional `PARAMS`, `M=`)
+manual_ref:
+- '[xyce-ref] §2.3.33 p803 "Subcircuit"'
+- '[xyce-ref] §2.1.37 p159 ".SUBCKT (Subcircuit)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- subckt_instance
+- x_node
+- x_last
+- x_name_node
+- X_NAME
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_elements.py::test_the_subcircuit_call_forms
+- tests/grammar/xyce/test_xyce_elements.py::test_a_subcircuit_name_takes_no_colon
+- tests/grammar/xyce/test_xyce_elements.py::test_subcircuit_call_forms_are_refused
+- tests/solver/test_xyce_element_probes.py::test_subcircuit_call_forms
+- tests/solver/test_xyce_element_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0: nodes, the subcircuit, `PARAMS:` (or not, or on a `+` line), then parameters, bare values without blanks and `M=` among them. Xyce stops on a comma in the parameters.'
+notes: 'The ngspice `SubcktInstance` node (decision 0027 item 6; point 15). The names are right-recursive, as in core.lark, and each is a NODE_WORD until the parser knows the last, the subcircuit, so the transformer refuses a `:` in that one. `PARAMS:` (PARAMS_KW, XY-SBD-001) is optional and adds nothing to the node; the parameters are instance parameters (XY-ELM-001) with no comma, `M=` an ordinary one. At least one node.'

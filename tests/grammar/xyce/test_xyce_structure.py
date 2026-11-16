@@ -124,7 +124,10 @@ def test_end_may_end_with_a_semicolon_comment(comment: str) -> None:
         _tiles(text)
 
 
-@pytest.mark.parametrize("letter", sorted(device_matrix(_XYCE)))
+@pytest.mark.parametrize(
+    "letter",
+    sorted(k for k, v in device_matrix(_XYCE).items() if v["status"] == "planned"),
+)
 def test_every_element_line_is_unsupported(letter: str) -> None:
     with pytest.raises(UnsupportedConstruct, match="not yet supported on Xyce") as captured:
         _parse(f"title\n{letter}1 a 0 1\n.END\n")
@@ -136,9 +139,12 @@ def test_every_element_line_is_unsupported(letter: str) -> None:
         _parse(f"title\n{letter.lower()}1 a 0 1\n.END\n")
 
 
-def test_every_device_letter_is_planned() -> None:
+def test_the_x_m1_letters_are_supported_and_the_rest_planned() -> None:
     matrix = device_matrix(_XYCE)
-    assert {entry["status"] for entry in matrix.values()} == {"planned"}
+    supported = {letter for letter, entry in matrix.items() if entry["status"] == "supported"}
+    assert supported == set("CDIKLRVX")
+    assert all(matrix[letter]["milestone"] == "X-M1" for letter in supported)
+    assert {entry["status"] for entry in matrix.values()} == {"planned", "supported"}
     # A and N are not Xyce letters ([xyce-ref] Table 2-35 p177–178).
     assert "A" not in matrix
     assert "N" not in matrix

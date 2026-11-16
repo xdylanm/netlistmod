@@ -1,0 +1,51 @@
+id: XY-RCL-001
+dialect: xyce
+construct: R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms)
+manual_ref:
+- '[xyce-ref] §2.3.7 p201–203 "Resistor"'
+- '[xyce-ref] §2.3.4 p186–187 "Capacitor"'
+- '[xyce-ref] §2.3.5 p191–192 "Inductor"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- resistor
+- capacitor
+- inductor
+- _rcl
+- _rcl_tail
+- xy_tc_param
+- late_model
+- TC_KW
+- R_NAME
+- C_NAME
+- L_NAME
+core_rules:
+- value
+- model
+tests:
+- tests/grammar/xyce/test_xyce_elements.py::test_a_resistor_takes_the_model_before_the_value
+- tests/grammar/xyce/test_xyce_elements.py::test_resistor_value_forms
+- tests/grammar/xyce/test_xyce_elements.py::test_the_geometry_form_takes_a_model_and_both_l_and_w
+- tests/grammar/xyce/test_xyce_elements.py::test_a_resistor_needs_a_value
+- tests/grammar/xyce/test_xyce_elements.py::test_a_bare_name_as_the_value_is_read_as_the_model
+- tests/grammar/xyce/test_xyce_elements.py::test_the_ngspice_order_is_refused_with_a_hint
+- tests/grammar/xyce/test_xyce_elements.py::test_a_second_value_is_named
+- tests/grammar/xyce/test_xyce_elements.py::test_a_number_is_never_a_model
+- tests/grammar/xyce/test_xyce_elements.py::test_a_value_given_twice_is_refused
+- tests/grammar/xyce/test_xyce_elements.py::test_the_long_value_keywords_are_refused
+- tests/grammar/xyce/test_xyce_elements.py::test_tc_takes_one_or_two_values
+- tests/grammar/xyce/test_xyce_elements.py::test_the_capacitor_forms
+- tests/grammar/xyce/test_xyce_elements.py::test_a_capacitor_needs_a_value_a_charge_or_a_length
+- tests/grammar/xyce/test_xyce_elements.py::test_a_numeric_charge_is_refused
+- tests/grammar/xyce/test_xyce_elements.py::test_the_inductor_forms
+- tests/solver/test_xyce_element_probes.py::test_resistor_forms
+- tests/solver/test_xyce_element_probes.py::test_the_geometry_form_and_an_explicit_value
+- tests/solver/test_xyce_element_probes.py::test_capacitor_forms
+- tests/solver/test_xyce_element_probes.py::test_inductor_forms
+- tests/solver/test_xyce_element_probes.py::test_xyce_runs
+- tests/solver/test_xyce_element_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0, values compared through a divider (R) and the current of a 1 kHz AC source (C, L): the model before the value, `R=`, `C=`, `L=`, the charge `Q=`, the geometry form (RSH x L / W; an explicit value replaces it), `TC=a,b`, `M=`. Xyce stops on the long value keywords, a C with none of C, Q and L, an L without a value and three `TC=` values. It runs the ngspice order, a bare name as the value, an R without a value (1 kΩ) and a value written twice, which the library refuses (discrepancies.md).'
+notes: 'The ngspice `Resistor`, `Capacitor` and `Inductor` nodes (decision 0027 item 5, point 10 as amended by the maintainer). The model, a WORD, comes right after the nodes, then the value (positional: a NUMBER of the device reader, or an expression in braces or quotes). A field that reads as a number is the value, never a model (decision 0024 item 7), and a word after the value is refused with the hint "Xyce writes the model before the value". The value may instead be the parameter `R=`, `C=` or `L=` (value_keyword as written, the parameter left out of params); both together are a ParseError. R needs a value, positional or `R=`, unless it is the geometry form, a model with both `L=` and `W=`. C needs a value, `C=`, the charge `Q=` (an expression, Capacitor.charge) or `L=` (the semiconductor form, as Xyce requires "C, Q, or L"); a value with `Q=` is a ParseError. L needs a value. `TC=` takes one value, or two separated by a comma (a ValueList). `resistance=`, `capacitance=` and `inductance=` are refused. A bare name after the nodes is the model; when the line then has no value the message suggests braces. The document layer''s diagnostic for a model name that is a visible parameter, and the warning on a `.model` whose name reads as a number, are X-M1 B6''s.'

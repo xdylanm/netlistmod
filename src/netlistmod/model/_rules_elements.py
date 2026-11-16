@@ -244,12 +244,25 @@ class ElementsRules(_Rules):
     def mutual_coupling(self, children: list[Any]) -> _Item:
         element = _Element(children)
         value = element.values()[0]
+        inductors = element.all(ElementReference)
+        # Only an xyce K has a model, after the coupling, and only it may name one inductor
+        # ([xyce-ref] §2.3.6 p194; decision 0027 item 6).
+        model = element.optional(ModelReference)
+        if model is not None:
+            model = self._model_not_number(model, "the name after the coupling")
+        elif len(inductors) == 1:
+            raise self._error_at(
+                inductors[0].span.start,
+                "a K line with one inductor needs a CORE model after the coupling (Xyce "
+                "reference manual §2.3.6 p194); without one there is nothing to couple",
+            )
         return _Item(
             element.end,
             lambda span: MutualCoupling(
                 **_common(element, span, nodes=()),
-                inductors=element.all(ElementReference),
+                inductors=inductors,
                 value=value,
+                model=model,
             ),
         )
 
@@ -423,6 +436,13 @@ class ElementsRules(_Rules):
         element = _Element([None, *children])
         name = element.fields[0]
         assert isinstance(name, Token)
+        if name.type == "NODE_WORD" and ":" in name:
+            # On xyce every name of an X line is a node field until the last (decision X-D2).
+            raise self._parse_error(
+                name,
+                f"`{name}` is in the subcircuit's place (the last name before the parameters), "
+                "and a subcircuit name cannot hold `:`",
+            )
         subckt = SubcktReference(str(name), _span(name))
         return _XRest((), subckt, element.all(ParamAssignment), element.comments, element.end)
 

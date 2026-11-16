@@ -192,10 +192,16 @@ class Inductor(_TwoTerminal):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class MutualCoupling(Component):
-    """A ``K`` line; its inductor references are topology but not nets, so ``nodes`` is empty."""
+    """A ``K`` line; its inductor references are topology but not nets, so ``nodes`` is empty.
+
+    ``model`` is the CORE model an xyce K may name after the coupling (decision 0027 item 6),
+    which makes it a nonlinear magnetic core; ``None`` otherwise, and always on ngspice and
+    LTspice.
+    """
 
     inductors: tuple[ElementReference, ...]
     value: Value
+    model: ModelReference | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)

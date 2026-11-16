@@ -333,6 +333,11 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "LIB_KW": "`.LIB`",
         "ENDL_KW": "`.ENDL`",
         "PATH_FIELD": "file path or name",
+        "INST_KEY": "parameter name and `=`",
+        "OFF_VALUE_KW": "`OFF=`",
+        "SRC_FN_KW": "source function",
+        "DC_KW": "`DC`",
+        "AC_KW": "`AC`",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's
