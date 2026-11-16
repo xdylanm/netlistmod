@@ -128,7 +128,7 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
     - A positional value together with `R=`, or a value together with `Q=`, raises `ParseError`; Xyce silently prefers one (P5).
 
     *Recommendation:* as listed. R with no value gets a warning diagnostic.
-    **Decided (maintainer, 2026-11-16): as recommended, except that R requires a value.** An R line with no positional value and no `R=` raises `ParseError`, although Xyce runs it as 1 kΩ with a warning (a discrepancy row). This also refuses R's model-geometry form (`R1 a b rmod L=… W=…`, which takes its value from the model's `RSH`), and `remove_value` on R is refused, as on L.
+    **Decided (maintainer, 2026-11-16): as recommended, except that R requires a value.** An R line with no positional value and no `R=` raises `ParseError`, although Xyce runs it as 1 kΩ with a warning (a discrepancy row). *Narrowed (maintainer, 2026-11-16):* the model-geometry form, a model with both `L=` and `W=`, is still accepted, since Xyce computes RSH × L/W for it. Only an R that Xyce would set to the 1 kΩ default is refused: no value, no `R=`, and not that form. A lead probe on XyceNF 7.10.0 found `rmod L=30u W=1u` with `RSH=100` gives 3 kΩ, while an explicit value replaces the geometry (`rmod 2k L=30u W=1u` gives 2 kΩ). `remove_value` on R is allowed only on the geometry form, as on C's semiconductor form.
 11. **The edits follow the order.**
     - `set_value` inserts after the model.
     - `set_model` inserts right after the nodes, and is allowed with `R=`.
