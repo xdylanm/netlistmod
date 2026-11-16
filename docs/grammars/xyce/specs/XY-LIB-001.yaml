@@ -1,0 +1,36 @@
+id: XY-LIB-001
+dialect: xyce
+construct: .LIB calls and .LIB/.ENDL definitions
+manual_ref:
+- '[xyce-ref] §2.1.16 p50–51 ".LIB (Library file)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- lib_call
+- lib_section
+- lib_open
+- lib_open_end
+- lib_text
+- lib_close
+- LIB_KW
+- ENDL_KW
+- BLOCK_DOT_NAME
+- BLOCK_TEXT
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_statements.py::test_a_lib_call_has_a_file_and_entries
+- tests/grammar/xyce/test_xyce_statements.py::test_a_lib_call_with_several_entries_is_reported
+- tests/grammar/xyce/test_xyce_statements.py::test_a_lib_with_one_field_is_a_block
+- tests/grammar/xyce/test_xyce_statements.py::test_a_lib_block_must_close_with_its_name
+- tests/grammar/xyce/test_xyce_statements.py::test_an_unterminated_lib_block_is_named
+- tests/grammar/xyce/test_xyce_statements.py::test_the_paths_are_identifiers_as_written
+- tests/grammar/xyce/test_xyce_statements.py::test_a_stray_block_end_is_a_syntax_error
+- tests/solver/test_xyce_statement_probes.py::test_lib_call_forms
+- tests/solver/test_xyce_statement_probes.py::test_a_lib_call_loads_only_its_first_entry
+- tests/solver/test_xyce_statement_probes.py::test_a_lib_with_one_field_opens_a_block
+- tests/solver/test_xyce_statement_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0: a call reads its entry, quoted or not, across a `+` line; with two entries it warns and loads only the first; one field opens a definition, which Xyce stops on without a matching `.ENDL` (the name compared in any case) and skips in a netlist.'
+notes: 'Decision 0027 item 7; xm1-tasks 5.1 point 17. Two or more fields are a call: a `LibCall`, an `OpaqueStatement` of kind `lib` with its `entries` (internal, not exported until X-M8). Xyce loads only the first of several entries, which the manual allows ("the section or sections"), and the document layer reports it (DIALECT_GATED_SYNTAX, info). One field is a definition: an `OpaqueBlock` of kind `lib`, whose lines are never read, closed by `.ENDL` and the same name (folded by case), else a ParseError; the manual''s example `.LIB "path/models.lib"` (p50) is therefore a definition, as on Xyce. The opening line ends with its own NL (lib_open_end), so the state after it offers only the block''s terminals. A stray `.ENDL` is a ParseError.'

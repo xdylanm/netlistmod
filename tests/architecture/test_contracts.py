@@ -309,7 +309,9 @@ UNCHECKED_TERMINALS = {
         {
             "BARE_FORMULA",
             "BLANK_TAIL",
+            "BLOCK_TEXT",
             "COMMENT_LINE",
+            "DOT_NAME",
             "INDENTED_LINE",
             "PLUS_LINE",
             "REST_TEXT",

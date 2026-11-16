@@ -155,12 +155,6 @@ def test_a_letter_xyce_does_not_have_is_rejected(letter: str) -> None:
     "statement",
     [
         ".tran 1n 1u",
-        ".subckt s a b",
-        ".ends",
-        ".endl",
-        ".include 'x.cir'",
-        ".lib x.lib tt",
-        ".model rmod r",
         ".options timeint method=gear",
         ".print tran v(1) ; comment $ and // are text here",
         ".title other",

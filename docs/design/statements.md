@@ -146,4 +146,16 @@ differs:
 - **`FuncStatement`** (`_DotCommand` fields, `function: FunctionDefinition`) is `.FUNC`, one
   function per line.
 - **Spec IDs** of B3: `XY-VAL-001`, `XY-PRM-001`, `XY-PRM-002`, `XY-FUN-001`, `XY-FML-001`.
+- **`.SUBCKT`/`.ENDS`** is `SubcktDefinition`: at least one port, never `0`; `PARAMS:` optional
+  and kept out of the node; defaults with no comma and no bare value. `.GLOBAL`, `.GLOBAL_PARAM` and
+  `.END` are refused in a body. A stray `.ENDS` or `.ENDL` is a `ParseError`.
+- **`.MODEL`** is `ModelStatement`, with or without one pair of parentheses, no comma, no flags;
+  a parameter written twice is a `ParseError`. xyce's model types replace the shared list
+  (`model-types.json`, `model_types._MODES`).
+- **`.INC`, `.INCL` and `.INCLUDE`** are `OpaqueStatement` of kind `include`, one path, quoted or
+  not, and may be continued by `+` lines.
+- **`.LIB`** with two or more fields is a **`LibCall`**, an `OpaqueStatement` of kind `lib` that
+  adds `entries: tuple[Identifier, ...]` (the names after the file); with one field it opens an
+  `OpaqueBlock` of kind `lib`, closed by `.ENDL` and the same name.
+- **Spec IDs** of B4: `XY-SBD-001`, `XY-MOD-001`, `XY-INC-001`, `XY-LIB-001`.
 - **Dot-commands** the dialect does not read yet are `UnsupportedConstruct`.

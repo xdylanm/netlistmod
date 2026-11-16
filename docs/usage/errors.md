@@ -334,7 +334,7 @@ The name on `.ends` differs from the `.subckt` name.
 
 ### `DIALECT_GATED_SYNTAX`
 
-An ngspice value in RKM notation, which needs `rkm=True` and `ngbehavior=lt` in ngspice. Not used for LTspice, where it is native.
+An ngspice value in RKM notation, which needs `rkm=True` and `ngbehavior=lt` in ngspice. Not used for LTspice, where it is native. On the hidden xyce dialect, a `.LIB` call that names more than one entry, of which Xyce loads only the first.
 
 ```python
 >>> report("t\nR1 a 0 2k7\n.end\n", rkm=True)

@@ -43,7 +43,11 @@ _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
         "SUBCKT_KW": (".subckt", ".ends"),
         "subckt_header": (".subckt", ".ends"),
     },
-    _XYCE: {},
+    _XYCE: {
+        "SUBCKT_KW": (".SUBCKT", ".ENDS"),
+        "subckt_header": (".SUBCKT", ".ENDS"),
+        "lib_open": (".LIB", ".ENDL"),
+    },
 }
 # Opening parenthesis terminals; an unclosed one is reported at the opener when the line ends.
 _OPEN_PARENS: Final[frozenset[str]] = frozenset(
@@ -319,6 +323,16 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "FUNC_KW": "`.FUNC`",
         "GLOBAL_PARAM_KW": "`.GLOBAL_PARAM`",
         "PARAM_KW": "`.PARAM`",
+        "SUBCKT_KW": "`.SUBCKT`",
+        "ENDS_KW": "`.ENDS`",
+        "MODEL_KW": "`.MODEL`",
+        "PARAMS_KW": "`PARAMS:`",
+        "INC_KW": "`.INC`",
+        "INCL_KW": "`.INCL`",
+        "INCLUDE_KW": "`.INCLUDE`",
+        "LIB_KW": "`.LIB`",
+        "ENDL_KW": "`.ENDL`",
+        "PATH_FIELD": "file path or name",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's
@@ -327,6 +341,16 @@ _CLOSED_DOT_COMMANDS: Final[dict[Dialect, bool]] = {
     Dialect.NGSPICE: False,
     Dialect.LTSPICE: True,
     _XYCE: False,
+}
+# Why a comma where the parser stopped is refused, on a dialect whose statements read no comma
+# outside the places its grammar names (`.PARAM` on xyce).
+_COMMA_REASONS: Final[dict[Dialect, str | None]] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: None,
+    _XYCE: (
+        "a comma between fields: this line takes its fields separated by blanks (Xyce 7.10 stops "
+        "on a comma in `PARAMS:` and in a `.MODEL` line)"
+    ),
 }
 _MISSING_END = "the netlist must end with `.end`, which is missing"
 _INCOMPLETE_LINE = "this line ends too early"
@@ -520,6 +544,10 @@ def _map_error(
             line, column = source.position(refused_at)
             return ParseError(line, column, source.excerpt(refused_at), (), reason)
 
+    comma = _COMMA_REASONS[dialect]
+    if comma is not None and source.text.startswith(",", offset):
+        line, column = source.position(offset)
+        return ParseError(line, column, source.excerpt(offset), expected, comma)
     line, column = source.position(offset)
     line_start = source.line_span(line).start
     letter = source.text[offset : offset + 1].upper()

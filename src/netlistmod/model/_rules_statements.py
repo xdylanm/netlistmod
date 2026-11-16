@@ -8,7 +8,7 @@ from typing import Any, Literal, NoReturn
 from lark import Token, v_args
 from lark.tree import Meta
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect, fold_name
 from netlistmod.model._rules_elements import ElementsRules
 from netlistmod.model._tree import (
     _BARE_EXPRESSION,
@@ -84,6 +84,13 @@ _LTRA_FLAGS = frozenset(
     {"nosteplimit", "steplimit", "nocontrol", "lininterp", "mixedinterp", "truncnr", "truncdontcut"}
 )
 _LTRA_FLAG_TERMINALS = frozenset(f"{flag.upper()}_KW" for flag in _LTRA_FLAGS)
+# Whether a `.model` parameter written twice is refused: Xyce stops on it ("Duplicate specification
+# of parameter"; xm1-tasks 5.1 point 18), while ngspice and LTspice read the line.
+_MODEL_REPEAT_REFUSED: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
 _CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
 # The LTspice special function names (decision 0020 item 3) and DIGITAL: LTspice 26.1.1 stops on a
 # `.model` line of one of these types on its own ("Expected model definition", M18 D2), since an
@@ -188,6 +195,17 @@ class StatementsRules(ElementsRules):
         paren = element.optional(_ModelParams)
         fields = paren.fields if paren is not None else tuple(element.fields)
         params, flags = self._model_fields(str(model_type), fields)
+        if _MODEL_REPEAT_REFUSED[self._dialect]:
+            seen: set[str] = set()
+            for param in params:
+                folded = fold_name(param.name, self._dialect)
+                if folded in seen:
+                    raise self._error_at(
+                        param.name_span.start,
+                        f"`{param.name}=` is written twice on this `.model` line; "
+                        f"{self._dialect.display_name} stops on a repeated model parameter",
+                    )
+                seen.add(folded)
         return _Item(
             element.end,
             lambda span: ModelStatement(

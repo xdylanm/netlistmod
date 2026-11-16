@@ -13,6 +13,7 @@ grammar:
 - GLOBAL_PARAM_KW
 core_rules: []
 tests:
+- tests/grammar/xyce/test_xyce_statements.py::test_top_level_statements_are_refused_in_a_body
 - tests/grammar/xyce/test_xyce_params.py::test_global_param_is_a_top_level_param
 - tests/grammar/xyce/test_xyce_params.py::test_global_param_defines_no_function
 - tests/document/test_xyce_scoping.py::test_a_global_param_is_a_top_level_parameter
@@ -21,4 +22,4 @@ tests:
 - tests/solver/test_xyce_param_probes.py::test_the_first_definition_wins_and_param_beats_global_param
 - tests/solver/test_xyce_param_probes.py::test_xyce_stops_on
 validation_note: 'Validated on XyceNF Release 7.10.0: a top-level `.GLOBAL_PARAM` is a parameter like a `.PARAM`; it stops Xyce in a body or with a function, and a `.PARAM` of the same name wins.'
-notes: 'A `GlobalParamStatement`, a `ParamStatement` of its own keyword (decision 0027 item 9), with the assignments of XY-PRM-001 and no function (a ParseError). It is a top statement; in a subcircuit body it is refused (X-M1 B4). The document layer reads it as a top-level `.PARAM`, listed after the `.PARAM` assignments, so a `.PARAM` of the same name wins (scoping.md S5).'
+notes: 'A `GlobalParamStatement`, a `ParamStatement` of its own keyword (decision 0027 item 9), with the assignments of XY-PRM-001 and no function (a ParseError). It is a top statement; in a subcircuit body it is refused (not_in_subckt, XY-SBD-001). The document layer reads it as a top-level `.PARAM`, listed after the `.PARAM` assignments, so a `.PARAM` of the same name wins (scoping.md S5).'

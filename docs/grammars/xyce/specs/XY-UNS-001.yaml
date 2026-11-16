@@ -14,8 +14,8 @@ grammar:
 - PLUS_LINE
 - preprocess_other
 - pp_word
-core_rules:
 - DOT_NAME
+core_rules: []
 tests:
 - tests/grammar/xyce/test_xyce_structure.py::test_every_element_line_is_unsupported
 - tests/grammar/xyce/test_xyce_structure.py::test_every_other_dot_command_is_unsupported

@@ -3,10 +3,11 @@
 The table is data (``model-types.json``; decision 0007 item 3): an element class name maps to the
 types it may refer to, compared case-insensitively, with a dialect's own types added (decision
 0014: LTspice's Z also takes an IGBT; decision 0019: only ngspice has Y and P). The types it
-lists are the built-in ones. ``not_builtin`` names the elements whose model may be any type that is
-not built in: ngspice's code models and OSDI devices (decision 0020 items 5 and 6). The parser
-uses the built-in set to keep a code model's values off a built-in model, and the document
-layer's model-type check reads the same table (``netlistmod.document.models``).
+lists are the built-in ones; xyce's entry replaces the shared list instead (``_MODES``).
+``not_builtin`` names the elements whose model may be any type that is not built in: ngspice's
+code models and OSDI devices (decision 0020 items 5 and 6). The parser uses the built-in set to
+keep a code model's values off a built-in model, and the document layer's model-type check reads
+the same table (``netlistmod.document.models``).
 """
 
 from __future__ import annotations
@@ -14,11 +15,19 @@ from __future__ import annotations
 import json
 from functools import lru_cache
 from importlib.resources import files
-from typing import Any
+from typing import Any, Literal
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 
 _MODEL_TYPES = "model-types.json"
+# How a dialect's own entry combines with the shared ``elements``: ngspice and LTspice add their
+# types to it; xyce's entry is its whole list (decision 0027 item 7), since Xyce names its types
+# differently (``RES``, ``CAP``, ``IND``, ``CORE``).
+_MODES: dict[Dialect, Literal["extend", "replace"]] = {
+    Dialect.NGSPICE: "extend",
+    Dialect.LTSPICE: "extend",
+    _XYCE: "replace",
+}
 
 
 @lru_cache(maxsize=1)
@@ -36,6 +45,8 @@ def model_type_table(dialect: Dialect) -> dict[str, frozenset[str]]:
     parsed = _parsed()
     elements: dict[str, list[str]] = parsed["elements"]
     extra: dict[str, list[str]] = parsed.get(dialect.value, {})
+    if _MODES[dialect] == "replace":
+        elements = {}
     names = (*elements, *(name for name in extra if name not in elements))
     return {
         str(name): frozenset(
