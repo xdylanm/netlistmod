@@ -21,6 +21,7 @@ grammar:
 - rparen
 - dc_keyword
 - ac_spec
+- ac_variation
 core_rules: []
 tests:
 - tests/grammar/xyce/test_xyce_structure.py::test_an_indented_line_is_its_own_kind_of_comment

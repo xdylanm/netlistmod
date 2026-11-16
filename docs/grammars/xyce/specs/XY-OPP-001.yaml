@@ -1,0 +1,17 @@
+id: XY-OPP-001
+dialect: xyce
+construct: .OP operating point
+manual_ref:
+- '[xyce-ref] §2.1.24 p95 ".OP (Bias Point Analysis)"'
+status: documented
+grammar: []
+core_rules:
+- op_stmt
+- OP_KW
+tests:
+- tests/grammar/xyce/test_xyce_analyses.py::test_op_takes_no_fields
+- tests/grammar/xyce/test_xyce_analyses.py::test_op_with_fields_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_several_analyses_are_read
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+validation_note: Read from the manual (decision 0028 item 3; xm2-tasks 5.1 point 13). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy row (extra fields, which Xyce runs with a warning) are X-M2 B6's.
+notes: '`OpDirective`, core.lark''s `op_stmt` as on ngspice: no fields, so any field is a ParseError. Top level only (in a body it is a ParseError, since Xyce ignores it there).'

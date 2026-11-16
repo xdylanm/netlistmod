@@ -1,5 +1,5 @@
-reject: .tran is X-M2's
+reject: .options is X-M2 B3's
 V1 a 0 1
 R1 a 0 1k
-.tran 1n 10n
+.options timeint method=gear
 .END

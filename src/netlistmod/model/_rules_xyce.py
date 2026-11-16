@@ -1,11 +1,12 @@
 """Rules for xyce's statements and element lines: `.SUBCKT` defaults, the includes and `.LIB`
-(X-M1 B4; decision 0027 item 7), and the R, C, L, V, I and D forms that differ from the other
-dialects (X-M1 B5; decision 0027 items 5 and 6)."""
+(X-M1 B4; decision 0027 item 7), the R, C, L, V, I and D forms that differ from the other
+dialects (X-M1 B5; decision 0027 items 5 and 6), and the analyses and `.STEP` (X-M2 B2; decision
+0028 items 3 and 4)."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, NoReturn
+from dataclasses import dataclass, field
+from typing import Any, Literal, NoReturn
 
 from lark import Token
 
@@ -14,20 +15,27 @@ from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._tree import (
     _common,
+    _dot,
     _Element,
     _Field,
     _field_token,
     _Item,
+    _ListKeyword,
     _span,
     _XRest,
 )
 from netlistmod.model.nodes import (
+    AcDirective,
     Capacitor,
+    DcDirective,
+    DcSweep,
     Inductor,
     LibCall,
     OpaqueBlock,
     OpaqueStatement,
     Resistor,
+    StepDirective,
+    TranDirective,
 )
 from netlistmod.model.values import (
     Flag,
@@ -38,6 +46,7 @@ from netlistmod.model.values import (
     ParamAssignment,
     Value,
 )
+from netlistmod.source import Span
 
 # Whether R, C and L take xyce's forms (decision 0027 item 5): the model right after the nodes,
 # then the value, which may also be written `R=`, `C=` or `L=` (and the charge `Q=` on C). The
@@ -89,6 +98,38 @@ _VALUE_FORMS: dict[type, str] = {
     Capacitor: "a value, positional or `C=`, a charge `Q=`, or `L=`",
     Inductor: "a value, positional or `L=`",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class _Schedule:
+    """The `{schedule(...)}` field of an xyce `.TRAN`, kept apart from the positional values."""
+
+    formula: Formula
+
+
+@dataclass(frozen=True, slots=True)
+class _DataRef:
+    """`DATA=table` on an xyce `.AC`, `.DC` or `.STEP`: the keyword and the table's name."""
+
+    keyword: Token
+    table: Identifier
+
+
+@dataclass(frozen=True, slots=True)
+class _SweepTarget:
+    """The target of an xyce `.DC` sweep or `.STEP`, a name that may hold `:`."""
+
+    token: Token
+
+
+@dataclass
+class _OpenSweep:
+    """A `.DC` sweep while its fields are gathered."""
+
+    target: Token
+    variation: Token | None
+    listed: bool = False
+    values: list[Value] = field(default_factory=list)
 
 
 @dataclass(frozen=True, slots=True)
@@ -391,4 +432,211 @@ class XyceRules(StatementsRules):
         raise self._error_at(
             _span(element.designator).start,
             f"this {letter} line has no value: it needs {_VALUE_FORMS[kind]}{hint}",
+        )
+
+    # Analyses and `.STEP` (X-M2 B2; decision 0028 items 3 and 4). In a subcircuit body they are
+    # refused by not_in_subckt (StatementsRules), whose message says Xyce ignores them there.
+
+    def xy_tran_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        values = element.values()
+        for value in values:
+            head = value.text.lstrip()
+            if (
+                isinstance(value, Formula)
+                and head[:8].lower() == "schedule"
+                and head[8:].lstrip().startswith("(")
+            ):
+                raise self._error_at(
+                    value.span.start,
+                    "a schedule stands after the numbers and the NOOP and UIC flags, as the "
+                    "last field (`.TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] "
+                    "[{schedule(...)}]`; Xyce reference manual §2.1.38 p161)",
+                )
+        flags: dict[str, Flag] = {}
+        for flag in element.all(Flag):
+            folded = fold_name(flag.name, self._dialect)
+            if folded in flags:
+                raise self._error_at(
+                    flag.span.start,
+                    f"`{flag.name}` is written twice on this `.TRAN` line; write it once (NOOP "
+                    "and UIC are synonyms, each at most once; Xyce reference manual §2.1.38 p161)",
+                )
+            flags[folded] = flag
+        schedule = element.optional(_Schedule)
+        return _Item(
+            element.end,
+            lambda span: TranDirective(
+                **_dot(element, span),
+                tstep=values[0],
+                tstop=values[1],
+                tstart=values[2] if len(values) > 2 else None,
+                tmax=values[3] if len(values) > 3 else None,
+                uic=flags.get("uic"),
+                noop=flags.get("noop"),
+                schedule=schedule.formula if schedule is not None else None,
+            ),
+        )
+
+    def tran_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    def tran_schedule(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _Schedule:
+            # SCHEDULE_FORMULA has one delimiter character at each end, braces or quotes.
+            span = _span(token)
+            text = self._source.text[span.start + 1 : span.end - 1]
+            delimiter: Literal["{", "'"] = "{" if str(token).startswith("{") else "'"
+            return _Schedule(Formula(text, delimiter, span))
+
+        return self._field(children, build)
+
+    def data_ref(self, children: list[Any]) -> _Field:
+        def build(keyword: Token) -> _DataRef:
+            table: Token = children[-1]
+            return _DataRef(keyword, Identifier(str(table), _span(table)))
+
+        return self._field(children, build)
+
+    def xy_ac_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        values = element.values()
+        keyword = data.keyword if data is not None else element.all(Token)[0]
+        ranged = data is None
+        return _Item(
+            element.end,
+            lambda span: AcDirective(
+                **_dot(element, span),
+                variation=str(keyword),
+                variation_span=_span(keyword),
+                points=values[0] if ranged else None,
+                fstart=values[1] if ranged else None,
+                fstop=values[2] if ranged else None,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def sweep_target(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _SweepTarget:
+            text = str(token)
+            if reads_as_number(text):
+                raise self._parse_error(
+                    token, f"`{text}` stands where a sweep target is, and a target is a name"
+                )
+            if "" in text.split(":"):
+                raise self._parse_error(
+                    token,
+                    f"`{text}` has an empty part around a `:`; a target is a name, "
+                    "`device:parameter`, `model:parameter` or a path such as `X1:R5:R`",
+                )
+            return _SweepTarget(token)
+
+        return self._field(children, build)
+
+    def xy_dc_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        sweeps: list[DcSweep] = []
+        variation: Token | None = None
+        current: _OpenSweep | None = None
+        for node in element.fields:
+            if isinstance(node, Token):  # LIN, DEC or OCT, before the next target
+                variation = node
+            elif isinstance(node, _SweepTarget):
+                if current is not None:
+                    sweeps.append(self._dc_sweep(current))
+                current = _OpenSweep(node.token, variation)
+                variation = None
+            elif isinstance(node, _ListKeyword):
+                assert current is not None
+                current.listed = True
+            elif isinstance(node, NumericValue | Formula):
+                assert current is not None
+                current.values.append(node)
+        if current is not None:
+            sweeps.append(self._dc_sweep(current))
+        found = tuple(sweeps)
+        return _Item(
+            element.end,
+            lambda span: DcDirective(
+                **_dot(element, span),
+                sweeps=found,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def _dc_sweep(self, sweep: _OpenSweep) -> DcSweep:
+        values = tuple(sweep.values)
+        ranged = not sweep.listed
+        target = _span(sweep.target)
+        return DcSweep(
+            str(sweep.target),
+            target,
+            values[0] if ranged else None,
+            values[1] if ranged else None,
+            values[2] if ranged else None,
+            Span(target.start, values[-1].span.end),
+            str(sweep.variation) if sweep.variation is not None else None,
+            values if sweep.listed else (),
+        )
+
+    def xy_step_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        target = element.optional(_SweepTarget)
+        variation = next(iter(element.all(Token)), None)
+        values = element.values()
+        listed = element.optional(_ListKeyword) is not None
+        kind: Literal["temp", "name", "qualified", "data"]
+        parameter: str | None = None
+        if data is not None:
+            kind, name, name_span = "data", data.table.name, data.table.span
+        else:
+            assert target is not None
+            name, name_span = str(target.token), _span(target.token)
+            if ":" in name:
+                kind, parameter = "qualified", name.rpartition(":")[2]
+            elif fold_name(name, self._dialect) == "temp":
+                kind = "temp"
+            else:
+                kind = "name"
+        ranged = data is None and not listed
+        return _Item(
+            element.end,
+            lambda span: StepDirective(
+                **_dot(element, span),
+                kind=kind,
+                name=name,
+                name_span=name_span,
+                model_type=None,
+                model=None,
+                variation=str(variation) if variation is not None else None,
+                variation_span=_span(variation) if variation is not None else None,
+                start=values[0] if ranged else None,
+                stop=values[1] if ranged else None,
+                increment=values[2] if ranged else None,
+                values=values if listed else (),
+                file=None,
+                parameter=parameter,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def step_second(self, children: list[Any]) -> NoReturn:
+        target = _field_token(children)
+        raise self._parse_error(
+            target,
+            f"a second sweep (`{target}`) on one `.STEP` line: Xyce silently runs only the last "
+            "one, so write one `.STEP` line per sweep (they nest, the first innermost; Xyce "
+            "reference manual §2.1.36 p155)",
+        )
+
+    def xy_step_param(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        raise self._parse_error(
+            keyword,
+            f"`.STEP` takes no `{keyword}` keyword on Xyce, which stops on it: name the "
+            "parameter directly, `.STEP name start stop step` (Xyce reference manual §2.1.36 "
+            "p155)",
         )

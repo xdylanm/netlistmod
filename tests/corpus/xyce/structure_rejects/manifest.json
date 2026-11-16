@@ -135,11 +135,11 @@
       "xyce": "runs"
     },
     "unsupported_directive.cir": {
-      "sha256": "0e14921d3a43e0920a5ecc6b8a14290882a70c2ee0ef68f951bb917071bf7194",
+      "sha256": "09c497816ed8521646ce83bc948148d9f5c990d67c1aa43e01e8b56eb4405f77",
       "line": 4,
       "column": 1,
       "error": "UnsupportedConstruct",
-      "note": "`.tran` is X-M2's (XY-UNS-001)",
+      "note": "`.options` is X-M2 B3's (XY-UNS-001)",
       "xyce": "runs"
     },
     "unsupported_letter.cir": {

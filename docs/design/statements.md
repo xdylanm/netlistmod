@@ -19,16 +19,16 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | `SubcktDefinition` | `name`, `name_span`, `ports: tuple[Node, ...]`, `params` (defaults), `body: tuple[BodyItem, ...]`, `ends: EndsLine`, `header_span` |
 | `EndsLine` | `name: str \| None`, `name_span: Span \| None`, `span`, `trailing_comments` |
 | `Directive` | base of the directives below (top level only) |
-| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None`, `modifiers: tuple[OptionItem, ...]` (LTspice) |
-| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop`, `frequencies` (LTspice `.ac list`; range fields `None`), `file` (LTspice `.ac file=`) |
-| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span, variation, values, file)`; the last three are LTspice's |
+| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None`, `modifiers: tuple[OptionItem, ...]` (LTspice), `noop: Flag \| None` and `schedule: Formula \| None` (xyce's `NOOP` and `{schedule(...)}`) |
+| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop`, `frequencies` (LTspice `.ac list`; range fields `None`), `file` (LTspice `.ac file=`), `data: Identifier \| None` (xyce `.AC DATA=table`; `variation` is `data` as written) |
+| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span, variation, values, file)`; the last three are LTspice's, and xyce's sweeps take `variation` and `values` (`LIST`) too; `data: Identifier \| None` (xyce `.DC DATA=table`, with no sweeps) |
 | `OpDirective` | — |
 | `OptionsDirective` | `options: tuple[OptionItem, ...]`; `OptionItem(name, name_span, value: Value \| Identifier \| None, span)` |
 | `TempDirective` | `value`, `others` (LTspice's further values) |
 | `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span, current)`, `node is None` for `all=` or for an LTspice `.ic i(L1)=…` (`current: ElementReference`) |
 | `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span, function: str \| None, nodes: tuple[Node, ...], source: ElementReference \| None)` |
 | `MeasureDirective` | `analysis`, `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
-| `StepDirective` (LTspice) | `kind: "param" \| "source" \| "temp" \| "model"`, `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file` |
+| `StepDirective` (LTspice, xyce) | `kind: "param" \| "source" \| "temp" \| "model" \| "name" \| "qualified" \| "data"` (the last three xyce's), `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file`, `parameter: str \| None` (xyce: the part of a `qualified` target after the last `:`), `data: Identifier \| None` (xyce `DATA=table`) |
 | `GlobalDirective` | `nodes: tuple[Node, ...]`; not a `Directive` subclass, because it is topology |
 | `Title` | `text`, `explicit` (written `.title`), `span` |
 | `TitleDirective` | `text`, `span`; a `.title` after the first line |
