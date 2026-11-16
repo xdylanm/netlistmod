@@ -47,7 +47,7 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 ### Stage 2
 
 - [x] **B1 — Decision record(s)** for the G1 decisions (X-D1, X-D2, X-D3, X-D5, `.END`), and the architecture sections they amend.
-- [ ] **B2 — Structure, names and numbers** in `xyce.lark`, the names layer and the value grammar; `names.md`, `numbers.md`.
+- [x] **B2 — Structure, names and numbers** in `xyce.lark`, the names layer and the value grammar; `names.md`, `numbers.md`.
 - [ ] **B3 — Parameters and expressions:** `.PARAM`, `.GLOBAL_PARAM`, `.FUNC`, the xyce formula grammar and reserved words; `scoping.md`.
 - [ ] **B4 — Statements:** `.MODEL` and model types, `.SUBCKT`/`.ENDS`, includes, `.LIB`, `.GLOBAL`, `.PREPROCESS REPLACEGROUND`.
 - [ ] **B5 — Elements:** R, C, L, V, I (DC/AC), D, X, K; `devices.md`.

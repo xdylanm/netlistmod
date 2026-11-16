@@ -1,5 +1,6 @@
-"""The structure-only xyce grammar of X-M0 (decision 0026): the title, `*` comments, blank lines
-and `.END`, and the refusal of every other line."""
+"""The structure of the xyce grammar (decision 0026; X-M1 B2, decision 0027 items 1 and 2): the
+title, `*` and `;` comments, blank lines, indented lines, `+` continuation across them, `.END`, and
+the refusal of the lines the dialect does not read yet."""
 
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ from netlistmod import (
     BlankLine,
     CommentLine,
     End,
+    GlobalDirective,
+    Node,
     ParseError,
     SourceText,
     Span,
@@ -21,6 +24,7 @@ from netlistmod import (
 )
 from netlistmod.dialects import _XYCE
 from netlistmod.grammar.loader import build_parser, device_matrix, parse_tree, registered_dialects
+from netlistmod.model.nodes import IndentedLine
 from netlistmod.model.transform import _NodeBuilder
 
 
@@ -100,14 +104,24 @@ def test_end_is_required() -> None:
 
 
 def test_end_is_last_with_only_blank_lines_after_it() -> None:
-    for after in ("* c", "R1 a 0 1k", ".END", ".param x=1", "+ x"):
+    for after in ("* c", "; c", "  indented", "R1 a 0 1k", ".END", ".param x=1", "+ x"):
         with pytest.raises(ParseError) as captured:
             _parse(f"title\n.END\n{after}\n")
         assert captured.value.line == 3
-    for text in ("title\n.END x\n", "title\n.END ; c\n"):
+    # Nothing but a `;` comment may follow `.END` on its line (decision 0027 item 2).
+    for text in ("title\n.END x\n", "title\n.END x ; c\n"):
         with pytest.raises(ParseError) as captured:
             _parse(text)
         assert captured.value.line == 2
+
+
+@pytest.mark.parametrize("comment", [" ; c", "; c", ";", "\t;c ; d"])
+def test_end_may_end_with_a_semicolon_comment(comment: str) -> None:
+    # `;` may end any line ([xyce-ug] §4.1.3.1 p43), so also the `.END` line.
+    for ending in ("\n", "\n\n", ""):
+        text = f"title\n.END{comment}{ending}"
+        assert _kinds(text)[:2] == [Title, End]
+        _tiles(text)
 
 
 @pytest.mark.parametrize("letter", sorted(device_matrix(_XYCE)))
@@ -149,7 +163,7 @@ def test_a_letter_xyce_does_not_have_is_rejected(letter: str) -> None:
         ".include 'x.cir'",
         ".lib x.lib tt",
         ".global_param g=1",
-        ".preprocess replaceground true",
+        ".func f(x) {x}",
         ".options timeint method=gear",
         ".print tran v(1) ; comment $ and // are text here",
         ".title other",
@@ -214,27 +228,92 @@ def test_a_continuation_with_only_the_title_before_it_is_rejected(before: str) -
     assert captured.value.line == text.count("\n", 0, text.index("+")) + 1
 
 
-@pytest.mark.parametrize("line", [";", "; a comment", ";* not a star comment"])
-def test_a_line_that_begins_with_a_semicolon_is_unsupported(line: str) -> None:
+@pytest.mark.parametrize("line", [";", "; a comment", ";* not a star comment", "  ; indented"])
+def test_a_line_that_begins_with_a_semicolon_is_a_comment(line: str) -> None:
     # An in-line comment may occur on any line ([xyce-ug] §4.1.3.1 p43), so a line that begins
-    # with `;` is valid; X-M1 reads it.
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(f"title\n* c\n{line}\n.END\n")
-    assert captured.value.construct == (
-        "line that begins with `;`, an in-line comment; not yet supported on Xyce"
-    )
-    assert (captured.value.line, captured.value.column) == (3, 1)
+    # with `;` is a comment line, indented or not (decision 0027 item 2).
+    text = f"title\n* c\n{line}\n.END\n"
+    items = _parse(text).items
+    assert [type(item) for item in items] == [Title, CommentLine, CommentLine, End]
+    assert items[2].text == line.lstrip()
+    _tiles(text)
 
 
-def test_an_indented_line_is_unsupported() -> None:
-    # Xyce reads an indented line as a comment ([xyce-ug] §4.1.3.1 p43); decision X-D1 is X-M1's.
-    for line in ("  .param x=1", "\tR1 a 0 1k", "  hello"):
-        with pytest.raises(UnsupportedConstruct, match="indented line") as captured:
-            _parse(f"title\n{line}\n.END\n")
-        assert (captured.value.line, captured.value.column) == (2, 1)
+@pytest.mark.parametrize("line", ["  .param x=1", "\tR1 a 0 1k", "  hello", " .END", "\tx"])
+def test_an_indented_line_is_its_own_kind_of_comment(line: str) -> None:
+    # Xyce reads an indented line as a comment ([xyce-ug] §4.1.3.1 p43); decision X-D1 reads it
+    # as a node of its own kind, with its blanks (decision 0027 item 1).
+    text = f"title\n{line}\n.END\n"
+    items = _parse(text).items
+    assert [type(item) for item in items] == [Title, IndentedLine, End]
+    assert items[1] == IndentedLine(line, Span(6, 6 + len(line) + 1))
+    _tiles(text)
+
+
+def test_an_indented_end_is_not_the_end() -> None:
     # An indented `.END` is such a comment, so the netlist has no `.END`.
     with pytest.raises(ParseError, match="must end with"):
         _parse("title\n  .END\n")
+
+
+def test_indented_star_and_plus_lines_are_not_indented_lines() -> None:
+    # An indented `*` line is a comment, and an indented `+` line continues (decision 0027 item 1).
+    assert _kinds("title\n  * c\n.END\n") == [Title, CommentLine, End]
+    directive = _parse("t\n.global a\n  + b\n.END\n").items[1]
+    assert isinstance(directive, GlobalDirective)
+    assert [node.name for node in directive.nodes] == ["a", "b"]
+
+
+@pytest.mark.parametrize(
+    ("between", "comments"),
+    [
+        ("", []),
+        ("* c\n", ["* c"]),
+        ("\n", []),
+        ("   \n", []),
+        ("; c\n", ["; c"]),
+        ("  ; c\n", ["  ; c"]),
+        ("  indented\n", ["  indented"]),
+        ("* a\n\n  b\n;c\n", ["* a", "  b", ";c"]),
+    ],
+)
+def test_a_continuation_joins_across_blank_comment_and_indented_lines(
+    between: str, comments: list[str]
+) -> None:
+    # A `+` line joins the last line that is not a comment, across blank, `*`, `;` and indented
+    # lines ([xyce-ug] §4.1.3.2 p43; decision 0027 item 2). The lines between belong to the
+    # statement, and their comments are its trailing comments, an indented one with its blanks.
+    text = f"title\n.global a ; first\n{between}+ b\n.END\n"
+    items = _parse(text).items
+    assert [type(item) for item in items] == [Title, GlobalDirective, End]
+    directive = items[1]
+    b = text.index("+ b") + 2
+    assert directive.nodes == (Node("a", Span(14, 15)), Node("b", Span(b, b + 1)))
+    assert directive.span == Span(6, text.index(".END"))
+    found = [text[span.start : span.end] for span in directive.trailing_comments]
+    assert found == ["; first", *comments]
+    _tiles(text)
+
+
+def test_a_continuation_line_may_hold_only_a_comment() -> None:
+    # A `+` line holding only `;` is fine ([xyce-ug] §4.1.3.2 p43), after comment lines too.
+    for text in ("t\n.global a\n+ ; c\n.END\n", "t\n.global a\n* c\n+;\n+ b\n.END\n"):
+        assert _kinds(text) == [Title, GlobalDirective, End]
+        _tiles(text)
+
+
+def test_a_comment_line_not_followed_by_a_continuation_ends_the_statement() -> None:
+    text = "t\n.global a\n* c\n  indented\n\n.END\n"
+    assert _kinds(text) == [Title, GlobalDirective, CommentLine, IndentedLine, BlankLine, End]
+    assert _parse(text).items[1].trailing_comments == ()
+    _tiles(text)
+
+
+def test_crlf_continuation_across_comments() -> None:
+    text = "t\r\n.global a\r\n* c\r\n\r\n+ b\r\n.END\r\n"
+    assert _kinds(text) == [Title, GlobalDirective, End]
+    assert [node.name for node in _parse(text).items[1].nodes] == ["a", "b"]
+    _tiles(text)
 
 
 @pytest.mark.parametrize("line", ["$ comment", "// comment", "+ continued"])

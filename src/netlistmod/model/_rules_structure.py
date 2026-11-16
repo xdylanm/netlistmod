@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
+from dataclasses import dataclass, replace
 from typing import Any, NoReturn
 
 from lark import Token
@@ -10,7 +10,10 @@ from lark import Token
 from netlistmod.model._rules_base import _Rules
 from netlistmod.model._tree import (
     _comment_spans,
+    _dot,
+    _Element,
     _end,
+    _Field,
     _Item,
     _Rest,
     _span,
@@ -19,15 +22,43 @@ from netlistmod.model.nodes import (
     BlankLine,
     CommentLine,
     End,
+    IndentedLine,
     OpaqueBlock,
     OpaqueStatement,
     ParseResult,
+    PreprocessDirective,
+    SubcktDefinition,
     Title,
     TitleDirective,
     TopLevelItem,
     UnknownDirective,
 )
+from netlistmod.model.values import Identifier
 from netlistmod.source import Span
+
+_SECOND_PREPROCESS = (
+    "a second `.PREPROCESS REPLACEGROUND`: Xyce allows one in a netlist (Xyce reference manual "
+    "§2.1.28 p125) and stops on another"
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _Truth:
+    """The TRUE or FALSE of a ``.PREPROCESS REPLACEGROUND``, as written, and which one it is."""
+
+    word: Identifier
+    enabled: bool
+
+
+def _preprocess_directives(items: tuple[TopLevelItem, ...]) -> list[PreprocessDirective]:
+    """Every ``.PREPROCESS REPLACEGROUND`` line, subcircuit bodies included, in source order."""
+    found: list[PreprocessDirective] = []
+    for item in items:
+        if isinstance(item, PreprocessDirective):
+            found.append(item)
+        elif isinstance(item, SubcktDefinition):
+            found.extend(_preprocess_directives(item.body))
+    return found
 
 
 class StructureRules(_Rules):
@@ -45,6 +76,9 @@ class StructureRules(_Rules):
         text = self._source.text
         if cursor < len(text):
             items[-1] = replace(items[-1], span=Span(items[-1].span.start, len(text)))
+        directives = _preprocess_directives(tuple(items))
+        if len(directives) > 1:
+            raise self._error_at(directives[1].keyword_span.start, _SECOND_PREPROCESS)
         return ParseResult(tuple(items), self._dialect)
 
     def explicit_title(self, children: list[Token]) -> _Item:
@@ -139,26 +173,48 @@ class StructureRules(_Rules):
     def machine_line(self, children: list[Any]) -> None:
         return None
 
-    # The xyce grammar of X-M0 reads only the structure of a netlist (decision 0026): it
-    # recognises the other lines whole, to refuse them here.
+    # The xyce grammar (decision 0026; X-M1, decision 0027).
+    def indented_line(self, children: list[Token]) -> _Item:
+        text = str(children[0])
+        return _Item(_end(children), lambda span: IndentedLine(text, span))
+
+    def preprocess_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        option = element.all(Identifier)[0]
+        truth = element.all(_Truth)[0]
+        return _Item(
+            element.end,
+            lambda span: PreprocessDirective(
+                **_dot(element, span), option=option, value=truth.word, enabled=truth.enabled
+            ),
+        )
+
+    def pp_option(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: Identifier(str(token), _span(token)))
+
+    def pp_value(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _Truth:
+            return _Truth(Identifier(str(token), _span(token)), token.type == "TRUE_KW")
+
+        return self._field(children, build)
+
+    def pp_word(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def preprocess_other(self, children: list[Any]) -> NoReturn:
+        keyword = children[0]
+        word = children[1].node
+        raise self._unsupported(
+            keyword,
+            f"`{keyword} {word}`, not yet supported on {self._dialect.display_name}; the library "
+            "reads only `.PREPROCESS REPLACEGROUND`",
+        )
+
+    # The lines the xyce grammar recognises whole, to refuse them here.
     def unsupported_directive(self, children: list[Any]) -> NoReturn:
         name = children[0]
         raise self._unsupported(
             name, f"dot-command `{name}`, not yet supported on {self._dialect.display_name}"
-        )
-
-    def indented_line(self, children: list[Any]) -> NoReturn:
-        raise self._unsupported(
-            children[0],
-            f"indented line, which {self._dialect.display_name} reads as a comment; not yet "
-            f"supported on {self._dialect.display_name}",
-        )
-
-    def semicolon_line(self, children: list[Any]) -> NoReturn:
-        raise self._unsupported(
-            children[0],
-            f"line that begins with `;`, an in-line comment; not yet supported on "
-            f"{self._dialect.display_name}",
         )
 
     def continuation_line(self, children: list[Any]) -> NoReturn:

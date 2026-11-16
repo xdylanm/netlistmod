@@ -60,9 +60,10 @@ sequence or its bodies). They insert nothing: an edit inserts a line through
 
 Read-only properties: `path: ScopePath`, `display` (names as written), `definition:
 SubcktDefinition | None`, `lines`, `parent`, `children`, `dialect`, `params`, `models`,
-`subckts`, `elements` (each `Mapping[folded name, tuple in source order]`) and
+`subckts`, `elements` (each `Mapping[folded name, tuple in source order]`),
 `may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
-`.lib` block, whose names the tables do not show; §7.8). Methods: `fold(name)` (the dialect's
+`.lib` block, whose names the tables do not show; §7.8) and `replace_ground: bool` (an xyce
+netlist with `.PREPROCESS REPLACEGROUND TRUE`, the same in every scope; section 9). Methods: `fold(name)` (the dialect's
 folded form), `chain()` (self, then enclosing scopes), `walk()`, `describe()`. Assigning an
 attribute is an `AttributeError`.
 
@@ -133,7 +134,8 @@ body's entries, then the following lines), with exact text everywhere; `scope` i
 | K line | `("coupling", scope, designator, (inductor, …))` |
 | controlling source (F, H, W, and an ngspice A's `%vnam`) | `("control", scope, designator, source)`, one entry for each source after the element's own, in line order: one for the linear form, N for POLY, none for LTspice's `value=` (decision 0017 item 2), one for each `%vnam` of an A line. POLY's control nodes are in the element entry's `nodes`; swapping two POLY sources changes the order of the entries |
 | definition | `("subckt", scope, name, (port, …))` |
-| last entry | `("global", (sorted set of .global node names))` |
+| `.global` | `("global", (sorted set of .global node names))`, after the entries of the scopes |
+| xyce `.PREPROCESS REPLACEGROUND` | `("replaceground", (value as written, …))`, last, only when the netlist has the statement (section 9) |
 
 `digest()` is the SHA-256 hex digest of `json.dumps(entries, ensure_ascii=False,
 separators=(",", ":"))` encoded as UTF-8.
@@ -155,6 +157,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block, or for a node inside an instance of the scope (ngspice `x1.n`, LTspice `X1:n`) | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
 | `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 | `FRA_PROBE_IN_IMPEDANCE_MODE` | warning | the probe's designator | an LTspice `&` whose resolved analyzer (decision 0020 item 8) has the `zm` flag; LTspice stops on it (M18 D2) |
+| `INDENTED_LINE_IGNORED` | warning | the line, without its line end | an xyce `IndentedLine`: a line that begins with blanks and is not a `*`, `;` or `+` line, which Xyce reads as a comment (decision 0027 item 1) |
 | `FRA_RANGE_MISSING` | warning | the analyzer's designator | an LTspice `@`, in any scope, without `fstart=` or `fend=` and without `enabled=`, when the top level has a `.fra` command; LTspice stops in the `.fra` run (M18 D2) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
@@ -203,3 +206,20 @@ The formula scan (section 5) reads, inside an expression, `{...}` within a bare 
 `+` continuations and LTspice's `~`. The words an expression gives a meaning to are not
 parameters there: LTspice's `time` in B and `value=`, `x` in `Q=` and `Flux=`, and `s` in `Laplace=` and B's `laplace=`. LTspice's
 `time` elsewhere is still a name.
+
+## 9. Xyce (hidden)
+
+The dialect is the internal `netlistmod.dialects._XYCE` until X-M8 (decision 0026); its nodes
+`IndentedLine` and `PreprocessDirective` live in `netlistmod.model.nodes` and are not exported. The
+API and the signature encoding are the same. What differs ([names.md](../grammars/xyce/names.md),
+decision 0027 items 1 and 3):
+
+- **Names** fold by ASCII lower case. `0` is the only ground, unless the netlist holds
+  `.PREPROCESS REPLACEGROUND TRUE`, anywhere, a body included: then `GND`, `GND!` and `GROUND`
+  in any case are ground in every scope (`Index.replace_ground`, `Scope.replace_ground`, the
+  `replace_ground=` argument of `names.is_ground` and `names.net_name`). The statement's value is
+  the last signature entry, so no edit changes it (P4).
+- **Globals:** a node whose name begins `$G`, in any case, is global (`is_automatic_global`, a
+  per-dialect prefix table: LTspice `$g_`, xyce `$g`), as is a `.GLOBAL` name.
+- **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4). An indented line inside a
+  continued statement is one of its trailing comments and is not reported.

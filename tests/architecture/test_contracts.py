@@ -306,7 +306,15 @@ UNCHECKED_TERMINALS = {
         }
     ),
     _XYCE: frozenset(
-        {"COMMENT_LINE", "INDENTED_LINE", "PLUS_LINE", "REST_TEXT", "SEMICOLON_LINE", "TITLE_TEXT"}
+        {
+            "COMMENT_LINE",
+            "INDENTED_LINE",
+            "PLUS_LINE",
+            "REST_TEXT",
+            "SEP",
+            "TITLE_TEXT",
+            "TRAILING_COMMENT",
+        }
     ),
 }
 

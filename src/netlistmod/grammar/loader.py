@@ -300,14 +300,22 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
     },
     _XYCE: {
         "END_KW": "`.END`",
+        "COMMENT_LINE": "comment line (`*` or `;`)",
+        "TRAILING_COMMENT": "comment (`;`)",
         "INDENTED_LINE": "indented line",
-        "SEMICOLON_LINE": "`;` comment line",
         "PLUS_LINE": "continuation line (`+`)",
         "REST_TEXT": "text",
+        "GLOBAL_KW": "`.GLOBAL`",
+        "PREPROCESS_KW": "`.PREPROCESS`",
+        "REPLACEGROUND_KW": "`REPLACEGROUND`",
+        "TRUE_KW": "`TRUE`",
+        "FALSE_KW": "`FALSE`",
+        "NODE_WORD": "node name",
+        "EXPR_NUMBER": "number",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's
-# closed list (decision 0009). Xyce refuses every dot-command but `.END` in its grammar (X-M0).
+# closed list (decision 0009). Xyce refuses in its grammar every dot-command it does not read yet.
 _CLOSED_DOT_COMMANDS: Final[dict[Dialect, bool]] = {
     Dialect.NGSPICE: False,
     Dialect.LTSPICE: True,

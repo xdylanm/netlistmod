@@ -12,14 +12,18 @@ grammar:
 - start
 - lead
 - line
+- statement
+- body_statement
+- top_statement
 core_rules:
 - LINE_END
 - WS
 tests:
 - tests/grammar/xyce/test_xyce_structure.py::test_title_comments_blank_lines_and_end_tile_the_source
 - tests/grammar/xyce/test_xyce_structure.py::test_crlf_and_a_missing_final_newline
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_structure_items_tile_with_the_new_statements
 - tests/architecture/test_hidden_dialects.py::test_the_public_loaders_read_a_structure_only_netlist
 - tests/solver/test_xyce_structure_probes.py::test_a_continuation_joins_across_comments_and_blank_lines
 - tests/solver/test_xyce_structure_probes.py::test_a_blank_line_one_is_the_title
-validation_note: Validated by the X-M0 probes (tests/solver/test_xyce_structure_probes.py) on XyceNF Release 7.10.0. X-M0 reads only the title line, `*` comment lines, blank lines and `.END`; a blank line is also a line of blanks.
-notes: The manual says the first line is a title and the last is `.END`, with the statements between them in any order. The lines before the first statement are `lead` lines, which a `+` line cannot follow. Every other line is refused (XY-UNS-001). Continuation lines, `;` comments and indentation are X-M1's.
+validation_note: Validated by the X-M0 probes (tests/solver/test_xyce_structure_probes.py) on XyceNF Release 7.10.0. A blank line is also a line of blanks.
+notes: The manual says the first line is a title and the last is `.END`, with the statements between them in any order. The lines before the first statement are `lead` lines (blank, comment and indented lines), which a `+` line cannot follow. A body statement may also stand in a subcircuit body (X-M1 B4); `.GLOBAL` is a top statement. Every line the dialect does not read yet is refused (XY-UNS-001).

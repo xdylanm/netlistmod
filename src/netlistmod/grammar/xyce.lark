@@ -1,25 +1,36 @@
-// xyce overlay on core.lark (X-M0, decision 0026). The dialect is hidden until X-M8, and X-M0 reads
-// only the structure of a netlist: the title line, `*` comment lines, blank lines and the final
-// `.END` ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42–43). Everything else is recognised only to be refused:
-// a dot-command other than `.END`; an indented line, which Xyce reads as a comment (decision X-D1
-// settles it in X-M1); a line that begins with `;`, an in-line comment, which may occur on any line
-// (§4.1.3.1 p43); and a `+` line after comment or blank lines that follow a statement, which joins
-// that statement (§4.1.3.2 p43). They raise UnsupportedConstruct from the transformer. A `+` line
-// with only the title, comments and blank lines before it is a ParseError: the title is a comment,
-// so there is no line for it to join. An element line has no rule: its letter is `planned` in
-// xyce-devices.json, so the loader raises UnsupportedConstruct, and A and N, which are not Xyce
-// letters, are a ParseError.
+// xyce overlay on core.lark (decision 0026; X-M1, decision 0027). The dialect is hidden until X-M8.
+// It reads the structure of a netlist ([xyce-ug] §4.1.1 p40, §4.1.3.1 p42–43): the title line,
+// comment lines (`*`, or `;`, which may also end any line), blank lines, indented lines (a comment
+// to Xyce, decision X-D1), `+` continuation across those lines (§4.1.3.2 p43), the final `.END`;
+// and the statements X-M1 B2 reads: `.PREPROCESS REPLACEGROUND` and `.GLOBAL`. The names and the
+// two number readers of decision 0027 items 3 and 8 are defined here for the statements and element
+// lines that use them.
 //
-// The rules of core.lark that a later milestone reuses are imported by that milestone; X-M0 imports
-// only the terminals of the structure and the `.end` rule, and defines its own `start`, so no core
-// statement can be reached. %ignore is not carried by %import, so it is declared again here.
+// Every other line is refused: a dot-command the overlay does not read yet, and the other
+// `.PREPROCESS` forms, raise UnsupportedConstruct from the transformer; an element line has no
+// rule, so the loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and
+// A and N, which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines
+// that follow a refused dot-command joins it, and is refused with it. A `+` line with only the
+// title, comments and blank lines before it is a ParseError: the title is a comment, so there is
+// no line for it to join.
 //
-// Lexer priorities: INDENTED_LINE (10) outranks the ignored WS (9) at the start of a line, so an
-// indented line other than a `*` comment or a `+` line is one token; a blank line is still WS and
-// LINE_END. REST_TEXT (2) is the text after a refused dot-command, to the end of the line.
+// %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
+// used is imported by name, which keeps tree and token names unprefixed.
+//
+// Lexer priorities (decision 0003; Lark collision-checks only terminals of equal priority):
+//  * INDENTED_LINE (10) outranks the ignored WS (9) at the start of a line, so an indented line
+//    other than a `*`, `;` or `+` line is one token; a blank line is still WS and LINE_END.
+//  * A statement's fields are separated by SEP (10). Its third alternative is the line end of a
+//    line that a `+` line joins across blank, comment and indented lines: the lookahead finds the
+//    `+` line, so the line end is a separator, not the NL that ends the statement. Each line
+//    between is then a TRAILING_COMMENT (12, above SEP), which matches a `*` line or an indented
+//    line only right after a line end (a lookbehind), so the comments of a continued statement
+//    stay in its trailing_comments and its Line.
+//  * REST_TEXT (2) is the text after a refused dot-command, to the end of the line.
 
-%import .core (end_stmt, trailer)
+%import .core (end_stmt, trailer, eol, global_stmt)
 %import .core (WS, LINE_END, CONT, NL, TITLE_TEXT, COMMENT_LINE, END_KW, DOT_NAME)
+%import .core (SEP, TRAILING_COMMENT, WORD, NUMBER, GLOBAL_KW)
 
 %ignore WS
 %ignore CONT
@@ -37,7 +48,6 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
 // spec: XY-STR-001
 ?lead: LINE_END                             -> blank_line
      | COMMENT_LINE LINE_END                -> comment_line
-     | semicolon_line
      | indented_line
 
 // spec: XY-STR-001
@@ -45,29 +55,99 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
      | statement
      | continuation_line
 
-// The statements X-M0 recognises, all refused.
-// spec: XY-UNS-001
-?statement: unsupported_directive
+// A body statement may also stand in a subcircuit body (X-M1 B4); a top statement only at the
+// top level.
+// spec: XY-STR-001
+?statement: body_statement
+          | top_statement
+?body_statement: unsupported_directive
+               | preprocess_stmt
+               | preprocess_other
+?top_statement: global_stmt
 
-// A dot-command other than `.END`, continued by `+` lines; refused whole.
+// A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
+// (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
+// `*` and indented alternatives are the lines that a `+` line joins across (XY-CNT-001).
+// spec: XY-COM-001
+%override COMMENT_LINE.3: /[*;](?:[^\r\n]|\r(?!\n))*/
+%override TRAILING_COMMENT.12: /;(?:[^\r\n]|\r(?!\n))*|(?<=\n)(?:\*|[ \t]+[^ \t\r\n+])(?:[^\r\n]|\r(?!\n))*/
+
+// A `+` line continues the last line that is not a comment, across blank, comment (`*`, `;`) and
+// indented lines (§4.1.3.2 p43; decision 0027 item 2).
+// spec: XY-CNT-001
+%override SEP.10: /[ \t]*\r?\n[ \t]*\+[ \t]*|[ \t]*\r?\n(?=(?:(?:[*;](?:[^\r\n]|\r(?!\n))*|[ \t]+(?:[^ \t\r\n+](?:[^\r\n]|\r(?!\n))*)?)?\r?\n)+[ \t]*\+)|[ \t]+/
+
+// An indented line that is not a `*`, `;` or `+` line: a comment to Xyce ([xyce-ug] §4.1.3.1
+// p43, [xyce-ref] §2.1.39.1 p163), read as a node of its own kind (decision X-D1).
+// spec: XY-IND-001
+indented_line: INDENTED_LINE LINE_END
+INDENTED_LINE.10: /[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
+
+// `.END` may end with a `;` comment, since `;` may end any line (§4.1.3.1 p43); nothing else may
+// follow it on its line.
+// spec: XY-END-001
+%extend end_stmt: END_KW TRAILING_COMMENT LINE_END trailer* -> end
+                | END_KW TRAILING_COMMENT -> end
+
+// A dot-command the overlay does not read yet, continued by `+` lines; refused whole.
 // spec: XY-UNS-001
 unsupported_directive: DOT_NAME REST_TEXT* NL
 
-// spec: XY-UNS-001
-indented_line: INDENTED_LINE LINE_END
-
-// A line that begins with `;`, an in-line comment on a line of its own.
-// spec: XY-UNS-001
-semicolon_line: SEMICOLON_LINE LINE_END
-
-// A `+` line after comment or blank lines, which joins the statement before them.
+// A `+` line after comment or blank lines that follow a refused dot-command, which joins it.
 // spec: XY-UNS-001
 continuation_line: PLUS_LINE LINE_END
 
 // spec: XY-UNS-001
 REST_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
-INDENTED_LINE.10: /[ \t]+[^ \t\r\n+*](?:[^\r\n]|\r(?!\n))*/
-// spec: XY-UNS-001
-SEMICOLON_LINE.3: /;(?:[^\r\n]|\r(?!\n))*/
 // spec: XY-UNS-001
 PLUS_LINE.3: /\+(?:[^\r\n]|\r(?!\n))*/
+
+// Names ([xyce-ref] §2.3.2 p184; decision 0027 item 3): printable ASCII except blanks and
+// ( ) { } , : ; " ' =. `[` and `]` are name characters. A node field of an element line also
+// takes `:`, a node path into an instance (decision X-D2); NODE_WORD is that field's terminal.
+// spec: XY-NAM-001
+_XY_CHAR: /[!#$%&*+\-.\/0-9<>?@A-Z\[\\\]^_`a-z|~]/
+%override WORD.2: _XY_CHAR+
+NODE_WORD.2: (_XY_CHAR | ":")+
+
+// .PREPROCESS REPLACEGROUND TRUE|FALSE ([xyce-ref] §2.1.28 p125): one per netlist (the
+// transformer refuses a second), allowed in a subcircuit body, and netlist-wide in effect.
+// spec: XY-PRE-001
+preprocess_stmt: PREPROCESS_KW pp_option pp_value (NL | eol)
+pp_option: SEP REPLACEGROUND_KW
+         | (SEP | TRAILING_COMMENT) pp_option
+pp_value: SEP (TRUE_KW | FALSE_KW)
+        | (SEP | TRAILING_COMMENT) pp_value
+PREPROCESS_KW.4: ".preprocess"i
+REPLACEGROUND_KW.2: "replaceground"i
+TRUE_KW.2: "true"i
+FALSE_KW.2: "false"i
+
+// The other .PREPROCESS forms (REMOVEUNUSED, ADDRESISTORS, ...), refused whole.
+// spec: XY-UNS-001
+preprocess_other: PREPROCESS_KW pp_word REST_TEXT* NL
+pp_word: SEP WORD
+       | (SEP | TRAILING_COMMENT) pp_word
+
+// .GLOBAL node... ([xyce-ref] §2.1.11 p44): top level only, at least one name, no commas.
+// spec: XY-GLB-001
+%override global_stmt: GLOBAL_KW global_node+ (NL | eol)
+global_node: SEP WORD
+           | (SEP | TRAILING_COMMENT) global_node
+
+// Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
+// XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
+// milli), then a unit (a, amp, c, f, farad, h, henry, hertz, hy, hz, m, ohm, s, v, vdc, volt), in
+// any case. A letter that begins a scale factor is the scale factor, as Xyce reads it (an atomic
+// group, so `1farad` is femto followed by `arad`, refused, while `1pfarad` is a picofarad); the
+// longer alternatives come first, and the lookahead makes the token end where its word ends, so a
+// letter, digit or `.` after the closed lists is refused (`1kk`, `1keg`, `1e`, `2k7`, `µ`). The
+// element lines of X-M1 B5 read their values with it.
+// spec: XY-NUM-001
+%override NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?>(?:meg|mil|[tgxkmunpf])?)(?:amp|farad|henry|hertz|ohm|vdc|volt|hy|hz|[acfhmsv])?(?![a-z0-9.])/i
+
+// Numbers in an expression and a .PARAM value (decision 0027 item 8, observed): the same scale
+// factors, then a unit of a, f, h, hz, m, s or v, then an optional `j`, the imaginary part
+// ([xyce-ref] §2.2.1 p172). `1kohm` is refused here.
+// spec: XY-NUM-002
+EXPR_NUMBER.3: /[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?(?>(?:meg|mil|[tgxkmunpf])?)(?:hz|[afhmsv])?j?(?![a-z0-9.])/i

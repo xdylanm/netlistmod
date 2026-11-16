@@ -1,0 +1,24 @@
+id: XY-GLB-001
+dialect: xyce
+construct: .GLOBAL node names
+manual_ref:
+- '[xyce-ref] §2.1.11 p44 ".GLOBAL (Global Node)"'
+- '[xyce-ref] §2.3.1.1 p182 "Global nodes"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- global_stmt
+- global_node
+core_rules:
+- GLOBAL_KW
+tests:
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_global_node_takes_the_name_class
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_global_takes_several_names_and_continues
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_global_without_names_or_with_commas_is_rejected
+- tests/document/test_xyce_names.py::test_replaceground_sets_the_netlist_wide_flag
+- tests/solver/test_xyce_names_probes.py::test_global_makes_nodes_global
+validation_note: 'Validated on XyceNF Release 7.10.0: the names are global nodes in every subcircuit. Xyce also takes commas between them, which the library refuses (discrepancies.md).'
+notes: '`GlobalDirective`, as on ngspice: at least one name, separated by blanks, no comma (decision 0027 item 3). It is a top statement; in a subcircuit body it is refused (X-M1 B4). A name takes WORD (XY-NAM-001), so no `:`.'

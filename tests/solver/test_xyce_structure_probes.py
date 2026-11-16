@@ -78,6 +78,15 @@ def test_a_continuation_joins_across_comments_and_blank_lines(
     assert op(solver, tmp_path, text)["v(2)"] == pytest.approx(1.0)
 
 
+def test_a_continuation_joins_across_an_indented_line(solver: Solver, tmp_path: Path) -> None:
+    """An indented line between a statement and its ``+`` line does not break the join
+    ([xyce-ug] §4.1.3.2 p43; xm1-tasks 5.1 point 1): ``R1``'s value comes after an indented line
+    and an indented ``+``."""
+    text = "continuation\nV1 1 0 2\nR1 1 2\n  R9 9 0 1k\n  + 1k\nR2 2 0 1k\n.op\n.end\n"
+    assert nodes(solver, tmp_path / "names", text) == {"1", "2"}
+    assert op(solver, tmp_path / "op", text)["v(2)"] == pytest.approx(1.0)
+
+
 @pytest.mark.parametrize(
     "title",
     ["continuation after the title", "V1 1 0 2"],

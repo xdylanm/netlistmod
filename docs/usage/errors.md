@@ -429,3 +429,9 @@ LTspice only. An `@` without `fstart=` or `fend=`, in a netlist with a `.fra` co
 ```
 
 **What to do:** give the analyzer `fstart=` and `fend=`, beside `flist=` if it has one.
+
+### `INDENTED_LINE_IGNORED`
+
+Xyce only (a dialect still being built, which `Dialect` does not list yet). A line that begins with blanks and is not a `*`, `;` or `+` line: Xyce reads it as a comment and ignores it, even an element line or a dot-command, so the library reads it as a comment too. A warning, on the line.
+
+**What to do:** remove the indentation if the line is meant as a statement; to keep it as a comment, begin it with `*`.

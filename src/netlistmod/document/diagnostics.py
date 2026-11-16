@@ -23,6 +23,7 @@ from netlistmod.model.nodes import (
     FraProbe,
     FrequencyAnalyzer,
     GlobalDirective,
+    IndentedLine,
     Inductor,
     ModelStatement,
     StepDirective,
@@ -60,6 +61,7 @@ class DiagnosticCode(StrEnum):
     UNRESOLVED_NODE = "UNRESOLVED_NODE"
     FRA_PROBE_IN_IMPEDANCE_MODE = "FRA_PROBE_IN_IMPEDANCE_MODE"
     FRA_RANGE_MISSING = "FRA_RANGE_MISSING"
+    INDENTED_LINE_IGNORED = "INDENTED_LINE_IGNORED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,7 +100,7 @@ _ENDS_NAME_RULE: dict[Dialect, str] = {
     Dialect.LTSPICE: f"{_SOLVER[Dialect.LTSPICE]} does not check the name",
 }
 # Whether a numeric value is checked against the dialect's number rules (ngspice only).
-_VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False}
+_VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False, _XYCE: False}
 # Whether a repeated `.param`, `.model` or `.subckt` in one scope stops the solver.
 _REPEAT_STOPS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: True}
 
@@ -126,6 +128,17 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
                         item.ends.name_span,
                     )
                 )
+        if isinstance(item, IndentedLine):
+            found.append(
+                (
+                    DiagnosticCode.INDENTED_LINE_IGNORED,
+                    "warning",
+                    f"this line begins with blanks, so {_SOLVER[index.dialect]} reads it as a "
+                    "comment and ignores it (Xyce users' manual §4.1.3.1 p43); remove the "
+                    "indentation if it is meant as a statement",
+                    Span(item.span.start, item.span.start + len(item.text)),
+                )
+            )
         if isinstance(item, UnknownDirective):
             span = item.name_span or item.span
             found.append(
@@ -457,7 +470,8 @@ def _reading_of_instance_node(
 
 def _is_global(index: Index, name: str) -> bool:
     """Whether a node name means the same net everywhere: ground or a global node."""
-    if is_ground(name, index.dialect) or is_automatic_global(name, index.dialect):
+    grounded = is_ground(name, index.dialect, replace_ground=index.replace_ground)
+    if grounded or is_automatic_global(name, index.dialect):
         return True
     return any(
         isinstance(line.item, GlobalDirective)

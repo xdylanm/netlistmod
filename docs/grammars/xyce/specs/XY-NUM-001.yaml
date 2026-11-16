@@ -1,0 +1,21 @@
+id: XY-NUM-001
+dialect: xyce
+construct: numbers in device fields (scale factors and units)
+manual_ref:
+- '[xyce-ug] §4.1.3 p41–42 "Elements"'
+status: observed
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- NUMBER
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_the_device_field_reader_takes_scale_factors_and_units
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_the_device_field_reader_refuses_other_letters
+- tests/solver/test_xyce_names_probes.py::test_device_fields_take_scale_factors_and_units
+- tests/solver/test_xyce_names_probes.py::test_device_fields_refuse_other_letters
+- tests/solver/test_xyce_names_probes.py::test_device_fields_take_lexer_artefacts
+validation_note: 'Observed on XyceNF Release 7.10.0: the manual lists the scale factors (Table 4-1) but not the units that may follow them, which rest on the solver.'
+notes: 'An integer or a decimal number with an optional sign and exponent, then an optional scale factor (T, G, Meg, X = 1e6, K, mil, m, u, n, p, f; `M` is milli), then an optional unit (a, amp, c, f, farad, h, henry, hertz, hy, hz, m, ohm, s, v, vdc, volt), in any case (decision 0027 item 8). A letter that begins a scale factor is read as one, as Xyce reads it, so `1farad` is refused and `1pfarad` is read. Other letters, RKM forms (`2k7`), `µ` (which the manual lists and Xyce refuses) and the binary''s lexer artefacts (`1keg`, `1kmeg`, `1kmhz`, `1e`) are refused (discrepancies.md). The element lines of X-M1 B5 read their values with this terminal; until then it is reached only by the lexer-only build of the tests.'
