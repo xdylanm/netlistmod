@@ -83,6 +83,12 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
   name at the name, as Xyce stops on it (`XY-IPN-001`; xm1-tasks 5.1 point 29). X's parameters
   are the subcircuit's and stay open; K, V and I take none.
 
+- **B7, the corpus:** `tests/corpus/xyce/` holds authored netlists with manifests: accept families
+  (`structure_basic`, `statements_basic`, `elements_basic`, with CRLF twins) that cover every
+  construct above, round-trip byte for byte and run in Xyce with an `.op` added, and rejection
+  families (`*_rejects`) whose manifests give each refusal's position and kind and Xyce's own
+  outcome (`tests/grammar/xyce/test_xyce_corpus.py`, `tests/solver/test_xyce_solver_corpus.py`).
+
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
 `ParseError`; a dot-command the dialect does not read yet, and a `.PREPROCESS` form other than
@@ -142,10 +148,10 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-RCL-001](./specs/XY-RCL-001.yaml) | R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms) | validated | 15 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 16 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-SRC-001](./specs/XY-SRC-001.yaml) | V and I independent sources, DC and AC parts (transient functions refused until X-M3) | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 4 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 8 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-SUB-001](./specs/XY-SUB-001.yaml) | X subcircuit calls (nodes, optional `PARAMS`, `M=`) | validated | 3 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 9 + 0 solver |  |
+| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 10 + 0 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
 28 entries: 25 validated, 2 observed, 0 disputed, 1 documented.
