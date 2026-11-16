@@ -1,0 +1,5 @@
+reject: a comma in .MODEL
+.model rm R (R=1, TC1=0)
+V1 n 0 1
+R1 n 0 rm 1k
+.END

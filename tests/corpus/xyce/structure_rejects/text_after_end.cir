@@ -1,0 +1,5 @@
+reject: a line after .END
+V1 a 0 1
+R1 a 0 1k
+.END
+R2 a 0 1k

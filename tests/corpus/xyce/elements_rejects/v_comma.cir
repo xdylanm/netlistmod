@@ -1,0 +1,4 @@
+reject: a comma on a source line
+V1 a 0 1, AC 1
+R1 a 0 1k
+.END

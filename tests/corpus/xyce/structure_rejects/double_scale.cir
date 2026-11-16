@@ -1,0 +1,4 @@
+reject: two scale factors
+V1 a 0 1
+R1 a 0 1kk
+.END

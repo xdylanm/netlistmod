@@ -1,0 +1,4 @@
+reject: three TC values
+V1 a 0 1
+R1 a 0 1k TC=1m,2u,3u
+.END

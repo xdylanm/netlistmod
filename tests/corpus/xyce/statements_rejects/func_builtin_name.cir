@@ -1,0 +1,5 @@
+reject: a built-in function's name
+.func sin(x) {x}
+V1 n 0 1
+R1 n 0 1k
+.END

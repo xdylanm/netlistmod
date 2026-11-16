@@ -1,0 +1,5 @@
+reject: a non-ASCII node name
+V1 a 0 1
+R1 a nœud 1k
+R2 nœud 0 1k
+.END

@@ -1,0 +1,5 @@
+reject: W on an L line
+V1 a 0 1
+R1 a b 1k
+L1 b 0 1u W=1u
+.END

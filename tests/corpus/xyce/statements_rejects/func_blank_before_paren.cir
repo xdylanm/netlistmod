@@ -1,0 +1,5 @@
+reject: a blank before the arguments
+.func f (x) {x}
+V1 n 0 1
+R1 n 0 {f(1k)}
+.END

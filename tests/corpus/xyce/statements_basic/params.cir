@@ -1,0 +1,17 @@
+parameters, functions and expressions
+.param rbase=1k, rtop={2*rbase} rq='rbase/2'
+.param gain = 3 offset=-0.5
+.param scaled=rbase*2 ratio=(rtop/rbase)
+.param zc={1+2j}
+.param twice(x)={2*x}
+.global_param gtemp=27
+.func half(v) {v/2}
+.func clamp(a,b)={min(a,b)}
+.func cube(x) 'x**3'
+V1 in 0 {half(4)}
+R1 in out {twice(rbase)}
+R2 out 0 {rtop}
+R3 out 0 1k M=gain
+R4 out 0 {clamp(rq,rbase)} TEMP=gtemp
+R5 out 0 'scaled+cube(2)'
+.END

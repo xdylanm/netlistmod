@@ -1,0 +1,6 @@
+reject: Q is X-M4's
+.model qn NPN
+V1 c 0 1
+V2 b 0 0.7
+Q1 c b 0 qn
+.END

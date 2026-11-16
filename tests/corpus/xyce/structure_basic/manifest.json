@@ -1,0 +1,13 @@
+{
+  "family": "structure_basic",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "The structure, names and numbers of X-M1 B2. Each netlist has no analysis, which X-M2 reads: the solver test adds `.op` before `.END`. The `_crlf` file is the CRLF variant of its LF twin, byte for byte otherwise.",
+  "fixtures": {
+    "names_numbers.cir": "6d1d5e3150626aae787dac70d83d7bfeb0562af7a5adfbdc04986bf56ad933a5",
+    "structure.cir": "20800770d4ddb7e2bb4818745f937d57e1ed96014b919cb7b856939f93cc0eda",
+    "structure_crlf.cir": "d2eee5731d259428a92e877ea4def79564333533894623047c35169d4714555d"
+  }
+}

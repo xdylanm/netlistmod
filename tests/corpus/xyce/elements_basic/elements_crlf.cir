@@ -1,0 +1,35 @@
+element lines: R, C, L, K, D, V, I and X
+.model dmod D (IS=1e-14)
+.model kcore CORE
+.model rmod R (R=1)
+.subckt load a
+Rl a 0 10k
+.ends load
+V1 1 0 DC 2 AC 1 0
+V2 5 0 1
+Vac 9 0 AC 0.5
+I1 0 2 1m
+I2 0 3 DC 0.5m AC 1
+R1 1 2 1k TEMP=27 M=1
+R2 2 0 R=2k TC=1m,2u
+R3 3 0 rmod 1k dtemp=0
+R4 4 0 100
+R6 6 0 50
+R9 9 0 1k
+C1 2 0 1u IC=0
+C2 2 0 C=10n
+C3 2 0 Q={1n*V(2)}
+C4 3 0 1p age=0 d=0.02
+L1 2 4 1m
+L2 3 6 2m ic=0
+K1 L1 L2 0.9
+L3 7 0 10
+R7 5 7 10
+K2 L3 1 kcore
+D1 2 0 dmod 1.5 OFF
+D2 3 0 dmod AREA=2 TEMP=30
+D3 5 0 dmod off=1 pj=0
+X1 5 load
+X2 2 load
++ M=2
+.END

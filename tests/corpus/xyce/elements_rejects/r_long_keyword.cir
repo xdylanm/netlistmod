@@ -1,0 +1,4 @@
+reject: ngspice's long keyword
+V1 a 0 1
+R1 a 0 resistance=1k
+.END

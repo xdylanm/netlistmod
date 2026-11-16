@@ -1,0 +1,5 @@
+reject: a numeric charge
+V1 a 0 1
+R1 a 0 1k
+C1 a 0 Q=1p
+.END

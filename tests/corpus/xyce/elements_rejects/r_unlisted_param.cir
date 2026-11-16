@@ -1,0 +1,4 @@
+reject: a model parameter on an R line
+V1 a 0 1
+R1 a 0 1k RSH=10
+.END

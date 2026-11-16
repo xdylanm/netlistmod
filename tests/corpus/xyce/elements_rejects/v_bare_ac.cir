@@ -1,0 +1,4 @@
+reject: AC without a magnitude
+V1 a 0 1 AC
+R1 a 0 1k
+.END

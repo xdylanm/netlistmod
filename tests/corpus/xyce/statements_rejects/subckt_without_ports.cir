@@ -1,0 +1,7 @@
+reject: a subcircuit without ports
+.subckt s
+R1 a 0 1k
+.ends
+V1 n 0 1
+R1 n 0 1k
+.END

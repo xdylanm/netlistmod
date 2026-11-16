@@ -1,0 +1,7 @@
+* Two library entries; includes.cir loads `typical`.
+.lib typical
+.model rcorner R (R=1)
+.endl typical
+.lib slow
+.model rcorner R (R=1.2)
+.endl slow

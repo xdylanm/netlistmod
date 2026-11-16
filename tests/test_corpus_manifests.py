@@ -94,3 +94,29 @@ def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
             assert len(field["skip"]) > 20, f"give the reason: {path}"
         for stub in [*field.get("stubs", {}).values(), *filter(None, [field.get("harness")])]:
             assert (STUBS / stub).is_file(), f"{path}: missing stub {stub}"
+
+
+def test_every_xyce_fixture_names_its_solver_outcome_or_role() -> None:
+    """X-M1 B7: an accept netlist runs in Xyce unless its ``solver`` field is ``{"skip": reason}``;
+    a file it includes names its ``role``; a rejection gives its position, its error and, when
+    probed, what Xyce does with it (``xyce``: ``stops`` or ``runs``)."""
+    from tests.solver.test_xyce_solver_corpus import FAMILIES, REJECT_FAMILIES, solver_fields
+
+    xyce = CORPUS / "xyce"
+    assert {family.name for family in xyce.iterdir()} == {*FAMILIES, *REJECT_FAMILIES}
+    for path, field in solver_fields().items():
+        assert set(field) <= {"skip"}, path
+        if "skip" in field:
+            assert len(field["skip"]) > 20, f"give the reason: {path}"
+    for family in FAMILIES:
+        manifest = json.loads((xyce / family / "manifest.json").read_text(encoding="utf-8"))
+        for name, entry in manifest["fixtures"].items():
+            if not name.endswith(".cir"):
+                assert isinstance(entry, dict) and set(entry) == {"sha256", "role"}, name
+    for family in REJECT_FAMILIES:
+        manifest = json.loads((xyce / family / "manifest.json").read_text(encoding="utf-8"))
+        for name, entry in manifest["fixtures"].items():
+            assert {"sha256", "line", "column", "error", "note"} <= set(entry), name
+            assert set(entry) <= {"sha256", "line", "column", "error", "note", "xyce"}, name
+            assert entry["error"] in {"ParseError", "UnsupportedConstruct"}, name
+            assert entry.get("xyce", "stops") in {"stops", "runs"}, name

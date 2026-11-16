@@ -1,0 +1,14 @@
+includes and libraries
+.include "stage.inc"
+.incl 'buffer.inc'
+.INC models.inc
+.lib "corner.lib" typical
+.lib localblock
+R9 a 0 1k
+.endl localblock
+V1 1 0 1
+Xs 1 0 stage
+Xb 1 buffer
+R1 1 0 rcorner 1k
+R2 1 0 rlocal 2k
+.END

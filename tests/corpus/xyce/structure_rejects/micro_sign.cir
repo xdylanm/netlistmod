@@ -1,0 +1,5 @@
+reject: the micro sign
+V1 a 0 1
+R1 a 0 1k
+C1 a 0 1µ
+.END
