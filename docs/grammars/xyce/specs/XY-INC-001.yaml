@@ -1,0 +1,25 @@
+id: XY-INC-001
+dialect: xyce
+construct: .INC, .INCL and .INCLUDE
+manual_ref:
+- '[xyce-ref] §2.1.15 p49 ".INC or .INCLUDE or .INCL (Include file)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- include_line
+- path_field
+- INC_KW
+- INCL_KW
+- INCLUDE_KW
+- PATH_FIELD
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_statements.py::test_includes_take_one_path_quoted_or_not
+- tests/grammar/xyce/test_xyce_statements.py::test_an_include_takes_one_path
+- tests/solver/test_xyce_statement_probes.py::test_include_forms
+- tests/solver/test_xyce_statement_probes.py::test_an_extra_include_field_is_ignored
+validation_note: 'Validated on XyceNF Release 7.10.0: the three keywords, a path in single or double quotes or none, a `+` line and a `;` comment. Xyce warns on a second field and ignores it, which the library refuses (discrepancies.md).'
+notes: 'An opaque `OpaqueStatement` of kind `include`, as on ngspice (decision 0027 item 7), whose `raw` runs from the keyword to the end of the path, across `+` lines; unlike ngspice''s, it may be continued. The file is never read (§7.8). One path field: a quoted text, or a run of characters other than blanks, quotes and `;`.'

@@ -49,7 +49,7 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 - [x] **B1 — Decision record(s)** for the G1 decisions (X-D1, X-D2, X-D3, X-D5, `.END`), and the architecture sections they amend.
 - [x] **B2 — Structure, names and numbers** in `xyce.lark`, the names layer and the value grammar; `names.md`, `numbers.md`.
 - [x] **B3 — Parameters and expressions:** `.PARAM`, `.GLOBAL_PARAM`, `.FUNC`, the xyce formula grammar and reserved words; `scoping.md`.
-- [ ] **B4 — Statements:** `.MODEL` and model types, `.SUBCKT`/`.ENDS`, includes, `.LIB`, `.GLOBAL`, `.PREPROCESS REPLACEGROUND`.
+- [x] **B4 — Statements:** `.MODEL` and model types, `.SUBCKT`/`.ENDS`, includes, `.LIB`, `.GLOBAL`, `.PREPROCESS REPLACEGROUND`.
 - [ ] **B5 — Elements:** R, C, L, V, I (DC/AC), D, X, K; `devices.md`.
 - [ ] **B6 — The document and edit layers:** the X-M1 lines of the plan's section 8.1; topology, diagnostics and edits on xyce for the letters read.
 - [ ] **B7 — Evidence:** spec entries for every construct, corpus files with manifests, solver tests (accept and reject probes, values and nets compared with Xyce), the README status table.

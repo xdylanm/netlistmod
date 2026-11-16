@@ -40,6 +40,7 @@ from netlistmod.model._rules_sources import SourcesRules
 from netlistmod.model._rules_special import SpecialRules
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._rules_structure import StructureRules
+from netlistmod.model._rules_xyce import XyceRules
 from netlistmod.model.nodes import (
     ParseResult,
 )
@@ -61,6 +62,7 @@ class _NodeBuilder(
     SpecialRules,
     LinesRules,
     ParamRules,
+    XyceRules,
     StatementsRules,
     Transformer[Token, ParseResult],
 ):

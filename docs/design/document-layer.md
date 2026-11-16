@@ -151,7 +151,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
 | `PARAM_USED_BEFORE_DEFINITION` | warning | the name in the formula | the definition is in the reference's own scope and that scope's first definition starts after it (an enclosing scope's parameter is never "late": review R1) |
 | `ENDS_NAME_MISMATCH` | info | the `.ends` name | names differ (case-insensitive) |
-| `DIALECT_GATED_SYNTAX` | info | the value | `notation == "rkm"` |
+| `DIALECT_GATED_SYNTAX` | info | the value; on xyce, the entries after the first | `notation == "rkm"`; an xyce `LibCall` with more than one entry, of which Xyce loads only the first |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
@@ -233,5 +233,9 @@ decision 0027 items 1 and 3):
   parameter references in its body. A repeated function is a `DUPLICATE_DEFINITION` warning
   (Xyce stops). An unresolved function has no diagnostic yet (X-M1 B6).
 - **Formula scan:** `formula_xyce.lark` (`XY-FML-001`); a bare `.PARAM` value has no delimiter.
+- **`.ENDS` names** are not checked by Xyce: `ENDS_NAME_MISMATCH` (info) says so. A repeated
+  `.model` or `.subckt` is a `DUPLICATE_DEFINITION` warning that says Xyce stops.
+- **`DIALECT_GATED_SYNTAX`** (info) reports a `.LIB` call that names more than one entry: Xyce
+  loads only the first, with a warning.
 - **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4). An indented line inside a
   continued statement is one of its trailing comments and is not reported.

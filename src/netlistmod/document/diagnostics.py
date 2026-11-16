@@ -26,6 +26,7 @@ from netlistmod.model.nodes import (
     GlobalParamStatement,
     IndentedLine,
     Inductor,
+    LibCall,
     ModelStatement,
     StepDirective,
     SubcktDefinition,
@@ -99,6 +100,7 @@ _INSTANCE_NODES: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE:
 _ENDS_NAME_RULE: dict[Dialect, str] = {
     Dialect.NGSPICE: "ngspice does not check the name (ngspice manual §2.6.2)",
     Dialect.LTSPICE: f"{_SOLVER[Dialect.LTSPICE]} does not check the name",
+    _XYCE: f"{_SOLVER[_XYCE]} does not check the name",
 }
 # Whether a numeric value is checked against the dialect's number rules (ngspice only).
 _VALUE_CHECKS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False, _XYCE: False}
@@ -142,6 +144,17 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
                         item.ends.name_span,
                     )
                 )
+        if isinstance(item, LibCall) and len(item.entries) > 1:
+            found.append(
+                (
+                    DiagnosticCode.DIALECT_GATED_SYNTAX,
+                    "info",
+                    f"this `.LIB` call names {len(item.entries)} entries; "
+                    f"{_SOLVER[index.dialect]} loads only the first, `{item.entries[0].name}`, "
+                    "and ignores the rest with a warning",
+                    Span(item.entries[1].span.start, item.entries[-1].span.end),
+                )
+            )
         if isinstance(item, IndentedLine):
             found.append(
                 (

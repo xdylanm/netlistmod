@@ -15,10 +15,11 @@ grammar:
 core_rules:
 - GLOBAL_KW
 tests:
+- tests/grammar/xyce/test_xyce_statements.py::test_top_level_statements_are_refused_in_a_body
 - tests/grammar/xyce/test_xyce_names_numbers.py::test_a_global_node_takes_the_name_class
 - tests/grammar/xyce/test_xyce_names_numbers.py::test_global_takes_several_names_and_continues
 - tests/grammar/xyce/test_xyce_names_numbers.py::test_a_global_without_names_or_with_commas_is_rejected
 - tests/document/test_xyce_names.py::test_replaceground_sets_the_netlist_wide_flag
 - tests/solver/test_xyce_names_probes.py::test_global_makes_nodes_global
 validation_note: 'Validated on XyceNF Release 7.10.0: the names are global nodes in every subcircuit. Xyce also takes commas between them, which the library refuses (discrepancies.md).'
-notes: '`GlobalDirective`, as on ngspice: at least one name, separated by blanks, no comma (decision 0027 item 3). It is a top statement; in a subcircuit body it is refused (X-M1 B4). A name takes WORD (XY-NAM-001), so no `:`.'
+notes: '`GlobalDirective`, as on ngspice: at least one name, separated by blanks, no comma (decision 0027 item 3). It is a top statement; in a subcircuit body it is refused (not_in_subckt, XY-SBD-001). A name takes WORD (XY-NAM-001), so no `:`.'

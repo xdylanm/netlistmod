@@ -27,7 +27,8 @@ Until the X-M8 review the dialect is not a member of `Dialect`: it is the intern
 `Netlist.from_text(text, dialect=_XYCE)`. It cannot be pickled. X-M8 makes it the member
 `Dialect.XYCE`.
 The node classes only xyce has (`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement`,
-`FuncStatement`, and the value `FunctionDefinition`) live in `netlistmod.model` and are not exported from `netlistmod` until then.
+`FuncStatement`, `LibCall`, and the value `FunctionDefinition`) live in `netlistmod.model` and are
+not exported from `netlistmod` until then.
 
 ## What the dialect reads
 
@@ -55,6 +56,16 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
   - the formula grammar `formula_xyce.lark` and its reserved words (`XY-FML-001`), and the
     scoping rules of [scoping.md](./scoping.md).
 
+- **B4, statements:**
+  - `.SUBCKT`/`.ENDS`, with at least one port other than `0`, optional `PARAMS:` defaults
+    without commas, and nesting (`XY-SBD-001`); `.GLOBAL`, `.GLOBAL_PARAM` and `.END` are refused
+    in a body;
+  - `.MODEL`, its parameters with or without one pair of parentheses and no comma, a repeated
+    parameter refused, and xyce's own model types (`XY-MOD-001`);
+  - `.INC`, `.INCL` and `.INCLUDE`, opaque, with one path (`XY-INC-001`);
+  - `.LIB`: a call with a file and entries, opaque, or a definition block closed by `.ENDL` and
+    its name (`XY-LIB-001`).
+
 Every other line is refused (`XY-UNS-001`): an element line is `UnsupportedConstruct`, naming the
 milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
 `ParseError`; a dot-command the dialect does not read yet, and a `.PREPROCESS` form other than
@@ -66,11 +77,12 @@ Where Xyce is more lenient than the manual, the difference is a row of
 [discrepancies.md](./discrepancies.md): Xyce runs without `.END`, ignores text after it and on its
 line, warns on an unknown dot-command and ignores it, takes commas in `.GLOBAL`, `"` and non-ASCII
 in names, a few number forms that no list holds, blanks in a bare `.PARAM` value, a blank
-before a function's `(`, and some reserved and built-in names, which it ignores.
+before a function's `(`, some reserved and built-in names, which it ignores, and a second
+field on `.INC`, which it ignores with a warning.
 
 The rest is planned by task and milestone in [xm1-tasks.md](../../design/xm1-tasks.md) and the
-xyce plan, section 8: statements (B4) and the first elements (B5)
-in X-M1, directives in X-M2, then the remaining devices.
+xyce plan, section 8: the first elements (B5) in X-M1, directives in X-M2, then the remaining
+devices.
 
 ## Validation status
 
@@ -91,28 +103,32 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-END-001](./specs/XY-END-001.yaml) | required final .END statement | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-FML-001](./specs/XY-FML-001.yaml) | formula expression syntax for reference scans (formula_xyce.lark) | validated | 6 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-FUN-001](./specs/XY-FUN-001.yaml) | .FUNC user-defined functions | validated | 8 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-GLB-001](./specs/XY-GLB-001.yaml) | .GLOBAL node names | validated | 4 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-GLB-001](./specs/XY-GLB-001.yaml) | .GLOBAL node names | validated | 5 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-INC-001](./specs/XY-INC-001.yaml) | .INC, .INCL and .INCLUDE | validated | 2 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-LIB-001](./specs/XY-LIB-001.yaml) | .LIB calls and .LIB/.ENDL definitions | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NUM-001](./specs/XY-NUM-001.yaml) | numbers in device fields (scale factors and units) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NUM-002](./specs/XY-NUM-002.yaml) | numbers in expressions and .PARAM values (units and the imaginary J) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 16 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 4 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 9 + 0 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-17 entries: 14 validated, 2 observed, 0 disputed, 1 documented.
+21 entries: 18 validated, 2 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 
 As for ngspice ([ngspice README](../ngspice/README.md#lookaround-terminals)): Lark's strict mode
 skips these terminals in its collision check, and `UNCHECKED_TERMINALS` in
 `tests/architecture/test_contracts.py` lists them. Each was reviewed by hand (Lark 1.3.1; X-M0, and
-X-M1 B2 for the changed and new ones). `.N` is a terminal's priority; the state counts are parse
-states. The grammar has no block, so no block state.
+X-M1 B2 to B4 for the changed and new ones). `.N` is a terminal's priority; the state counts are
+parse states. The one block is a `.LIB` definition (B4).
 
 | Terminal | Matches | Candidate in | Competitors | Why no collision |
 |---|---|---|---|---|
@@ -123,5 +139,7 @@ states. The grammar has no block, so no block state.
 | `TITLE_TEXT.2` | as in ngspice | 1 state: line 1 | `LINE_END`, `WS` | No competitor at its priority; Xyce has no `TITLE_KW`. |
 | `SEP.10` | blanks; a line end and a `+` line's `+`; or a line end whose lookahead finds blank, comment or indented lines and then a `+` line | 95 states: before a field and at the end of a statement | `NL.5`, `CONT.7` (ignored), `WS.9` (ignored); above: `TRAILING_COMMENT.12`; below: the field tokens | It outranks `NL` and `CONT`, so a line end that a `+` line joins is a separator; the third alternative matches only when a `+` line follows the skipped lines, so any other line end stays `NL` and ends the statement. Field tokens never start with a blank or a line end. |
 | `TRAILING_COMMENT.12` | `;` to the end of the line; or, right after a line end (a lookbehind), a `*` line or an indented line other than a `+` line | 96 states: in a statement's gaps, and after `.END` | `SEP.10`, `NL`, `LINE_END`, the field tokens | Its `;` alternative: no field token holds `;`. Its other alternatives match only right after a line end, which in a gap only `SEP`'s third alternative leaves, so they are the skipped lines; it outranks `SEP`, so an indented skipped line is one comment rather than `SEP` and a field. A blank skipped line, which it cannot match, is part of a `SEP`. |
+| `DOT_NAME.4` | a `.`, a letter, then letters, digits, `_` and `-`, but not `.ends` or `.endl` (a lookahead) | line starts | the keywords (`END_KW.4`, `MODEL_KW.4`, `SUBCKT_KW.4`, `INC_KW.4`, `LIB_KW.4`, …) at its priority; `ENDS_KW.4` in a subcircuit body | The keywords are strings that it matches whole, so Lark re-types them; it refuses `.ends` and `.endl` whole, so a stray one is a syntax error and in a body `.ends` is `ENDS_KW`, which it does not shadow. |
+| `BLOCK_TEXT.2` | a non-blank, then text to the end of the line | the states of a `.LIB` definition's lines | `BLOCK_DOT_NAME.4`, `ENDL_KW.4`, `LINE_END`, `NL` | Reached only after the opening line's own NL (`lib_open_end`) and after a block line, states no statement shares, so no statement terminal competes; `BLOCK_DOT_NAME` outranks it at a line start, and `.endl` is re-typed to `ENDL_KW`. |
 | `BARE_FORMULA.5` | an expression without blanks: no `= , ; ( ) { } ' "` outside parentheses, `[<>!=]=`, parentheses three deep | 4 states: a `.PARAM` or `.GLOBAL_PARAM` value | `EXPR_NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3` | Its lookahead refuses a word that begins like a number and runs to the end of the field, so a number is `EXPR_NUMBER`, and a refused number form is not an expression; braces and quotes cannot begin it. |
 | `BLANK_TAIL.12` | blanks followed by something other than a blank, `,`, `;`, a line end or the next `name=` or `name(...)=`, then the rest of the line | 42 states: after a `.PARAM` or `.GLOBAL_PARAM` value | `SEP.10`, `CSEP.11`, `TRAILING_COMMENT.12`, `NL` | Its lookaheads leave every blank that `SEP` or `CSEP` may take before a field, a comment or a line end; `TRAILING_COMMENT` never starts with a blank there (its indented alternative needs a line end before it). |

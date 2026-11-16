@@ -21,5 +21,13 @@
   "ltspice": {
     "Mesfet": ["NIGBT", "PIGBT"]
   },
+  "xyce_source": "Xyce Reference Guide 7.10, the Model Form of each device: §2.3.4 p186 (C, CAP), §2.3.5 p191 (L, IND), §2.3.6 p194 (CORE), §2.3.7 p201 (R, RES), §2.3.8 p207 (D); X-M1 B4, decision 0027 item 7. The list replaces the shared one; each later xyce milestone adds the types of its letters",
+  "xyce": {
+    "Resistor": ["R", "RES"],
+    "Capacitor": ["C", "CAP"],
+    "Inductor": ["L", "IND"],
+    "MutualCoupling": ["CORE"],
+    "Diode": ["D"]
+  },
   "not_builtin": ["CodeModelDevice", "OsdiDevice"]
 }

@@ -92,6 +92,14 @@ class OpaqueStatement:
 
 
 @dataclass(frozen=True, slots=True)
+class LibCall(OpaqueStatement):
+    """An xyce ``.LIB`` call: an opaque ``lib`` statement whose ``entries`` are the names after
+    the file, as written (``[xyce-ref]`` §2.1.16.1 p50). Xyce loads only the first of several."""
+
+    entries: tuple[Identifier, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
 class End:
     """The required ``.end`` statement, including its terminator."""
 
