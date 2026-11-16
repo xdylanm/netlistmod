@@ -143,14 +143,14 @@ One pull request each, in the style of the phase plans. Sizes are rough.
 
 X-M0 keyed every dialect branch that an xyce load reaches ([decision 0026](../decisions/0026-the-xyce-dialect.md) item 6). These sites are not reachable until the milestone named; each gets its xyce entry or branch there, from the manuals (X-M0 audit A2, line numbers at `xm0-xyce-setup`).
 
-- **X-M1:**
-  - names and nets: `document/names.py:45` (`$G`, X-D3); `document/diagnostics.py:94` `_INSTANCE_NODES` and `:351` `_into_instance` (`X1:node`, X-D2); `dialects.py` `_FOLDS` (the case fold is provisional);
-  - diagnostics: `document/diagnostics.py:97` `_ENDS_NAME_RULE`, `:101` `_VALUE_CHECKS`, `:103` `_REPEAT_STOPS`, and the citations at `:185` and `:198`;
-  - the index: `document/index.py:557`, `:565` (use before definition) and `:604` (`_context_words`);
-  - formulas: `grammar/formula.py:24` `_GRAMMARS` and `formula-reserved.json`;
-  - models: `model/model_types.py:38`, which gives xyce no model types of its own without an entry;
-  - elements: `model/_rules_elements.py:321`;
-  - edits: `edit/_ops_common.py:254`; `edit/_ops_elements.py:147`, `:359` and `:412`, and the model placed after the value (`:397`; xyce writes R, C and L's model first); `edit/_ops_remove.py:75`.
+- **X-M1** (each line done in X-M1, B2 to B6, unless it says otherwise):
+  - names and nets: `document/names.py:45` (`$G`, X-D3; done in X-M1 B2); `document/diagnostics.py:94` `_INSTANCE_NODES` and `:351` `_into_instance` (`X1:node`, X-D2; done in X-M1 B6, an `_InstanceNodeRule` per dialect and `_EXPRESSION_PATHS`); `dialects.py` `_FOLDS` (the ASCII fold, observed; done in X-M1 B2);
+  - diagnostics: `document/diagnostics.py:97` `_ENDS_NAME_RULE`, `:101` `_VALUE_CHECKS`, `:103` `_REPEAT_STOPS` (done in X-M1 B2 to B4), and the citations at `:185` and `:198` (done in X-M1 B6: xyce reports no `PARAM_USED_BEFORE_DEFINITION`, and its `MODEL_TYPE_MISMATCH` carries no citation, as on LTspice);
+  - the index: `document/index.py:557`, `:565` (use before definition) and `:604` (`_context_words`) (done in X-M1 B3);
+  - formulas: `grammar/formula.py:24` `_GRAMMARS` and `formula-reserved.json` (done in X-M1 B3);
+  - models: `model/model_types.py:38`, which gives xyce no model types of its own without an entry (done in X-M1 B4);
+  - elements: `model/_rules_elements.py:321` (the transistor rule: not reached in X-M1, so it stays for X-M4);
+  - edits: `edit/_ops_common.py:254`; `edit/_ops_elements.py:147`, `:359` and `:412`, and the model placed after the value (`:397`; xyce writes R, C and L's model first); `edit/_ops_remove.py:75` (done in X-M1 B6: the tables `_JOIN_TRAILING_COMMENTS`, `_LTSPICE_FORMS`, `_RCL_FORMS`, `_POSITIONAL_AREAS` and `_PORT_PARAMS` in `edit/_ops_common.py`).
 - **X-M1 and X-M2 (statements):** `model/_rules_statements.py:180` and `:279`.
 - **X-M3 (sources):** `model/_rules_sources.py:244`; `edit/_ops_sources.py:171`.
 - **X-M4 (transistors):** the positional area of Q (`edit/_ops_elements.py:234`).

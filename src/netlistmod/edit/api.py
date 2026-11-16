@@ -519,7 +519,8 @@ class ParamTable(Mapping[str, tuple[ParamAssignment, ...]], Generic[_R]):
         placement: Placement | None = None,
     ) -> _R:
         """Set a parameter: replace the value of its effective (last) assignment in ``scope``,
-        or add ``.param name=value`` (decision 0007 item 7).
+        or add ``.param name=value`` (decision 0007 item 7). On the hidden xyce dialect the
+        effective assignment is the first, as Xyce 7.10 uses it.
 
         A new line goes to ``placement``: by default after the last ``.param`` of the scope
         (after the title, or at the start of a definition's body, when there is none). The
