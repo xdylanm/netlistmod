@@ -4,7 +4,8 @@ The letters of `[xyce-ref] §2.3 p177 "Devices"` (Table 2-35, p177–178). X-M1 
 L, K, D, V and I (their DC and AC parts) and X
 ([decision 0027](../../decisions/0027-xyce-structure-names-and-values.md) items 5 and 6): they are
 `supported`, with the spec entries `XY-ELM-001`, `XY-RCL-001`, `XY-MUT-001`, `XY-DIO-001`,
-`XY-SRC-001` and `XY-SUB-001`. Every other letter is `planned`, and a line that starts with one
+`XY-SRC-001` and `XY-SUB-001`, and R, C, L and D take the closed instance-parameter lists of
+`XY-IPN-001` (X-M1 B7). Every other letter is `planned`, and a line that starts with one
 raises `UnsupportedConstruct` ("not yet supported on Xyce", with the milestone). The Milestone column is the milestone of the [xyce plan](../../design/xyce-plan.md)
 section 8 that adds the letter; Phase is 1 for the X-M1 letters and 2 for the rest. The table is
 checked against [`xyce-devices.json`](../../../src/netlistmod/grammar/xyce-devices.json).

@@ -14,8 +14,9 @@ grammar:
 - resistor
 - capacitor
 - inductor
-- _rcl
-- _rcl_tail
+- _r_body
+- _c_body
+- _l_body
 - xy_tc_param
 - late_model
 - TC_KW
