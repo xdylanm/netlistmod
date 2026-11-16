@@ -255,7 +255,9 @@ def set_param(
     if (
         isinstance(element, Diode | BipolarTransistor | Jfet | Mesfet)
         and folded == _POSITIONAL_AREA
-        and isinstance(element, _POSITIONAL_AREAS[netlist.dialect])
+        # issubclass on the type, not isinstance: the table's tuple is typed as Component classes,
+        # and narrowing on it would widen `element` back to Component.
+        and issubclass(type(element), _POSITIONAL_AREAS[netlist.dialect])
     ):
         if any(found_fold(param.name) == folded for param in element.params):
             return _assign(element.params, element, name, value, reason, folded=found_fold)
