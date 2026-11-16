@@ -47,6 +47,7 @@ _BLOCKS: Final[dict[Dialect, dict[str, tuple[str, str]]]] = {
         "SUBCKT_KW": (".SUBCKT", ".ENDS"),
         "subckt_header": (".SUBCKT", ".ENDS"),
         "lib_open": (".LIB", ".ENDL"),
+        "DATA_BLOCK_KW": (".DATA", ".ENDDATA"),
     },
 }
 # Opening parenthesis terminals; an unclosed one is reported at the opener when the line ends.
@@ -359,6 +360,22 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "OP_KW": "`.OP`",
         "STEP_KW": "`.STEP`",
         "STEP_PARAM_KW": "`param`",
+        "OPTIONS_KW": "`.OPTIONS`",
+        "OPTION_KW": "`.OPTION`",
+        "OPT_PACKAGE_KW": "`.OPTIONS` package",
+        "OPT_KEY": "option name and `=`",
+        "IC_KW": "`.IC`",
+        "DCVOLT_KW": "`.DCVOLT`",
+        "NODESET_KW": "`.NODESET`",
+        "V_OPEN": "`V(`",
+        "IC_CURRENT_OPEN": "`I(`",
+        "ALL_KW": "`all=`",
+        "MEAS_KW": "`.MEAS`",
+        "MEASURE_KW": "`.MEASURE`",
+        "MEAS_MODE_KW": "`.MEASURE` mode",
+        "MEAS_TEXT": "measure text",
+        "DATA_BLOCK_KW": "`.DATA`",
+        "ENDDATA_KW": "`.ENDDATA`",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's

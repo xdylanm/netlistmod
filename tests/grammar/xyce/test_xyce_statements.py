@@ -188,9 +188,9 @@ def test_top_level_statements_are_refused_in_a_body(line: str) -> None:
 
 
 def test_a_directive_in_a_body_is_still_unsupported() -> None:
-    # X-M2 B3 reads `.OPTIONS`; until then a body's `.options` is refused as at the top level.
-    with pytest.raises(UnsupportedConstruct, match="dot-command `.options`"):
-        _parse("t\n.subckt s a\n.options timeint method=gear\n.ends\n.END\n")
+    # X-M2 B4 decides `.PRINT`; until then a body's `.print` is refused as at the top level.
+    with pytest.raises(UnsupportedConstruct, match="dot-command `.print`"):
+        _parse("t\n.subckt s a\n.print tran v(a)\n.ends\n.END\n")
 
 
 @pytest.mark.parametrize("line", [".ends", ".ENDS s", ".endl", ".endl x"])

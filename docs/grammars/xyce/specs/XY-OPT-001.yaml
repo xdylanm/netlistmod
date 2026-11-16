@@ -1,0 +1,23 @@
+id: XY-OPT-001
+dialect: xyce
+construct: .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE)
+manual_ref:
+- '[xyce-ref] §2.1.25 p96 ".OPTIONS Statements"'
+- '[xyce-ref] §2.1.25.21 p119 ".OPTIONS PARSER (Parser Options)"'
+status: documented
+grammar:
+- xy_options_stmt
+- opt_package
+- OPT_PACKAGE_KW
+core_rules:
+- OPTIONS_KW
+- OPTION_KW
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_options_take_each_package_of_the_manual
+- tests/grammar/xyce/test_xyce_directives.py::test_option_is_a_synonym
+- tests/grammar/xyce/test_xyce_directives.py::test_option_scale_stands_without_a_package
+- tests/grammar/xyce/test_xyce_directives.py::test_a_package_that_is_missing_or_unknown_is_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_options_measures_and_tables_are_refused_in_a_body
+- tests/grammar/xyce/test_xyce_directives.py::test_the_directives_round_trip
+validation_note: Read from the manual (decision 0028 item 5; xm2-tasks 5.1 points 18, 22 and 23). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (an unknown package, which Xyce ignores with a warning; a line with no package; the plural `.OPTIONS SCALE=`; `PCES`, which this build does not recognise) are X-M2 B6's. `.OPTION` as a full synonym rests on the binary.
+notes: '`OptionsDirective` with `package`, the package as written (an `Identifier`): one of the manual''s 21 (DEVICE, DIAGNOSTIC, TIMEINT, NONLIN, NONLIN-TRAN, NONLIN-HB, LOCA, LINSOL, LINSOL-HB, LINSOL-AC, OUTPUT, RESTART, SAMPLES, EMBEDDEDSAMPLES, PCES, SENSITIVITY, HBINT, DIST, FFT, MEASURE, PARSER), in any case. Any other word is a ParseError naming the closest package; a line without a package, or with a package and no item, is a ParseError, except `.OPTION SCALE=v` (singular, exactly one item), read with `package` `None`. The items are XY-OPT-002''s. Top level only: in a body Xyce silently ignores it, so it is a ParseError there. A repeated item (Xyce uses the first value) is the document layer''s (X-M2 B5).'
