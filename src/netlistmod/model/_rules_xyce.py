@@ -49,6 +49,32 @@ _MODEL_FIRST: dict[Dialect, bool] = {
 _VALUE_KEYWORDS: dict[type, str] = {Resistor: "r", Capacitor: "c", Inductor: "l"}
 # The long value keywords of ngspice, which Xyce stops on ("Unrecognized parameter").
 _LONG_KEYWORDS = {"resistance": "R", "capacitance": "C", "inductance": "L"}
+# Each letter's closed instance-parameter list, as the grammar's R_PARAM_KW, C_PARAM_KW,
+# L_PARAM_KW and D_PARAM_KW hold it (xm1-tasks 5.1 point 29), for the message that refuses a name
+# outside it: the device, the tables, and the names.
+_PARAM_LISTS: dict[str, tuple[str, str, str]] = {
+    "r": (
+        "resistor",
+        "Xyce reference manual §2.3.7 p203–205, Tables 2-42 and 2-44",
+        "a, density, dtemp, heatcapacity, l, m, outputintvars, r, resistivity, tc (or tc1 and "
+        "tc2), tce, temp, thermal_a, thermal_heatcapacity, thermal_l and w",
+    ),
+    "c": (
+        "capacitor",
+        "Xyce reference manual §2.3.4 p187, Table 2-37",
+        "age, c, d, dtemp, ic, l, m, q, tc (or tc1 and tc2), temp and w",
+    ),
+    "l": (
+        "inductor",
+        "Xyce reference manual §2.3.5 p193, Table 2-39",
+        "dtemp, ic, l, m, tc (or tc1 and tc2) and temp",
+    ),
+    "d": (
+        "diode",
+        "Xyce reference manual §2.3.8 p208–213, Tables 2-46, 2-48 and 2-51",
+        "ab, area, dtemp, ic, lg, ls, m, mult, off, perim, pj and temp",
+    ),
+}
 # What a line of each letter needs when it has no value (decision 0027 item 5, as amended).
 _VALUE_FORMS: dict[type, str] = {
     Resistor: "a value, positional or `R=`, or a model with both `L=` and `W=`",
@@ -121,6 +147,47 @@ class XyceRules(StatementsRules):
     def inst_param(self, children: list[Any]) -> _Field:
         return self.param(children)
 
+    def r_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    def c_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    def l_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    def d_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    def r_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("r", children)
+
+    def c_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("c", children)
+
+    def l_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("l", children)
+
+    def d_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("d", children)
+
+    def _unlisted(self, letter: str, children: list[Any]) -> NoReturn:
+        """Refuse a parameter name outside the letter's closed list (xm1-tasks 5.1 point 29)."""
+        name = _field_token(children)
+        folded = fold_name(str(name), self._dialect)
+        if folded in _LONG_KEYWORDS:
+            raise self._parse_error(
+                name,
+                f"`{name}=` is not a Xyce parameter, and Xyce stops on it; write the value "
+                f"positionally or as `{_LONG_KEYWORDS[folded]}=`",
+            )
+        device, tables, names = _PARAM_LISTS[letter]
+        raise self._parse_error(
+            name,
+            f"`{name}=` is not a parameter of a Xyce {device}, and Xyce stops on it "
+            f'("Unrecognized parameter"). The reference guide lists {names} ({tables})',
+        )
+
     def xy_tc_param(self, children: list[Any]) -> _Field:
         # `TC=a,b` is a list of two; `TC=a` alone is an ordinary value.
         if any(isinstance(c, Token) and c.type == "CSEP" for c in children):
@@ -182,12 +249,6 @@ class XyceRules(StatementsRules):
         names: set[str] = set()
         for param in element.all(ParamAssignment):
             name = fold_name(param.name, self._dialect)
-            if name in _LONG_KEYWORDS:
-                raise self._error_at(
-                    param.name_span.start,
-                    f"`{param.name}=` is not a Xyce parameter, and Xyce stops on it; write the "
-                    f"value positionally or as `{_LONG_KEYWORDS[name]}=`",
-                )
             if name == _VALUE_KEYWORDS[kind] and keyword is None:
                 keyword = param
             elif kind is Capacitor and name == "q" and charge is None:

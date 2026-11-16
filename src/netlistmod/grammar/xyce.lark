@@ -328,12 +328,44 @@ node: SEP NODE_WORD
 // An instance parameter name=value: the name is one token whose lookahead finds the `=`, above
 // WORD and NODE_WORD, so a name written before `=` is never a model or a node. Its value is a
 // number of the device reader, an expression in braces or quotes, or a bare expression without
-// blanks (decision X-D5).
+// blanks (decision X-D5). X takes any name, since its parameters are the subcircuit's; R, C, L
+// and D take only their letter's closed list below, where INST_KEY is a name outside the list.
 // spec: XY-ELM-001
 inst_param: SEP INST_KEY EQ _inst_value
           | (SEP | TRAILING_COMMENT) inst_param
 _inst_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | BARE_FORMULA
 INST_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
+
+// The closed instance-parameter lists (xm1-tasks 5.1 point 29), in any case: the names of each
+// device's instance-parameter tables in the reference guide, for every level of the device, since
+// the level is the model's and the grammar does not see it. R: Table 2-42 (level 1) and Table 2-44
+// (level 2, the thermal resistor), §2.3.7 p203–205; C: Table 2-37, §2.3.4 p187; L: Table 2-39,
+// §2.3.5 p193; D: Table 2-46 (levels 1 and 2), Table 2-48 (level 200) and Table 2-51 (level
+// 2002), §2.3.8 p208–213, without `OFF`, which is d_flag. `TC=` on R, C and L is xy_tc_param. A
+// name outside the list is recognised as INST_KEY, with the rest of its line, only to be refused
+// (the `*_unlisted` rules), since Xyce stops on it ("Unrecognized parameter"). K, V and I take no
+// instance parameter, so a `name=` there is a syntax error.
+// spec: XY-IPN-001
+r_param: SEP R_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT) r_param
+c_param: SEP C_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT) c_param
+l_param: SEP L_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT) l_param
+d_param: SEP D_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT) d_param
+r_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT) r_unlisted
+c_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT) c_unlisted
+l_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT) l_unlisted
+d_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT) d_unlisted
+R_PARAM_KW.4: /(?:a|density|dtemp|heatcapacity|l|m|outputintvars|r|resistivity|tc1|tc2|tce|temp|thermal_a|thermal_heatcapacity|thermal_l|w)(?=[ \t]*=)/i
+C_PARAM_KW.4: /(?:age|c|d|dtemp|ic|l|m|q|tc1|tc2|temp|w)(?=[ \t]*=)/i
+L_PARAM_KW.4: /(?:dtemp|ic|l|m|tc1|tc2|temp)(?=[ \t]*=)/i
+D_PARAM_KW.4: /(?:ab|area|dtemp|ic|lg|ls|m|mult|perim|pj|temp)(?=[ \t]*=)/i
 
 // R, C and L ([xyce-ref] §2.3.7 p201, §2.3.4 p186, §2.3.5 p191; decision 0027 item 5): the nodes,
 // the model if any, then the value, then parameters. A word after the nodes is the model, and a
@@ -342,12 +374,15 @@ INST_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
 // §2.3.7 p202). Which value forms each letter requires (`R=`, `C=`, `L=`, `Q=`, the geometry
 // forms) is checked by the transformer.
 // spec: XY-RCL-001
-resistor: R_NAME node node _rcl
-capacitor: C_NAME node node _rcl
-inductor: L_NAME node node _rcl
-_rcl: model? value? _rcl_tail
-    | value late_model
-_rcl_tail: (inst_param | xy_tc_param)* (NL | eol)
+resistor: R_NAME node node _r_body
+capacitor: C_NAME node node _c_body
+inductor: L_NAME node node _l_body
+_r_body: model? value? (r_param | xy_tc_param)* (r_unlisted | NL | eol)
+       | value late_model
+_c_body: model? value? (c_param | xy_tc_param)* (c_unlisted | NL | eol)
+       | value late_model
+_l_body: model? value? (l_param | xy_tc_param)* (l_unlisted | NL | eol)
+       | value late_model
 xy_tc_param: SEP TC_KW EQ _inst_value (CSEP _inst_value)?
            | (SEP | TRAILING_COMMENT) xy_tc_param
 late_model: SEP WORD REST_TEXT* NL
@@ -368,7 +403,7 @@ L_REF.4: /[Ll]/ _XY_CHAR*
 // D ([xyce-ref] §2.3.8 p207): the model, an optional positional area, then flags (`OFF`, or
 // `OFF=` and a value) and parameters.
 // spec: XY-DIO-001
-diode: D_NAME node node model value? (inst_param | d_flag)* (NL | eol)
+diode: D_NAME node node model value? (d_param | d_flag)* (d_unlisted | NL | eol)
 d_flag: SEP OFF_KW
       | SEP OFF_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
       | (SEP | TRAILING_COMMENT) d_flag

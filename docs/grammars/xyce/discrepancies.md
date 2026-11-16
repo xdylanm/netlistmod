@@ -50,6 +50,12 @@ library's side.
 | Stops on a comma between `PARAMS:` defaults ("Parameter name , contains illegal character(s)"). | Its own example writes one (`PARAMS: CENTER=200kHz,`, `[xyce-ref] §2.1.37 p159`). | `ParseError`, as on Xyce (`XY-SBD-001`; xm1-tasks 5.1 point 28). | `tests/solver/test_xyce_statement_probes.py::test_xyce_stops_on`; `tests/grammar/xyce/test_xyce_statements.py::test_a_comma_in_params_is_rejected` |
 | Reads `.LIB "path/models.lib"`, one field, as a definition and stops without its `.ENDL`. | Lists it among the call's examples (`[xyce-ref] §2.1.16.1 p50`). | A definition, as on Xyce: one field opens a block (`XY-LIB-001`; xm1-tasks 5.1 point 17). | `tests/solver/test_xyce_statement_probes.py::test_a_lib_with_one_field_opens_a_block`; `tests/grammar/xyce/test_xyce_statements.py::test_a_lib_with_one_field_is_a_block` |
 
+## Forms the library accepts and Xyce rejects
+
+| Xyce 7.10 | Manual | Library behaviour | Evidence |
+|---|---|---|---|
+| Takes on R and D only the instance parameters of the model's LEVEL: it stops on `THERMAL_A=` on a level 1 R and on `DTEMP=`, `TC1=` or `TC=` on a level 2 one, on `MULT=` on a level 1 D, `AREA=` or `OFF` on a level 200 one and `M=` on a level 2002 one. | Gives each level its own table (`[xyce-ref] §2.3.7 p203–205`, Tables 2-42 and 2-44; `§2.3.8 p208–213`, Tables 2-46, 2-48 and 2-51). | Read: each letter's list is the union of its tables (`XY-IPN-001`; xm1-tasks 5.1 point 29), since the level is the model's, which may be in another file, and the grammar does not see it. | `tests/solver/test_xyce_instance_param_probes.py::test_the_model_level_decides_the_list`; `tests/grammar/xyce/test_xyce_instance_params.py::test_each_listed_name_is_read_in_any_case` |
+
 ## Where the manual is silent
 
 | Xyce 7.10 | Library behaviour | Evidence |

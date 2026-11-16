@@ -78,6 +78,11 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
     X-M3 (`XY-SRC-001`);
   - X with optional `PARAMS:` and `M=` (`XY-SUB-001`).
 
+- **B7, the instance-parameter lists:** R, C, L and D take only the names of their
+  instance-parameter tables, for every level of the device, in any case, and refuse any other
+  name at the name, as Xyce stops on it (`XY-IPN-001`; xm1-tasks 5.1 point 29). X's parameters
+  are the subcircuit's and stay open; K, V and I take none.
+
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
 `ParseError`; a dot-command the dialect does not read yet, and a `.PREPROCESS` form other than
@@ -92,7 +97,9 @@ in names, a few number forms that no list holds, blanks in a bare `.PARAM` value
 before a function's `(`, some reserved and built-in names, which it ignores, a second
 field on `.INC`, which it ignores with a warning, and, on element lines, the ngspice order of R,
 C and L, an R without a value, a value written twice, one inductor on K without a model, a
-number before D's model, a bare `AC`, a comma on a source line and `:` in a designator.
+number before D's model, a bare `AC`, a comma on a source line and `:` in a designator. Where the
+library is more lenient, the row says so: R's and D's parameter lists are the union of their
+levels' tables, while Xyce takes only the model level's.
 
 The rest is planned by task and milestone in [xm1-tasks.md](../../design/xm1-tasks.md) and the
 xyce plan, section 8: the document and edit layers for these letters (B6) in X-M1, directives
@@ -122,6 +129,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-GLB-001](./specs/XY-GLB-001.yaml) | .GLOBAL node names | validated | 5 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-INC-001](./specs/XY-INC-001.yaml) | .INC, .INCL and .INCLUDE | validated | 2 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-IPN-001](./specs/XY-IPN-001.yaml) | closed instance-parameter lists of R, C, L and D | validated | 8 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-LIB-001](./specs/XY-LIB-001.yaml) | .LIB calls and .LIB/.ENDL definitions | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-MUT-001](./specs/XY-MUT-001.yaml) | K mutual inductors (coupling and optional CORE model) | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -140,14 +148,14 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 9 + 0 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-27 entries: 24 validated, 2 observed, 0 disputed, 1 documented.
+28 entries: 25 validated, 2 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 
 As for ngspice ([ngspice README](../ngspice/README.md#lookaround-terminals)): Lark's strict mode
 skips these terminals in its collision check, and `UNCHECKED_TERMINALS` in
 `tests/architecture/test_contracts.py` lists them. Each was reviewed by hand (Lark 1.3.1; X-M0, and
-X-M1 B2 to B4 for the changed and new ones). `.N` is a terminal's priority; the state counts are
+X-M1 B2 to B7 for the changed and new ones). `.N` is a terminal's priority; the state counts are
 parse states. The one block is a `.LIB` definition (B4).
 
 | Terminal | Matches | Candidate in | Competitors | Why no collision |
@@ -161,8 +169,9 @@ parse states. The one block is a `.LIB` definition (B4).
 | `TRAILING_COMMENT.12` | `;` to the end of the line; or, right after a line end (a lookbehind), a `*` line or an indented line other than a `+` line | 96 states: in a statement's gaps, and after `.END` | `SEP.10`, `NL`, `LINE_END`, the field tokens | Its `;` alternative: no field token holds `;`. Its other alternatives match only right after a line end, which in a gap only `SEP`'s third alternative leaves, so they are the skipped lines; it outranks `SEP`, so an indented skipped line is one comment rather than `SEP` and a field. A blank skipped line, which it cannot match, is part of a `SEP`. |
 | `DOT_NAME.4` | a `.`, a letter, then letters, digits, `_` and `-`, but not `.ends` or `.endl` (a lookahead) | line starts | the keywords (`END_KW.4`, `MODEL_KW.4`, `SUBCKT_KW.4`, `INC_KW.4`, `LIB_KW.4`, …) at its priority; `ENDS_KW.4` in a subcircuit body | The keywords are strings that it matches whole, so Lark re-types them; it refuses `.ends` and `.endl` whole, so a stray one is a syntax error and in a body `.ends` is `ENDS_KW`, which it does not shadow. |
 | `BLOCK_TEXT.2` | a non-blank, then text to the end of the line | the states of a `.LIB` definition's lines | `BLOCK_DOT_NAME.4`, `ENDL_KW.4`, `LINE_END`, `NL` | Reached only after the opening line's own NL (`lib_open_end`) and after a block line, states no statement shares, so no statement terminal competes; `BLOCK_DOT_NAME` outranks it at a line start, and `.endl` is re-typed to `ENDL_KW`. |
-| `INST_KEY.3` | a letter or `_`, then name characters, when a `=` follows (a lookahead) | after an element's fixed fields | `WORD.2`, `NODE_WORD.2`; at its priority `NUMBER.3`, `PARAMS_KW.3`, `SRC_FN_KW.3` | It outranks the names, so a name before `=` is a parameter; it starts with a letter, so no number, and it holds no `:`, so no `PARAMS:`. |
-| `TC_KW.4`, `OFF_VALUE_KW.4` | `tc` or `off`, when a `=` follows | after R, C and L's fields; after D's model | `INST_KEY.3` | They outrank it, so `TC=` takes its list and `OFF=` is a flag; the lookahead keeps `tcx=` and `offset=` ordinary parameters. |
+| `INST_KEY.3` | a letter or `_`, then name characters, when a `=` follows (a lookahead) | after an element's fixed fields | `WORD.2`, `NODE_WORD.2`; at its priority `NUMBER.3`, `PARAMS_KW.3`, `SRC_FN_KW.3`; above: the parameter keywords below | It outranks the names, so a name before `=` is a parameter; it starts with a letter, so no number, and it holds no `:`, so no `PARAMS:`. On R, C, L and D it is the name outside the letter's list, which the keywords outrank. |
+| `TC_KW.4`, `OFF_VALUE_KW.4` | `tc` or `off`, when a `=` follows | after R, C and L's fields; after D's model | `INST_KEY.3`; at their priority the parameter keywords below | They outrank `INST_KEY`, so `TC=` takes its list and `OFF=` is a flag; the lookahead keeps `tcx=` and `offset=` ordinary parameters. No list holds `tc` or `off`, so they meet no keyword. |
+| `R_PARAM_KW.4`, `C_PARAM_KW.4`, `L_PARAM_KW.4`, `D_PARAM_KW.4` | one name of the letter's closed list, in any case, when a `=` follows (a lookahead) | after R, C and L's fields; after D's model | `INST_KEY.3`, `WORD.2`, `NODE_WORD.2`; at their priority `TC_KW.4` (R, C, L) or `OFF_VALUE_KW.4` (D) | Each is offered only after its own letter's fields, so they never meet each other. They outrank `INST_KEY`, so a listed name is a parameter and any other is `INST_KEY`, refused; the lookahead makes the name end at the `=`, so `l` never takes the start of `lg=` and `m` never the start of `mult=`. |
 | `SRC_FN_KW.3` | a function name not followed by a name character | after a source's nodes, DC or AC part | `NUMBER.3`, `DC_KW.2`, `AC_KW.2` | A function name starts with a letter, so it never meets a number; the keywords are other words. |
 | `BARE_FORMULA.5` | an expression without blanks: no `= , ; ( ) { } ' "` outside parentheses, `[<>!=]=`, parentheses three deep | 4 states: a `.PARAM` or `.GLOBAL_PARAM` value | `EXPR_NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3` | Its lookahead refuses a word that begins like a number and runs to the end of the field, so a number is `EXPR_NUMBER`, and a refused number form is not an expression; braces and quotes cannot begin it. |
 | `BLANK_TAIL.12` | blanks followed by something other than a blank, `,`, `;`, a line end or the next `name=` or `name(...)=`, then the rest of the line | 42 states: after a `.PARAM` or `.GLOBAL_PARAM` value | `SEP.10`, `CSEP.11`, `TRAILING_COMMENT.12`, `NL` | Its lookaheads leave every blank that `SEP` or `CSEP` may take before a field, a comment or a line end; `TRAILING_COMMENT` never starts with a blank there (its indented alternative needs a line end before it). |

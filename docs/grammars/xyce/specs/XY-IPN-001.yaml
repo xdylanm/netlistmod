@@ -1,0 +1,41 @@
+id: XY-IPN-001
+dialect: xyce
+construct: closed instance-parameter lists of R, C, L and D
+manual_ref:
+- '[xyce-ref] §2.3.7 p203–205 "Resistor"'
+- '[xyce-ref] §2.3.4 p187 "Capacitor"'
+- '[xyce-ref] §2.3.5 p193 "Inductor"'
+- '[xyce-ref] §2.3.8 p208–213 "Diode"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- r_param
+- c_param
+- l_param
+- d_param
+- r_unlisted
+- c_unlisted
+- l_unlisted
+- d_unlisted
+- R_PARAM_KW
+- C_PARAM_KW
+- L_PARAM_KW
+- D_PARAM_KW
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_instance_params.py::test_each_listed_name_is_read_in_any_case
+- tests/grammar/xyce/test_xyce_instance_params.py::test_the_grammar_and_the_message_hold_the_same_list
+- tests/grammar/xyce/test_xyce_instance_params.py::test_a_name_outside_the_list_is_refused_at_the_name
+- tests/grammar/xyce/test_xyce_instance_params.py::test_a_refused_name_on_a_continuation_line_is_found_there
+- tests/grammar/xyce/test_xyce_instance_params.py::test_the_long_value_keywords_keep_their_hint
+- tests/grammar/xyce/test_xyce_instance_params.py::test_k_v_and_i_take_no_parameter
+- tests/grammar/xyce/test_xyce_instance_params.py::test_a_subcircuit_call_takes_any_parameter_name
+- tests/grammar/xyce/test_xyce_instance_params.py::test_the_other_dialects_keep_their_own_lists
+- tests/solver/test_xyce_instance_param_probes.py::test_every_listed_name_runs
+- tests/solver/test_xyce_instance_param_probes.py::test_an_unlisted_name_stops_xyce
+- tests/solver/test_xyce_instance_param_probes.py::test_the_model_level_decides_the_list
+validation_note: 'Validated on XyceNF Release 7.10.0: every name of each table runs on a device of its level (R levels 1 and 2, C, L, D levels 1, 2, 200 and 2002), in any case, and `TC=a,b` on R, C and L; Xyce stops on an unknown name, a model parameter (`RSH`, `CJ`, `TNOM`) and another letter''s parameter ("Unrecognized parameter", or "Unrecognized fields" on D). Xyce takes only the table of the model''s LEVEL, which the library''s union does not check (discrepancies.md).'
+notes: 'xm1-tasks 5.1 point 29. Each letter''s parameter keyword (R_PARAM_KW, C_PARAM_KW, L_PARAM_KW, D_PARAM_KW, case-insensitive, with a lookahead for the `=`) holds the names of the letter''s instance-parameter tables, for every level, since the level is the model''s and may be in another file: R, Table 2-42 (dtemp, l, m, r, tc1, tc2, tce, temp, w) and Table 2-44 (a, density, heatcapacity, l, m, outputintvars, r, resistivity, temp, thermal_a, thermal_heatcapacity, thermal_l, w); C, Table 2-37 (age, c, d, dtemp, ic, l, m, q, tc1, tc2, temp, w); L, Table 2-39 (dtemp, ic, l, m, tc1, tc2, temp); D, Table 2-46 (area, dtemp, ic, m, off, pj, temp), Table 2-48 (ab, lg, ls, m, mult) and Table 2-51 (ab, area, lg, ls, mult, perim, pj). `TC=`, the vector form of TC1 and TC2 (p187, p193, p203), is xy_tc_param (XY-RCL-001), and D''s `OFF` is its flag (XY-DIO-001). A name outside the list is INST_KEY, recognised with the rest of its line only to be refused at the name, with the list in the message; ngspice''s long value keywords keep their own hint. X takes any name (XY-SUB-001), since its parameters are the subcircuit''s; K, V and I take none (the manual gives them no instance-parameter table), so a `name=` there is a syntax error. ngspice and LTspice keep their own rules.'

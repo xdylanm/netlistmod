@@ -301,6 +301,13 @@ REFUSED: list[tuple[str, str, Op, type[Exception], str]] = [
     ),
     ("model-undefined", "R1 a 0 1k\n", lambda n: n.set_model("R1", "nomod"), EditError, "defined"),
     (
+        "unlisted-param",
+        "R1 a 0 1k\n",
+        lambda n: n.set_param("R1", "rsh", "1"),
+        EditError,
+        "is not a parameter of a Xyce resistor",
+    ),
+    (
         "source-port-param",
         "V1 a 0 1\n",
         lambda n: n.set_param("V1", "z0", "50"),
