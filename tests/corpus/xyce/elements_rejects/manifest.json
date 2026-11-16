@@ -1,0 +1,178 @@
+{
+  "family": "elements_rejects",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "c_numeric_charge.cir": {
+      "sha256": "afdae8afa5f2d3c24292c62b77f4cdbe5d352c9ae43e97a59d06a207f03f6636",
+      "line": 4,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`Q=` takes an expression",
+      "xyce": "runs"
+    },
+    "c_unlisted_param.cir": {
+      "sha256": "5fee49d2282f1cc33891df518d4f315f8bebaddeb4e8106ce97d2505574abdd0",
+      "line": 4,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`TCE` is R's, not C's (XY-IPN-001)",
+      "xyce": "stops"
+    },
+    "c_without_value.cir": {
+      "sha256": "01dfdbbb9acb069f796ab8cd1d3251daecc63f4341661e62e7189d7f14f8b5c6",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "a C needs a value, `C=`, `Q=` or `L=` (point 30)",
+      "xyce": "stops"
+    },
+    "d_number_before_model.cir": {
+      "sha256": "17dd0acfd0e52c77fdedaa81557dea05ac4166c84c7e0c8b6ace26b9344053f2",
+      "line": 5,
+      "column": 10,
+      "error": "ParseError",
+      "note": "D's model comes first (XY-DIO-001)",
+      "xyce": "runs"
+    },
+    "d_unlisted_param.cir": {
+      "sha256": "b17fc02d0cfe00e6d54415b7cd44a9b4aa74d898c8b31b4029a0663234bae902",
+      "line": 5,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`RS` is a model parameter (XY-IPN-001)",
+      "xyce": "stops"
+    },
+    "designator_colon.cir": {
+      "sha256": "eec000f1e3c6206f52488a6410d081a6961ed7ddf2502cd38bac3378b4fd9632",
+      "line": 6,
+      "column": 3,
+      "error": "ParseError",
+      "note": "`:` stands only in node fields (XY-ELM-001)",
+      "xyce": "runs"
+    },
+    "k_one_inductor_without_model.cir": {
+      "sha256": "f2a537f6cebe60dda3cb8c5467cedf2826a4d8e061f42af20f194214ee4a6374",
+      "line": 5,
+      "column": 4,
+      "error": "ParseError",
+      "note": "one inductor needs a CORE model (XY-MUT-001)",
+      "xyce": "runs"
+    },
+    "k_param.cir": {
+      "sha256": "d4fd033a604e7f6ffb5fa9b356b178cb955a2adfa9b15371bd9a6af804c902a3",
+      "line": 7,
+      "column": 15,
+      "error": "ParseError",
+      "note": "K takes no instance parameter",
+      "xyce": "stops"
+    },
+    "l_unlisted_param.cir": {
+      "sha256": "6ef30800903f79f5a4c7d2361828847a2c48a3d75be1fb904588923ec4b1a826",
+      "line": 4,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`W` is not an inductor parameter (XY-IPN-001)",
+      "xyce": "stops"
+    },
+    "l_without_value.cir": {
+      "sha256": "48f104088bd86196e2a25cffa73c3c2575976eeffa1b560b93785db93e81efcf",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "an L needs a value",
+      "xyce": "stops"
+    },
+    "r_long_keyword.cir": {
+      "sha256": "4d6d8af8844f062918aa1972a89b2b7530d001d53a20da53d5b852ec33f67fd6",
+      "line": 3,
+      "column": 8,
+      "error": "ParseError",
+      "note": "ngspice's `resistance=` is not a Xyce parameter",
+      "xyce": "stops"
+    },
+    "r_ngspice_order.cir": {
+      "sha256": "3f6956bce536950451aed8271b9e9ea17b8a732e795b72a13e09303185045481",
+      "line": 4,
+      "column": 11,
+      "error": "ParseError",
+      "note": "the model before the value (XY-RCL-001)",
+      "xyce": "runs"
+    },
+    "r_three_tc_values.cir": {
+      "sha256": "4270f473eca72efd04525f7424082e72c04a9b8f4f477dd65e3c498d9dc901f3",
+      "line": 3,
+      "column": 19,
+      "error": "ParseError",
+      "note": "`TC=` takes one or two values",
+      "xyce": "stops"
+    },
+    "r_unlisted_param.cir": {
+      "sha256": "600534a923206c186169bbd1edaac40a8dd91e228d254a8176306c9d760abb86",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": "a model parameter is not an instance parameter (XY-IPN-001)",
+      "xyce": "stops"
+    },
+    "r_value_twice.cir": {
+      "sha256": "9963332ab546a7d09bb6fa2ce630ed462f554ee3caeee102f83a5a79b77d073d",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": "the value positionally and as `R=`",
+      "xyce": "runs"
+    },
+    "r_without_value.cir": {
+      "sha256": "876b8fec1adb0683479ba9b09f596b7db011bba906eee5c0cd85d6da59f43206",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "an R needs a value (point 10 as amended)",
+      "xyce": "runs"
+    },
+    "v_bare_ac.cir": {
+      "sha256": "debf016a49c587f3d69176a14be7af4243c439fe6cd18eb22bada4a569187549",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`AC` needs its magnitude, a recorded strictness exception (XY-SRC-001)",
+      "xyce": "runs"
+    },
+    "v_comma.cir": {
+      "sha256": "36ebb710b809928b093800c7b062a3cf7d0844374ed148d016174c10a63b3554",
+      "line": 2,
+      "column": 9,
+      "error": "ParseError",
+      "note": "no comma between a source's fields",
+      "xyce": "runs"
+    },
+    "v_param.cir": {
+      "sha256": "5f129509ca981f732dbdc2da3dc710c84fbcbadd575facacb3412d49c711c8df",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "V takes no instance parameter",
+      "xyce": "runs"
+    },
+    "v_transient_function.cir": {
+      "sha256": "9645984392eb62e1ac6829a37011cbf34b4b3388e6a922967c136c601acf70c7",
+      "line": 2,
+      "column": 8,
+      "error": "UnsupportedConstruct",
+      "note": "the transient functions are X-M3's",
+      "xyce": "runs"
+    },
+    "x_params_comma.cir": {
+      "sha256": "b3f5954a55844a36f265da683d99a76134f0e9fe6dc4ada4dc078b4be235182a",
+      "line": 6,
+      "column": 20,
+      "error": "ParseError",
+      "note": "an X line's `PARAMS:` take no comma (XY-SUB-001)",
+      "xyce": "stops"
+    }
+  }
+}

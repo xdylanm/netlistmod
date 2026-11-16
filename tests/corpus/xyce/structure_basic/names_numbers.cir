@@ -1,0 +1,21 @@
+names and numbers: scale factors, units, node paths into an instance
+.subckt cell a b
+Rin a n1 1k
+Rout n1 b 2k
+.ends cell
+V1 1 0 DC 1.5
+Xc 1 2 cell
+Rmeg 2 0 1X
+Rmeg2 2 0 2Meg
+Rkohm 2 0 4.7kohm
+Rmilli 2 3 500M
+Rplain 3 0 1e3
+Rexp 2 0 2.5E+3ohm
+Cpico 2 0 22pF
+Cnano 2 0 3.3nfarad
+Cmil 2 0 1mil
+Lmicro 2 4 10uH
+Rload 4 0 100
+Rpath 2 Xc:n1 3k
+.param fclock=1khz tdelay=5ns vhalf=0.75v
+.END

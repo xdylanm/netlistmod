@@ -1,0 +1,5 @@
+reject: L without a value
+V1 a 0 1
+R1 a b 1k
+L1 b 0
+.END

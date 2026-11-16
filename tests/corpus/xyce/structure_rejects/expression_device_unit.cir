@@ -1,0 +1,5 @@
+reject: a device unit in a .param value
+.param r=1kohm
+V1 a 0 1
+R1 a 0 {r}
+.END

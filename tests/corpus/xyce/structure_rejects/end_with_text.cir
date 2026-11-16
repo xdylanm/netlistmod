@@ -1,0 +1,4 @@
+reject: text after .END on its line
+V1 a 0 1
+R1 a 0 1k
+.end here

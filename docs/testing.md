@@ -349,7 +349,12 @@ locally and write everything to temporary folders. The reader's and parsers' uni
 (`tests/test_xyce_raw_reader.py`) use synthetic strings written in the test.
 `tests/solver/test_xyce_harness.py` checks what the harness relies on, and
 `tests/solver/test_xyce_structure_probes.py` holds the X-M0 probes (comments, continuation, title,
-`.END`, brackets, ground). Run them with:
+`.END`, brackets, ground). The xyce corpus (`tests/corpus/xyce/`, X-M1 B7) holds no analysis,
+since the directives are X-M2's: `tests/solver/test_xyce_solver_corpus.py` copies a fixture's family
+(the files it includes) into a temporary folder, adds an `.op` before its `.END`, and checks that
+it runs, that the library's top-level nets are Xyce's nodes, and that an unedited save gives the
+same results. A rejection fixture's manifest `xyce` field (`stops` or `runs`) is what Xyce does with
+it, checked the same way. Run them with:
 
 ```powershell
 uv run --env-file .env python -m pytest tests/solver -k xyce --no-cov --require-solver xyce

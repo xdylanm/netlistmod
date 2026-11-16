@@ -1,0 +1,5 @@
+reject: a blank inside a bare value
+.param a = 1 + 2
+V1 n 0 1
+R1 n 0 {a}
+.END

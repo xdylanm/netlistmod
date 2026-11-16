@@ -1,0 +1,4 @@
+reject: $ is not a comment
+V1 a 0 1
+R1 a 0 1k $ load
+.END

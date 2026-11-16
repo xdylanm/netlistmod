@@ -1,0 +1,5 @@
+reject: a model parameter twice
+.model rm R (R=1 R=2)
+V1 n 0 1
+R1 n 0 rm 1k
+.END

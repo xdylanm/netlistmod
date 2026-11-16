@@ -1,0 +1,7 @@
+reject: node 0 as a port
+.subckt s a 0
+R1 a 0 1k
+.ends
+V1 n 0 1
+X1 n 0 s
+.END

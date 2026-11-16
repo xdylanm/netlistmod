@@ -1,0 +1,121 @@
+{
+  "family": "statements_rejects",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "func_blank_before_paren.cir": {
+      "sha256": "037760b0631413d116bd8ea4051081878f763b4e11e1694d2c9ee28e3dc6d6df",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a function's name and `(` are one token",
+      "xyce": "runs"
+    },
+    "func_builtin_name.cir": {
+      "sha256": "a3cd0f0c70a3b305d49ac8634535dbccdb7a0c6cc7ad27ad5c43ebdaf0e149f7",
+      "line": 2,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a built-in function's name cannot be defined (XY-FUN-001)",
+      "xyce": "runs"
+    },
+    "global_param_in_subckt.cir": {
+      "sha256": "90edc66646036d556266d3dae8188f1b321173242cd0c17e507510aea1568917",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "`.GLOBAL_PARAM` is top level only (XY-PRM-002)",
+      "xyce": "stops"
+    },
+    "include_two_fields.cir": {
+      "sha256": "901eae8ae0b8517f43fb947dc6cc435dead564aea3e19a5416f07fdd93afc0fb",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "`.INCLUDE` takes one path (XY-INC-001); Xyce's side is test_xyce_statement_probes.py::test_an_extra_include_field_is_ignored"
+    },
+    "lib_endl_mismatch.cir": {
+      "sha256": "048a01040d0a662104f29bb9d66dd81b7e2cfdc9bd0bd956dedf9d280b974d6a",
+      "line": 4,
+      "column": 7,
+      "error": "ParseError",
+      "note": "`.ENDL` names the entry it closes (XY-LIB-001)",
+      "xyce": "stops"
+    },
+    "lib_unclosed.cir": {
+      "sha256": "59057a486e84c6277e9161d8529c41424ec3a6bf4973d3c08a76c6d5d1122bf8",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "a `.LIB` definition needs its `.ENDL`",
+      "xyce": "stops"
+    },
+    "model_comma.cir": {
+      "sha256": "e6c0de40db1d096e55ea2ace201678a6da199249c23f0de1b3ec1fe1c9bc29d1",
+      "line": 2,
+      "column": 17,
+      "error": "ParseError",
+      "note": "`.MODEL` parameters take no comma (XY-MOD-001)",
+      "xyce": "stops"
+    },
+    "model_repeated_param.cir": {
+      "sha256": "752efb5a8c1e074d20d1cb3cea7e6380b374781b26bfbe700421033a85ba5a56",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "a model parameter written twice",
+      "xyce": "stops"
+    },
+    "param_blank_in_bare_value.cir": {
+      "sha256": "9dbb55bc0197d79056762f9da932c2cf9d1b448ce8e31a4b00a29cc5728bdaeb",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "a bare value has no blank (decision X-D5)",
+      "xyce": "runs"
+    },
+    "param_reserved_word.cir": {
+      "sha256": "7fd4b5e192a97b5d966055b4dca952217fe183ecc15639fbe1a373e27288f980",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a reserved word is not a parameter name",
+      "xyce": "stops"
+    },
+    "preprocess_other_form.cir": {
+      "sha256": "0be47ff2945389f5afcafb76339bf9aeaf3b3dce811106cc84d37c46a2789caa",
+      "line": 2,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "only REPLACEGROUND is read (XY-UNS-001)",
+      "xyce": "runs"
+    },
+    "subckt_ground_port.cir": {
+      "sha256": "d9f07c256ab532dbf65b106aec861ccd681e8c8d21e9ea147474b06e7fcaa1a8",
+      "line": 2,
+      "column": 13,
+      "error": "ParseError",
+      "note": "node 0 is not a port",
+      "xyce": "stops"
+    },
+    "subckt_params_comma.cir": {
+      "sha256": "1fdb3eef593839c1aca8ce8395b51a84fd81c2cc3f88f59b6a27407ef67c3c18",
+      "line": 2,
+      "column": 25,
+      "error": "ParseError",
+      "note": "`PARAMS:` defaults take no comma",
+      "xyce": "stops"
+    },
+    "subckt_without_ports.cir": {
+      "sha256": "b4327f6c84e69c4a2648356d660585f48002077381075e3543d7f1acfe88035b",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "at least one port (XY-SBD-001); Xyce warns and runs while the definition is not called",
+      "xyce": "runs"
+    }
+  }
+}

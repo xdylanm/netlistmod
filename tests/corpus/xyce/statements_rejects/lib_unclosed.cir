@@ -1,0 +1,6 @@
+reject: .LIB without .ENDL
+.lib first
+R9 a 0 1k
+V1 n 0 1
+R1 n 0 1k
+.END

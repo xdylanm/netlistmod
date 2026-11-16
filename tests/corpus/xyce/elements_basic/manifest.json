@@ -1,0 +1,12 @@
+{
+  "family": "elements_basic",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "The element lines of X-M1 B5 and the parameter lists of B7. The solver test adds `.op` before `.END`. The `_crlf` file is the CRLF variant of its LF twin.",
+  "fixtures": {
+    "elements.cir": "896938be1c4c98c3f87acda2547fba5e56e5d3e2a27e3ad9033f0ed5e8864072",
+    "elements_crlf.cir": "6a34c1c3ed4fde11ee392ffe0a04c1a2058dc3094525e62a3f7e9bc626dbf103"
+  }
+}

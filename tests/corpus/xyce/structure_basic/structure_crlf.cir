@@ -1,0 +1,22 @@
+structure corpus: comments, continuation, indented lines, ground and globals
+* A star comment line.
+; A line that starts with a semicolon is a comment too.
+.preprocess replaceground true ; gnd and ground become node 0
+
+Vsupply in gnd 5 ; the supply, with an end-of-line comment
+R1 in mid[0] 1k
+    an indented line, which Xyce reads as a comment
+R2 mid[0] 0
+* a comment between a line and the + line that continues it
+
++ 2k
+Rbus $Gbus GROUND 10k
+Rtap $gbus mid[0]
+  an indented line between a line and its + line does not break the join
++ 4.7k ;a comment needs no blank before it
+.global vdd
+Vdd vdd 0 3.3
+Rdd vdd 0 1meg
+	a tab-indented line is a comment as well
+.END ; the end of the netlist
+

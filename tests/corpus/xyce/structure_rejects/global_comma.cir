@@ -1,0 +1,6 @@
+reject: a comma in .GLOBAL
+.global vdd,vss
+V1 vdd vss 1
+R1 vdd 0 1k
+R2 vss 0 1k
+.END

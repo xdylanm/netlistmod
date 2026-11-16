@@ -1,0 +1,4 @@
+reject: an RKM number
+V1 a 0 1
+R1 a 0 4k7
+.END

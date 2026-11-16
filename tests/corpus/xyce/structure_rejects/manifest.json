@@ -1,0 +1,154 @@
+{
+  "family": "structure_rejects",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "continuation_after_title.cir": {
+      "sha256": "0903129f971b1f11aac804eb87324a9290e9bf7e973ec76a90ac75fa879e867c",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "a `+` line with only the title before it joins nothing",
+      "xyce": "stops"
+    },
+    "dollar_comment.cir": {
+      "sha256": "6800dc821ea1d5aebd93b0b8a633e7cbf425a9eaf83a4030e9764881e6cfe244",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`$` is not a comment; the word after the value is refused",
+      "xyce": "stops"
+    },
+    "double_scale.cir": {
+      "sha256": "6fe4658dd5d7fe4aeeb7c7310279e9ad3d5fbb1330aa0fa87458b4d4dda0b3df",
+      "line": 3,
+      "column": 8,
+      "error": "ParseError",
+      "note": "one scale factor: `1kk` is not a number, and a model name cannot read as one",
+      "xyce": "stops"
+    },
+    "double_slash_comment.cir": {
+      "sha256": "147edc5495728ad0b46e364aeaefd94120eb6b46c02fd3da73cedff904e445db",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`//` is not a comment",
+      "xyce": "stops"
+    },
+    "end_with_text.cir": {
+      "sha256": "9ace701500c59c9221b9161473679b9ef2a86aadf616ab7d1a5deeba1e1004e4",
+      "line": 4,
+      "column": 6,
+      "error": "ParseError",
+      "note": "only a `;` comment may follow `.END` on its line",
+      "xyce": "runs"
+    },
+    "expression_device_unit.cir": {
+      "sha256": "81668d77ea5bc132d703da64fe882621b6b58e22842e09f51609e7fdc8cfe9ee",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "an expression number takes only the short unit list (XY-NUM-002)",
+      "xyce": "stops"
+    },
+    "global_comma.cir": {
+      "sha256": "03a12fd1de8a0c79868b260a7d5e6ff8a56482ab936ed8bf158c1944bbf0b6c4",
+      "line": 2,
+      "column": 12,
+      "error": "ParseError",
+      "note": "`.GLOBAL` takes no comma (XY-GLB-001)",
+      "xyce": "runs"
+    },
+    "micro_sign.cir": {
+      "sha256": "0468e97d80fb63ee38aaaab680532e7866f737bde52c31e64e73e75a1c312028",
+      "line": 4,
+      "column": 9,
+      "error": "ParseError",
+      "note": "the micro sign is not a scale factor (XY-NUM-001)",
+      "xyce": "stops"
+    },
+    "missing_end.cir": {
+      "sha256": "09868a4dacb03d594d973f0878964e54680133e78245c6c4651763982d56a47b",
+      "line": 3,
+      "column": 11,
+      "error": "ParseError",
+      "note": "`.END` is required (XY-END-001)",
+      "xyce": "runs"
+    },
+    "non_ascii_name.cir": {
+      "sha256": "d337918488588f2412e5c7d967562f9dd6f2b055c0ef454b1b8b8759d56cb41f",
+      "line": 3,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a node name is printable ASCII (XY-NAM-001)",
+      "xyce": "runs"
+    },
+    "not_a_letter.cir": {
+      "sha256": "a9990c858f59167b6145bd6c24980072d478cdff4ae0755b2564cc6bd7852879",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "A is not a Xyce letter",
+      "xyce": "stops"
+    },
+    "preprocess_bad_value.cir": {
+      "sha256": "5cb512ec5dec28e3de1b33d755109de89a5eee518a3394b16de119e869ca176b",
+      "line": 2,
+      "column": 27,
+      "error": "ParseError",
+      "note": "REPLACEGROUND takes TRUE or FALSE",
+      "xyce": "stops"
+    },
+    "quote_in_name.cir": {
+      "sha256": "32f5c52a18fb5843b25ac3b0ff807ac6c4e84cc3e8f3d331b0dd29fba5462b44",
+      "line": 3,
+      "column": 7,
+      "error": "ParseError",
+      "note": "`\"` is not a name character (XY-NAM-001)",
+      "xyce": "runs"
+    },
+    "rkm_number.cir": {
+      "sha256": "3de7e0649b0a33b1626f2e08b2a8a79bad8bc9704b6a43266169880514c7db4e",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "no RKM numbers: `4k7` is not a number, so it is the model, and the line has no value",
+      "xyce": "stops"
+    },
+    "second_preprocess.cir": {
+      "sha256": "959744f2fbf5ca18352fbd8309b2bf36e2954355308b359f33af594e25b9ea00",
+      "line": 3,
+      "column": 1,
+      "error": "ParseError",
+      "note": "one `.PREPROCESS REPLACEGROUND` per netlist (XY-PRE-001)",
+      "xyce": "stops"
+    },
+    "text_after_end.cir": {
+      "sha256": "534f185eac4b90bf55cdcc625ddb6ca1e52a93ad099dc7b1f629f9a7c821a2d6",
+      "line": 5,
+      "column": 1,
+      "error": "ParseError",
+      "note": "only blank lines may follow `.END`",
+      "xyce": "runs"
+    },
+    "unsupported_directive.cir": {
+      "sha256": "0e14921d3a43e0920a5ecc6b8a14290882a70c2ee0ef68f951bb917071bf7194",
+      "line": 4,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "`.tran` is X-M2's (XY-UNS-001)",
+      "xyce": "runs"
+    },
+    "unsupported_letter.cir": {
+      "sha256": "18e4212a84e90b13283af1d5b7011f27498a4a7d817b7663d6bd0b3130564333",
+      "line": 5,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "Q is X-M4's (xyce-devices.json)",
+      "xyce": "runs"
+    }
+  }
+}

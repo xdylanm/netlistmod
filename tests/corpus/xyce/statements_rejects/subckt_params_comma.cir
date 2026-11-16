@@ -1,0 +1,7 @@
+reject: a comma in PARAMS:
+.subckt s a params: r=1k, c=1p
+R1 a 0 {r}
+.ends
+V1 n 0 1
+X1 n s
+.END

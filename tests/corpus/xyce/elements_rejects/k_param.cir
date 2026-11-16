@@ -1,0 +1,8 @@
+reject: K takes no parameter
+V1 a 0 1
+R1 a b 1k
+L1 b 0 1u
+L2 c 0 1u
+R2 c 0 1k
+K1 L1 L2 0.5 m=1
+.END

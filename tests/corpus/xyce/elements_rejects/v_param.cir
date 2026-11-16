@@ -1,0 +1,4 @@
+reject: V takes no parameter
+V1 a 0 1 m=1
+R1 a 0 1k
+.END

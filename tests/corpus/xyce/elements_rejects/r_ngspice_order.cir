@@ -1,0 +1,5 @@
+reject: R in the ngspice order
+.model rm R (R=1)
+V1 a 0 1
+R1 a 0 1k rm
+.END

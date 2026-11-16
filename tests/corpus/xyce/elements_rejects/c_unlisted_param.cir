@@ -1,0 +1,5 @@
+reject: TCE on a C line
+V1 a 0 1
+R1 a 0 1k
+C1 a 0 1p tce=0
+.END

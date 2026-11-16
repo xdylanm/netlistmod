@@ -1,0 +1,6 @@
+reject: two REPLACEGROUND lines
+.preprocess replaceground true
+.preprocess replaceground false
+V1 a gnd 1
+R1 a 0 1k
+.END

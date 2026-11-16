@@ -1,0 +1,5 @@
+reject: A is not a Xyce letter
+V1 a 0 1
+R1 a 0 1k
+A1 a 0 x
+.END

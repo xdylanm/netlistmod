@@ -1,0 +1,29 @@
+{
+  "family": "statements_basic",
+  "origin": "Authored in this repository for the X-M1 xyce grammar (task B7)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "The parameters, functions, models, subcircuits, includes and libraries of X-M1 B3 and B4. The .inc and .lib files are the files includes.cir includes, never read as netlists; the solver test copies the family beside each netlist and adds `.op` before `.END`.",
+  "fixtures": {
+    "buffer.inc": {
+      "sha256": "2537ef957d0fa0beed2f2e9c4fdee5f313289664f41f24aff7ce6e513c61fc7e",
+      "role": "included whole by includes.cir (`.incl`)"
+    },
+    "corner.lib": {
+      "sha256": "f4b79d6b20bc5d606d109f5565e0c9331fc3fa7f9b100b3fcc7ec976dfed50c5",
+      "role": "the library file of includes.cir's `.lib` call (entry `typical`)"
+    },
+    "includes.cir": "5a94ad300f308a2d6c388970e4ff3b2ed9c6e85008a536de246f4a0f109a5cb7",
+    "models.inc": {
+      "sha256": "43226d2b34714735da2054f904547a869a57d376c38427bf243dbdfa8465470a",
+      "role": "included whole by includes.cir (`.INC`)"
+    },
+    "params.cir": "6bc519d9ad5171900002ed5dfbaf81b95622d8f382d20de803368314f6e5eb5d",
+    "stage.inc": {
+      "sha256": "7adb39c4fc217ff2a8906bfb8a3b0b27a2cee7fa9fa58711288a4899855bc859",
+      "role": "included whole by includes.cir (`.include`)"
+    },
+    "subckt.cir": "61944cc5c57ed614365999edd9f869520245e9e6fffcf91a17a7ea59d76bacca"
+  }
+}

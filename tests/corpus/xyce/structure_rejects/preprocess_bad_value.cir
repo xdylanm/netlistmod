@@ -1,0 +1,5 @@
+reject: REPLACEGROUND takes TRUE or FALSE
+.preprocess replaceground yes
+V1 a gnd 1
+R1 a 0 1k
+.END
