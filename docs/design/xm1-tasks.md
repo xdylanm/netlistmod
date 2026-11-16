@@ -128,7 +128,7 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
     - A positional value together with `R=`, or a value together with `Q=`, raises `ParseError`; Xyce silently prefers one (P5).
 
     *Recommendation:* as listed. R with no value gets a warning diagnostic.
-    **Decided (maintainer, 2026-11-16): as recommended, except that R requires a value.** An R line with no positional value and no `R=` raises `ParseError`, although Xyce runs it as 1 kΩ with a warning (a discrepancy row). *Narrowed (maintainer, 2026-11-16):* the model-geometry form, a model with both `L=` and `W=`, is still accepted, since Xyce computes RSH × L/W for it. Only an R that Xyce would set to the 1 kΩ default is refused: no value, no `R=`, and not that form. A lead probe on XyceNF 7.10.0 found `rmod L=30u W=1u` with `RSH=100` gives 3 kΩ, while an explicit value replaces the geometry (`rmod 2k L=30u W=1u` gives 2 kΩ). `remove_value` on R is allowed only on the geometry form, as on C's semiconductor form.
+    **Decided (maintainer, 2026-11-16): as recommended, except that R requires a value.** An R line with no positional value and no `R=` raises `ParseError`, although Xyce runs it as 1 kΩ with a warning (a discrepancy row). *Narrowed (maintainer, 2026-11-16):* the model-geometry form, a model with `L=` (`W=` optional), is still accepted, since Xyce computes RSH × L/W for it. Only an R that Xyce would set to the 1 kΩ default is refused: no value, no `R=`, and not that form. A lead probe on XyceNF 7.10.0 found `rmod L=30u W=1u` with `RSH=100` gives 3 kΩ, while an explicit value replaces the geometry (`rmod 2k L=30u W=1u` gives 2 kΩ). `remove_value` on R is allowed only on the geometry form, as on C's semiconductor form. *Corrected at R1 (maintainer, 2026-11-16):* the geometry form needs only a model and `L=`. A missing `W=` takes the model's `DEFW` ([xyce-ref] §2.3.7 p203), so `rmod L=30u` with `RSH=100` gives 300 Ω, not the 1 kΩ default.
 11. **The edits follow the order.**
     - `set_value` inserts after the model.
     - `set_model` inserts right after the nodes, and is allowed with `R=`.
@@ -211,6 +211,7 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
 
 29. **Instance parameter names (B5).** Xyce stops on an unknown instance parameter (`R1 a 0 1k foo=1`), but B5 left the names open, which is more lenient than Xyce. **Decided (maintainer, 2026-11-16): close the lists per letter,** as LTspice's are. Each letter accepts only the instance parameters its manual section lists, with spec entries, and an unknown name raises `ParseError`. Done in B7.
 30. **C's value rule (B5).** B5 followed Xyce's own message: a C needs a value, `C=`, `Q=` or `L=` (the length), so a model-only C raises `ParseError` (Xyce stops on it). That is stricter than point 10's "model-only is grammatical". **Decided (maintainer, 2026-11-16): keep Xyce's rule.** `remove_value` on C is allowed only while `Q=` or `L=` remains.
+31. **The new `Scope` properties (R1).** `Scope.functions` and `Scope.replace_ground` would be covered public names under decision 0024, released before the dialect is public. **Decided (maintainer, 2026-11-16): private until X-M8**, which decides their public names. The xyce paragraphs in `docs/usage/errors.md` are held back until X-M8 as well.
 
 ### 5.2 Log
 
