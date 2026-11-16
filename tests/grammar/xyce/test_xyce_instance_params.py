@@ -93,7 +93,19 @@ def test_the_grammar_and_the_message_hold_the_same_list(letter: str) -> None:
     text = GRAMMAR.read_text(encoding="utf-8")
     match = re.search(rf"^{letter}_PARAM_KW\.4: /\(\?:([a-z0-9_|]+)\)", text, re.MULTILINE)
     assert match is not None
-    assert tuple(match.group(1).split("|")) == LISTS[letter]
+    # The value keywords and C's charge have terminals of their own (XY-RCL-001; R1 review).
+    keywords = {
+        name
+        for terminal, name in (
+            ("R_VALUE_KW", "r"),
+            ("C_VALUE_KW", "c"),
+            ("L_VALUE_KW", "l"),
+            ("Q_KW", "q"),
+        )
+        if (letter, name) in _VALUE_NAMES
+        and re.search(rf"^{terminal}\.4: /{name}\(\?=", text, re.MULTILINE)
+    }
+    assert tuple(sorted({*match.group(1).split("|"), *keywords})) == LISTS[letter]
     message = _PARAM_LISTS[letter.lower()][2]
     words = set(re.findall(r"[a-z_0-9]+", message)) - {"and", "or", "tc"}
     expected = set(LISTS[letter]) | ({"off"} if letter == "D" else set())

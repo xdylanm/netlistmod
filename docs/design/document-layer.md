@@ -60,10 +60,9 @@ sequence or its bodies). They insert nothing: an edit inserts a line through
 
 Read-only properties: `path: ScopePath`, `display` (names as written), `definition:
 SubcktDefinition | None`, `lines`, `parent`, `children`, `dialect`, `params`, `models`,
-`subckts`, `elements` (each `Mapping[folded name, tuple in source order]`),
-`functions` (xyce's user-defined functions, empty elsewhere), `may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
-`.lib` block, whose names the tables do not show; §7.8) and `replace_ground: bool` (an xyce
-netlist with `.PREPROCESS REPLACEGROUND TRUE`, the same in every scope; section 9). Methods: `fold(name)` (the dialect's
+`subckts`, `elements` (each `Mapping[folded name, tuple in source order]`) and
+`may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
+`.lib` block, whose names the tables do not show; §7.8). Methods: `fold(name)` (the dialect's
 folded form), `chain()` (self, then enclosing scopes), `walk()`, `describe()`. Assigning an
 attribute is an `AttributeError`.
 
@@ -151,14 +150,16 @@ separators=(",", ":"))` encoded as UTF-8.
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
 | `PARAM_USED_BEFORE_DEFINITION` | warning | the name in the formula | the definition is in the reference's own scope and that scope's first definition starts after it (an enclosing scope's parameter is never "late": review R1) |
 | `ENDS_NAME_MISMATCH` | info | the `.ends` name | names differ (case-insensitive) |
-| `DIALECT_GATED_SYNTAX` | info; warning for an xyce model name | the value; on xyce, the entries after the first, or the model name | `notation == "rkm"`; an xyce `LibCall` with more than one entry, of which Xyce loads only the first; an xyce `.model` whose name reads as a number (section 9) |
+| `DIALECT_GATED_SYNTAX` | info | the value | `notation == "rkm"` |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
 | `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19); an xyce one that names an internal node of the instance's definition (decision 0027 item 4; section 9) |
 | `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block, or for a node inside an instance of the scope (ngspice `x1.n`, LTspice `X1:n`) | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
 | `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 | `FRA_PROBE_IN_IMPEDANCE_MODE` | warning | the probe's designator | an LTspice `&` whose resolved analyzer (decision 0020 item 8) has the `zm` flag; LTspice stops on it (M18 D2) |
-| `INDENTED_LINE_IGNORED` | warning | the line, without its line end | an xyce `IndentedLine`: a line that begins with blanks and is not a `*`, `;` or `+` line, which Xyce reads as a comment (decision 0027 item 1) |
+| `INDENTED_LINE_IGNORED` | warning | the line, without its line end | an xyce `IndentedLine`: a line that begins with blanks and is not a `*`, `;` or `+` line, which Xyce reads as a comment (decision 0027 item 1); also such a line between a statement and its `+` line, one of the statement's trailing comments (section 9) |
+| `LIB_EXTRA_ENTRIES` | info | the entries after the first | an xyce `LibCall` with more than one entry, of which Xyce loads only the first (section 9) |
+| `NUMERIC_MODEL_NAME` | warning | the model name | an xyce `.model` whose name reads as a number (section 9) |
 | `FRA_RANGE_MISSING` | warning | the analyzer's designator | an LTspice `@`, in any scope, without `fstart=` or `fend=` and without `enabled=`, when the top level has a `.fra` command; LTspice stops in the `.fra` run (M18 D2) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
@@ -217,8 +218,9 @@ decision 0027 items 1 and 3):
 
 - **Names** fold by ASCII lower case. `0` is the only ground, unless the netlist holds
   `.PREPROCESS REPLACEGROUND TRUE`, anywhere, a body included: then `GND`, `GND!` and `GROUND`
-  in any case are ground in every scope (`Index.replace_ground`, `Scope.replace_ground`, the
-  `replace_ground=` argument of `names.is_ground` and `names.net_name`). The statement's value is
+  in any case are ground in every scope (`Index.replace_ground`, the internal
+  `Scope._replace_ground`, the `replace_ground=` argument of `names.is_ground` and
+  `names.net_name`). The statement's value is
   the last signature entry, so no edit changes it (P4).
 - **Globals:** a node whose name begins `$G`, in any case, is global (`is_automatic_global`, a
   per-dialect prefix table: LTspice `$g_`, xyce `$g`), as is a `.GLOBAL` name.
@@ -227,8 +229,8 @@ decision 0027 items 1 and 3):
   `PARAM_USED_BEFORE_DEFINITION`; a `.GLOBAL_PARAM` is a top-level parameter listed after the
   `.PARAM` assignments, so a `.PARAM` of the same name wins; a body `.PARAM` that repeats a
   `PARAMS:` name is reported as shadowed; reserved words are never references.
-- **Functions:** `Scope.functions` holds `.FUNC` lines and `.PARAM` function assignments, looked
-  up like models; a call that is not a built-in (`builtin_functions`, from
+- **Functions:** the scope's internal table `Scope._functions` (named at X-M8; xm1-tasks 5.1
+  point 31) holds `.FUNC` lines and `.PARAM` function assignments, looked up like models; a call that is not a built-in (`builtin_functions`, from
   `formula-reserved.json`) is a `function` reference, and a function's arguments are not
   parameter references in its body. A repeated function is a `DUPLICATE_DEFINITION` warning
   (Xyce stops). An unresolved function is an `UNRESOLVED_PARAM` (message "function `f` is not
@@ -236,7 +238,7 @@ decision 0027 items 1 and 3):
 - **Formula scan:** `formula_xyce.lark` (`XY-FML-001`); a bare `.PARAM` value has no delimiter.
 - **`.ENDS` names** are not checked by Xyce: `ENDS_NAME_MISMATCH` (info) says so. A repeated
   `.model` or `.subckt` is a `DUPLICATE_DEFINITION` warning that says Xyce stops.
-- **`DIALECT_GATED_SYNTAX`** (info) reports a `.LIB` call that names more than one entry: Xyce
+- **`LIB_EXTRA_ENTRIES`** (info) reports a `.LIB` call that names more than one entry: Xyce
   loads only the first, with a warning.
 - **Node paths into an instance** (decision X-D2, decision 0027 item 4; `names.md` N7): a node
   `X1:m` (or `X1:X2:m`) is resolved through the `X` designators of the scope it is written in,
@@ -251,7 +253,9 @@ decision 0027 items 1 and 3):
   `MODEL_TYPE_MISMATCH` (it takes `CORE`) as for any model.
 - **R, C and L words that Xyce sorts by lookup** (xm1-tasks 5.1 point 9): an `UNRESOLVED_MODEL`
   on an R, C or L whose model name is a visible parameter adds that Xyce reads the word as the
-  value; a `.model` whose name reads as a number (`.model 2k R`) is a `DIALECT_GATED_SYNTAX`
+  value; a `.model` whose name reads as a number (`.model 2k R`) is a `NUMERIC_MODEL_NAME`
   warning, since the library reads that word on an element line as a value and Xyce as the model.
-- **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4). An indented line inside a
-  continued statement is one of its trailing comments and is not reported.
+- **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4), and each indented line
+  inside a continued statement, which is one of its trailing comments: the grammar lexes it as
+  `INDENTED_TRAILING`, and the parse records its span (`model.nodes.indented_comments`, internal),
+  which `collect_diagnostics` takes as `indented`.

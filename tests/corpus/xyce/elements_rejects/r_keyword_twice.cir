@@ -1,0 +1,4 @@
+reject: R= written twice
+V1 a 0 1
+R1 a 0 R=1k R=2k
+.END

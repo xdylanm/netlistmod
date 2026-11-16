@@ -12,13 +12,25 @@ validated_on:
 grammar:
 - indented_line
 - INDENTED_LINE
+- INDENTED_TRAILING
+- eol
+- value
+- param
+- model
+- x_name
+- rparen
+- dc_keyword
+- ac_spec
 core_rules: []
 tests:
 - tests/grammar/xyce/test_xyce_structure.py::test_an_indented_line_is_its_own_kind_of_comment
 - tests/grammar/xyce/test_xyce_structure.py::test_an_indented_end_is_not_the_end
 - tests/document/test_xyce_names.py::test_an_indented_line_is_reported
+- tests/document/test_xyce_names.py::test_an_indented_line_inside_a_continued_statement_is_reported
+- tests/edits/test_xyce_edits.py::test_refused
+- tests/edits/test_xyce_edits.py::test_an_indented_comment_may_stand_in_inserted_text
 - tests/solver/test_xyce_structure_probes.py::test_an_indented_element_line_is_a_comment
 - tests/solver/test_xyce_structure_probes.py::test_an_indented_param_line_is_a_comment
 - tests/solver/test_xyce_structure_probes.py::test_an_indented_end_line_is_a_comment
 validation_note: 'Validated by the X-M0 probes on XyceNF Release 7.10.0: an indented element, `.param` or `.END` line is a silent comment.'
-notes: An indented line that is not a `*`, `;` or `+` line is read as Xyce reads it, a comment, in a node of its own kind (`IndentedLine`, its text with the blanks; decision 0027 item 1), and the document layer reports it with `INDENTED_LINE_IGNORED` (warning), since such a line is often meant as a statement. An indented `*` or `;` line is a plain comment line, and an indented `+` line continues. An indented `.END` is not `.END`. An indented line between a statement and its `+` line is a trailing comment of that statement and gets no diagnostic (XY-CNT-001).
+notes: An indented line that is not a `*`, `;` or `+` line is read as Xyce reads it, a comment, in a node of its own kind (`IndentedLine`, its text with the blanks; decision 0027 item 1), and the document layer reports it with `INDENTED_LINE_IGNORED` (warning), since such a line is often meant as a statement. An indented `*` or `;` line is a plain comment line, and an indented `+` line continues. An indented `.END` is not `.END`. An indented line between a statement and its `+` line is a trailing comment of that statement (XY-CNT-001), lexed as its own terminal, INDENTED_TRAILING, so the parse records it and the document layer reports it with `INDENTED_LINE_IGNORED` too (R1 review). The edits refuse inserted text that holds such a line, from the parse of that text rather than its first characters, so an indented `*`, `;` or `+` line may stand in it.

@@ -8,6 +8,7 @@ from typing import Any, NoReturn
 from lark import Token
 
 from netlistmod.dialects import Dialect
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_base import _Rules
 from netlistmod.model._tree import (
     _comment_spans,
@@ -49,43 +50,6 @@ from netlistmod.model.values import (
     ValueList,
 )
 from netlistmod.source import Span
-
-_DIGITS = frozenset("0123456789")
-_LETTERS = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZµ")
-
-
-def _is_letter(char: str) -> bool:
-    """Whether ``char`` is a letter of LTspice's NUMBER and FIELD_NUMBER (``[^\\W\\d_]``)."""
-    return char.isalnum() and not char.isdecimal()
-
-
-def _reads_as_number(text: str, *, any_letter: bool = False) -> bool:
-    """Whether ``text`` is core.lark's FIELD_NUMBER: a number, then letters only (``2``, ``1k``).
-
-    With ``any_letter``, the letters are any Unicode letter, as in LTspice's NUMBER (``1μ``,
-    ``2Ω``): a field written so is a number in the model's place on either dialect, never a
-    model name (M18 A1-4).
-    """
-    i = 1 if text[:1] in ("+", "-") else 0
-    start = i
-    while i < len(text) and text[i] in _DIGITS:
-        i += 1
-    digits = i - start
-    if i < len(text) and text[i] == ".":
-        i += 1
-        while i < len(text) and text[i] in _DIGITS:
-            i += 1
-            digits += 1
-    if digits == 0:
-        return False
-    if i < len(text) and text[i] in "eE":
-        j = i + 1 + (text[i + 1 : i + 2] in ("+", "-"))
-        if j < len(text) and text[j] in _DIGITS:
-            i = j
-            while i < len(text) and text[i] in _DIGITS:
-                i += 1
-    return all(char in _LETTERS or (any_letter and _is_letter(char)) for char in text[i:])
-
 
 # The tokens an expression is written with: a brace or quoted formula, or the pieces of a bare
 # expression, one per physical line (decision 0016 item 2).
@@ -333,7 +297,7 @@ class ElementsRules(_Rules):
             kind is BipolarTransistor
             and self._dialect is Dialect.NGSPICE
             and len(names) > 1
-            and _reads_as_number(str(last), any_letter=True)
+            and reads_as_number(str(last), any_letter=True)
         ):
             # A number with a letter outside ngspice's NUMBER (1μ, 2Ω): ngspice 47 runs it as an
             # area and ignores the letters, so it is the area message, not the model's (M18 A1-4).
@@ -367,7 +331,7 @@ class ElementsRules(_Rules):
         cannot refuse them as the model; both solvers would look the name up instead.
         """
         text = str(token)
-        if _reads_as_number(text, any_letter=True):
+        if reads_as_number(text, any_letter=True):
             raise self._parse_error(
                 token,
                 f"`{text}` is in the model's place (the last name before any area, flag or "
@@ -389,7 +353,7 @@ class ElementsRules(_Rules):
         cannot refuse it as the model (as for Q, decision 0014 item 1). A field that reads as a
         number (digits, then letters only) is never a model name; ``1n4148`` and ``2N2222`` are.
         """
-        if _reads_as_number(model.model_name, any_letter=True):
+        if reads_as_number(model.model_name, any_letter=True):
             raise self._error_at(
                 model.span.start,
                 f"`{model.model_name}` is in the model's place ({place}), and a model name "

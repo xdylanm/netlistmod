@@ -43,7 +43,12 @@ _STEP_VARIATIONS = frozenset({"DEC_KW", "OCT_KW", "LIN_KW"})
 # RKM terminals that ngspice reads differently from IEC 60062 (decision 0004).
 _RKM_SOLVER_MISMATCH = frozenset({"RKM_R_MEGA", "RKM_C_FARAD"})
 # Field tokens: the token of a field rule that is neither a separator nor a comment.
-_GAP_TERMINALS = frozenset({"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT", "EQ"})
+# INDENTED_TRAILING is xyce's indented line inside a continued statement, a comment there.
+_GAP_TERMINALS = frozenset(
+    {"SEP", "CSEP", "BS_CONT", "TRAILING_COMMENT", "INDENTED_TRAILING", "EQ"}
+)
+# The tokens of a statement's end-of-line comments.
+_COMMENT_TERMINALS = frozenset({"TRAILING_COMMENT", "INDENTED_TRAILING"})
 # Names that §2.11.1 reserves and a .param assignment may not define.
 _RESERVED_PARAMS = frozenset({"TIME_KW", "TEMPER_KW", "HERTZ_KW"})
 _BARE_EXPRESSION = (
@@ -309,7 +314,7 @@ def _comment_spans(children: list[Any]) -> tuple[Span, ...]:
     return tuple(
         _span(child)
         for child in children
-        if isinstance(child, Token) and child.type == "TRAILING_COMMENT"
+        if isinstance(child, Token) and child.type in _COMMENT_TERMINALS
     )
 
 

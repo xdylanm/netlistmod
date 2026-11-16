@@ -88,7 +88,8 @@ ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "
 # Whether a parameter used before its definition in its own scope is reported (scoping.md of each
 # dialect): ngspice reads the netlist in order; LTspice and Xyce do not mind.
 _ORDER_MATTERS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False, _XYCE: False}
-# Which definition a repeated parameter resolves to: the last on ngspice and LTspice, the first on
+# Which definition a repeated parameter resolves to, and so which assignment params.set edits
+# (edit/_ops_statements.py): the last on ngspice and LTspice, the first on
 # Xyce 7.10, as its own warning says (xyce scoping.md S3; the manual says the last).
 _FIRST_PARAM_WINS: dict[Dialect, bool] = {
     Dialect.NGSPICE: False,
@@ -125,6 +126,12 @@ class Scope:
     The tables map a folded name to every definition in this scope, in source order:
     ``params`` (defaults first, then ``.param`` assignments), ``models``, ``subckts`` and
     ``elements`` (the components of this scope, not of nested definitions).
+
+    Two xyce attributes are internal until X-M8 names them (decision 0026; xm1-tasks 5.1 point
+    31): ``_functions``, the user-defined functions by folded name in source order (an xyce
+    ``.FUNC`` line, or a function on a ``.PARAM`` line; empty on the other dialects), and
+    ``_replace_ground``, whether ``GND``, ``GND!`` and ``GROUND`` are the ground net (an xyce
+    netlist with ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it; the same in every scope).
     """
 
     __slots__ = (
@@ -253,12 +260,6 @@ class Scope:
         return self._subckts
 
     @property
-    def functions(self) -> Mapping[str, tuple[FunctionDefinition, ...]]:
-        """User-defined functions by folded name, in source order: an xyce ``.FUNC`` line, or a
-        function on a ``.PARAM`` line; empty on the other dialects."""
-        return self._functions
-
-    @property
     def elements(self) -> Mapping[str, tuple[Component, ...]]:
         """The components of this scope (not of nested definitions) by folded designator."""
         return self._elements
@@ -268,13 +269,6 @@ class Scope:
         """Whether this scope holds an opaque item that may define names its tables do not show:
         an ``.include`` or ``.lib`` statement, or an ``.if`` or ``.lib`` block (§7.8)."""
         return self._may_define_elsewhere
-
-    @property
-    def replace_ground(self) -> bool:
-        """Whether ``GND``, ``GND!`` and ``GROUND`` are the ground net here: an xyce netlist with
-        ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it (``names.md``); the same in every scope.
-        """
-        return self._replace_ground
 
     def fold(self, name: str) -> str:
         """``name`` in the form this netlist's dialect compares names in."""
@@ -409,7 +403,7 @@ def _build_scope(
 
 
 def _lookup(
-    scope: Scope, table: Literal["params", "models", "subckts", "functions"], name: str
+    scope: Scope, table: Literal["params", "models", "subckts", "_functions"], name: str
 ) -> tuple[Scope, tuple[object, ...]] | None:
     key = scope.fold(name)
     for candidate in scope.chain():
@@ -598,7 +592,7 @@ def _formula_references(
             if token.kind == "function" and _USER_FUNCTIONS[scope.dialect]:
                 if token.text.lower() not in builtin_functions(scope.dialect):
                     start = text_start + token.start
-                    called = _lookup(scope, "functions", token.text)
+                    called = _lookup(scope, "_functions", token.text)
                     references.append(
                         Reference(
                             "function",
@@ -657,7 +651,7 @@ def _node_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) ->
 
 def _net_node(scope: Scope, name: str) -> object | None:
     dialect = scope.dialect
-    grounds = scope.replace_ground
+    grounds = scope._replace_ground
     if is_ground(name, dialect, replace_ground=grounds) or is_automatic_global(name, dialect):
         return name
     key = net_name(name, dialect, replace_ground=grounds)

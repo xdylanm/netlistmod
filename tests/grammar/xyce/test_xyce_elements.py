@@ -119,18 +119,19 @@ def test_resistor_value_forms(
     assert resistor.params == ()
 
 
-def test_the_geometry_form_takes_a_model_and_both_l_and_w() -> None:
-    # The maintainer's change to point 10: Xyce then takes RSH x L / W from the model.
+def test_the_geometry_form_takes_a_model_and_l() -> None:
+    # The maintainer's change to point 10, corrected at R1: Xyce takes RSH x L / W from the model,
+    # and the model's DEFW for a missing `W=` ([xyce-ref] §2.3.7 p203).
     resistor = _element("R1 a b rmod L=30u W=1u")
     assert resistor.value is None and resistor.model is not None
     assert [p.name for p in resistor.params] == ["L", "W"]
+    length_only = _element("R1 a b rmod L=30u")
+    assert length_only.value is None and [p.name for p in length_only.params] == ["L"]
     # An explicit value replaces the geometry (probe test_the_geometry_form_and_an_explicit_value).
     assert _element("R1 a b rmod 2k L=30u W=1u").value.text == "2k"
 
 
-@pytest.mark.parametrize(
-    "line", ["R1 a b", "R1 a b rmod", "R1 a b rmod L=30u", "R1 a b rmod W=1u", "R1 a b L=1u W=1u"]
-)
+@pytest.mark.parametrize("line", ["R1 a b", "R1 a b rmod", "R1 a b rmod W=1u", "R1 a b L=1u W=1u"])
 def test_a_resistor_needs_a_value(line: str) -> None:
     # Xyce runs each with its 1 kΩ default (probe test_xyce_runs); the library refuses them.
     error = _error(line)
@@ -176,6 +177,48 @@ def test_a_value_given_twice_is_refused(line: str, keyword: str) -> None:
     # Xyce silently uses one of them (point 10; probe test_xyce_runs).
     error = _error(line)
     assert error.column == line.index(keyword) + 1
+
+
+@pytest.mark.parametrize(
+    ("line", "second"),
+    [
+        ("R1 a b R=1k R=2k", "R=2k"),
+        ("R1 a b R=1k r = 2k", "r = 2k"),
+        ("C1 a b C=1p C=2p", "C=2p"),
+        ("L1 a b L=1u L=2u", "L=2u"),
+        ("C1 a b Q={1p*v(a)} q={2p*v(a)}", "q="),
+        ("R1 a b 1k L=1u L=2u", "L=2u"),
+        ("R1 a b rmod L=30u W=1u w=2u", "w=2u"),
+        ("R1 a b 1k TC=1m TC=2m", "TC=2m"),
+        ("C1 a b 1p IC=1 ic=2", "ic=2"),
+        ("L1 a b 1u M=1\n+ M=2", "M=2"),
+        ("D1 a b dm AREA=1 area=2", "area=2"),
+        ("X1 a s PARAMS: r=1 R=2", "R=2"),
+    ],
+)
+def test_a_value_keyword_or_parameter_written_twice_is_refused(line: str, second: str) -> None:
+    # Xyce 7.10 runs each and silently uses one of the values: the last on R (probe
+    # test_a_repeated_keyword_or_parameter_takes_one_value), the first on X; the library refuses
+    # a second value keyword, a second charge and any repeated instance parameter (R1 review).
+    error = _error(line)
+    assert "written twice" in error.reason
+    lines = f"t\n{line}".splitlines()
+    assert (error.line, error.column) == (len(lines), lines[-1].index(second) + 1)
+
+
+def test_the_value_keywords_are_their_own_fields() -> None:
+    # `R=`, `C=`, `L=` and `Q=` have their own keyword terminals (P13): the keyword's span is kept
+    # for the edits, and the other parameters are left in params.
+    resistor = _element("R1 a b r = 2k L=1u")
+    assert (resistor.value_keyword, resistor.value_keyword_span) == ("r", Span(9, 10))
+    assert [p.name for p in resistor.params] == ["L"]
+    capacitor = _element("C1 a b cmod C=1p L=1u")
+    assert (capacitor.value_keyword, capacitor.value_keyword_span) == ("C", Span(14, 15))
+    assert [p.name for p in capacitor.params] == ["L"]
+    inductor = _element("L1 a b M=2 L=1u")
+    assert (inductor.value_keyword, inductor.value_keyword_span) == ("L", Span(13, 14))
+    assert [p.name for p in inductor.params] == ["M"]
+    assert _element("R1 a b 1k").value_keyword_span is None
 
 
 @pytest.mark.parametrize(

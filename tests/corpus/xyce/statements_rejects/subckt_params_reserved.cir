@@ -1,0 +1,7 @@
+reject: a reserved word as a PARAMS: name
+.subckt s a params: temp=1
+R1 a 0 1k
+.ends
+V1 n 0 1
+X1 n s
+.END

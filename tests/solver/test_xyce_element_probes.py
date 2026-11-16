@@ -95,6 +95,44 @@ def test_the_geometry_form_and_an_explicit_value(solver: Solver, tmp_path: Path)
 
 
 @pytest.mark.parametrize(
+    ("lines", "ohms"),
+    [
+        (".model rmod R (RSH=100)\nR5 2 0 rmod L=30u\n", 300.0),
+        (".model rmod R (RSH=100 DEFW=3u)\nR5 2 0 rmod L=30u\n", 1000.0),
+        (".model rmod R (RSH=100 DEFW=3u)\nR5 2 0 rmod L=30u W=1u\n", 3000.0),
+        (".model rmod R (RSH=100)\nR5 2 0 rmod L=30u W=3u\n", 1000.0),
+    ],
+    ids=["l-only", "l-only-with-defw", "w-given-over-defw", "w-given"],
+)
+def test_the_geometry_form_needs_only_l(
+    solver: Solver, tmp_path: Path, lines: str, ohms: float
+) -> None:
+    """A model and `L=` are the geometry form: RSH x L / W, where a missing `W=` is the model's
+    DEFW, 10u by default ([xyce-ref] §2.3.7 p203; point 10 as corrected at R1). So `rmod L=30u`
+    with RSH=100 is 300 Ohm, not the 1 kOhm default; a `W=` replaces DEFW."""
+    assert _v2(solver, tmp_path, lines) == pytest.approx(2 * ohms / (1000 + ohms), rel=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("lines", "ohms"),
+    [
+        ("R5 2 0 R=1k R=3k\n", 3000.0),
+        ("R5 2 0 1k M=1 M=2\n", 500.0),
+        (".model rmod R (RSH=100)\nR5 2 0 rmod L=30u W=1u W=3u\n", 1000.0),
+        (".subckt s a params: r=3k\nR1 a 0 {r}\n.ends\nX1 2 s PARAMS: r=1k r=3k\n", 1000.0),
+    ],
+    ids=["value-keyword", "multiplicity", "width", "subcircuit-call"],
+)
+def test_a_repeated_keyword_or_parameter_takes_one_value(
+    solver: Solver, tmp_path: Path, lines: str, ohms: float
+) -> None:
+    """Xyce 7.10 runs a value keyword or an instance parameter written twice and silently uses
+    one of the values: the last on R, the first on an X line. The library refuses both (R1
+    review; discrepancies.md)."""
+    assert _v2(solver, tmp_path, lines) == pytest.approx(2 * ohms / (1000 + ohms), rel=1e-6)
+
+
+@pytest.mark.parametrize(
     "lines",
     [
         "C5 1 0 1u\n",
@@ -258,8 +296,14 @@ def test_a_node_path_reaches_into_an_instance(solver: Solver, tmp_path: Path) ->
         ".param rv=1k\nR5 2 0 rv\n",
         "R5 2 0\n",
         ".model rmod R (R=1)\nR5 2 0 rmod\n",
-        ".model rmod R (RSH=100)\nR5 2 0 rmod L=10u\n",
+        ".model rmod R (RSH=100)\nR5 2 0 rmod W=10u\n",
         "R5 2 0 1k R=3k\n",
+        "R5 2 0 R=1k r=3k\n",
+        "C5 2 0 C=1p C=2p\nR5 2 0 1k\n",
+        "C5 2 0 Q={1p*V(2)} Q={2p*V(2)}\nR5 2 0 1k\n",
+        "L5 3 0 L=1m L=2m\nR3 3 0 1\nR5 2 0 1k\n",
+        "R5 2 0 1k L=1u L=2u\n",
+        ".model dm D\nD1 3 0 dm AREA=1 AREA=2\nR3 3 0 1\nR5 2 0 1k\n",
         "C5 2 0 1p C=2p\nR5 2 0 1k\n",
         "C5 2 0 1p Q={1p*V(2)}\nR5 2 0 1k\n",
         "C5 2 0 Q=1p\nR5 2 0 1k\n",
@@ -275,8 +319,14 @@ def test_a_node_path_reaches_into_an_instance(solver: Solver, tmp_path: Path) ->
         "bare-parameter-as-value",
         "resistor-without-value",
         "resistor-model-without-value",
-        "resistor-model-with-l-only",
+        "resistor-model-with-w-only",
         "value-and-r-keyword",
+        "r-keyword-twice",
+        "c-keyword-twice",
+        "charge-twice",
+        "l-keyword-twice",
+        "geometry-parameter-twice",
+        "diode-parameter-twice",
         "value-and-c-keyword",
         "value-and-charge",
         "numeric-charge",
@@ -291,8 +341,9 @@ def test_a_node_path_reaches_into_an_instance(solver: Solver, tmp_path: Path) ->
 def test_xyce_runs(solver: Solver, tmp_path: Path, lines: str) -> None:
     """Forms Xyce runs, with a warning at most, that the library refuses (discrepancies.md): the
     ngspice order and a bare name as R's value, which Xyce sorts by lookup (point 9); an R
-    without a value or with an incomplete geometry (1k default, point 10 as amended); a value
-    written twice, of which Xyce silently keeps one; a numeric charge; one inductor without a
+    without a value, or with a model and `W=` but no `L=` (1k default, point 10 as amended); a
+    value written twice, a value keyword, a charge or an instance parameter written twice, of
+    which Xyce silently keeps one (R1 review); a numeric charge; one inductor without a
     model (point 12); a number before D's model, which Xyce drops (point 13); a bare `AC` and a
     comma on a source line, and `M=` on I (point 14); `:` in a designator."""
     result = run(solver, tmp_path, _divider(lines))
@@ -356,7 +407,7 @@ def test_a_parameter_in_the_model_place_is_the_value(solver: Solver, tmp_path: P
 def test_a_model_named_as_a_number_is_taken_as_the_model(solver: Solver, tmp_path: Path) -> None:
     """With `.model 2k R (R=0.5)`, Xyce reads `R5 2 0 2k` as that model with the default 1 kOhm
     times 0.5, not as a 2k value, while the library reads the value: the reason for the
-    `DIALECT_GATED_SYNTAX` warning on the `.model` (xm1-tasks 5.1 point 9(c); X-M1 B6)."""
+    `NUMERIC_MODEL_NAME` warning on the `.model` (xm1-tasks 5.1 point 9(c); X-M1 B6)."""
     lines = ".model 2k R (R=0.5)\nR5 2 0 2k\n"
     assert _v2(solver, tmp_path / "model", lines) == pytest.approx(2 / 3, rel=1e-6)
     other = ".model 2k R (R=0.5)\nR5 2 0 4k\n"

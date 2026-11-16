@@ -7,7 +7,7 @@ status: validated
 validated_on:
 - solver: xyce
   version: XyceNF Release 7.10.0
-  date: '2026-11-15'
+  date: '2026-11-16'
 grammar:
 - diode
 - d_flag
@@ -24,5 +24,6 @@ tests:
 - tests/solver/test_xyce_element_probes.py::test_diode_forms
 - tests/solver/test_xyce_element_probes.py::test_the_positional_area_scales_the_current
 - tests/solver/test_xyce_element_probes.py::test_xyce_runs
+- tests/grammar/xyce/test_xyce_elements.py::test_a_value_keyword_or_parameter_written_twice_is_refused
 validation_note: 'Validated on XyceNF Release 7.10.0: the model, a positional area (a number or an expression) that scales the current, `OFF` and `OFF=1`, and parameters. Xyce drops a number written before the model, which the library refuses (discrepancies.md).'
-notes: 'The ngspice `Diode` node, as LTspice''s D (decision 0027 item 6; point 13): the model, a WORD and never a number, then an optional positional area (Diode.area), then flags (`OFF`, or `OFF=` and a value, a `Flag` with its value) and instance parameters (XY-ELM-001), in any order.'
+notes: 'The ngspice `Diode` node, as LTspice''s D (decision 0027 item 6; point 13): the model, a WORD and never a number, then an optional positional area (Diode.area), then flags (`OFF`, or `OFF=` and a value, a `Flag` with its value) and instance parameters (XY-ELM-001), in any order. A parameter written twice is a ParseError, which Xyce runs (discrepancies.md; R1 review).'

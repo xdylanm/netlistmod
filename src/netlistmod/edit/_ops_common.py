@@ -174,15 +174,6 @@ _JOIN_TRAILING_COMMENTS: dict[Dialect, bool] = {
 }
 
 
-# Whether a line of statement text that begins with blanks is a comment in the dialect (xyce,
-# decision 0027 item 1), so inserted statement text may not begin with one.
-_INDENT_IS_COMMENT: dict[Dialect, bool] = {
-    Dialect.NGSPICE: False,
-    Dialect.LTSPICE: False,
-    _XYCE: True,
-}
-
-
 # Topology items (§7.1): directive operations never add, replace or remove them. An xyce
 # `.PREPROCESS REPLACEGROUND` changes net identity, so it is topology too (P4; decision 0027
 # item 3).
@@ -376,4 +367,21 @@ def _refuse_over_comment(netlist: Netlist, comment: Span, what: str) -> EditErro
     return EditError(
         f"{what} holds the comment `{text}` (line {line}); the edit would lose it. Edit the "
         "line by hand, or remove the comment first"
+    )
+
+
+def _charge_is_not_a_param(element: Capacitor, name: str) -> EditError:
+    """``q`` on an xyce C (decision 0027 item 5): the charge is a form of the line, not a
+    parameter, so ``set_param`` and ``remove_param`` refuse it and point to ``set_expression``,
+    which changes the charge of a line written ``Q=…``."""
+    designator = element.designator
+    if element.charge is not None:
+        return EditError(
+            f"`{name}` names the charge of `{designator}` (`Q=…`), not a parameter; use "
+            "set_expression to change it"
+        )
+    return EditError(
+        f"`{name}` names the charge form of an xyce C (`Q=…`), not a parameter, and "
+        f"`{designator}` has no charge; a charge replaces the capacitance, so edit the line by "
+        "hand to write one"
     )

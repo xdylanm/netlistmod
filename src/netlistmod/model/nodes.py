@@ -160,13 +160,16 @@ class _TwoTerminal(Component):
 
     ``value_keyword`` is the keyword as written when the value is given as ``r=1k``,
     ``capacitance={c0}`` and similar; it is ``None`` for a positional value. ``flags`` holds an
-    LTspice ``noiseless``.
+    LTspice ``noiseless``. ``value_keyword_span`` covers that keyword on xyce (decision 0027 item
+    5), where an edit removes the keyword with its value; it is ``None`` for a positional value
+    and on ngspice and LTspice.
     """
 
     value: Value | None
     value_keyword: str | None
     model: ModelReference | None
     flags: tuple[Flag, ...] = ()
+    value_keyword_span: Span | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -646,7 +649,13 @@ class ParamStatement(_DotCommand):
 class GlobalParamStatement(ParamStatement):
     """An xyce ``.GLOBAL_PARAM`` line ([xyce-ref] §2.1.12 p45): a top-level ``.PARAM`` of its own
     keyword, without functions. A ``.PARAM`` of the same name wins over it (``scoping.md``). xyce
-    only; internal while the dialect is hidden (decision 0026)."""
+    only; internal while the dialect is hidden (decision 0026).
+
+    It subclasses :class:`ParamStatement` so that every reader of parameters (the scope tables,
+    the formula scan, ``params.set``) takes it as one without a branch of its own; the places
+    where it differs test for this class first (the scope lists its assignments after the
+    ``.PARAM`` ones, and ``directives`` refuses to add one). ``functions`` is always empty.
+    """
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -1021,6 +1030,21 @@ class ParseResult:
 
     items: tuple[TopLevelItem, ...]
     dialect: Dialect
+
+
+@dataclass(frozen=True, slots=True)
+class _IndentedParseResult(ParseResult):
+    """A parse whose continued statements hold indented lines (xyce, decision X-D1): the spans of
+    those lines, each also one of its statement's trailing comments, so that the document layer
+    reports them as it reports an :class:`IndentedLine`. Internal while the dialect is hidden
+    (decision 0026; xm1-tasks 5.1 point 31); only a parse that has such a line is one."""
+
+    indented: tuple[Span, ...] = ()
+
+
+def indented_comments(result: ParseResult) -> tuple[Span, ...]:
+    """The indented lines inside continued statements of ``result``, in source order (xyce)."""
+    return result.indented if isinstance(result, _IndentedParseResult) else ()
 
 
 # What messages call each element (review R3): the edit errors and MODEL_TYPE_MISMATCH.

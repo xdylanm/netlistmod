@@ -26,8 +26,11 @@
 //    line that a `+` line joins across blank, comment and indented lines: the lookahead finds the
 //    `+` line, so the line end is a separator, not the NL that ends the statement. Each line
 //    between is then a TRAILING_COMMENT (12, above SEP), which matches a `*` line or an indented
-//    line only right after a line end (a lookbehind), so the comments of a continued statement
-//    stay in its trailing_comments and its Line.
+//    `*` or `;` line only right after a line end (a lookbehind), or an INDENTED_TRAILING (12),
+//    which matches any other indented line there. So the comments of a continued statement stay
+//    in its trailing_comments and its Line, and an indented line among them is still told apart
+//    (decision X-D1). Every gap of a field rule takes all three, and the imported core rules with
+//    a gap are extended with INDENTED_TRAILING.
 //  * REST_TEXT (2) is the text after a refused dot-command, to the end of the line.
 
 %import .core (end_stmt, trailer, eol, global_stmt)
@@ -87,10 +90,11 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
 
 // A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
 // (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
-// `*` and indented alternatives are the lines that a `+` line joins across (XY-CNT-001).
+// `*` alternative, and a `*` or `;` line with blanks before it, are lines that a `+` line joins
+// across (XY-CNT-001).
 // spec: XY-COM-001
 %override COMMENT_LINE.3: /[*;](?:[^\r\n]|\r(?!\n))*/
-%override TRAILING_COMMENT.12: /;(?:[^\r\n]|\r(?!\n))*|(?<=\n)(?:\*|[ \t]+[^ \t\r\n+])(?:[^\r\n]|\r(?!\n))*/
+%override TRAILING_COMMENT.12: /;(?:[^\r\n]|\r(?!\n))*|(?<=\n)(?:\*|[ \t]+[*;])(?:[^\r\n]|\r(?!\n))*/
 
 // A `+` line continues the last line that is not a comment, across blank, comment (`*`, `;`) and
 // indented lines (§4.1.3.2 p43; decision 0027 item 2).
@@ -102,6 +106,20 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
 // spec: XY-IND-001
 indented_line: INDENTED_LINE LINE_END
 INDENTED_LINE.10: /[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
+
+// The same line between a statement and its `+` line (XY-CNT-001): one of the statement's
+// trailing comments, which the parser also records as an indented line, so that it is reported
+// as one (INDENTED_LINE_IGNORED). The imported core rules with a gap take it too.
+// spec: XY-IND-001
+INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
+%extend eol: INDENTED_TRAILING (NL | eol)
+%extend value: INDENTED_TRAILING value
+%extend param: INDENTED_TRAILING param
+%extend model: INDENTED_TRAILING model
+%extend x_name: INDENTED_TRAILING x_name
+%extend rparen: INDENTED_TRAILING rparen
+%extend dc_keyword: INDENTED_TRAILING dc_keyword
+%extend ac_spec: INDENTED_TRAILING ac_spec
 
 // `.END` may end with a `;` comment, since `;` may end any line (§4.1.3.1 p43); nothing else may
 // follow it on its line.
@@ -137,9 +155,9 @@ NODE_WORD.2: (_XY_CHAR | ":")+
 // spec: XY-PRE-001
 preprocess_stmt: PREPROCESS_KW pp_option pp_value (NL | eol)
 pp_option: SEP REPLACEGROUND_KW
-         | (SEP | TRAILING_COMMENT) pp_option
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_option
 pp_value: SEP (TRUE_KW | FALSE_KW)
-        | (SEP | TRAILING_COMMENT) pp_value
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_value
 PREPROCESS_KW.4: ".preprocess"i
 REPLACEGROUND_KW.2: "replaceground"i
 TRUE_KW.2: "true"i
@@ -149,13 +167,13 @@ FALSE_KW.2: "false"i
 // spec: XY-UNS-001
 preprocess_other: PREPROCESS_KW pp_word REST_TEXT* NL
 pp_word: SEP WORD
-       | (SEP | TRAILING_COMMENT) pp_word
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_word
 
 // .GLOBAL node... ([xyce-ref] §2.1.11 p44): top level only, at least one name, no commas.
 // spec: XY-GLB-001
 %override global_stmt: GLOBAL_KW global_node+ (NL | eol)
 global_node: SEP WORD
-           | (SEP | TRAILING_COMMENT) global_node
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) global_node
 
 // Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
 // XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
@@ -205,11 +223,11 @@ _param_end: NL | eol | blank_tail
 _param_value: EXPR_NUMBER | BRACE_FORMULA | QUOTE_FORMULA | BARE_FORMULA
 param_def: SEP PARAM_NAME EQ _param_value
          | SEP RESERVED_NAME EQ _param_value          -> reserved_def
-         | (SEP | TRAILING_COMMENT) param_def
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) param_def
 param_next: CSEP PARAM_NAME EQ _param_value
           | CSEP RESERVED_NAME EQ _param_value        -> reserved_def
           | CSEP param_def
-          | (SEP | TRAILING_COMMENT) param_next
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) param_next
 
 // Parameter names (decision 0027 item 9; point 27): a letter or `_`, then letters, digits, `_` and
 // `.`. The reserved words ([xyce-ref] §2.1.26 p121, §2.1.10 p42) end where a name would.
@@ -232,16 +250,16 @@ GLOBAL_PARAM_KW.4: ".global_param"i
 // spec: XY-FUN-001
 func_stmt: FUNC_KW func_name func_args func_body (NL | eol)
 func_name: SEP (FUNC_OPEN | BUILTIN_OPEN)
-         | (SEP | TRAILING_COMMENT) func_name
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) func_name
 func_args: ((PARAM_NAME | RESERVED_NAME) (CSEP (PARAM_NAME | RESERVED_NAME))*)? RPAR
 func_body: (BRACE_FORMULA | QUOTE_FORMULA)
          | EQ (BRACE_FORMULA | QUOTE_FORMULA)
-         | (SEP | TRAILING_COMMENT) func_body
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) func_body
 func_def: SEP (FUNC_OPEN | BUILTIN_OPEN) func_args EQ (BRACE_FORMULA | QUOTE_FORMULA)
-        | (SEP | TRAILING_COMMENT) func_def
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) func_def
 func_next: CSEP (FUNC_OPEN | BUILTIN_OPEN) func_args EQ (BRACE_FORMULA | QUOTE_FORMULA)
          | CSEP func_def
-         | (SEP | TRAILING_COMMENT) func_next
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) func_next
 FUNC_KW.4: ".func"i
 FUNC_OPEN.3: /[A-Za-z_][A-Za-z0-9_.#@`]*\(/
 BUILTIN_OPEN.4: /(?:abs|ceil|ddt|ddx|floor|fmod|if|int|limit|m|min|max|nint|pwr|pow|pwrs|sdt|sgn|sign|stp|sqrt|uramp|table|fasttable|spline|akima|cubic|wodicka|bli|tablefile|db|img|ph|r|re|acos|acosh|arctan|asin|asinh|atan|atanh|atan2|cos|cosh|exp|ln|log|log10|sin|sinh|tan|tanh|agauss|gauss|aunif|unif|rand|spice_exp|spice_pulse|spice_sffm|spice_sin|time|freq|hertz|vt|temp|temper|gmin|pi)\(/i
@@ -252,14 +270,18 @@ BUILTIN_OPEN.4: /(?:abs|ceil|ddt|ddx|floor|fmod|if|int|limit|m|min|max|nint|pwr|
 // A definition is a body statement, so definitions nest, and a nested one is local to its outer
 // definition. The top-level-only statements are recognised in a body so that the transformer
 // refuses them at their keyword (not_in_subckt). `.ENDS` may name a subcircuit, which Xyce does not
-// check (the document layer reports a mismatch).
+// check (the document layer reports a mismatch). A default's name is a parameter name
+// (XY-PRM-001's class) whose lookahead finds the `=`, so a port is never read as one; a reserved
+// word there is recognised only to be refused (RESERVED_DEFAULT), and a name outside the class
+// (`1x=1`) is a syntax error, since Xyce stops on both (scoping.md S7).
 // spec: XY-SBD-001
 subckt_def: subckt_header subckt_item* ends_line
 subckt_header: SUBCKT_KW x_name subckt_port+ params_marker? subckt_param* (NL | eol)
 subckt_port: SEP (WORD | ZERO_PORT)
-           | (SEP | TRAILING_COMMENT) subckt_port
-subckt_param: SEP WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-            | (SEP | TRAILING_COMMENT) subckt_param
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) subckt_port
+subckt_param: SEP DEFAULT_NAME EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+            | SEP RESERVED_DEFAULT EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA) -> reserved_default
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) subckt_param
 ?subckt_item: lead
             | body_statement
             | continuation_line
@@ -269,8 +291,11 @@ not_in_subckt: (GLOBAL_KW | GLOBAL_PARAM_KW | END_KW) REST_TEXT* NL
 // `PARAMS:` is one token, above WORD, which holds no `:`.
 // spec: XY-SBD-001
 params_marker: SEP PARAMS_KW
-             | (SEP | TRAILING_COMMENT) params_marker
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) params_marker
 PARAMS_KW.3: "params:"i
+// spec: XY-SBD-001
+DEFAULT_NAME.3: /[A-Za-z_][A-Za-z0-9_.]*(?=[ \t]*=)/
+RESERVED_DEFAULT.4: /(?:time|freq|hertz|vt|temp|temper|gmin|pi|exp)(?=[ \t]*=)/i
 
 // .MODEL name type, then name=value parameters, without or within one pair of parentheses, with
 // no comma ([xyce-ref] §2.1.21 p89; decision 0027 item 7). A value is a number of the device
@@ -280,16 +305,16 @@ PARAMS_KW.3: "params:"i
 model_stmt: MODEL_KW x_name x_name param* (NL | eol)
           | MODEL_KW x_name x_name model_paren (NL | eol)
 model_paren: LPAR (model_param_first param*)? rparen
-           | (SEP | TRAILING_COMMENT) model_paren
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) model_paren
 model_param_first: WORD EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-                 | (SEP | TRAILING_COMMENT) model_param_first
+                 | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) model_param_first
 
 // .INC, .INCL and .INCLUDE take one path, in single or double quotes or none ([xyce-ref] §2.1.15
 // p49), and may be continued by `+` lines. The statement is kept as opaque text.
 // spec: XY-INC-001
 include_line: (INC_KW | INCL_KW | INCLUDE_KW) path_field (NL | eol)
 path_field: SEP PATH_FIELD
-          | (SEP | TRAILING_COMMENT) path_field
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) path_field
 INC_KW.4: ".inc"i
 INCL_KW.4: ".incl"i
 INCLUDE_KW.4: ".include"i
@@ -305,7 +330,7 @@ lib_call: LIB_KW path_field path_field+ (NL | eol)
 lib_section: lib_open lib_text* lib_close
 lib_open: LIB_KW path_field lib_open_end
 lib_open_end: NL
-            | (SEP | TRAILING_COMMENT) lib_open_end
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) lib_open_end
 lib_text: (BLOCK_DOT_NAME | BLOCK_TEXT) BLOCK_TEXT* NL
         | LINE_END
 lib_close: ENDL_KW path_field? (NL | eol)
@@ -323,7 +348,7 @@ BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
 // so the transformer refuses a `:` in the subcircuit's name. No comma separates fields.
 // spec: XY-ELM-001
 node: SEP NODE_WORD
-    | (SEP | TRAILING_COMMENT) node
+    | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) node
 
 // An instance parameter name=value: the name is one token whose lookahead finds the `=`, above
 // WORD and NODE_WORD, so a name written before `=` is never a model or a node. Its value is a
@@ -332,7 +357,7 @@ node: SEP NODE_WORD
 // and D take only their letter's closed list below, where INST_KEY is a name outside the list.
 // spec: XY-ELM-001
 inst_param: SEP INST_KEY EQ _inst_value
-          | (SEP | TRAILING_COMMENT) inst_param
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) inst_param
 _inst_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | BARE_FORMULA
 INST_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
 
@@ -341,51 +366,67 @@ INST_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
 // the level is the model's and the grammar does not see it. R: Table 2-42 (level 1) and Table 2-44
 // (level 2, the thermal resistor), §2.3.7 p203–205; C: Table 2-37, §2.3.4 p187; L: Table 2-39,
 // §2.3.5 p193; D: Table 2-46 (levels 1 and 2), Table 2-48 (level 200) and Table 2-51 (level
-// 2002), §2.3.8 p208–213, without `OFF`, which is d_flag. `TC=` on R, C and L is xy_tc_param. A
+// 2002), §2.3.8 p208–213, without `OFF`, which is d_flag. `TC=` on R, C and L is xy_tc_param,
+// and the value keywords `R=`, `C=` and `L=` and the charge `Q=` are XY-RCL-001's. A
 // name outside the list is recognised as INST_KEY, with the rest of its line, only to be refused
 // (the `*_unlisted` rules), since Xyce stops on it ("Unrecognized parameter"). K, V and I take no
 // instance parameter, so a `name=` there is a syntax error.
 // spec: XY-IPN-001
 r_param: SEP R_PARAM_KW EQ _inst_value
-       | (SEP | TRAILING_COMMENT) r_param
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) r_param
 c_param: SEP C_PARAM_KW EQ _inst_value
-       | (SEP | TRAILING_COMMENT) c_param
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) c_param
 l_param: SEP L_PARAM_KW EQ _inst_value
-       | (SEP | TRAILING_COMMENT) l_param
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) l_param
 d_param: SEP D_PARAM_KW EQ _inst_value
-       | (SEP | TRAILING_COMMENT) d_param
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) d_param
 r_unlisted: SEP INST_KEY REST_TEXT* NL
-          | (SEP | TRAILING_COMMENT) r_unlisted
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) r_unlisted
 c_unlisted: SEP INST_KEY REST_TEXT* NL
-          | (SEP | TRAILING_COMMENT) c_unlisted
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) c_unlisted
 l_unlisted: SEP INST_KEY REST_TEXT* NL
-          | (SEP | TRAILING_COMMENT) l_unlisted
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) l_unlisted
 d_unlisted: SEP INST_KEY REST_TEXT* NL
-          | (SEP | TRAILING_COMMENT) d_unlisted
-R_PARAM_KW.4: /(?:a|density|dtemp|heatcapacity|l|m|outputintvars|r|resistivity|tc1|tc2|tce|temp|thermal_a|thermal_heatcapacity|thermal_l|w)(?=[ \t]*=)/i
-C_PARAM_KW.4: /(?:age|c|d|dtemp|ic|l|m|q|tc1|tc2|temp|w)(?=[ \t]*=)/i
-L_PARAM_KW.4: /(?:dtemp|ic|l|m|tc1|tc2|temp)(?=[ \t]*=)/i
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) d_unlisted
+R_PARAM_KW.4: /(?:a|density|dtemp|heatcapacity|l|m|outputintvars|resistivity|tc1|tc2|tce|temp|thermal_a|thermal_heatcapacity|thermal_l|w)(?=[ \t]*=)/i
+C_PARAM_KW.4: /(?:age|d|dtemp|ic|l|m|tc1|tc2|temp|w)(?=[ \t]*=)/i
+L_PARAM_KW.4: /(?:dtemp|ic|m|tc1|tc2|temp)(?=[ \t]*=)/i
 D_PARAM_KW.4: /(?:ab|area|dtemp|ic|lg|ls|m|mult|perim|pj|temp)(?=[ \t]*=)/i
 
 // R, C and L ([xyce-ref] §2.3.7 p201, §2.3.4 p186, §2.3.5 p191; decision 0027 item 5): the nodes,
 // the model if any, then the value, then parameters. A word after the nodes is the model, and a
 // number is the value (decision 0024 item 7). A word after the value is the ngspice order,
 // recognised only to be refused (late_model). `TC=a,b` takes one or two values ([xyce-ref]
-// §2.3.7 p202). Which value forms each letter requires (`R=`, `C=`, `L=`, `Q=`, the geometry
-// forms) is checked by the transformer.
+// §2.3.7 p202). The value may instead be written as its parameter, `R=`, `C=` or `L=` (Tables
+// 2-42, 2-37 and 2-39), and a C's charge as `Q=`: each has its own keyword terminal and rule, so
+// the transformer tells them from the other parameters by rule, not by name. Which value forms
+// each letter requires (the geometry forms), and that no keyword or parameter is written twice,
+// is checked by the transformer.
 // spec: XY-RCL-001
 resistor: R_NAME node node _r_body
 capacitor: C_NAME node node _c_body
 inductor: L_NAME node node _l_body
-_r_body: model? value? (r_param | xy_tc_param)* (r_unlisted | NL | eol)
+_r_body: model? value? (r_param | r_keyword | xy_tc_param)* (r_unlisted | NL | eol)
        | value late_model
-_c_body: model? value? (c_param | xy_tc_param)* (c_unlisted | NL | eol)
+_c_body: model? value? (c_param | c_keyword | q_charge | xy_tc_param)* (c_unlisted | NL | eol)
        | value late_model
-_l_body: model? value? (l_param | xy_tc_param)* (l_unlisted | NL | eol)
+_l_body: model? value? (l_param | l_keyword | xy_tc_param)* (l_unlisted | NL | eol)
        | value late_model
 xy_tc_param: SEP TC_KW EQ _inst_value (CSEP _inst_value)?
-           | (SEP | TRAILING_COMMENT) xy_tc_param
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xy_tc_param
 late_model: SEP WORD REST_TEXT* NL
+r_keyword: SEP R_VALUE_KW EQ _inst_value
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) r_keyword
+c_keyword: SEP C_VALUE_KW EQ _inst_value
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) c_keyword
+l_keyword: SEP L_VALUE_KW EQ _inst_value
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) l_keyword
+q_charge: SEP Q_KW EQ _inst_value
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) q_charge
+R_VALUE_KW.4: /r(?=[ \t]*=)/i
+C_VALUE_KW.4: /c(?=[ \t]*=)/i
+L_VALUE_KW.4: /l(?=[ \t]*=)/i
+Q_KW.4: /q(?=[ \t]*=)/i
 TC_KW.4: /tc(?=[ \t]*=)/i
 R_NAME.4: /[Rr]/ _XY_CHAR*
 C_NAME.4: /[Cc]/ _XY_CHAR*
@@ -396,7 +437,7 @@ L_NAME.4: /[Ll]/ _XY_CHAR*
 // spec: XY-MUT-001
 mutual_coupling: K_NAME inductor_ref+ value model? (NL | eol)
 inductor_ref: SEP L_REF
-            | (SEP | TRAILING_COMMENT) inductor_ref
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) inductor_ref
 K_NAME.4: /[Kk]/ _XY_CHAR*
 L_REF.4: /[Ll]/ _XY_CHAR*
 
@@ -406,7 +447,7 @@ L_REF.4: /[Ll]/ _XY_CHAR*
 diode: D_NAME node node model value? (d_param | d_flag)* (d_unlisted | NL | eol)
 d_flag: SEP OFF_KW
       | SEP OFF_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
-      | (SEP | TRAILING_COMMENT) d_flag
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) d_flag
 OFF_VALUE_KW.4: /off(?=[ \t]*=)/i
 D_NAME.4: /[Dd]/ _XY_CHAR*
 
@@ -423,9 +464,9 @@ _xsrc_ac: ac_spec value? _xsrc_end
         | _xsrc_end
 _xsrc_end: src_function | NL | eol
 ac_bare: SEP AC_KW (NL | eol)
-       | (SEP | TRAILING_COMMENT) ac_bare
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ac_bare
 src_function: SEP SRC_FN_KW REST_TEXT* NL
-            | (SEP | TRAILING_COMMENT) src_function
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) src_function
 SRC_FN_KW.3: /(?:pulse|sin|exp|pwl|sffm|pat)(?![A-Za-z0-9_])/i
 V_NAME.4: /[Vv]/ _XY_CHAR*
 I_NAME.4: /[Ii]/ _XY_CHAR*
@@ -438,5 +479,5 @@ subckt_instance: X_NAME node (x_node | x_last)
 x_node: x_name_node (x_node | x_last)
 x_last: x_name_node params_marker? inst_param* (NL | eol)
 x_name_node: SEP NODE_WORD
-           | (SEP | TRAILING_COMMENT) x_name_node
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) x_name_node
 X_NAME.4: /[Xx]/ _XY_CHAR*

@@ -15,7 +15,7 @@ from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
 from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground
-from netlistmod.model._rules_elements import _reads_as_number
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model.nodes import (
     Capacitor,
     Cccs,
@@ -67,6 +67,8 @@ class DiagnosticCode(StrEnum):
     FRA_PROBE_IN_IMPEDANCE_MODE = "FRA_PROBE_IN_IMPEDANCE_MODE"
     FRA_RANGE_MISSING = "FRA_RANGE_MISSING"
     INDENTED_LINE_IGNORED = "INDENTED_LINE_IGNORED"
+    LIB_EXTRA_ENTRIES = "LIB_EXTRA_ENTRIES"
+    NUMERIC_MODEL_NAME = "NUMERIC_MODEL_NAME"
 
 
 @dataclass(frozen=True, slots=True)
@@ -150,6 +152,9 @@ _LOOKUP_SORTS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: F
 # The severity and the rule of a repeated parameter where the solver runs on.
 _PARAM_REPEATS: dict[Dialect, tuple[Severity, str]] = {
     Dialect.NGSPICE: ("info", "the last assignment is used"),
+    # Not reached: a repeated parameter stops LTspice (`_REPEAT_STOPS`); the entry keeps the table
+    # whole, so a change there cannot fall through to another dialect's rule.
+    Dialect.LTSPICE: ("warning", f"{_SOLVER[Dialect.LTSPICE]} stops with an error"),
     _XYCE: (
         "warning",
         "Xyce 7.10 uses the first definition, as its own warning says (the Xyce reference manual "
@@ -158,8 +163,13 @@ _PARAM_REPEATS: dict[Dialect, tuple[Severity, str]] = {
 }
 
 
-def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, ...]:
-    """Compute every diagnostic of a netlist, in source order (decision 0006 items 7 and 8)."""
+def collect_diagnostics(
+    index: Index, source: SourceText, *, indented: tuple[Span, ...] = ()
+) -> tuple[Diagnostic, ...]:
+    """Compute every diagnostic of a netlist, in source order (decision 0006 items 7 and 8).
+
+    ``indented`` holds the xyce indented lines inside continued statements (the parse's
+    ``indented_comments``), which are reported as an :class:`IndentedLine` is."""
     found: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     for reference in index.references:
         found.extend(_reference_findings(index, reference))
@@ -184,7 +194,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         if isinstance(item, LibCall) and len(item.entries) > 1:
             found.append(
                 (
-                    DiagnosticCode.DIALECT_GATED_SYNTAX,
+                    DiagnosticCode.LIB_EXTRA_ENTRIES,
                     "info",
                     f"this `.LIB` call names {len(item.entries)} entries; "
                     f"{_SOLVER[index.dialect]} loads only the first, `{item.entries[0].name}`, "
@@ -196,14 +206,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
             found.extend(_numeric_model_findings(index, item))
         if isinstance(item, IndentedLine):
             found.append(
-                (
-                    DiagnosticCode.INDENTED_LINE_IGNORED,
-                    "warning",
-                    f"this line begins with blanks, so {_SOLVER[index.dialect]} reads it as a "
-                    "comment and ignores it (Xyce users' manual §4.1.3.1 p43); remove the "
-                    "indentation if it is meant as a statement",
-                    Span(item.span.start, item.span.start + len(item.text)),
-                )
+                _indented_finding(index, Span(item.span.start, item.span.start + len(item.text)))
             )
         if isinstance(item, UnknownDirective):
             span = item.name_span or item.span
@@ -219,6 +222,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         for value in walk_nodes(item, NumericValue, bodies=False):
             if _VALUE_CHECKS[index.dialect]:
                 found.extend(_value_findings(value))
+    found.extend(_indented_finding(index, span) for span in indented)
     if index.dialect is Dialect.LTSPICE:
         found.extend(_fra_range_findings(index))
     found.sort(key=lambda entry: (entry[3].start, entry[3].end, _ORDER[entry[0]]))
@@ -227,6 +231,19 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         line_number, column = source.position(span.start)
         diagnostics.append(Diagnostic(code, severity, message, span, line_number, column))
     return tuple(diagnostics)
+
+
+def _indented_finding(index: Index, span: Span) -> tuple[DiagnosticCode, Severity, str, Span]:
+    """An xyce indented line (decision 0027 item 1): on its own, an :class:`IndentedLine`, or
+    between a statement and its `+` line, where it is one of the statement's comments."""
+    return (
+        DiagnosticCode.INDENTED_LINE_IGNORED,
+        "warning",
+        f"this line begins with blanks, so {_SOLVER[index.dialect]} reads it as a comment and "
+        "ignores it (Xyce users' manual §4.1.3.1 p43); remove the indentation if it is meant as "
+        "a statement",
+        span,
+    )
 
 
 def _reference_findings(
@@ -365,11 +382,11 @@ def _numeric_model_findings(
     """On xyce, a `.model` whose name reads as a number (xm1-tasks 5.1 point 9(c)): the library
     reads such a word in an R, C or L line as the value, never a model (decision 0024 item 7),
     while Xyce takes it as this model."""
-    if not _LOOKUP_SORTS[index.dialect] or not _reads_as_number(item.name):
+    if not _LOOKUP_SORTS[index.dialect] or not reads_as_number(item.name):
         return []
     return [
         (
-            DiagnosticCode.DIALECT_GATED_SYNTAX,
+            DiagnosticCode.NUMERIC_MODEL_NAME,
             "warning",
             f"model name `{item.name}` reads as a number: the library reads `{item.name}` on an "
             f"element line as a value, while {_SOLVER[index.dialect]} takes it as this model; "
@@ -607,7 +624,7 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
         (scope.params, "parameter"),
         (scope.models, "model"),
         (scope.subckts, "subcircuit"),
-        (scope.functions, "function"),
+        (scope._functions, "function"),
     )
     defaults = {id(p) for p in (scope.definition.params if scope.definition is not None else ())}
     global_params = {

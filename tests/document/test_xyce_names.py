@@ -66,16 +66,16 @@ def test_the_global_prefix_is_per_dialect() -> None:
 
 def test_replaceground_sets_the_netlist_wide_flag() -> None:
     plain = _netlist("t\n.global GND a\n.END\n")
-    assert not plain.scope().replace_ground
+    assert not plain.scope()._replace_ground
     assert [net.name for net in plain.nets()] == ["gnd", "a"]
     replaced = _netlist("t\n.global GND a\n.preprocess replaceground true\n.END\n")
-    assert replaced.scope().replace_ground
+    assert replaced.scope()._replace_ground
     nets = replaced.nets()
     assert [net.name for net in nets] == ["0", "a"]
     assert nets[0].spellings == ("GND",)
     assert nets[0].global_
     off = _netlist("t\n.global GND\n.preprocess replaceground false\n.END\n")
-    assert not off.scope().replace_ground
+    assert not off.scope()._replace_ground
     assert [net.name for net in off.nets()] == ["gnd"]
 
 
@@ -113,6 +113,23 @@ def test_an_indented_line_is_reported() -> None:
     assert (diagnostic.line, diagnostic.column) == (2, 1)
     assert diagnostic.span == Span(2, 13)
     assert "reads it as a comment" in diagnostic.message
+
+
+def test_an_indented_line_inside_a_continued_statement_is_reported() -> None:
+    # Between a statement and its `+` line, the indented line is one of the statement's comments
+    # (XY-CNT-001), and still the line Xyce ignores (decision 0027 item 1; R1 review): the grammar
+    # gives it its own token, INDENTED_TRAILING, and the document layer reports it.
+    text = "t\n.global a\n  R1 a 0 1k\n  * indented comment\n+ b\n.END\n"
+    netlist = _netlist(text)
+    (diagnostic,) = netlist.diagnostics
+    assert diagnostic.code is DiagnosticCode.INDENTED_LINE_IGNORED
+    assert (diagnostic.line, diagnostic.column) == (3, 1)
+    assert diagnostic.span == Span(12, 23)
+    (directive,) = [line.item for line in netlist.lines if line.item.span.start == 2]
+    assert [netlist.text[s.start : s.end] for s in directive.trailing_comments] == [
+        "  R1 a 0 1k",
+        "  * indented comment",
+    ]
 
 
 def test_a_structure_only_netlist_has_no_diagnostics() -> None:
