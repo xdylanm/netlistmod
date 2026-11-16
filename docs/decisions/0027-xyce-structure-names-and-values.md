@@ -19,7 +19,7 @@
   4. **X-D2, a node path into an instance** (point 7). `X1:m` (or `X1:X2:m`) on a device line is read as a net of its own. When it names an internal node of the instance's definition, it is reported as `NODE_INTO_INSTANCE`, as on LTspice. The library's nets are per definition, so the join Xyce makes is not modelled; §7.8's known limit extends to xyce.
   5. **R, C and L** (points 9 to 11). The model, if any, comes right after the nodes, then the value; the ngspice order is refused with a hint.
      - A word in the model's place is the model. A field that reads as a number is the value, never a model (decision 0024 item 7).
-     - **R requires a value,** positional or `R=`, unless it has a model and both `L=` and `W=` (the geometry form, whose value Xyce computes from the model's `RSH`). Xyce runs any other R with no value as 1 kΩ (or 1 kΩ times the model's `R`), with a warning; the library refuses it. An explicit value replaces the geometry.
+     - **R requires a value,** positional or `R=`, unless it has a model and `L=` (the geometry form, whose value Xyce computes from the model's `RSH`; a missing `W=` takes the model's `DEFW`, [xyce-ref] §2.3.7 p203). Xyce runs any other R with no value as 1 kΩ (or 1 kΩ times the model's `R`), with a warning; the library refuses it. An explicit value replaces the geometry.
      - **L requires a value.** C may have a model only (the semiconductor form) or `Q=` (the charge form).
      - A positional value together with `R=`, or a value together with `Q=`, raises `ParseError`.
      - The edits keep the order: the value goes after the model, and the model right after the nodes.
