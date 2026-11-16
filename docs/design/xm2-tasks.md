@@ -1,6 +1,6 @@
 # X-M2 task list — xyce directives
 
-> **Status:** ACTIVE — G1 (the maintainer decides section 5.1)
+> **Status:** ACTIVE — stage 2 (implementation)
 > **Follows:** [X-M1](./archive/xyce/xm1-tasks.md) and decisions [0026](../decisions/0026-the-xyce-dialect.md) and [0027](../decisions/0027-xyce-structure-names-and-values.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 4, 6 and 8. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12).
 
 ## 1. Scope
@@ -59,7 +59,7 @@ X-M2 makes the hidden xyce dialect read its analysis, option, initial-condition,
 
 ### 5.1 G1 decisions
 
-From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditions, measurements and `.DATA`) and A3 (the closed list and the edit layer). All probes are on XyceNF Release 7.10.0 and are kept outside the repository. Each point gives the evidence, then *Recommendation:*. The decisions are recorded at G1.
+From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditions, measurements and `.DATA`) and A3 (the closed list and the edit layer). All probes are on XyceNF Release 7.10.0 and are kept outside the repository. Each point gives the evidence, then *Recommendation:*, then the decision. **Every point not marked otherwise was decided as recommended (maintainer, 2026-11-16).**
 
 **Dot-commands and where they stand (A3)**
 
@@ -151,3 +151,4 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
 - 2026-11-16: task list written; X-M1 archived (approved and merged as #27).
 - 2026-11-16: A1, A2 and A3 done (reports to the lead; nothing in `src/` changed); section 5.1 written for G1.
 - 2026-11-16: G1 in progress: points 1, 9 (the manual's form), 12 and 14 decided; the other points wait for the maintainer's review.
+- 2026-11-16: G1 done: the maintainer accepted every other point as recommended.
