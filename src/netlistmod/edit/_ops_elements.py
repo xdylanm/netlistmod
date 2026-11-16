@@ -4,16 +4,17 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from netlistmod.dialects import Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
+    _LTSPICE_FORMS,
     _MODEL,
-    _NO_LTSPICE_MODEL,
     _PORT_PARAMS,
     _POSITIONAL_AREA,
+    _POSITIONAL_AREAS,
+    _RCL_FORMS,
     _SOURCES,
     _TRANSISTORS,
     _TWO_TERMINAL,
@@ -26,25 +27,30 @@ from netlistmod.edit._ops_common import (
     _last_field_end,
     _refuse_impedance_flag,
     _refuse_over_comment,
+    _removal_edit,
 )
 from netlistmod.edit._ops_nonlinear import use_instead
+from netlistmod.edit._ops_remove import _removal
 from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     BehavioralSource,
     BipolarTransistor,
+    Capacitor,
     Cccs,
     CodeModelDevice,
     ControlledSource,
     Diode,
     FraProbe,
     FrequencyAnalyzer,
+    Inductor,
     Jfet,
     LosslessLine,
     LossyLine,
     Mesfet,
     MutualCoupling,
     OsdiDevice,
+    Resistor,
     SpecialFunction,
     SubcktInstance,
     Switch,
@@ -59,6 +65,7 @@ from netlistmod.model.values import (
     ParamAssignment,
     ValueList,
 )
+from netlistmod.source import Span
 
 _LAPLACE_PARAMS = ("window", "nfft", "mtol")
 # The two spellings of a T line's impedance, which name one parameter (decision 0019).
@@ -74,15 +81,25 @@ def set_value(
     in_definition: bool = False,
     reason: str = "",
 ) -> list[Edit]:
-    """Replace the value of an R, C or L line, or add one after the nodes; replace a source's
-    DC value (never adding one or a ``DC`` keyword); or replace the gain of an E, F, G or H
-    line (decision 0015 item 10)."""
+    """Replace the value of an R, C or L line, or add one after the nodes (on xyce after the
+    model, which comes first; decision 0027 item 5); replace a source's DC value (never adding
+    one or a ``DC`` keyword); or replace the gain of an E, F, G or H line (decision 0015 item
+    10)."""
     element = _element(netlist, designator, scope, in_definition)
     reason = reason or f"set_value {designator}"
     if isinstance(element, _TWO_TERMINAL):
         if element.value is not None:
             return [Edit(element.value.span, value, reason, (_VALUE,))]
+        model_first = _RCL_FORMS[netlist.dialect].model_first
+        if model_first and isinstance(element, Capacitor) and element.charge is not None:
+            raise EditError(
+                f"`{designator}` is written with a charge `Q=`, which takes no capacitance "
+                "beside it (Xyce silently uses one of them); use set_expression to change the "
+                "charge"
+            )
         point = element.nodes[-1].span.end
+        if model_first and element.model is not None:
+            point = element.model.span.end
         return [_insert(point, conventions.field(value), reason, _VALUE, 1)]
     if isinstance(element, _SOURCES):
         if element.dc is None:
@@ -144,7 +161,7 @@ def set_param(
     reason = f"set_param {designator} {name}"
     found_fold = netlist.scope(scope).fold
     folded = found_fold(name)
-    ltspice = netlist.dialect is Dialect.LTSPICE
+    ltspice = _LTSPICE_FORMS[netlist.dialect]
     if isinstance(element, SubcktInstance):
         raise EditError(f"`{designator}` is a subcircuit call; use set_instance_param")
     if isinstance(element, ControlledSource | Switch):
@@ -203,7 +220,7 @@ def set_param(
                 return [Edit(written[0].value.span, value, reason, (_VALUE,))]
         return _assign(element.params, element, name, value, reason, folded=found_fold)
     takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES, BehavioralSource)
-    port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS
+    port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS[netlist.dialect]
     if not isinstance(element, takes_params) or (
         not ltspice and isinstance(element, _SOURCES) and not port
     ):
@@ -226,12 +243,12 @@ def set_param(
                 return [Edit(flag.value.span, value, reason, (_VALUE,))]
             text = f"={value}"
             return [_insert(flag.span.end, text, reason, _VALUE, 1)]
-    # The area is positional, right after the model, unless it is written `area=`: LTspice's D
-    # and Q, and J and Z on both dialects. An ngspice D and Q write `area=` only.
+    # The area is positional, right after the model, unless it is written `area=`: the elements
+    # of the dialect's table (`_POSITIONAL_AREAS`).
     if (
         isinstance(element, Diode | BipolarTransistor | Jfet | Mesfet)
         and folded == _POSITIONAL_AREA
-        and (ltspice or isinstance(element, Jfet | Mesfet))
+        and isinstance(element, _POSITIONAL_AREAS[netlist.dialect])
     ):
         if any(found_fold(param.name) == folded for param in element.params):
             return _assign(element.params, element, name, value, reason, folded=found_fold)
@@ -333,7 +350,9 @@ def set_model(
     """Replace the model name of an R, C, L, D, Q, M, J, Z, S, W, O, U, Y, P, ngspice A or N line,
     or add one after the value of an R, C or L line that has none (decision 0007 item 3; review
     round 1; decisions 0014 and 0015: S takes an SW model and W a CSW model; decision 0019: O takes
-    LTRA, U URC, Y TXL and P CPL; decision 0020: A and N take any type that is not built in)."""
+    LTRA, U URC, Y TXL and P CPL; decision 0020: A and N take any type that is not built in). On
+    xyce the model of an R, C or L goes right after the nodes, also beside a value written ``R=``,
+    ``C=`` or ``L=`` (decision 0027 item 5)."""
     element = _element(netlist, designator, scope, in_definition)
     if isinstance(element, LosslessLine):
         raise EditError(f"`{designator}` is {_a_kind(element)} and has no model")
@@ -356,12 +375,14 @@ def set_model(
         ),
     ):
         raise EditError(f"`{designator}` is {_a_kind(element)} line and has no model")
-    if netlist.dialect is Dialect.LTSPICE and isinstance(element, _TWO_TERMINAL):
-        raise EditError(f"`{designator}` takes no model: {_NO_LTSPICE_MODEL}")
+    form = _RCL_FORMS[netlist.dialect]
+    if form.no_model is not None and isinstance(element, _TWO_TERMINAL):
+        raise EditError(f"`{designator}` takes no model: {form.no_model}")
     if (
         isinstance(element, _TWO_TERMINAL)
         and element.model is None
         and element.value_keyword is not None
+        and not form.model_first
     ):
         raise EditError(
             f"`{designator}` writes its value as `{element.value_keyword}=…`, a form that takes "
@@ -392,6 +413,11 @@ def set_model(
     current = getattr(element, "model", None)
     if isinstance(current, ModelReference):
         return [Edit(current.span, model, reason, (_MODEL,))]
+    if form.model_first:
+        # xyce: the model comes right after the nodes, before any value (decision 0027 item 5).
+        assert isinstance(element, _TWO_TERMINAL)
+        point = element.nodes[-1].span.end
+        return [_insert(point, conventions.field(model), reason, _MODEL, 1)]
     # Without a model the grammar requires a value; the model goes right after it.
     assert isinstance(element, _TWO_TERMINAL) and element.value is not None
     return [_insert(element.value.span.end, conventions.field(model), reason, _MODEL, 1)]
@@ -405,19 +431,72 @@ def remove_value(
     in_definition: bool = False,
 ) -> list[Edit]:
     """Remove the value of an R, C or L line that also names a model, so the model's geometry
-    applies (review round 1). The separator before the value stays."""
+    applies (review round 1). The separator before the value stays.
+
+    On xyce (decision 0027 item 5; xm1-tasks 5.1 points 10 and 11) the whole field goes with the
+    separator before it, a value written ``R=``, ``C=`` or ``L=`` with its keyword. It is
+    refused on L, which needs its value; on R unless the line keeps the geometry form, the
+    model with both ``L=`` and ``W=``; and on C unless it keeps the model and ``L=``."""
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _TWO_TERMINAL):
         raise EditError(f"`{designator}` is {_a_kind(element)} line; only R, C and L have a value")
-    if netlist.dialect is Dialect.LTSPICE:
-        raise EditError(f"`{designator}` needs its value: {_NO_LTSPICE_MODEL}")
+    form = _RCL_FORMS[netlist.dialect]
+    if form.no_model is not None:
+        raise EditError(f"`{designator}` needs its value: {form.no_model}")
     if element.value is None:
         raise EditError(f"`{designator}` has no value to remove")
+    if form.model_first and isinstance(element, Inductor):
+        raise EditError(
+            f"`{designator}` needs its value: an inductor has no other form "
+            f"({_XYCE_RCL_CITED[Inductor]})"
+        )
     if element.model is None:
         raise EditError(
             f"`{designator}` has no model, so it needs its value; add a model with set_model first"
         )
-    return [Edit(element.value.span, "", f"remove_value {designator}")]
+    reason = f"remove_value {designator}"
+    if not form.model_first:
+        return [Edit(element.value.span, "", reason)]
+    _refuse_without_geometry(netlist, element)
+    field = element.value.span
+    name = "value"
+    if element.value_keyword is not None:
+        # The keyword as written is the only text between the field before and the value.
+        before = _last_field_end(element, before=field.start)
+        start = netlist.source.text.rindex(element.value_keyword, before, field.start)
+        field = Span(start, field.end)
+        name = element.value_keyword
+    held = ParamAssignment(name, element.value, field, Span(field.start, field.start))
+    return [_removal_edit(netlist, element, _removal(netlist, element, held), reason)]
+
+
+# Where the Xyce reference manual gives each letter's line, its value and its geometry.
+_XYCE_RCL_CITED = {
+    Resistor: "Xyce reference manual §2.3.7 p201",
+    Capacitor: "Xyce reference manual §2.3.4 p186",
+    Inductor: "Xyce reference manual §2.3.5 p191",
+}
+
+
+def _refuse_without_geometry(netlist: Netlist, element: Resistor | Capacitor | Inductor) -> None:
+    """Refuse to leave an xyce R or C without a value unless the line keeps the form whose value
+    Xyce computes from the model (decision 0027 item 5, as amended): an R with both ``L=`` and
+    ``W=``, a C with ``L=``."""
+    fold = netlist.scope().fold
+    given = {fold(param.name) for param in element.params}
+    designator = element.designator
+    cited = _XYCE_RCL_CITED[type(element)]
+    if isinstance(element, Resistor) and not {"l", "w"} <= given:
+        raise EditError(
+            f"`{designator}` needs its value: without one, Xyce computes the resistance from the "
+            f"model only when the line writes both `L=` and `W=` ({cited}), and otherwise uses a "
+            "default of 1 kOhm, which the library refuses; set `L=` and `W=` first"
+        )
+    if isinstance(element, Capacitor) and "l" not in given:
+        raise EditError(
+            f"`{designator}` needs its value: without one, Xyce computes the capacitance from the "
+            f"model only when the line writes `L=` ({cited}); set `L=` first"
+        )
 
 
 def set_coupling(

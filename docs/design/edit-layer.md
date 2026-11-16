@@ -87,7 +87,7 @@ goes right after it, so a trailing comment or a continuation stays after the new
 
 | Method | Edit | Insertion | Errors |
 |---|---|---|---|
-| `params.set(name, value, *, scope=(), in_definition=False, placement=None)` | the value of the **last** assignment of `name` in `scope` (defaults count) | `.param name=value` + terminator at `placement` (default `None`: after the last `.param` of `scope`, as `AFTER_LAST_PARAM`; a sentinel because the default depends on `scope`) | scope rules; on ngspice a bare expression (`2*3`) is an `EditError`, whose cause is the `ParseError` suggesting braces; LTspice accepts it |
+| `params.set(name, value, *, scope=(), in_definition=False, placement=None)` | the value of the **last** assignment of `name` in `scope` (defaults count; on xyce the first, section 8) | `.param name=value` + terminator at `placement` (default `None`: after the last `.param` of `scope`, as `AFTER_LAST_PARAM`; a sentinel because the default depends on `scope`) | scope rules; on ngspice a bare expression (`2*3`) is an `EditError`, whose cause is the `ParseError` suggesting braces; LTspice accepts it |
 | `set_model_param(model, name, value, *, scope=(), in_definition=False)` | the value of parameter `name` of the first `.model model` in `scope`; a CPL matrix is replaced as a whole list (`"50n 10n 50n"`), and a code model's vector as a whole with its brackets (`"[2 1]"`, decision 0020); over a comment inside it (`+` lines), a list of as many values replaces each value in place, so the comment stays (review R3, as decision 0017 item 6); LTRA's flags stay as written | after the last parameter (inside `( … )`); in empty parentheses right after `open_paren_span`: `name=value`; without parentheses after the type: ` name=value` | no such model in `scope`; repeated parameter; a CPL matrix with a comment inside it, given another number of values |
 | `remove_model_param(model, name, *, scope=(), in_definition=False)` | deletes parameter `name` of the first `.model model` in `scope`, with the separator chosen as for `remove_param`; the first parameter inside `( … )` goes with the separator after it, a field first on its `+` line before the `)` leaves `+ )`, and the last one leaves `()`; a CPL matrix goes whole | — | no such model; no such parameter; a flag (not removable); a repeated parameter; a CPL matrix with a comment inside it, which the removal would lose (decision 0019 item 11, reviews R1 and R3) |
 
@@ -267,3 +267,45 @@ The conventions, verification and placement are the same (decision 0009 item 17)
 - `directives.add` and `set` parse their text with the LTspice grammar, so the blocks `.control` and `.if` are refused. A whole `.lib` block is accepted on both dialects (decision 0012).
 
 `tests/edits` runs on both dialects, with `tests/support/dialects.py` marking the cases only one dialect reads.
+
+## 8. Xyce (hidden)
+
+The hidden dialect (`netlistmod.dialects._XYCE`, decision 0026) has the same API, conventions,
+verification and placement. The dialect branches of the operations are tables keyed by dialect
+(`_RCL_FORMS`, `_POSITIONAL_AREAS`, `_PORT_PARAMS`, `_LTSPICE_FORMS`, `_JOIN_TRAILING_COMMENTS`
+and `_INDENT_IS_COMMENT` in `edit/_ops_common.py`, `_FIRST_PARAM_WINS` in
+`edit/_ops_statements.py`), so a dialect without an entry fails loudly. What differs (decision
+0027 items 1, 3, 5 and 9; xm1-tasks 5.1 points 9 to 11):
+
+- **R, C and L write the model right after the nodes, then the value** (positional or `R=`,
+  `C=`, `L=`). `set_value` on a line without a value inserts it after the model (the geometry
+  forms: an R with a model, `L=` and `W=`; a C with `L=`); on a C written with a charge `Q=` it is
+  an `EditError` (use `set_expression`). `set_model` inserts the model right after the nodes, also
+  beside a value written `R=`, `C=` or `L=`; the types are xyce's own (R: `R`, `RES`; C: `C`,
+  `CAP`; L: `L`, `IND`).
+- **`remove_value`** removes the whole field and the separator before it (as `remove_param`
+  chooses it), with its keyword when the value is written `R=…`. It needs a model, as on ngspice,
+  and is refused on L, which has no form without a value; on R unless the line keeps both `L=`
+  and `W=`; on C unless it keeps `L=` (Xyce computes the value from the model then). `remove_param`
+  refuses to take `L=` or `W=` from a line that has no value and needs them.
+- **`set_param`**: `R`, `C` and `L` edit the value written that way; a D's `area` is positional,
+  right after the model, unless the line writes `AREA=`; V and I take no parameters (no port
+  parameters on Xyce's V).
+- **`params.set`** edits the **first** assignment of the name, the one Xyce 7.10 uses (scoping.md
+  S3): a `.PARAM` before a `.GLOBAL_PARAM` of the same name, a `PARAMS:` default before a body
+  `.PARAM`. A `.GLOBAL_PARAM` value is edited in place; a new line is always a `.param`. A name
+  that a visible `.FUNC` or `.PARAM` function defines is an `EditError`: the library does not
+  edit functions, and `directives.*` refuses a `.FUNC` or `.GLOBAL_PARAM` line.
+- **Inserted statement text** (`directives.*`, `add_include`) that has a line beginning with
+  blanks is an `EditError` (decision 0027 item 1): Xyce would read it as a comment. A later
+  `+` line may be indented.
+- **`.PREPROCESS REPLACEGROUND`** is topology (P4): `directives.add`, `replace` and `remove` raise
+  `TopologyError` on it, and its value is in the signature.
+- `add_include` writes `.include "path"`, the long spelling; a `.LIB` call (`LibCall`, an
+  `OpaqueStatement`) is added, replaced and removed as an opaque statement.
+- Removal takes ngspice's plain path: comments over emptied `+` lines stay where they are, since
+  Xyce runs such a line (xm1-tasks 5.1 point 3).
+
+`tests/edits/test_xyce_edits.py` holds the golden diffs and refusals, and
+`tests/solver/test_xyce_edit_results.py` checks that edited netlists still run in Xyce with the
+expected value.

@@ -7,6 +7,7 @@ from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DIRECTIVE_LINES,
+    _INDENT_IS_COMMENT,
     _ITEM_NAMES,
     _TOPOLOGY_ITEMS,
     SINGLETON_DIRECTIVES,
@@ -21,6 +22,7 @@ from netlistmod.errors import EditError, ParseError, TopologyError, UnsupportedC
 from netlistmod.model.nodes import (
     Component,
     End,
+    FuncStatement,
     ModelStatement,
     OpaqueBlock,
     OpaqueStatement,
@@ -61,6 +63,8 @@ def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLev
     lines (an element of ``lines`` may not hold a line break); a single topology item is
     returned whatever its length, for the caller to reject.
     """
+    if _INDENT_IS_COMMENT[netlist.dialect]:
+        _refuse_indented(lines, what)
     newline = conventions.DEFAULT_TERMINATOR
     probe = SourceText(f"probe{newline}{newline.join(lines)}{newline}.end{newline}")
     try:
@@ -87,6 +91,20 @@ def classify_text(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLev
     return body[0]
 
 
+def _refuse_indented(lines: tuple[str, ...], what: str) -> None:
+    """Refuse statement text with a line that begins with blanks where the dialect reads such a
+    line as a comment (xyce; decision 0027 item 1): the statement would be ignored, or the line
+    would join it as a comment. A later line may still be an indented ``+`` line."""
+    for number, line in enumerate(lines):
+        stripped = line.lstrip(" \t")
+        if stripped == line or (number > 0 and stripped.startswith("+")):
+            continue
+        raise EditError(
+            f"{what}: {_show(lines)} has a line that begins with blanks, which Xyce reads as a "
+            "comment and ignores (Xyce users' manual §4.1.3.1 p43); remove the indentation"
+        )
+
+
 def _addable(netlist: Netlist, lines: tuple[str, ...], what: str) -> TopLevelItem:
     """The item ``lines`` hold, if directive operations may write it: a directive, an unknown
     dot-command, a whole ``.control``, ``.if`` or ``.lib`` block or a ``.lib`` statement."""
@@ -111,6 +129,8 @@ def _property_hint(item: TopLevelItem) -> str:
         return "; use params.set"
     if isinstance(item, ModelStatement):
         return "; a `.model` line cannot be added, and set_model_param edits an existing one"
+    if isinstance(item, FuncStatement):
+        return "; a `.func` line cannot be added or edited by the library; edit it by hand"
     return ""
 
 

@@ -6,7 +6,7 @@ from collections.abc import Iterator, Sequence
 from dataclasses import dataclass, fields, is_dataclass
 from dataclasses import field as dataclass_field
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document import Line, Scope, ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit.plan import Edit, SlotCheck
@@ -20,10 +20,14 @@ from netlistmod.model.nodes import (
     Component,
     CurrentSource,
     DcDirective,
+    Diode,
     Directive,
     End,
     FrequencyAnalyzer,
+    FuncStatement,
     GlobalDirective,
+    GlobalParamStatement,
+    IndentedLine,
     Inductor,
     Jfet,
     Mesfet,
@@ -33,6 +37,7 @@ from netlistmod.model.nodes import (
     OpaqueStatement,
     OpDirective,
     ParamStatement,
+    PreprocessDirective,
     Resistor,
     SourceSpec,
     SubcktDefinition,
@@ -107,20 +112,81 @@ SINGLETON_DIRECTIVES: tuple[type[Directive], ...] = (
 _DISTORTION_NAMES = frozenset({"DISTOF1", "DISTOF2"})
 
 
-# The parameters an ngspice V line takes (RF port, manual §4.1.11).
-_PORT_PARAMS = frozenset({"portnum", "z0"})
+# The parameters a V line takes where the dialect reads only its port parameters: ngspice's RF
+# port (manual §4.1.11); Xyce's V and I take none in X-M1 (decision 0027 item 6). LTspice's V and
+# I take their own parameters (`_LTSPICE_FORMS`).
+_PORT_PARAMS: dict[Dialect, frozenset[str]] = {
+    Dialect.NGSPICE: frozenset({"portnum", "z0"}),
+    Dialect.LTSPICE: frozenset({"portnum", "z0"}),
+    _XYCE: frozenset(),
+}
+
+
+# Whether the dialect writes LTspice's element forms, which set_param and remove_param treat on
+# their own: `Laplace=` and B's `laplace=`, V and I parameters, an R, C or L value keyword that is
+# an ordinary parameter. ngspice and xyce take the other path.
+_LTSPICE_FORMS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: True,
+    _XYCE: False,
+}
+
+
+@dataclass(frozen=True, slots=True)
+class _RclForm:
+    """How a dialect writes the model of an R, C or L line (decision 0027 item 5)."""
+
+    # Why R, C and L take no model, or None if they take one.
+    no_model: str | None
+    # Whether the model comes right after the nodes, before the value (xyce), rather than after
+    # the value (ngspice); a value written `R=`, `C=` or `L=` may then stand beside a model.
+    model_first: bool
 
 
 # LTspice has no R, C or L .model type, so the semiconductor form does not exist (review R6).
 _NO_LTSPICE_MODEL = "LTspice has no R, C or L model"
+_RCL_FORMS: dict[Dialect, _RclForm] = {
+    Dialect.NGSPICE: _RclForm(no_model=None, model_first=False),
+    Dialect.LTSPICE: _RclForm(no_model=_NO_LTSPICE_MODEL, model_first=False),
+    _XYCE: _RclForm(no_model=None, model_first=True),
+}
 
 
-# The name of an LTspice diode's positional area, which set_param routes to its slot.
+# The name of a positional area, which set_param routes to its slot.
 _POSITIONAL_AREA = "area"
+# The elements whose area is positional, right after the model, unless it is written `area=`:
+# LTspice's D and Q, J and Z on ngspice and LTspice, and Xyce's D (decision 0027 item 6; Xyce's Q,
+# J and Z come with X-M4). An ngspice D and Q write `area=` only.
+_POSITIONAL_AREAS: dict[Dialect, tuple[type[Component], ...]] = {
+    Dialect.NGSPICE: (Jfet, Mesfet),
+    Dialect.LTSPICE: (Diode, BipolarTransistor, Jfet, Mesfet),
+    _XYCE: (Diode,),
+}
 
 
-# Topology items (§7.1): directive operations never add, replace or remove them.
-_TOPOLOGY_ITEMS = (Component, SubcktDefinition, GlobalDirective)
+# Whether the edit of an element field keeps comments over emptied `+` lines on the line of the
+# last field (LTspice stops on a statement whose last `+` line holds only a comment; M18 D2 and
+# D7b). ngspice and Xyce run it (xm1-tasks 5.1 point 3), so they take the plain removal.
+_JOIN_TRAILING_COMMENTS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: True,
+    _XYCE: False,
+}
+
+
+# Whether a line of statement text that begins with blanks is a comment in the dialect (xyce,
+# decision 0027 item 1), so inserted statement text may not begin with one.
+_INDENT_IS_COMMENT: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+
+
+# Topology items (§7.1): directive operations never add, replace or remove them. An xyce
+# `.PREPROCESS REPLACEGROUND` changes net identity, so it is topology too (P4; decision 0027
+# item 3).
+_TOPOLOGY_ITEMS = (Component, SubcktDefinition, GlobalDirective, PreprocessDirective)
 
 
 # What directive operations write and remove: directives, and whole opaque items, whose
@@ -167,6 +233,10 @@ _ITEM_NAMES: dict[type, str] = {
     SubcktDefinition: "subcircuit definition",
     GlobalDirective: "`.global` line",
     ParamStatement: "`.param` line",
+    GlobalParamStatement: "`.global_param` line",
+    FuncStatement: "`.func` line",
+    PreprocessDirective: "`.preprocess` line",
+    IndentedLine: "indented line, which Xyce reads as a comment",
     ModelStatement: "`.model` line",
     Title: "title line",
     TitleDirective: "`.title` line",
@@ -251,7 +321,7 @@ def _removal_edit(
     go: LTspice stops on a statement whose last ``+`` line holds only a comment (M18 D2 and
     D7b). ngspice runs it, so there the removal is only the span."""
     plain = Edit(removed, "", reason)
-    if netlist.dialect is not Dialect.LTSPICE:
+    if not _JOIN_TRAILING_COMMENTS[netlist.dialect]:
         return plain
     spans = [
         span

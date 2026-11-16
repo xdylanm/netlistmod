@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
@@ -27,6 +28,14 @@ from netlistmod.model.values import (
 )
 from netlistmod.source import SourceText, Span
 
+# Which assignment of a repeated parameter is the effective one, which params.set replaces: the
+# last on ngspice and LTspice, the first on Xyce 7.10 (xyce scoping.md S3; the index's rule).
+_FIRST_PARAM_WINS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+
 
 def set_param_statement(
     netlist: Netlist,
@@ -38,12 +47,24 @@ def set_param_statement(
     placement: Placement | None = None,
 ) -> list[Edit]:
     """Upsert a parameter (decision 0007 item 7): replace the effective assignment of ``name``
-    in ``scope`` (defaults count), or add a ``.param`` line by placement."""
+    in ``scope`` (defaults count), or add a ``.param`` line by placement.
+
+    On xyce the effective assignment is the first (a ``.PARAM`` before a ``.GLOBAL_PARAM`` of the
+    same name), and a name that a visible ``.FUNC`` or ``.PARAM`` function defines is refused:
+    functions are not edited by the library."""
     found = resolve_scope(netlist, scope, in_definition)
     reason = f"params.set {name}"
-    assignments = found.params.get(found.fold(name))
+    key = found.fold(name)
+    function = next((where for where in found.chain() if key in where.functions), None)
+    if function is not None:
+        raise EditError(
+            f"params.set: `{name}` is a function defined in {function.describe()}, not a "
+            "parameter; the library does not edit functions, so edit its line by hand"
+        )
+    assignments = found.params.get(key)
     if assignments:
-        return [Edit(assignments[-1].value.span, value, reason, (_VALUE,))]
+        effective = assignments[0] if _FIRST_PARAM_WINS[netlist.dialect] else assignments[-1]
+        return [Edit(effective.value.span, value, reason, (_VALUE,))]
     point = insertion_point(placement or Placement.AFTER_LAST_PARAM, netlist, found.path)
     terminator = conventions.terminator_before(netlist.source, point)
     text = conventions.param_line(name, value, terminator)

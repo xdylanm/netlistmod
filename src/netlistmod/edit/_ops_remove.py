@@ -11,10 +11,11 @@ from __future__ import annotations
 
 from dataclasses import fields, is_dataclass
 
-from netlistmod.dialects import Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit._ops_common import (
+    _LTSPICE_FORMS,
+    _RCL_FORMS,
     _TRANSISTORS,
     _TWO_TERMINAL,
     _VALUE_KEYWORDS,
@@ -32,18 +33,21 @@ from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     BehavioralSource,
     BipolarTransistor,
+    Capacitor,
     CodeModelDevice,
     Component,
     ControlledSource,
     CurrentSource,
     Diode,
     FrequencyAnalyzer,
+    Inductor,
     Jfet,
     LosslessLine,
     LossyLine,
     Mesfet,
     ModelStatement,
     OsdiDevice,
+    Resistor,
     SpecialFunction,
     SubcktInstance,
     TransmissionLine,
@@ -72,7 +76,7 @@ def remove_param(
     reason = f"remove_param {designator} {name}"
     fold = netlist.scope(scope).fold
     folded = fold(name)
-    ltspice = netlist.dialect is Dialect.LTSPICE
+    ltspice = _LTSPICE_FORMS[netlist.dialect]
     if isinstance(element, SubcktInstance):
         raise EditError(
             f"`{designator}` is a subcircuit call: its instance parameters cannot be removed "
@@ -150,7 +154,28 @@ def remove_param(
         raise EditError(f"`{designator}` has no parameter `{name}`")
     if len(matches) > 1:
         raise EditError(f"{reason}: parameter `{name}` is repeated; the edit has no single target")
+    if (
+        isinstance(element, _TWO_TERMINAL)
+        and _RCL_FORMS[netlist.dialect].model_first
+        and element.value is None
+        and getattr(element, "charge", None) is None
+        and folded in _GEOMETRY[type(element)]
+    ):
+        # An xyce R or C without a value reads its value from this geometry (decision 0027
+        # item 5, as amended); without it the line does not parse.
+        raise EditError(
+            f"`{designator}` has no value, so `{matches[0].name}=` is part of the geometry Xyce "
+            "computes its value from; set a value with set_value first"
+        )
     return [_removal_edit(netlist, element, _removal(netlist, element, matches[0]), reason)]
+
+
+# The parameters an xyce R or C without a value needs: the geometry Xyce computes the value from.
+_GEOMETRY: dict[type, frozenset[str]] = {
+    Resistor: frozenset({"l", "w"}),
+    Capacitor: frozenset({"l"}),
+    Inductor: frozenset(),
+}
 
 
 def remove_model_param(
