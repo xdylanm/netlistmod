@@ -1,0 +1,38 @@
+id: XY-FUN-001
+dialect: xyce
+construct: .FUNC user-defined functions
+manual_ref:
+- '[xyce-ref] §2.1.10 p42–43 ".FUNC (Function)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- func_stmt
+- func_name
+- func_args
+- func_body
+- func_def
+- func_next
+- FUNC_KW
+- FUNC_OPEN
+- BUILTIN_OPEN
+core_rules:
+- RPAR
+tests:
+- tests/grammar/xyce/test_xyce_params.py::test_func_defines_one_function
+- tests/grammar/xyce/test_xyce_params.py::test_a_func_without_a_body_or_with_two_is_rejected
+- tests/grammar/xyce/test_xyce_params.py::test_a_builtin_function_name_is_rejected
+- tests/grammar/xyce/test_xyce_params.py::test_a_reserved_word_is_rejected_as_an_argument
+- tests/grammar/xyce/test_xyce_params.py::test_the_builtin_lists_agree
+- tests/document/test_xyce_scoping.py::test_function_calls_are_function_references
+- tests/document/test_xyce_scoping.py::test_a_function_argument_shadows_a_parameter_in_its_body
+- tests/document/test_xyce_scoping.py::test_a_repeated_function_is_a_warning
+- tests/solver/test_xyce_param_probes.py::test_functions
+- tests/solver/test_xyce_param_probes.py::test_xyce_stops_on
+- tests/solver/test_xyce_param_probes.py::test_a_builtin_function_name_is_ignored
+- tests/solver/test_xyce_param_probes.py::test_pi_as_an_argument_is_ignored
+- tests/solver/test_xyce_param_probes.py::test_a_blank_before_the_argument_list_runs
+validation_note: 'Validated on XyceNF Release 7.10.0: `.FUNC` with or without `=` and with a braced or quoted body defines its function, usable before its line. Xyce ignores a built-in name and `pi` as an argument, takes `f (x)`, and stops on a call to a function of no arguments (discrepancies.md).'
+notes: 'A `FuncStatement` holding a `FunctionDefinition` (name, arguments, body; decision 0027 item 9): one function per line, the name and `(` one token (no blank between), arguments separated by commas, an optional `=`, then a braced or quoted body. A built-in function name or a reserved word as the name (BUILTIN_OPEN, the names of Tables 2-33 and 2-34 and the reserved words, as in formula-reserved.json) and a reserved word as an argument are ParseErrors, as the manual forbids them. A function of no arguments is read, as the manual''s form allows. A repeated function is a `DUPLICATE_DEFINITION` warning, since Xyce stops; a call is a `function` reference (scoping.md S8).'

@@ -312,6 +312,13 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "FALSE_KW": "`FALSE`",
         "NODE_WORD": "node name",
         "EXPR_NUMBER": "number",
+        "BLANK_TAIL": "blank inside a value",
+        "RESERVED_NAME": "reserved word",
+        "FUNC_OPEN": "function name and `(`",
+        "BUILTIN_OPEN": "function name and `(`",
+        "FUNC_KW": "`.FUNC`",
+        "GLOBAL_PARAM_KW": "`.GLOBAL_PARAM`",
+        "PARAM_KW": "`.PARAM`",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's

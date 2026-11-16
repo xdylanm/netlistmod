@@ -61,7 +61,7 @@ sequence or its bodies). They insert nothing: an edit inserts a line through
 Read-only properties: `path: ScopePath`, `display` (names as written), `definition:
 SubcktDefinition | None`, `lines`, `parent`, `children`, `dialect`, `params`, `models`,
 `subckts`, `elements` (each `Mapping[folded name, tuple in source order]`),
-`may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
+`functions` (xyce's user-defined functions, empty elsewhere), `may_define_elsewhere: bool` (the scope holds an `.include` or `.lib` statement, or an `.if` or
 `.lib` block, whose names the tables do not show; §7.8) and `replace_ground: bool` (an xyce
 netlist with `.PREPROCESS REPLACEGROUND TRUE`, the same in every scope; section 9). Methods: `fold(name)` (the dialect's
 folded form), `chain()` (self, then enclosing scopes), `walk()`, `describe()`. Assigning an
@@ -74,7 +74,7 @@ one-name tuple (`("amp",)`).
 ### `Reference`
 
 `Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is a
-`ReferenceKind`, the `Literal` of `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`. `span` covers the name as written,
+`ReferenceKind`, the `Literal` of `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`, `"function"`. `span` covers the name as written,
 `owner` is the item holding it, `target` the resolved node or `None`. Deviation from task 3.2:
 `owner` is added (the edit layer needs the item to edit).
 
@@ -86,6 +86,7 @@ one-name tuple (`("amp",)`).
 | `param` | a bare identifier in a formula anywhere (values, parameters, `.param`, `.model`, defaults, X parameters, directive arguments, expressions); an LTspice `.step param` name that a `.param` line also defines | the `ParamAssignment` (last in its scope) |
 | `element` | K inductors; the controlling sources of F, H and W, and an ngspice A's `%vnam` sources; an LTspice `&` probe's analyzer; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources; `i(src)` in a behavioural expression | `Component` |
 | `node` | each name in `v(a)` or `v(a,b)` in a behavioural expression; an LTspice `@`'s `refnode=` and `intnode=` | `Net`, or `None` |
+| `function` | xyce only: a call in a formula to a name that is not a built-in function | the `FunctionDefinition` (first in its scope), or `None` |
 
 ### `TopologyView`
 
@@ -210,7 +211,7 @@ parameters there: LTspice's `time` in B and `value=`, `x` in `Q=` and `Flux=`, a
 ## 9. Xyce (hidden)
 
 The dialect is the internal `netlistmod.dialects._XYCE` until X-M8 (decision 0026); its nodes
-`IndentedLine` and `PreprocessDirective` live in `netlistmod.model.nodes` and are not exported. The
+`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement` and `FuncStatement` live in `netlistmod.model.nodes` and are not exported. The
 API and the signature encoding are the same. What differs ([names.md](../grammars/xyce/names.md),
 decision 0027 items 1 and 3):
 
@@ -221,5 +222,16 @@ decision 0027 items 1 and 3):
   the last signature entry, so no edit changes it (P4).
 - **Globals:** a node whose name begins `$G`, in any case, is global (`is_automatic_global`, a
   per-dialect prefix table: LTspice `$g_`, xyce `$g`), as is a `.GLOBAL` name.
+- **Scoping** ([scoping.md](../grammars/xyce/scoping.md)): a repeated parameter resolves to its
+  **first** definition (a `DUPLICATE_DEFINITION` warning); order does not matter, so there is no
+  `PARAM_USED_BEFORE_DEFINITION`; a `.GLOBAL_PARAM` is a top-level parameter listed after the
+  `.PARAM` assignments, so a `.PARAM` of the same name wins; a body `.PARAM` that repeats a
+  `PARAMS:` name is reported as shadowed; reserved words are never references.
+- **Functions:** `Scope.functions` holds `.FUNC` lines and `.PARAM` function assignments, looked
+  up like models; a call that is not a built-in (`builtin_functions`, from
+  `formula-reserved.json`) is a `function` reference, and a function's arguments are not
+  parameter references in its body. A repeated function is a `DUPLICATE_DEFINITION` warning
+  (Xyce stops). An unresolved function has no diagnostic yet (X-M1 B6).
+- **Formula scan:** `formula_xyce.lark` (`XY-FML-001`); a bare `.PARAM` value has no delimiter.
 - **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4). An indented line inside a
   continued statement is one of its trailing comments and is not reported.

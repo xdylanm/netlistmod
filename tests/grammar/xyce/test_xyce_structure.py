@@ -154,16 +154,13 @@ def test_a_letter_xyce_does_not_have_is_rejected(letter: str) -> None:
 @pytest.mark.parametrize(
     "statement",
     [
-        ".param x=1",
-        ".PARAM x=1",
         ".tran 1n 1u",
         ".subckt s a b",
         ".ends",
         ".endl",
         ".include 'x.cir'",
         ".lib x.lib tt",
-        ".global_param g=1",
-        ".func f(x) {x}",
+        ".model rmod r",
         ".options timeint method=gear",
         ".print tran v(1) ; comment $ and // are text here",
         ".title other",
@@ -180,33 +177,33 @@ def test_every_other_dot_command_is_unsupported(statement: str) -> None:
 
 def test_a_continued_dot_command_is_unsupported_whole() -> None:
     with pytest.raises(UnsupportedConstruct) as captured:
-        _parse("title\n.param x=1\n+ y=2\n.END\n")
+        _parse("title\n.tran 1n\n+ 1u\n.END\n")
     assert captured.value.line == 2
 
 
 def test_a_syntax_error_later_is_reported_before_an_unsupported_line() -> None:
     # The whole source is parsed first, as on the other dialects.
     with pytest.raises(ParseError):
-        _parse("title\n.param x=1\n")
+        _parse("title\n.tran 1n 1u\n")
 
 
 @pytest.mark.parametrize("between", ["* a comment\n", "\n", "* a comment\n\n", "; c\n"])
-@pytest.mark.parametrize("plus", ["+ y=2", "  + y=2"])
+@pytest.mark.parametrize("plus", ["+ 1u", "  + 1u"])
 def test_a_continuation_after_comment_or_blank_lines_is_not_a_syntax_error(
     between: str, plus: str
 ) -> None:
     # A `+` line joins the last non-comment line across comment and blank lines ([xyce-ug]
     # §4.1.3.2 p43; probe test_a_continuation_joins_across_comments_and_blank_lines): the
     # statement it joins is refused, not the `+` line.
-    with pytest.raises(UnsupportedConstruct, match="dot-command `.param`") as captured:
-        _parse(f"title\n.param x=1\n{between}{plus}\n.END\n")
+    with pytest.raises(UnsupportedConstruct, match="dot-command `.tran`") as captured:
+        _parse(f"title\n.tran 1n\n{between}{plus}\n.END\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 def test_a_continuation_line_is_refused_by_its_own_rule() -> None:
     # Every statement X-M0 recognises is refused before the `+` line that follows it, so the
     # rule's own refusal is checked on its subtree.
-    source = SourceText("title\n.param x=1\n* c\n+ y=2\n.END\n")
+    source = SourceText("title\n.tran 1n\n* c\n+ 1u\n.END\n")
     (subtree,) = parse_tree(source, _XYCE).find_data("continuation_line")
     with pytest.raises(VisitError) as captured:
         _NodeBuilder(source, _XYCE).transform(subtree)

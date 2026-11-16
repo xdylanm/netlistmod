@@ -136,4 +136,14 @@ differs:
   `ParseError`. It is topology (net identity), not a `Directive`. The other `.PREPROCESS` forms are
   `UnsupportedConstruct`.
 - **`.GLOBAL`** is `GlobalDirective`, with no commas between its names.
+- **`.PARAM`** is `ParamStatement`, with commas allowed between assignments, values that are
+  numbers, braced, quoted or bare expressions without blanks (no strings), and function
+  assignments in `functions: tuple[FunctionDefinition, ...]` (empty on the other dialects).
+  `FunctionDefinition(name, name_span, args, body, span)` (in `netlistmod.model.values`): the
+  name without its `(`, the argument `Identifier`s and the body `Formula`.
+- **`GlobalParamStatement`**, a `ParamStatement` subclass of its own keyword, is `.GLOBAL_PARAM`:
+  top level only, no functions.
+- **`FuncStatement`** (`_DotCommand` fields, `function: FunctionDefinition`) is `.FUNC`, one
+  function per line.
+- **Spec IDs** of B3: `XY-VAL-001`, `XY-PRM-001`, `XY-PRM-002`, `XY-FUN-001`, `XY-FML-001`.
 - **Dot-commands** the dialect does not read yet are `UnsupportedConstruct`.

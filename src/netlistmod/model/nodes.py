@@ -11,6 +11,7 @@ from netlistmod.model.values import (
     ElementReference,
     Flag,
     Formula,
+    FunctionDefinition,
     Identifier,
     ModelReference,
     ParamAssignment,
@@ -617,9 +618,29 @@ class _DotCommand:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class ParamStatement(_DotCommand):
-    """A ``.param`` line: one or more ``name=value`` assignments."""
+    """A ``.param`` line: one or more ``name=value`` assignments.
+
+    ``functions`` holds the function assignments of an xyce ``.PARAM`` (``f(x)={x*2}``), in source
+    order; it is empty on every other dialect.
+    """
 
     assignments: tuple[ParamAssignment, ...]
+    functions: tuple[FunctionDefinition, ...] = ()
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class GlobalParamStatement(ParamStatement):
+    """An xyce ``.GLOBAL_PARAM`` line ([xyce-ref] §2.1.12 p45): a top-level ``.PARAM`` of its own
+    keyword, without functions. A ``.PARAM`` of the same name wins over it (``scoping.md``). xyce
+    only; internal while the dialect is hidden (decision 0026)."""
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class FuncStatement(_DotCommand):
+    """An xyce ``.FUNC`` line ([xyce-ref] §2.1.10 p42): one user-defined function. xyce only;
+    internal while the dialect is hidden (decision 0026)."""
+
+    function: FunctionDefinition
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -916,6 +937,7 @@ BodyItem: TypeAlias = (
     | CommentLine
     | IndentedLine
     | PreprocessDirective
+    | FuncStatement
     | UnknownDirective
     | OpaqueBlock
     | OpaqueStatement
@@ -971,6 +993,7 @@ TopLevelItem: TypeAlias = (
     | MeasureDirective
     | StepDirective
     | GlobalDirective
+    | GlobalParamStatement
 )
 
 

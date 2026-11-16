@@ -26,8 +26,8 @@ Until the X-M8 review the dialect is not a member of `Dialect`: it is the intern
 (`tests/architecture/test_hidden_dialects.py`). It is passed wherever a dialect is, for example
 `Netlist.from_text(text, dialect=_XYCE)`. It cannot be pickled. X-M8 makes it the member
 `Dialect.XYCE`.
-The node classes only xyce has (`IndentedLine`, `PreprocessDirective`) live in
-`netlistmod.model.nodes` and are not exported from `netlistmod` until then.
+The node classes only xyce has (`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement`,
+`FuncStatement`, and the value `FunctionDefinition`) live in `netlistmod.model` and are not exported from `netlistmod` until then.
 
 ## What the dialect reads
 
@@ -48,6 +48,13 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
   - the two number readers, for device fields and for expressions (`XY-NUM-001`, `XY-NUM-002`;
     [numbers.md](./numbers.md)).
 
+- **B3, parameters and expressions:**
+  - `.PARAM` assignments and function assignments, with blanks or commas (`XY-PRM-001`),
+    `.GLOBAL_PARAM` (`XY-PRM-002`) and `.FUNC` (`XY-FUN-001`);
+  - values in braces, in single quotes, or bare without blanks (`XY-VAL-001`; decision X-D5);
+  - the formula grammar `formula_xyce.lark` and its reserved words (`XY-FML-001`), and the
+    scoping rules of [scoping.md](./scoping.md).
+
 Every other line is refused (`XY-UNS-001`): an element line is `UnsupportedConstruct`, naming the
 milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
 `ParseError`; a dot-command the dialect does not read yet, and a `.PREPROCESS` form other than
@@ -58,10 +65,11 @@ at the start of a line they are a `ParseError`. `rkm=True` is a `ValueError`.
 Where Xyce is more lenient than the manual, the difference is a row of
 [discrepancies.md](./discrepancies.md): Xyce runs without `.END`, ignores text after it and on its
 line, warns on an unknown dot-command and ignores it, takes commas in `.GLOBAL`, `"` and non-ASCII
-in names, and a few number forms that no list holds.
+in names, a few number forms that no list holds, blanks in a bare `.PARAM` value, a blank
+before a function's `(`, and some reserved and built-in names, which it ignores.
 
 The rest is planned by task and milestone in [xm1-tasks.md](../../design/xm1-tasks.md) and the
-xyce plan, section 8: parameters and expressions (B3), statements (B4) and the first elements (B5)
+xyce plan, section 8: statements (B4) and the first elements (B5)
 in X-M1, directives in X-M2, then the remaining devices.
 
 ## Validation status
@@ -81,17 +89,22 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-CNT-001](./specs/XY-CNT-001.yaml) | `+` continuation lines, across blank, comment and indented lines | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-COM-001](./specs/XY-COM-001.yaml) | comments (`*` lines, `;` lines and `;` at the end of a line) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-END-001](./specs/XY-END-001.yaml) | required final .END statement | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-FML-001](./specs/XY-FML-001.yaml) | formula expression syntax for reference scans (formula_xyce.lark) | validated | 6 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-FUN-001](./specs/XY-FUN-001.yaml) | .FUNC user-defined functions | validated | 8 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-GLB-001](./specs/XY-GLB-001.yaml) | .GLOBAL node names | validated | 4 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NUM-001](./specs/XY-NUM-001.yaml) | numbers in device fields (scale factors and units) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NUM-002](./specs/XY-NUM-002.yaml) | numbers in expressions and .PARAM values (units and the imaginary J) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 4 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 9 + 0 solver |  |
+| [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-12 entries: 9 validated, 2 observed, 0 disputed, 1 documented.
+17 entries: 14 validated, 2 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 
@@ -103,10 +116,12 @@ states. The grammar has no block, so no block state.
 
 | Terminal | Matches | Candidate in | Competitors | Why no collision |
 |---|---|---|---|---|
-| `COMMENT_LINE.3` | `*` or `;`, then text to the end of the line | 38 states: line starts | above: `INDENTED_LINE.10`, `WS`, `LINE_END`; `END_KW.4`, `DOT_NAME.4`, `PREPROCESS_KW.4`, `GLOBAL_KW.4`; at its priority: `PLUS_LINE.3` | Only it starts with `*` or `;`, and `INDENTED_LINE` excludes a `*` or `;` after the blanks, so an indented `*` or `;` line is a comment. |
-| `INDENTED_LINE.10` | blanks, then a character other than a blank, `+`, `*` or `;`, then text to the end of the line | 38 states: line starts | `COMMENT_LINE`, `PLUS_LINE`, the keywords, `DOT_NAME`, `LINE_END`; below: `WS.9` | No competitor at its priority; it outranks `WS`, so an indented line is one token, and a line of blanks, which it cannot match, is still `WS` and `LINE_END`. Nothing else starts with a blank. |
-| `PLUS_LINE.3` | `+` to the end of the line | 32 states: line starts after a statement | as `COMMENT_LINE` | Only it starts with `+`. It is reached only after a refused dot-command, whose `REST_TEXT` leaves the line end to `NL`: after a statement the dialect reads, `SEP` takes a `+` line, with or without comment lines before it. |
+| `COMMENT_LINE.3` | `*` or `;`, then text to the end of the line | 56 states: line starts | above: `INDENTED_LINE.10`, `WS`, `LINE_END`; `END_KW.4`, `DOT_NAME.4`, `PREPROCESS_KW.4`, `GLOBAL_KW.4`; at its priority: `PLUS_LINE.3` | Only it starts with `*` or `;`, and `INDENTED_LINE` excludes a `*` or `;` after the blanks, so an indented `*` or `;` line is a comment. |
+| `INDENTED_LINE.10` | blanks, then a character other than a blank, `+`, `*` or `;`, then text to the end of the line | 56 states: line starts | `COMMENT_LINE`, `PLUS_LINE`, the keywords, `DOT_NAME`, `LINE_END`; below: `WS.9` | No competitor at its priority; it outranks `WS`, so an indented line is one token, and a line of blanks, which it cannot match, is still `WS` and `LINE_END`. Nothing else starts with a blank. |
+| `PLUS_LINE.3` | `+` to the end of the line | 50 states: line starts after a statement | as `COMMENT_LINE` | Only it starts with `+`. It is reached only after a refused dot-command, whose `REST_TEXT` leaves the line end to `NL`: after a statement the dialect reads, `SEP` takes a `+` line, with or without comment lines before it. |
 | `REST_TEXT.2` | a non-blank, then text to the end of the line | 9 states: after a refused dot-command or `.PREPROCESS` form | `NL`, `CONT`, `WS` | No competitor at its priority, and only line ends compete. |
 | `TITLE_TEXT.2` | as in ngspice | 1 state: line 1 | `LINE_END`, `WS` | No competitor at its priority; Xyce has no `TITLE_KW`. |
-| `SEP.10` | blanks; a line end and a `+` line's `+`; or a line end whose lookahead finds blank, comment or indented lines and then a `+` line | 27 states: before a field and at the end of a statement | `NL.5`, `CONT.7` (ignored), `WS.9` (ignored); above: `TRAILING_COMMENT.12`; below: the field tokens | It outranks `NL` and `CONT`, so a line end that a `+` line joins is a separator; the third alternative matches only when a `+` line follows the skipped lines, so any other line end stays `NL` and ends the statement. Field tokens never start with a blank or a line end. |
-| `TRAILING_COMMENT.12` | `;` to the end of the line; or, right after a line end (a lookbehind), a `*` line or an indented line other than a `+` line | 28 states: in a statement's gaps, and after `.END` | `SEP.10`, `NL`, `LINE_END`, the field tokens | Its `;` alternative: no field token holds `;`. Its other alternatives match only right after a line end, which in a gap only `SEP`'s third alternative leaves, so they are the skipped lines; it outranks `SEP`, so an indented skipped line is one comment rather than `SEP` and a field. A blank skipped line, which it cannot match, is part of a `SEP`. |
+| `SEP.10` | blanks; a line end and a `+` line's `+`; or a line end whose lookahead finds blank, comment or indented lines and then a `+` line | 95 states: before a field and at the end of a statement | `NL.5`, `CONT.7` (ignored), `WS.9` (ignored); above: `TRAILING_COMMENT.12`; below: the field tokens | It outranks `NL` and `CONT`, so a line end that a `+` line joins is a separator; the third alternative matches only when a `+` line follows the skipped lines, so any other line end stays `NL` and ends the statement. Field tokens never start with a blank or a line end. |
+| `TRAILING_COMMENT.12` | `;` to the end of the line; or, right after a line end (a lookbehind), a `*` line or an indented line other than a `+` line | 96 states: in a statement's gaps, and after `.END` | `SEP.10`, `NL`, `LINE_END`, the field tokens | Its `;` alternative: no field token holds `;`. Its other alternatives match only right after a line end, which in a gap only `SEP`'s third alternative leaves, so they are the skipped lines; it outranks `SEP`, so an indented skipped line is one comment rather than `SEP` and a field. A blank skipped line, which it cannot match, is part of a `SEP`. |
+| `BARE_FORMULA.5` | an expression without blanks: no `= , ; ( ) { } ' "` outside parentheses, `[<>!=]=`, parentheses three deep | 4 states: a `.PARAM` or `.GLOBAL_PARAM` value | `EXPR_NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3` | Its lookahead refuses a word that begins like a number and runs to the end of the field, so a number is `EXPR_NUMBER`, and a refused number form is not an expression; braces and quotes cannot begin it. |
+| `BLANK_TAIL.12` | blanks followed by something other than a blank, `,`, `;`, a line end or the next `name=` or `name(...)=`, then the rest of the line | 42 states: after a `.PARAM` or `.GLOBAL_PARAM` value | `SEP.10`, `CSEP.11`, `TRAILING_COMMENT.12`, `NL` | Its lookaheads leave every blank that `SEP` or `CSEP` may take before a field, a comment or a line end; `TRAILING_COMMENT` never starts with a blank there (its indented alternative needs a line end before it). |

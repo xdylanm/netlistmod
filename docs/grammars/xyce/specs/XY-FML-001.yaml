@@ -1,0 +1,55 @@
+id: XY-FML-001
+dialect: xyce
+construct: formula expression syntax for reference scans (formula_xyce.lark)
+manual_ref:
+- '[xyce-ref] §2.2 p164–171 "Expressions"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- start
+- ternary
+- or_expr
+- and_expr
+- comparison
+- sum
+- product
+- power
+- unary
+- atom
+- WS
+- NUMBER
+- STRING
+- IDENT
+- VOLTAGE_OPEN
+- CURRENT_OPEN
+- NAME
+- LPAR
+- RPAR
+- COMMA
+- QUESTION
+- COLON
+- BAR
+- CARET
+- AMP
+- TILDE
+- COMPARE
+- PLUS
+- MINUS
+- STAR
+- SLASH
+- PERCENT
+- POWER
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_params.py::test_the_formula_grammar_reads_xyce_operators
+- tests/grammar/xyce/test_xyce_params.py::test_the_formula_grammar_reads_names_numbers_calls_and_accessors
+- tests/grammar/xyce/test_xyce_params.py::test_the_formula_grammar_refuses_what_xyce_refuses
+- tests/architecture/test_hidden_dialects.py::test_xyce_has_its_own_formula_grammar
+- tests/document/test_xyce_scoping.py::test_function_calls_are_function_references
+- tests/document/test_xyce_scoping.py::test_reserved_words_are_never_references
+- tests/solver/test_xyce_param_probes.py::test_expression_operators
+validation_note: 'Validated on XyceNF Release 7.10.0 for the operators it reads differently from ngspice: `**` is the power and `^` a boolean XOR. The scan is not a validator: a formula it cannot parse gives no references (architecture §8).'
+notes: 'The overlay of decision 0027 item 11: `**` power, `^` XOR at the level of `|`, `&` and unary `~`, no unary `!`, no `\` and no `||` or `&&`, `%` kept; names may hold `.`, `#`, `@`, `$`, `:` and the backtick, not `[` or `]`; numbers as XY-NUM-002. A call is a `function` token; `v(...)` and `i(...)` read nodes and sources, a node possibly a path into an instance (`V(X1:A)`, read by X-M1 B6). The reserved words are those of formula-reserved.json; a name right before the ternary''s `:` takes the colon, as the manual warns, so `a?b:c` does not parse. `dev:param` accessors appear only in `.print` (X-M2).'

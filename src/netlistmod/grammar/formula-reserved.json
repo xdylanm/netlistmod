@@ -14,5 +14,19 @@
   "ltspice": {
     "source": "[ltspice-ref] SIMULATION-COMMANDS-REFERENCE.md \".PARAM\" (built-in constants), and the solver variable temp: the bare words LTspice gives a value by itself, settled by probe in M8 T12; a call is told apart by the grammar; see docs/grammars/ltspice/scoping.md S11",
     "words": ["temp", "pi", "boltz", "echarge", "planck", "kelvin", "gmin"]
+  },
+  "xyce": {
+    "source": "[xyce-ref] §2.1.26 p121 and §2.1.12 p46 \".PARAM\", \".GLOBAL_PARAM\" (reserved words), §2.1.10 p42 \".FUNC\" (the constants PI and EXP) and Tables 2-33 and 2-34 p166-171 (built-in functions); a definition never masks a reserved word (docs/grammars/xyce/scoping.md S7). The functions are also the alternatives of BUILTIN_OPEN in xyce.lark",
+    "words": ["time", "freq", "hertz", "vt", "temp", "temper", "gmin", "pi", "exp"],
+    "functions": [
+      "abs", "ceil", "ddt", "ddx", "floor", "fmod", "if", "int", "limit", "m", "min", "max",
+      "nint", "pwr", "pow", "pwrs", "sdt", "sgn", "sign", "stp", "sqrt", "uramp",
+      "table", "fasttable", "spline", "akima", "cubic", "wodicka", "bli", "tablefile",
+      "db", "img", "ph", "r", "re",
+      "acos", "acosh", "arctan", "asin", "asinh", "atan", "atanh", "atan2", "cos", "cosh",
+      "exp", "ln", "log", "log10", "sin", "sinh", "tan", "tanh",
+      "agauss", "gauss", "aunif", "unif", "rand",
+      "spice_exp", "spice_pulse", "spice_sffm", "spice_sin"
+    ]
   }
 }

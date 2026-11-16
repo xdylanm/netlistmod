@@ -1,0 +1,40 @@
+id: XY-PRM-001
+dialect: xyce
+construct: .PARAM assignments and function assignments
+manual_ref:
+- '[xyce-ref] §2.1.26 p120–121 ".PARAM (Parameter)"'
+- '[xyce-ref] §2.1.10 p42–43 ".FUNC (Function)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- param_stmt
+- _param_end
+- _param_value
+- param_def
+- param_next
+- PARAM_NAME
+- RESERVED_NAME
+core_rules:
+- PARAM_KW
+- CSEP
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_params.py::test_param_takes_numbers_braces_quotes_and_bare_values
+- tests/grammar/xyce/test_xyce_params.py::test_param_separates_with_blanks_or_commas
+- tests/grammar/xyce/test_xyce_params.py::test_parameter_names
+- tests/grammar/xyce/test_xyce_params.py::test_a_name_outside_the_parameter_rule_is_rejected
+- tests/grammar/xyce/test_xyce_params.py::test_a_reserved_word_is_rejected_as_a_parameter
+- tests/grammar/xyce/test_xyce_params.py::test_param_function_assignments
+- tests/grammar/xyce/test_xyce_params.py::test_param_function_forms
+- tests/grammar/xyce/test_xyce_params.py::test_a_param_function_needs_its_equals_and_a_delimited_body
+- tests/document/test_xyce_scoping.py::test_a_repeated_param_resolves_to_the_first_definition
+- tests/solver/test_xyce_param_probes.py::test_param_forms
+- tests/solver/test_xyce_param_probes.py::test_functions
+- tests/solver/test_xyce_param_probes.py::test_xyce_stops_on
+- tests/solver/test_xyce_param_probes.py::test_a_reserved_word_parameter_stops_xyce
+- tests/solver/test_xyce_param_probes.py::test_some_reserved_words_are_ignored
+validation_note: 'Validated on XyceNF Release 7.10.0: every form the library reads gives the expected value. Xyce also takes `f (x)`, ignores four of the reserved words as a name and deletes blanks in a bare value, all refused here (discrepancies.md).'
+notes: '`ParamStatement`, as on ngspice, with `functions` for its function assignments (`FunctionDefinition`; decision 0027 item 9). Assignments are separated by blanks or commas (a comma may stand before a `+` line, not first nor twice); blanks may stand around `=`. A value is EXPR_NUMBER, a braced or quoted expression or a bare one (XY-VAL-001); no strings. A function assignment is `name(args)={body}` or with quotes, the `=` required, no blank before the `(` (discrepancies.md). A parameter name is a letter or `_`, then letters, digits, `_` and `.`, which the manual does not mention (observed); a function name may also hold `#`, `@` and the backtick. A reserved word (time, freq, hertz, vt, temp, temper, gmin, pi, exp) is refused as a name; a built-in function name is refused as a function''s (XY-FUN-001).'

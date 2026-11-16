@@ -10,8 +10,10 @@ The scope model is ``docs/grammars/<dialect>/scoping.md`` (decision 0006 items 3
   visible in its nested definitions.
 - A model, subcircuit or parameter reference is looked up in its own scope, then each
   enclosing scope, independent of file order. A repeated ``.param`` resolves to the last
-  assignment of the scope; a repeated model or subcircuit to the first (ngspice 47 ignores a
-  redefinition; LTspice 26.1.1 stops at one that is used, ``scoping.md`` S7). A parameter swept by
+  assignment of the scope (on xyce to the first, as Xyce 7.10 does); a repeated model or
+  subcircuit to the first (ngspice 47 ignores a redefinition; LTspice 26.1.1 stops at one that is
+  used, ``scoping.md`` S7). An xyce ``.FUNC`` (or a ``.PARAM`` function) is looked up like a
+  model, and a call to it is a ``function`` reference. A parameter swept by
   an LTspice
   ``.step param`` is defined by that line. Element references (``K`` inductors, ``.dc`` sources,
   ``.save i(src)``) are
@@ -27,10 +29,10 @@ from dataclasses import dataclass, fields, is_dataclass
 from types import MappingProxyType
 from typing import Literal, TypeVar
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.lines import Line, Lines, ScopePath
 from netlistmod.document.names import fold, is_automatic_global, is_ground, net_name
-from netlistmod.grammar.formula import parse_formula
+from netlistmod.grammar.formula import builtin_functions, parse_formula
 from netlistmod.model.nodes import (
     BehavioralSource,
     Capacitor,
@@ -45,7 +47,9 @@ from netlistmod.model.nodes import (
     Diode,
     FraProbe,
     FrequencyAnalyzer,
+    FuncStatement,
     GlobalDirective,
+    GlobalParamStatement,
     IcDirective,
     Inductor,
     LossyLine,
@@ -67,7 +71,7 @@ from netlistmod.model.nodes import (
     Transistor,
     TxlLine,
 )
-from netlistmod.model.values import Formula, ParamAssignment
+from netlistmod.model.values import Formula, FunctionDefinition, ParamAssignment
 from netlistmod.source import SourceText, Span
 
 _T = TypeVar("_T")
@@ -76,10 +80,23 @@ _MODEL_LINES = LossyLine | RcLine | TxlLine | CoupledLine
 # The ngspice devices whose model may be any type that is not built in (decision 0020).
 _OPEN_MODEL = CodeModelDevice | OsdiDevice
 
-ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node"]
+ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node", "function"]
 """What a reference names: a ``.model``, a ``.subckt``, a parameter, a subcircuit default
-(an ``X`` line's ``name=value``) or an element (``K`` inductor, ``.dc`` source,
-``.save i(src)``)."""
+(an ``X`` line's ``name=value``), an element (``K`` inductor, ``.dc`` source,
+``.save i(src)``), a node an expression reads, or an xyce user-defined function (a call)."""
+
+# Whether a parameter used before its definition in its own scope is reported (scoping.md of each
+# dialect): ngspice reads the netlist in order; LTspice and Xyce do not mind.
+_ORDER_MATTERS: dict[Dialect, bool] = {Dialect.NGSPICE: True, Dialect.LTSPICE: False, _XYCE: False}
+# Which definition a repeated parameter resolves to: the last on ngspice and LTspice, the first on
+# Xyce 7.10, as its own warning says (xyce scoping.md S3; the manual says the last).
+_FIRST_PARAM_WINS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+# Whether formulas may call user-defined functions, so a call is a reference (xyce's `.FUNC`).
+_USER_FUNCTIONS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
 
 # The swept name of `.dc TEMP ...` is the temperature, not an element (§11.3.2).
 _DC_TEMPERATURE = "temp"
@@ -116,6 +133,7 @@ class Scope:
         "_dialect",
         "_display",
         "_elements",
+        "_functions",
         "_lines",
         "_may_define_elsewhere",
         "_models",
@@ -152,12 +170,24 @@ class Scope:
         models: dict[str, list[ModelStatement]] = {}
         subckts: dict[str, list[SubcktDefinition]] = {}
         elements: dict[str, list[Component]] = {}
+        functions: dict[str, list[FunctionDefinition]] = {}
+        # An xyce `.GLOBAL_PARAM` loses to a `.PARAM` of the same name wherever it stands
+        # (scoping.md S5), so its assignments follow the `.PARAM` ones in the table.
+        late_params: list[ParamAssignment] = []
         elsewhere = False
         for line in lines:
             item = line.item
             if isinstance(item, ParamStatement):
+                kept = late_params if isinstance(item, GlobalParamStatement) else None
                 for assignment in item.assignments:
-                    params.setdefault(self.fold(assignment.name), []).append(assignment)
+                    if kept is not None:
+                        kept.append(assignment)
+                    else:
+                        params.setdefault(self.fold(assignment.name), []).append(assignment)
+                for function in item.functions:
+                    functions.setdefault(self.fold(function.name), []).append(function)
+            elif isinstance(item, FuncStatement):
+                functions.setdefault(self.fold(item.function.name), []).append(item.function)
             elif isinstance(item, ModelStatement):
                 models.setdefault(self.fold(item.name), []).append(item)
             elif isinstance(item, SubcktDefinition):
@@ -168,7 +198,10 @@ class Scope:
                 isinstance(item, OpaqueBlock) and item.kind != "control"
             ):
                 elsewhere = True
+        for assignment in late_params:
+            params.setdefault(self.fold(assignment.name), []).append(assignment)
         self._params = _frozen(params)
+        self._functions = _frozen(functions)
         self._models = _frozen(models)
         self._subckts = _frozen(subckts)
         self._elements = _frozen(elements)
@@ -218,6 +251,12 @@ class Scope:
     def subckts(self) -> Mapping[str, tuple[SubcktDefinition, ...]]:
         """Subcircuit definitions by folded name, in source order."""
         return self._subckts
+
+    @property
+    def functions(self) -> Mapping[str, tuple[FunctionDefinition, ...]]:
+        """User-defined functions by folded name, in source order: an xyce ``.FUNC`` line, or a
+        function on a ``.PARAM`` line; empty on the other dialects."""
+        return self._functions
 
     @property
     def elements(self) -> Mapping[str, tuple[Component, ...]]:
@@ -370,7 +409,7 @@ def _build_scope(
 
 
 def _lookup(
-    scope: Scope, table: Literal["params", "models", "subckts"], name: str
+    scope: Scope, table: Literal["params", "models", "subckts", "functions"], name: str
 ) -> tuple[Scope, tuple[object, ...]] | None:
     key = scope.fold(name)
     for candidate in scope.chain():
@@ -555,6 +594,21 @@ def _formula_references(
         text_start = formula.span.start + (1 if formula.delimiter else 0)
         context = _context_words(owner, formula, scope.dialect)
         for token in tokens or ():
+            if token.kind == "function" and _USER_FUNCTIONS[scope.dialect]:
+                if token.text.lower() not in builtin_functions(scope.dialect):
+                    start = text_start + token.start
+                    called = _lookup(scope, "functions", token.text)
+                    references.append(
+                        Reference(
+                            "function",
+                            token.text,
+                            Span(start, start + len(token.text)),
+                            scope.path,
+                            owner,
+                            called[1][0] if called else None,
+                        )
+                    )
+                continue
             if token.kind in ("node", "source"):
                 # What the expression reads (decision 0016 item 6): a net, or an element.
                 start = text_start + token.start
@@ -571,7 +625,9 @@ def _formula_references(
             start = text_start + token.start
             span = Span(start, start + len(token.text))
             found = _lookup(scope, "params", token.text)
-            target: object | None = found[1][-1] if found else None
+            target: object | None = None
+            if found:
+                target = found[1][0] if _FIRST_PARAM_WINS[scope.dialect] else found[1][-1]
             if target is None:
                 target = _stepped_parameter(scope, token.text)
             # A definition in scope masks an LTspice constant (scoping.md S11); otherwise a
@@ -585,7 +641,7 @@ def _formula_references(
             # Order is only meaningful within one scope: a body is expanded where it is
             # called, not where it is defined (§2.11.1; M5 review R1). In LTspice line order
             # never matters (reference, Netlist Structure).
-            if found and found[0] is scope and scope.dialect is not Dialect.LTSPICE:
+            if found and found[0] is scope and _ORDER_MATTERS[scope.dialect]:
                 first = found[1][0]
                 assert isinstance(first, ParamAssignment)
                 if first.name_span.start > span.start:
@@ -628,6 +684,10 @@ def _context_words(owner: object, formula: Formula, dialect: Dialect) -> frozens
     mask them there (m8-tasks 13.2). ngspice's ``time``, ``temper`` and ``hertz`` are reserved
     words everywhere already.
     """
+    # A function's arguments are local to its body (xyce scoping.md S8).
+    for function in walk_nodes(owner, FunctionDefinition, bodies=False):
+        if formula is function.body:
+            return frozenset(arg.name.lower() for arg in function.args)
     if dialect is not Dialect.LTSPICE:
         return frozenset()
     if formula is getattr(owner, "charge", None) or formula is getattr(owner, "flux", None):
