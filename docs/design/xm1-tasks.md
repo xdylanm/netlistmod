@@ -52,7 +52,7 @@ X-M1 makes the hidden xyce dialect read real netlists: the structure, names and 
 - [x] **B4 — Statements:** `.MODEL` and model types, `.SUBCKT`/`.ENDS`, includes, `.LIB`, `.GLOBAL`, `.PREPROCESS REPLACEGROUND`.
 - [x] **B5 — Elements:** R, C, L, V, I (DC/AC), D, X, K; `devices.md`.
 - [x] **B6 — The document and edit layers:** the X-M1 lines of the plan's section 8.1; topology, diagnostics and edits on xyce for the letters read.
-- [ ] **B7 — Evidence and the parameter lists:** closed instance-parameter lists per letter (5.1 point 29); spec entries for every construct, corpus files with manifests, solver tests (accept and reject probes, values and nets compared with Xyce), the README status table.
+- [x] **B7 — Evidence and the parameter lists:** closed instance-parameter lists per letter (5.1 point 29); spec entries for every construct, corpus files with manifests, solver tests (accept and reject probes, values and nets compared with Xyce), the README status table.
 
 ## 5. Findings and log
 
@@ -219,3 +219,4 @@ From the stage 1 reports: A1 (structure and names), A2 (numbers, parameters and 
 - 2026-11-16: G1, first round: points 1 (X-D1), 7 (X-D2), 9 (the R, C and L order), 19 (numbers), 21 (X-D5) and 22 (repeated `.param`) decided as recommended. The maintainer reviews the remaining points before stage 2.
 - 2026-11-16: G1, second round: every other point decided as recommended, except point 10: an R line requires a value.
 - 2026-11-16: B6 done: `NODE_INTO_INSTANCE` on xyce, K's model reference, the unresolved function and the point 9(b) and 9(c) findings; the edit tables and the model-first R, C and L edits; the X-M1 lines of the plan's section 8.1 marked done.
+- 2026-11-16: B7 done: R, C, L and D take the closed instance-parameter lists of their tables (point 29; `XY-IPN-001`), the union of a letter's levels, with a discrepancy row for Xyce's per-level lists; the xyce corpus with manifests (accept and rejection families, CRLF twins), its round-trip tests and its solver tests (runs, nets, unedited round trip, Xyce's outcome on each rejection); the status table regenerated.
