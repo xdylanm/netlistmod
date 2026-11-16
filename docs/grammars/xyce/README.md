@@ -107,9 +107,9 @@ number before D's model, a bare `AC`, a comma on a source line and `:` in a desi
 library is more lenient, the row says so: R's and D's parameter lists are the union of their
 levels' tables, while Xyce takes only the model level's.
 
-The rest is planned by task and milestone in [xm1-tasks.md](../../design/xm1-tasks.md) and the
-xyce plan, section 8: the document and edit layers for these letters (B6) in X-M1, directives
-in X-M2, then the remaining devices.
+The rest is planned by task and milestone in [xm2-tasks.md](../../design/xm2-tasks.md) and the
+xyce plan, section 8: the directives in X-M2, then the remaining devices. X-M1's record is
+[archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md).
 
 ## Validation status
 
