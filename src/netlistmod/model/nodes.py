@@ -882,9 +882,40 @@ class GlobalDirective(_DotCommand):
     nodes: tuple[Node, ...]
 
 
+@dataclass(frozen=True, slots=True)
+class IndentedLine:
+    """An xyce line that begins with blanks and is not a ``*``, ``;`` or ``+`` line.
+
+    Xyce reads such a line as a comment and ignores it ([xyce-ug] §4.1.3.1 p43), so the library
+    reads it the same way, as a node of its own kind (decision 0027 item 1), and reports it with
+    ``INDENTED_LINE_IGNORED``. ``text`` is the line as written, its leading blanks included and
+    its line end left out. xyce only; internal while the dialect is hidden (decision 0026).
+    """
+
+    text: str
+    span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class PreprocessDirective(_DotCommand):
+    """An xyce ``.PREPROCESS REPLACEGROUND TRUE|FALSE`` ([xyce-ref] §2.1.28 p125).
+
+    ``option`` and ``value`` are the two words as written; ``enabled`` is ``True`` for ``TRUE``.
+    When it is, ``GND``, ``GND!`` and ``GROUND`` in any case are the ground net across the whole
+    netlist, wherever the line stands (decision 0027 item 3). It changes net identity, so it is
+    topology (P4), not a :class:`Directive`. xyce only; internal while the dialect is hidden.
+    """
+
+    option: Identifier
+    value: Identifier
+    enabled: bool
+
+
 BodyItem: TypeAlias = (
     BlankLine
     | CommentLine
+    | IndentedLine
+    | PreprocessDirective
     | UnknownDirective
     | OpaqueBlock
     | OpaqueStatement

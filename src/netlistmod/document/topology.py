@@ -1,9 +1,10 @@
 """Read-only topology queries and the topology signature (architecture §7.7, decision 0006).
 
 Net identity follows ``docs/grammars/<dialect>/names.md``: node names compare case-insensitively;
-``0`` and ``gnd`` are the one ground net ``"0"``; a net inside a subcircuit definition is local
-to that definition unless it is ground, a ``.global`` node or an LTspice ``$G_*`` node, which are
-shared by every scope.
+``0`` and ``gnd`` are the one ground net ``"0"`` (on xyce ``0``, and ``GND``, ``GND!`` and
+``GROUND`` under ``.PREPROCESS REPLACEGROUND TRUE``); a net inside a subcircuit definition is local
+to that definition unless it is ground, a ``.global`` node, an LTspice ``$G_*`` node or an xyce
+``$G*`` node, which are shared by every scope.
 A definition's ports are nets of its own scope. Elements inside opaque ``.if`` blocks and
 included files are not seen (§7.8).
 
@@ -45,7 +46,8 @@ class Net:
     """A net: its canonical name and the scope it belongs to.
 
     ``name`` is folded (``"0"`` for ground). ``scope`` is ``()`` for a net that is shared by
-    every scope (``global_``: ground, a ``.global`` node or an LTspice ``$G_*`` node), otherwise
+    every scope (``global_``: ground, a ``.global`` node, an LTspice ``$G_*`` node or an xyce
+    ``$G*`` node), otherwise
     the definition scope.
     ``spellings`` lists the names as written, in first-seen order; nets compare by name and
     scope only.
@@ -90,8 +92,8 @@ class TopologySignature:
     Entries hold the exact text of every topology token: each element's scope, designator,
     type and ordered nodes; each definition's name and ordered ports; each ``X`` line's nodes
     and subcircuit name; each ``K`` line's inductors; each F, H and W line's controlling
-    source; each ngspice A line's port structure and ``%vnam`` sources; and the ``.global`` node
-    set.
+    source; each ngspice A line's port structure and ``%vnam`` sources; the ``.global`` node
+    set; and, on xyce, the value of ``.PREPROCESS REPLACEGROUND`` when the netlist has one.
     """
 
     entries: tuple[SignatureEntry, ...]
@@ -109,6 +111,7 @@ class TopologyView:
         """Compute the nets of every scope."""
         self._index = index
         self._dialect = index.dialect
+        self._replace_ground = index.replace_ground
         self._globals = frozenset(
             index.root.fold(node.name)
             for line in index.lines
@@ -224,15 +227,21 @@ class TopologyView:
             }
         )
         entries.append(("global", tuple(global_nodes)))
+        if self._index.preprocess:
+            # `.PREPROCESS REPLACEGROUND` changes which nets are ground (decision 0027 item 3),
+            # so its value is topology; only xyce has the statement, so no other signature moves.
+            values = tuple(directive.value.name for directive in self._index.preprocess)
+            entries.append(("replaceground", values))
         return TopologySignature(tuple(entries))
 
     def _shared(self, name: str) -> bool:
         return name == GROUND or name in self._globals or is_automatic_global(name, self._dialect)
 
     def _key(self, scope: Scope, name: str) -> tuple[ScopePath, str]:
-        canonical = net_name(name, self._dialect)
+        grounds = self._replace_ground
+        canonical = net_name(name, self._dialect, replace_ground=grounds)
         if (
-            is_ground(name, self._dialect)
+            is_ground(name, self._dialect, replace_ground=grounds)
             or canonical in self._globals
             or is_automatic_global(name, self._dialect)
         ):

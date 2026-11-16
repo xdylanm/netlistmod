@@ -1,0 +1,34 @@
+id: XY-PRE-001
+dialect: xyce
+construct: .PREPROCESS REPLACEGROUND TRUE|FALSE
+manual_ref:
+- '[xyce-ref] §2.1.28 p125 ".PREPROCESS REPLACEGROUND (Ground Synonym)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- preprocess_stmt
+- pp_option
+- pp_value
+- PREPROCESS_KW
+- REPLACEGROUND_KW
+- TRUE_KW
+- FALSE_KW
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_preprocess_replaceground_is_typed
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_preprocess_replaceground_continues
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_preprocess_replaceground_without_a_boolean_is_rejected
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_second_preprocess_replaceground_is_rejected
+- tests/document/test_xyce_names.py::test_replaceground_sets_the_netlist_wide_flag
+- tests/document/test_xyce_names.py::test_the_signature_records_replaceground
+- tests/document/test_xyce_names.py::test_an_edit_cannot_change_replaceground
+- tests/solver/test_xyce_names_probes.py::test_replaceground_makes_the_synonyms_ground
+- tests/solver/test_xyce_names_probes.py::test_ground_with_a_bang_is_not_a_synonym
+- tests/solver/test_xyce_names_probes.py::test_replaceground_false_keeps_gnd_a_node
+- tests/solver/test_xyce_names_probes.py::test_replaceground_in_a_body_acts_on_the_whole_netlist
+- tests/solver/test_xyce_names_probes.py::test_replaceground_stops_on_a_second_line_or_a_bad_value
+validation_note: 'Validated on XyceNF Release 7.10.0: with TRUE, GND, GND! and GROUND in any case are node 0, GROUND! is not, the statement acts on the whole netlist from a subcircuit body too, and a second statement, `1`, `yes` or a missing value stops Xyce.'
+notes: 'A typed `PreprocessDirective` (`option`, `value`, `enabled`; decision 0027 item 3), allowed in a subcircuit body. Its flag makes the ground synonyms ground across the whole netlist (names.md N2); it is part of the topology signature, so no edit can change it (P4). A second statement is a ParseError at its keyword, since Xyce stops. The other `.PREPROCESS` forms are UnsupportedConstruct (XY-UNS-001).'

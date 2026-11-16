@@ -1,0 +1,26 @@
+id: XY-NAM-001
+dialect: xyce
+construct: node and device names (legal characters)
+manual_ref:
+- '[xyce-ref] §2.3.2 p184 "Legal Characters in Node and Device Names"'
+- '[xyce-ug] §4.1.3 p41 "Elements"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- _XY_CHAR
+- WORD
+- NODE_WORD
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_global_node_takes_the_name_class
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_a_name_outside_the_class_is_rejected
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_the_node_field_terminal_also_takes_a_colon
+- tests/document/test_xyce_names.py::test_names_fold_by_ascii_case_only
+- tests/solver/test_xyce_names_probes.py::test_name_characters_of_the_class
+- tests/solver/test_xyce_names_probes.py::test_names_outside_the_manual_class_run
+- tests/solver/test_xyce_names_probes.py::test_case_folds_in_ascii_only
+validation_note: 'Validated on XyceNF Release 7.10.0: the names of the class are nodes of their own, and case folds in ASCII only. Xyce also takes `"` and non-ASCII letters, which the library refuses (discrepancies.md).'
+notes: 'A name is printable ASCII except blanks and ( ) { } , : ; " '' = (decision 0027 item 3, from the manual''s class with `=` left out); `[` and `]` are name characters. Non-ASCII is refused. `:` is allowed only in a node field of an element line (NODE_WORD, decision X-D2), which X-M1 B5 reads; `.GLOBAL` and the other statements take WORD. Names compare by ASCII lower case (names.md N5).'

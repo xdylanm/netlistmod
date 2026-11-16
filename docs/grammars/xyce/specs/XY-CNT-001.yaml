@@ -1,0 +1,27 @@
+id: XY-CNT-001
+dialect: xyce
+construct: '`+` continuation lines, across blank, comment and indented lines'
+manual_ref:
+- '[xyce-ug] §4.1.3.2 p43 "Continuation Lines"'
+- '[xyce-ref] §2.1.39.3 p163 "+ (Line Continuation)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- SEP
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_structure.py::test_a_continuation_joins_across_blank_comment_and_indented_lines
+- tests/grammar/xyce/test_xyce_structure.py::test_a_continuation_line_may_hold_only_a_comment
+- tests/grammar/xyce/test_xyce_structure.py::test_a_comment_line_not_followed_by_a_continuation_ends_the_statement
+- tests/grammar/xyce/test_xyce_structure.py::test_indented_star_and_plus_lines_are_not_indented_lines
+- tests/grammar/xyce/test_xyce_structure.py::test_crlf_continuation_across_comments
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_preprocess_replaceground_continues
+- tests/solver/test_xyce_structure_probes.py::test_a_continuation_joins_across_comments_and_blank_lines
+- tests/solver/test_xyce_structure_probes.py::test_a_semicolon_line_is_a_comment
+- tests/solver/test_xyce_structure_probes.py::test_a_continuation_joins_across_an_indented_line
+- tests/solver/test_xyce_structure_probes.py::test_a_continuation_never_joins_the_title
+validation_note: 'Validated on XyceNF Release 7.10.0: a `+` line, indented or not, joins the last line that is not a comment across blank, `*`, `;` and indented lines, and never the title.'
+notes: 'A `+` line continues the last line that is not a comment (decision 0027 item 2). In a statement the line end before the lines between is a separator (the third alternative of SEP, whose lookahead finds the `+` line), so those lines belong to the statement''s span and its Line, and each comment or indented line among them is one of its trailing comments, an indented one with its blanks. A blank line between is part of a separator. A `+` line holding only a comment is fine. A `+` line with only the title, comments and blank lines before it joins nothing and is a ParseError, as on Xyce (XY-UNS-001); after a refused dot-command it is refused with it.'

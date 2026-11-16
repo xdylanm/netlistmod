@@ -1,0 +1,22 @@
+id: XY-NUM-002
+dialect: xyce
+construct: numbers in expressions and .PARAM values (units and the imaginary J)
+manual_ref:
+- '[xyce-ug] §4.1.3 p41–42 "Elements"'
+- '[xyce-ref] §2.2.1 p171–172 "Expressions in .PARAM or .GLOBAL_PARAM Statements"'
+status: observed
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- EXPR_NUMBER
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_the_expression_reader_takes_its_units_and_j
+- tests/grammar/xyce/test_xyce_names_numbers.py::test_the_expression_reader_refuses_the_device_units
+- tests/solver/test_xyce_names_probes.py::test_expressions_take_their_units
+- tests/solver/test_xyce_names_probes.py::test_expressions_refuse_the_device_units
+- tests/solver/test_xyce_names_probes.py::test_expressions_take_an_imaginary_part
+validation_note: 'Observed on XyceNF Release 7.10.0: the manual documents the scale factors and the J suffix, not the shorter unit list of expressions, which rests on the solver.'
+notes: 'As XY-NUM-001, but the unit is one of a, f, h, hz, m, s and v, and an optional `j` (the imaginary part) may follow (decision 0027 item 8), so `.param r=1kohm` is refused, as Xyce refuses it. X-M1 B3 reads `.PARAM` values with this terminal, and the formula grammar has the same number without a sign.'

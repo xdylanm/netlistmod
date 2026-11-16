@@ -116,3 +116,24 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 4, 
 - **`.model`** has `ako:`, and a string or bare word for `mfg` and `type` only. LTRA's ngspice flags are refused with their own message (the reference lists none), and a list of values after a parameter is a syntax error (LTspice has no CPL).
 - **`.ic`** has `i(L1)=value`; **`.meas`** may omit the analysis, and has `noise` and `op`; **`.save`** has device currents and wildcards.
 - **`.step`** is a typed node, with no limit on nesting. A parameter swept by `.step param` counts as defined.
+
+## 6. Xyce (hidden)
+
+The rules are in [decision 0027](../decisions/0027-xyce-structure-names-and-values.md) and the
+syntax facts in [docs/grammars/xyce/](../grammars/xyce/README.md). The xyce-only nodes live in
+`netlistmod.model.nodes` and are not exported while the dialect is hidden (decision 0026). What
+differs:
+
+- **Spec IDs:** `XY-STR-001`, `XY-TTL-001`, `XY-COM-001`, `XY-CNT-001`, `XY-IND-001`, `XY-END-001`,
+  `XY-NAM-001`, `XY-GLB-001`, `XY-PRE-001`, `XY-NUM-001`, `XY-NUM-002`, `XY-UNS-001`.
+- **Comments:** `;` starts a comment line or ends any line, `.END`'s included (`CommentLine`, a
+  trailing comment). A `+` line joins across blank, comment and indented lines, which belong to
+  the statement: their comments are in its `trailing_comments`, and its `span` covers them.
+- **`IndentedLine(text, span)`:** a line that begins with blanks and is not a `*`, `;` or `+` line,
+  which Xyce reads as a comment; `text` keeps the blanks.
+- **`PreprocessDirective`** (`_DotCommand` fields, `option: Identifier`, `value: Identifier`,
+  `enabled: bool`): `.PREPROCESS REPLACEGROUND TRUE|FALSE`, allowed in a body; a second one is a
+  `ParseError`. It is topology (net identity), not a `Directive`. The other `.PREPROCESS` forms are
+  `UnsupportedConstruct`.
+- **`.GLOBAL`** is `GlobalDirective`, with no commas between its names.
+- **Dot-commands** the dialect does not read yet are `UnsupportedConstruct`.

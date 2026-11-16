@@ -55,6 +55,7 @@ from netlistmod.model.nodes import (
     OpaqueStatement,
     OsdiDevice,
     ParamStatement,
+    PreprocessDirective,
     RcLine,
     Resistor,
     SaveDirective,
@@ -121,6 +122,7 @@ class Scope:
         "_params",
         "_parent",
         "_path",
+        "_replace_ground",
         "_subckts",
     )
 
@@ -132,9 +134,12 @@ class Scope:
         lines: Lines,
         parent: Scope | None,
         dialect: Dialect,
+        *,
+        replace_ground: bool = False,
     ) -> None:
         """Build the tables of one scope; the builder adds the children."""
         self._dialect = dialect
+        self._replace_ground = replace_ground
         self._path = path
         self._display = display
         self._definition = definition
@@ -225,6 +230,13 @@ class Scope:
         an ``.include`` or ``.lib`` statement, or an ``.if`` or ``.lib`` block (§7.8)."""
         return self._may_define_elsewhere
 
+    @property
+    def replace_ground(self) -> bool:
+        """Whether ``GND``, ``GND!`` and ``GROUND`` are the ground net here: an xyce netlist with
+        ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it (``names.md``); the same in every scope.
+        """
+        return self._replace_ground
+
     def fold(self, name: str) -> str:
         """``name`` in the form this netlist's dialect compares names in."""
         return fold(name, self.dialect)
@@ -271,7 +283,15 @@ class Index:
         """Build lines, scopes and references for a parsed netlist."""
         self.dialect = dialect
         self.lines = build_lines(items, (), source, dialect)
-        self.root = _build_scope(self.lines, (), (), None, None, dialect)
+        # `.PREPROCESS REPLACEGROUND` acts on the whole netlist, wherever it stands (decision
+        # 0027 item 3); the grammar admits one.
+        self.preprocess = tuple(
+            line.item for line in self.lines.walk() if isinstance(line.item, PreprocessDirective)
+        )
+        self.replace_ground = any(directive.enabled for directive in self.preprocess)
+        self.root = _build_scope(
+            self.lines, (), (), None, None, dialect, replace_ground=self.replace_ground
+        )
         self.scopes = tuple(self.root.walk())
         self._by_path: dict[ScopePath, Scope] = {}
         for scope in self.scopes:
@@ -326,8 +346,10 @@ def _build_scope(
     definition: SubcktDefinition | None,
     parent: Scope | None,
     dialect: Dialect,
+    *,
+    replace_ground: bool,
 ) -> Scope:
-    scope = Scope(path, display, definition, lines, parent, dialect)
+    scope = Scope(path, display, definition, lines, parent, dialect, replace_ground=replace_ground)
     children = []
     for line in lines:
         if isinstance(line.item, SubcktDefinition) and line.body is not None:
@@ -340,6 +362,7 @@ def _build_scope(
                     line.item,
                     scope,
                     dialect,
+                    replace_ground=replace_ground,
                 )
             )
     scope._children = tuple(children)
@@ -577,9 +600,10 @@ def _node_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) ->
 
 def _net_node(scope: Scope, name: str) -> object | None:
     dialect = scope.dialect
-    if is_ground(name, dialect) or is_automatic_global(name, dialect):
+    grounds = scope.replace_ground
+    if is_ground(name, dialect, replace_ground=grounds) or is_automatic_global(name, dialect):
         return name
-    key = net_name(name, dialect)
+    key = net_name(name, dialect, replace_ground=grounds)
     nodes = [*(scope.definition.ports if scope.definition is not None else ())]
     for line in scope.lines:
         if isinstance(line.item, Component):
@@ -590,7 +614,10 @@ def _net_node(scope: Scope, name: str) -> object | None:
     for line in root.lines:
         if isinstance(line.item, GlobalDirective):
             nodes.extend(line.item.nodes)
-    return next((node for node in nodes if net_name(node.name, dialect) == key), None)
+    return next(
+        (node for node in nodes if net_name(node.name, dialect, replace_ground=grounds) == key),
+        None,
+    )
 
 
 def _context_words(owner: object, formula: Formula, dialect: Dialect) -> frozenset[str]:

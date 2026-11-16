@@ -616,6 +616,10 @@ class StatementsRules(ElementsRules):
         nodes = element.all(Node)
         return _Item(element.end, lambda span: GlobalDirective(**_dot(element, span), nodes=nodes))
 
+    def global_node(self, children: list[Any]) -> _Field:
+        # xyce's `.GLOBAL` names, which take no `:` (decision 0027 item 3).
+        return self.node(children)
+
     def step_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         tokens = element.all(Token)
