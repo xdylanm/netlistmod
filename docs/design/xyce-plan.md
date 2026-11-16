@@ -157,6 +157,55 @@ X-M0 keyed every dialect branch that an xyce load reaches ([decision 0026](../de
 - **X-M5 (controlled and behavioural sources):** `model/_rules_controlled.py:70`, `:171` and `:185`; `model/_rules_nonlinear.py:46` and `:206`; `edit/_ops_nonlinear.py:23`, `:98`, `:105` and `:185`; `document/diagnostics.py:325` `_CONTROL_RUNS`.
 - **X-M6 (lines):** `model/_rules_lines.py:85`, `:135` and `:174`.
 
+### 8.2 Held until X-M8
+
+While the dialect is hidden, the user documentation does not describe it, and no new public name
+is given to it (xm1-tasks 5.1 point 31). X-M8 restores what is held here and decides the names.
+
+**The X-M8 release notes.** The best-effort additions that X-M0 to X-M7 make to the public API
+(decision 0024 item 11), each harmless on ngspice and LTspice, which X-M8 lists in the release
+notes:
+
+- [ ] `ParamStatement.functions` (empty on ngspice and LTspice), with `FunctionDefinition` in
+  `netlistmod.model.values` (X-M1 B3);
+- [ ] `MutualCoupling.model` (`None` on ngspice and LTspice; X-M1 B5);
+- [ ] `Resistor`, `Capacitor` and `Inductor` `.value_keyword_span` (`None` on ngspice and
+  LTspice; X-M1 R1);
+- [ ] the `ReferenceKind` `"function"` (X-M1 B6);
+- [ ] the `DiagnosticCode` members `INDENTED_LINE_IGNORED` (X-M1 B2), `LIB_EXTRA_ENTRIES` and
+  `NUMERIC_MODEL_NAME` (X-M1 R1), which `docs/usage/errors.md` lists only as reserved;
+- [ ] the growth of the `BodyItem` and `TopLevelItem` unions by `IndentedLine`,
+  `PreprocessDirective`, `FuncStatement` and `GlobalParamStatement` (X-M1 B2 and B3), and
+  `LibCall`, an `OpaqueStatement` subclass (X-M1 B4): nodes that only an xyce parse produces;
+- [ ] the internal names X-M8 makes public, or keeps internal: `Scope._functions` and
+  `Scope._replace_ground` (X-M1 B3 and B2; point 31), and the parse's record of indented lines
+  inside continued statements (`model.nodes.indented_comments`, X-M1 R1).
+
+**`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
+named:
+
+- `UNRESOLVED_MODEL`, after "which may define it.": "On the hidden xyce dialect, when an R, C or
+  L's model name is a visible parameter, the message adds that Xyce reads the word as the value."
+- `UNRESOLVED_PARAM`, after "Severity as for `UNRESOLVED_MODEL`.": "On the hidden xyce dialect, a
+  call to a function that no visible `.FUNC` (or `.PARAM` function) defines is reported the same
+  way, with a message that names a function."
+- `NODE_INTO_INSTANCE`, in place of "LTspice only.": "LTspice, and the hidden xyce dialect." and,
+  after "a net of its own.": "On xyce only an internal node of the definition is joined (not a
+  port or a global), and `X1:X2:m` reaches through both instances."
+- `INDENTED_LINE_IGNORED`, in place of its reserved entry: "Xyce only. A line that begins with
+  blanks and is not a `*`, `;` or `+` line: Xyce reads it as a comment and ignores it, even an
+  element line or a dot-command, so the library reads it as a comment too; also such a line
+  between a statement and its `+` line, which the library keeps among the statement's comments. A
+  warning, on the line." Then: "**What to do:** remove the indentation if the line is meant as a
+  statement; to keep it as a comment, begin it with `*`."
+- `LIB_EXTRA_ENTRIES`, in place of its reserved entry: "Xyce only. A `.LIB` call that names more
+  than one entry, of which Xyce loads only the first, ignoring the rest with a warning. Info, on
+  the entries after the first." Then: "**What to do:** write one `.LIB` call per entry."
+- `NUMERIC_MODEL_NAME`, in place of its reserved entry: "Xyce only. A `.model` whose name reads
+  as a number (`.model 2k R`): the library reads `2k` on an element line as a value, while Xyce
+  takes it as that model. A warning, on the model name." Then: "**What to do:** rename the model
+  so it begins with a letter."
+
 ## 9. Risks
 
 1. **Leading whitespace.** An indented element line is a comment to xyce. The manual's own TCAD examples are indented, so X-M0 probes the rule before anything relies on it.
