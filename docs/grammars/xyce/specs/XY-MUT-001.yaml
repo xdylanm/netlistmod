@@ -1,0 +1,29 @@
+id: XY-MUT-001
+dialect: xyce
+construct: K mutual inductors (coupling and optional CORE model)
+manual_ref:
+- '[xyce-ref] §2.3.6 p194–195 "Mutual Inductors"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- mutual_coupling
+- inductor_ref
+- K_NAME
+- L_REF
+core_rules:
+- value
+- model
+tests:
+- tests/grammar/xyce/test_xyce_elements.py::test_a_coupling_takes_inductors_a_value_and_an_optional_model
+- tests/grammar/xyce/test_xyce_elements.py::test_one_inductor_needs_the_model
+- tests/grammar/xyce/test_xyce_elements.py::test_coupling_forms_xyce_stops_on
+- tests/grammar/xyce/test_xyce_elements.py::test_the_other_dialects_have_no_coupling_model
+- tests/solver/test_xyce_element_probes.py::test_coupling_forms
+- tests/solver/test_xyce_element_probes.py::test_the_coupling_changes_the_current
+- tests/solver/test_xyce_element_probes.py::test_xyce_runs
+- tests/solver/test_xyce_element_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0: two or more inductors and a coupling, braced or not, then an optional CORE model, which may couple one winding; the coupling changes the primary''s current. Xyce stops on the model before the coupling, and runs one inductor without a model, which the library refuses (discrepancies.md).'
+notes: '`MutualCoupling` gains `model: ModelReference | None = None` (decision 0027 item 6; point 12), `None` on ngspice and LTspice. The inductors are L_REF names (no `:`), then the coupling value, then the model, a WORD, never a number. One inductor needs the model (the manual''s "could be just one inductor" applies to the core form only). The model types table gives MutualCoupling `CORE` (XY-MOD-001); the model reference in the index is X-M1 B6''s.'

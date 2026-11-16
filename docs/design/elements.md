@@ -35,7 +35,7 @@ more than one token, and decides how that name is written.
 | Node | Extra fields |
 |---|---|
 | `Resistor`, `Capacitor`, `Inductor` | `value: Value \| None`, `value_keyword: str \| None`, `model: ModelReference \| None`, `flags` (an LTspice `noiseless`); `Capacitor.charge` and `Inductor.flux`: `Formula \| None`, the behavioural forms (ngspice `q=`, LTspice `Q=` and `Flux=`), with `value` `None`; LTspice's hysteretic L has no value and its core parameters in `params` (decision 0016 item 4) |
-| `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`; `nodes == ()` |
+| `MutualCoupling` | `inductors: tuple[ElementReference, ...]`, `value: Value`, `model: ModelReference \| None = None` (an xyce CORE model, decision 0027 item 6; `None` on ngspice and LTspice); `nodes == ()` |
 | `VoltageSource`, `CurrentSource` | `dc: Value \| None`, `dc_keyword: bool`, `ac: AcSpec \| None`, `flags` (an LTspice `load`); `params == ()` in ngspice |
 | `Diode` | `model: ModelReference`, `flags: tuple[Flag, ...]`, `area: Value \| None` (LTspice's positional area) |
 | `BipolarTransistor`, `Mosfet`, `Jfet`, `Mesfet` (subclasses of `Transistor`, for `isinstance`) | `model: ModelReference`, `flags: tuple[Flag, ...]` (`off`, and an ngspice VDMOS's `thermal`), `area: Value \| None` (a positional area: J and Z, and an LTspice Q); `nodes` are the nodes as written (decision 0014) |
@@ -153,6 +153,30 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 
 - **K:** three or more inductors, as in ngspice.
 - **Numbers:** the embedded decimal is native (`notation == "rkm"`), and there is no `rkm` option.
 - **Separators:** no comma separator and no `\\` continuation; see the comment rules in decision 0009 item 9.
+
+## 6. Xyce (hidden)
+
+The rules are in [decision 0027](../decisions/0027-xyce-structure-names-and-values.md) items 5
+and 6 (point 10 as amended by the maintainer: an R without a value is refused unless it is the
+geometry form), and the syntax facts in [docs/grammars/xyce/](../grammars/xyce/README.md). X-M1
+reads R, C, L, K, D, V, I and X with the shapes above. What differs:
+
+- **Spec IDs:** `XY-ELM-001` (node fields and instance parameters), `XY-RCL-001`, `XY-MUT-001`,
+  `XY-DIO-001`, `XY-SRC-001` and `XY-SUB-001`.
+- **Fields:** a node field may hold a `:` path into an instance (`X1:m`, decision X-D2); a
+  designator, a model and a subcircuit name may not. An instance value may be a bare expression
+  without blanks, a `Formula` with no delimiter (decision X-D5). No comma separates fields.
+- **R, C, L:** the model right after the nodes, then the value; the value may be the parameter
+  `R=`, `C=` or `L=` instead, recorded in `value` and `value_keyword` and left out of `params`.
+  `R` needs a value unless it has a model and both `L=` and `W=` (its `value` is then `None`); C
+  needs a value, `C=`, `Q=` (the expression in `charge`) or `L=`; L needs a value. `TC=a,b` is a
+  `ValueList`. The ngspice order, a value written twice and the long keywords are refused.
+- **K:** one or more inductors, the coupling, then an optional CORE `model`; one inductor needs
+  it.
+- **D:** as LTspice's: `area` is the positional area, and `OFF` may take a value (`OFF=1`).
+- **V, I:** `[DC] value`, then `AC magnitude [phase]`; no parameter, function or distortion. A
+  transient function is `UnsupportedConstruct` until X-M3, and a bare `AC` is refused.
+- **X:** `PARAMS:` optional, `M=` an ordinary parameter.
 
 ## Behavioural expressions (decision 0016)
 

@@ -7,10 +7,11 @@
 // includes and `.LIB`. The names and the two number readers of decision 0027 items 3 and 8 are
 // defined here for the statements and element lines that use them.
 //
-// Every other line is refused: a dot-command the overlay does not read yet, and the other
-// `.PREPROCESS` forms, raise UnsupportedConstruct from the transformer; an element line has no
-// rule, so the loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and
-// A and N, which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines
+// The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X. Every other line is
+// refused: a dot-command the overlay does not read yet, and the other `.PREPROCESS` forms, raise
+// UnsupportedConstruct from the transformer; an element line of another letter has no rule, so the
+// loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and A and N,
+// which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines
 // that follow a refused dot-command joins it, and is refused with it. A `+` line with only the
 // title, comments and blank lines before it is a ParseError: the title is a comment, so there is
 // no line for it to join.
@@ -34,6 +35,7 @@
 %import .core (SEP, TRAILING_COMMENT, WORD, NUMBER, GLOBAL_KW)
 %import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, PARAM_KW, RPAR)
 %import .core (x_name, ends_line, param, rparen, MODEL_KW, LPAR, SUBCKT_KW, ENDS_KW, ZERO_PORT)
+%import .core (value, model, dc_spec, dc_keyword, ac_spec, DC_KW, AC_KW, OFF_KW)
 
 %ignore WS
 %ignore CONT
@@ -72,6 +74,14 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | include_line
                | lib_call
                | lib_section
+               | resistor
+               | capacitor
+               | inductor
+               | mutual_coupling
+               | voltage_source
+               | current_source
+               | diode
+               | subckt_instance
 ?top_statement: global_stmt
               | global_param_stmt
 
@@ -303,3 +313,95 @@ LIB_KW.4: ".lib"i
 ENDL_KW.4: ".endl"i
 BLOCK_DOT_NAME.4: /\.[a-z][a-z0-9_-]*/i
 BLOCK_TEXT.2: /[^ \t\r\n](?:[^\r\n]|\r(?!\n))*/
+
+// ---------------------------------------------------------------------------------------------
+// Element lines (X-M1 B5; decision 0027 items 5 and 6). Fields follow core.lark's design: each
+// field rule is "gap, then field", so its token is lexed in a state that offers only what may
+// stand there. A designator is the letter and the name class without `:` (XY-NAM-001); a node
+// field takes NODE_WORD, which also holds `:` (decision X-D2). A model or subcircuit name is a
+// WORD, which holds no `:`; on X every name is a NODE_WORD until the parser knows which is last,
+// so the transformer refuses a `:` in the subcircuit's name. No comma separates fields.
+// spec: XY-ELM-001
+node: SEP NODE_WORD
+    | (SEP | TRAILING_COMMENT) node
+
+// An instance parameter name=value: the name is one token whose lookahead finds the `=`, above
+// WORD and NODE_WORD, so a name written before `=` is never a model or a node. Its value is a
+// number of the device reader, an expression in braces or quotes, or a bare expression without
+// blanks (decision X-D5).
+// spec: XY-ELM-001
+inst_param: SEP INST_KEY EQ _inst_value
+          | (SEP | TRAILING_COMMENT) inst_param
+_inst_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | BARE_FORMULA
+INST_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
+
+// R, C and L ([xyce-ref] §2.3.7 p201, §2.3.4 p186, §2.3.5 p191; decision 0027 item 5): the nodes,
+// the model if any, then the value, then parameters. A word after the nodes is the model, and a
+// number is the value (decision 0024 item 7). A word after the value is the ngspice order,
+// recognised only to be refused (late_model). `TC=a,b` takes one or two values ([xyce-ref]
+// §2.3.7 p202). Which value forms each letter requires (`R=`, `C=`, `L=`, `Q=`, the geometry
+// forms) is checked by the transformer.
+// spec: XY-RCL-001
+resistor: R_NAME node node _rcl
+capacitor: C_NAME node node _rcl
+inductor: L_NAME node node _rcl
+_rcl: model? value? _rcl_tail
+    | value late_model
+_rcl_tail: (inst_param | xy_tc_param)* (NL | eol)
+xy_tc_param: SEP TC_KW EQ _inst_value (CSEP _inst_value)?
+           | (SEP | TRAILING_COMMENT) xy_tc_param
+late_model: SEP WORD REST_TEXT* NL
+TC_KW.4: /tc(?=[ \t]*=)/i
+R_NAME.4: /[Rr]/ _XY_CHAR*
+C_NAME.4: /[Cc]/ _XY_CHAR*
+L_NAME.4: /[Ll]/ _XY_CHAR*
+
+// K ([xyce-ref] §2.3.6 p194; decision 0027 item 6): one or more inductors, the coupling, then an
+// optional CORE model. The transformer requires the model for one inductor.
+// spec: XY-MUT-001
+mutual_coupling: K_NAME inductor_ref+ value model? (NL | eol)
+inductor_ref: SEP L_REF
+            | (SEP | TRAILING_COMMENT) inductor_ref
+K_NAME.4: /[Kk]/ _XY_CHAR*
+L_REF.4: /[Ll]/ _XY_CHAR*
+
+// D ([xyce-ref] §2.3.8 p207): the model, an optional positional area, then flags (`OFF`, or
+// `OFF=` and a value) and parameters.
+// spec: XY-DIO-001
+diode: D_NAME node node model value? (inst_param | d_flag)* (NL | eol)
+d_flag: SEP OFF_KW
+      | SEP OFF_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT) d_flag
+OFF_VALUE_KW.4: /off(?=[ \t]*=)/i
+D_NAME.4: /[Dd]/ _XY_CHAR*
+
+// V and I, their DC and AC parts ([xyce-ref] §2.3.10 p226, §2.3.9 p221; decision 0027 item 6):
+// `[DC] value`, then `AC magnitude [phase]`, in that order, with no comma and no parameter. A bare
+// `AC` is recognised only to be refused (ac_bare). A transient function (src_function) is
+// recognised with the rest of its line only to be refused whole until X-M3.
+// spec: XY-SRC-001
+voltage_source: V_NAME node node _xsrc
+current_source: I_NAME node node _xsrc
+_xsrc: dc_spec? _xsrc_ac
+_xsrc_ac: ac_spec value? _xsrc_end
+        | ac_bare
+        | _xsrc_end
+_xsrc_end: src_function | NL | eol
+ac_bare: SEP AC_KW (NL | eol)
+       | (SEP | TRAILING_COMMENT) ac_bare
+src_function: SEP SRC_FN_KW REST_TEXT* NL
+            | (SEP | TRAILING_COMMENT) src_function
+SRC_FN_KW.3: /(?:pulse|sin|exp|pwl|sffm|pat)(?![A-Za-z0-9_])/i
+V_NAME.4: /[Vv]/ _XY_CHAR*
+I_NAME.4: /[Ii]/ _XY_CHAR*
+
+// X ([xyce-ref] §2.3.33 p803; decision 0027 item 6): nodes, the subcircuit, then `PARAMS:`
+// (optional) and parameters, with no comma; `M=` is an ordinary parameter. The name list is right-recursive,
+// as in core.lark, so a name is classified once the parser sees what follows it.
+// spec: XY-SUB-001
+subckt_instance: X_NAME node (x_node | x_last)
+x_node: x_name_node (x_node | x_last)
+x_last: x_name_node params_marker? inst_param* (NL | eol)
+x_name_node: SEP NODE_WORD
+           | (SEP | TRAILING_COMMENT) x_name_node
+X_NAME.4: /[Xx]/ _XY_CHAR*

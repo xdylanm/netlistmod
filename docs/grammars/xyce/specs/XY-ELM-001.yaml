@@ -1,0 +1,30 @@
+id: XY-ELM-001
+dialect: xyce
+construct: element fields (node fields with `:` paths, instance parameters with bare values)
+manual_ref:
+- '[xyce-ref] §2.3.1.2 p182–183 "Subcircuit Nodes"'
+- '[xyce-ref] §2.3.2 p184 "Legal Characters in Node and Device Names"'
+- '[xyce-ref] §2.2 p164 "Parameters and Expressions"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-15'
+grammar:
+- node
+- inst_param
+- _inst_value
+- INST_KEY
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_elements.py::test_a_node_field_takes_a_path_into_an_instance
+- tests/grammar/xyce/test_xyce_elements.py::test_designators_and_model_names_take_no_colon
+- tests/grammar/xyce/test_xyce_elements.py::test_designators_take_the_name_class
+- tests/grammar/xyce/test_xyce_elements.py::test_fields_take_no_comma
+- tests/grammar/xyce/test_xyce_elements.py::test_instance_values_may_be_bare_expressions_without_blanks
+- tests/solver/test_xyce_element_probes.py::test_a_node_path_reaches_into_an_instance
+- tests/solver/test_xyce_element_probes.py::test_resistor_forms
+- tests/solver/test_xyce_element_probes.py::test_subcircuit_call_forms
+- tests/solver/test_xyce_element_probes.py::test_xyce_runs
+validation_note: 'Validated on XyceNF Release 7.10.0: `X1:c` on a device line joins the node `c` of instance `X1`; an instance value may be a bare expression without blanks; a comma on an R line stops Xyce. Xyce runs a comma on a V line and a `:` in a designator, which the library refuses (discrepancies.md).'
+notes: 'The fields every xyce element line shares (decision 0027 items 3 and 10; decision X-D2). A node field is a NODE_WORD (XY-NAM-001), so it may hold `:`; the library keeps `X1:m` as a net of its own, which the document layer resolves and reports (X-M1 B6). A designator is the letter and the name class without `:`; a model or subcircuit name is a WORD, without `:`. An instance parameter is `name=value`: the name is one token whose lookahead finds the `=` (INST_KEY, a letter or `_` first, so it never meets a number), and the value a NUMBER of the device reader, a braced or quoted expression, or a bare expression without blanks (BARE_FORMULA, decision X-D5), a `Formula` without delimiters. The parameter names are not checked against the manual''s tables, where Xyce stops on an unknown one. No comma separates fields.'
