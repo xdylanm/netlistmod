@@ -320,10 +320,10 @@ A `Line` is one **logical** item: a statement with all its continuation lines an
 
 ### 6.5 Directives
 
-- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError`.
+- Known directives get typed nodes (`.tran`, `.ac`, `.dc`, `.op`, `.options`/`.option`, `.temp`, `.ic`, `.nodeset`, `.save`, `.meas`/`.measure`; `.step` for LTspice). `.probe` stays an `UnknownDirective` in v1: it has its own sublanguage (decision 0005). These directives are top-level only; inside a `.subckt` body they are a `ParseError` (on the hidden xyce dialect `.ic`, `.dcvolt` and `.nodeset` are allowed in a body, [decision 0028](decisions/0028-xyce-directives.md) item 2).
 - `.include` and `.lib` statements are **opaque**: preserved verbatim, not resolved, not read, not indexed. The library may add an `.include` (Section 7.9) but never interprets one.
 - The first physical line is always the `Title` (implicit unless it is a `.title` statement; the node records which). `.title` may also occur later and replaces the displayed title; both source nodes are retained. `.end` is required (Section 6.3, rule 2). See [decision 0002](decisions/0002-grammar-structure-policy.md).
-- An **unknown dot-command** is preserved as `UnknownDirective(raw)` in ngspice: it is not topology, so preserving it is safe. LTspice stops at one and has a documented set, so its overlay has a **closed list**: the reference's untyped commands are `UnknownDirective`, anything else is a `ParseError`, and `.machine` is an `UnsupportedConstruct` ([decision 0009](decisions/0009-ltspice-dialect.md)).
+- An **unknown dot-command** is preserved as `UnknownDirective(raw)` in ngspice: it is not topology, so preserving it is safe. LTspice stops at one and has a documented set, so its overlay has a **closed list**: the reference's untyped commands are `UnknownDirective`, anything else is a `ParseError`, and `.machine` is an `UnsupportedConstruct` ([decision 0009](decisions/0009-ltspice-dialect.md)). The hidden xyce dialect has a closed list too ([decision 0028](decisions/0028-xyce-directives.md) item 1).
 - An **unknown element letter** is an error (P5): an unparsed element would be a blind spot in the topology guarantee.
 
 ### 6.6 Opaque regions

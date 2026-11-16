@@ -59,7 +59,7 @@ Model types for `model-types.json`: R/RES, C/CAP, L/IND, CORE, D, NPN, PNP, NJF,
 | Command | Notes | Source | Kind |
 |---|---|---|---|
 | `.OP`, `.ENDS`, `.GLOBAL`, `.IC`, `.NODESET`, `.MEASURE` | as on ngspice (`.DCVOLT` is a synonym of `.IC`) | ref §2.1 | Reuse |
-| `.TRAN` | `NOOP`, `UIC` (ignored with a warning), a `{schedule(…)}` argument | ref §2.1.38 p161 | Reuse with differences |
+| `.TRAN` | `NOOP`, `UIC` (a synonym of `NOOP`, as §2.1.38 says; Table 6-1's "ignored with a warning" is stale, X-M2 point 8), a `{schedule(…)}` argument | ref §2.1.38 p161 | Reuse with differences |
 | `.AC`, `.DC` | `DATA=<table>`; `.DC` takes any number of sweeps, `LIST` | ref §2.1.1 p24, §2.1.3 p27 | Reuse with differences |
 | `.STEP` | one sweep per line, no `param` keyword; sweeps a device, `dev:param`, `model:param`, `TEMP` or a parameter; `LIST`, `DATA=` | ref §2.1.36 p155–158 | Reuse with differences (`StepDirective.kind` gains values) |
 | `.PARAM` | values braced, quoted or **bare**; functions (`f(x)={…}`); commas optional; complex `1+2J` | ref §2.1.26 p120, §2.2.1 p172 | Reuse with differences (decision X-D5) |
