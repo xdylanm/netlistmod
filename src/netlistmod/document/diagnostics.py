@@ -15,7 +15,9 @@ from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
 from netlistmod.document.models import model_type_allowed, model_type_requirement
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground
+from netlistmod.model._rules_elements import _reads_as_number
 from netlistmod.model.nodes import (
+    Capacitor,
     Cccs,
     Ccvs,
     Component,
@@ -28,6 +30,7 @@ from netlistmod.model.nodes import (
     Inductor,
     LibCall,
     ModelStatement,
+    Resistor,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
@@ -84,6 +87,9 @@ _UNRESOLVED: dict[str, tuple[DiagnosticCode, str]] = {
     "param": (DiagnosticCode.UNRESOLVED_PARAM, "parameter"),
     "element": (DiagnosticCode.UNRESOLVED_ELEMENT, "element"),
     "node": (DiagnosticCode.UNRESOLVED_NODE, "node"),
+    # An xyce call of a user-defined function is reported as a parameter is: a `.FUNC` is
+    # scoped like a `.PARAM` (scoping.md S8), and Xyce stops on an unknown one (X-M1 B6).
+    "function": (DiagnosticCode.UNRESOLVED_PARAM, "function"),
 }
 _ORDER = {code: position for position, code in enumerate(DiagnosticCode)}
 # The solver version whose behaviour a message states (validated_on of the rule tables).
@@ -94,8 +100,35 @@ _SOLVER: dict[Dialect, str] = {
 }
 # The rules below are looked up only when a netlist has what they judge, so a dialect without an
 # entry (xyce, until its milestone defines the construct) fails loudly instead of reading as
-# another dialect. Whether a node named `<instance>:<node>` reaches into an instance (LTspice).
-_INSTANCE_NODES: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: True}
+# another dialect.
+
+
+@dataclass(frozen=True, slots=True)
+class _InstanceNodeRule:
+    """How a node named ``<instance>:<node>`` reaches into an instance: LTspice (``names.md``
+    N11) and Xyce (decision 0027 item 4; ``[xyce-ref]`` §2.3.1.2 p182-183)."""
+
+    # Whether a port of the definition is reached too (LTspice joins it; Xyce keeps a net of its
+    # own, as for a missing node).
+    ports: bool
+    # Whether the solver stops on a path to ground, a global or nothing (LTspice); Xyce reads it
+    # as a net of its own.
+    stops_on_global: bool
+    # Where the rule is documented, for the message.
+    cited: str
+
+
+# Whether, and how, a node named `<instance>:<node>` reaches into an instance; ngspice: never.
+_INSTANCE_NODES: dict[Dialect, _InstanceNodeRule | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: _InstanceNodeRule(ports=True, stops_on_global=True, cited=""),
+    _XYCE: _InstanceNodeRule(
+        ports=False, stops_on_global=False, cited=" (Xyce reference manual §2.3.1.2 p182)"
+    ),
+}
+# The separator of an instance path in a name an expression reads (decision 0016 item 6):
+# ngspice `x1.n` and `v.x1.vq`; LTspice and Xyce `X1:n` and `X1:Vq`.
+_EXPRESSION_PATHS: dict[Dialect, str] = {Dialect.NGSPICE: ".", Dialect.LTSPICE: ":", _XYCE: ":"}
 # What the solver does with a `.ends` that names another subcircuit.
 _ENDS_NAME_RULE: dict[Dialect, str] = {
     Dialect.NGSPICE: "ngspice does not check the name (ngspice manual §2.6.2)",
@@ -110,6 +143,10 @@ _REPEAT_STOPS: dict[Dialect, frozenset[str]] = {
     Dialect.LTSPICE: frozenset({"parameter", "model", "subcircuit"}),
     _XYCE: frozenset({"model", "subcircuit", "function"}),
 }
+# Whether the solver sorts the words of an R, C or L line by looking names up (xyce; decision
+# 0027 item 5): a word in the model's place that names no model but a parameter is the value to
+# Xyce, and a `.model` whose name reads as a number is taken as the model.
+_LOOKUP_SORTS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
 # The severity and the rule of a repeated parameter where the solver runs on.
 _PARAM_REPEATS: dict[Dialect, tuple[Severity, str]] = {
     Dialect.NGSPICE: ("info", "the last assignment is used"),
@@ -128,7 +165,7 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
         found.extend(_reference_findings(index, reference))
     for scope in index.scopes:
         found.extend(_duplicate_findings(scope))
-        if scope.elements and _INSTANCE_NODES[index.dialect]:
+        if scope.elements and _INSTANCE_NODES[index.dialect] is not None:
             found.extend(_instance_node_findings(index, scope))
     for line in index.lines.walk():
         item = line.item
@@ -155,6 +192,8 @@ def collect_diagnostics(index: Index, source: SourceText) -> tuple[Diagnostic, .
                     Span(item.entries[1].span.start, item.entries[-1].span.end),
                 )
             )
+        if isinstance(item, ModelStatement):
+            found.extend(_numeric_model_findings(index, item))
         if isinstance(item, IndentedLine):
             found.append(
                 (
@@ -215,6 +254,7 @@ def _reference_findings(
                 "; it may be defined in an `.include` or `.lib` file or an opaque block, which "
                 "is not read"
             )
+        message += _model_place_note(index, scope, reference)
         findings.append((code, severity, message, reference.span))
     if reference in index.late_param_uses:
         findings.append(
@@ -299,6 +339,46 @@ def _reference_findings(
     return findings
 
 
+def _model_place_note(index: Index, scope: Scope, reference: Reference) -> str:
+    """On xyce, what Xyce does with an R, C or L word in the model's place that names no model
+    but a visible parameter: it reads it as the value (xm1-tasks 5.1 point 9(b))."""
+    owner = reference.owner
+    if (
+        reference.kind != "model"
+        or not _LOOKUP_SORTS[index.dialect]
+        or not isinstance(owner, Resistor | Capacitor | Inductor)
+    ):
+        return ""
+    key = scope.fold(reference.name)
+    if not any(key in candidate.params for candidate in scope.chain()):
+        return ""
+    return (
+        f"; a parameter `{reference.name}` is visible, and {_SOLVER[index.dialect]} reads the word "
+        "as the value (and stops if the line gives another one); write it in braces, "
+        f"`{{{reference.name}}}`, if it is meant as the value"
+    )
+
+
+def _numeric_model_findings(
+    index: Index, item: ModelStatement
+) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
+    """On xyce, a `.model` whose name reads as a number (xm1-tasks 5.1 point 9(c)): the library
+    reads such a word in an R, C or L line as the value, never a model (decision 0024 item 7),
+    while Xyce takes it as this model."""
+    if not _LOOKUP_SORTS[index.dialect] or not _reads_as_number(item.name):
+        return []
+    return [
+        (
+            DiagnosticCode.DIALECT_GATED_SYNTAX,
+            "warning",
+            f"model name `{item.name}` reads as a number: the library reads `{item.name}` on an "
+            f"element line as a value, while {_SOLVER[index.dialect]} takes it as this model; "
+            "rename the model so it begins with a letter",
+            item.name_span,
+        )
+    ]
+
+
 # The parameters every enabled LTspice `@` needs in a `.fra` run; `flist=` does not replace them.
 _FRA_RANGE = ("fstart", "fend")
 
@@ -381,14 +461,15 @@ def _into_instance(index: Index, scope: Scope, reference: Reference) -> str | No
     decision 0016 item 6):
 
     - LTspice: ``X1:Vq`` for any element reference (a controlling source, an ``I()`` read, a
-      ``K`` inductor, a ``.save I(...)``), and ``X1:n`` for a node an expression reads;
+      ``K`` inductor, a ``.save I(...)``), and ``X1:n`` for a node an expression reads; Xyce
+      the same, ``V(X1:n)`` (decision 0027 item 4);
     - ngspice: ``x1.n`` for a node an expression reads, and ``v.x1.vq`` (the device letter, the
       instance, the name) for a source it reads. ngspice stops on ``i(x1.vq)``, so that one
       stays a warning.
     """
     if reference.kind not in ("element", "node"):
         return None
-    if index.dialect is Dialect.LTSPICE:
+    if _EXPRESSION_PATHS[index.dialect] == ":":
         head, colon, _ = reference.name.partition(":")
         if not colon:
             return None
@@ -426,19 +507,27 @@ def _is_expression_read(reference: Reference) -> bool:
 def _instance_node_findings(
     index: Index, scope: Scope
 ) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
-    """LTspice nodes named ``<instance>:<node>``, which the library keeps as nets of their own."""
+    """LTspice and Xyce nodes named ``<instance>:<node>``, which the library keeps as nets of
+    their own."""
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     solver = _SOLVER[scope.dialect]
+    rule_of = _INSTANCE_NODES[scope.dialect]
+    assert rule_of is not None
     for elements in scope.elements.values():
         for element in elements:
             for node in element.nodes:
-                reading = _reading_of_instance_node(index, scope, node.name)
+                reading = _reading_of_instance_node(index, scope, node.name, rule_of)
                 if reading == "joined":
                     severity: Severity = "warning"
-                    rule = f"{solver} connects it to that node inside the instance"
+                    rule = f"{solver} connects it to that node inside the instance{rule_of.cited}"
                 elif reading == "unknown":
                     severity = "info"
-                    rule = f"{solver} connects it to a node of that name in the included definition"
+                    rule = (
+                        f"{solver} connects it to a node of that name in the included definition"
+                        if rule_of.ports
+                        else f"{solver} connects it to that node inside the instance if the "
+                        "included definition has it as an internal node"
+                    )
                 elif reading == "stopped":
                     severity = "warning"
                     rule = f"{solver} stops: the part after the instance is not a local node"
@@ -457,9 +546,12 @@ def _instance_node_findings(
 
 
 def _reading_of_instance_node(
-    index: Index, scope: Scope, name: str
+    index: Index, scope: Scope, name: str, rule: _InstanceNodeRule
 ) -> Literal["joined", "unknown", "stopped"] | None:
-    """How LTspice reads ``<instance>:<node>`` from ``scope`` (``names.md`` N11), if it is one."""
+    """How the solver reads ``<instance>:<node>`` from ``scope``, if it names an instance there:
+    LTspice ``names.md`` N11; Xyce decision 0027 item 4, where only an internal node of the
+    definition (a node of a body element that is not a port, ground or a global) is joined, and
+    a port, a global, ground or a missing node is a net of its own."""
     head, colon, rest = name.partition(":")
     if not colon:
         return None
@@ -478,20 +570,21 @@ def _reading_of_instance_node(
         return None
     child = definition_scope(scope, instance.subckt.name)
     if ":" not in rest and (not rest or _is_global(index, rest)):
-        return "stopped"
+        return "stopped" if rule.stops_on_global else None
     if child is None:
         included = any(candidate.may_define_elsewhere for candidate in scope.chain())
         return "unknown" if included else None
     if ":" in rest:
-        return _reading_of_instance_node(index, child, rest)
+        return _reading_of_instance_node(index, child, rest, rule)
     assert child.definition is not None
-    local = {child.fold(port.name) for port in child.definition.ports}
-    local.update(
+    ports = {child.fold(port.name) for port in child.definition.ports}
+    local = {
         child.fold(node.name)
         for elements in child.elements.values()
         for element in elements
         for node in element.nodes
-    )
+    }
+    local = local | ports if rule.ports else local - ports
     return "joined" if child.fold(rest) in local else None
 
 

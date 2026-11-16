@@ -200,3 +200,11 @@ def test_expression_operators(solver: Solver, tmp_path: Path, expression: str) -
     """`**` is the power and `^` a boolean XOR beside `|` and `&` ([xyce-ref] Table 2-32 p164;
     xm1-tasks 5.1 point 26)."""
     assert _v2(solver, tmp_path, expression, "") == pytest.approx(1.0)
+
+
+def test_an_undefined_function_stops_xyce(solver: Solver, tmp_path: Path) -> None:
+    """A call to a function that nothing defines stops Xyce, which is why the library reports it
+    as it reports an undefined parameter (`UNRESOLVED_PARAM`; X-M1 B6)."""
+    assert run(solver, tmp_path / "undefined", _divider("{f(1k)}", "")).returncode == 1
+    defined = ".func f(x) {x}\n"
+    assert run(solver, tmp_path / "defined", _divider("{f(1k)}", defined)).returncode == 0

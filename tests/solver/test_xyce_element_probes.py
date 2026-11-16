@@ -342,3 +342,22 @@ def test_xyce_stops_on(solver: Solver, tmp_path: Path, lines: str) -> None:
     more than two `TC=` values; a comma on an R or X line; the model before K's coupling; `DC`
     after `AC`, `DC=` and a bare DC value (points 10 to 15)."""
     assert run(solver, tmp_path, _divider(lines)).returncode == 1
+
+
+def test_a_parameter_in_the_model_place_is_the_value(solver: Solver, tmp_path: Path) -> None:
+    """A word after the nodes that names no model but a `.param` is the value to Xyce (2k here),
+    and a second value after it stops Xyce ("Unrecognized parameter"), which is why the library
+    adds that to its `UNRESOLVED_MODEL` (xm1-tasks 5.1 point 9(b); X-M1 B6)."""
+    assert _v2(solver, tmp_path / "alone", ".param rv=2k\nR5 2 0 rv\n") == pytest.approx(4 / 3)
+    text = _divider(".param rv=2k\nR5 2 0 rv 1k\n")
+    assert run(solver, tmp_path / "two", text).returncode == 1
+
+
+def test_a_model_named_as_a_number_is_taken_as_the_model(solver: Solver, tmp_path: Path) -> None:
+    """With `.model 2k R (R=0.5)`, Xyce reads `R5 2 0 2k` as that model with the default 1 kOhm
+    times 0.5, not as a 2k value, while the library reads the value: the reason for the
+    `DIALECT_GATED_SYNTAX` warning on the `.model` (xm1-tasks 5.1 point 9(c); X-M1 B6)."""
+    lines = ".model 2k R (R=0.5)\nR5 2 0 2k\n"
+    assert _v2(solver, tmp_path / "model", lines) == pytest.approx(2 / 3, rel=1e-6)
+    other = ".model 2k R (R=0.5)\nR5 2 0 4k\n"
+    assert _v2(solver, tmp_path / "value", other) == pytest.approx(1.6, rel=1e-6)
