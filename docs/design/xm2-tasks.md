@@ -69,6 +69,7 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
    - (c) the manual's untyped commands open, the rest refused.
 
    *Recommendation:* (a). One discrepancy row for Xyce's leniency replaces `XY-UNS-001`'s. The closed-list `UnknownDirective` lines are continuable with `+`, as Xyce joins them.
+   **Decided (maintainer, 2026-11-16): as recommended, a closed list.**
 2. **Commands that are not Xyce's.** `.TEMP`, `.TF`, `.PROBE`, `.PZ`, `.DISTO`, `.MC`, `.PLOT`, `.WCASE` and the rest of [xyce-ref] Table 6-1 (p847–848), `.title`, `.backanno`, `.control`/`.if`, `.ALIASES`: each is ignored with that warning, and the lines of a block are read. `.step param` stops Xyce. The binary also knows `.MOR`, `.INITCOND` (it hangs with no arguments), `.LOAD` and a lone `.ENDDATA`, none in the manual.
 
    *Recommendation:* `ParseError` "not an Xyce dot-command" for all of them, with hints for `.TEMP` (use `.STEP TEMP` or `.OPTIONS DEVICE TEMP=`), `.PROBE` (`.PRINT … FORMAT=PROBE`), `.title` (the first line is the title), `.opt` (`.OPTIONS`) and `.step param` (no `param` keyword). Discrepancy rows for each one Xyce runs.
@@ -95,6 +96,7 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
    - (c) keep the line opaque.
 
    *Recommendation:* (b), as a new field `TranDirective.schedule: Formula | None` with its own terminal (P13); a row for the manual's form.
+   **Decided (maintainer, 2026-11-16): (a), the manual's form.** tstart and tmax may stand with the schedule (`tstep tstop [tstart [tmax]] [NOOP] [UIC] [{schedule(…)}]`): tstart is meaningful, and tmax is a fixed ceiling beside the schedule's. That Xyce 7.10 stops on a schedule after tstart is taken as a solver bug and is a discrepancy row; a generator can always write a line Xyce runs. The field `TranDirective.schedule: Formula | None` and its own terminal stay as recommended.
 10. **Numbers and expressions in analysis fields.** Unbraced fields take the device-field reader (decision 0027 item 8: `1kohm`, `10meghz` and `10x` run; `1j`, `10z` and `µ` stop Xyce). Braces and quotes run on `.TRAN`, `.AC` and `.DC` (the manual's own examples use them, though §2.1.36 p157 says analyses take no expressions); `.STEP` stops on any. A stepped parameter in a `.TRAN` field is read once.
 
     *Recommendation:* that reading; `.STEP` takes plain numbers only. A warning when an analysis field names a parameter that a `.STEP` sweeps (Xyce reads it once).
@@ -102,6 +104,7 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
 12. **`.DC`** (§2.1.3 p27). Any number of sweeps, first innermost, each with its own `LIN|DEC|OCT` (`LIN` optional) or `LIST`, in any position; `DATA=table` stands alone. Targets: a source, a device (its primary parameter), `dev:param`, `model:param`, `TEMP`, a `.param` or `.global_param`. `LIST` with one value runs, though the manual requires two. Options for `LIST`: (a) at least two values, as the manual, with a row; (b) at least one, as the binary.
 
     *Recommendation:* (a); a sweep-target terminal that allows `:`; a new field `DcDirective.data` with empty `sweeps` (`XY-DCA-001`, `-002`).
+    **Decided (maintainer, 2026-11-16): (a), at least two values, as the manual; the same for `.STEP` (point 14).**
 13. **`.OP`.** Extra fields run with a warning. *Recommendation:* refused, with a row (`XY-OPP-001`).
 14. **`.STEP` forms** (§2.1.36 p155–158). `[LIN|DEC|OCT] target start stop step`, `target LIST v…` or `DATA=table`; no `param` keyword; one sweep per line (two on one line run only the last, silently); `LIST` as point 12. Targets as `.DC`, plus `X1:R5:R` (not `X1:R5`). Xyce resolves a name as a parameter first, then a device; the form of a target does not tell a device from a parameter, nor `dev:param` from `model:param`.
 
@@ -147,3 +150,4 @@ From the stage 1 reports: A1 (analyses and sweeps), A2 (options, initial conditi
 
 - 2026-11-16: task list written; X-M1 archived (approved and merged as #27).
 - 2026-11-16: A1, A2 and A3 done (reports to the lead; nothing in `src/` changed); section 5.1 written for G1.
+- 2026-11-16: G1 in progress: points 1, 9 (the manual's form), 12 and 14 decided; the other points wait for the maintainer's review.
