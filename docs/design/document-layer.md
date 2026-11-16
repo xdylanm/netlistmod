@@ -151,10 +151,10 @@ separators=(",", ":"))` encoded as UTF-8.
 | `SUBCKT_PORT_MISMATCH` | warning | the X line's subcircuit name | node count ≠ port count |
 | `PARAM_USED_BEFORE_DEFINITION` | warning | the name in the formula | the definition is in the reference's own scope and that scope's first definition starts after it (an enclosing scope's parameter is never "late": review R1) |
 | `ENDS_NAME_MISMATCH` | info | the `.ends` name | names differ (case-insensitive) |
-| `DIALECT_GATED_SYNTAX` | info | the value; on xyce, the entries after the first | `notation == "rkm"`; an xyce `LibCall` with more than one entry, of which Xyce loads only the first |
+| `DIALECT_GATED_SYNTAX` | info; warning for an xyce model name | the value; on xyce, the entries after the first, or the model name | `notation == "rkm"`; an xyce `LibCall` with more than one entry, of which Xyce loads only the first; an xyce `.model` whose name reads as a number (section 9) |
 | `RKM_SOLVER_MISMATCH` | warning | the value | `solver_mismatch` |
 | `UNTYPED_DIRECTIVE_PRESERVED` | info | the dot-command name | each `UnknownDirective` |
-| `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19) |
+| `NODE_INTO_INSTANCE` | warning; info if the definition is in an include | the node | an LTspice `<instance>:<node>` that reaches into an instance of the same scope (decision 0009 item 19); an xyce one that names an internal node of the instance's definition (decision 0027 item 4; section 9) |
 | `UNRESOLVED_NODE` | warning; info if the scope has an `.include`, `.lib` or opaque block, or for a node inside an instance of the scope (ngspice `x1.n`, LTspice `X1:n`) | the node name | a behavioural expression reads a node that no element of its own scope connects to, and that is not ground, a `.global` node or a port (decision 0016 item 6) |
 | `CONTROL_SOURCE_MISMATCH` | warning | the controlling source's name | an F, H or W line whose controlling source resolves to an element that is not a V; the message names the independent voltage source (`V`) the reference expects, and says whether the solver runs this source (an E or H, and on LTspice an L) or stops on it (decision 0015 item 5) |
 | `FRA_PROBE_IN_IMPEDANCE_MODE` | warning | the probe's designator | an LTspice `&` whose resolved analyzer (decision 0020 item 8) has the `zm` flag; LTspice stops on it (M18 D2) |
@@ -231,11 +231,27 @@ decision 0027 items 1 and 3):
   up like models; a call that is not a built-in (`builtin_functions`, from
   `formula-reserved.json`) is a `function` reference, and a function's arguments are not
   parameter references in its body. A repeated function is a `DUPLICATE_DEFINITION` warning
-  (Xyce stops). An unresolved function has no diagnostic yet (X-M1 B6).
+  (Xyce stops). An unresolved function is an `UNRESOLVED_PARAM` (message "function `f` is not
+  defined"), with the severity of an unresolved parameter: a `.FUNC` is scoped like a `.PARAM`.
 - **Formula scan:** `formula_xyce.lark` (`XY-FML-001`); a bare `.PARAM` value has no delimiter.
 - **`.ENDS` names** are not checked by Xyce: `ENDS_NAME_MISMATCH` (info) says so. A repeated
   `.model` or `.subckt` is a `DUPLICATE_DEFINITION` warning that says Xyce stops.
 - **`DIALECT_GATED_SYNTAX`** (info) reports a `.LIB` call that names more than one entry: Xyce
   loads only the first, with a warning.
+- **Node paths into an instance** (decision X-D2, decision 0027 item 4; `names.md` N7): a node
+  `X1:m` (or `X1:X2:m`) is resolved through the `X` designators of the scope it is written in,
+  then of each definition. When it names an internal node of the definition, a node of a body
+  element that is not a port, ground, a `$G` node or a `.GLOBAL` node, it is a
+  `NODE_INTO_INSTANCE` warning: Xyce joins it to that node, and the library keeps it as a net of
+  its own (§7.8). A port, ground, a global, a missing node or a missing instance is a net of its
+  own in Xyce too, with no finding; a definition the netlist does not hold, with an include in
+  scope, gives an info. An expression read such as `V(X1:m)` is an `UNRESOLVED_NODE` info, as on
+  LTspice.
+- **K's CORE model** (`MutualCoupling.model`) is a `model` reference: `UNRESOLVED_MODEL` and
+  `MODEL_TYPE_MISMATCH` (it takes `CORE`) as for any model.
+- **R, C and L words that Xyce sorts by lookup** (xm1-tasks 5.1 point 9): an `UNRESOLVED_MODEL`
+  on an R, C or L whose model name is a visible parameter adds that Xyce reads the word as the
+  value; a `.model` whose name reads as a number (`.model 2k R`) is a `DIALECT_GATED_SYNTAX`
+  warning, since the library reads that word on an element line as a value and Xyce as the model.
 - **`INDENTED_LINE_IGNORED`** reports each `IndentedLine` (section 4). An indented line inside a
   continued statement is one of its trailing comments and is not reported.

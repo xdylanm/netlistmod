@@ -231,3 +231,50 @@ def test_expressions_take_an_imaginary_part(solver: Solver, tmp_path: Path, valu
     parameter takes the real part."""
     text = _divider("1k", "1k", before=f".param c={value}\n")
     assert op(solver, tmp_path, text)["v(2)"] == pytest.approx(1.0)
+
+
+# Node paths into an instance (decision X-D2, decision 0027 item 4; names.md N7). `X1` is a
+# 1k + 1k divider from node 1 to ground, `R3` 1k from the path to ground: joined to the divider's
+# middle, the source sees 1.5k; as a net of its own, R3 hangs from it and the source sees 2k.
+_DIV = ".subckt div a b\nR1 a m 1k\nR2 m b 1k\n.ends\n"
+_JOINED = 1 / 1.5e3
+_SEPARATE = 1 / 2e3
+
+
+def _path_current(solver: Solver, folder: Path, body: str) -> float:
+    return -op(solver, folder, f"paths\nV1 1 0 1\n{body}.op\n.end\n")["v1#branch"]
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        (f"X1 1 0 div\n{_DIV}R3 X1:m 0 1k\n", _JOINED),
+        (f"R3 x1:M 0 1k\nX1 1 0 div\n{_DIV}", _JOINED),
+        (f"X1 1 0 div\n{_DIV}R3 X1:a 0 1k\n", _SEPARATE),
+        (f"X1 1 0 div\n{_DIV}R3 X1:zz 0 1k\n", _SEPARATE),
+        (f"X1 1 0 div\n{_DIV}R3 X7:m 0 1k\n", _SEPARATE),
+        (
+            f"X1 1 0 top\n.subckt top p q\nX2 p q div\n.ends\n{_DIV}R3 X1:X2:m 0 1k\n",
+            _JOINED,
+        ),
+        (f"X1 1 0 top\n.subckt top p q\nX2 p q div\nR3 X2:m q 1k\n.ends\n{_DIV}", _JOINED),
+        (f"X1 1 0 div\nX9 1 0 top\n.subckt top p q\nR3 X1:m q 1k\n.ends\n{_DIV}", _SEPARATE),
+    ],
+    ids=[
+        "internal",
+        "internal-any-case-before-the-instance",
+        "port",
+        "missing-node",
+        "missing-instance",
+        "nested",
+        "from-a-body",
+        "relative-to-its-scope",
+    ],
+)
+def test_a_node_path_into_an_instance(
+    solver: Solver, tmp_path: Path, body: str, expected: float
+) -> None:
+    """A path joins an internal node of the instance, relative to the scope it is written in;
+    a port, a missing node or a missing instance is a net of its own ([xyce-ref] §2.3.1.2
+    p182-183; the port and missing cases rest on the binary)."""
+    assert _path_current(solver, tmp_path, body) == pytest.approx(expected, rel=1e-6)

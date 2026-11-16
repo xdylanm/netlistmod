@@ -445,6 +445,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                 | Diode
                 | Transistor
                 | Switch
+                | MutualCoupling
                 | _MODEL_LINES
                 | _OPEN_MODEL,
             )
