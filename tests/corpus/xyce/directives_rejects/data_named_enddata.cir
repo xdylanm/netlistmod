@@ -1,0 +1,12 @@
+a named .ENDDATA
+V1 in 0 2 AC 1
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.data t
++ r1 r2
++ 1k 1k
++ 1k 3k
+.enddata t
+.dc data=t
+.end

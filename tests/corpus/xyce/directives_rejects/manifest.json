@@ -1,0 +1,274 @@
+{
+  "family": "directives_rejects",
+  "origin": "Authored in this repository for the X-M2 xyce grammar (task B6)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "ac_list.cir": {
+      "sha256": "0dad0d8e90294a7c0a1c91058a589c6aa3c107fa23c1613e5cfadc841c18efdf",
+      "line": 6,
+      "column": 5,
+      "error": "ParseError",
+      "note": "no `list` on `.AC` (XY-ACA-001)",
+      "xyce": "stops"
+    },
+    "addresistors_twice.cir": {
+      "sha256": "5cb6b0ba3c80a012b6ec3c3b98ad6e9d7509747d31cb55cb19a779b1b60deff0",
+      "line": 7,
+      "column": 1,
+      "error": "ParseError",
+      "note": "one of each kind (XY-PRE-002)",
+      "xyce": "stops"
+    },
+    "control_block.cir": {
+      "sha256": "682dbf9daafe24e80d0e64c80b880e0c4fa2cd99887423363c9c0f8889fcff0e",
+      "line": 6,
+      "column": 1,
+      "error": "ParseError",
+      "note": "not an Xyce dot-command (XY-DIR-002)",
+      "xyce": "stops"
+    },
+    "data_expression.cir": {
+      "sha256": "fcef01b49462ee9c88300a08c04eac37d90a8146e39c2b0e392353d4440696f9",
+      "line": 8,
+      "column": 3,
+      "error": "ParseError",
+      "note": "plain numbers only (XY-DAT-001)",
+      "xyce": "stops"
+    },
+    "data_named_enddata.cir": {
+      "sha256": "5fb31b740174eaa11bb2eca86c6298937db390d7bc43d84e876ededd7c1cb7b3",
+      "line": 10,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`.ENDDATA` takes no name (XY-DAT-001)",
+      "xyce": "runs"
+    },
+    "data_without_enddata.cir": {
+      "sha256": "e185283bfd4d5667f6b1dd23ed6e0c1559163a14959a448bda83ef00b79e53ff",
+      "line": 10,
+      "column": 1,
+      "error": "ParseError",
+      "note": "`.ENDDATA` is required (XY-DAT-001)",
+      "xyce": "runs"
+    },
+    "dc_list_one_value.cir": {
+      "sha256": "9abf530c214350969917946edbe5c7ccef9a472726812c81be1939c679ac8809",
+      "line": 6,
+      "column": 14,
+      "error": "ParseError",
+      "note": "`LIST` takes two or more values (XY-DCA-001)",
+      "xyce": "runs"
+    },
+    "ic_all.cir": {
+      "sha256": "2e1caf5370e3c7c0b1c36e310327d293162ab78f46aeebecb06077a1d45c06ff",
+      "line": 6,
+      "column": 5,
+      "error": "ParseError",
+      "note": "`all=` is not a condition; Xyce ignores it on `.IC` (XY-ICN-001)",
+      "xyce": "runs"
+    },
+    "ic_mixed_forms.cir": {
+      "sha256": "1c865888abcd8abbd42d037a0d92dcd63452b2eab6ad40d8ab832aa0cc320a24",
+      "line": 6,
+      "column": 16,
+      "error": "ParseError",
+      "note": "one form per line (XY-ICN-001)",
+      "xyce": "runs"
+    },
+    "load.cir": {
+      "sha256": "e681a5e59fad3f06c5a72042404b6b1bdad7a3cfa54ecb7020f1e233dadeb20d",
+      "line": 6,
+      "column": 1,
+      "error": "ParseError",
+      "note": "not in the manual (XY-DIR-002)",
+      "xyce": "runs"
+    },
+    "meas_hb_mode.cir": {
+      "sha256": "8e2520efa733eb4f571cb46772f8ba43ff6f7221dea988378d812faf149f29e8",
+      "line": 7,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a mode of the manual's list (XY-MEA-001)",
+      "xyce": "stops"
+    },
+    "meas_tr_mode.cir": {
+      "sha256": "dbcddd0ae17db19f172f15ddb4b8258aceeaa50258b503518d2f33ebfbd332f1",
+      "line": 7,
+      "column": 7,
+      "error": "ParseError",
+      "note": "a mode of the manual's list (XY-MEA-001)",
+      "xyce": "runs"
+    },
+    "mor.cir": {
+      "sha256": "abfdb699a806ce3f74940b7428cc271a490c7e2b72875ccdc1f3039f269e9df8",
+      "line": 6,
+      "column": 1,
+      "error": "ParseError",
+      "note": "not in the manual (XY-DIR-002)",
+      "xyce": "runs"
+    },
+    "nodeset_all.cir": {
+      "sha256": "a1d9bcbf34c0ad4cc31f728882321e3b0740c56db405a5704283ca8f6f3f69c9",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`all=` is not a condition; Xyce stops on it on `.NODESET` (XY-NOD-001)",
+      "xyce": "stops"
+    },
+    "nodeset_current.cir": {
+      "sha256": "980aa7dda962033eaa1d7f5c6a0740f1e2eaf051795238cf5ae574bb2dac7b08",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a node voltage only (XY-NOD-001)",
+      "xyce": "stops"
+    },
+    "op_fields.cir": {
+      "sha256": "758656ea0ade3fbe5473ba44b9d898fc48252bf2cb74fe2e1ec801ccc9856434",
+      "line": 6,
+      "column": 5,
+      "error": "ParseError",
+      "note": "`.OP` takes no field (XY-OPP-001)",
+      "xyce": "runs"
+    },
+    "options_bare_word.cir": {
+      "sha256": "eed7fcba50c764b160ce522d54fda3eaf11f78e8f1ccdd229adf04d82a7f471a",
+      "line": 6,
+      "column": 25,
+      "error": "ParseError",
+      "note": "`name=value` items only (XY-OPT-002)",
+      "xyce": "runs"
+    },
+    "options_braces.cir": {
+      "sha256": "5ea55543a746c45d2ab1a611f8d11756444405597c199626ad0300e5e38409b9",
+      "line": 6,
+      "column": 22,
+      "error": "ParseError",
+      "note": "braces only in SAMPLES and EMBEDDEDSAMPLES (XY-OPT-002)",
+      "xyce": "stops"
+    },
+    "options_in_body.cir": {
+      "sha256": "5e32e17976d888bda2a577272a05be9c71ad0514c542d18417abb9420ce40f95",
+      "line": 8,
+      "column": 1,
+      "error": "ParseError",
+      "note": "Xyce ignores it in a body (XY-DIR-003)",
+      "xyce": "runs"
+    },
+    "options_no_package.cir": {
+      "sha256": "0ccdf9dc4b47c3a1d407683ebd2a3daed4b4f9da4f7f19baf551dd39321387bd",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a package is required (XY-OPT-001)",
+      "xyce": "runs"
+    },
+    "options_temp_no_package.cir": {
+      "sha256": "a7501839014acd2e23631524f1988f35a9019e6dee474e39040317c5cbb1324f",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a package is required, with the DEVICE hint (XY-OPT-001)",
+      "xyce": "runs"
+    },
+    "options_unknown_package.cir": {
+      "sha256": "6af08605d8b2eecf18e00a2aaaad35ff652b1160f34ff20871fd99c27fe68fc1",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "a package of the manual's list (XY-OPT-001)",
+      "xyce": "runs"
+    },
+    "print_in_body.cir": {
+      "sha256": "e25e810fbe4af91c4f1d58ed479d47ead829e365461cf4d8a968d10a2d6ebc65",
+      "line": 8,
+      "column": 1,
+      "error": "ParseError",
+      "note": "Xyce ignores it in a body (XY-DIR-003)",
+      "xyce": "runs"
+    },
+    "removeunused.cir": {
+      "sha256": "192839b5b1fd8a8edf0fea9c30128e93a682a658e7d34eac5f3dc3fb1c4949ec",
+      "line": 6,
+      "column": 1,
+      "error": "UnsupportedConstruct",
+      "note": "UnsupportedConstruct (XY-UNS-001)",
+      "xyce": "runs"
+    },
+    "step_expression.cir": {
+      "sha256": "deb5379c4332d5d3b7a512f306473742b79395a63e3f4dafe939c5d4ed4a7ba7",
+      "line": 6,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`.STEP` takes plain numbers (XY-STP-001)",
+      "xyce": "stops"
+    },
+    "step_param_keyword.cir": {
+      "sha256": "af463f7820b573ac12a5bdabd01c08b177b8b5c422076da3d68c696ec335b8e9",
+      "line": 6,
+      "column": 7,
+      "error": "ParseError",
+      "note": "no `param` keyword (XY-STP-001)",
+      "xyce": "stops"
+    },
+    "step_two_sweeps.cir": {
+      "sha256": "d70b92614e2ffc841765f20ecceb041c0f9a94b17e9b4be821acb1b2b85b9cec",
+      "line": 6,
+      "column": 19,
+      "error": "ParseError",
+      "note": "one sweep per `.STEP` line (XY-STP-001)",
+      "xyce": "runs"
+    },
+    "tran_flag_twice.cir": {
+      "sha256": "cfe58b0a1359430c00434deda3d340d9afd6bb1cc1cd2b77b94e5f8907b886e2",
+      "line": 6,
+      "column": 19,
+      "error": "ParseError",
+      "note": "a flag at most once (XY-TRN-001)",
+      "xyce": "runs"
+    },
+    "tran_in_body.cir": {
+      "sha256": "5e63bae4bd95f5372f2eabdbc763cba5bfcb606086365610bfe40d848ca56bc2",
+      "line": 8,
+      "column": 1,
+      "error": "ParseError",
+      "note": "Xyce ignores it in a body (XY-DIR-003)",
+      "xyce": "runs"
+    },
+    "tran_number_after_flag.cir": {
+      "sha256": "abbc48c0ecb1b6d9dad789baf5e7477e7bdcb5ad8eabd9958e0ef41e7a9aa293",
+      "line": 6,
+      "column": 19,
+      "error": "ParseError",
+      "note": "the numbers before the flags (XY-TRN-001)",
+      "xyce": "runs"
+    },
+    "tran_one_value.cir": {
+      "sha256": "ef21628a46772c596951e586ba04c966ff7f21babb306934d72f8bcdfc0d72d7",
+      "line": 6,
+      "column": 9,
+      "error": "ParseError",
+      "note": "`.TRAN` needs tstep and tstop (XY-TRN-001)",
+      "xyce": "stops"
+    },
+    "unknown_block.cir": {
+      "sha256": "b34875eec085ab35292880dd45fe90e47c83d7668fb8791e4001fd7602520a83",
+      "line": 6,
+      "column": 1,
+      "error": "ParseError",
+      "note": "refused at its opener (XY-DIR-002)",
+      "xyce": "runs"
+    },
+    "unknown_temp.cir": {
+      "sha256": "356f667bf6600137c94bb08708a103da7c2f914c9e02884e381ebdbc023a167f",
+      "line": 6,
+      "column": 1,
+      "error": "ParseError",
+      "note": "not an Xyce dot-command, with a hint (XY-DIR-002)",
+      "xyce": "runs"
+    }
+  }
+}

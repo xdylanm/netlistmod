@@ -1,0 +1,12 @@
+measure: .MEAS and .MEASURE in the modes of the analysis that runs
+V1 in 0 2
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.tran 1n 20n
+.meas tran vfinal find v(out) at=20n
+.MEASURE TRAN vmax MAX v(out)
+.meas tran_cont crossing when v(out)=0.5
+.meas tran vavg avg v(out)
++ from=1n to=10n
+.end

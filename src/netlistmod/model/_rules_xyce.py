@@ -205,6 +205,14 @@ class _MeasText:
 
 
 @dataclass(frozen=True, slots=True)
+class _IcRefused:
+    """A refused `.IC`, `.DCVOLT` or `.NODESET` field (`I(...)`, `all=`, `V(a,b)`), refused by the
+    statement, whose keyword decides what Xyce does with it."""
+
+    opener: Token
+
+
+@dataclass(frozen=True, slots=True)
 class _ValueKeyword:
     """An xyce R, C or L value written as its parameter (`R=`, `C=`, `L=`), or a C's charge
     `Q=` (``charge``): the whole assignment, which keeps the keyword's span for the edits."""
@@ -795,11 +803,22 @@ class XyceRules(StatementsRules):
                 f"stands without one; write that, or `.OPTIONS PARSER {first}=` (Xyce reference "
                 "manual §2.1.25.21 p119)",
             )
+        folded = fold_name(str(first), self._dialect)
+        if folded in ("temp", "tnom") and len(groups) == 1:
+            # Observed (X-M2 B6): Xyce 7.10 applies `TEMP=` or `TNOM=` alone on a package-less
+            # line, silently; any other package-less line it ignores, with a warning.
+            raise self._parse_error(
+                first,
+                f"`{keyword}` needs a package before its items: write `.OPTIONS DEVICE "
+                f"{folded.upper()}=` (Xyce reference manual §2.1.25.1 p98); Xyce applies a "
+                f"package-less line whose only item is `{first}=`, silently, but the manual "
+                "gives every item a package",
+            )
         raise self._parse_error(
             first,
             f"`{keyword}` needs a package before its items, `{keyword} <package> {first}=...`, "
             f"the package one of {_PACKAGE_LIST} (Xyce reference manual §2.1.25 p96); Xyce "
-            "ignores a line without one, or stops on it",
+            "ignores a line without one, with a warning",
         )
 
     def _refuse_bare(self, value: Value | Identifier) -> NoReturn:
@@ -863,29 +882,50 @@ class XyceRules(StatementsRules):
 
         return self._field(children, build)
 
-    def ic_refused(self, children: list[Any]) -> NoReturn:
-        opener = _field_token(children)
+    def ic_refused(self, children: list[Any]) -> _Field:
+        # Refused by `_conditions`, which knows the statement's keyword.
+        if isinstance(children[-1], _Field):
+            return children[-1]
+        return _Field(_IcRefused(_field_token(children)), ())
+
+    def _condition_outcome(self, keyword: Token, what: str) -> str:
+        """What Xyce 7.10 does with a condition field it cannot read (X-M2 B6 probes): `.IC` and
+        `.DCVOLT` warn and ignore it, `.NODESET` stops."""
+        if fold_name(str(keyword), self._dialect) == ".nodeset":
+            return f"Xyce stops on {what} on `.NODESET`"
+        return f"Xyce ignores {what} on `{keyword}`, with a warning"
+
+    def _refuse_condition(self, keyword: Token, opener: Token) -> NoReturn:
+        nodeset = fold_name(str(keyword), self._dialect) == ".nodeset"
         if opener.type == "IC_CURRENT_OPEN":
             reason = (
                 f"`{opener}...)`: an initial condition sets a node voltage only, `V(node)=value` "
-                "or `node value` (Xyce reference manual §2.1.14 p48); Xyce ignores a current, "
-                "or stops on it"
+                "or `node value` (Xyce reference manual §2.1.14 p48); "
+                + self._condition_outcome(keyword, "a current")
             )
         elif opener.type == "ALL_KW":
+            section = (
+                "Xyce reference manual §2.1.22 p92"
+                if nodeset
+                else "Xyce reference manual §2.1.14 p48"
+            )
             reason = (
                 f"`{opener}=` is not a Xyce initial condition: name each node, `V(node)=value` "
-                "or `node value` (Xyce reference manual §2.1.22 p92); Xyce stops on it"
+                f"or `node value` ({section}); " + self._condition_outcome(keyword, "it")
             )
         else:
             reason = (
                 "`V(a,b)`: an initial condition takes one node, `V(node)=value` (Xyce reference "
-                "manual §2.1.14 p48); Xyce ignores a difference, with a warning"
+                "manual §2.1.14 p48); " + self._condition_outcome(keyword, "a difference")
             )
         raise self._parse_error(opener, reason)
 
     def _conditions(self, element: _Element) -> tuple[NodeCondition, ...]:
         conditions: list[NodeCondition] = []
         pending: Node | None = None
+        refused = element.optional(_IcRefused)
+        if refused is not None:
+            self._refuse_condition(element.designator, refused.opener)
         for node in element.fields:
             if isinstance(node, NodeCondition):
                 conditions.append(node)
@@ -915,8 +955,8 @@ class XyceRules(StatementsRules):
                 raise self._error_at(
                     condition.span.start,
                     f"this `{keyword}` line mixes `V(node)=value` and `node value`: write one "
-                    "form per line (Xyce reference manual §2.1.14 p48); Xyce ignores the other "
-                    "form, with a warning",
+                    "form per line (Xyce reference manual §2.1.14 p48); "
+                    + self._condition_outcome(keyword, "the other form"),
                 )
         return tuple(conditions)
 

@@ -1,0 +1,14 @@
+outputs: untyped commands of the closed list that Xyce runs with -r
+V1 in 0 2 AC 1
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.PRINT TRAN v(out)
++ v(in) i(V1)
+.print tran format=csv file=out.csv v(out)
+.four 20meg v(out)
+.FFT v(out)
+.save type=ic file=saved.ic
+.result {v(out)}
+.tran 1n 100n
+.end

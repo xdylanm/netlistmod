@@ -1,0 +1,15 @@
+options: a package and name=value items on each line
+V1 in 0 2
+R1 in out 1k TC1=0.01
+R2 out 0 1k
+C1 out 0 1n
+.options device temp=27 tnom=27
+.OPTIONS TIMEINT RELTOL=1e-3 ABSTOL = 1e-6 METHOD=gear
+.option nonlin-tran maxstep=20 ; a comment
+.options linsol
++ type=klu
+.options output initial_interval=1n 5n 0.5n
+.options output outputtimepoints=1n,2n, 3n
+.OPTION SCALE=1
+.tran 0.1n 10n
+.end

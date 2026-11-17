@@ -5,7 +5,11 @@ manual_ref:
 - '[xyce-ref] §2.1.18 p54 ".MEASURE or .MEAS (Measure output)"'
 - '[xyce-ref] §2.1.19 p78 ".MEASURE (Continuous results)"'
 - '[xyce-ref] §2.1.20 p84 ".MEASURE FFT (Measure output for .FFT)"'
-status: documented
+status: observed
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
 grammar:
 - xy_meas_stmt
 - meas_mode
@@ -22,5 +26,13 @@ tests:
 - tests/grammar/xyce/test_xyce_directives.py::test_a_measure_mode_outside_the_list_is_rejected
 - tests/grammar/xyce/test_xyce_directives.py::test_a_measure_without_its_body_is_rejected
 - tests/grammar/xyce/test_xyce_directives.py::test_options_measures_and_tables_are_refused_in_a_body
-validation_note: Read from the manual (decision 0028 item 7; xm2-tasks 5.1 point 26). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy row (`TR`, which Xyce runs) are X-M2 B6's.
+- tests/solver/test_xyce_directive_probes.py::test_each_measure_mode_runs
+- tests/solver/test_xyce_directive_probes.py::test_tr_runs_as_tran
+- tests/solver/test_xyce_directive_probes.py::test_a_mode_outside_the_list_stops_xyce
+- tests/solver/test_xyce_directive_probes.py::test_a_mode_whose_analysis_does_not_run_stops_xyce
+- tests/solver/test_xyce_directive_probes.py::test_a_dc_mode_under_op_reports_failed
+- tests/solver/test_xyce_directive_probes.py::test_fft_without_an_fft_line_stops_xyce
+- tests/solver/test_xyce_directive_probes.py::test_a_cont_mode_takes_only_some_types
+- tests/solver/test_xyce_directive_probes.py::test_a_repeated_measurement_uses_the_last
+validation_note: 'Observed on XyceNF Release 7.10.0: the modes are the manual''s, and each runs with its analysis; what a mode needs rests on the solver (xm2-tasks 5.1 point 32): a mode whose analysis is not the one Xyce runs stops it, a DC mode under `.OP` reports FAILED, FFT needs a `.FFT` line, and a repeated result takes the last definition. `TR` runs as TRAN, and the `_CONT` modes take only some types, which the library does not check (discrepancies.md).'
 notes: '`MeasureDirective`, typed shallowly as on ngspice and LTspice: `analysis` is the mode as written, required, one of TRAN, DC, AC, NOISE, FFT, TRAN_CONT, DC_CONT, AC_CONT and NOISE_CONT, in any case; `result` the result name; `body_text` the source slice of `body_span`, from the first to the last field of the body, which must have at least one field, each a run of characters other than blanks and `;` (`FIELD_TEXT`, XY-DIR-001''s) (comments on earlier lines of a continued statement are inside it). `TR`, `HB`, `OP`, `SP`, any other word and a missing mode are a ParseError. Top level only. A mode with no matching analysis and a repeated result name are the document layer''s (X-M2 B5).'

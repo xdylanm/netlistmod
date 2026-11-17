@@ -1,12 +1,14 @@
-"""The xyce corpus in XyceNF 7.10 (X-M1 B7; T8 tier; architecture §10.3 (a) and (c)).
+"""The xyce corpus in XyceNF 7.10 (X-M1 B7, X-M2 B6; T8 tier; architecture §10.3 (a) and (c)).
 
 Each accept fixture is copied with its family (the files it includes) into a temporary folder,
-given an `.op` before its `.END` (the analysis directives are X-M2's, so the corpus holds none)
-and run with ``tests/support/xyce.py``. (a) It must run without an error and give data, and the
-library's top-level nets must be Xyce's top-level nodes. (c) Saved unedited with
-``load(...).save(...)`` it gives the same bytes, and the saved file the same results. Each rejection
-fixture whose manifest names Xyce's outcome is run the same way: Xyce stops on it, or runs it (a
-row of discrepancies.md). Nothing Xyce writes is committed.
+given an `.op` before its `.END` (which gives way to a file's own analysis, X-M2's) and run with
+``tests/support/xyce.py``. (a) It must run without an error and give data, and the library's
+top-level nets must be Xyce's top-level nodes. (c) Saved unedited with ``load(...).save(...)`` it
+gives the same bytes, and the saved file the same results. A fixture whose manifest ``solver``
+field is ``{"mode": "print"}`` runs without ``-r``, on which Xyce aborts for `.EMBEDDEDSAMPLING`,
+`.HB`, `.LIN` and `.PCE`: it must run without an error, and the saved file write the same files.
+Each rejection fixture whose manifest names Xyce's outcome is run the same way: Xyce stops on
+it, or runs it (a row of discrepancies.md). Nothing Xyce writes is committed.
 """
 
 from __future__ import annotations
@@ -22,13 +24,18 @@ import pytest
 from netlistmod import Netlist
 from netlistmod.dialects import _XYCE
 from tests.support.solvers import Solver
-from tests.support.xyce import Run, nodes, run
+from tests.support.xyce import Mode, Run, nodes, run
 
 pytestmark = pytest.mark.solver("xyce")
 
 CORPUS = Path(__file__).parents[1] / "corpus" / "xyce"
-FAMILIES = ("structure_basic", "statements_basic", "elements_basic")
-REJECT_FAMILIES = ("structure_rejects", "statements_rejects", "elements_rejects")
+FAMILIES = ("structure_basic", "statements_basic", "elements_basic", "directives_basic")
+REJECT_FAMILIES = (
+    "structure_rejects",
+    "statements_rejects",
+    "elements_rejects",
+    "directives_rejects",
+)
 _END = re.compile(rb"^\.end(?![a-z0-9_])", re.IGNORECASE | re.MULTILINE)
 
 
@@ -66,10 +73,16 @@ def _prepare(folder: Path, path: Path) -> bytes:
     return with_op(path.read_bytes())
 
 
-def _run(solver: Solver, folder: Path, path: Path) -> Run:
-    result = run(solver, folder, _prepare(folder, path), name=path.name)
+def _printed(path: Path) -> bool:
+    return solver_fields()[path].get("mode") == "print"
+
+
+def _run(solver: Solver, folder: Path, path: Path, source: Path | None = None) -> Run:
+    mode: Mode = "print" if _printed(source or path) else "run"
+    result = run(solver, folder, _prepare(folder, path), name=path.name, mode=mode)
     assert result.ok, result.log
-    assert result.plots and all(plot.rows for plot in result.plots), result.log
+    if mode == "run":
+        assert result.plots and all(plot.rows for plot in result.plots), result.log
     return result
 
 
@@ -111,7 +124,11 @@ def test_unedited_round_trip_gives_identical_results(
     Netlist.load(path, dialect=_XYCE).save(saved)
     assert saved.read_bytes() == path.read_bytes()
     original = _run(solver, tmp_path / "original", path)
-    again = _run(solver, tmp_path / "again", saved)
+    again = _run(solver, tmp_path / "again", saved, source=path)
+    if _printed(path):
+        written = {item.name for item in original.netlist.parent.iterdir()}
+        assert {item.name for item in again.netlist.parent.iterdir()} == written
+        return
     assert [(p.variables, p.rows) for p in again.plots] == [
         (p.variables, p.rows) for p in original.plots
     ]

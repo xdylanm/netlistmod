@@ -4,7 +4,11 @@ construct: .DC sweeps (any number, each LIN, DEC, OCT or LIST)
 manual_ref:
 - '[xyce-ref] §2.1.3 p27 ".DC (DC Sweep Analysis)"'
 - '[xyce-ref] §2.1.3.4 p28 "List Sweeps"'
-status: documented
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
 grammar:
 - xy_dc_stmt
 - _dc_sweeps
@@ -23,5 +27,9 @@ tests:
 - tests/grammar/xyce/test_xyce_analyses.py::test_a_dc_target_named_like_a_keyword_part_is_a_name
 - tests/grammar/xyce/test_xyce_analyses.py::test_malformed_dc_is_rejected
 - tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
-validation_note: Read from the manual (decision 0028 item 3; xm2-tasks 5.1 points 10 and 12). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy row (a LIST of one value, which Xyce runs) are X-M2 B6's.
+- tests/solver/test_xyce_analysis_probes.py::test_dc_sweeps_each_target
+- tests/solver/test_xyce_analysis_probes.py::test_dc_sweeps_nest_the_first_innermost
+- tests/solver/test_xyce_analysis_probes.py::test_a_list_with_one_value_runs
+- tests/solver/test_xyce_analysis_probes.py::test_dc_lines_join_into_one_sweep
+validation_note: 'Validated on XyceNF Release 7.10.0: each form sweeps the points its line gives, from the library''s start, the sweeps nested with the first innermost; a `LIST` of one value runs, which the library refuses (decision 0028 item 4; discrepancies.md); two `.DC` lines join into one sweep (point 15).'
 notes: '`DcDirective` with one `DcSweep` per sweep, the first innermost: `[LIN|DEC|OCT] target start stop step` (`variation` as written, or `None`) or `target LIST v1 v2 ...` with at least two values (`values`; the range fields `None`, `variation` `None`), in any order and any number. Values are numbers of the device-field reader or expressions in braces or quotes. The target is XY-STP-002''s. The sweeps are right-recursive, so a list''s next value and the next sweep are told apart by the token after the separator. `DATA=table` is XY-DCA-002''s. Top level only.'

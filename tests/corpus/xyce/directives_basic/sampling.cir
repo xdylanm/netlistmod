@@ -1,0 +1,8 @@
+sampling: .EMBEDDEDSAMPLING, which Xyce runs only without -r
+V1 in 0 2
+R1 in out 1k
+R2 out 0 1k
+.embeddedsampling param=R1 type=normal means=1k std_deviations=100
+.options embeddedsamples numsamples=3 outputs={v(out)}
+.dc V1 2 2 1
+.end

@@ -101,7 +101,6 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
   - `.OP`, with no fields (`XY-OPP-001`);
   - `.STEP`, one sweep per line, plain numbers only, no `param` keyword (`XY-STP-001`), and the
     sweep targets of `.DC` and `.STEP`, which may hold `:` (`XY-STP-002`).
-  The entries are `documented` until X-M2 B6's solver tests.
 
 - **B3, options, initial conditions, measurements and the `.DATA` block:**
   - `.OPTIONS` and `.OPTION` with a package of the manual's 21, in any case; any other word, a
@@ -116,7 +115,6 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
     (`XY-MEA-001`); top level only;
   - the `.DATA name columns... values... .ENDDATA` table, an opaque block with plain numbers in a
     non-zero multiple of the columns and a bare `.ENDDATA` (`XY-DAT-001`); top level only.
-  The entries are `documented` until X-M2 B6's solver tests.
 
 - **B4, the closed list of dot-commands, and directives in a body:**
   - `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`, `.HB`, `.LIN`, `.SAMPLING`,
@@ -132,7 +130,15 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
   - in a subcircuit body the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the untyped
     commands are a `ParseError` saying Xyce silently ignores them there; `.IC`, `.DCVOLT`,
     `.NODESET` and `.PREPROCESS` are allowed (`XY-DIR-003`).
-  The entries are `documented` until X-M2 B6's solver tests.
+
+- **B6, the evidence:** the solver tests `tests/solver/test_xyce_analysis_probes.py`,
+  `test_xyce_directive_probes.py` and `test_xyce_closed_list_probes.py` run each X-M2 construct
+  and each claim a diagnostic makes about Xyce; the corpus families `directives_basic` (with a
+  CRLF twin, and `sampling.cir`, which runs without `-r`) and `directives_rejects`; the X-M2
+  entries are `validated`, or `observed` where the reading rests on the binary (`.OPTION` as a
+  synonym, the measure modes against the analysis that runs, `.NOISE` in the last-line rule).
+  The refusals of `.IC`/`.DCVOLT`/`.NODESET` fields now say per keyword what Xyce does, and a
+  package-less `TEMP=` or `TNOM=` gets the DEVICE hint.
 
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
@@ -150,6 +156,15 @@ C and L, an R without a value, a value written twice, one inductor on K without 
 number before D's model, a bare `AC`, a comma on a source line and `:` in a designator. Where the
 library is more lenient, the row says so: R's and D's parameter lists are the union of their
 levels' tables, while Xyce takes only the model level's.
+
+X-M2's rows: Xyce runs a repeated `.TRAN` flag, extra fields on `.OP`, a one-value `LIST`, two
+sweeps on one `.STEP` line, an unknown package, package-less options (applying `TEMP=` or `TNOM=`
+alone), a bare word after an option, the `TR` mode, a table without its bare `.ENDDATA`, every
+dot-command outside the closed list (warned and ignored), and silently ignores directives in a
+body; it stops on a schedule after tstart and on the full `.TRAN` form, which the library reads
+as the manual writes them; and the library reads an `.AC` point count that is not an integer, a
+path target without its parameter, `.PCE`, ngspice's `.save v(2)` and any `_CONT` measure type,
+on which Xyce stops or which it ignores.
 
 The rest is planned by task and milestone in [xm2-tasks.md](../../design/xm2-tasks.md) and the
 xyce plan, section 8: the directives in X-M2, then the remaining devices. X-M1's record is
@@ -169,54 +184,54 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 
 | Entry | Construct | Status | Tests | Validated on |
 |---|---|---|---|---|
-| [XY-ACA-001](./specs/XY-ACA-001.yaml) | .AC small-signal analysis (a sweep, or DATA=) | documented | 4 + 0 solver |  |
+| [XY-ACA-001](./specs/XY-ACA-001.yaml) | .AC small-signal analysis (a sweep, or DATA=) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-CNT-001](./specs/XY-CNT-001.yaml) | `+` continuation lines, across blank, comment and indented lines | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-COM-001](./specs/XY-COM-001.yaml) | comments (`*` lines, `;` lines and `;` at the end of a line) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-DAT-001](./specs/XY-DAT-001.yaml) | the .DATA ... .ENDDATA table (an opaque named block) | documented | 9 + 0 solver |  |
-| [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | documented | 6 + 0 solver |  |
-| [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | documented | 6 + 0 solver |  |
+| [XY-DAT-001](./specs/XY-DAT-001.yaml) | the .DATA ... .ENDDATA table (an opaque named block) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | validated | 6 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIO-001](./specs/XY-DIO-001.yaml) | D diode lines (model, positional area, flags and parameters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | documented | 7 + 0 solver |  |
-| [XY-DIR-002](./specs/XY-DIR-002.yaml) | any other dot-command is refused (not an Xyce dot-command), with hints | documented | 8 + 0 solver |  |
-| [XY-DIR-003](./specs/XY-DIR-003.yaml) | directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed) | documented | 9 + 0 solver |  |
+| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DIR-002](./specs/XY-DIR-002.yaml) | any other dot-command is refused (not an Xyce dot-command), with hints | validated | 8 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DIR-003](./specs/XY-DIR-003.yaml) | directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-ELM-001](./specs/XY-ELM-001.yaml) | element fields (node fields with `:` paths, instance parameters with bare values) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-END-001](./specs/XY-END-001.yaml) | required final .END statement | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-FML-001](./specs/XY-FML-001.yaml) | formula expression syntax for reference scans (formula_xyce.lark) | validated | 6 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-FUN-001](./specs/XY-FUN-001.yaml) | .FUNC user-defined functions | validated | 8 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-GLB-001](./specs/XY-GLB-001.yaml) | .GLOBAL node names | validated | 5 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-ICN-001](./specs/XY-ICN-001.yaml) | .IC and .DCVOLT initial conditions (V(node)=value or node value pairs) | documented | 7 + 0 solver |  |
+| [XY-ICN-001](./specs/XY-ICN-001.yaml) | .IC and .DCVOLT initial conditions (V(node)=value or node value pairs) | validated | 9 + 10 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-INC-001](./specs/XY-INC-001.yaml) | .INC, .INCL and .INCLUDE | validated | 2 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IPN-001](./specs/XY-IPN-001.yaml) | closed instance-parameter lists of R, C, L and D | validated | 9 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-LIB-001](./specs/XY-LIB-001.yaml) | .LIB calls and .LIB/.ENDL definitions | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | documented | 5 + 0 solver |  |
+| [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | observed | 5 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-MUT-001](./specs/XY-MUT-001.yaml) | K mutual inductors (coupling and optional CORE model) | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-NOD-001](./specs/XY-NOD-001.yaml) | .NODESET (the forms of .IC) | documented | 4 + 0 solver |  |
+| [XY-NOD-001](./specs/XY-NOD-001.yaml) | .NODESET (the forms of .IC) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-NUM-001](./specs/XY-NUM-001.yaml) | numbers in device fields (scale factors and units) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NUM-002](./specs/XY-NUM-002.yaml) | numbers in expressions and .PARAM values (units and the imaginary J) | observed | 2 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-OPP-001](./specs/XY-OPP-001.yaml) | .OP operating point | documented | 4 + 0 solver |  |
-| [XY-OPT-001](./specs/XY-OPT-001.yaml) | .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE) | documented | 6 + 0 solver |  |
-| [XY-OPT-002](./specs/XY-OPT-002.yaml) | .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs) | documented | 7 + 0 solver |  |
+| [XY-OPP-001](./specs/XY-OPP-001.yaml) | .OP operating point | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-OPT-001](./specs/XY-OPT-001.yaml) | .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE) | observed | 8 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-OPT-002](./specs/XY-OPT-002.yaml) | .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs) | validated | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | documented | 6 + 0 solver |  |
+| [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-RCL-001](./specs/XY-RCL-001.yaml) | R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms) | validated | 17 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | documented | 3 + 0 solver |  |
+| [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SRC-001](./specs/XY-SRC-001.yaml) | V and I independent sources, DC and AC parts (transient functions refused until X-M3) | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | documented | 9 + 0 solver |  |
-| [XY-STP-002](./specs/XY-STP-002.yaml) | sweep targets of .DC and .STEP (names, `dev:param`, `model:param`, paths, TEMP) | documented | 4 + 0 solver |  |
+| [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | validated | 9 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-STP-002](./specs/XY-STP-002.yaml) | sweep targets of .DC and .STEP (names, `dev:param`, `model:param`, paths, TEMP) | validated | 4 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 8 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-SUB-001](./specs/XY-SUB-001.yaml) | X subcircuit calls (nodes, optional `PARAMS`, `M=`) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-TRN-001](./specs/XY-TRN-001.yaml) | .TRAN transient analysis (NOOP, UIC and a schedule) | documented | 10 + 0 solver |  |
+| [XY-TRN-001](./specs/XY-TRN-001.yaml) | .TRAN transient analysis (NOOP, UIC and a schedule) | validated | 10 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 0 solver |  |
+| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 1 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-46 entries: 25 validated, 2 observed, 0 disputed, 19 documented.
+46 entries: 40 validated, 5 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 

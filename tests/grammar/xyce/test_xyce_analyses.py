@@ -191,6 +191,13 @@ def test_ac_takes_a_variation_and_three_values(variation: str) -> None:
     assert (ac.frequencies, ac.file, ac.data) == ((), None, None)
 
 
+def test_the_ac_point_count_is_not_checked() -> None:
+    # Xyce 7.10 stops on a count that is not an integer; the library keeps the number's text
+    # (XY-ACA-001; discrepancies.md).
+    line = ".ac dec 1.5 1 10"
+    assert _item(line).points == _number(line, "1.5")
+
+
 @pytest.mark.parametrize("data", ["DATA=table1", "data = table1", "Data =table1"])
 def test_ac_takes_a_data_table(data: str) -> None:
     line = f".ac {data}"

@@ -1,0 +1,15 @@
+data: .DATA tables used by .STEP DATA= and .DC DATA=
+V1 in 0 2
+R1 in out 1k
+R2 out 0 1k
+.step data=loads
+.dc DATA = sources
+.DATA loads
++ r1 r2
++ 1k 1k
++ 1k 3k
+.ENDDATA
+.data sources v1
++ 0 1 2
+.enddata
+.end

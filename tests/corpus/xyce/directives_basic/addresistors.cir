@@ -1,0 +1,14 @@
+addresistors: Xyce writes a copy with resistors at the dangling nodes
+V1 in 0 2
+R1 in out 1k
+R2 out 0 1k
+R3 out tip 1k
+C3 out float 1n
+C4 float 0 1n
+.subckt stub a
+R5 a 0 1meg
+.preprocess addresistors nodcpath 1g
+.ends
+X1 out stub
+.PREPROCESS ADDRESISTORS ONETERMINAL 1meg
+.end

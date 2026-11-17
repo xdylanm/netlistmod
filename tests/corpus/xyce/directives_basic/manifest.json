@@ -1,0 +1,27 @@
+{
+  "family": "directives_basic",
+  "origin": "Authored in this repository for the X-M2 xyce grammar (task B6)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-16",
+  "notes": "The directives of X-M2 B2 to B4: analyses, sweeps, .STEP, options, initial conditions (.IC and .DCVOLT in one file, .NODESET in another, since together they abort Xyce), measurements, .DATA tables with their DATA= users, the untyped outputs and ADDRESISTORS. The solver test adds `.op` before `.END`, which gives way to each file's own analysis. A fixture whose `solver` field is {\"mode\": \"print\"} runs without -r, since Xyce aborts on -r for .EMBEDDEDSAMPLING, .HB, .LIN and .PCE. The `_crlf` file is the CRLF variant of its LF twin.",
+  "fixtures": {
+    "addresistors.cir": "9f7daf135019650f070fa647f04b1effc8038e68db188635435914e289905289",
+    "analyses.cir": "a91957540aa12d0a77fbbdef5bd211cbc982fbff47fbf9607b763f70e7d6a3b8",
+    "data.cir": "94bd70ffc7dd756353a1b79ab4afe6025b88aaf428e494f5ff03f07c30e70ace",
+    "dc.cir": "b38334dbe2a4f65095f4af2ec81b8a578c501ca858fddc8fcba61539d2582658",
+    "ic.cir": "fcb6368a069584341a3d01c3319ad84545f4615c988da3f97c5ec8243826dc2b",
+    "measure.cir": "5b02e24322d41d1e1a1a4cf041e86ddc8fc7e41583e029201a2b7bc9ab4cc4af",
+    "nodeset.cir": "b99e93e9c7fa55b69005e15802c97fd0557176ac8b67c3fa675d8ae0ab09b831",
+    "options.cir": "50203006df68e10eb1f05a9cd8f11ce4e07687400b595b0428a6c16ccdc4f46b",
+    "options_crlf.cir": "f60f2d7723cfd4f0e88d61ff8a31621bc411607bee548d280600bb6ff75685d1",
+    "outputs.cir": "926bb977d3ab2ba3e40cda150f711c3643ba62966dfa438c0450b0f75269f6d3",
+    "sampling.cir": {
+      "sha256": "08aa402ca10661cfba87a9aa67feb4c86e0e957a1facfb3ed4c0cfd6e49d0ee3",
+      "solver": {
+        "mode": "print"
+      }
+    },
+    "step.cir": "e5c124ad2765fa1f61c35fbc4b7857666d68b76c00d8a88a575cbe4646dffba6"
+  }
+}

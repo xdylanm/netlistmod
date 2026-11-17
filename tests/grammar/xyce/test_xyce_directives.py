@@ -144,6 +144,31 @@ def test_a_package_that_is_missing_or_unknown_is_rejected(
     assert message in error.reason
 
 
+@pytest.mark.parametrize(
+    ("line", "message"),
+    [
+        (".options temp=127", "write `.OPTIONS DEVICE TEMP=`"),
+        (".OPTION TNOM=50", "write `.OPTIONS DEVICE TNOM=`"),
+        (".options Temp = 27", "Xyce applies a package-less line whose only item is `Temp=`"),
+    ],
+)
+def test_a_packageless_temp_or_tnom_gets_the_device_hint(line: str, message: str) -> None:
+    # Xyce 7.10 applies TEMP= or TNOM= alone without a package, silently (discrepancies.md);
+    # the manual gives every item a package, so the line stays refused, with the DEVICE hint.
+    error = _error(line)
+    assert message in error.reason
+    assert "silently" in error.reason and "§2.1.25.1 p98" in error.reason
+
+
+@pytest.mark.parametrize(
+    "line", [".options reltol=1e-3", ".options temp=127 reltol=1e-3", ".option tnom=50 x=1"]
+)
+def test_another_packageless_line_is_ignored_with_a_warning(line: str) -> None:
+    error = _error(line)
+    assert "needs a package" in error.reason
+    assert error.reason.endswith("Xyce ignores a line without one, with a warning")
+
+
 # .OPTIONS: items and values (XY-OPT-002)
 
 
@@ -309,6 +334,43 @@ def test_malformed_conditions_are_rejected(line: str, piece: str, message: str) 
     error = _error(line)
     assert (error.line, error.column) == (2, 1 + line.index(piece))
     assert message in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "outcome"),
+    [
+        (".ic all=0.5", "Xyce ignores it on `.ic`, with a warning"),
+        (".DCVOLT ALL = 0.5", "Xyce ignores it on `.DCVOLT`, with a warning"),
+        (".ic v(2)=1\n+ all=0.5", "Xyce ignores it on `.ic`, with a warning"),
+        (".nodeset all=0.5", "Xyce stops on it on `.NODESET`"),
+    ],
+)
+def test_all_is_refused_with_what_xyce_does_on_each_keyword(line: str, outcome: str) -> None:
+    # `.IC`/`.DCVOLT` `all=` is warned and ignored by Xyce 7.10, `.NODESET all=` stops it
+    # (discrepancies.md); each cites its own section.
+    error = _error(line)
+    assert error.reason.endswith(outcome)
+    section = "§2.1.22 p92" if "nodeset" in line else "§2.1.14 p48"
+    assert section in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "outcome"),
+    [
+        (".ic i(C1)=1m", "Xyce ignores a current on `.ic`, with a warning"),
+        (".nodeset I(L1)=1m", "Xyce stops on a current on `.NODESET`"),
+        (".DCVOLT v(2,3)=0.5", "Xyce ignores a difference on `.DCVOLT`, with a warning"),
+        (".nodeset v(2,3)=0.5", "Xyce stops on a difference on `.NODESET`"),
+        (".ic v(2)=0.5 3 0.25", "Xyce ignores the other form on `.ic`, with a warning"),
+        (".nodeset 2 0.5 v(3)=0.25", "Xyce stops on the other form on `.NODESET`"),
+    ],
+)
+def test_other_refused_conditions_say_what_xyce_does_on_each_keyword(
+    line: str, outcome: str
+) -> None:
+    # Xyce 7.10 warns and ignores what it cannot read on `.IC` and `.DCVOLT`, and stops on
+    # `.NODESET` (discrepancies.md).
+    assert _error(line).reason.endswith(outcome)
 
 
 @pytest.mark.parametrize(
