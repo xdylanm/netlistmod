@@ -1,0 +1,12 @@
+dc: nested sweeps of a source, a device, a model parameter and the temperature
+V1 in 0 2
+R1 in out rmod 1k TC1=0.01
+R2 out 0 1k
+.model rmod R R=1
+.param gain=1
+.DC LIN V1 0 2 1
++ R1:R 1k 2k 1k
++ rmod:R LIST 1 2
++ TEMP 27 127 100
+.dc oct gain 1 4 1
+.end

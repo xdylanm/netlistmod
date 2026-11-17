@@ -4,7 +4,11 @@ construct: .IC and .DCVOLT initial conditions (V(node)=value or node value pairs
 manual_ref:
 - '[xyce-ref] §2.1.14 p48 ".IC (Initial Condition, Bias point)"'
 - '[xyce-ref] §2.1.4 p29 ".DCVOLT (Initial Condition, Bias point)"'
-status: documented
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
 grammar:
 - xy_ic_stmt
 - _ic_conditions
@@ -28,5 +32,17 @@ tests:
 - tests/grammar/xyce/test_xyce_directives.py::test_malformed_conditions_are_rejected
 - tests/grammar/xyce/test_xyce_directives.py::test_condition_syntax_errors_are_rejected
 - tests/grammar/xyce/test_xyce_directives.py::test_the_directives_round_trip
-validation_note: Read from the manual (decision 0028 items 2 and 6; xm2-tasks 5.1 points 24 and 25). The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1; the solver tests and the discrepancy rows (mixed forms, commas, `I(...)`, `V(a,b)` and `2=0.5`, which Xyce ignores with a warning; an odd pair count, which hangs Xyce and is recorded, not probed) are X-M2 B6's.
-notes: '`IcDirective` (`.DCVOLT` too, `keyword` as written) with one `NodeCondition` per condition: `V(node)=value` (`form` `v`, `V(` in any case, blanks allowed around the `=`) or a `node value` pair (`form` `pair`, the span from the node to the value), several per line, one form per statement (a mix is a ParseError). A node is a NODE_WORD, so it may be a `:` path into an instance or a `$G` global; a value is a number of the device-field reader or an expression in braces or quotes. `I(...)`, `all=`, `V(a,b)`, commas, an empty statement and a node without its value are a ParseError. Allowed in a subcircuit body, read per definition (Xyce applies it in every instance). Resolving the nodes, a repeated node, `.IC` with `.NODESET` and a `$G` node in a body are the document layer''s (X-M2 B5).'
+- tests/grammar/xyce/test_xyce_directives.py::test_all_is_refused_with_what_xyce_does_on_each_keyword
+- tests/grammar/xyce/test_xyce_directives.py::test_other_refused_conditions_say_what_xyce_does_on_each_keyword
+- tests/solver/test_xyce_directive_probes.py::test_an_initial_condition_holds_its_node
+- tests/solver/test_xyce_directive_probes.py::test_without_a_condition_the_operating_point_holds
+- tests/solver/test_xyce_directive_probes.py::test_ic_ignores_what_it_cannot_read_with_a_warning
+- tests/solver/test_xyce_directive_probes.py::test_a_repeated_condition_uses_the_last_value
+- tests/solver/test_xyce_directive_probes.py::test_ic_with_nodeset_aborts
+- tests/solver/test_xyce_directive_probes.py::test_a_path_reaches_the_internal_node
+- tests/solver/test_xyce_directive_probes.py::test_a_condition_on_an_unconnected_node_is_ignored
+- tests/solver/test_xyce_directive_probes.py::test_a_body_condition_applies_in_every_instance
+- tests/solver/test_xyce_directive_probes.py::test_a_global_node_in_a_body_condition_is_ignored
+- tests/solver/test_xyce_directive_probes.py::test_a_top_level_condition_on_a_dollar_g_node_applies
+validation_note: 'Validated on XyceNF Release 7.10.0: both forms on `.IC` and `.DCVOLT` hold the node at the value the library reads (blanks inside `V( node )` too), a repeated node takes the last value, a path reaches an internal node, a body condition applies in every instance, and `.IC` with `.NODESET` aborts. Mixed forms, commas, `I(...)`, `V(a,b)`, `2=0.5` and `all=` are ignored with a warning (discrepancies.md); an odd number of pair fields hangs Xyce and is never run.'
+notes: '`IcDirective` (`.DCVOLT` too, `keyword` as written) with one `NodeCondition` per condition: `V(node)=value` (`form` `v`, `V(` in any case, blanks allowed around the `=`) or a `node value` pair (`form` `pair`, the span from the node to the value), several per line, one form per statement (a mix is a ParseError). A node is a NODE_WORD, so it may be a `:` path into an instance or a `$G` global; a value is a number of the device-field reader or an expression in braces or quotes. `I(...)`, `all=`, `V(a,b)`, commas, an empty statement and a node without its value are a ParseError. The message of each refused field says what Xyce does with it on the statement''s keyword: it ignores it, with a warning, on `.IC` and `.DCVOLT`, and stops on `.NODESET` (X-M2 B6). Allowed in a subcircuit body, read per definition (Xyce applies it in every instance). Resolving the nodes, a repeated node, `.IC` with `.NODESET` and a `$G` node in a body are the document layer''s (X-M2 B5).'

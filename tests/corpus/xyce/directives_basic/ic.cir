@@ -1,0 +1,19 @@
+ic: initial conditions at the top level, in a body and through a path
+V1 in 0 2
+R1 in out 1k
+C1 out 0 1u
+R2 out 0 1k
+.subckt hold a
+Rs a m 1k
+Cs m 0 1u
+Rt m 0 1k
+.ic v(m)=0.3
+.ends
+X1 out hold
+X2 out hold
+.IC V(out) = 0.5
+.dcvolt in 2 x1:m 0.25
+.ic v(x2:m)={0.1*2}
++ v(in)='2'
+.tran 1n 1n
+.end

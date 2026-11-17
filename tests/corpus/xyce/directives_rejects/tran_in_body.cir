@@ -1,0 +1,12 @@
+an analysis in a body
+V1 in 0 2 AC 1
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.subckt s a
+R5 a 0 1meg
+.tran 1n 10n
+.ends
+X1 out s
+
+.end
