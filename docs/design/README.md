@@ -25,7 +25,7 @@ Active plans and design notes live in this folder. Completed work records move t
 | [document-layer.md](./document-layer.md) | ACTIVE (living reference) |
 | [edit-layer.md](./edit-layer.md) | ACTIVE (living reference) |
 | [xyce-plan.md](./xyce-plan.md) | ACTIVE |
-| [xm2-tasks.md](./xm2-tasks.md) | ACTIVE |
+| [xm2-tasks.md](./xm2-tasks.md) | READY FOR REVIEW |
 | [qspice-plan.md](./qspice-plan.md) | DRAFT |
 | [archive/xyce/xm1-tasks.md](./archive/xyce/xm1-tasks.md) | COMPLETE (2026-11-16) |
 | [archive/xyce/xm0-tasks.md](./archive/xyce/xm0-tasks.md) | COMPLETE (2026-11-15) |
