@@ -429,7 +429,37 @@ def test_malformed_step_is_rejected(line: str) -> None:
     assert _error(line).line == 2
 
 
-@pytest.mark.parametrize("line", [".step param x 1 2 1", ".STEP PARAM x list 1 2"])
+@pytest.mark.parametrize(
+    "line",
+    [".step param LIST 1k 2k", ".STEP PARAM list 1k 2k", ".step Param LiSt 1k 2k ; c"],
+)
+def test_a_target_named_param_takes_a_list(line: str) -> None:
+    # R1 review S2: Xyce runs `.STEP param LIST 1k 2k` as a sweep of a parameter `param`.
+    step = _item(line)
+    assert isinstance(step, StepDirective)
+    name = line.split()[1]
+    assert (step.kind, step.name, step.parameter) == ("name", name, None)
+    assert step.name_span == _at(line, name)
+    assert step.values == (_number(line, "1k"), _number(line, "2k"))
+
+
+def test_a_target_named_param_takes_a_list_on_a_plus_line() -> None:
+    (step,) = _parse("t\n.step param list\n+ 1k 2k\n.END\n").items[1:-1]
+    assert isinstance(step, StepDirective)
+    assert (step.name, [value.text for value in step.values]) == ("param", ["1k", "2k"])
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        ".step param x 1 2 1",
+        ".STEP PARAM x list 1 2",
+        ".step param listx 1 2 1",
+        ".step param l 1 2 1",
+        ".step param LIS 1 2 1",
+        ".step param list_1 1 2 1",
+    ],
+)
 def test_the_param_keyword_is_rejected_with_a_hint(line: str) -> None:
     error = _error(line)
     assert (error.line, error.column) == (2, 7)

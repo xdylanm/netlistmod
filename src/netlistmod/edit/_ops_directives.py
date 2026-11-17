@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document import Line
 from netlistmod.document.document import Netlist
-from netlistmod.document.index import SWEEP_LOOKUP, step_quantity
+from netlistmod.document.index import _SWEEP_LOOKUP, step_quantity
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DIRECTIVE_LINES,
@@ -216,7 +217,7 @@ def _step_quantity(netlist: Netlist, step: StepDirective) -> tuple[str, ...]:
     folded target of the document layer, so that ``R2`` and ``R2:R`` are one quantity and a
     ``DATA=`` step is keyed by its table (xm2-tasks 5.1 point 16)."""
     root = netlist.scope()
-    if SWEEP_LOOKUP[netlist.dialect]:
+    if _SWEEP_LOOKUP[netlist.dialect]:
         return step_quantity(root, step)
     model_type = step.model_type.name if step.model_type is not None else ""
     return (step.kind, root.fold(model_type), root.fold(step.name))
@@ -237,10 +238,20 @@ def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
         )
     if line.scope:
         raise EditError(
-            f"{what}: line {line.first_line} is inside a subcircuit definition, and directive "
-            "operations edit top-level lines only"
+            f"{what}: line {line.first_line} is inside a subcircuit definition"
+            + _BODY_LINE_NOTE[netlist.dialect]
         )
     return line
+
+
+# What the refusal of a body line adds: on xyce, where `.IC`, `.DCVOLT`, `.NODESET` and
+# `.PREPROCESS` may stand in a body (decision 0028 item 2), that the operations edit top-level
+# lines only; nothing on ngspice and LTspice, whose text is unchanged (decision 0024).
+_BODY_LINE_NOTE: dict[Dialect, str] = {
+    Dialect.NGSPICE: "",
+    Dialect.LTSPICE: "",
+    _XYCE: ", and directive operations edit top-level lines only",
+}
 
 
 def add_include(

@@ -195,7 +195,8 @@ notes:
   `MEASURE_MODE_MISMATCH` and `CONDITION_IGNORED` (X-M2 B5), which `docs/usage/errors.md` lists
   only as reserved;
 - [ ] the X-M2 internal names X-M8 makes public, or keeps internal: `Scope._data` (the `.DATA`
-  tables), `Index.sweep_targets` with `SweepTarget`, and `document.index.step_quantity` (the
+  tables), `Index.sweep_targets` with `SweepTarget`, `Index.condition_nodes` (the nodes that
+  initial conditions set; X-M2 R1), and `document.index.step_quantity` (the
   folded `.STEP` quantity that `directives.set` also keys by; X-M2 B5).
 
 **`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
@@ -242,8 +243,9 @@ named:
     line after the first joins it into one nested sweep (its own message). A warning, on the
     keyword." "**What to do:** keep one analysis line, or one `.DC` line with all its sweeps."
   - `STEPPED_ANALYSIS_FIELD`: "Xyce only. A field of `.TRAN`, `.AC` or `.DC` reads a parameter
-    that a `.STEP` sweeps; Xyce reads the field once, so the sweep does not change it. A
-    warning, on the parameter." "**What to do:** write the field as a number."
+    that a `.STEP` sweeps; Xyce reads a `.TRAN` field once, so the sweep does not change it, and
+    stops on an `.AC` or `.DC` field. A warning, on the parameter." "**What to do:** write the
+    field as a number."
   - `STEP_IGNORED`: "Xyce only. A `.STEP` line beside a `.STEP DATA=` line, which makes Xyce drop
     every other `.STEP` line. A warning, on the keyword." "**What to do:** put the swept quantity
     in the table's columns."

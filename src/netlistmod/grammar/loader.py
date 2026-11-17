@@ -390,6 +390,15 @@ _CLOSED_DOT_COMMANDS: Final[dict[Dialect, bool]] = {
     Dialect.LTSPICE: True,
     _XYCE: True,
 }
+# Whether that refusal lists what the parser expected: on LTspice (decision 0009, unchanged); not
+# on xyce, so that a dot-command outside the list reads the same whether the parser stops at its
+# first character (`.temp`) or inside it after a keyword that is its start (`.steps`, `.optionsx`;
+# R1 review N1).
+_DOT_COMMAND_EXPECTED: Final[dict[Dialect, bool]] = {
+    Dialect.NGSPICE: True,
+    Dialect.LTSPICE: True,
+    _XYCE: False,
+}
 # Whether the parser stopping inside the first word of a line that begins with `.` means that word
 # is outside the closed list: xyce has no generic dot-command terminal, so a keyword that is a
 # string matches the start of a longer word (`.op` in `.opt` or `.optoins`, `.end` in `.endc`) and
@@ -639,8 +648,9 @@ def _map_error(
         if letter == "." and _CLOSED_DOT_COMMANDS[dialect]:
             # The closed list of decision 0009: no terminal of this place matches the command.
             name = source.text[offset:].split(maxsplit=1)[0]
+            listed = expected if _DOT_COMMAND_EXPECTED[dialect] else ()
             return ParseError(
-                line, column, source.excerpt(offset), expected, _not_a_dot_command(dialect, name)
+                line, column, source.excerpt(offset), listed, _not_a_dot_command(dialect, name)
             )
     word = _DOT_WORD.match(source.text, line_start)
     if _DOT_WORD_PREFIXES[dialect] and word is not None and offset < word.end():

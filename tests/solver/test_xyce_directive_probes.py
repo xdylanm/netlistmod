@@ -226,12 +226,12 @@ def test_the_plural_scale_without_a_package_runs(solver: Solver, tmp_path: Path)
 
 def test_option_scale_is_parsers_scale(solver: Solver, tmp_path: Path) -> None:
     """Xyce reads `.OPTION SCALE=` as PARSER's SCALE ([xyce-ref] §2.1.25.21 p119): beside
-    `.OPTIONS PARSER SCALE=` it is a repeat, the first value used, with a warning. The library
-    keys the package-less item apart and reports no repeat (a discrepancies.md row)."""
+    `.OPTIONS PARSER SCALE=` it is a repeat, the first value used, with a warning, as
+    `DUPLICATE_DEFINITION` says (R1 review gap 2)."""
     text = f"{_HOT}.option scale=1\n.options parser scale=2\n.op\n.end\n"
     result = _ok(solver, tmp_path, text)
     assert "duplicate PARSER parameter.  Using the first value found = 1" in _messages(result)
-    assert DiagnosticCode.DUPLICATE_DEFINITION not in _codes(text)
+    assert DiagnosticCode.DUPLICATE_DEFINITION in _codes(text)
 
 
 @pytest.mark.parametrize(
@@ -643,9 +643,11 @@ def test_ac_and_noise_data_take_the_frequencies(
 
 
 def test_tran_takes_no_data(solver: Solver, tmp_path: Path) -> None:
-    """`DATA=` is not a `.TRAN` field: Xyce stops on it, and the library refuses it."""
+    """`DATA=` is not a `.TRAN` field: Xyce stops on it ("expected NOOP/UIC field on .TRAN
+    line"), and the library refuses it."""
     result = run(solver, tmp_path, f"{_DIVIDER}{_TABLE}.tran 1n 2n data=t\n.end\n")
     assert result.returncode != 0
+    assert "expected NOOP/UIC field on .TRAN line" in _messages(result)
     with pytest.raises(ParseError):
         _library(f"{_DIVIDER}{_TABLE}.tran 1n 2n data=t\n.end\n")
 

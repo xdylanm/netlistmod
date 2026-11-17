@@ -257,10 +257,15 @@ global_node: SEP WORD
 // tstep is required; NOOP and UIC (synonyms) stand after the numbers, in either order, each at
 // most once (the transformer refuses a repeat); then at most one schedule, an expression in braces
 // or quotes whose head is `schedule(` in any case (blanks may stand around `schedule`, which Xyce
-// runs), a field of its own (SCHEDULE_FORMULA outranks BRACE_FORMULA and QUOTE_FORMULA). The
-// transformer refuses a schedule in a number's place. No comma, and none of LTspice's modifiers.
+// runs), a field of its own (SCHEDULE_FORMULA outranks BRACE_FORMULA and QUOTE_FORMULA). A
+// schedule in tstep's or tstop's place (tran_early_schedule) is recognised with the rest of the
+// line only to be refused; in tstart's or tmax's place it is the schedule, and what follows it is
+// refused. No comma, and none of LTspice's modifiers.
 // spec: XY-TRN-001
 xy_tran_stmt: TRAN_KW value value (value value?)? tran_flag* tran_schedule? (NL | eol)
+            | TRAN_KW value? tran_early_schedule
+tran_early_schedule: SEP SCHEDULE_FORMULA REST_TEXT* NL
+                   | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_early_schedule
 tran_flag: SEP (NOOP_KW | UIC_KW)
          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_flag
 tran_schedule: SEP SCHEDULE_FORMULA
@@ -311,9 +316,12 @@ sweep_target: SEP NODE_WORD
 
 // .STEP ([xyce-ref] §2.1.36 p155–158): one sweep per line, `[LIN|DEC|OCT] target start stop
 // step`, `target LIST v1 v2 ...` (at least two values) or DATA=table, with plain numbers only.
-// There is no `param` keyword: STEP_PARAM_KW, `param` before a name, is recognised with the rest
-// of the line only to be refused, and so is a second sweep on the line (step_second), since
-// Xyce runs only the last one.
+// There is no `param` keyword: STEP_PARAM_KW, `param` before a name other than LIST, is
+// recognised with the rest of the line only to be refused, and so is a second sweep on the line
+// (step_second), since Xyce runs only the last one. `.STEP param LIST 1k 2k` sweeps a parameter
+// named `param`, as Xyce runs it. The lookahead spells out every word but `list` (a word that
+// does not begin with `l`, or that leaves `list` at its second, third, fourth or fifth letter)
+// rather than nesting a negative lookahead, so that Lark still checks it for collisions.
 // spec: XY-STP-001
 xy_step_stmt: STEP_KW ac_variation? sweep_target step_value step_value step_value _step_end
             | STEP_KW sweep_target list_keyword step_value step_value+ _step_end
@@ -329,7 +337,7 @@ step_second: SEP NODE_WORD REST_TEXT* NL
 xy_step_param: SEP STEP_PARAM_KW REST_TEXT* NL
              | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xy_step_param
 STEP_KW.4: ".step"i
-STEP_PARAM_KW.3: /param(?=[ \t]+[A-Za-z_])/i
+STEP_PARAM_KW.3: /param(?=[ \t]+(?:[a-km-z_]|l(?:[^i]|i(?:[^s]|s(?:[^t]|t[^ \t\r\n;])))))/i
 
 // ---------------------------------------------------------------------------------------------
 // Options, initial conditions, measurements and the .DATA block (X-M2 B3; decision 0028 items 2

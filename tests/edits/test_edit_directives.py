@@ -7,6 +7,7 @@ from collections.abc import Callable
 import pytest
 
 from netlistmod import (
+    Dialect,
     EditError,
     Netlist,
     OpDirective,
@@ -332,3 +333,22 @@ def test_placement_repr() -> None:
     netlist = _netlist("t\n.op\n.end\n")
     assert repr(Placement.BEFORE_END) == "Placement.BEFORE_END"
     assert repr(Placement.after(netlist.lines[1])) == "Placement.after(line 2)"
+
+
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+@pytest.mark.parametrize("operation", ["remove", "replace"])
+def test_a_body_line_refusal_keeps_its_text(dialect: Dialect, operation: str) -> None:
+    # R1 review of X-M2 (B2): the xyce note on this refusal is not added on ngspice and LTspice.
+    netlist = Netlist.from_text(
+        't\nX1 a 0 s\n.subckt s p q\nR1 p q 1k\n.include "x.lib"\n.ends\nR2 a 0 1\n.end\n',
+        dialect=dialect,
+    )
+    line = netlist.scope(("s",)).lines[1]
+    with pytest.raises(EditError) as raised:
+        if operation == "remove":
+            netlist.directives.remove(line)
+        else:
+            netlist.directives.replace(line, ".op")
+    assert str(raised.value) == (
+        f"directives.{operation}: line 5 is inside a subcircuit definition"
+    )

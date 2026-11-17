@@ -798,6 +798,11 @@ class DcSweep:
 
     An LTspice sweep may name a ``variation`` before the source, or hold a ``values`` list or a
     ``file`` in place of the range (``span`` then ends with the last of them).
+
+    An Xyce sweep (decision 0028 item 3) may name a ``variation`` (``LIN``, ``DEC`` or ``OCT``, as
+    written) or hold a ``LIST`` of at least two ``values`` in place of the range; its ``source``
+    is any sweep target, which may hold ``:`` (``R2:R``, ``dm:IS``, ``X1:R5:R``), ``TEMP`` or a
+    parameter, and its range fields may be expressions in braces or quotes.
     """
 
     source: str
@@ -928,7 +933,9 @@ class MeasureDirective(Directive):
     """``.meas`` or ``.measure``, typed shallowly.
 
     ``analysis`` (``dc``, ``ac``, ``tran``, ``sp``; in LTspice also ``noise`` and ``op``, or
-    ``None`` when it is left out; as written) and ``result`` are fields; the
+    ``None`` when it is left out; in Xyce one of ``tran``, ``dc``, ``ac``, ``noise``, ``fft``,
+    ``tran_cont``, ``dc_cont``, ``ac_cont`` and ``noise_cont``, required; as written) and
+    ``result`` are fields; the
     rest of the statement is ``body_text``, the source slice of ``body_span``, which runs from
     the first to the last text token (comments on earlier lines of a continued statement are
     inside it; those are also listed in ``trailing_comments``).
@@ -958,6 +965,9 @@ class StepDirective(Directive):
     (``R2:R``, ``dm:IS``, ``X1:R5:R``; ``parameter`` is the part after the last ``:``), ``temp``
     for ``TEMP``, and ``data`` for ``DATA=table`` (``data`` and ``name`` are the table's name, the
     sweep fields ``None`` and empty). ``parameter`` and ``data`` are ``None`` on LTspice.
+    ``parameter`` is read from the form alone, which cannot tell ``R2:R`` from a path to a device
+    without its parameter, ``X1:R5``: there it is ``R5``, a device name, and the document layer
+    reports the target as an unresolved element, since Xyce stops on it.
     """
 
     kind: Literal["param", "source", "temp", "model", "name", "qualified", "data"]

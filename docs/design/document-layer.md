@@ -272,14 +272,17 @@ decision 0027 items 1 and 3):
   inside a continued statement, which is one of its trailing comments: the grammar lexes it as
   `INDENTED_TRAILING`, and the parse records its span (`model.nodes.indented_comments`, internal),
   which `collect_diagnostics` takes as `indented`.
-- **Sweep targets** (decision 0028 item 4; `index.py`'s `SWEEP_LOOKUP`, a per-dialect table): a
+- **Sweep targets** (decision 0028 item 4; `index.py`'s `_SWEEP_LOOKUP`, a per-dialect table): a
   `.DC` sweep or `.STEP` target is resolved as Xyce resolves it. `TEMP` is no reference. A plain
   name is a parameter first (the effective assignment, the first on xyce), then an element of the
   scope (a device's primary parameter); unresolved, a `param` reference, which Xyce reports as an
   undefined variable. In `head:param`, split at the last `:`, the head is an element, a path
   `X1:R5` walked through the `X` lines and their definitions, or a model; unresolved, an
-  `element` reference. `Index.sweep_targets` (internal) maps these references to what they may
-  name, so an unresolved one says "parameter or element", "element or model" or "element", adds
+  `element` reference. A path whose last part is a device of the instance (`X1:R5`, the device
+  without its parameter) is an unresolved `element` reference for the whole target, "element
+  parameter" in the message with the hint to write `X1:R5:<param>`, a warning even with an
+  include in scope, since Xyce stops on it. `Index.sweep_targets` (internal) maps these
+  references to what they may name, so an unresolved one says "parameter or element", "element or model" or "element", adds
   that Xyce stops, and is info when a path reaches a definition an include may hold. ngspice and
   LTspice keep their `.dc` and `.step` references.
 - **`DATA=`** on `.AC`, `.DC` and `.STEP` is a `data` reference to the top-level `.DATA` table
@@ -289,8 +292,10 @@ decision 0027 items 1 and 3):
   no function reference; its arguments are scanned as any formula. `schedule` is not made a
   built-in function, since Xyce knows it in that field only.
 - **Condition nodes** (decision 0028 items 2 and 6): each node of an `.IC`, `.DCVOLT` or
-  `.NODESET` condition is a `node` reference resolved in the scope of its line (a body condition
-  in its definition: ports and body nodes, ground, globals). A path that names an internal node of
+  `.NODESET` condition is a `node` reference resolved in the scope of its line, and is listed in
+  `Index.condition_nodes` (internal), which routes it to the condition checks: a node that an
+  expression in a condition's value reads is an ordinary expression node, on every dialect (a
+  body condition in its definition: ports and body nodes, ground, globals). A path that names an internal node of
   an instance is a `NODE_INTO_INSTANCE` warning (info when the definition may be in an include),
   as on a device line; a node that nothing in the scope connects is an `UNRESOLVED_NODE` warning
   (info with an include), since Xyce ignores its condition; a `$G` or `.GLOBAL` node in a body's
@@ -302,7 +307,9 @@ decision 0027 items 1 and 3):
     to any of them; when `.DC` runs, every `.DC` line after the first joins it into one nested
     sweep, the earlier lines innermost (its own message).
   - `STEPPED_ANALYSIS_FIELD`: a parameter reference in a `.TRAN`, `.AC` or `.DC` field whose
-    target a `.STEP` sweeps (a `.DC` sweep of the parameter itself is not a field).
+    target a `.STEP` sweeps (a `.DC` sweep of the parameter itself is not a field). The message
+    is keyed per analysis (`_STEPPED_FIELD`): Xyce reads a `.TRAN` field once, and stops on an
+    `.AC` or `.DC` one (R1 review).
   - `STEP_IGNORED` on each `.STEP` line beside a `.STEP DATA=` line; `STEPS_WITH_OP` on `.OP` when
     it runs with two or more `.STEP` lines.
   - `IC_WITH_NODESET` on each `.NODESET` when the netlist, in any scope, has `.IC` or `.DCVOLT`.
@@ -311,8 +318,8 @@ decision 0027 items 1 and 3):
     message says Xyce stops, or, for DC under `.OP`, reports the measurement as FAILED.
 - **`DUPLICATE_DEFINITION`** for directives, each a warning that says which one Xyce uses: a
   repeated `.OPTIONS` item of one package (the first; the OUTPUT package is left out, since two of
-  its lines both apply), a repeated node in the `.IC` and `.DCVOLT` conditions or in the
-  `.NODESET` conditions of one scope (the last), a repeated `.MEAS` result (the last) and a
+  its lines both apply; the package-less `.OPTION SCALE=` is PARSER's, as Xyce reads it), a
+  repeated node in the `.IC` and `.DCVOLT` conditions or in the `.NODESET` conditions of one scope (the last), a repeated `.MEAS` result (the last) and a
   repeated `.DATA` name (the last). Two `.STEP` lines of one quantity are a repeat by the key
   `step_quantity` (internal): a device's name alone means its primary parameter (R, C and L
   theirs, V and I `DCV0`), only when the name resolves to that device and not to a parameter, so
