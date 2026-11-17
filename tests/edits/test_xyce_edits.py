@@ -276,12 +276,188 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         lambda n: n.directives.remove(n.lines[1]),
         "R1 a 0 1k\n",
     ),
+    # X-M2 B5: every xyce directive kind, the closed-list lines and the `.DATA` table are added,
+    # replaced and removed whole (decision 0028; xm2-tasks 5.1 point 23).
+    (
+        "tran-schedule-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(
+            ".tran 1n 10n NOOP {schedule(0, 1n, 5n, 2n)}", placement=Placement.AFTER_TITLE
+        ),
+        ".tran 1n 10n NOOP {schedule(0, 1n, 5n, 2n)}\nR1 a 0 1k\n",
+    ),
+    (
+        "tran-replaced",
+        ".TRAN 1n 10n UIC\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".tran 1n 20n 0 1n NOOP"),
+        ".tran 1n 20n 0 1n NOOP\nR1 a 0 1k\n",
+    ),
+    (
+        "dc-sweeps-added",
+        "V1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.add(
+            ".dc V1 0 1 0.5 R1:R LIST 1k 2k DEC rmod:RSH 1 100 2", placement=Placement.AFTER_TITLE
+        ),
+        ".dc V1 0 1 0.5 R1:R LIST 1k 2k DEC rmod:RSH 1 100 2\nV1 a 0 1\nR1 a 0 1k\n",
+    ),
+    (
+        "ac-data-replaced",
+        ".ac dec 10 1 1k\n.data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".AC DATA=t"),
+        ".AC DATA=t\n.data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+    ),
+    (
+        "op-removed",
+        ".op\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
+    (
+        "options-continued-replaced",
+        ".options timeint reltol=1e-3\n+ method=gear ; integrator\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".OPTIONS DEVICE TEMP=50"),
+        ".OPTIONS DEVICE TEMP=50\nR1 a 0 1k\n",
+    ),
+    (
+        "option-scale-removed",
+        ".option scale=1e-6\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
+    (
+        "dcvolt-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".DCVOLT V(a)=1", placement=Placement.AFTER_TITLE),
+        ".DCVOLT V(a)=1\nR1 a 0 1k\n",
+    ),
+    (
+        "nodeset-replaced",
+        ".nodeset V(a)=1\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".nodeset a 0.5"),
+        ".nodeset a 0.5\nR1 a 0 1k\n",
+    ),
+    (
+        "ic-removed",
+        ".ic a 1\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
+    (
+        "meas-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(
+            [".MEASURE TRAN m1 MAX V(a)", "+ FROM=1n TO=2n"], placement=Placement.AFTER_TITLE
+        ),
+        ".MEASURE TRAN m1 MAX V(a)\n+ FROM=1n TO=2n\nR1 a 0 1k\n",
+    ),
+    (
+        "meas-replaced",
+        ".meas tran m1 max v(a)\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".meas ac m1 max vm(a)"),
+        ".meas ac m1 max vm(a)\nR1 a 0 1k\n",
+    ),
+    (
+        "step-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".step R1:R LIST 1k 2k", placement=Placement.AFTER_TITLE),
+        ".step R1:R LIST 1k 2k\nR1 a 0 1k\n",
+    ),
+    (
+        "step-data-removed",
+        ".step DATA=t\n.data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        ".data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+    ),
+    # The closed list (decision 0028 item 1): `UnknownDirective` lines, continued by `+` lines.
+    (
+        "print-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(
+            [".print tran FORMAT=CSV", "+ v(a)"], placement=Placement.AFTER_TITLE
+        ),
+        ".print tran FORMAT=CSV\n+ v(a)\nR1 a 0 1k\n",
+    ),
+    (
+        "print-replaced",
+        ".PRINT TRAN v(a)\n* more\n+ i(R1) ; currents\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".print ac vm(a)"),
+        ".print ac vm(a)\nR1 a 0 1k\n",
+    ),
+    (
+        "save-removed",
+        ".save type=ic\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
+    (
+        "noise-replaced-by-fft",
+        ".noise v(a) V1 dec 1 1 10\nV1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.replace(n.lines[1], ".fft v(a) np=16"),
+        ".fft v(a) np=16\nV1 a 0 1\nR1 a 0 1k\n",
+    ),
+    (
+        "addresistors-added",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(
+            ".preprocess addresistors nodcpath 1g", placement=Placement.AFTER_TITLE
+        ),
+        ".preprocess addresistors nodcpath 1g\nR1 a 0 1k\n",
+    ),
+    (
+        "addresistors-removed",
+        ".PREPROCESS ADDRESISTORS ONETERMINAL 1G\nR1 a 0 1k\n",
+        lambda n: n.directives.remove(n.lines[1]),
+        "R1 a 0 1k\n",
+    ),
+    # directives.set: the singleton kinds as on the other dialects; `.STEP` by its folded
+    # quantity (xm2-tasks 5.1 points 15 and 16).
+    (
+        "set-tran",
+        ".tran 1n 10n\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".tran 1n 20n {schedule(0, 1n)}"),
+        ".tran 1n 20n {schedule(0, 1n)}\nR1 a 0 1k\n",
+    ),
+    (
+        "set-dc",
+        ".DC V1 0 1 0.5 R1 LIST 1k 2k\nV1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".dc V1 0 2 0.5"),
+        ".dc V1 0 2 0.5\nV1 a 0 1\nR1 a 0 1k\n",
+    ),
+    (
+        "set-step-device-by-its-primary-parameter",
+        ".step R1 1k 2k 1k\n.step V1 1 2 1\nV1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".step r1:r LIST 1k 5k"),
+        ".step r1:r LIST 1k 5k\n.step V1 1 2 1\nV1 a 0 1\nR1 a 0 1k\n",
+    ),
+    (
+        "set-step-source-by-dcv0",
+        ".step R1 1k 2k 1k\n.STEP V1:DCV0 1 2 1\nV1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".step V1 1 3 1"),
+        ".step R1 1k 2k 1k\n.step V1 1 3 1\nV1 a 0 1\nR1 a 0 1k\n",
+    ),
+    (
+        "set-step-parameter-is-not-the-device",
+        ".param R1=1\n.step R1 1 2 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".step R1:R 1k 2k 1k"),
+        ".param R1=1\n.step R1 1 2 1\nR1 a 0 1k\n",
+    ),
+    (
+        "set-step-data-by-its-table",
+        ".step DATA=t\n.step R1 1k 2k 1k\n.data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".step data = T"),
+        ".step data = T\n.step R1 1k 2k 1k\n.data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
+    ),
 ]
 
 # The cases whose change is outside the body: the model or the `.include` line.
 _OUTSIDE = {
     "model-param": _text("R1 a 0 rmod 1k\n").replace(b"RSH=100", b"RSH=50"),
     "include": _text("R1 a 0 1k\n").replace(b".end\n", b'.include "models.lib"\n.end\n'),
+    # Xyce looks a plain `.STEP` name up as a parameter first, so `R1:R` is another quantity and
+    # set adds a line.
+    "set-step-parameter-is-not-the-device": _text(
+        ".param R1=1\n.step R1 1 2 1\nR1 a 0 1k\n"
+    ).replace(b".end\n", b".step R1:R 1k 2k 1k\n.end\n"),
 }
 
 
@@ -469,6 +645,86 @@ REFUSED: list[tuple[str, str, Op, type[Exception], str]] = [
         lambda n: n.params.set("a", "1 + 2"),
         EditError,
         "does not parse",
+    ),
+    # X-M2 B5: refused directive text says why, with the grammar's own message and hint.
+    (
+        "not-an-xyce-dot-command",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".temp 50"),
+        EditError,
+        "not an Xyce dot-command",
+    ),
+    (
+        "step-param-keyword",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".step param p 1 2 1"),
+        EditError,
+        "`param`",
+    ),
+    (
+        "options-without-a-package",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.add(".options reltol=1e-3"),
+        EditError,
+        "package",
+    ),
+    (
+        "second-addresistors-of-a-kind",
+        ".preprocess addresistors nodcpath 1g\nR1 a 0 1k\n",
+        lambda n: n.directives.add(".preprocess addresistors nodcpath 2g"),
+        EditError,
+        "does not parse",
+    ),
+    (
+        "directive-into-a-body",
+        "X1 a 0 s\n.subckt s p q\nR1 p q 1k\n.ends\n",
+        lambda n: n.directives.add(".tran 1n 2n", placement=Placement.after(n.lines[2].body[0])),
+        EditError,
+        "go to the top level",
+    ),
+    (
+        "body-condition-removed",
+        "X1 a 0 s\n.subckt s p q\nR1 p q 1k\n.ic V(p)=1\n.ends\n",
+        lambda n: n.directives.remove(n.lines[2].body[1]),
+        EditError,
+        "inside a subcircuit definition",
+    ),
+    # directives.set: a repeatable kind, two lines of a singleton kind (two `.DC` lines join into
+    # one nested sweep), two lines of one `.STEP` quantity.
+    (
+        "set-print",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.set(".print tran v(a)"),
+        EditError,
+        "repeatable",
+    ),
+    (
+        "set-ic",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.set(".ic V(a)=1"),
+        EditError,
+        "repeatable",
+    ),
+    (
+        "set-data",
+        "R1 a 0 1k\n",
+        lambda n: n.directives.set([".data t r1:r", "+ 1k", ".enddata"]),
+        EditError,
+        "repeatable",
+    ),
+    (
+        "set-with-two-dc-lines",
+        ".dc V1 0 1 0.5\n.dc R1 1k 2k 1k\nV1 a 0 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".dc V1 0 2 1"),
+        EditError,
+        "ambiguous",
+    ),
+    (
+        "set-with-a-repeated-quantity",
+        ".step R1 1k 2k 1k\n.step R1:R 1 2 1\nR1 a 0 1k\n",
+        lambda n: n.directives.set(".step r1 LIST 1 2"),
+        EditError,
+        "ambiguous",
     ),
 ]
 

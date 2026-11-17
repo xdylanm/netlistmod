@@ -73,7 +73,7 @@ one-name tuple (`("amp",)`).
 ### `Reference`
 
 `Reference(kind, name, span, scope, owner, target)`; compares by identity. `kind` is a
-`ReferenceKind`, the `Literal` of `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`, `"function"`. `span` covers the name as written,
+`ReferenceKind`, the `Literal` of `"model"`, `"subckt"`, `"param"`, `"subckt_param"`, `"element"`, `"node"`, `"function"`, `"data"`. `span` covers the name as written,
 `owner` is the item holding it, `target` the resolved node or `None`. Deviation from task 3.2:
 `owner` is added (the edit layer needs the item to edit).
 
@@ -86,6 +86,11 @@ one-name tuple (`("amp",)`).
 | `element` | K inductors; the controlling sources of F, H and W, and an ngspice A's `%vnam` sources; an LTspice `&` probe's analyzer; `.dc` sources (not `TEMP`); `.save i(src)`; LTspice `.ic i(L1)` and `.step` sources; `i(src)` in a behavioural expression | `Component` |
 | `node` | each name in `v(a)` or `v(a,b)` in a behavioural expression; an LTspice `@`'s `refnode=` and `intnode=` | `Net`, or `None` |
 | `function` | xyce only: a call in a formula to a name that is not a built-in function | the `FunctionDefinition` (first in its scope), or `None` |
+| `data` | xyce only: a `DATA=` field of `.AC`, `.DC` or `.STEP` | the top-level `DataTable` of that name (the last of a repeated one), or `None` |
+
+On xyce (section 9) a `.DC` or `.STEP` target is a `param`, `element` or `model` reference by
+what it resolves to, and each node of an `.IC`, `.DCVOLT` or `.NODESET` condition is a `node`
+reference.
 
 ### `TopologyView`
 
@@ -161,6 +166,14 @@ separators=(",", ":"))` encoded as UTF-8.
 | `LIB_EXTRA_ENTRIES` | info | the entries after the first | an xyce `LibCall` with more than one entry, of which Xyce loads only the first (section 9) |
 | `NUMERIC_MODEL_NAME` | warning | the model name | an xyce `.model` whose name reads as a number (section 9) |
 | `FRA_RANGE_MISSING` | warning | the analyzer's designator | an LTspice `@`, in any scope, without `fstart=` or `fend=` and without `enabled=`, when the top level has a `.fra` command; LTspice stops in the `.fra` run (M18 D2) |
+| `UNRESOLVED_DATA` | warning; info if the top level has `.include`/`.lib` | the table name | an xyce `DATA=` field that names no top-level `.DATA` table (section 9) |
+| `ANALYSIS_IGNORED` | warning | the keyword | an xyce analysis Xyce does not run, or a `.DC` line that joins the first (section 9) |
+| `STEPPED_ANALYSIS_FIELD` | warning | the parameter | an xyce `.TRAN`, `.AC` or `.DC` field that reads a parameter a `.STEP` sweeps (section 9) |
+| `STEP_IGNORED` | warning | the keyword | an xyce `.STEP` line beside a `.STEP DATA=` line (section 9) |
+| `STEPS_WITH_OP` | warning | the `.OP` keyword | two or more xyce `.STEP` lines when `.OP` is the analysis that runs (section 9) |
+| `IC_WITH_NODESET` | warning | each `.NODESET` keyword | an xyce netlist with `.IC` or `.DCVOLT` and `.NODESET` (section 9) |
+| `MEASURE_MODE_MISMATCH` | warning | the mode | an xyce `.MEAS` mode whose analysis does not run, or FFT without `.FFT` (section 9) |
+| `CONDITION_IGNORED` | warning | the node | an xyce condition in a subcircuit body on a global node (section 9) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
 the model name) is specified with the edit layer ([edit-layer.md](./edit-layer.md) §6), because
@@ -259,3 +272,49 @@ decision 0027 items 1 and 3):
   inside a continued statement, which is one of its trailing comments: the grammar lexes it as
   `INDENTED_TRAILING`, and the parse records its span (`model.nodes.indented_comments`, internal),
   which `collect_diagnostics` takes as `indented`.
+- **Sweep targets** (decision 0028 item 4; `index.py`'s `SWEEP_LOOKUP`, a per-dialect table): a
+  `.DC` sweep or `.STEP` target is resolved as Xyce resolves it. `TEMP` is no reference. A plain
+  name is a parameter first (the effective assignment, the first on xyce), then an element of the
+  scope (a device's primary parameter); unresolved, a `param` reference, which Xyce reports as an
+  undefined variable. In `head:param`, split at the last `:`, the head is an element, a path
+  `X1:R5` walked through the `X` lines and their definitions, or a model; unresolved, an
+  `element` reference. `Index.sweep_targets` (internal) maps these references to what they may
+  name, so an unresolved one says "parameter or element", "element or model" or "element", adds
+  that Xyce stops, and is info when a path reaches a definition an include may hold. ngspice and
+  LTspice keep their `.dc` and `.step` references.
+- **`DATA=`** on `.AC`, `.DC` and `.STEP` is a `data` reference to the top-level `.DATA` table
+  of that name (the internal `Scope._data`, folded names in source order); a repeated name
+  resolves to the last table, as Xyce uses. `UNRESOLVED_DATA` reports an unknown one.
+- **The `.TRAN` schedule** (`TranDirective.schedule`): its `schedule` word is the field's own and
+  no function reference; its arguments are scanned as any formula. `schedule` is not made a
+  built-in function, since Xyce knows it in that field only.
+- **Condition nodes** (decision 0028 items 2 and 6): each node of an `.IC`, `.DCVOLT` or
+  `.NODESET` condition is a `node` reference resolved in the scope of its line (a body condition
+  in its definition: ports and body nodes, ground, globals). A path that names an internal node of
+  an instance is a `NODE_INTO_INSTANCE` warning (info when the definition may be in an include),
+  as on a device line; a node that nothing in the scope connects is an `UNRESOLVED_NODE` warning
+  (info with an include), since Xyce ignores its condition; a `$G` or `.GLOBAL` node in a body's
+  condition is a `CONDITION_IGNORED` warning: Xyce ignores it there.
+- **What Xyce runs** (decision 0028 item 9; `diagnostics.py`'s `_DIRECTIVE_CHECKS`, a per-dialect
+  table, false on ngspice and LTspice), all warnings, from the top level:
+  - `ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC` and `.NOISE` (an `UnknownDirective`, as the B5
+    probes show) only the last line's analysis runs, each other line is reported; `.OP` gives way
+    to any of them; when `.DC` runs, every `.DC` line after the first joins it into one nested
+    sweep, the earlier lines innermost (its own message).
+  - `STEPPED_ANALYSIS_FIELD`: a parameter reference in a `.TRAN`, `.AC` or `.DC` field whose
+    target a `.STEP` sweeps (a `.DC` sweep of the parameter itself is not a field).
+  - `STEP_IGNORED` on each `.STEP` line beside a `.STEP DATA=` line; `STEPS_WITH_OP` on `.OP` when
+    it runs with two or more `.STEP` lines.
+  - `IC_WITH_NODESET` on each `.NODESET` when the netlist, in any scope, has `.IC` or `.DCVOLT`.
+  - `MEASURE_MODE_MISMATCH` on a `.MEAS` mode whose analysis is not the one that runs (TRAN and
+    TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`), or FFT with no `.FFT` line; the
+    message says Xyce stops, or, for DC under `.OP`, reports the measurement as FAILED.
+- **`DUPLICATE_DEFINITION`** for directives, each a warning that says which one Xyce uses: a
+  repeated `.OPTIONS` item of one package (the first; the OUTPUT package is left out, since two of
+  its lines both apply), a repeated node in the `.IC` and `.DCVOLT` conditions or in the
+  `.NODESET` conditions of one scope (the last), a repeated `.MEAS` result (the last) and a
+  repeated `.DATA` name (the last). Two `.STEP` lines of one quantity are a repeat by the key
+  `step_quantity` (internal): a device's name alone means its primary parameter (R, C and L
+  theirs, V and I `DCV0`), only when the name resolves to that device and not to a parameter, so
+  `R2` and `R2:R` are one quantity; Xyce nests them silently. LTspice keeps its `.step` rule and
+  message (a per-dialect table, `_STEP_REPEATS`).

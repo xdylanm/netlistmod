@@ -101,7 +101,7 @@ goes right after it, so a trailing comment or a continuation stays after the new
 | `add(text, *, placement=BEFORE_END)` | insert `text` + terminator | text classification below; placement errors |
 | `replace(line, text)` | replace the whole `line.span` with `text` + the line's terminator | line targets below |
 | `remove(line)` | delete `line.span` | as `replace` |
-| `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end`. LTspice `.step`: the same, by swept quantity | two or more lines of the kind (or quantity); a repeatable kind |
+| `set(text)` | singleton kinds (`.tran`, `.ac`, `.dc`, `.op`, `.temp`): `replace` the one line of the kind, or `add` before `.end`. LTspice `.step`: the same, by swept quantity; xyce `.STEP` by its folded quantity (section 8) | two or more lines of the kind (or quantity); a repeatable kind |
 | `add_include(path, *, placement=AFTER_TITLE)` (on the netlist) | insert `.include "path"` + terminator | an include with the same statement text; a path that does not parse (a `"` or a line break) |
 
 **Text.** `text` is one physical line (a `str`) or a sequence of physical lines (a continued
@@ -311,6 +311,22 @@ verification and placement. The dialect branches of the operations are tables ke
   `OpaqueStatement`) is added, replaced and removed as an opaque statement.
 - Removal takes ngspice's plain path: comments over emptied `+` lines stay where they are, since
   Xyce runs such a line (xm1-tasks 5.1 point 3).
+- **Directives** (decision 0028; xm2-tasks 5.1 points 15, 16 and 23): `directives.add`,
+  `replace` and `remove` take every xyce directive whole: `.TRAN` (with `NOOP`, `UIC` and a
+  schedule), `.AC`, `.DC`, `.OP`, `.OPTIONS` and `.OPTION SCALE=`, `.IC`, `.DCVOLT`, `.NODESET`,
+  `.MEAS`, `.STEP`, the closed list's `UnknownDirective` lines (`.PRINT`, `.SAVE`, `.NOISE`,
+  `.FFT`, `.PREPROCESS ADDRESISTORS` and the rest, with their `+` lines), and the `.DATA …
+  .ENDDATA` table (`DataTable`, an `OpaqueBlock`). There is no `set_option`. `SINGLETON_DIRECTIVES`
+  is unchanged: `set` upserts `.TRAN`, `.AC`, `.DC` and `.OP`, and two `.DC` lines (which Xyce joins
+  into one sweep) make it ambiguous; `.IC`, `.MEAS`, `.DATA` and the closed list are repeatable.
+  `set` of a `.STEP` replaces the line that sweeps the same quantity, by the document layer's
+  folded key (`step_quantity`): `R2` and `R2:R` are one quantity, `V1` and `V1:DCV0` too, unless
+  a parameter of that name exists, which Xyce looks up first; a `DATA=` step is keyed by its
+  table. Text the grammar refuses (a dot-command not on the closed list, `.STEP param`,
+  `.OPTIONS` without a package, a second `.PREPROCESS ADDRESISTORS` of a kind) is an `EditError`
+  with the grammar's message and hint; an anchor in a body is refused, since directives go to the
+  top level, and a body `.IC`, `.DCVOLT` or `.NODESET` is not replaced or removed (directive
+  operations edit top-level lines only).
 
 `tests/edits/test_xyce_edits.py` holds the golden diffs and refusals, and
 `tests/solver/test_xyce_edit_results.py` checks that edited netlists still run in Xyce with the
