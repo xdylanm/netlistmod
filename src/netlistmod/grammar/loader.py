@@ -314,6 +314,11 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "GLOBAL_KW": "`.GLOBAL`",
         "PREPROCESS_KW": "`.PREPROCESS`",
         "REPLACEGROUND_KW": "`REPLACEGROUND`",
+        "ADDRESISTORS_KW": "`ADDRESISTORS`",
+        "ONETERMINAL_KW": "`ONETERMINAL`",
+        "NODCPATH_KW": "`NODCPATH`",
+        "REMOVEUNUSED_KW": "`REMOVEUNUSED`",
+        "XY_SAVE_KW": "`.SAVE`",
         "TRUE_KW": "`TRUE`",
         "FALSE_KW": "`FALSE`",
         "NODE_WORD": "node name",
@@ -373,18 +378,42 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "MEAS_KW": "`.MEAS`",
         "MEASURE_KW": "`.MEASURE`",
         "MEAS_MODE_KW": "`.MEASURE` mode",
-        "MEAS_TEXT": "measure text",
+        "FIELD_TEXT": "text",
         "DATA_BLOCK_KW": "`.DATA`",
         "ENDDATA_KW": "`.ENDDATA`",
     },
 }
 # Whether a dot-command that no terminal matches at the start of a line is outside the dialect's
-# closed list (decision 0009). Xyce refuses in its grammar every dot-command it does not read yet.
+# closed list (decision 0009; xyce, decision 0028 item 1).
 _CLOSED_DOT_COMMANDS: Final[dict[Dialect, bool]] = {
     Dialect.NGSPICE: False,
     Dialect.LTSPICE: True,
-    _XYCE: False,
+    _XYCE: True,
 }
+# Whether the parser stopping inside the first word of a line that begins with `.` means that word
+# is outside the closed list: xyce has no generic dot-command terminal, so a keyword that is a
+# string matches the start of a longer word (`.op` in `.opt` or `.optoins`, `.end` in `.endc`) and
+# the parser stops after it. Every keyword ends at a blank, `;` or the line end.
+_DOT_WORD_PREFIXES: Final[dict[Dialect, bool]] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+# What to write instead of a dot-command outside the closed list, by its case-folded name.
+_DOT_COMMAND_HINTS: Final[dict[Dialect, dict[str, str]]] = {
+    Dialect.NGSPICE: {},
+    Dialect.LTSPICE: {},
+    _XYCE: {
+        ".temp": (
+            "set the temperature with `.STEP TEMP ...` (Xyce reference manual §2.1.36 p155) or "
+            "`.OPTIONS DEVICE TEMP=` (Xyce reference manual §2.1.25.1 p98)"
+        ),
+        ".probe": "write `.PRINT ... FORMAT=PROBE` (Xyce reference manual §6.1.4 p843)",
+        ".title": "the first line of the netlist is its title (Xyce users' manual §4.1.3.1 p42)",
+        ".opt": "write `.OPTIONS` and a package (Xyce reference manual §2.1.25 p96)",
+    },
+}
+_DOT_WORD = re.compile(r"\.[^ \t\r\n;]*")
 # Why a comma where the parser stopped is refused, on a dialect whose statements read no comma
 # outside the places its grammar names (`.PARAM` on xyce).
 _COMMA_REASONS: Final[dict[Dialect, str | None]] = {
@@ -610,11 +639,22 @@ def _map_error(
         if letter == "." and _CLOSED_DOT_COMMANDS[dialect]:
             # The closed list of decision 0009: no terminal of this place matches the command.
             name = source.text[offset:].split(maxsplit=1)[0]
-            reason = (
-                f"`{name}` is not an {dialect.display_name} dot-command, or is not allowed here"
+            return ParseError(
+                line, column, source.excerpt(offset), expected, _not_a_dot_command(dialect, name)
             )
-            return ParseError(line, column, source.excerpt(offset), expected, reason)
+    word = _DOT_WORD.match(source.text, line_start)
+    if _DOT_WORD_PREFIXES[dialect] and word is not None and offset < word.end():
+        # The parser read a keyword that is only the start of this line's first word.
+        line, column = source.position(line_start)
+        reason = _not_a_dot_command(dialect, word.group())
+        return ParseError(line, column, source.excerpt(line_start), (), reason)
     return ParseError(line, column, source.excerpt(offset), expected)
+
+
+def _not_a_dot_command(dialect: Dialect, name: str) -> str:
+    reason = f"`{name}` is not an {dialect.display_name} dot-command, or is not allowed here"
+    hint = _DOT_COMMAND_HINTS[dialect].get(name.lower())
+    return f"{reason}: {hint}" if hint else reason
 
 
 def _comma_after_params(source: SourceText, offset: int, error: UnexpectedToken) -> bool:

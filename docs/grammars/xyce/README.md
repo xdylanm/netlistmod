@@ -118,10 +118,25 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
     non-zero multiple of the columns and a bare `.ENDDATA` (`XY-DAT-001`); top level only.
   The entries are `documented` until X-M2 B6's solver tests.
 
+- **B4, the closed list of dot-commands, and directives in a body:**
+  - `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`, `.HB`, `.LIN`, `.SAMPLING`,
+    `.EMBEDDEDSAMPLING` and `.PCE`, in any case, read as `UnknownDirective` with
+    `UNTYPED_DIRECTIVE_PRESERVED` (info), continued by `+` lines, top level only (`XY-DIR-001`);
+    `.SAVE` is never ngspice's `SaveDirective` (`XY-SAV-001`);
+  - any other dot-command is a `ParseError` "not an Xyce dot-command", at its first character, so
+    the lines of a would-be block are never read, with hints for `.TEMP`, `.PROBE`, `.title` and
+    `.opt` (`XY-DIR-002`);
+  - `.PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value`, an `UnknownDirective` allowed in a body,
+    one of each kind per netlist; any other word after `.PREPROCESS` is a `ParseError`
+    (`XY-PRE-002`);
+  - in a subcircuit body the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the untyped
+    commands are a `ParseError` saying Xyce silently ignores them there; `.IC`, `.DCVOLT`,
+    `.NODESET` and `.PREPROCESS` are allowed (`XY-DIR-003`).
+  The entries are `documented` until X-M2 B6's solver tests.
+
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
-`ParseError`; a dot-command the dialect does not read yet, and a `.PREPROCESS` form other than
-REPLACEGROUND, are `UnsupportedConstruct`. A `+` line with only the title, comments and blank
+`ParseError`; `.PREPROCESS REMOVEUNUSED`, which deletes devices, is `UnsupportedConstruct`. A `+` line with only the title, comments and blank
 lines before it joins nothing and is a `ParseError`, as on Xyce. `$` and `//` are not comments, so
 at the start of a line they are a `ParseError`. `rkm=True` is a `ValueError`.
 
@@ -161,6 +176,9 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | documented | 6 + 0 solver |  |
 | [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | documented | 6 + 0 solver |  |
 | [XY-DIO-001](./specs/XY-DIO-001.yaml) | D diode lines (model, positional area, flags and parameters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | documented | 7 + 0 solver |  |
+| [XY-DIR-002](./specs/XY-DIR-002.yaml) | any other dot-command is refused (not an Xyce dot-command), with hints | documented | 8 + 0 solver |  |
+| [XY-DIR-003](./specs/XY-DIR-003.yaml) | directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed) | documented | 9 + 0 solver |  |
 | [XY-ELM-001](./specs/XY-ELM-001.yaml) | element fields (node fields with `:` paths, instance parameters with bare values) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-END-001](./specs/XY-END-001.yaml) | required final .END statement | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-FML-001](./specs/XY-FML-001.yaml) | formula expression syntax for reference scans (formula_xyce.lark) | validated | 6 + 1 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -182,9 +200,11 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-OPT-001](./specs/XY-OPT-001.yaml) | .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE) | documented | 6 + 0 solver |  |
 | [XY-OPT-002](./specs/XY-OPT-002.yaml) | .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs) | documented | 7 + 0 solver |  |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | documented | 6 + 0 solver |  |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-RCL-001](./specs/XY-RCL-001.yaml) | R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms) | validated | 17 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | documented | 3 + 0 solver |  |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SRC-001](./specs/XY-SRC-001.yaml) | V and I independent sources, DC and AC parts (transient functions refused until X-M3) | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | documented | 9 + 0 solver |  |
@@ -193,10 +213,10 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-SUB-001](./specs/XY-SUB-001.yaml) | X subcircuit calls (nodes, optional `PARAMS`, `M=`) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-TRN-001](./specs/XY-TRN-001.yaml) | .TRAN transient analysis (NOOP, UIC and a schedule) | documented | 10 + 0 solver |  |
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines, the other dot-commands and .PREPROCESS forms, `+` lines after a refused dot-command) | documented | 10 + 0 solver |  |
+| [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 0 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-41 entries: 25 validated, 2 observed, 0 disputed, 14 documented.
+46 entries: 25 validated, 2 observed, 0 disputed, 19 documented.
 
 ## Lookaround terminals
 
@@ -210,12 +230,13 @@ parse states. The blocks are a `.LIB` definition (B4) and a `.DATA` table (X-M2 
 |---|---|---|---|---|
 | `COMMENT_LINE.3` | `*` or `;`, then text to the end of the line | 56 states: line starts | above: `INDENTED_LINE.10`, `WS`, `LINE_END`; `END_KW.4`, `DOT_NAME.4`, `PREPROCESS_KW.4`, `GLOBAL_KW.4`; at its priority: `PLUS_LINE.3` | Only it starts with `*` or `;`, and `INDENTED_LINE` excludes a `*` or `;` after the blanks, so an indented `*` or `;` line is a comment. |
 | `INDENTED_LINE.10` | blanks, then a character other than a blank, `+`, `*` or `;`, then text to the end of the line | 56 states: line starts | `COMMENT_LINE`, `PLUS_LINE`, the keywords, `DOT_NAME`, `LINE_END`; below: `WS.9` | No competitor at its priority; it outranks `WS`, so an indented line is one token, and a line of blanks, which it cannot match, is still `WS` and `LINE_END`. Nothing else starts with a blank. |
-| `PLUS_LINE.3` | `+` to the end of the line | 50 states: line starts after a statement | as `COMMENT_LINE` | Only it starts with `+`. It is reached only after a refused dot-command, whose `REST_TEXT` leaves the line end to `NL`: after a statement the dialect reads, `SEP` takes a `+` line, with or without comment lines before it. |
-| `REST_TEXT.2` | a non-blank, then text to the end of the line | after a refused dot-command or `.PREPROCESS` form, a statement refused in a subcircuit body, `.STEP`'s refused `param` and second sweep (X-M2 B2), and the refused `.IC` forms, `.MEASURE` mode and stray `.ENDDATA` (X-M2 B3) | `NL`, `CONT`, `WS` | No competitor at its priority, and only line ends compete. |
+| `PLUS_LINE.3` | `+` to the end of the line | 50 states: line starts after a statement | as `COMMENT_LINE` | Only it starts with `+`. It is reached only after a refused line (`.PREPROCESS REMOVEUNUSED`, a statement refused in a body, and the other `REST_TEXT` refusals), whose `REST_TEXT` leaves the line end to `NL`: after a statement the dialect reads, `SEP` takes a `+` line, with or without comment lines before it. |
+| `REST_TEXT.2` | a non-blank, then text to the end of the line | after `.PREPROCESS REMOVEUNUSED`, another `.PREPROCESS` word or `ADDRESISTORS` kind (X-M2 B4), a statement refused in a subcircuit body, `.STEP`'s refused `param` and second sweep (X-M2 B2), and the refused `.IC` forms, `.MEASURE` mode and stray `.ENDDATA` (X-M2 B3) | `NL`, `CONT`, `WS` | No competitor at its priority, and only line ends compete. |
 | `TITLE_TEXT.2` | as in ngspice | 1 state: line 1 | `LINE_END`, `WS` | No competitor at its priority; Xyce has no `TITLE_KW`. |
 | `SEP.10` | blanks; a line end and a `+` line's `+`; or a line end whose lookahead finds blank, comment or indented lines and then a `+` line | 95 states: before a field and at the end of a statement | `NL.5`, `CONT.7` (ignored), `WS.9` (ignored); above: `TRAILING_COMMENT.12`; below: the field tokens | It outranks `NL` and `CONT`, so a line end that a `+` line joins is a separator; the third alternative matches only when a `+` line follows the skipped lines, so any other line end stays `NL` and ends the statement. Field tokens never start with a blank or a line end. |
 | `TRAILING_COMMENT.12` | `;` to the end of the line; or, right after a line end (a lookbehind), a `*` line or an indented line other than a `+` line | 96 states: in a statement's gaps, and after `.END` | `SEP.10`, `NL`, `LINE_END`, the field tokens | Its `;` alternative: no field token holds `;`. Its other alternatives match only right after a line end, which in a gap only `SEP`'s third alternative leaves, so they are the skipped lines; it outranks `SEP`, so an indented skipped line is one comment rather than `SEP` and a field. A blank skipped line, which it cannot match, is part of a `SEP`. |
-| `DOT_NAME.4` | a `.`, a letter, then letters, digits, `_` and `-`, but not `.ends` or `.endl` (a lookahead) | line starts | the keywords (`END_KW.4`, `MODEL_KW.4`, `SUBCKT_KW.4`, `INC_KW.4`, `LIB_KW.4`, …) at its priority; `ENDS_KW.4` in a subcircuit body | The keywords are strings that it matches whole, so Lark re-types them; it refuses `.ends` and `.endl` whole, so a stray one is a syntax error and in a body `.ends` is `ENDS_KW`, which it does not shadow. |
+| `DOT_NAME.4` | one of the closed list's untyped commands (`.print`, `.four`, `.fft`, `.result`, `.sens`, `.noise`, `.hb`, `.lin`, `.sampling`, `.embeddedsampling`, `.pce`), in any case, when a blank, `;` or a line end follows (a lookahead; X-M2 B4) | line starts | the keywords (`END_KW.4`, `MODEL_KW.4`, `LIB_KW.4`, `PARAM_KW.4`, `PREPROCESS_KW.4`, …) and `XY_SAVE_KW.4` at its priority | Its words are none of the keywords' and no keyword is a prefix of one (`.lin` against `.lib`, `.pce` against `.param`), and the lookahead makes `.prints` or `.linx` no match, so such a word matches no terminal and is refused (XY-DIR-002). Lark now checks it for collisions; it was unchecked before B4, when it matched any dot-name but `.ends` and `.endl`. |
+| `XY_SAVE_KW.4` | `.save` in any case, when a blank, `;` or a line end follows (a lookahead; X-M2 B4) | line starts | as `DOT_NAME` | As `DOT_NAME`, whose list it completes; core.lark's `SAVE_KW` is not imported, so `.save` is never ngspice's `save_stmt`. |
 | `BLOCK_TEXT.2` | a non-blank, then text to the end of the line | the states of a `.LIB` definition's lines | `BLOCK_DOT_NAME.4`, `ENDL_KW.4`, `LINE_END`, `NL` | Reached only after the opening line's own NL (`lib_open_end`) and after a block line, states no statement shares, so no statement terminal competes; `BLOCK_DOT_NAME` outranks it at a line start, and `.endl` is re-typed to `ENDL_KW`. |
 | `INST_KEY.3` | a letter or `_`, then name characters, when a `=` follows (a lookahead) | after an element's fixed fields | `WORD.2`, `NODE_WORD.2`; at its priority `NUMBER.3`, `PARAMS_KW.3`, `SRC_FN_KW.3`; above: the parameter keywords below | It outranks the names, so a name before `=` is a parameter; it starts with a letter, so no number, and it holds no `:`, so no `PARAMS:`. On R, C, L and D it is the name outside the letter's list, which the keywords outrank. |
 | `TC_KW.4`, `OFF_VALUE_KW.4` | `tc` or `off`, when a `=` follows | after R, C and L's fields; after D's model | `INST_KEY.3`; at their priority the parameter keywords below | They outrank `INST_KEY`, so `TC=` takes its list and `OFF=` is a flag; the lookahead keeps `tcx=` and `offset=` ordinary parameters. No list holds `tc` or `off`, so they meet no keyword. |

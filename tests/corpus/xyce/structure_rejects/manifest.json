@@ -86,6 +86,14 @@
       "note": "a node name is printable ASCII (XY-NAM-001)",
       "xyce": "runs"
     },
+    "not_a_dot_command.cir": {
+      "sha256": "17578d2d4cacc3a6350f99a9c960b15295147bc572e939748e340839dd7cd856",
+      "line": 4,
+      "column": 1,
+      "error": "ParseError",
+      "note": "`.TEMP` is not an Xyce dot-command (XY-DIR-002)",
+      "xyce": "runs"
+    },
     "not_a_letter.cir": {
       "sha256": "a9990c858f59167b6145bd6c24980072d478cdff4ae0755b2564cc6bd7852879",
       "line": 4,
@@ -132,14 +140,6 @@
       "column": 1,
       "error": "ParseError",
       "note": "only blank lines may follow `.END`",
-      "xyce": "runs"
-    },
-    "unsupported_directive.cir": {
-      "sha256": "90de952a5a9fa901a3d11fa027ab7f12e67d99af6e8f5ed17e40e18a34c571a5",
-      "line": 4,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "`.print` is X-M2 B4's (XY-UNS-001)",
       "xyce": "runs"
     },
     "unsupported_letter.cir": {

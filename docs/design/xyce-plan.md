@@ -151,7 +151,7 @@ X-M0 keyed every dialect branch that an xyce load reaches ([decision 0026](../de
   - models: `model/model_types.py:38`, which gives xyce no model types of its own without an entry (done in X-M1 B4);
   - elements: `model/_rules_elements.py:321` (the transistor rule: not reached in X-M1, so it stays for X-M4);
   - edits: `edit/_ops_common.py:254`; `edit/_ops_elements.py:147`, `:359` and `:412`, and the model placed after the value (`:397`; xyce writes R, C and L's model first); `edit/_ops_remove.py:75` (done in X-M1 B6: the tables `_JOIN_TRAILING_COMMENTS`, `_LTSPICE_FORMS`, `_RCL_FORMS`, `_POSITIONAL_AREAS` and `_PORT_PARAMS` in `edit/_ops_common.py`).
-- **X-M1 and X-M2 (statements):** `model/_rules_statements.py:180` and `:279`.
+- **X-M1 and X-M2 (statements):** `model/_rules_statements.py:180` and `:279` (done in X-M2 B4: the tables `_REFUSED_MODEL_TYPES` and `_LTRA_FLAG_REFUSALS`).
 - **X-M3 (sources):** `model/_rules_sources.py:244`; `edit/_ops_sources.py:171`.
 - **X-M4 (transistors):** the positional area of Q (`edit/_ops_elements.py:234`).
 - **X-M5 (controlled and behavioural sources):** `model/_rules_controlled.py:70`, `:171` and `:185`; `model/_rules_nonlinear.py:46` and `:206`; `edit/_ops_nonlinear.py:23`, `:98`, `:105` and `:185`; `document/diagnostics.py:325` `_CONTROL_RUNS`.

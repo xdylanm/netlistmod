@@ -133,8 +133,9 @@ differs:
   which Xyce reads as a comment; `text` keeps the blanks.
 - **`PreprocessDirective`** (`_DotCommand` fields, `option: Identifier`, `value: Identifier`,
   `enabled: bool`): `.PREPROCESS REPLACEGROUND TRUE|FALSE`, allowed in a body; a second one is a
-  `ParseError`. It is topology (net identity), not a `Directive`. The other `.PREPROCESS` forms are
-  `UnsupportedConstruct`.
+  `ParseError`. It is topology (net identity), not a `Directive`. `.PREPROCESS ADDRESISTORS` is an
+  `UnknownDirective` (X-M2 B4), `REMOVEUNUSED` is `UnsupportedConstruct`, and any other word a
+  `ParseError`.
 - **`.GLOBAL`** is `GlobalDirective`, with no commas between its names.
 - **`.PARAM`** is `ParamStatement`, with commas allowed between assignments, values that are
   numbers, braced, quoted or bare expressions without blanks (no strings), and function
@@ -179,4 +180,16 @@ differs:
   - `.OPTIONS`, `.MEAS` and `.DATA` are refused in a body, where Xyce silently ignores them.
   - **Spec IDs:** `XY-OPT-001`, `XY-OPT-002`, `XY-ICN-001`, `XY-NOD-001`, `XY-MEA-001`,
     `XY-DAT-001`.
-- **Dot-commands** the dialect does not read yet are `UnsupportedConstruct`.
+- **X-M2 B4** ([decision 0028](../decisions/0028-xyce-directives.md) items 1 and 2), the closed
+  list of dot-commands:
+  - **`UnknownDirective`** for `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`,
+    `.HB`, `.LIN`, `.SAMPLING`, `.EMBEDDEDSAMPLING` and `.PCE` (`raw` from the name to its last
+    field, continued by `+` lines), top level only; xyce's `.SAVE` is never `SaveDirective`.
+  - **`.PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value`** is an `UnknownDirective`, allowed in
+    a body, one of each kind per netlist (a second is a `ParseError`).
+  - Any other dot-command is a `ParseError` ("not an Xyce dot-command"), with hints for `.TEMP`,
+    `.PROBE`, `.title` and `.opt`; `.PREPROCESS REMOVEUNUSED` stays `UnsupportedConstruct`.
+  - In a body the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the untyped commands are a
+    `ParseError` (Xyce silently ignores them there); `.IC`, `.DCVOLT`, `.NODESET` and
+    `.PREPROCESS` are allowed.
+  - **Spec IDs:** `XY-DIR-001`, `XY-DIR-002`, `XY-DIR-003`, `XY-PRE-002`, `XY-SAV-001`.

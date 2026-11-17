@@ -151,10 +151,13 @@ def test_a_second_preprocess_replaceground_is_rejected() -> None:
 
 
 @pytest.mark.parametrize(
-    "line", [".preprocess removeunused r,c", ".PREPROCESS ADDRESISTORS NOGND 1G", ".preprocess x"]
+    "line",
+    [".preprocess removeunused r,c", ".PREPROCESS REMOVEUNUSED", ".Preprocess\n+ removeunused"],
 )
 def test_the_other_preprocess_forms_are_unsupported(line: str) -> None:
-    with pytest.raises(UnsupportedConstruct, match="reads only `.PREPROCESS REPLACEGROUND`") as e:
+    # REMOVEUNUSED deletes devices, so it changes the circuit (P4; decision 0028 item 1): it stays
+    # unsupported until X-M4. ADDRESISTORS and any other word are XY-PRE-002's.
+    with pytest.raises(UnsupportedConstruct, match="it deletes devices") as e:
         _parse(f"t\n{line}\n.END\n")
     assert (e.value.line, e.value.column) == (2, 1)
 

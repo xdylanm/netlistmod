@@ -25,7 +25,6 @@ from netlistmod import (
     Span,
     SubcktDefinition,
     Title,
-    UnsupportedConstruct,
     parse,
 )
 from netlistmod.dialects import _XYCE
@@ -499,12 +498,6 @@ def test_options_measures_and_tables_are_refused_in_a_body(lines: str) -> None:
     assert (error.line, error.column) == (3, 1)
     assert "not allowed inside a subcircuit definition" in error.reason
     assert "silently ignores it there" in error.reason
-
-
-def test_print_stays_unsupported() -> None:
-    # The other dot-commands are X-M2 B4's closed list.
-    with pytest.raises(UnsupportedConstruct):
-        _parse("t\n.print tran v(1)\n.END\n")
 
 
 def test_the_directives_round_trip() -> None:

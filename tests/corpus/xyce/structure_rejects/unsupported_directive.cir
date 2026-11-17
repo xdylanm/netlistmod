@@ -1,5 +1,0 @@
-reject: .print is X-M2 B4's
-V1 a 0 1
-R1 a 0 1k
-.print dc v(a)
-.END

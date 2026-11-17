@@ -1,0 +1,32 @@
+id: XY-DIR-003
+dialect: xyce
+construct: directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed)
+manual_ref:
+- '[xyce-ref] §2.1.37 p160 ".SUBCKT (Subcircuit)"'
+- '[xyce-ref] §2.1.14 p48 ".IC (Initial Condition, Bias point)"'
+status: documented
+grammar:
+- not_in_subckt
+core_rules:
+- GLOBAL_KW
+- END_KW
+- TRAN_KW
+- DOT_AC_KW
+- DOT_DC_KW
+- OP_KW
+- OPTIONS_KW
+- OPTION_KW
+- MEAS_KW
+- MEASURE_KW
+tests:
+- tests/grammar/xyce/test_xyce_closed_list.py::test_conditions_and_preprocess_are_allowed_in_a_body
+- tests/grammar/xyce/test_xyce_closed_list.py::test_an_untyped_command_is_refused_in_a_body
+- tests/grammar/xyce/test_xyce_closed_list.py::test_every_ignored_directive_is_refused_in_a_body
+- tests/grammar/xyce/test_xyce_closed_list.py::test_the_statements_xyce_stops_on_in_a_body_say_only_where
+- tests/grammar/xyce/test_xyce_closed_list.py::test_a_refused_command_in_a_body_is_refused_as_at_the_top_level
+- tests/grammar/xyce/test_xyce_statements.py::test_an_output_in_a_body_is_refused
+- tests/grammar/xyce/test_xyce_statements.py::test_top_level_statements_are_refused_in_a_body
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+- tests/grammar/xyce/test_xyce_directives.py::test_options_measures_and_tables_are_refused_in_a_body
+validation_note: Read from the manual (decision 0028 item 2; xm2-tasks 5.1 point 5), which allows only devices, `.MODEL`, `.PARAM` and `.FUNC` in a body, while its `.IC` text implies `.IC` may stand there. The stage 1 probes on XyceNF Release 7.10.0 are recorded in xm2-tasks 5.1 (Xyce silently ignores the analyses, `.OPTIONS`, `.STEP`, `.MEAS`, `.DATA` and the outputs in a body, applies `.IC`, `.DCVOLT` and `.NODESET` in every instance and `.PREPROCESS` netlist-wide, and stops on `.GLOBAL`, `.GLOBAL_PARAM` and `.END`); the solver tests and the rewritten X-M1 discrepancy row are X-M2 B6's.
+notes: 'In a body each top statement is recognised with the rest of its line (`not_in_subckt`) and refused at its keyword with "`<keyword>` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)"; for the analyses (`.TRAN`, `.AC`, `.DC`, `.OP`), `.STEP`, `.OPTIONS`/`.OPTION`, `.MEAS`/`.MEASURE`, `.DATA` and the untyped commands of XY-DIR-001 the message adds that Xyce silently ignores it there, so write it at the top level (the per-dialect table `_IGNORED_IN_BODY`). `.GLOBAL`, `.GLOBAL_PARAM` and `.END`, which stop Xyce in a body, get the plain message. `.IC`, `.DCVOLT`, `.NODESET` (XY-ICN-001, XY-NOD-001), `.PREPROCESS REPLACEGROUND` (XY-PRE-001) and `.PREPROCESS ADDRESISTORS` (XY-PRE-002) are body statements. A dot-command outside the closed list is refused in a body as at the top level (XY-DIR-002). The warning for a `$G` node in a body condition is the document layer''s (X-M2 B5).'

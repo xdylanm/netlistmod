@@ -14,6 +14,7 @@ from netlistmod.model._tree import (
     _Element,
     _end,
     _Field,
+    _field_token,
     _Item,
     _Rest,
     _span,
@@ -40,6 +41,10 @@ _SECOND_PREPROCESS = (
     "a second `.PREPROCESS REPLACEGROUND`: Xyce allows one in a netlist (Xyce reference manual "
     "§2.1.28 p125) and stops on another"
 )
+_PREPROCESS_FORMS = (
+    "the `.PREPROCESS` forms are REPLACEGROUND, REMOVEUNUSED and ADDRESISTORS (Xyce reference "
+    "manual §2.1.28 p125 and the two sections after it, to p127)"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -63,6 +68,9 @@ def _preprocess_directives(items: tuple[TopLevelItem, ...]) -> list[PreprocessDi
 
 class StructureRules(_Rules):
     """Rules for lines, titles, comments, opaque statements and blocks, and ``.end``."""
+
+    # The kinds of xyce's `.PREPROCESS ADDRESISTORS` read so far, in source order.
+    _addresistors: set[str]
 
     def start(self, children: list[Any]) -> ParseResult:
         items: list[TopLevelItem] = []
@@ -201,21 +209,58 @@ class StructureRules(_Rules):
     def pp_word(self, children: list[Any]) -> _Field:
         return self._field(children, lambda token: token)
 
-    def preprocess_other(self, children: list[Any]) -> NoReturn:
+    def pp_addresistors(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    pp_kind = pp_addresistors
+
+    pp_number = pp_addresistors
+
+    def preprocess_addresistors(self, children: list[Any]) -> _Item:
+        # An UnknownDirective (decision 0028 item 1): it writes another netlist and changes
+        # nothing in this one. One of each kind per netlist, subcircuit bodies included: the
+        # transformer sees the lines in source order, so the second is refused at its keyword.
+        element = _Element(children)
+        keyword = element.designator
+        kind = element.all(Token)[1]
+        folded = str(kind).upper()
+        if folded in self._addresistors:
+            raise self._parse_error(
+                keyword,
+                f"a second `.PREPROCESS ADDRESISTORS {folded}`: Xyce allows one of each kind in a "
+                "netlist (Xyce reference manual §2.1.30 p127) and stops on another",
+            )
+        self._addresistors.add(folded)
+        end = _span(element.all(Token)[-1]).end
+        raw = self._source.text[_span(keyword).start : end]
+        comments = element.comments
+        return _Item(
+            element.end,
+            lambda span: UnknownDirective(str(keyword), raw, span, comments, _span(keyword)),
+        )
+
+    def pp_bad_kind(self, children: list[Any]) -> NoReturn:
+        word = _field_token(children)
+        raise self._parse_error(
+            word,
+            f"`{word}` is not a kind of `.PREPROCESS ADDRESISTORS`: write ONETERMINAL or "
+            "NODCPATH, then the resistor's value (Xyce reference manual §2.1.30 p127)",
+        )
+
+    pp_removeunused = pp_addresistors
+
+    def preprocess_removeunused(self, children: list[Any]) -> NoReturn:
         keyword = children[0]
         word = children[1].node
         raise self._unsupported(
             keyword,
-            f"`{keyword} {word}`, not yet supported on {self._dialect.display_name}; the library "
-            "reads only `.PREPROCESS REPLACEGROUND`",
+            f"`{keyword} {word}`, not yet supported on {self._dialect.display_name}: it deletes "
+            "devices, which changes the circuit",
         )
 
-    # The lines the xyce grammar recognises whole, to refuse them here.
-    def unsupported_directive(self, children: list[Any]) -> NoReturn:
-        name = children[0]
-        raise self._unsupported(
-            name, f"dot-command `{name}`, not yet supported on {self._dialect.display_name}"
-        )
+    def preprocess_other(self, children: list[Any]) -> NoReturn:
+        word = children[1].node
+        raise self._parse_error(word, f"`{word}` is not a `.PREPROCESS` form: {_PREPROCESS_FORMS}")
 
     def continuation_line(self, children: list[Any]) -> NoReturn:
         raise self._unsupported(
