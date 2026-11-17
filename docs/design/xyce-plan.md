@@ -180,6 +180,23 @@ notes:
 - [ ] the internal names X-M8 makes public, or keeps internal: `Scope._functions` and
   `Scope._replace_ground` (X-M1 B3 and B2; point 31), and the parse's record of indented lines
   inside continued statements (`model.nodes.indented_comments`, X-M1 R1).
+- [ ] the X-M2 fields (decision 0028 item 10; xm2-tasks 5.1 point 28), each `None` or empty on
+  ngspice and LTspice: `TranDirective.noop` and `.schedule`, `AcDirective.data`,
+  `DcDirective.data`, `StepDirective.parameter` and `.data` (X-M2 B2), `OptionsDirective.package`,
+  `OptionItem.values` and `.pairs`, `NodeCondition.form` (X-M2 B3);
+- [ ] the X-M2 `Literal` values: the `StepDirective.kind` values `"name"`, `"qualified"` and
+  `"data"` (X-M2 B2), the `OpaqueBlock.kind` `"data"` with its subclass `DataTable` for the
+  `.DATA … .ENDDATA` table (X-M2 B3), the `NodeCondition.form` values `"v"` and `"pair"` (X-M2
+  B3), and the `ReferenceKind` `"data"` (X-M2 B5);
+- [ ] the growth of the `BodyItem` union by `IcDirective` and `NodesetDirective`, which stand in
+  a body on xyce only (X-M2 B3);
+- [ ] the X-M2 `DiagnosticCode` members `UNRESOLVED_DATA`, `ANALYSIS_IGNORED`,
+  `STEPPED_ANALYSIS_FIELD`, `STEP_IGNORED`, `STEPS_WITH_OP`, `IC_WITH_NODESET`,
+  `MEASURE_MODE_MISMATCH` and `CONDITION_IGNORED` (X-M2 B5), which `docs/usage/errors.md` lists
+  only as reserved;
+- [ ] the X-M2 internal names X-M8 makes public, or keeps internal: `Scope._data` (the `.DATA`
+  tables), `Index.sweep_targets` with `SweepTarget`, and `document.index.step_quantity` (the
+  folded `.STEP` quantity that `directives.set` also keys by; X-M2 B5).
 
 **`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
 named:
@@ -205,6 +222,43 @@ named:
   as a number (`.model 2k R`): the library reads `2k` on an element line as a value, while Xyce
   takes it as that model. A warning, on the model name." Then: "**What to do:** rename the model
   so it begins with a letter."
+- `UNRESOLVED_PARAM`, `UNRESOLVED_ELEMENT` and `UNRESOLVED_NODE`, after the X-M1 paragraphs: "On
+  the hidden xyce dialect, a `.DC` or `.STEP` target that names nothing is reported as a
+  parameter (a plain name, 'parameter or element') or an element (`head:param`, 'element or
+  model'), and a node of an `.IC`, `.DCVOLT` or `.NODESET` condition that nothing connects is an
+  `UNRESOLVED_NODE`; a path such as `V(X1:m)` to an internal node is a `NODE_INTO_INSTANCE`."
+  (X-M2 B5)
+- `DUPLICATE_DEFINITION`, after its rule: "On the hidden xyce dialect it also reports a repeated
+  `.OPTIONS` item (Xyce uses the first value; not the OUTPUT package, whose lines all apply), a
+  repeated node in `.IC` and `.DCVOLT` or in `.NODESET`, a repeated `.MEAS` result and a repeated
+  `.DATA` name (Xyce uses the last), and two `.STEP` lines of one quantity (`R2` and `R2:R`), which
+  Xyce nests." (X-M2 B5)
+- each X-M2 code, in place of its reserved entry (X-M2 B5), with its **What to do:**
+  - `UNRESOLVED_DATA`: "Xyce only. A `DATA=` field on `.AC`, `.DC` or `.STEP` that names no
+    top-level `.DATA` table; Xyce stops. A warning, info if an `.include` or `.lib` may define it,
+    on the name." "**What to do:** define the table, or correct the name."
+  - `ANALYSIS_IGNORED`: "Xyce only. An analysis Xyce does not run: of `.TRAN`, `.AC`, `.DC` and
+    `.NOISE` only the last line's analysis runs, and `.OP` gives way to any of them; every `.DC`
+    line after the first joins it into one nested sweep (its own message). A warning, on the
+    keyword." "**What to do:** keep one analysis line, or one `.DC` line with all its sweeps."
+  - `STEPPED_ANALYSIS_FIELD`: "Xyce only. A field of `.TRAN`, `.AC` or `.DC` reads a parameter
+    that a `.STEP` sweeps; Xyce reads the field once, so the sweep does not change it. A
+    warning, on the parameter." "**What to do:** write the field as a number."
+  - `STEP_IGNORED`: "Xyce only. A `.STEP` line beside a `.STEP DATA=` line, which makes Xyce drop
+    every other `.STEP` line. A warning, on the keyword." "**What to do:** put the swept quantity
+    in the table's columns."
+  - `STEPS_WITH_OP`: "Xyce only. Two or more `.STEP` lines when `.OP` is the analysis that runs;
+    Xyce 7.10 aborts. A warning, on `.OP`." "**What to do:** keep one `.STEP` line, or use `.DC`."
+  - `IC_WITH_NODESET`: "Xyce only. `.IC` or `.DCVOLT` and `.NODESET` in one netlist, which Xyce
+    aborts on. A warning, on each `.NODESET`." "**What to do:** keep one of the two."
+  - `MEASURE_MODE_MISMATCH`: "Xyce only. A `.MEAS` mode whose analysis Xyce does not run (TRAN
+    needs `.TRAN` to be the analysis that runs, AC `.AC`, DC `.DC`, NOISE `.NOISE`, with their
+    `_CONT` forms), or FFT without a `.FFT` line; Xyce stops, except that DC under `.OP` reports
+    the measurement as FAILED. A warning, on the mode." "**What to do:** match the mode to the
+    analysis."
+  - `CONDITION_IGNORED`: "Xyce only. An `.IC`, `.DCVOLT` or `.NODESET` condition in a subcircuit
+    body on a global node (`$G…` or a `.GLOBAL` node), which Xyce ignores with a warning. A
+    warning, on the node." "**What to do:** move the condition to the top level."
 
 ## 9. Risks
 

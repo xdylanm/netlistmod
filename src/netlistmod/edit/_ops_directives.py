@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from netlistmod.document import Line
 from netlistmod.document.document import Netlist
+from netlistmod.document.index import SWEEP_LOOKUP, step_quantity
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _DIRECTIVE_LINES,
@@ -210,10 +211,15 @@ def _set_step(netlist: Netlist, step: StepDirective, lines: tuple[str, ...]) -> 
     return [_line_insertion(netlist, lines, StepDirective, Placement.BEFORE_END, "directives.set")]
 
 
-def _step_quantity(netlist: Netlist, step: StepDirective) -> tuple[str, str, str]:
-    fold = netlist.scope().fold
+def _step_quantity(netlist: Netlist, step: StepDirective) -> tuple[str, ...]:
+    """The quantity a ``.step`` sweeps: on LTspice its kind, model type and name; on xyce the
+    folded target of the document layer, so that ``R2`` and ``R2:R`` are one quantity and a
+    ``DATA=`` step is keyed by its table (xm2-tasks 5.1 point 16)."""
+    root = netlist.scope()
+    if SWEEP_LOOKUP[netlist.dialect]:
+        return step_quantity(root, step)
     model_type = step.model_type.name if step.model_type is not None else ""
-    return (step.kind, fold(model_type), fold(step.name))
+    return (step.kind, root.fold(model_type), root.fold(step.name))
 
 
 def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
@@ -230,7 +236,10 @@ def _directive_line(netlist: Netlist, target: Line | object, what: str) -> Line:
             + ("; parameters and models are edited, not removed" if _is_property(item) else "")
         )
     if line.scope:
-        raise EditError(f"{what}: line {line.first_line} is inside a subcircuit definition")
+        raise EditError(
+            f"{what}: line {line.first_line} is inside a subcircuit definition, and directive "
+            "operations edit top-level lines only"
+        )
     return line
 
 

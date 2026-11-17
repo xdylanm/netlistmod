@@ -55,7 +55,8 @@ def test_every_diagnostic_code_occurs_in_the_corpus() -> None:
     # NODE_INTO_INSTANCE and the FRA codes are LTspice's (tests/document/test_ltspice_document.py,
     # tests/document/test_ltspice_fra_diagnostics.py); INDENTED_LINE_IGNORED, LIB_EXTRA_ENTRIES and
     # NUMERIC_MODEL_NAME the hidden xyce dialect's (tests/document/test_xyce_names.py,
-    # tests/grammar/xyce/test_xyce_statements.py, tests/document/test_xyce_document.py).
+    # tests/grammar/xyce/test_xyce_statements.py, tests/document/test_xyce_document.py), as are
+    # the X-M2 directive codes (tests/document/test_xyce_directive_findings.py).
     assert codes == {code.value for code in DiagnosticCode} - {
         "NODE_INTO_INSTANCE",
         "FRA_PROBE_IN_IMPEDANCE_MODE",
@@ -63,6 +64,14 @@ def test_every_diagnostic_code_occurs_in_the_corpus() -> None:
         "INDENTED_LINE_IGNORED",
         "LIB_EXTRA_ENTRIES",
         "NUMERIC_MODEL_NAME",
+        "UNRESOLVED_DATA",
+        "ANALYSIS_IGNORED",
+        "STEPPED_ANALYSIS_FIELD",
+        "STEP_IGNORED",
+        "STEPS_WITH_OP",
+        "IC_WITH_NODESET",
+        "MEASURE_MODE_MISMATCH",
+        "CONDITION_IGNORED",
     }
 
 

@@ -32,6 +32,10 @@ tests come with B4, which reads `.SUBCKT`.
 
 - `.MODEL` and `.SUBCKT` scoping, repeated models and subcircuits (Xyce stops on both;
   `_REPEAT_STOPS` already says so) and model binning are X-M1 B4's.
+- The X-M2 rows, written at X-M2 B6 with their solver tests: `.DC` and `.STEP` targets resolved
+  a parameter first, then an element or (for `head:param`) a model; the `.DATA` namespace
+  (top level only, the last of a repeated name); condition nodes resolved in their line's scope
+  (decision 0028 items 4, 6 and 8; implemented at X-M2 B5, `document-layer.md` section 9).
 
 ## Includes
 
