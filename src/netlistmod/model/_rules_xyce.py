@@ -520,19 +520,6 @@ class XyceRules(StatementsRules):
     def xy_tran_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         values = element.values()
-        for value in values:
-            head = value.text.lstrip()
-            if (
-                isinstance(value, Formula)
-                and head[:8].lower() == "schedule"
-                and head[8:].lstrip().startswith("(")
-            ):
-                raise self._error_at(
-                    value.span.start,
-                    "a schedule stands after the numbers and the NOOP and UIC flags, as the "
-                    "last field (`.TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] "
-                    "[{schedule(...)}]`; Xyce reference manual §2.1.38 p161)",
-                )
         flags: dict[str, Flag] = {}
         for flag in element.all(Flag):
             folded = fold_name(flag.name, self._dialect)
@@ -701,6 +688,15 @@ class XyceRules(StatementsRules):
                 parameter=parameter,
                 data=data.table if data is not None else None,
             ),
+        )
+
+    def tran_early_schedule(self, children: list[Any]) -> NoReturn:
+        schedule = _field_token(children)
+        raise self._error_at(
+            _span(schedule).start,
+            "a schedule stands after the numbers and the NOOP and UIC flags, as the last field "
+            "(`.TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] [{schedule(...)}]`; Xyce reference "
+            "manual §2.1.38 p161)",
         )
 
     def step_second(self, children: list[Any]) -> NoReturn:

@@ -12,6 +12,7 @@ grammar:
 - xy_tran_stmt
 - tran_flag
 - tran_schedule
+- tran_early_schedule
 - NOOP_KW
 - SCHEDULE_FORMULA
 core_rules:

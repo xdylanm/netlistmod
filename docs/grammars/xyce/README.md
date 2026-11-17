@@ -162,9 +162,9 @@ sweeps on one `.STEP` line, an unknown package, package-less options (applying `
 alone), a bare word after an option, the `TR` mode, a table without its bare `.ENDDATA`, every
 dot-command outside the closed list (warned and ignored), and silently ignores directives in a
 body; it stops on a schedule after tstart and on the full `.TRAN` form, which the library reads
-as the manual writes them; and the library reads an `.AC` point count that is not an integer, a
-path target without its parameter, `.PCE`, ngspice's `.save v(2)` and any `_CONT` measure type,
-on which Xyce stops or which it ignores.
+as the manual writes them; and the library reads an `.AC` point count that is not an integer,
+`.PCE`, ngspice's `.save v(2)` and any `_CONT` measure type, on which Xyce stops or which it
+ignores.
 
 The rest is planned by task and milestone in [xm2-tasks.md](../../design/xm2-tasks.md) and the
 xyce plan, section 8: the directives in X-M2, then the remaining devices. X-M1's record is
@@ -184,11 +184,11 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 
 | Entry | Construct | Status | Tests | Validated on |
 |---|---|---|---|---|
-| [XY-ACA-001](./specs/XY-ACA-001.yaml) | .AC small-signal analysis (a sweep, or DATA=) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-ACA-001](./specs/XY-ACA-001.yaml) | .AC small-signal analysis (a sweep, or DATA=) | validated | 5 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-CNT-001](./specs/XY-CNT-001.yaml) | `+` continuation lines, across blank, comment and indented lines | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-COM-001](./specs/XY-COM-001.yaml) | comments (`*` lines, `;` lines and `;` at the end of a line) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-DAT-001](./specs/XY-DAT-001.yaml) | the .DATA ... .ENDDATA table (an opaque named block) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | validated | 6 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | validated | 6 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIO-001](./specs/XY-DIO-001.yaml) | D diode lines (model, positional area, flags and parameters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -222,7 +222,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SRC-001](./specs/XY-SRC-001.yaml) | V and I independent sources, DC and AC parts (transient functions refused until X-M3) | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | validated | 9 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | validated | 11 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-STP-002](./specs/XY-STP-002.yaml) | sweep targets of .DC and .STEP (names, `dev:param`, `model:param`, paths, TEMP) | validated | 4 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 8 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-SUB-001](./specs/XY-SUB-001.yaml) | X subcircuit calls (nodes, optional `PARAMS`, `M=`) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -258,8 +258,8 @@ parse states. The blocks are a `.LIB` definition (B4) and a `.DATA` table (X-M2 
 | `R_PARAM_KW.4`, `C_PARAM_KW.4`, `L_PARAM_KW.4`, `D_PARAM_KW.4` | one name of the letter's closed list, in any case, when a `=` follows (a lookahead) | after R, C and L's fields; after D's model | `INST_KEY.3`, `WORD.2`, `NODE_WORD.2`; at their priority `TC_KW.4` (R, C, L) or `OFF_VALUE_KW.4` (D) | Each is offered only after its own letter's fields, so they never meet each other. They outrank `INST_KEY`, so a listed name is a parameter and any other is `INST_KEY`, refused; the lookahead makes the name end at the `=`, so `l` never takes the start of `lg=` and `m` never the start of `mult=`. |
 | `SRC_FN_KW.3` | a function name not followed by a name character | after a source's nodes, DC or AC part | `NUMBER.3`, `DC_KW.2`, `AC_KW.2` | A function name starts with a letter, so it never meets a number; the keywords are other words. |
 | `DATA_KW.4` | `data` in any case, when a `=` follows (a lookahead; X-M2 B2) | after `.AC`, after `.DC`, after `.STEP` | `NODE_WORD.2` (`.DC`, `.STEP`); `DEC_KW.2`, `OCT_KW.2`, `LIN_KW.2`; `STEP_PARAM_KW.3` (`.STEP`) | It outranks the target's `NODE_WORD`, and the lookahead leaves a target named `data` (`.DC data 0 1 1`) a name; `NODE_WORD` holds no `=`. The other keywords are other words. |
-| `STEP_PARAM_KW.3` | `param` in any case, when blanks and a letter or `_` follow (a lookahead; X-M2 B2) | after `.STEP` | `NODE_WORD.2`, `DATA_KW.4`, `DEC_KW.2`, `OCT_KW.2`, `LIN_KW.2` | It outranks `NODE_WORD`, so `.STEP param x ...` is recognised, to be refused with a hint; the lookahead leaves a target named `param` (`.STEP param 1 2 1`) a name. `DATA_KW` needs a `=`, which this lookahead cannot meet. |
-| `SCHEDULE_FORMULA.4` | `{` or `'`, blanks, `schedule` in any case, blanks and `(`, then an expression to the closing delimiter (X-M2 B2) | after `.TRAN`'s tstop, tstart, tmax and flags | `BRACE_FORMULA.3`, `QUOTE_FORMULA.3`, `NUMBER.3`, `NOOP_KW.2`, `UIC_KW.2` | It outranks the expressions it is also one of, so a schedule there is the schedule field, not tstart or tmax; in tstep and tstop it is not offered, and the transformer refuses a schedule read there as an expression. It starts with a delimiter, so no number or keyword. |
+| `STEP_PARAM_KW.3` | `param` in any case, when blanks and a letter or `_` follow and that word is not `list` (a lookahead whose alternatives spell out every word but `list`, case-folded, with no nested lookaround, so Lark still checks it for collisions; X-M2 B2 and R1) | after `.STEP` | `NODE_WORD.2`, `DATA_KW.4`, `DEC_KW.2`, `OCT_KW.2`, `LIN_KW.2` | It outranks `NODE_WORD`, so `.STEP param x ...` is recognised, to be refused with a hint; the lookahead leaves a target named `param` a name before a number (`.STEP param 1 2 1`) and before `LIST` (`.STEP param LIST 1k 2k`, which Xyce runs as a sweep of a parameter `param`), while `.STEP param listx ...` is still refused. `DATA_KW` needs a `=`, which this lookahead cannot meet. |
+| `SCHEDULE_FORMULA.4` | `{` or `'`, blanks, `schedule` in any case, blanks and `(`, then an expression to the closing delimiter (X-M2 B2) | after `.TRAN`'s keyword and tstep (to be refused), and after its tstop, tstart, tmax and flags | `BRACE_FORMULA.3`, `QUOTE_FORMULA.3`, `NUMBER.3`, `NOOP_KW.2`, `UIC_KW.2` | It outranks the expressions it is also one of, so a schedule there is the schedule field, not tstart or tmax; in tstep's and tstop's place it is offered only through `tran_early_schedule`, which refuses it (X-M2 R1; it was the transformer's before). It starts with a delimiter, so no number or keyword. |
 | `OPT_PACKAGE_KW.4` | a package of the manual's 21, in any case, when a blank, `;` or a line end follows (a lookahead; X-M2 B3) | after `.OPTIONS` and `.OPTION` | `OPT_KEY.3`, `WORD.2` | It outranks `WORD`, so a listed package is read and any other word is `WORD`, refused with the closest package; its lookahead makes `nonlin_tran` and `device=1` other tokens, and leaves `nonlin` to `nonlin-tran`. |
 | `OPT_KEY.3` | a letter or `_`, then name characters, when a `=` follows (a lookahead; X-M2 B3) | after `.OPTIONS`'s package and items | `WORD.2`, `NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3`; above: `OPT_PACKAGE_KW.4` | It outranks `WORD`, so a name before `=` is an item and a bare word is `WORD`, refused; it starts with a letter or `_`, so it meets no number or expression. `OPT_PACKAGE_KW` cannot match before a `=`. |
 | `ALL_KW.4` | `all` in any case, when a `=` follows (a lookahead; X-M2 B3) | at a condition of `.IC`, `.DCVOLT` and `.NODESET` | `NODE_WORD.2`; at its priority `V_OPEN.4`, `IC_CURRENT_OPEN.4` | It outranks `NODE_WORD`, so `all=` is recognised, to be refused; the lookahead leaves a node named `all` (`.IC all 1`) a name. `V(` and `I(` begin with other letters. |

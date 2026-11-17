@@ -319,11 +319,16 @@ def test_an_undefined_sweep_target_stops_xyce(solver: Solver, tmp_path: Path, li
 @pytest.mark.parametrize("line", [".dc X1:R5 1k 2k 1k", ".step X1:R5 1k 2k 1k\n.op"])
 def test_a_path_to_a_device_needs_its_parameter(solver: Solver, tmp_path: Path, line: str) -> None:
     """`X1:R5` without `:R` stops Xyce ("X1:R5 is not defined"): a path target names the
-    parameter, `X1:R5:R` (point 14). The library resolves the path to the instance's R5, silently
-    (a discrepancies.md row)."""
+    parameter, `X1:R5:R` (point 14), as `UNRESOLVED_ELEMENT` says (R1 review gap 1)."""
     text = _netlist(line)
     assert "X1:R5 is not defined" in _messages(_stops(solver, tmp_path, text))
-    assert not [item for item in _library(text).diagnostics if item.severity != "info"]
+    (finding,) = [
+        item
+        for item in _library(text).diagnostics
+        if item.code is DiagnosticCode.UNRESOLVED_ELEMENT
+    ]
+    assert finding.severity == "warning"
+    assert "Xyce 7.10 stops on it; write `X1:R5:<param>`" in finding.message
 
 
 # .OP (XY-OPP-001)
@@ -381,6 +386,16 @@ def test_step_stops_on(solver: Solver, tmp_path: Path, line: str, message: str) 
     """The `param` keyword and an expression stop Xyce (points 10 and 14), as the library
     refuses."""
     assert message in _messages(_stops(solver, tmp_path, _netlist(f"{line}\n.op")))
+
+
+def test_a_parameter_named_param_takes_a_list(solver: Solver, tmp_path: Path) -> None:
+    """`.STEP param LIST 1k 2k` sweeps a parameter named `param`: two steps, as the library reads
+    it (R1 review S2); `param` is no keyword before `LIST`."""
+    text = "probe\n.param param=1k\nV1 1 0 1\nR1 1 0 {param}\n.step param LIST 1k 2k\n.op\n.end\n"
+    (step,) = _items(text, StepDirective)
+    assert (step.name, [_number(value) for value in step.values]) == ("param", [1e3, 2e3])
+    found = [next(iter(item.values())) for item in _steps(_ok(solver, tmp_path, text))]
+    assert found == pytest.approx([1e3, 2e3])
 
 
 def test_a_second_sweep_on_one_line_runs_only_the_last(solver: Solver, tmp_path: Path) -> None:
@@ -527,3 +542,26 @@ def test_a_stepped_parameter_in_a_tran_field_is_read_once(solver: Solver, tmp_pa
     assert len(plots) == 2
     assert [_column(plot, "time")[-1] for plot in plots] == pytest.approx([2e-9, 2e-9])
     assert DiagnosticCode.STEPPED_ANALYSIS_FIELD in _codes(text)
+
+
+@pytest.mark.parametrize(
+    ("name", "analysis"),
+    [("dc", ".dc V1 0 {p*1e-3} 0.5"), ("ac", ".ac dec 1 1 {p*1e-2}")],
+)
+def test_a_stepped_parameter_in_a_dc_or_ac_field_stops_xyce(
+    solver: Solver, tmp_path: Path, name: str, analysis: str
+) -> None:
+    """A `.DC` or `.AC` field that names a stepped parameter stops Xyce ("Attempt to evaluate
+    expression … which contains unknowns"), as `STEPPED_ANALYSIS_FIELD` says (point 10; R1 review
+    S1); without the `.STEP` the same line runs."""
+    text = _netlist(f".step p 1k 2k 1k\n{analysis}")
+    assert "contains unknowns" in _messages(_stops(solver, tmp_path / name, text))
+    (finding,) = [
+        item
+        for item in _library(text).diagnostics
+        if item.code is DiagnosticCode.STEPPED_ANALYSIS_FIELD
+    ]
+    assert f"Xyce 7.10 stops on this `.{name}` field" in finding.message
+    alone = _netlist(analysis)
+    _ok(solver, tmp_path / f"{name}-alone", alone)
+    assert DiagnosticCode.STEPPED_ANALYSIS_FIELD not in _codes(alone)

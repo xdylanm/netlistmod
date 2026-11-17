@@ -11,6 +11,7 @@ import pytest
 
 from netlistmod import (
     DiagnosticCode,
+    Dialect,
     End,
     IcDirective,
     Netlist,
@@ -192,6 +193,27 @@ def test_another_dot_command_is_refused_at_its_first_character(name: str) -> Non
     error = _error(f"t\nR1 1 0 1k\n{name} 1 2\n.END\n")
     assert (error.line, error.column) == (3, 1)
     assert error.reason == f"`{name}` is not an Xyce dot-command, or is not allowed here"
+    assert error.expected == ()
+
+
+@pytest.mark.parametrize(
+    "line",
+    [".temp 27", ".foo", ".tarn 1n 2n", ".steps 1", ".datax", ".optionsx a=1", ".transient 1"],
+)
+def test_every_refused_dot_command_reads_the_same(line: str) -> None:
+    # R1 review N1: whether the parser stops at the first character (`.temp`) or inside the word
+    # after a keyword that is its start (`.steps`), the refusal lists no expected tokens.
+    error = _error(f"t\nR1 1 0 1k\n{line}\n.END\n")
+    assert (error.line, error.column, error.expected) == (3, 1, ())
+    assert error.reason.startswith(f"`{line.split()[0]}` is not an Xyce dot-command")
+    assert "Expected" not in str(error)
+
+
+def test_ltspice_keeps_its_expected_list_on_a_refused_dot_command() -> None:
+    with pytest.raises(ParseError) as raised:
+        Netlist.from_text("t\nR1 1 0 1k\n.foo\n.end\n", dialect=Dialect.LTSPICE)
+    assert raised.value.reason == "`.foo` is not an LTspice dot-command, or is not allowed here"
+    assert "`.tran`" in raised.value.expected
 
 
 @pytest.mark.parametrize(("line", "hint"), sorted(_HINTS.items()))
@@ -314,6 +336,19 @@ def test_addresistors_is_an_unknown_directive(line: str) -> None:
     assert directive.name.upper() == ".PREPROCESS"
     assert directive.raw == line.split(" ;")[0]
     assert directive.name_span == Span(2, 13)
+    # R1 review N2: the info names the untyped form, since REPLACEGROUND is typed.
+    (diagnostic,) = Netlist.from_text(f"t\n{line}\n.END\n", dialect=_XYCE).diagnostics
+    assert diagnostic.code is DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED
+    assert diagnostic.message == (
+        "`.PREPROCESS ADDRESISTORS` is not typed by the library and is preserved verbatim"
+    )
+
+
+def test_another_dialects_preprocess_line_keeps_its_name() -> None:
+    netlist = Netlist.from_text("t\n.preprocess foo\n.end\n", dialect=Dialect.NGSPICE)
+    assert [d.message for d in netlist.diagnostics] == [
+        "`.preprocess` is not typed by the library and is preserved verbatim"
+    ]
 
 
 def test_each_kind_of_addresistors_may_stand_once() -> None:

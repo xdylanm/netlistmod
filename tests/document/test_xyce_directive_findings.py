@@ -138,6 +138,50 @@ def test_a_nested_path_reaches_through_each_instance() -> None:
     assert _codes(netlist) == []
 
 
+@pytest.mark.parametrize(
+    ("directive", "target"),
+    [
+        (".step X1:R1 1 2 1", "X1:R1"),
+        (".dc X1:R1 1 2 1", "X1:R1"),
+        (".step x1:c1 1p 2p 1p", "x1:c1"),
+        (".step X3:X2:R1 1 2 1", "X3:X2:R1"),
+    ],
+)
+def test_a_path_to_a_device_without_its_parameter_is_unresolved(
+    directive: str, target: str
+) -> None:
+    # R1 review gap 1: Xyce stops on `X1:R5` ("X1:R5 is not defined"); `X1:R5:R` runs.
+    inner = ".subckt top p q\nX2 p q div\n.ends\n"
+    netlist = _netlist(f"X1 1 0 div\nX3 1 0 top\n{inner}{_DIV}{directive}\n.op\n")
+    (reference,) = [
+        r for r in netlist.references if isinstance(r.owner, StepDirective | DcDirective)
+    ]
+    assert (reference.kind, reference.name, reference.target) == ("element", target, None)
+    assert netlist.slice(reference.span) == target
+    (finding,) = [d for d in netlist.diagnostics if d.code.name.startswith("UNRESOLVED")]
+    assert (finding.code, finding.severity) == (DiagnosticCode.UNRESOLVED_ELEMENT, "warning")
+    head, _, device = target.rpartition(":")
+    assert finding.message == (
+        f"element parameter `{target}` is not defined (searched: top level); it names device "
+        f"`{device}` inside instance `{head}`, not one of its parameters; Xyce 7.10 stops on "
+        f"it; write `{target}:<param>`"
+    )
+
+
+def test_a_path_to_a_device_stays_a_warning_with_an_include() -> None:
+    netlist = _netlist(f'.include "more.lib"\nX1 1 0 div\n{_DIV}.step X1:R1 1 2 1\n')
+    (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.UNRESOLVED_ELEMENT]
+    assert finding.severity == "warning"
+    assert "Xyce 7.10 stops on it" in finding.message
+
+
+def test_a_path_to_a_device_keeps_the_part_after_the_last_colon() -> None:
+    # The form alone cannot tell `X1:R1` from `R2:R`, so `parameter` is `R1` (N4).
+    netlist = _netlist(f"X1 1 0 div\n{_DIV}.step X1:R1 1 2 1\n.op\n")
+    (step,) = [line.item for line in netlist.lines if isinstance(line.item, StepDirective)]
+    assert (step.kind, step.name, step.parameter) == ("qualified", "X1:R1", "R1")
+
+
 def test_the_other_dialects_keep_their_dc_targets() -> None:
     # ngspice and LTspice: a `.dc` target is an element (LTspice's `.step` says what it sweeps).
     for dialect in (Dialect.NGSPICE, Dialect.LTSPICE):
@@ -324,6 +368,51 @@ def test_the_other_dialects_make_no_condition_node_references() -> None:
         assert netlist.diagnostics == ()
 
 
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+@pytest.mark.parametrize("line", [".ic v(1)={v(1)}", ".nodeset v(1)={v(1)*2}"])
+def test_a_node_read_in_a_condition_value_loads_on_the_other_dialects(
+    dialect: Dialect, line: str
+) -> None:
+    # R1 review B1: a node that an expression in the value reads is an expression node, not a
+    # condition node, so the condition checks never see it on ngspice and LTspice.
+    netlist = Netlist.from_text(
+        f"t\nV1 1 0 1\nR1 1 0 1k\n{line}\n.tran 1n 10n\n.end\n", dialect=dialect
+    )
+    (reference,) = netlist.references
+    assert (reference.kind, reference.name) == ("node", "1")
+    assert reference.target is not None
+    assert netlist.diagnostics == ()
+
+
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+def test_an_unconnected_node_read_in_a_condition_value_is_an_expression_node(
+    dialect: Dialect,
+) -> None:
+    netlist = Netlist.from_text(
+        "t\nV1 1 0 1\nR1 1 0 1k\n.ic v(1)={v(99)}\n.tran 1n 10n\n.end\n", dialect=dialect
+    )
+    assert [d.message for d in netlist.diagnostics] == [
+        "node `99` is not defined (searched: top level)"
+    ]
+
+
+def test_a_node_read_in_a_condition_value_is_an_expression_node_on_xyce() -> None:
+    netlist = _netlist(".ic V(2)={V(99)}\n")
+    (finding,) = netlist.diagnostics
+    assert (finding.code, finding.severity) == (DiagnosticCode.UNRESOLVED_NODE, "warning")
+    assert finding.message == "node `99` is not defined (searched: top level)"
+
+
+def test_a_path_read_in_a_condition_value_is_an_expression_path_on_xyce() -> None:
+    netlist = _netlist(f"X1 1 0 div\n{_DIV}.ic V(2)={{V(X1:m)}}\n")
+    (finding,) = netlist.diagnostics
+    assert (finding.code, finding.severity) == (DiagnosticCode.UNRESOLVED_NODE, "info")
+    assert finding.message == (
+        "node `X1:m` is not defined (searched: top level); it names a node inside instance "
+        "`X1`, which Xyce 7.10 reads and the library does not resolve"
+    )
+
+
 # --- ANALYSIS_IGNORED (point 15) ---
 
 
@@ -483,21 +572,30 @@ def test_steps_with_op_that_runs_are_not_reported(body: str) -> None:
 
 
 @pytest.mark.parametrize(
-    "analysis",
+    ("analysis", "outcome"),
     [
-        ".tran {tstep} 10n",
-        ".ac dec {tstep} 1 10",
-        ".dc V1 0 {tstep} 0.5",
-        ".tran 1n 10n {schedule(0, tstep, 5n, 2n)}",
+        (".tran {tstep} 10n", "reads this `.tran` field once, so the sweep does not change it"),
+        (
+            ".ac dec {tstep} 1 10",
+            "stops on this `.ac` field: it cannot evaluate a stepped parameter there",
+        ),
+        (
+            ".dc V1 0 {tstep} 0.5",
+            "stops on this `.dc` field: it cannot evaluate a stepped parameter there",
+        ),
+        (
+            ".tran 1n 10n {schedule(0, tstep, 5n, 2n)}",
+            "reads this `.tran` field once, so the sweep does not change it",
+        ),
     ],
 )
-def test_a_stepped_parameter_in_an_analysis_field_is_a_warning(analysis: str) -> None:
+def test_a_stepped_parameter_in_an_analysis_field_is_a_warning(analysis: str, outcome: str) -> None:
+    # R1 review S1: Xyce reads a `.TRAN` field once and stops on an `.AC` or `.DC` one.
     netlist = _netlist(f".param tstep=1n\n.step tstep 1n 2n 1n\n{analysis}\n")
     (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.STEPPED_ANALYSIS_FIELD]
     assert finding.severity == "warning"
     assert finding.message == (
-        f"parameter `tstep` is swept by the `.STEP` on line 11, but Xyce 7.10 reads this "
-        f"`{analysis.split()[0]}` field once, so the sweep does not change it"
+        f"parameter `tstep` is swept by the `.STEP` on line 11, but Xyce 7.10 {outcome}"
     )
     assert netlist.slice(finding.span) == "tstep"
 
@@ -537,6 +635,26 @@ def test_an_item_of_another_package_or_output_is_not_a_repeat() -> None:
         ".options output initial_interval=1n\n.options output initial_interval=2n\n.tran 1n 2n\n"
     )
     assert _codes(netlist) == []
+
+
+@pytest.mark.parametrize(
+    ("lines", "message"),
+    [
+        (
+            ".option scale=1\n.options parser scale=2\n",
+            "option `scale` of package `parser` is set again; Xyce 7.10 uses the first value, "
+            "with a warning",
+        ),
+        (
+            ".options parser scale=2\n.option scale=1\n",
+            "option `scale` is set again; Xyce 7.10 uses the first value, with a warning",
+        ),
+    ],
+)
+def test_option_scale_is_parsers_scale(lines: str, message: str) -> None:
+    # R1 review gap 2: Xyce reads the package-less `.OPTION SCALE=` as PARSER's SCALE.
+    netlist = _netlist(f"{lines}.tran 1n 2n\n")
+    assert _only(netlist, DiagnosticCode.DUPLICATE_DEFINITION) == [message]
 
 
 def test_a_repeated_condition_uses_the_last_value() -> None:

@@ -13,7 +13,7 @@ from typing import Literal
 
 from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.index import (
-    SWEEP_LOOKUP,
+    _SWEEP_LOOKUP,
     Index,
     Reference,
     Scope,
@@ -62,6 +62,14 @@ from netlistmod.model.values import Formula, NumericValue
 from netlistmod.source import SourceText, Span
 
 Severity = Literal["warning", "info"]
+# Whether an untyped `.PREPROCESS` line is xyce's `.PREPROCESS ADDRESISTORS` (decision 0028 item
+# 1), the grammar's only untyped form of it, which `UNTYPED_DIRECTIVE_PRESERVED` names so; on
+# ngspice and LTspice a `.preprocess` line is any unknown directive.
+_UNTYPED_PREPROCESS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
 
 
 class DiagnosticCode(StrEnum):
@@ -256,11 +264,15 @@ def collect_diagnostics(
             )
         if isinstance(item, UnknownDirective):
             span = item.name_span or item.span
+            named = item.name
+            if _UNTYPED_PREPROCESS[index.dialect] and index.root.fold(item.name) == ".preprocess":
+                # Only this form is untyped: REPLACEGROUND is a `PreprocessDirective`.
+                named = ".PREPROCESS ADDRESISTORS"
             found.append(
                 (
                     DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED,
                     "info",
-                    f"`{item.name}` is not typed by the library and is preserved verbatim",
+                    f"`{named}` is not typed by the library and is preserved verbatim",
                     span,
                 )
             )
@@ -299,7 +311,7 @@ def _reference_findings(
 ) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     scope = index.scope(reference.scope)
-    if reference.kind == "node" and isinstance(reference.owner, IcDirective | NodesetDirective):
+    if reference in index.condition_nodes:
         return _condition_findings(index, scope, reference)
     if reference.target is None and reference.kind in _UNRESOLVED:
         code, noun = _UNRESOLVED[reference.kind]
@@ -311,7 +323,13 @@ def _reference_findings(
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
         into = _into_instance(index, scope, reference) if sweep is None else None
-        if sweep is not None and sweep.included:
+        if sweep is not None and sweep.device:
+            # The device is found, so an include changes nothing: Xyce stops on the path.
+            head, _, device = reference.name.rpartition(":")
+            message += (
+                f"; it names device `{device}` inside instance `{head}`, not one of its parameters"
+            )
+        elif sweep is not None and sweep.included:
             severity = "info"
             message += (
                 "; it names an element inside an instance whose definition may be in an "
@@ -334,6 +352,8 @@ def _reference_findings(
         if severity == "warning" and (sweep is not None or reference.kind == "data"):
             # Observed (X-M2 B5 probes): an undefined sweep target or table stops Xyce 7.10.
             message += f"; {_SOLVER[index.dialect]} stops on it"
+        if sweep is not None and sweep.device:
+            message += f"; write `{reference.name}:<param>`"
         findings.append((code, severity, message, reference.span))
     if reference in index.late_param_uses:
         findings.append(
@@ -736,13 +756,13 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
             step = line.item
             quantity = (
                 step_quantity(scope, step)
-                if SWEEP_LOOKUP[scope.dialect]
+                if _SWEEP_LOOKUP[scope.dialect]
                 else (step.kind, scope.fold(step.name))
             )
             if quantity in seen:
                 repeat = _STEP_REPEATS[scope.dialect]
                 assert repeat is not None  # only LTspice and xyce read `.step`
-                if SWEEP_LOOKUP[scope.dialect]:
+                if _SWEEP_LOOKUP[scope.dialect]:
                     repeat = f"line {seen[quantity].first_line} sweeps it already; {repeat}"
                 findings.append(
                     (
@@ -804,8 +824,14 @@ def _value_findings(value: NumericValue) -> list[tuple[DiagnosticCode, Severity,
 # The analyses of which Xyce runs only the last line (point 15, observed; `.NOISE`, an untyped
 # line, takes part as the B5 probes show), and the one that gives way to any of them.
 _LAST_WINS = ("tran", "ac", "dc", "noise")
-# The analysis a `.MEAS` mode needs (point 26); FFT needs a `.FFT` line instead.
-_MEASURE_ANALYSES = {"tran": "tran", "ac": "ac", "dc": "dc", "noise": "noise"}
+# What Xyce 7.10 does with a field of each analysis that reads a stepped parameter (point 10;
+# the R1 review's probes): it reads a `.TRAN` field once, and stops on an `.AC` or `.DC` one
+# ("Attempt to evaluate expression {p}, which contains unknowns").
+_STEPPED_FIELD: dict[type, str] = {
+    TranDirective: "reads this `{keyword}` field once, so the sweep does not change it",
+    AcDirective: "stops on this `{keyword}` field: it cannot evaluate a stepped parameter there",
+    DcDirective: "stops on this `{keyword}` field: it cannot evaluate a stepped parameter there",
+}
 
 Finding = tuple[DiagnosticCode, Severity, str, Span]
 
@@ -915,8 +941,8 @@ def _step_findings(
                     DiagnosticCode.STEPPED_ANALYSIS_FIELD,
                     "warning",
                     f"parameter `{reference.name}` is swept by the `.STEP` on line "
-                    f"{stepped[id(reference.target)].first_line}, but {solver} reads this "
-                    f"`{owner.keyword}` field once, so the sweep does not change it",
+                    f"{stepped[id(reference.target)].first_line}, but {solver} "
+                    + _STEPPED_FIELD[type(owner)].format(keyword=owner.keyword),
                     reference.span,
                 )
             )
@@ -995,7 +1021,9 @@ def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) 
                     (DiagnosticCode.MEASURE_MODE_MISMATCH, "warning", message, item.analysis_span)
                 )
             continue
-        needed = _MEASURE_ANALYSES[mode.removesuffix("_cont")]
+        # A mode needs the analysis of its name (point 26); FFT is handled above.
+        needed = mode.removesuffix("_cont")
+        assert needed in _LAST_WINS, mode
         if runs is not None and runs[1] == needed:
             continue
         if runs is None:
@@ -1091,7 +1119,8 @@ def _directive_repeat_findings(scope: Scope) -> list[Finding]:
     for line in scope.lines:
         item = line.item
         if isinstance(item, OptionsDirective):
-            package = scope.fold(item.package.name) if item.package is not None else ""
+            # `.OPTION SCALE=`, the one item without a package, is PARSER's SCALE (observed).
+            package = scope.fold(item.package.name) if item.package is not None else "parser"
             # Two OUTPUT lines both apply (point 21, observed), so they are not repeats.
             if package == "output":
                 continue

@@ -119,7 +119,7 @@ _DC_TEMPERATURE = "temp"
 # Whether `.DC` and `.STEP` targets are resolved as Xyce resolves them (decision 0028 item 4): a
 # plain name as a parameter first, then an element; `head:param` as an element or a model. On
 # ngspice and LTspice a `.dc` target is an element (or `TEMP`), and `.step` says what it sweeps.
-SWEEP_LOOKUP: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
+_SWEEP_LOOKUP: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
 # Whether the nodes of `.ic` and `.nodeset` conditions are references (decision 0028 item 6).
 _CONDITION_NODES: dict[Dialect, bool] = {
     Dialect.NGSPICE: False,
@@ -159,10 +159,13 @@ class SweepTarget:
     """What an xyce ``.DC`` or ``.STEP`` target may name (decision 0028 item 4), for the message
     of one that does not resolve: ``noun`` (``parameter or element``, ``element or model``), and
     ``included``, whether a path such as ``X1:R5`` runs into an instance whose definition the
-    netlist does not hold, while a searched scope has an ``.include`` or ``.lib``."""
+    netlist does not hold, while a searched scope has an ``.include`` or ``.lib``; ``device``,
+    whether the target is a path to a device without its parameter (``X1:R5``), which Xyce does
+    not resolve."""
 
     noun: str
     included: bool = False
+    device: bool = False
 
 
 class Scope:
@@ -386,12 +389,16 @@ class Index:
         references: list[Reference] = []
         late: list[Reference] = []
         targets: dict[Reference, SweepTarget] = {}
+        conditions: list[Reference] = []
         for scope in self.scopes:
-            _collect(scope, references, late, targets)
+            _collect(scope, references, late, targets, conditions)
         self.references = tuple(sorted(references, key=lambda ref: ref.span.start))
         self.late_param_uses = frozenset(late)
         # The xyce `.DC` and `.STEP` targets among the references, with what they may name.
         self.sweep_targets: Mapping[Reference, SweepTarget] = MappingProxyType(targets)
+        # The nodes that xyce `.IC`, `.DCVOLT` and `.NODESET` conditions set; a node that an
+        # expression in a condition's value reads is an ordinary expression node, not one of these.
+        self.condition_nodes = frozenset(conditions)
 
     def scope(self, path: ScopePath = ()) -> Scope:
         """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``.
@@ -481,8 +488,10 @@ def _collect(
     references: list[Reference],
     late: list[Reference],
     targets: dict[Reference, SweepTarget],
+    conditions: list[Reference],
 ) -> None:
-    """Add the references made from ``scope`` (not from nested definitions)."""
+    """Add the references made from ``scope`` (not from nested definitions); the nodes that
+    initial conditions set go in ``conditions`` as well."""
     if scope.definition is not None:
         for assignment in scope.definition.params:
             _formula_references(scope, scope.definition, assignment, references, late)
@@ -530,7 +539,7 @@ def _collect(
                 references.append(
                     _element_reference(scope, item, inductor.designator, inductor.span)
                 )
-        elif isinstance(item, DcDirective) and SWEEP_LOOKUP[scope.dialect]:
+        elif isinstance(item, DcDirective) and _SWEEP_LOOKUP[scope.dialect]:
             for sweep in item.sweeps:
                 _sweep_target(scope, item, sweep.source, sweep.source_span, references, targets)
             if item.data is not None:
@@ -561,7 +570,9 @@ def _collect(
                     )
                 if condition.node is not None and _CONDITION_NODES[scope.dialect]:
                     node = condition.node
-                    references.append(_node_reference(scope, item, node.name, node.span))
+                    reference = _node_reference(scope, item, node.name, node.span)
+                    references.append(reference)
+                    conditions.append(reference)
         elif isinstance(item, StepDirective):
             _step_references(scope, item, references, targets)
         elif isinstance(item, ModelStatement) and item.ako is not None:
@@ -630,7 +641,9 @@ def _sweep_target(
     effective assignment) or else an element, and unresolved a parameter reference, since Xyce
     reports it as an undefined variable; in ``head:param``, split at the last ``:``, the head is
     an element (a path ``X1:R5`` through the instances) or else a model, and unresolved an
-    element reference."""
+    element reference. A path whose last part is a device of the instance (``X1:R5``, the device
+    without its parameter) is an unresolved element reference for the whole target, as Xyce stops
+    on it ("X1:R5 is not defined")."""
     if scope.fold(name) == _DC_TEMPERATURE:
         return
     head, colon, _ = name.rpartition(":")
@@ -647,6 +660,11 @@ def _sweep_target(
         else:
             reference = Reference("param", name, span, scope.path, owner, None)
         noun = "parameter or element"
+    elif _path_element(scope, name)[0] is not None:
+        reference = Reference("element", name, span, scope.path, owner, None)
+        references.append(reference)
+        targets[reference] = SweepTarget("element parameter", device=True)
+        return
     else:
         head_span = Span(span.start, span.start + len(head))
         noun = "element or model"

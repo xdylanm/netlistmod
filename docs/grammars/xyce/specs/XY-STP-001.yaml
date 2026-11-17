@@ -27,16 +27,19 @@ tests:
 - tests/grammar/xyce/test_xyce_analyses.py::test_step_takes_a_data_table
 - tests/grammar/xyce/test_xyce_analyses.py::test_step_continues_across_plus_lines
 - tests/grammar/xyce/test_xyce_analyses.py::test_malformed_step_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_a_target_named_param_takes_a_list
+- tests/grammar/xyce/test_xyce_analyses.py::test_a_target_named_param_takes_a_list_on_a_plus_line
 - tests/grammar/xyce/test_xyce_analyses.py::test_the_param_keyword_is_rejected_with_a_hint
 - tests/grammar/xyce/test_xyce_analyses.py::test_a_second_sweep_on_one_step_line_is_rejected
 - tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
 - tests/solver/test_xyce_analysis_probes.py::test_step_forms_and_targets
 - tests/solver/test_xyce_analysis_probes.py::test_step_stops_on
+- tests/solver/test_xyce_analysis_probes.py::test_a_parameter_named_param_takes_a_list
 - tests/solver/test_xyce_analysis_probes.py::test_a_second_sweep_on_one_line_runs_only_the_last
 - tests/solver/test_xyce_analysis_probes.py::test_steps_nest_the_first_innermost
 - tests/solver/test_xyce_analysis_probes.py::test_a_repeated_quantity_nests
 - tests/solver/test_xyce_analysis_probes.py::test_a_list_with_one_value_runs
 - tests/solver/test_xyce_analysis_probes.py::test_two_steps_with_op_crash_xyce
 - tests/solver/test_xyce_analysis_probes.py::test_a_data_step_drops_the_other_steps
-validation_note: 'Validated on XyceNF Release 7.10.0: each form steps the values its line gives, from the library''s start; the lines nest, the first innermost, a repeated quantity too; `param` and an expression stop Xyce; two sweeps on one line run only the last and a `LIST` of one value runs, which the library refuses (discrepancies.md).'
-notes: '`StepDirective`, one sweep per line: `[LIN|DEC|OCT] target start stop step` (`start`, `stop`, `increment`; `variation` as written), `target LIST v1 v2 ...` with at least two values (`values`), or `DATA=table` (XY-DCA-002). The values are plain numbers of the device-field reader: braces and quotes are a ParseError, as Xyce stops on them. There is no `param` keyword: `param` before a name is a ParseError with a hint (a target named `param` is read). A second sweep on the line is a ParseError. The target and `kind` are XY-STP-002''s. Repeated quantities, `DATA=` beside other steps and steps with `.OP` are the document layer''s (X-M2 B5). Top level only.'
+validation_note: 'Validated on XyceNF Release 7.10.0: each form steps the values its line gives, from the library''s start; the lines nest, the first innermost, a repeated quantity too; `param` before a name and an expression stop Xyce, and a parameter named `param` takes `LIST`; two sweeps on one line run only the last and a `LIST` of one value runs, which the library refuses (discrepancies.md).'
+notes: '`StepDirective`, one sweep per line: `[LIN|DEC|OCT] target start stop step` (`start`, `stop`, `increment`; `variation` as written), `target LIST v1 v2 ...` with at least two values (`values`), or `DATA=table` (XY-DCA-002). The values are plain numbers of the device-field reader: braces and quotes are a ParseError, as Xyce stops on them. There is no `param` keyword: `param` before a name other than `LIST` is a ParseError with a hint (a target named `param` is read, before a number or `LIST`). A second sweep on the line is a ParseError. The target and `kind` are XY-STP-002''s. Repeated quantities, `DATA=` beside other steps and steps with `.OP` are the document layer''s (X-M2 B5). Top level only.'
