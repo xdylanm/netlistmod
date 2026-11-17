@@ -90,7 +90,7 @@
       "line": 2,
       "column": 1,
       "error": "UnsupportedConstruct",
-      "note": "only REPLACEGROUND is read (XY-UNS-001)",
+      "note": "`.PREPROCESS REMOVEUNUSED` deletes devices, so it is not read (XY-UNS-001)",
       "xyce": "runs"
     },
     "subckt_ground_port.cir": {

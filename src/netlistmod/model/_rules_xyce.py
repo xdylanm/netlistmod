@@ -1,8 +1,9 @@
 """Rules for xyce's statements and element lines: `.SUBCKT` defaults, the includes and `.LIB`
 (X-M1 B4; decision 0027 item 7), the R, C, L, V, I and D forms that differ from the other
 dialects (X-M1 B5; decision 0027 items 5 and 6), the analyses and `.STEP` (X-M2 B2; decision
-0028 items 3 and 4), and the options, initial conditions, measurements and the `.DATA` block (X-M2
-B3; decision 0028 items 5 to 8)."""
+0028 items 3 and 4), the options, initial conditions, measurements and the `.DATA` block (X-M2
+B3; decision 0028 items 5 to 8), and the closed list's untyped dot-commands (X-M2 B4; decision
+0028 item 1)."""
 
 from __future__ import annotations
 
@@ -47,6 +48,7 @@ from netlistmod.model.nodes import (
     Resistor,
     StepDirective,
     TranDirective,
+    UnknownDirective,
 )
 from netlistmod.model.values import (
     Flag,
@@ -1061,6 +1063,23 @@ class XyceRules(StatementsRules):
                 body_span=body,
                 end_span=_span(closing),
             ),
+        )
+
+    # The closed list's untyped dot-commands (X-M2 B4; decision 0028 item 1), kept whole as
+    # UnknownDirective; in a body not_in_subckt refuses them.
+    def unknown_field(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def xy_unknown_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        name = element.designator
+        fields = element.all(Token)
+        end = _span(fields[-1]).end if fields else _span(name).end
+        raw = self._source.text[_span(name).start : end]
+        comments = element.comments
+        return _Item(
+            element.end,
+            lambda span: UnknownDirective(str(name), raw, span, comments, _span(name)),
         )
 
     def stray_enddata(self, children: list[Any]) -> NoReturn:

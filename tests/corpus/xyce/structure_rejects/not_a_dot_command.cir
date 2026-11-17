@@ -1,0 +1,5 @@
+reject: .TEMP is not an Xyce dot-command
+V1 a 0 1
+R1 a 0 1k
+.temp 27
+.END

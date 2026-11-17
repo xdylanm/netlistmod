@@ -13,8 +13,6 @@ grammar:
 - lead
 - line
 - statement
-- body_statement
-- top_statement
 core_rules:
 - LINE_END
 - WS
@@ -34,4 +32,4 @@ tests:
 - tests/solver/test_xyce_solver_corpus.py::test_unedited_round_trip_gives_identical_results
 - tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
 validation_note: Validated by the X-M0 probes (tests/solver/test_xyce_structure_probes.py) on XyceNF Release 7.10.0. A blank line is also a line of blanks. The accept corpus of tests/corpus/xyce (X-M1 B7), which covers every construct X-M1 reads, runs in Xyce with an `.op` added, its top-level nets are Xyce's nodes, and an unedited save gives the same bytes and results; Xyce's outcome on each rejection fixture is checked against its manifest.
-notes: The manual says the first line is a title and the last is `.END`, with the statements between them in any order. The lines before the first statement are `lead` lines (blank, comment and indented lines), which a `+` line cannot follow. A body statement may also stand in a subcircuit body (X-M1 B4); `.GLOBAL` is a top statement. Every line the dialect does not read yet is refused (XY-UNS-001).
+notes: The manual says the first line is a title and the last is `.END`, with the statements between them in any order. The lines before the first statement are `lead` lines (blank, comment and indented lines), which a `+` line cannot follow. A body statement may also stand in a subcircuit body (X-M1 B4); `.GLOBAL` is a top statement. The statements of `body_statement` and `top_statement` are the closed list of dot-commands (XY-DIR-002); every line the dialect does not read yet is refused (XY-UNS-001).
