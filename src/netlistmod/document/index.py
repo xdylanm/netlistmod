@@ -18,6 +18,12 @@ The scope model is ``docs/grammars/<dialect>/scoping.md`` (decision 0006 items 3
   ``.step param`` is defined by that line. Element references (``K`` inductors, ``.dc`` sources,
   ``.save i(src)``) are
   looked up in their own scope only.
+- On xyce (decision 0028 items 4, 6 and 8), a ``.DC`` or ``.STEP`` target is resolved as Xyce
+  resolves it: a plain name as a parameter first, then an element (a device's primary parameter);
+  ``head:param`` as an element (``X1:R5`` through the instances) or a model; ``TEMP`` is no
+  reference. A ``DATA=`` field is a ``data`` reference to a top-level ``.DATA`` table (the last of
+  a repeated name), and each node of an ``.IC``, ``.DCVOLT`` or ``.NODESET`` condition is a
+  ``node`` reference in the scope of its line.
 
 Items inside opaque ``.if`` blocks and ``.include``/``.lib`` files are not seen (§7.8).
 """
@@ -34,6 +40,7 @@ from netlistmod.document.lines import Line, Lines, ScopePath
 from netlistmod.document.names import fold, is_automatic_global, is_ground, net_name
 from netlistmod.grammar.formula import builtin_functions, parse_formula
 from netlistmod.model.nodes import (
+    AcDirective,
     BehavioralSource,
     Capacitor,
     Cccs,
@@ -42,7 +49,9 @@ from netlistmod.model.nodes import (
     Component,
     ControlledSource,
     CoupledLine,
+    CurrentSource,
     CurrentSwitch,
+    DataTable,
     DcDirective,
     Diode,
     FraProbe,
@@ -55,6 +64,7 @@ from netlistmod.model.nodes import (
     LossyLine,
     ModelStatement,
     MutualCoupling,
+    NodesetDirective,
     OpaqueBlock,
     OpaqueStatement,
     OsdiDevice,
@@ -68,8 +78,10 @@ from netlistmod.model.nodes import (
     SubcktInstance,
     Switch,
     TopLevelItem,
+    TranDirective,
     Transistor,
     TxlLine,
+    VoltageSource,
 )
 from netlistmod.model.values import Formula, FunctionDefinition, ParamAssignment
 from netlistmod.source import SourceText, Span
@@ -80,10 +92,13 @@ _MODEL_LINES = LossyLine | RcLine | TxlLine | CoupledLine
 # The ngspice devices whose model may be any type that is not built in (decision 0020).
 _OPEN_MODEL = CodeModelDevice | OsdiDevice
 
-ReferenceKind = Literal["model", "subckt", "param", "subckt_param", "element", "node", "function"]
+ReferenceKind = Literal[
+    "model", "subckt", "param", "subckt_param", "element", "node", "function", "data"
+]
 """What a reference names: a ``.model``, a ``.subckt``, a parameter, a subcircuit default
 (an ``X`` line's ``name=value``), an element (``K`` inductor, ``.dc`` source,
-``.save i(src)``), a node an expression reads, or an xyce user-defined function (a call)."""
+``.save i(src)``), a node an expression reads (or, on xyce, a node an initial condition sets), an
+xyce user-defined function (a call), or an xyce ``.DATA`` table (a ``DATA=`` field)."""
 
 # Whether a parameter used before its definition in its own scope is reported (scoping.md of each
 # dialect): ngspice reads the netlist in order; LTspice and Xyce do not mind.
@@ -101,6 +116,25 @@ _USER_FUNCTIONS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE:
 
 # The swept name of `.dc TEMP ...` is the temperature, not an element (§11.3.2).
 _DC_TEMPERATURE = "temp"
+# Whether `.DC` and `.STEP` targets are resolved as Xyce resolves them (decision 0028 item 4): a
+# plain name as a parameter first, then an element; `head:param` as an element or a model. On
+# ngspice and LTspice a `.dc` target is an element (or `TEMP`), and `.step` says what it sweeps.
+_SWEEP_LOOKUP: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
+# Whether the nodes of `.ic` and `.nodeset` conditions are references (decision 0028 item 6).
+_CONDITION_NODES: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+# The primary parameter of a device that an xyce `.STEP` or `.DC` sweeps by its name alone, so
+# that `R2` and `R2:R` are one quantity (xm2-tasks 5.1 point 16; [xyce-ref] §2.1.36 p155).
+_PRIMARY_PARAMS: dict[type, str] = {
+    Resistor: "r",
+    Capacitor: "c",
+    Inductor: "l",
+    VoltageSource: "dcv0",
+    CurrentSource: "dcv0",
+}
 
 
 @dataclass(frozen=True, slots=True, eq=False)
@@ -120,6 +154,20 @@ class Reference:
     target: object | None
 
 
+@dataclass(frozen=True, slots=True)
+class SweepTarget:
+    """What an xyce ``.DC`` or ``.STEP`` target may name (decision 0028 item 4), for the message
+    of one that does not resolve: ``noun`` (``parameter or element``, ``element or model``), and
+    ``included``, whether a path such as ``X1:R5`` runs into an instance whose definition the
+    netlist does not hold, while a searched scope has an ``.include`` or ``.lib``; ``device``,
+    whether the target is a path to a device without its parameter (``X1:R5``), which Xyce does
+    not resolve."""
+
+    noun: str
+    included: bool = False
+    device: bool = False
+
+
 class Scope:
     """The top level or one subcircuit definition, with its lines and symbol tables.
 
@@ -132,10 +180,13 @@ class Scope:
     ``.FUNC`` line, or a function on a ``.PARAM`` line; empty on the other dialects), and
     ``_replace_ground``, whether ``GND``, ``GND!`` and ``GROUND`` are the ground net (an xyce
     netlist with ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it; the same in every scope).
+    A third, ``_data``, holds the xyce ``.DATA`` tables by folded name in source order (X-M2;
+    only the top level has any, since a table in a body is refused).
     """
 
     __slots__ = (
         "_children",
+        "_data",
         "_definition",
         "_dialect",
         "_display",
@@ -178,6 +229,7 @@ class Scope:
         subckts: dict[str, list[SubcktDefinition]] = {}
         elements: dict[str, list[Component]] = {}
         functions: dict[str, list[FunctionDefinition]] = {}
+        data: dict[str, list[DataTable]] = {}
         # An xyce `.GLOBAL_PARAM` loses to a `.PARAM` of the same name wherever it stands
         # (scoping.md S5), so its assignments follow the `.PARAM` ones in the table.
         late_params: list[ParamAssignment] = []
@@ -201,14 +253,17 @@ class Scope:
                 subckts.setdefault(self.fold(item.name), []).append(item)
             elif isinstance(item, Component):
                 elements.setdefault(self.fold(item.designator), []).append(item)
+            elif isinstance(item, DataTable):
+                data.setdefault(self.fold(item.name.name), []).append(item)
             elif isinstance(item, OpaqueStatement) or (
-                isinstance(item, OpaqueBlock) and item.kind != "control"
+                isinstance(item, OpaqueBlock) and item.kind not in ("control", "data")
             ):
                 elsewhere = True
         for assignment in late_params:
             params.setdefault(self.fold(assignment.name), []).append(assignment)
         self._params = _frozen(params)
         self._functions = _frozen(functions)
+        self._data = _frozen(data)
         self._models = _frozen(models)
         self._subckts = _frozen(subckts)
         self._elements = _frozen(elements)
@@ -333,10 +388,17 @@ class Index:
             self._by_path.setdefault(scope.path, scope)
         references: list[Reference] = []
         late: list[Reference] = []
+        targets: dict[Reference, SweepTarget] = {}
+        conditions: list[Reference] = []
         for scope in self.scopes:
-            _collect(scope, references, late)
+            _collect(scope, references, late, targets, conditions)
         self.references = tuple(sorted(references, key=lambda ref: ref.span.start))
         self.late_param_uses = frozenset(late)
+        # The xyce `.DC` and `.STEP` targets among the references, with what they may name.
+        self.sweep_targets: Mapping[Reference, SweepTarget] = MappingProxyType(targets)
+        # The nodes that xyce `.IC`, `.DCVOLT` and `.NODESET` conditions set; a node that an
+        # expression in a condition's value reads is an ordinary expression node, not one of these.
+        self.condition_nodes = frozenset(conditions)
 
     def scope(self, path: ScopePath = ()) -> Scope:
         """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``.
@@ -421,8 +483,15 @@ def definition_scope(scope: Scope, name: str) -> Scope | None:
     return next(child for child in found[0].children if child.definition is found[1][0])
 
 
-def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -> None:
-    """Add the references made from ``scope`` (not from nested definitions)."""
+def _collect(
+    scope: Scope,
+    references: list[Reference],
+    late: list[Reference],
+    targets: dict[Reference, SweepTarget],
+    conditions: list[Reference],
+) -> None:
+    """Add the references made from ``scope`` (not from nested definitions); the nodes that
+    initial conditions set go in ``conditions`` as well."""
     if scope.definition is not None:
         for assignment in scope.definition.params:
             _formula_references(scope, scope.definition, assignment, references, late)
@@ -470,12 +539,19 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                 references.append(
                     _element_reference(scope, item, inductor.designator, inductor.span)
                 )
+        elif isinstance(item, DcDirective) and _SWEEP_LOOKUP[scope.dialect]:
+            for sweep in item.sweeps:
+                _sweep_target(scope, item, sweep.source, sweep.source_span, references, targets)
+            if item.data is not None:
+                references.append(_data_reference(scope, item, item.data.name, item.data.span))
         elif isinstance(item, DcDirective):
             for sweep in item.sweeps:
                 if scope.fold(sweep.source) != _DC_TEMPERATURE:
                     references.append(
                         _element_reference(scope, item, sweep.source, sweep.source_span)
                     )
+        elif isinstance(item, AcDirective) and item.data is not None:
+            references.append(_data_reference(scope, item, item.data.name, item.data.span))
         elif isinstance(item, SaveDirective):
             for vector in item.vectors:
                 if vector.source is not None:
@@ -484,7 +560,7 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                             scope, item, vector.source.designator, vector.source.span
                         )
                     )
-        elif isinstance(item, IcDirective):
+        elif isinstance(item, IcDirective | NodesetDirective):
             for condition in item.conditions:
                 if condition.current is not None:
                     references.append(
@@ -492,8 +568,13 @@ def _collect(scope: Scope, references: list[Reference], late: list[Reference]) -
                             scope, item, condition.current.designator, condition.current.span
                         )
                     )
+                if condition.node is not None and _CONDITION_NODES[scope.dialect]:
+                    node = condition.node
+                    reference = _node_reference(scope, item, node.name, node.span)
+                    references.append(reference)
+                    conditions.append(reference)
         elif isinstance(item, StepDirective):
-            _step_references(scope, item, references)
+            _step_references(scope, item, references, targets)
         elif isinstance(item, ModelStatement) and item.ako is not None:
             found = _lookup(scope, "models", item.ako.model_name)
             target = found[1][0] if found else None
@@ -518,10 +599,20 @@ def _instance_references(scope: Scope, item: SubcktInstance, references: list[Re
         )
 
 
-def _step_references(scope: Scope, item: StepDirective, references: list[Reference]) -> None:
-    """A ``.step`` sweeps a source, a model parameter or a parameter it defines itself, so a
-    parameter name is a reference only when a ``.param`` line defines it as well."""
-    if item.kind == "source":
+def _step_references(
+    scope: Scope,
+    item: StepDirective,
+    references: list[Reference],
+    targets: dict[Reference, SweepTarget],
+) -> None:
+    """An LTspice ``.step`` sweeps a source, a model parameter or a parameter it defines itself,
+    so a parameter name is a reference only when a ``.param`` line defines it as well. An xyce
+    target is resolved as a ``.DC`` target, and ``DATA=`` names a table."""
+    if item.kind in ("name", "qualified"):
+        _sweep_target(scope, item, item.name, item.name_span, references, targets)
+    elif item.kind == "data":
+        references.append(_data_reference(scope, item, item.name, item.name_span))
+    elif item.kind == "source":
         references.append(_element_reference(scope, item, item.name, item.name_span))
     elif item.kind == "model" and item.model is not None:
         found = _lookup(scope, "models", item.model.model_name)
@@ -535,6 +626,106 @@ def _step_references(scope: Scope, item: StepDirective, references: list[Referen
             references.append(
                 Reference("param", item.name, item.name_span, scope.path, item, found[1][-1])
             )
+
+
+def _sweep_target(
+    scope: Scope,
+    owner: TopLevelItem,
+    name: str,
+    span: Span,
+    references: list[Reference],
+    targets: dict[Reference, SweepTarget],
+) -> None:
+    """An xyce ``.DC`` or ``.STEP`` target, resolved as Xyce resolves it (decision 0028 item 4;
+    xm2-tasks 5.1 points 12 and 14): ``TEMP`` is no reference; a plain name is a parameter (the
+    effective assignment) or else an element, and unresolved a parameter reference, since Xyce
+    reports it as an undefined variable; in ``head:param``, split at the last ``:``, the head is
+    an element (a path ``X1:R5`` through the instances) or else a model, and unresolved an
+    element reference. A path whose last part is a device of the instance (``X1:R5``, the device
+    without its parameter) is an unresolved element reference for the whole target, as Xyce stops
+    on it ("X1:R5 is not defined")."""
+    if scope.fold(name) == _DC_TEMPERATURE:
+        return
+    head, colon, _ = name.rpartition(":")
+    included = False
+    reference: Reference
+    if not colon:
+        found = _lookup(scope, "params", name)
+        elements = scope.elements.get(scope.fold(name), ())
+        if found:
+            target = found[1][0] if _FIRST_PARAM_WINS[scope.dialect] else found[1][-1]
+            reference = Reference("param", name, span, scope.path, owner, target)
+        elif elements:
+            reference = Reference("element", name, span, scope.path, owner, elements[0])
+        else:
+            reference = Reference("param", name, span, scope.path, owner, None)
+        noun = "parameter or element"
+    elif _path_element(scope, name)[0] is not None:
+        reference = Reference("element", name, span, scope.path, owner, None)
+        references.append(reference)
+        targets[reference] = SweepTarget("element parameter", device=True)
+        return
+    else:
+        head_span = Span(span.start, span.start + len(head))
+        noun = "element or model"
+        if ":" in head:
+            noun = "element"
+            element, included = _path_element(scope, head)
+            reference = Reference("element", head, head_span, scope.path, owner, element)
+        elif scope.elements.get(scope.fold(head)):
+            reference = _element_reference(scope, owner, head, head_span)
+        elif (model := _lookup(scope, "models", head)) is not None:
+            reference = Reference("model", head, head_span, scope.path, owner, model[1][0])
+        else:
+            reference = Reference("element", head, head_span, scope.path, owner, None)
+    references.append(reference)
+    targets[reference] = SweepTarget(noun, included)
+
+
+def _path_element(scope: Scope, path: str) -> tuple[Component | None, bool]:
+    """The element an xyce path such as ``X1:X2:R5`` names through the ``X`` lines of ``scope``
+    and of each definition, and whether the walk stopped at a definition the netlist does not
+    hold while a searched scope may define it elsewhere (an include)."""
+    *instances, last = path.split(":")
+    current = scope
+    for name in instances:
+        instance = next(iter(current.elements.get(current.fold(name), ())), None)
+        if not isinstance(instance, SubcktInstance):
+            return None, False
+        child = definition_scope(current, instance.subckt.name)
+        if child is None:
+            return None, any(candidate.may_define_elsewhere for candidate in current.chain())
+        current = child
+    found = current.elements.get(current.fold(last), ())
+    return (found[0] if found else None), False
+
+
+def step_quantity(scope: Scope, step: StepDirective) -> tuple[str, ...]:
+    """What an xyce ``.STEP`` sweeps, as a key that two lines share when Xyce sweeps one quantity
+    (xm2-tasks 5.1 point 16): a device's name alone means its primary parameter (``R2`` is
+    ``R2:R``, ``V1`` is ``V1:DCV0``), only when the name resolves to that device and not to a
+    parameter, which Xyce looks up first; a ``DATA=`` step is keyed by its table."""
+    fold = scope.fold
+    if step.kind == "data":
+        return ("data", fold(step.name))
+    if step.kind == "temp":
+        return ("temp",)
+    head, colon, parameter = step.name.rpartition(":")
+    if colon:
+        return ("target", fold(head), fold(parameter))
+    if _lookup(scope, "params", step.name) is None:
+        elements = scope.elements.get(fold(step.name), ())
+        primary = _PRIMARY_PARAMS.get(type(elements[0])) if elements else None
+        if primary is not None:
+            return ("target", fold(step.name), primary)
+    return ("target", fold(step.name))
+
+
+def _data_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:
+    """A ``DATA=`` field: the top-level ``.DATA`` table of that name, the last of a repeated one,
+    as Xyce uses (xm2-tasks 5.1 point 27)."""
+    tables = scope._data.get(scope.fold(name), ())
+    return Reference("data", name, span, scope.path, owner, tables[-1] if tables else None)
 
 
 def _stepped_parameter(scope: Scope, name: str) -> StepDirective | None:
@@ -590,6 +781,8 @@ def _formula_references(
         context = _context_words(owner, formula, scope.dialect)
         for token in tokens or ():
             if token.kind == "function" and _USER_FUNCTIONS[scope.dialect]:
+                if _is_schedule(owner, formula, token.text):
+                    continue  # the `.TRAN` field's own keyword; its arguments are read
                 if token.text.lower() not in builtin_functions(scope.dialect):
                     start = text_start + token.start
                     called = _lookup(scope, "_functions", token.text)
@@ -641,6 +834,17 @@ def _formula_references(
                 assert isinstance(first, ParamAssignment)
                 if first.name_span.start > span.start:
                     late.append(reference)
+
+
+def _is_schedule(owner: object, formula: Formula, name: str) -> bool:
+    """Whether ``name`` is the ``schedule`` of an xyce ``.TRAN`` schedule field (decision 0028
+    item 3): the field's own word, not a function of the netlist, so no reference. It is not made
+    a built-in function, since Xyce knows it nowhere else."""
+    return (
+        isinstance(owner, TranDirective)
+        and formula is owner.schedule
+        and name.lower() == "schedule"
+    )
 
 
 def _node_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:

@@ -75,10 +75,34 @@ class UnknownDirective:
 
 @dataclass(frozen=True, slots=True)
 class OpaqueBlock:
-    """A preserved ``.control``, conditional or ``.lib`` … ``.endl`` block."""
+    """A preserved ``.control``, conditional or ``.lib`` … ``.endl`` block, or an xyce
+    ``.DATA`` … ``.ENDDATA`` table (``kind`` ``data``, a :class:`DataTable`)."""
 
-    kind: Literal["control", "if", "lib"]
+    kind: Literal["control", "if", "lib", "data"]
     span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
+class DataTable(OpaqueBlock):
+    """An xyce ``.DATA name col... value... .ENDDATA`` table ([xyce-ref] §2.1.2 p26), an opaque
+    block (``kind`` is ``data``) that ``DATA=`` on ``.AC``, ``.DC`` and ``.STEP`` names.
+
+    ``keyword`` and ``keyword_span`` are the ``.DATA`` keyword as written; ``name`` is the table's
+    name; ``columns`` its column names in order; ``rows`` the number of rows (the values divided by
+    the columns). ``body_text`` is the source slice of ``body_span``, which runs from the first
+    column to the last value, across ``+``, comment and blank lines; ``end_span`` covers the
+    ``.ENDDATA`` keyword. The values are not typed. xyce only; internal while the dialect is hidden
+    (decision 0026).
+    """
+
+    keyword: str
+    keyword_span: Span
+    name: Identifier
+    columns: tuple[Identifier, ...]
+    rows: int
+    body_text: str
+    body_span: Span
+    end_span: Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -725,7 +749,8 @@ class SubcktDefinition(_DotCommand):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class Directive(_DotCommand):
-    """Base of the typed analysis, option and output directives (top level only)."""
+    """Base of the typed analysis, option and output directives (top level only, except xyce's
+    ``.IC``, ``.DCVOLT`` and ``.NODESET``, which may stand in a subcircuit body)."""
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -733,7 +758,9 @@ class TranDirective(Directive):
     """``.tran tstep tstop [tstart [tmax]] [uic]``.
 
     In LTspice ``tstep`` may be left out (``.tran 1m``), and ``modifiers`` holds the other
-    keywords (``startup``, ``steady``, ``savestate=...``).
+    keywords (``startup``, ``steady``, ``savestate=...``). Xyce also has ``NOOP`` (``noop``), a
+    synonym of ``UIC`` that may stand beside it, and a ``{schedule(...)}`` expression after the
+    flags (``schedule``, whose text is ``schedule(...)``); both are ``None`` on the other dialects.
     """
 
     tstep: Value | None
@@ -742,6 +769,8 @@ class TranDirective(Directive):
     tmax: Value | None
     uic: Flag | None
     modifiers: tuple[OptionItem, ...] = ()
+    noop: Flag | None = None
+    schedule: Formula | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -749,7 +778,8 @@ class AcDirective(Directive):
     """``.ac dec|oct|lin points fstart fstop``; ``variation`` is the keyword as written.
 
     LTspice also has ``.ac list f1 f2 ...`` (``frequencies``, the range fields ``None``) and
-    ``.ac file=name`` (``file``, ``variation`` is ``file``).
+    ``.ac file=name`` (``file``, ``variation`` is ``file``). Xyce has ``.AC DATA=table``
+    (``data``, the table's name; ``variation`` is ``data`` as written, the range fields ``None``).
     """
 
     variation: str
@@ -759,6 +789,7 @@ class AcDirective(Directive):
     fstop: Value | None
     frequencies: tuple[Value, ...] = ()
     file: Identifier | None = None
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -767,6 +798,11 @@ class DcSweep:
 
     An LTspice sweep may name a ``variation`` before the source, or hold a ``values`` list or a
     ``file`` in place of the range (``span`` then ends with the last of them).
+
+    An Xyce sweep (decision 0028 item 3) may name a ``variation`` (``LIN``, ``DEC`` or ``OCT``, as
+    written) or hold a ``LIST`` of at least two ``values`` in place of the range; its ``source``
+    is any sweep target, which may hold ``:`` (``R2:R``, ``dm:IS``, ``X1:R5:R``), ``TEMP`` or a
+    parameter, and its range fields may be expressions in braces or quotes.
     """
 
     source: str
@@ -782,9 +818,14 @@ class DcSweep:
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class DcDirective(Directive):
-    """``.dc`` with one or two sweeps (up to three in LTspice)."""
+    """``.dc`` with one or two sweeps (up to three in LTspice, any number in Xyce, the first
+    innermost).
+
+    Xyce's ``.DC DATA=table`` has no sweeps: ``data`` is the table's name, ``None`` otherwise.
+    """
 
     sweeps: tuple[DcSweep, ...]
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -794,19 +835,32 @@ class OpDirective(Directive):
 
 @dataclass(frozen=True, slots=True)
 class OptionItem:
-    """One ``.options`` item, ``name`` or ``name=value``; ``span`` covers both."""
+    """One ``.options`` item, ``name`` or ``name=value``; ``span`` covers both.
+
+    Xyce also has a comma list (``OUTPUTTIMEPOINTS=1n,2n``): ``values`` holds its two or more
+    values in order and ``value`` is ``None``; and the ``INITIAL_INTERVAL=i t1 i1 ...`` of the
+    OUTPUT and RESTART packages: ``value`` is the interval and ``pairs`` the ``(t, i)`` pairs after
+    it, which ``span`` covers. Both are empty on the other dialects and for a single value.
+    """
 
     name: str
     name_span: Span
     value: Value | Identifier | None
     span: Span
+    values: tuple[Value | Identifier, ...] = ()
+    pairs: tuple[tuple[Value, Value], ...] = ()
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class OptionsDirective(Directive):
-    """``.options`` or ``.option`` with one or more items."""
+    """``.options`` or ``.option`` with one or more items.
+
+    ``package`` is an xyce ``.OPTIONS`` package as written (``TIMEINT``, ``DEVICE``, ...); it is
+    ``None`` for xyce's ``.OPTION SCALE=v`` and on the other dialects, which have no packages.
+    """
 
     options: tuple[OptionItem, ...]
+    package: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -822,18 +876,21 @@ class NodeCondition:
     """``v(node)=value``, ``all=value`` (``node is None``, ngspice ``.nodeset`` only), or an
     inductor current ``i(L1)=value`` (``current`` is set, LTspice ``.ic`` only).
 
-    ``span`` runs from ``v(`` (or ``all``, or ``i(``) to the end of the value.
+    ``span`` runs from ``v(`` (or ``all``, or ``i(``) to the end of the value. ``form`` is ``v``
+    for those; xyce also writes a condition as a ``node value`` pair (``form`` ``pair``), whose
+    ``span`` runs from the node to the end of the value.
     """
 
     node: Node | None
     value: Value
     span: Span
     current: ElementReference | None = None
+    form: Literal["v", "pair"] = "v"
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class IcDirective(Directive):
-    """``.ic v(node)=value …``."""
+    """``.ic v(node)=value …``; also xyce's ``.DCVOLT``, a synonym (``keyword`` as written)."""
 
     conditions: tuple[NodeCondition, ...]
 
@@ -876,7 +933,9 @@ class MeasureDirective(Directive):
     """``.meas`` or ``.measure``, typed shallowly.
 
     ``analysis`` (``dc``, ``ac``, ``tran``, ``sp``; in LTspice also ``noise`` and ``op``, or
-    ``None`` when it is left out; as written) and ``result`` are fields; the
+    ``None`` when it is left out; in Xyce one of ``tran``, ``dc``, ``ac``, ``noise``, ``fft``,
+    ``tran_cont``, ``dc_cont``, ``ac_cont`` and ``noise_cont``, required; as written) and
+    ``result`` are fields; the
     rest of the statement is ``body_text``, the source slice of ``body_span``, which runs from
     the first to the last text token (comments on earlier lines of a continued statement are
     inside it; those are also listed in ``trailing_comments``).
@@ -892,7 +951,7 @@ class MeasureDirective(Directive):
 
 @dataclass(frozen=True, slots=True, kw_only=True)
 class StepDirective(Directive):
-    """An LTspice ``.step`` (decision 0009): one nested sweep of one quantity.
+    """An LTspice or Xyce ``.step`` (decisions 0009 and 0028): one nested sweep of one quantity.
 
     ``kind`` says what ``name`` is: a parameter (``.step param x``), a source (``.step V1``), the
     temperature (``.step temp``) or a model parameter (``.step NPN 2N2222(VAF)``; ``model_type``
@@ -900,9 +959,18 @@ class StepDirective(Directive):
     ``variation`` is ``oct``, ``dec`` or ``lin``
     as written, if any. The sweep is a range (``start``, ``stop``, ``increment``), a ``values``
     list or a ``file``.
+
+    An Xyce target has no keyword, and its form does not tell a device from a parameter: ``kind``
+    is ``name`` for a plain name (``R1``, ``p``), ``qualified`` for a name with ``:``
+    (``R2:R``, ``dm:IS``, ``X1:R5:R``; ``parameter`` is the part after the last ``:``), ``temp``
+    for ``TEMP``, and ``data`` for ``DATA=table`` (``data`` and ``name`` are the table's name, the
+    sweep fields ``None`` and empty). ``parameter`` and ``data`` are ``None`` on LTspice.
+    ``parameter`` is read from the form alone, which cannot tell ``R2:R`` from a path to a device
+    without its parameter, ``X1:R5``: there it is ``R5``, a device name, and the document layer
+    reports the target as an unresolved element, since Xyce stops on it.
     """
 
-    kind: Literal["param", "source", "temp", "model"]
+    kind: Literal["param", "source", "temp", "model", "name", "qualified", "data"]
     name: str
     name_span: Span
     model_type: Identifier | None
@@ -914,6 +982,8 @@ class StepDirective(Directive):
     increment: Value | None
     values: tuple[Value, ...]
     file: Identifier | None
+    parameter: str | None = None
+    data: Identifier | None = None
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
@@ -961,6 +1031,8 @@ BodyItem: TypeAlias = (
     | IndentedLine
     | PreprocessDirective
     | FuncStatement
+    | IcDirective
+    | NodesetDirective
     | UnknownDirective
     | OpaqueBlock
     | OpaqueStatement
@@ -997,7 +1069,8 @@ BodyItem: TypeAlias = (
     | FraProbe
     | SubcktInstance
 )
-"""An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block."""
+"""An item allowed in a subcircuit body (decision 0005); ``OpaqueBlock`` is an ``.if`` block.
+``IcDirective`` and ``NodesetDirective`` stand in a body on xyce only (decision 0028 item 2)."""
 
 TopLevelItem: TypeAlias = (
     BodyItem

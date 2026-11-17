@@ -1,0 +1,22 @@
+id: XY-SAV-001
+dialect: xyce
+construct: .SAVE (an UnknownDirective, never a SaveDirective)
+manual_ref:
+- '[xyce-ref] §2.1.34 p152 ".SAVE (Save operating point conditions)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- XY_SAVE_KW
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_closed_list.py::test_save_is_never_a_save_directive
+- tests/grammar/xyce/test_xyce_closed_list.py::test_each_untyped_command_is_an_unknown_directive
+- tests/grammar/xyce/test_xyce_closed_list.py::test_an_untyped_command_is_refused_in_a_body
+- tests/solver/test_xyce_closed_list_probes.py::test_each_untyped_command_runs
+- tests/solver/test_xyce_closed_list_probes.py::test_an_ngspice_save_stops_xyce
+- tests/solver/test_xyce_closed_list_probes.py::test_a_directive_in_a_body_is_ignored
+validation_note: 'Validated on XyceNF Release 7.10.0: `.SAVE` writes its operating point file, is ignored in a body, and ngspice''s `.save v(2)` stops Xyce, which the library reads as an `UnknownDirective` (discrepancies.md).'
+notes: 'Xyce''s `.SAVE` writes the operating point as `.IC` or `.NODESET` lines and has no vectors, so it is one of the untyped commands of XY-DIR-001, an `UnknownDirective`, and never builds ngspice''s `SaveDirective`; `XY_SAVE_KW` is its own terminal, and the overlay does not import core.lark''s `save_stmt`. Its fields are kept as text and not checked, so `.save v(2)`, on which Xyce stops, is read. Top level only (XY-DIR-003).'

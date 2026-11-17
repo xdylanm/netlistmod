@@ -12,28 +12,47 @@ from enum import StrEnum
 from typing import Literal
 
 from netlistmod.dialects import _XYCE, Dialect
-from netlistmod.document.index import Index, Reference, Scope, definition_scope, walk_nodes
+from netlistmod.document.index import (
+    _SWEEP_LOOKUP,
+    Index,
+    Reference,
+    Scope,
+    definition_scope,
+    step_quantity,
+    walk_nodes,
+)
+from netlistmod.document.lines import Line
 from netlistmod.document.models import model_type_allowed, model_type_requirement
-from netlistmod.document.names import instance_name, is_automatic_global, is_ground
+from netlistmod.document.names import instance_name, is_automatic_global, is_ground, net_name
 from netlistmod.model._numbers import reads_as_number
 from netlistmod.model.nodes import (
+    AcDirective,
     Capacitor,
     Cccs,
     Ccvs,
     Component,
     CurrentSwitch,
+    DataTable,
+    DcDirective,
     FraProbe,
     FrequencyAnalyzer,
     GlobalDirective,
     GlobalParamStatement,
+    IcDirective,
     IndentedLine,
     Inductor,
     LibCall,
+    MeasureDirective,
     ModelStatement,
+    NodesetDirective,
+    OpDirective,
+    OptionsDirective,
     Resistor,
     StepDirective,
     SubcktDefinition,
     SubcktInstance,
+    TopLevelItem,
+    TranDirective,
     UnknownDirective,
     Vcvs,
     VoltageSource,
@@ -43,6 +62,14 @@ from netlistmod.model.values import Formula, NumericValue
 from netlistmod.source import SourceText, Span
 
 Severity = Literal["warning", "info"]
+# Whether an untyped `.PREPROCESS` line is xyce's `.PREPROCESS ADDRESISTORS` (decision 0028 item
+# 1), the grammar's only untyped form of it, which `UNTYPED_DIRECTIVE_PRESERVED` names so; on
+# ngspice and LTspice a `.preprocess` line is any unknown directive.
+_UNTYPED_PREPROCESS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
 
 
 class DiagnosticCode(StrEnum):
@@ -69,6 +96,14 @@ class DiagnosticCode(StrEnum):
     INDENTED_LINE_IGNORED = "INDENTED_LINE_IGNORED"
     LIB_EXTRA_ENTRIES = "LIB_EXTRA_ENTRIES"
     NUMERIC_MODEL_NAME = "NUMERIC_MODEL_NAME"
+    UNRESOLVED_DATA = "UNRESOLVED_DATA"
+    ANALYSIS_IGNORED = "ANALYSIS_IGNORED"
+    STEPPED_ANALYSIS_FIELD = "STEPPED_ANALYSIS_FIELD"
+    STEP_IGNORED = "STEP_IGNORED"
+    STEPS_WITH_OP = "STEPS_WITH_OP"
+    IC_WITH_NODESET = "IC_WITH_NODESET"
+    MEASURE_MODE_MISMATCH = "MEASURE_MODE_MISMATCH"
+    CONDITION_IGNORED = "CONDITION_IGNORED"
 
 
 @dataclass(frozen=True, slots=True)
@@ -92,7 +127,11 @@ _UNRESOLVED: dict[str, tuple[DiagnosticCode, str]] = {
     # An xyce call of a user-defined function is reported as a parameter is: a `.FUNC` is
     # scoped like a `.PARAM` (scoping.md S8), and Xyce stops on an unknown one (X-M1 B6).
     "function": (DiagnosticCode.UNRESOLVED_PARAM, "function"),
+    # An xyce `DATA=` field (decision 0028 item 8); Xyce stops on an unknown table.
+    "data": (DiagnosticCode.UNRESOLVED_DATA, "`.DATA` table"),
 }
+# The reference kinds looked up in their own scope only.
+_OWN_SCOPE = frozenset({"element", "node", "data"})
 _ORDER = {code: position for position, code in enumerate(DiagnosticCode)}
 # The solver version whose behaviour a message states (validated_on of the rule tables).
 _SOLVER: dict[Dialect, str] = {
@@ -150,6 +189,21 @@ _REPEAT_STOPS: dict[Dialect, frozenset[str]] = {
 # Xyce, and a `.model` whose name reads as a number is taken as the model.
 _LOOKUP_SORTS: dict[Dialect, bool] = {Dialect.NGSPICE: False, Dialect.LTSPICE: False, _XYCE: True}
 # The severity and the rule of a repeated parameter where the solver runs on.
+# What the solver does with two `.step` lines of one quantity (ngspice reads no `.step`).
+_STEP_REPEATS: dict[Dialect, str | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: f"{_SOLVER[Dialect.LTSPICE]} stops with an error",
+    # xm2-tasks 5.1 point 16 (observed).
+    _XYCE: f"{_SOLVER[_XYCE]} nests the two sweeps of one quantity, silently",
+}
+# Whether the netlist's directives are checked against what the solver runs (decision 0028 item
+# 9): repeated analyses, steps and their tables, options, conditions and measurements. The
+# checks are Xyce's; ngspice and LTspice keep their findings unchanged.
+_DIRECTIVE_CHECKS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
 _PARAM_REPEATS: dict[Dialect, tuple[Severity, str]] = {
     Dialect.NGSPICE: ("info", "the last assignment is used"),
     # Not reached: a repeated parameter stops LTspice (`_REPEAT_STOPS`); the entry keeps the table
@@ -210,11 +264,15 @@ def collect_diagnostics(
             )
         if isinstance(item, UnknownDirective):
             span = item.name_span or item.span
+            named = item.name
+            if _UNTYPED_PREPROCESS[index.dialect] and index.root.fold(item.name) == ".preprocess":
+                # Only this form is untyped: REPLACEGROUND is a `PreprocessDirective`.
+                named = ".PREPROCESS ADDRESISTORS"
             found.append(
                 (
                     DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED,
                     "info",
-                    f"`{item.name}` is not typed by the library and is preserved verbatim",
+                    f"`{named}` is not typed by the library and is preserved verbatim",
                     span,
                 )
             )
@@ -225,6 +283,8 @@ def collect_diagnostics(
     found.extend(_indented_finding(index, span) for span in indented)
     if index.dialect is Dialect.LTSPICE:
         found.extend(_fra_range_findings(index))
+    if _DIRECTIVE_CHECKS[index.dialect]:
+        found.extend(_directive_findings(index))
     found.sort(key=lambda entry: (entry[3].start, entry[3].end, _ORDER[entry[0]]))
     diagnostics = []
     for code, severity, message, span in found:
@@ -251,14 +311,31 @@ def _reference_findings(
 ) -> list[tuple[DiagnosticCode, Severity, str, Span]]:
     findings: list[tuple[DiagnosticCode, Severity, str, Span]] = []
     scope = index.scope(reference.scope)
+    if reference in index.condition_nodes:
+        return _condition_findings(index, scope, reference)
     if reference.target is None and reference.kind in _UNRESOLVED:
         code, noun = _UNRESOLVED[reference.kind]
-        searched = (scope,) if reference.kind in ("element", "node") else tuple(scope.chain())
+        sweep = index.sweep_targets.get(reference)
+        if sweep is not None:
+            noun = sweep.noun
+        searched = (scope,) if reference.kind in _OWN_SCOPE else tuple(scope.chain())
         where = ", ".join(candidate.describe() for candidate in searched)
         message = f"{noun} `{reference.name}` is not defined (searched: {where})"
         severity: Severity = "warning"
-        into = _into_instance(index, scope, reference)
-        if into is not None:
+        into = _into_instance(index, scope, reference) if sweep is None else None
+        if sweep is not None and sweep.device:
+            # The device is found, so an include changes nothing: Xyce stops on the path.
+            head, _, device = reference.name.rpartition(":")
+            message += (
+                f"; it names device `{device}` inside instance `{head}`, not one of its parameters"
+            )
+        elif sweep is not None and sweep.included:
+            severity = "info"
+            message += (
+                "; it names an element inside an instance whose definition may be in an "
+                "`.include` or `.lib` file, which is not read"
+            )
+        elif into is not None:
             severity = "info"
             what = "a node" if reference.kind == "node" else "a source"
             message += (
@@ -272,6 +349,11 @@ def _reference_findings(
                 "is not read"
             )
         message += _model_place_note(index, scope, reference)
+        if severity == "warning" and (sweep is not None or reference.kind == "data"):
+            # Observed (X-M2 B5 probes): an undefined sweep target or table stops Xyce 7.10.
+            message += f"; {_SOLVER[index.dialect]} stops on it"
+        if sweep is not None and sweep.device:
+            message += f"; write `{reference.name}:<param>`"
         findings.append((code, severity, message, reference.span))
     if reference in index.late_param_uses:
         findings.append(
@@ -668,21 +750,31 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
                         span,
                     )
                 )
-    seen: set[tuple[str, str]] = set()
+    seen: dict[tuple[str, ...], Line] = {}
     for line in scope.lines:
         if isinstance(line.item, StepDirective):
-            quantity = (line.item.kind, scope.fold(line.item.name))
+            step = line.item
+            quantity = (
+                step_quantity(scope, step)
+                if _SWEEP_LOOKUP[scope.dialect]
+                else (step.kind, scope.fold(step.name))
+            )
             if quantity in seen:
+                repeat = _STEP_REPEATS[scope.dialect]
+                assert repeat is not None  # only LTspice and xyce read `.step`
+                if _SWEEP_LOOKUP[scope.dialect]:
+                    repeat = f"line {seen[quantity].first_line} sweeps it already; {repeat}"
                 findings.append(
                     (
                         DiagnosticCode.DUPLICATE_DEFINITION,
                         "warning",
-                        f"`.step` sweeps `{line.item.name}` again; {_SOLVER[scope.dialect]} stops "
-                        "with an error",
-                        line.item.name_span,
+                        f"`.step` sweeps `{step.name}` again; {repeat}",
+                        step.name_span,
                     )
                 )
-            seen.add(quantity)
+            seen.setdefault(quantity, line)
+    if _DIRECTIVE_CHECKS[scope.dialect]:
+        findings.extend(_directive_repeat_findings(scope))
     for elements in scope.elements.values():
         for repeated in elements[1:]:
             findings.append(
@@ -724,4 +816,375 @@ def _value_findings(value: NumericValue) -> list[tuple[DiagnosticCode, Severity,
                 value.span,
             )
         )
+    return findings
+
+
+# --- xyce directives (decision 0028 item 9; xm2-tasks 5.1 points 10, 15, 16, 21, 24, 26, 27) ---
+
+# The analyses of which Xyce runs only the last line (point 15, observed; `.NOISE`, an untyped
+# line, takes part as the B5 probes show), and the one that gives way to any of them.
+_LAST_WINS = ("tran", "ac", "dc", "noise")
+# What Xyce 7.10 does with a field of each analysis that reads a stepped parameter (point 10;
+# the R1 review's probes): it reads a `.TRAN` field once, and stops on an `.AC` or `.DC` one
+# ("Attempt to evaluate expression {p}, which contains unknowns").
+_STEPPED_FIELD: dict[type, str] = {
+    TranDirective: "reads this `{keyword}` field once, so the sweep does not change it",
+    AcDirective: "stops on this `{keyword}` field: it cannot evaluate a stepped parameter there",
+    DcDirective: "stops on this `{keyword}` field: it cannot evaluate a stepped parameter there",
+}
+
+Finding = tuple[DiagnosticCode, Severity, str, Span]
+
+
+def _analysis_kind(item: TopLevelItem, root: Scope) -> str | None:
+    if isinstance(item, TranDirective):
+        return "tran"
+    if isinstance(item, AcDirective):
+        return "ac"
+    if isinstance(item, DcDirective):
+        return "dc"
+    if isinstance(item, OpDirective):
+        return "op"
+    if isinstance(item, UnknownDirective) and root.fold(item.name) == ".noise":
+        return "noise"
+    return None
+
+
+def _keyword(item: TopLevelItem) -> tuple[str, Span]:
+    if isinstance(item, UnknownDirective):
+        return item.name, item.name_span or item.span
+    keyword: str = getattr(item, "keyword")
+    span: Span = getattr(item, "keyword_span")
+    return keyword, span
+
+
+def _directive_findings(index: Index) -> list[Finding]:
+    """The xyce findings about what Xyce 7.10 runs: analyses it ignores, `.STEP` lines that do not
+    act as written, `.IC` beside `.NODESET`, and `.MEAS` modes without their analysis."""
+    root = index.root
+    solver = _SOLVER[index.dialect]
+    analyses = [(line, kind) for line in root.lines if (kind := _analysis_kind(line.item, root))]
+    ranked = [(line, kind) for line, kind in analyses if kind in _LAST_WINS]
+    runs: tuple[Line, str] | None = ranked[-1] if ranked else None
+    if runs is None:
+        runs = next(((line, kind) for line, kind in analyses if kind == "op"), None)
+    findings: list[Finding] = []
+    if runs is not None:
+        findings.extend(_ignored_analyses(analyses, runs, solver))
+    steps = [line for line in root.lines if isinstance(line.item, StepDirective)]
+    findings.extend(_step_findings(index, steps, runs, solver))
+    findings.extend(_ic_nodeset_findings(index, solver))
+    findings.extend(_measure_findings(index, runs, solver))
+    return findings
+
+
+def _ignored_analyses(
+    analyses: list[tuple[Line, str]], runs: tuple[Line, str], solver: str
+) -> list[Finding]:
+    """`ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC` and `.NOISE` Xyce runs the last line's
+    analysis; `.OP` gives way to any of them; every `.DC` line joins the first into one nested
+    sweep, the first line innermost (point 15; the B5 probes)."""
+    last, kind = runs
+    last_keyword = _keyword(last.item)[0]
+    first_dc = next((line for line, found in analyses if found == "dc"), None)
+    findings: list[Finding] = []
+    for line, found in analyses:
+        keyword, span = _keyword(line.item)
+        if found == "dc" and kind == "dc":
+            if line is first_dc:
+                continue
+            assert first_dc is not None
+            message = (
+                f"this `{keyword}` line joins the `.DC` on line {first_dc.first_line} into one "
+                f"nested sweep: {solver} runs every `.DC` line as one analysis, the sweeps of the "
+                "earlier lines innermost"
+            )
+        elif line is last or (found == "op" and kind == "op"):
+            continue
+        elif found == "op":
+            message = (
+                f"{solver} ignores `{keyword}` when the netlist has another analysis, and runs "
+                f"`{last_keyword}` (line {last.first_line})"
+            )
+        else:
+            message = (
+                f"{solver} runs only the last analysis line, `{last_keyword}` on line "
+                f"{last.first_line}, and ignores this `{keyword}`"
+            )
+        findings.append((DiagnosticCode.ANALYSIS_IGNORED, "warning", message, span))
+    return findings
+
+
+def _step_findings(
+    index: Index, steps: list[Line], runs: tuple[Line, str] | None, solver: str
+) -> list[Finding]:
+    """`STEPPED_ANALYSIS_FIELD` (point 10), `STEP_IGNORED` and `STEPS_WITH_OP` (point 16)."""
+    findings: list[Finding] = []
+    lines = {id(line.item): line for line in index.lines}
+    stepped = {
+        id(reference.target): lines[id(reference.owner)]
+        for reference in index.sweep_targets
+        if isinstance(reference.owner, StepDirective)
+        and reference.kind == "param"
+        and reference.target is not None
+    }
+    for reference in index.references:
+        owner = reference.owner
+        if (
+            reference.kind == "param"
+            and reference not in index.sweep_targets
+            and isinstance(owner, TranDirective | AcDirective | DcDirective)
+            and id(reference.target) in stepped
+        ):
+            findings.append(
+                (
+                    DiagnosticCode.STEPPED_ANALYSIS_FIELD,
+                    "warning",
+                    f"parameter `{reference.name}` is swept by the `.STEP` on line "
+                    f"{stepped[id(reference.target)].first_line}, but {solver} "
+                    + _STEPPED_FIELD[type(owner)].format(keyword=owner.keyword),
+                    reference.span,
+                )
+            )
+    tables = [line for line in steps if isinstance(line.item, StepDirective) and line.item.data]
+    if tables:
+        for line in steps:
+            if line not in tables:
+                keyword, span = _keyword(line.item)
+                findings.append(
+                    (
+                        DiagnosticCode.STEP_IGNORED,
+                        "warning",
+                        f"{solver} drops this `{keyword}` line: a `.STEP DATA=` line (line "
+                        f"{tables[0].first_line}) makes it ignore every other `.STEP` line",
+                        span,
+                    )
+                )
+    if len(steps) > 1 and runs is not None and runs[1] == "op":
+        keyword, span = _keyword(runs[0].item)
+        findings.append(
+            (
+                DiagnosticCode.STEPS_WITH_OP,
+                "warning",
+                f"{solver} aborts on an `{keyword}` analysis with {len(steps)} `.STEP` lines; "
+                "one `.STEP` line, or another analysis, runs",
+                span,
+            )
+        )
+    return findings
+
+
+def _ic_nodeset_findings(index: Index, solver: str) -> list[Finding]:
+    """`IC_WITH_NODESET` (point 24): Xyce aborts on `.IC` or `.DCVOLT` with `.NODESET`, in any
+    scope."""
+    ics = [line for line in index.lines.walk() if isinstance(line.item, IcDirective)]
+    if not ics:
+        return []
+    keyword = _keyword(ics[0].item)[0]
+    findings: list[Finding] = []
+    for line in index.lines.walk():
+        if isinstance(line.item, NodesetDirective):
+            findings.append(
+                (
+                    DiagnosticCode.IC_WITH_NODESET,
+                    "warning",
+                    f"the netlist has `{keyword}` (line {ics[0].first_line}) and "
+                    f"`{line.item.keyword}`; {solver} aborts when both stand in one netlist",
+                    line.item.keyword_span,
+                )
+            )
+    return findings
+
+
+def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) -> list[Finding]:
+    """`MEASURE_MODE_MISMATCH` (point 26): a `.MEAS` mode whose analysis Xyce does not run, or
+    FFT without a `.FFT` line (the B5 probes)."""
+    root = index.root
+    fft = any(
+        isinstance(line.item, UnknownDirective) and root.fold(line.item.name) == ".fft"
+        for line in root.lines
+    )
+    findings: list[Finding] = []
+    for line in root.lines:
+        item = line.item
+        if not isinstance(item, MeasureDirective) or item.analysis is None:
+            continue
+        assert item.analysis_span is not None
+        mode = root.fold(item.analysis)
+        if mode == "fft":
+            if not fft:
+                message = (
+                    f"`{item.analysis}` measures a `.FFT` line, and the netlist has none; "
+                    f'{solver} stops ("No .FFT statement in netlist")'
+                )
+                findings.append(
+                    (DiagnosticCode.MEASURE_MODE_MISMATCH, "warning", message, item.analysis_span)
+                )
+            continue
+        # A mode needs the analysis of its name (point 26); FFT is handled above.
+        needed = mode.removesuffix("_cont")
+        assert needed in _LAST_WINS, mode
+        if runs is not None and runs[1] == needed:
+            continue
+        if runs is None:
+            ran = "the netlist has no analysis"
+        else:
+            ran = f"{solver} runs `{_keyword(runs[0].item)[0]}` (line {runs[0].first_line})"
+        if needed == "dc" and runs is not None and runs[1] == "op":
+            outcome = "it reports the measurement as FAILED"
+        else:
+            outcome = "it stops: the analysis and the measure mode do not agree"
+        findings.append(
+            (
+                DiagnosticCode.MEASURE_MODE_MISMATCH,
+                "warning",
+                f"`{item.analysis}` needs a `.{needed.upper()}` analysis, but {ran}; {outcome}",
+                item.analysis_span,
+            )
+        )
+    return findings
+
+
+def _condition_findings(index: Index, scope: Scope, reference: Reference) -> list[Finding]:
+    """The node of an xyce `.IC`, `.DCVOLT` or `.NODESET` condition (decision 0028 items 2 and
+    6; points 5, 24 and 25): a path into an instance is `NODE_INTO_INSTANCE`, as on a device line
+    (decision 0027 item 4); a node nothing in the scope connects is `UNRESOLVED_NODE`, since Xyce
+    ignores its condition; a global node in a body's condition is `CONDITION_IGNORED`."""
+    owner = reference.owner
+    assert isinstance(owner, IcDirective | NodesetDirective)
+    solver = _SOLVER[index.dialect]
+    name = reference.name
+    rule = _INSTANCE_NODES[index.dialect]
+    assert rule is not None  # only xyce makes condition nodes references
+    reading = _reading_of_instance_node(index, scope, name, rule)
+    if reading == "joined":
+        return [
+            (
+                DiagnosticCode.NODE_INTO_INSTANCE,
+                "warning",
+                f"node `{name}` names an instance; {solver} applies the `{owner.keyword}` "
+                f"condition to that node inside the instance{rule.cited}, and the library does "
+                "not resolve it",
+                reference.span,
+            )
+        ]
+    if reading == "unknown":
+        return [
+            (
+                DiagnosticCode.NODE_INTO_INSTANCE,
+                "info",
+                f"node `{name}` names an instance; {solver} applies the `{owner.keyword}` "
+                "condition to that node inside the instance if the included definition has it as "
+                "an internal node, and the library does not resolve it",
+                reference.span,
+            )
+        ]
+    if reference.target is None:
+        severity: Severity = "warning"
+        message = (
+            f"node `{name}` is not connected to anything in {scope.describe()}; {solver} ignores "
+            f"the `{owner.keyword}` condition on it, with a warning"
+        )
+        if scope.may_define_elsewhere:
+            severity = "info"
+            message += (
+                "; it may be connected in an `.include` or `.lib` file or an opaque block, "
+                "which is not read"
+            )
+        return [(DiagnosticCode.UNRESOLVED_NODE, severity, message, reference.span)]
+    grounded = is_ground(name, index.dialect, replace_ground=index.replace_ground)
+    if scope.definition is not None and not grounded and _is_global(index, name):
+        return [
+            (
+                DiagnosticCode.CONDITION_IGNORED,
+                "warning",
+                f"node `{name}` is global, and {solver} ignores a `{owner.keyword}` condition on "
+                f"a global node in a subcircuit body ({scope.describe()}), with a warning; move "
+                "the condition to the top level",
+                reference.span,
+            )
+        ]
+    return []
+
+
+def _directive_repeat_findings(scope: Scope) -> list[Finding]:
+    """`DUPLICATE_DEFINITION` for repeated xyce options, conditions, measurements and tables,
+    saying which one Xyce 7.10 uses (points 21, 24, 26 and 27)."""
+    solver = _SOLVER[scope.dialect]
+    where = scope.describe()
+    findings: list[Finding] = []
+    options: set[tuple[str, str]] = set()
+    conditions: dict[type, set[str]] = {IcDirective: set(), NodesetDirective: set()}
+    results: set[str] = set()
+    for line in scope.lines:
+        item = line.item
+        if isinstance(item, OptionsDirective):
+            # `.OPTION SCALE=`, the one item without a package, is PARSER's SCALE (observed).
+            package = scope.fold(item.package.name) if item.package is not None else "parser"
+            # Two OUTPUT lines both apply (point 21, observed), so they are not repeats.
+            if package == "output":
+                continue
+            for option in item.options:
+                option_key = (package, scope.fold(option.name))
+                if option_key in options:
+                    named = f" of package `{item.package.name}`" if item.package else ""
+                    findings.append(
+                        (
+                            DiagnosticCode.DUPLICATE_DEFINITION,
+                            "warning",
+                            f"option `{option.name}`{named} is set again; {solver} uses the "
+                            "first value, with a warning",
+                            option.name_span,
+                        )
+                    )
+                options.add(option_key)
+        elif isinstance(item, IcDirective | NodesetDirective):
+            seen = conditions[type(item)]
+            for condition in item.conditions:
+                if condition.node is None:
+                    continue
+                net = net_name(
+                    condition.node.name, scope.dialect, replace_ground=scope._replace_ground
+                )
+                if net in seen:
+                    what = (
+                        "a `.NODESET` value"
+                        if isinstance(item, NodesetDirective)
+                        else ("an initial condition (`.IC` or `.DCVOLT`)")
+                    )
+                    findings.append(
+                        (
+                            DiagnosticCode.DUPLICATE_DEFINITION,
+                            "warning",
+                            f"node `{condition.node.name}` is given {what} again in {where}; "
+                            f"{solver} uses the last value",
+                            condition.node.span,
+                        )
+                    )
+                seen.add(net)
+        elif isinstance(item, MeasureDirective):
+            key = scope.fold(item.result)
+            if key in results:
+                findings.append(
+                    (
+                        DiagnosticCode.DUPLICATE_DEFINITION,
+                        "warning",
+                        f"measurement `{item.result}` is defined again; {solver} uses the last "
+                        "definition, with a warning",
+                        item.result_span,
+                    )
+                )
+            results.add(key)
+    for tables in scope._data.values():
+        for table in tables[1:]:
+            assert isinstance(table, DataTable)
+            findings.append(
+                (
+                    DiagnosticCode.DUPLICATE_DEFINITION,
+                    "warning",
+                    f"`.DATA` table `{table.name.name}` is defined again; {solver} uses the last "
+                    "definition",
+                    table.name.span,
+                )
+            )
     return findings

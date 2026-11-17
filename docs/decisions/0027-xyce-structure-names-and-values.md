@@ -3,7 +3,7 @@
 - **Status:** accepted (2026-11-16, maintainer; X-M1 gate G1)
 - **Date:** 2026-11-16
 - **Amends:** [decision 0026](0026-the-xyce-dialect.md) item 6 (what the hidden xyce dialect reads); architecture §6.3 rule 10 (an xyce exception), §7.8 (the known limit extends to xyce) and §19 decision 21 (strictness exceptions), for the hidden xyce dialect only.
-- **Context:** X-M1 ([xm1-tasks.md](../design/xm1-tasks.md)) makes the hidden xyce dialect read structure, names, numbers, parameters, expressions, subcircuits, models, includes and the letters R, C, L, V, I, D, X and K. Its stage 1 compared the Xyce 7.10 manuals with the XyceNF 7.10.0 binary (section 5.1, points 1 to 28). Where they differ, the grammar follows the manual (decision 0026 item 5), except as stated here. The maintainer decided every point at G1.
+- **Context:** X-M1 ([xm1-tasks.md](../design/archive/xyce/xm1-tasks.md)) makes the hidden xyce dialect read structure, names, numbers, parameters, expressions, subcircuits, models, includes and the letters R, C, L, V, I, D, X and K. Its stage 1 compared the Xyce 7.10 manuals with the XyceNF 7.10.0 binary (section 5.1, points 1 to 28). Where they differ, the grammar follows the manual (decision 0026 item 5), except as stated here. The maintainer decided every point at G1.
 - **Decision:** Item numbers below refer to xm1-tasks.md section 5.1, which holds the evidence and the details.
   1. **X-D1, indented lines** (point 1). An indented line that is not `*`, `;` or `+` is read as a comment, as Xyce reads it, in a node of its own kind. A warning diagnostic reports that Xyce ignores it. An indented `+` line continues. Edits refuse inserted statement text that begins with whitespace.
   2. **Structure** (points 2 and 3).

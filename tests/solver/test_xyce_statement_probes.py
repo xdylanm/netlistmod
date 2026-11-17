@@ -212,11 +212,15 @@ def test_a_lib_with_one_field_opens_a_block(solver: Solver, tmp_path: Path) -> N
     assert _v2(solver, tmp_path / "block", block) == pytest.approx(1.0)
 
 
-def test_a_directive_runs_in_a_body(solver: Solver, tmp_path: Path) -> None:
-    """Xyce runs an analysis directive written in a subcircuit body, which the manual says a body
-    should not hold ([xyce-ref] §2.1.37 p160); the library refuses it there (discrepancies.md)."""
-    lines = ".subckt s a\nR1 a 0 1k\n.options timeint reltol=1e-3\n.ends\nX1 2 s\n"
-    assert _v2(solver, tmp_path, lines) == pytest.approx(1.0)
+def test_an_option_in_a_body_is_ignored(solver: Solver, tmp_path: Path) -> None:
+    """An `.OPTIONS` line in a body, which the manual says a body should not hold
+    ([xyce-ref] §2.1.37 p160), is silently ignored: `DEVICE TEMP=127` there leaves R5's TC1 at
+    27 degrees, so v(2) stays 1 (decision 0028 item 2, which corrects X-M1's reading that Xyce
+    runs it; tests/solver/test_xyce_closed_list_probes.py has the other directives)."""
+    lines = ".subckt s a\nR5 a 0 1k TC1=0.01\n.options device temp=127\n.ends\nX1 2 s\n"
+    result = run(solver, tmp_path, _divider(lines))
+    assert result.ok and not [item for item in result.warnings if item.line is not None]
+    assert _v2(solver, tmp_path / "op", lines) == pytest.approx(1.0)
 
 
 @pytest.mark.parametrize("word", ["time", "vt", "temp", "gmin"])

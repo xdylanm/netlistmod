@@ -7,14 +7,17 @@
 // includes and `.LIB`. The names and the two number readers of decision 0027 items 3 and 8 are
 // defined here for the statements and element lines that use them.
 //
-// The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X. Every other line is
-// refused: a dot-command the overlay does not read yet, and the other `.PREPROCESS` forms, raise
-// UnsupportedConstruct from the transformer; an element line of another letter has no rule, so the
-// loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and A and N,
-// which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines
-// that follow a refused dot-command joins it, and is refused with it. A `+` line with only the
-// title, comments and blank lines before it is a ParseError: the title is a comment, so there is
-// no line for it to join.
+// The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X. X-M2 (decision 0028)
+// reads the directives, and closes the list of dot-commands (B4, decision 0028 item 1): the
+// typed ones, the untyped ones read as UnknownDirective (DOT_NAME), and `.PREPROCESS ADDRESISTORS`;
+// any other dot-command has no terminal, so the parser stops at its first character and the
+// loader raises a ParseError ("not an Xyce dot-command"). `.PREPROCESS REMOVEUNUSED` raises
+// UnsupportedConstruct from the transformer; an element line of another letter has no rule, so
+// the loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and A and N,
+// which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines that
+// follow a refused line joins it, and is refused with it. A `+` line with only the title,
+// comments and blank lines before it is a ParseError: the title is a comment, so there is no line
+// for it to join.
 //
 // %ignore is not carried by %import, so it is declared again here. Every core rule and terminal
 // used is imported by name, which keeps tree and token names unprefixed.
@@ -31,7 +34,7 @@
 //    in its trailing_comments and its Line, and an indented line among them is still told apart
 //    (decision X-D1). Every gap of a field rule takes all three, and the imported core rules with
 //    a gap are extended with INDENTED_TRAILING.
-//  * REST_TEXT (2) is the text after a refused dot-command, to the end of the line.
+//  * REST_TEXT (2) is the text after a refused line's keyword, to the end of the line.
 
 %import .core (end_stmt, trailer, eol, global_stmt)
 %import .core (WS, LINE_END, CONT, NL, TITLE_TEXT, COMMENT_LINE, END_KW, DOT_NAME)
@@ -39,6 +42,9 @@
 %import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, PARAM_KW, RPAR)
 %import .core (x_name, ends_line, param, rparen, MODEL_KW, LPAR, SUBCKT_KW, ENDS_KW, ZERO_PORT)
 %import .core (value, model, dc_spec, dc_keyword, ac_spec, DC_KW, AC_KW, OFF_KW)
+%import .core (TRAN_KW, UIC_KW, DOT_AC_KW, ac_variation, DEC_KW, OCT_KW, LIN_KW, DOT_DC_KW)
+%import .core (op_stmt, OP_KW)
+%import .core (OPTIONS_KW, OPTION_KW, IC_KW, NODESET_KW, V_OPEN, MEAS_KW, MEASURE_KW)
 
 %ignore WS
 %ignore CONT
@@ -67,8 +73,15 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
 // spec: XY-STR-001
 ?statement: body_statement
           | top_statement
-?body_statement: unsupported_directive
-               | preprocess_stmt
+
+// The closed list of dot-commands (decision 0028 item 1): the statements below are every line the
+// dialect reads, besides comments and blank lines. A dot-command that none of them begins with
+// matches no terminal at a line start, so the parser stops at its `.` and the loader refuses it
+// as not an Xyce dot-command (XY-DIR-002).
+// spec: XY-DIR-002
+?body_statement: preprocess_stmt
+               | preprocess_addresistors
+               | preprocess_removeunused
                | preprocess_other
                | param_stmt
                | func_stmt
@@ -85,8 +98,20 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | current_source
                | diode
                | subckt_instance
+               | xy_ic_stmt
+               | xy_nodeset_stmt
+               | stray_enddata
 ?top_statement: global_stmt
               | global_param_stmt
+              | xy_tran_stmt
+              | xy_ac_stmt
+              | xy_dc_stmt
+              | op_stmt
+              | xy_step_stmt
+              | xy_options_stmt
+              | xy_meas_stmt
+              | data_block
+              | xy_unknown_stmt
 
 // A `*` comment line, and a line that begins with `;`, an in-line comment on a line of its own
 // (§4.1.3.1 p43). An end-of-line comment starts at `;`, with or without a blank before it; the
@@ -120,6 +145,7 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 %extend rparen: INDENTED_TRAILING rparen
 %extend dc_keyword: INDENTED_TRAILING dc_keyword
 %extend ac_spec: INDENTED_TRAILING ac_spec
+%extend ac_variation: INDENTED_TRAILING ac_variation
 
 // `.END` may end with a `;` comment, since `;` may end any line (§4.1.3.1 p43); nothing else may
 // follow it on its line.
@@ -127,13 +153,29 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 %extend end_stmt: END_KW TRAILING_COMMENT LINE_END trailer* -> end
                 | END_KW TRAILING_COMMENT -> end
 
-// A dot-command the overlay does not read yet, continued by `+` lines; refused whole. `.ENDS` and
-// `.ENDL` are not dot-commands of their own: outside their block they are a syntax error.
-// spec: XY-UNS-001
-unsupported_directive: DOT_NAME REST_TEXT* NL
-%override DOT_NAME.4: /\.(?!(?:ends|endl)(?![a-z0-9_-]))[a-z][a-z0-9_-]*/i
+// The closed list's untyped dot-commands (decision 0028 item 1; xm2-tasks 5.1 points 1 and 3):
+// the outputs and the further analyses, read as UnknownDirective, top level only (in a body Xyce
+// silently ignores them, so they are refused there, not_in_subckt), and continued by `+` lines,
+// which Xyce joins. The name ends where its word ends (a lookahead), so `.prints` is not one. A
+// field is a run of characters other than blanks and `;` (FIELD_TEXT); the statement's text is
+// kept whole. `.SAVE` is this, never ngspice's `.save` (it writes an operating point and has no
+// vectors). Any other dot-command matches no terminal, so the parser stops at it: the loader
+// refuses it as not an Xyce dot-command, with a hint for some (`.TEMP`, `.PROBE`, `.title`,
+// `.opt`), and the lines of a would-be block are never read.
+// spec: XY-DIR-001
+xy_unknown_stmt: (DOT_NAME | XY_SAVE_KW) unknown_field* (NL | eol)
+unknown_field: SEP FIELD_TEXT
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) unknown_field
+%override DOT_NAME.4: /\.(?:print|four|fft|result|sens|noise|hb|lin|sampling|embeddedsampling|pce)(?![^ \t\r\n;])/i
+FIELD_TEXT.2: /[^ \t\r\n;]+/
 
-// A `+` line after comment or blank lines that follow a refused dot-command, which joins it.
+// .SAVE ([xyce-ref] §2.1.34 p152), one of the untyped commands above, with a terminal of its own:
+// it writes the operating point as `.IC` or `.NODESET` lines and has no vectors, so it is never
+// ngspice's `.save` (core.lark's save_stmt, which this overlay does not import).
+// spec: XY-SAV-001
+XY_SAVE_KW.4: /\.save(?![^ \t\r\n;])/i
+
+// A `+` line after comment or blank lines that follow a refused line, which joins it.
 // spec: XY-UNS-001
 continuation_line: PLUS_LINE LINE_END
 
@@ -163,8 +205,37 @@ REPLACEGROUND_KW.2: "replaceground"i
 TRUE_KW.2: "true"i
 FALSE_KW.2: "false"i
 
-// The other .PREPROCESS forms (REMOVEUNUSED, ADDRESISTORS, ...), refused whole.
+// .PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value ([xyce-ref] §2.1.30 p127; decision 0028
+// item 1): it writes another netlist and leaves this run unchanged, so it is an UnknownDirective,
+// allowed in a subcircuit body as REPLACEGROUND is; one of each kind per netlist (the transformer
+// refuses a second). The value is a plain number of the device-field reader. Another word in the
+// kind's place is recognised with the rest of the line only to be refused (pp_bad_kind).
+// spec: XY-PRE-002
+preprocess_addresistors: PREPROCESS_KW pp_addresistors pp_kind pp_number (NL | eol)
+                       | PREPROCESS_KW pp_addresistors pp_bad_kind
+pp_addresistors: SEP ADDRESISTORS_KW
+               | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_addresistors
+pp_kind: SEP (ONETERMINAL_KW | NODCPATH_KW)
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_kind
+pp_number: SEP NUMBER
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_number
+pp_bad_kind: SEP WORD REST_TEXT* NL
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_bad_kind
+ADDRESISTORS_KW.2: "addresistors"i
+ONETERMINAL_KW.2: "oneterminal"i
+NODCPATH_KW.2: "nodcpath"i
+
+// .PREPROCESS REMOVEUNUSED ([xyce-ref] §2.1.29 p126) deletes devices, so it changes the circuit
+// (P4): refused whole as unsupported, until X-M4.
 // spec: XY-UNS-001
+preprocess_removeunused: PREPROCESS_KW pp_removeunused REST_TEXT* NL
+pp_removeunused: SEP REMOVEUNUSED_KW
+               | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_removeunused
+REMOVEUNUSED_KW.2: "removeunused"i
+
+// Any other word after .PREPROCESS is not one of its forms, recognised with the rest of the line
+// only to be refused.
+// spec: XY-PRE-002
 preprocess_other: PREPROCESS_KW pp_word REST_TEXT* NL
 pp_word: SEP WORD
        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_word
@@ -174,6 +245,201 @@ pp_word: SEP WORD
 %override global_stmt: GLOBAL_KW global_node+ (NL | eol)
 global_node: SEP WORD
            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) global_node
+
+// ---------------------------------------------------------------------------------------------
+// Analyses and sweeps (X-M2 B2; decision 0028 items 3 and 4; xm2-tasks 5.1 points 7 to 17). Each
+// is a top statement: in a subcircuit body Xyce silently ignores it, so it is refused there
+// (not_in_subckt). Unbraced numbers are the device-field reader's (NUMBER, XY-NUM-001); `.TRAN`,
+// `.AC` and `.DC` also take an expression in braces or quotes (`value`), `.STEP` takes none.
+// Keywords fold case.
+
+// .TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] [{schedule(...)}] ([xyce-ref] §2.1.38 p161):
+// tstep is required; NOOP and UIC (synonyms) stand after the numbers, in either order, each at
+// most once (the transformer refuses a repeat); then at most one schedule, an expression in braces
+// or quotes whose head is `schedule(` in any case (blanks may stand around `schedule`, which Xyce
+// runs), a field of its own (SCHEDULE_FORMULA outranks BRACE_FORMULA and QUOTE_FORMULA). A
+// schedule in tstep's or tstop's place (tran_early_schedule) is recognised with the rest of the
+// line only to be refused; in tstart's or tmax's place it is the schedule, and what follows it is
+// refused. No comma, and none of LTspice's modifiers.
+// spec: XY-TRN-001
+xy_tran_stmt: TRAN_KW value value (value value?)? tran_flag* tran_schedule? (NL | eol)
+            | TRAN_KW value? tran_early_schedule
+tran_early_schedule: SEP SCHEDULE_FORMULA REST_TEXT* NL
+                   | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_early_schedule
+tran_flag: SEP (NOOP_KW | UIC_KW)
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_flag
+tran_schedule: SEP SCHEDULE_FORMULA
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) tran_schedule
+NOOP_KW.2: "noop"i
+SCHEDULE_FORMULA.4: /\{[ \t]*schedule[ \t]*\([^{};\r\n]*\}|'[ \t]*schedule[ \t]*\([^'{};\r\n]*'/i
+
+// .AC LIN|OCT|DEC points fstart fstop, or .AC DATA=table ([xyce-ref] §2.1.1 p24). No `list` and
+// no `file=`.
+// spec: XY-ACA-001
+xy_ac_stmt: DOT_AC_KW ac_variation value value value (NL | eol)
+          | DOT_AC_KW data_ref (NL | eol)
+
+// DATA=table on .AC, .DC and .STEP ([xyce-ref] §2.1.1 p24, §2.1.3 p27, §2.1.36 p156): the
+// keyword, whose lookahead finds the `=` (so a sweep target named `data` stays a name), blanks
+// allowed around the `=`, then the table's name. It stands alone on its line.
+// spec: XY-DCA-002
+data_ref: SEP DATA_KW EQ WORD
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_ref
+DATA_KW.4: /data(?=[ \t]*=)/i
+
+// .DC: one or more sweeps, the first innermost ([xyce-ref] §2.1.3 p27–28), each
+// `[LIN|DEC|OCT] target start stop step` or `target LIST v1 v2 ...` (at least two values), in
+// any order; or DATA=table alone. The sweeps are right-recursive, so that a list's next value and
+// the next sweep are told apart by the token after the separator, with nothing to reduce before
+// it; the transformer groups the fields into sweeps.
+// spec: XY-DCA-001
+xy_dc_stmt: DOT_DC_KW _dc_sweeps
+          | DOT_DC_KW data_ref (NL | eol)
+_dc_sweeps: ac_variation? sweep_target value value value _dc_next
+          | sweep_target list_keyword value value _dc_list
+_dc_list: value _dc_list
+        | _dc_next
+_dc_next: _dc_sweeps
+        | NL
+        | eol
+list_keyword: SEP LIST_KW
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) list_keyword
+LIST_KW.2: "list"i
+
+// A sweep target of .DC and .STEP: a source or device, `dev:param`, `model:param`, a path into
+// an instance (`X1:R5:R`), TEMP or a parameter ([xyce-ref] §2.1.3 p27, §2.1.36 p155), in the
+// name class with `:` (NODE_WORD). The transformer refuses a target that reads as a number, and
+// an empty part around a `:`.
+// spec: XY-STP-002
+sweep_target: SEP NODE_WORD
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) sweep_target
+
+// .STEP ([xyce-ref] §2.1.36 p155–158): one sweep per line, `[LIN|DEC|OCT] target start stop
+// step`, `target LIST v1 v2 ...` (at least two values) or DATA=table, with plain numbers only.
+// There is no `param` keyword: STEP_PARAM_KW, `param` before a name other than LIST, is
+// recognised with the rest of the line only to be refused, and so is a second sweep on the line
+// (step_second), since Xyce runs only the last one. `.STEP param LIST 1k 2k` sweeps a parameter
+// named `param`, as Xyce runs it. The lookahead spells out every word but `list` (a word that
+// does not begin with `l`, or that leaves `list` at its second, third, fourth or fifth letter)
+// rather than nesting a negative lookahead, so that Lark still checks it for collisions.
+// spec: XY-STP-001
+xy_step_stmt: STEP_KW ac_variation? sweep_target step_value step_value step_value _step_end
+            | STEP_KW sweep_target list_keyword step_value step_value+ _step_end
+            | STEP_KW data_ref _step_end
+            | STEP_KW xy_step_param
+_step_end: step_second
+         | NL
+         | eol
+step_value: SEP NUMBER
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) step_value
+step_second: SEP NODE_WORD REST_TEXT* NL
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) step_second
+xy_step_param: SEP STEP_PARAM_KW REST_TEXT* NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xy_step_param
+STEP_KW.4: ".step"i
+STEP_PARAM_KW.3: /param(?=[ \t]+(?:[a-km-z_]|l(?:[^i]|i(?:[^s]|s(?:[^t]|t[^ \t\r\n;])))))/i
+
+// ---------------------------------------------------------------------------------------------
+// Options, initial conditions, measurements and the .DATA block (X-M2 B3; decision 0028 items 2
+// and 5 to 8; xm2-tasks 5.1 points 18 to 27). `.OPTIONS`, `.MEAS` and `.DATA` are top statements,
+// which Xyce silently ignores in a subcircuit body (not_in_subckt); `.IC`, `.DCVOLT` and
+// `.NODESET` are body statements, since Xyce applies them in every instance. Keywords fold case.
+
+// .OPTIONS pkg name=value ... and .OPTION, a full synonym ([xyce-ref] §2.1.25 p96): a package of
+// the manual's 21, in any case (OPT_PACKAGE_KW, whose lookahead makes it end where its word
+// ends). Another word in its place is recognised only to be refused with the closest package,
+// and so is a line without a package (an item or nothing after the keyword), except
+// `.OPTION SCALE=v`, singular with one item (§2.1.25.21 p119), which the transformer reads with
+// no package. A package with no item is refused too.
+// spec: XY-OPT-001
+xy_options_stmt: (OPTIONS_KW | OPTION_KW) opt_package (opt_item | opt_extra)* (NL | eol)
+               | (OPTIONS_KW | OPTION_KW) opt_item (opt_item | opt_extra)* (NL | eol)
+               | (OPTIONS_KW | OPTION_KW) (NL | eol)
+opt_package: SEP (OPT_PACKAGE_KW | WORD)
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_package
+OPT_PACKAGE_KW.4: /(?:device|diagnostic|timeint|nonlin-tran|nonlin-hb|nonlin|loca|linsol-hb|linsol-ac|linsol|output|restart|samples|embeddedsamples|pces|sensitivity|hbint|dist|fft|measure|parser)(?![^ \t\r\n;])/i
+
+// An item is name=value, its name open (OPT_KEY, a letter or `_` and name characters, whose
+// lookahead finds the `=`), blanks allowed around the `=`. A value is a number of the
+// device-field reader, a word, an expression in braces or quotes, or a comma list of them (blanks
+// after a comma allowed); the transformer refuses braces and quotes outside SAMPLES and
+// EMBEDDEDSAMPLES. A field after an item that is not name=value (opt_extra) is recognised so that
+// the transformer reads OUTPUT's and RESTART's `INITIAL_INTERVAL=i [t i]*` pairs, and refuses it
+// anywhere else, as a bare word or value.
+// spec: XY-OPT-002
+opt_item: SEP OPT_KEY EQ _opt_value (CSEP _opt_value)*
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_item
+opt_extra: SEP _opt_value
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) opt_extra
+_opt_value: NUMBER | WORD | BRACE_FORMULA | QUOTE_FORMULA
+OPT_KEY.3: /[A-Za-z_]/ _XY_CHAR* /(?=[ \t]*=)/
+
+// .IC and .DCVOLT, a synonym that builds the same node ([xyce-ref] §2.1.14 p48, §2.1.4 p29):
+// `V(node)=value` conditions (blanks allowed around the `=`) or `node value` pairs, several on a
+// line; the transformer refuses a line that mixes the two forms, a line with none, and a last
+// node without its value (Xyce hangs on an odd count). A node is a NODE_WORD (a `:` path into an
+// instance, a `$G` global); a value is a number of the device-field reader or an expression in
+// braces or quotes. A current `I(...)`, `all=` and a differential `V(a,b)` are recognised with
+// the rest of the line only to be refused (ic_refused). V_OPEN outranks NODE_WORD, so `v(` opens
+// a condition while a node named `v` is a name.
+// spec: XY-ICN-001
+xy_ic_stmt: (IC_KW | DCVOLT_KW) _ic_conditions
+_ic_conditions: (ic_voltage | node value)* (node? (NL | eol) | ic_refused)
+ic_voltage: SEP V_OPEN NODE_WORD RPAR EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ic_voltage
+ic_refused: SEP (IC_CURRENT_OPEN | ALL_KW) REST_TEXT* NL
+          | SEP V_OPEN NODE_WORD CSEP REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ic_refused
+DCVOLT_KW.4: ".dcvolt"i
+%override V_OPEN.4: /[vV]\(/
+IC_CURRENT_OPEN.4: /[iI]\(/
+ALL_KW.4: /all(?=[ \t]*=)/i
+
+// .NODESET: the forms of .IC ([xyce-ref] §2.1.22 p92).
+// spec: XY-NOD-001
+xy_nodeset_stmt: NODESET_KW _ic_conditions
+
+// .MEASURE and .MEAS ([xyce-ref] §2.1.18 p54, §2.1.19 p78, §2.1.20 p84), typed shallowly as on the
+// other dialects: a mode of the manual's closed list (TRAN, DC, AC, NOISE, FFT and their `_CONT`
+// forms but FFT's), required, in any case (MEAS_MODE_KW, which ends where its word ends; another
+// word in its place is recognised with the rest of the line only to be refused); the result name;
+// then at least one field of the body, kept as text (each field a run of characters other than
+// blanks and `;`), across `+` lines.
+// spec: XY-MEA-001
+xy_meas_stmt: (MEAS_KW | MEASURE_KW) meas_mode x_name meas_field+ (NL | eol)
+            | (MEAS_KW | MEASURE_KW) meas_bad_mode
+meas_mode: SEP MEAS_MODE_KW
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_mode
+meas_bad_mode: SEP WORD REST_TEXT* NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_bad_mode
+meas_field: SEP FIELD_TEXT
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) meas_field
+MEAS_MODE_KW.4: /(?:tran_cont|dc_cont|ac_cont|noise_cont|tran|dc|ac|noise|fft)(?![^ \t\r\n;])/i
+
+// .DATA name column... value... and .ENDDATA ([xyce-ref] §2.1.2 p26), a block read as opaque. The
+// .DATA statement, continued by `+` lines (comment, blank and indented lines may stand between
+// them), holds the table's name, its column names, then its values, read as a stream. A field is
+// a NODE_WORD, since a column is a sweep target (a parameter, a device, `dev:param` or
+// `model:param`, XY-STP-002), or a number, which outranks it. The transformer checks that the
+// name is a name without `:` and the columns are sweep targets, that the values are plain numbers
+// of the device-field reader (an expression in braces or quotes is recognised only to be
+// refused), and that their count is a non-zero multiple of the columns. Comment, blank and
+// indented lines may stand before `.ENDDATA`, which is required and bare (a name after it is
+// recognised only to be refused). The statement ends with its own NL (data_open_end), never the
+// shared eol, so the state after it offers only the block's lines. A `.ENDDATA` that closes no
+// `.DATA` is recognised with the rest of its line only to be refused (stray_enddata).
+// spec: XY-DAT-001
+data_block: DATA_BLOCK_KW data_field+ data_open_end lead* data_close
+data_field: SEP (NODE_WORD | NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_field
+data_open_end: NL
+             | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_open_end
+data_close: ENDDATA_KW data_close_name? (NL | eol)
+data_close_name: SEP WORD
+               | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) data_close_name
+stray_enddata: ENDDATA_KW REST_TEXT* NL
+DATA_BLOCK_KW.4: ".data"i
+ENDDATA_KW.4: ".enddata"i
 
 // Numbers in a device field ([xyce-ug] Table 4-1 p42; decision 0027 item 8, observed on
 // XyceNF 7.10.0): a number, then a scale factor (T, G, Meg, X, K, mil, m, u, n, p, f; `M` is
@@ -286,7 +552,17 @@ subckt_param: SEP DEFAULT_NAME EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
             | body_statement
             | continuation_line
             | not_in_subckt
+
+// The top statements in a body (decision 0028 item 2; xm2-tasks 5.1 point 5), each recognised
+// with the rest of its line only to be refused at its keyword: Xyce stops on `.GLOBAL`,
+// `.GLOBAL_PARAM` and `.END` there, and silently ignores the analyses, `.STEP`, `.OPTIONS`, `.MEAS`,
+// `.DATA` and the closed list's untyped commands, which the refusal says. `.IC`, `.DCVOLT`,
+// `.NODESET` and `.PREPROCESS` are body statements.
+// spec: XY-DIR-003
 not_in_subckt: (GLOBAL_KW | GLOBAL_PARAM_KW | END_KW) REST_TEXT* NL
+             | (TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | STEP_KW) REST_TEXT* NL
+             | (OPTIONS_KW | OPTION_KW | MEAS_KW | MEASURE_KW | DATA_BLOCK_KW) REST_TEXT* NL
+             | (DOT_NAME | XY_SAVE_KW) REST_TEXT* NL
 
 // `PARAMS:` is one token, above WORD, which holds no `:`.
 // spec: XY-SBD-001

@@ -97,7 +97,8 @@ def test_every_accept_fixture_runs_in_ngspice_or_has_a_reason() -> None:
 
 
 def test_every_xyce_fixture_names_its_solver_outcome_or_role() -> None:
-    """X-M1 B7: an accept netlist runs in Xyce unless its ``solver`` field is ``{"skip": reason}``;
+    """X-M1 B7: an accept netlist runs in Xyce unless its ``solver`` field is ``{"skip": reason}``,
+    or runs without ``-r`` when it is ``{"mode": "print"}`` (X-M2 B6);
     a file it includes names its ``role``; a rejection gives its position, its error and, when
     probed, what Xyce does with it (``xyce``: ``stops`` or ``runs``)."""
     from tests.solver.test_xyce_solver_corpus import FAMILIES, REJECT_FAMILIES, solver_fields
@@ -105,7 +106,8 @@ def test_every_xyce_fixture_names_its_solver_outcome_or_role() -> None:
     xyce = CORPUS / "xyce"
     assert {family.name for family in xyce.iterdir()} == {*FAMILIES, *REJECT_FAMILIES}
     for path, field in solver_fields().items():
-        assert set(field) <= {"skip"}, path
+        assert set(field) <= {"skip", "mode"} and len(field) <= 1, path
+        assert field.get("mode", "print") == "print", path
         if "skip" in field:
             assert len(field["skip"]) > 20, f"give the reason: {path}"
     for family in FAMILIES:

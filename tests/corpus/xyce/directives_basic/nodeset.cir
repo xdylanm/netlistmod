@@ -1,0 +1,14 @@
+nodeset: guesses for the operating point, in both forms (never beside .IC, on which Xyce aborts)
+V1 in 0 2
+R1 in out 1k
+R2 out 0 1k
+.subckt guess a
+Rs a m 1k
+Rt m 0 1k
+.nodeset m 0.5
+.ends
+X1 out guess
+.NODESET V(out)=1 V( in )=2
+.nodeset x1:m 0.5
+.op
+.end

@@ -1,0 +1,39 @@
+id: XY-DAT-001
+dialect: xyce
+construct: the .DATA ... .ENDDATA table (an opaque named block)
+manual_ref:
+- '[xyce-ref] §2.1.2 p26 ".DATA (Data Table for sweeps)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- data_block
+- data_field
+- data_open_end
+- data_close
+- data_close_name
+- stray_enddata
+- DATA_BLOCK_KW
+- ENDDATA_KW
+core_rules: []
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_data_reads_a_table
+- tests/grammar/xyce/test_xyce_directives.py::test_data_columns_may_follow_the_name_and_rows_are_a_stream
+- tests/grammar/xyce/test_xyce_directives.py::test_comment_blank_and_indented_lines_may_stand_in_a_table
+- tests/grammar/xyce/test_xyce_directives.py::test_tables_and_directives_tile_the_source
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_tables_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_an_unterminated_table_is_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_a_table_without_end_at_end_of_input_names_its_opener
+- tests/grammar/xyce/test_xyce_directives.py::test_options_measures_and_tables_are_refused_in_a_body
+- tests/edits/test_xyce_edits.py::test_golden
+- tests/solver/test_xyce_directive_probes.py::test_dc_data_sweeps_the_rows
+- tests/solver/test_xyce_directive_probes.py::test_a_repeated_table_uses_the_last
+- tests/solver/test_xyce_directive_probes.py::test_a_table_may_stand_after_its_user
+- tests/solver/test_xyce_directive_probes.py::test_the_first_word_is_the_name
+- tests/solver/test_xyce_directive_probes.py::test_enddata_is_a_no_op
+- tests/solver/test_xyce_directive_probes.py::test_a_malformed_table_stops_xyce
+- tests/solver/test_xyce_closed_list_probes.py::test_a_body_table_is_invisible_at_the_top_level
+validation_note: 'Validated on XyceNF Release 7.10.0: a table''s rows are swept, a repeated name takes the last table, a table may stand after its user, the first word is the name, a value count that is not a multiple of the columns, an expression and rows without `+` stop Xyce, and a body table is invisible at the top level. A missing, named or doubled `.ENDDATA` runs, which the library refuses (discrepancies.md).'
+notes: '`DataTable`, an `OpaqueBlock` of `kind` `data`: the `.DATA` statement, continued by `+` lines (comment, blank and indented lines may stand between them), holds the required name (`name`; the first word, as Xyce reads it), at least one column name (`columns`, on the `.DATA` line or `+` lines), then plain numbers of the device-field reader read as a stream, whose count must be a non-zero multiple of the columns (`rows`). `body_text` is the slice of `body_span`, from the first column to the last value; `end_span` covers `.ENDDATA`, which is required and bare; comment, blank and indented lines may stand before it. An expression, a word after the values, a name that reads as a number, a name after `.ENDDATA` and a `.ENDDATA` that closes no table are a ParseError. Top level only. Directive edits add, replace and remove the block whole. The `data` reference kind and a repeated or unresolved name are the document layer''s (X-M2 B5).'

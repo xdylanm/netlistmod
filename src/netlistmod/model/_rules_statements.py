@@ -91,6 +91,30 @@ _MODEL_REPEAT_REFUSED: dict[Dialect, bool] = {
     Dialect.LTSPICE: False,
     _XYCE: True,
 }
+# The keywords of the statements that the solver silently ignores in a subcircuit body, which the
+# refusal there says (xyce: the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the closed
+# list's untyped dot-commands, DOT_NAME and XY_SAVE_KW, decision 0028 item 2). Empty on ngspice
+# and LTspice, whose message is unchanged.
+_IGNORED_IN_BODY: dict[Dialect, frozenset[str]] = {
+    Dialect.NGSPICE: frozenset(),
+    Dialect.LTSPICE: frozenset(),
+    _XYCE: frozenset(
+        {
+            "TRAN_KW",
+            "DOT_AC_KW",
+            "DOT_DC_KW",
+            "OP_KW",
+            "STEP_KW",
+            "OPTIONS_KW",
+            "OPTION_KW",
+            "MEAS_KW",
+            "MEASURE_KW",
+            "DATA_BLOCK_KW",
+            "DOT_NAME",
+            "XY_SAVE_KW",
+        }
+    ),
+}
 _CODE_FORMS = {"vector": "a vector", "boolean": "a boolean", "string": "a quoted string"}
 # The LTspice special function names (decision 0020 item 3) and DIGITAL: LTspice 26.1.1 stops on a
 # `.model` line of one of these types on its own ("Expected model definition", M18 D2), since an
@@ -113,6 +137,23 @@ _LT_FUNCTION_TYPES = frozenset(
         "digital",
     }
 )
+# The `.model` types a dialect refuses on a line of their own, keyed by dialect so that a missing
+# entry fails loudly (decision 0026 item 6; xm2-tasks 5.1 point 6): LTspice's function types. On
+# ngspice and xyce every type the grammar reads stands on its own line (xyce's model types are
+# `model_types.py`'s).
+_REFUSED_MODEL_TYPES: dict[Dialect, frozenset[str]] = {
+    Dialect.NGSPICE: frozenset(),
+    Dialect.LTSPICE: _LT_FUNCTION_TYPES,
+    _XYCE: frozenset(),
+}
+# Why a dialect refuses ngspice's LTRA flags on a `.model` line, or None where it reads them; keyed
+# by dialect as above. xyce's `.MODEL` line takes no flag (XY-MOD-001), so its grammar never
+# reaches this check.
+_LTRA_FLAG_REFUSALS: dict[Dialect, str | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: "the LTspice reference lists only R, L, G, C and Len for LTRA",
+    _XYCE: None,
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,7 +230,7 @@ class StatementsRules(ElementsRules):
     def model_stmt(self, children: list[Any]) -> _Item:
         element = _Element(children)
         name, model_type = element.all(Token)[:2]
-        if self._dialect is Dialect.LTSPICE and str(model_type).lower() in _LT_FUNCTION_TYPES:
+        if str(model_type).lower() in _REFUSED_MODEL_TYPES[self._dialect]:
             raise self._parse_error(model_type, _function_type_reason(str(model_type)))
         ako = element.optional(ModelReference)
         paren = element.optional(_ModelParams)
@@ -299,12 +340,9 @@ class StatementsRules(ElementsRules):
 
     def model_flag(self, children: list[Any]) -> _Field:
         def build(token: Token) -> Flag:
-            if token.type in _LTRA_FLAG_TERMINALS and self._dialect is Dialect.LTSPICE:
-                raise self._parse_error(
-                    token,
-                    f"`{token}` is an ngspice LTRA flag: the LTspice reference lists only R, L, "
-                    "G, C and Len for LTRA",
-                )
+            refusal = _LTRA_FLAG_REFUSALS[self._dialect]
+            if token.type in _LTRA_FLAG_TERMINALS and refusal is not None:
+                raise self._parse_error(token, f"`{token}` is an ngspice LTRA flag: {refusal}")
             return Flag(str(token), _span(token))
 
         return self._field(children, build)
@@ -370,10 +408,16 @@ class StatementsRules(ElementsRules):
     @v_args(meta=True)
     def not_in_subckt(self, meta: Meta, children: list[Any]) -> NoReturn:
         keyword = str(children[0]) if isinstance(children[0], Token) else ".control"
-        raise self._error_at(
-            meta.start_pos,
-            f"`{keyword}` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)",
+        reason = (
+            f"`{keyword}` is not allowed inside a subcircuit definition (`.subckt` ... `.ends`)"
         )
+        ignored = _IGNORED_IN_BODY[self._dialect]
+        if isinstance(children[0], Token) and children[0].type in ignored:
+            reason += (
+                f": {self._dialect.display_name} silently ignores it there, so write it at the "
+                "top level"
+            )
+        raise self._error_at(meta.start_pos, reason)
 
     def ends_line(self, children: list[Any]) -> _Ends:
         element = _Element(children)

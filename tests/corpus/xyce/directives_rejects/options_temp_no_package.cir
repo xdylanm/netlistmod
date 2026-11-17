@@ -1,0 +1,7 @@
+TEMP= without a package
+V1 in 0 2 AC 1
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.options temp=50
+.end

@@ -1,0 +1,37 @@
+id: XY-PRE-002
+dialect: xyce
+construct: .PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused
+manual_ref:
+- '[xyce-ref] §2.1.30 p127 ".PREPROCESS ADDRESISTORS (Adding Resistors to Dangling Nodes)"'
+- '[xyce-ref] §2.1.28 p125 ".PREPROCESS REPLACEGROUND (Ground Synonym)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- preprocess_addresistors
+- pp_addresistors
+- pp_kind
+- pp_number
+- pp_bad_kind
+- ADDRESISTORS_KW
+- ONETERMINAL_KW
+- NODCPATH_KW
+- preprocess_other
+- pp_word
+core_rules:
+- NUMBER
+tests:
+- tests/grammar/xyce/test_xyce_closed_list.py::test_addresistors_is_an_unknown_directive
+- tests/grammar/xyce/test_xyce_closed_list.py::test_each_kind_of_addresistors_may_stand_once
+- tests/grammar/xyce/test_xyce_closed_list.py::test_conditions_and_preprocess_are_allowed_in_a_body
+- tests/grammar/xyce/test_xyce_closed_list.py::test_a_second_addresistors_of_one_kind_is_rejected
+- tests/grammar/xyce/test_xyce_closed_list.py::test_a_malformed_addresistors_is_rejected
+- tests/grammar/xyce/test_xyce_closed_list.py::test_another_preprocess_word_is_rejected
+- tests/solver/test_xyce_closed_list_probes.py::test_addresistors_writes_a_copy_and_leaves_the_run
+- tests/solver/test_xyce_closed_list_probes.py::test_one_addresistors_of_each_kind_runs
+- tests/solver/test_xyce_closed_list_probes.py::test_a_second_addresistors_of_one_kind_stops_xyce
+- tests/solver/test_xyce_closed_list_probes.py::test_addresistors_runs_in_a_body
+validation_note: 'Validated on XyceNF Release 7.10.0: each kind writes `<netlist>_xyce.cir` and leaves the run unchanged, one of each kind runs, in a body too, and a second of one kind stops Xyce.'
+notes: '`.PREPROCESS ADDRESISTORS ONETERMINAL value` and `.PREPROCESS ADDRESISTORS NODCPATH value`, keywords in any case, the value a plain number of the device-field reader (XY-NUM-001), continued by `+` lines: an `UnknownDirective` named `.PREPROCESS` as written, with `UNTYPED_DIRECTIVE_PRESERVED` (info), since it writes another netlist and changes nothing in this one. Allowed wherever `.PREPROCESS` is, in a subcircuit body too. One of each kind per netlist, bodies included: a second ONETERMINAL or a second NODCPATH line is a ParseError at its keyword, since Xyce stops on it. Another word after ADDRESISTORS, a missing or braced value and an extra field are a ParseError. A word after `.PREPROCESS` other than REPLACEGROUND (XY-PRE-001), REMOVEUNUSED (UnsupportedConstruct, XY-UNS-001) and ADDRESISTORS is a ParseError at the word.'

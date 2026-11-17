@@ -1,11 +1,15 @@
 """Rules for xyce's statements and element lines: `.SUBCKT` defaults, the includes and `.LIB`
-(X-M1 B4; decision 0027 item 7), and the R, C, L, V, I and D forms that differ from the other
-dialects (X-M1 B5; decision 0027 items 5 and 6)."""
+(X-M1 B4; decision 0027 item 7), the R, C, L, V, I and D forms that differ from the other
+dialects (X-M1 B5; decision 0027 items 5 and 6), the analyses and `.STEP` (X-M2 B2; decision
+0028 items 3 and 4), the options, initial conditions, measurements and the `.DATA` block (X-M2
+B3; decision 0028 items 5 to 8), and the closed list's untyped dot-commands (X-M2 B4; decision
+0028 item 1)."""
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any, NoReturn
+import difflib
+from dataclasses import dataclass, field
+from typing import Any, Literal, NoReturn
 
 from lark import Token
 
@@ -14,20 +18,37 @@ from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_statements import StatementsRules
 from netlistmod.model._tree import (
     _common,
+    _dot,
     _Element,
     _Field,
     _field_token,
+    _field_tokens,
     _Item,
+    _ListKeyword,
     _span,
     _XRest,
 )
 from netlistmod.model.nodes import (
+    AcDirective,
     Capacitor,
+    DataTable,
+    DcDirective,
+    DcSweep,
+    IcDirective,
     Inductor,
     LibCall,
+    MeasureDirective,
+    Node,
+    NodeCondition,
+    NodesetDirective,
     OpaqueBlock,
     OpaqueStatement,
+    OptionItem,
+    OptionsDirective,
     Resistor,
+    StepDirective,
+    TranDirective,
+    UnknownDirective,
 )
 from netlistmod.model.values import (
     Flag,
@@ -38,6 +59,7 @@ from netlistmod.model.values import (
     ParamAssignment,
     Value,
 )
+from netlistmod.source import Span
 
 # Whether R, C and L take xyce's forms (decision 0027 item 5): the model right after the nodes,
 # then the value, which may also be written `R=`, `C=` or `L=` (and the charge `Q=` on C). The
@@ -89,6 +111,105 @@ _VALUE_FORMS: dict[type, str] = {
     Capacitor: "a value, positional or `C=`, a charge `Q=`, or `L=`",
     Inductor: "a value, positional or `L=`",
 }
+
+
+@dataclass(frozen=True, slots=True)
+class _Schedule:
+    """The `{schedule(...)}` field of an xyce `.TRAN`, kept apart from the positional values."""
+
+    formula: Formula
+
+
+@dataclass(frozen=True, slots=True)
+class _DataRef:
+    """`DATA=table` on an xyce `.AC`, `.DC` or `.STEP`: the keyword and the table's name."""
+
+    keyword: Token
+    table: Identifier
+
+
+@dataclass(frozen=True, slots=True)
+class _SweepTarget:
+    """The target of an xyce `.DC` sweep or `.STEP`, a name that may hold `:`."""
+
+    token: Token
+
+
+@dataclass
+class _OpenSweep:
+    """A `.DC` sweep while its fields are gathered."""
+
+    target: Token
+    variation: Token | None
+    listed: bool = False
+    values: list[Value] = field(default_factory=list)
+
+
+# The `.OPTIONS` packages of [xyce-ref] §2.1.25 p96, folded (decision 0028 item 5), those that
+# take braces and quotes in a value, and those that take the INITIAL_INTERVAL pairs.
+_OPTION_PACKAGES = (
+    "device",
+    "diagnostic",
+    "timeint",
+    "nonlin",
+    "nonlin-tran",
+    "nonlin-hb",
+    "loca",
+    "linsol",
+    "linsol-hb",
+    "linsol-ac",
+    "output",
+    "restart",
+    "samples",
+    "embeddedsamples",
+    "pces",
+    "sensitivity",
+    "hbint",
+    "dist",
+    "fft",
+    "measure",
+    "parser",
+)
+_DELIMITED_PACKAGES = frozenset({"samples", "embeddedsamples"})
+_INTERVAL_PACKAGES = frozenset({"output", "restart"})
+_PACKAGE_LIST = ", ".join(name.upper() for name in _OPTION_PACKAGES)
+
+
+@dataclass(frozen=True, slots=True)
+class _OptPackage:
+    """The package word of an xyce `.OPTIONS` line, read or recognised to be refused."""
+
+    token: Token
+
+
+@dataclass(frozen=True, slots=True)
+class _OptItem:
+    """An xyce option item's name and its value or comma list, before its pairs are known."""
+
+    name: Token
+    values: tuple[Value | Identifier, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class _OptExtra:
+    """A field after an option item that is not `name=value`."""
+
+    value: Value | Identifier
+
+
+@dataclass(frozen=True, slots=True)
+class _MeasText:
+    """One field of an xyce `.MEASURE` body."""
+
+    token: Token
+
+
+@dataclass(frozen=True, slots=True)
+class _IcRefused:
+    """A refused `.IC`, `.DCVOLT` or `.NODESET` field (`I(...)`, `all=`, `V(a,b)`), refused by the
+    statement, whose keyword decides what Xyce does with it."""
+
+    opener: Token
 
 
 @dataclass(frozen=True, slots=True)
@@ -391,4 +512,615 @@ class XyceRules(StatementsRules):
         raise self._error_at(
             _span(element.designator).start,
             f"this {letter} line has no value: it needs {_VALUE_FORMS[kind]}{hint}",
+        )
+
+    # Analyses and `.STEP` (X-M2 B2; decision 0028 items 3 and 4). In a subcircuit body they are
+    # refused by not_in_subckt (StatementsRules), whose message says Xyce ignores them there.
+
+    def xy_tran_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        values = element.values()
+        flags: dict[str, Flag] = {}
+        for flag in element.all(Flag):
+            folded = fold_name(flag.name, self._dialect)
+            if folded in flags:
+                raise self._error_at(
+                    flag.span.start,
+                    f"`{flag.name}` is written twice on this `.TRAN` line; write it once (NOOP "
+                    "and UIC are synonyms, each at most once; Xyce reference manual §2.1.38 p161)",
+                )
+            flags[folded] = flag
+        schedule = element.optional(_Schedule)
+        return _Item(
+            element.end,
+            lambda span: TranDirective(
+                **_dot(element, span),
+                tstep=values[0],
+                tstop=values[1],
+                tstart=values[2] if len(values) > 2 else None,
+                tmax=values[3] if len(values) > 3 else None,
+                uic=flags.get("uic"),
+                noop=flags.get("noop"),
+                schedule=schedule.formula if schedule is not None else None,
+            ),
+        )
+
+    def tran_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    def tran_schedule(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _Schedule:
+            # SCHEDULE_FORMULA has one delimiter character at each end, braces or quotes.
+            span = _span(token)
+            text = self._source.text[span.start + 1 : span.end - 1]
+            delimiter: Literal["{", "'"] = "{" if str(token).startswith("{") else "'"
+            return _Schedule(Formula(text, delimiter, span))
+
+        return self._field(children, build)
+
+    def data_ref(self, children: list[Any]) -> _Field:
+        def build(keyword: Token) -> _DataRef:
+            table: Token = children[-1]
+            return _DataRef(keyword, Identifier(str(table), _span(table)))
+
+        return self._field(children, build)
+
+    def xy_ac_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        values = element.values()
+        keyword = data.keyword if data is not None else element.all(Token)[0]
+        ranged = data is None
+        return _Item(
+            element.end,
+            lambda span: AcDirective(
+                **_dot(element, span),
+                variation=str(keyword),
+                variation_span=_span(keyword),
+                points=values[0] if ranged else None,
+                fstart=values[1] if ranged else None,
+                fstop=values[2] if ranged else None,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def sweep_target(self, children: list[Any]) -> _Field:
+        def build(token: Token) -> _SweepTarget:
+            text = str(token)
+            if reads_as_number(text):
+                raise self._parse_error(
+                    token, f"`{text}` stands where a sweep target is, and a target is a name"
+                )
+            if "" in text.split(":"):
+                raise self._parse_error(
+                    token,
+                    f"`{text}` has an empty part around a `:`; a target is a name, "
+                    "`device:parameter`, `model:parameter` or a path such as `X1:R5:R`",
+                )
+            return _SweepTarget(token)
+
+        return self._field(children, build)
+
+    def xy_dc_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        sweeps: list[DcSweep] = []
+        variation: Token | None = None
+        current: _OpenSweep | None = None
+        for node in element.fields:
+            if isinstance(node, Token):  # LIN, DEC or OCT, before the next target
+                variation = node
+            elif isinstance(node, _SweepTarget):
+                if current is not None:
+                    sweeps.append(self._dc_sweep(current))
+                current = _OpenSweep(node.token, variation)
+                variation = None
+            elif isinstance(node, _ListKeyword):
+                assert current is not None
+                current.listed = True
+            elif isinstance(node, NumericValue | Formula):
+                assert current is not None
+                current.values.append(node)
+        if current is not None:
+            sweeps.append(self._dc_sweep(current))
+        found = tuple(sweeps)
+        return _Item(
+            element.end,
+            lambda span: DcDirective(
+                **_dot(element, span),
+                sweeps=found,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def _dc_sweep(self, sweep: _OpenSweep) -> DcSweep:
+        values = tuple(sweep.values)
+        ranged = not sweep.listed
+        target = _span(sweep.target)
+        return DcSweep(
+            str(sweep.target),
+            target,
+            values[0] if ranged else None,
+            values[1] if ranged else None,
+            values[2] if ranged else None,
+            Span(target.start, values[-1].span.end),
+            str(sweep.variation) if sweep.variation is not None else None,
+            values if sweep.listed else (),
+        )
+
+    def xy_step_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        data = element.optional(_DataRef)
+        target = element.optional(_SweepTarget)
+        variation = next(iter(element.all(Token)), None)
+        values = element.values()
+        listed = element.optional(_ListKeyword) is not None
+        kind: Literal["temp", "name", "qualified", "data"]
+        parameter: str | None = None
+        if data is not None:
+            kind, name, name_span = "data", data.table.name, data.table.span
+        else:
+            assert target is not None
+            name, name_span = str(target.token), _span(target.token)
+            if ":" in name:
+                kind, parameter = "qualified", name.rpartition(":")[2]
+            elif fold_name(name, self._dialect) == "temp":
+                kind = "temp"
+            else:
+                kind = "name"
+        ranged = data is None and not listed
+        return _Item(
+            element.end,
+            lambda span: StepDirective(
+                **_dot(element, span),
+                kind=kind,
+                name=name,
+                name_span=name_span,
+                model_type=None,
+                model=None,
+                variation=str(variation) if variation is not None else None,
+                variation_span=_span(variation) if variation is not None else None,
+                start=values[0] if ranged else None,
+                stop=values[1] if ranged else None,
+                increment=values[2] if ranged else None,
+                values=values if listed else (),
+                file=None,
+                parameter=parameter,
+                data=data.table if data is not None else None,
+            ),
+        )
+
+    def tran_early_schedule(self, children: list[Any]) -> NoReturn:
+        schedule = _field_token(children)
+        raise self._error_at(
+            _span(schedule).start,
+            "a schedule stands after the numbers and the NOOP and UIC flags, as the last field "
+            "(`.TRAN tstep tstop [tstart [tmax]] [NOOP] [UIC] [{schedule(...)}]`; Xyce reference "
+            "manual §2.1.38 p161)",
+        )
+
+    def step_second(self, children: list[Any]) -> NoReturn:
+        target = _field_token(children)
+        raise self._parse_error(
+            target,
+            f"a second sweep (`{target}`) on one `.STEP` line: Xyce silently runs only the last "
+            "one, so write one `.STEP` line per sweep (they nest, the first innermost; Xyce "
+            "reference manual §2.1.36 p155)",
+        )
+
+    def xy_step_param(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        raise self._parse_error(
+            keyword,
+            f"`.STEP` takes no `{keyword}` keyword on Xyce, which stops on it: name the "
+            "parameter directly, `.STEP name start stop step` (Xyce reference manual §2.1.36 "
+            "p155)",
+        )
+
+    # Options, initial conditions, measurements and `.DATA` (X-M2 B3; decision 0028 items 5 to
+    # 8). `.OPTIONS`, `.MEAS` and `.DATA` are refused in a body by not_in_subckt.
+
+    def opt_package(self, children: list[Any]) -> _Field:
+        return self._field(children, _OptPackage)
+
+    def _opt_value(self, token: Token) -> Value | Identifier:
+        if token.type != "WORD":
+            return self._value(token)
+        if reads_as_number(str(token)):
+            raise self._parse_error(
+                token,
+                f"`{token}` is not a number Xyce reads: a number takes a scale factor and a unit "
+                "of the device-field lists (Xyce users' manual Table 4-1 p42)",
+            )
+        return Identifier(str(token), _span(token))
+
+    def opt_item(self, children: list[Any]) -> _Field:
+        def build(name: Token) -> _OptItem:
+            values = tuple(self._opt_value(token) for token in _field_tokens(children)[1:])
+            return _OptItem(name, values)
+
+        return self._field(children, build)
+
+    def opt_extra(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: _OptExtra(self._opt_value(token)))
+
+    def xy_options_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        keyword = element.designator
+        found = element.optional(_OptPackage)
+        package = Identifier(str(found.token), _span(found.token)) if found is not None else None
+        folded = fold_name(package.name, self._dialect) if package is not None else None
+        if package is not None and folded not in _OPTION_PACKAGES:
+            close = difflib.get_close_matches(folded or "", _OPTION_PACKAGES, n=1)
+            hint = f" (did you mean `{close[0].upper()}`?)" if close else ""
+            raise self._error_at(
+                package.span.start,
+                f"`{package.name}` is not an `.OPTIONS` package{hint}: the packages are "
+                f"{_PACKAGE_LIST} (Xyce reference manual §2.1.25 p96); Xyce ignores a line with "
+                "another package, with a warning",
+            )
+        groups: list[tuple[_OptItem, list[Value | Identifier]]] = []
+        for node in element.fields:
+            if isinstance(node, _OptItem):
+                groups.append((node, []))
+            elif isinstance(node, _OptExtra):
+                if not groups:
+                    self._refuse_bare(node.value)
+                groups[-1][1].append(node.value)
+        if not groups:
+            where = package.span.start if package is not None else _span(keyword).start
+            what = f"`{keyword} {package.name}`" if package is not None else f"`{keyword}`"
+            raise self._error_at(
+                where,
+                f"{what} has no item: an `.OPTIONS` line takes a package and one or more "
+                "`name=value` items (`.OPTIONS TIMEINT RELTOL=1e-3`; Xyce reference manual "
+                "§2.1.25 p96)",
+            )
+        if package is None:
+            self._check_packageless(keyword, groups)
+        options = tuple(self._option_item(folded, item, extras) for item, extras in groups)
+        return _Item(
+            element.end,
+            lambda span: OptionsDirective(**_dot(element, span), options=options, package=package),
+        )
+
+    def _check_packageless(
+        self, keyword: Token, groups: list[tuple[_OptItem, list[Value | Identifier]]]
+    ) -> None:
+        """Only `.OPTION SCALE=v`, singular with one item, stands without a package."""
+        first = groups[0][0].name
+        scale = fold_name(str(first), self._dialect) == "scale"
+        if scale and len(groups) == 1 and fold_name(str(keyword), self._dialect) == ".option":
+            return
+        if scale and len(groups) == 1:
+            raise self._parse_error(
+                first,
+                f"`{keyword} {first}=` has no package: only the singular `.OPTION {first}=` "
+                f"stands without one; write that, or `.OPTIONS PARSER {first}=` (Xyce reference "
+                "manual §2.1.25.21 p119)",
+            )
+        folded = fold_name(str(first), self._dialect)
+        if folded in ("temp", "tnom") and len(groups) == 1:
+            # Observed (X-M2 B6): Xyce 7.10 applies `TEMP=` or `TNOM=` alone on a package-less
+            # line, silently; any other package-less line it ignores, with a warning.
+            raise self._parse_error(
+                first,
+                f"`{keyword}` needs a package before its items: write `.OPTIONS DEVICE "
+                f"{folded.upper()}=` (Xyce reference manual §2.1.25.1 p98); Xyce applies a "
+                f"package-less line whose only item is `{first}=`, silently, but the manual "
+                "gives every item a package",
+            )
+        raise self._parse_error(
+            first,
+            f"`{keyword}` needs a package before its items, `{keyword} <package> {first}=...`, "
+            f"the package one of {_PACKAGE_LIST} (Xyce reference manual §2.1.25 p96); Xyce "
+            "ignores a line without one, with a warning",
+        )
+
+    def _refuse_bare(self, value: Value | Identifier) -> NoReturn:
+        raise self._error_at(
+            value.span.start,
+            f"`{self._source.text[value.span.start : value.span.end]}` is not a `name=value` "
+            "item: an `.OPTIONS` item is `name=value`, a list of values takes commas "
+            "(`name=a,b`), and only OUTPUT's and RESTART's INITIAL_INTERVAL takes pairs of values "
+            "after it (Xyce reference manual §2.1.25.9 p110); Xyce drops a bare field after an "
+            "item silently, or stops on it",
+        )
+
+    def _option_item(
+        self, package: str | None, item: _OptItem, extras: list[Value | Identifier]
+    ) -> OptionItem:
+        for value in item.values:
+            if isinstance(value, Formula) and package not in _DELIMITED_PACKAGES:
+                raise self._error_at(
+                    value.span.start,
+                    "an expression in braces or quotes is an option value only in the SAMPLES "
+                    "and EMBEDDEDSAMPLES packages (Xyce reference manual §2.1.25.13 p113); write "
+                    "a number or a word, as Xyce stops on it",
+                )
+        name_span = _span(item.name)
+        pairs: tuple[tuple[Value, Value], ...] = ()
+        if extras:
+            interval = (
+                package in _INTERVAL_PACKAGES
+                and fold_name(str(item.name), self._dialect) == "initial_interval"
+                and len(item.values) == 1
+            )
+            numbers = [value for value in extras if isinstance(value, NumericValue)]
+            if not interval or len(numbers) != len(extras):
+                self._refuse_bare(next(v for v in extras if not interval or v not in numbers))
+            if len(numbers) % 2:
+                raise self._error_at(
+                    numbers[-1].span.start,
+                    f"`{item.name}=` takes pairs `t i` after the interval, and "
+                    f"`{numbers[-1].text}` has no partner: write an even number of values (Xyce "
+                    "reference manual §2.1.25.9 p110)",
+                )
+            pairs = tuple(zip(numbers[::2], numbers[1::2], strict=True))
+        last = pairs[-1][1] if pairs else item.values[-1]
+        listed = len(item.values) > 1
+        return OptionItem(
+            str(item.name),
+            name_span,
+            None if listed else item.values[0],
+            Span(name_span.start, last.span.end),
+            values=item.values if listed else (),
+            pairs=pairs,
+        )
+
+    def ic_voltage(self, children: list[Any]) -> _Field:
+        def build(opener: Token) -> NodeCondition:
+            # v( node ) = value: the node is the second field token, the value the last.
+            tokens = _field_tokens(children)
+            value = self._value(tokens[-1])
+            node = Node(str(tokens[1]), _span(tokens[1]))
+            return NodeCondition(node, value, Span(_span(opener).start, value.span.end))
+
+        return self._field(children, build)
+
+    def ic_refused(self, children: list[Any]) -> _Field:
+        # Refused by `_conditions`, which knows the statement's keyword.
+        if isinstance(children[-1], _Field):
+            return children[-1]
+        return _Field(_IcRefused(_field_token(children)), ())
+
+    def _condition_outcome(self, keyword: Token, what: str) -> str:
+        """What Xyce 7.10 does with a condition field it cannot read (X-M2 B6 probes): `.IC` and
+        `.DCVOLT` warn and ignore it, `.NODESET` stops."""
+        if fold_name(str(keyword), self._dialect) == ".nodeset":
+            return f"Xyce stops on {what} on `.NODESET`"
+        return f"Xyce ignores {what} on `{keyword}`, with a warning"
+
+    def _refuse_condition(self, keyword: Token, opener: Token) -> NoReturn:
+        nodeset = fold_name(str(keyword), self._dialect) == ".nodeset"
+        if opener.type == "IC_CURRENT_OPEN":
+            reason = (
+                f"`{opener}...)`: an initial condition sets a node voltage only, `V(node)=value` "
+                "or `node value` (Xyce reference manual §2.1.14 p48); "
+                + self._condition_outcome(keyword, "a current")
+            )
+        elif opener.type == "ALL_KW":
+            section = (
+                "Xyce reference manual §2.1.22 p92"
+                if nodeset
+                else "Xyce reference manual §2.1.14 p48"
+            )
+            reason = (
+                f"`{opener}=` is not a Xyce initial condition: name each node, `V(node)=value` "
+                f"or `node value` ({section}); " + self._condition_outcome(keyword, "it")
+            )
+        else:
+            reason = (
+                "`V(a,b)`: an initial condition takes one node, `V(node)=value` (Xyce reference "
+                "manual §2.1.14 p48); " + self._condition_outcome(keyword, "a difference")
+            )
+        raise self._parse_error(opener, reason)
+
+    def _conditions(self, element: _Element) -> tuple[NodeCondition, ...]:
+        conditions: list[NodeCondition] = []
+        pending: Node | None = None
+        refused = element.optional(_IcRefused)
+        if refused is not None:
+            self._refuse_condition(element.designator, refused.opener)
+        for node in element.fields:
+            if isinstance(node, NodeCondition):
+                conditions.append(node)
+            elif isinstance(node, Node):
+                pending = node
+            elif isinstance(node, NumericValue | Formula):
+                assert pending is not None
+                span = Span(pending.span.start, node.span.end)
+                conditions.append(NodeCondition(pending, node, span, form="pair"))
+                pending = None
+        keyword = element.designator
+        if pending is not None:
+            raise self._error_at(
+                pending.span.start,
+                f"`{pending.name}` has no value: `{keyword}` takes `node value` pairs (Xyce "
+                "reference manual §2.1.14 p48), and Xyce hangs on an odd number of fields",
+            )
+        if not conditions:
+            raise self._parse_error(
+                keyword,
+                f"`{keyword}` has no condition: write `V(node)=value` or `node value` (Xyce "
+                "reference manual §2.1.14 p48)",
+            )
+        first = conditions[0].form
+        for condition in conditions:
+            if condition.form != first:
+                raise self._error_at(
+                    condition.span.start,
+                    f"this `{keyword}` line mixes `V(node)=value` and `node value`: write one "
+                    "form per line (Xyce reference manual §2.1.14 p48); "
+                    + self._condition_outcome(keyword, "the other form"),
+                )
+        return tuple(conditions)
+
+    def xy_ic_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        conditions = self._conditions(element)
+        return _Item(
+            element.end, lambda span: IcDirective(**_dot(element, span), conditions=conditions)
+        )
+
+    def xy_nodeset_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        conditions = self._conditions(element)
+        return _Item(
+            element.end,
+            lambda span: NodesetDirective(**_dot(element, span), conditions=conditions),
+        )
+
+    def meas_mode(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def meas_field(self, children: list[Any]) -> _Field:
+        return self._field(children, _MeasText)
+
+    def meas_bad_mode(self, children: list[Any]) -> NoReturn:
+        word = _field_token(children)
+        hint = " (write `TRAN`)" if fold_name(str(word), self._dialect) == "tr" else ""
+        raise self._parse_error(
+            word,
+            f"`{word}` is not a `.MEASURE` mode{hint}: the mode is required, one of TRAN, DC, "
+            "AC, NOISE, FFT, TRAN_CONT, DC_CONT, AC_CONT and NOISE_CONT, before the result name "
+            "(Xyce reference manual §2.1.18 p54, and the sections after it to p84)",
+        )
+
+    def xy_meas_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        mode, result = element.all(Token)
+        body = element.all(_MeasText)
+        start, end = _span(body[0].token).start, _span(body[-1].token).end
+        text = self._source.text[start:end]
+        return _Item(
+            element.end,
+            lambda span: MeasureDirective(
+                **_dot(element, span),
+                analysis=str(mode),
+                analysis_span=_span(mode),
+                result=str(result),
+                result_span=_span(result),
+                body_text=text,
+                body_span=Span(start, end),
+            ),
+        )
+
+    def data_field(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def data_open_end(self, children: list[Any]) -> None:
+        return None
+
+    def data_close_name(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def data_close(self, children: list[Any]) -> tuple[Token, int]:
+        element = _Element(children)
+        named = element.all(Token)
+        if named:
+            raise self._parse_error(
+                named[0],
+                f"`{element.designator} {named[0]}`: `.ENDDATA` takes no name (Xyce reference "
+                "manual §2.1.2 p26)",
+            )
+        return element.designator, element.end
+
+    def data_block(self, children: list[Any]) -> _Item:
+        keyword: Token = children[0]
+        fields = [
+            child.node
+            for child in children[1:]
+            if isinstance(child, _Field) and isinstance(child.node, Token)
+        ]
+        closing, end = children[-1]
+        name = fields[0]
+        if name.type != "NODE_WORD" or ":" in str(name) or reads_as_number(str(name)):
+            raise self._parse_error(
+                name,
+                f"`{name}` stands where the table's name is: `.DATA` takes a name, then its "
+                "column names, then the values (Xyce reference manual §2.1.2 p26)",
+            )
+        columns: list[Token] = []
+        values: list[Token] = []
+        for token in fields[1:]:
+            if token.type in ("BRACE_FORMULA", "QUOTE_FORMULA"):
+                raise self._parse_error(
+                    token,
+                    "a `.DATA` value is a plain number (Xyce reference manual §2.1.2 p26); "
+                    "Xyce stops on an expression",
+                )
+            if token.type == "NUMBER":
+                values.append(token)
+            elif values or reads_as_number(str(token)):
+                raise self._parse_error(
+                    token,
+                    f"`{token}` is not a number Xyce reads, and the column names stand before "
+                    "the values (Xyce reference manual §2.1.2 p26)",
+                )
+            elif "" in str(token).split(":"):
+                raise self._parse_error(
+                    token,
+                    f"`{token}` has an empty part around a `:`; a column is a parameter, a "
+                    "device, `device:parameter` or `model:parameter`",
+                )
+            else:
+                columns.append(token)
+        if not columns:
+            raise self._parse_error(
+                fields[1] if len(fields) > 1 else name,
+                f"the table `{name}` has no column names: write them after the name, then the "
+                "values (Xyce reference manual §2.1.2 p26)",
+            )
+        if not values or len(values) % len(columns):
+            at = values[-1] if values else columns[-1]
+            raise self._parse_error(
+                at,
+                f"the table `{name}` has {len(values)} values for {len(columns)} columns: the "
+                "count must be a non-zero multiple of the columns, one row per sweep point, and "
+                "Xyce stops on any other",
+            )
+        body = Span(_span(columns[0]).start, _span(values[-1]).end)
+        table = Identifier(str(name), _span(name))
+        names = tuple(Identifier(str(token), _span(token)) for token in columns)
+        rows = len(values) // len(columns)
+        text = self._source.text[body.start : body.end]
+        return _Item(
+            end,
+            lambda span: DataTable(
+                "data",
+                span,
+                keyword=str(keyword),
+                keyword_span=_span(keyword),
+                name=table,
+                columns=names,
+                rows=rows,
+                body_text=text,
+                body_span=body,
+                end_span=_span(closing),
+            ),
+        )
+
+    # The closed list's untyped dot-commands (X-M2 B4; decision 0028 item 1), kept whole as
+    # UnknownDirective; in a body not_in_subckt refuses them.
+    def unknown_field(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def xy_unknown_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        name = element.designator
+        fields = element.all(Token)
+        end = _span(fields[-1]).end if fields else _span(name).end
+        raw = self._source.text[_span(name).start : end]
+        comments = element.comments
+        return _Item(
+            element.end,
+            lambda span: UnknownDirective(str(name), raw, span, comments, _span(name)),
+        )
+
+    def stray_enddata(self, children: list[Any]) -> NoReturn:
+        raise self._parse_error(
+            children[0],
+            f"`{children[0]}` closes no `.DATA` table: it ends the block that a `.DATA` "
+            "statement opens (Xyce reference manual §2.1.2 p26)",
         )

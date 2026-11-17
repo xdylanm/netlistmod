@@ -1,0 +1,25 @@
+id: XY-OPP-001
+dialect: xyce
+construct: .OP operating point
+manual_ref:
+- '[xyce-ref] §2.1.24 p95 ".OP (Bias Point Analysis)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar: []
+core_rules:
+- op_stmt
+- OP_KW
+tests:
+- tests/grammar/xyce/test_xyce_analyses.py::test_op_takes_no_fields
+- tests/grammar/xyce/test_xyce_analyses.py::test_op_with_fields_is_rejected
+- tests/grammar/xyce/test_xyce_analyses.py::test_several_analyses_are_read
+- tests/grammar/xyce/test_xyce_analyses.py::test_analyses_and_step_are_refused_in_a_body
+- tests/solver/test_xyce_analysis_probes.py::test_op_runs_and_ignores_extra_fields
+- tests/solver/test_xyce_analysis_probes.py::test_only_the_last_analysis_runs
+- tests/solver/test_xyce_analysis_probes.py::test_two_op_lines_run_and_are_not_reported
+- tests/solver/test_xyce_analysis_probes.py::test_two_steps_with_op_crash_xyce
+validation_note: 'Validated on XyceNF Release 7.10.0: `.OP` runs, gives way to any other analysis, and two `.OP` lines run; with two `.STEP` lines it crashes Xyce. Extra fields run with a warning, which the library refuses (discrepancies.md).'
+notes: '`OpDirective`, core.lark''s `op_stmt` as on ngspice: no fields, so any field is a ParseError. Top level only (in a body it is a ParseError, since Xyce ignores it there).'

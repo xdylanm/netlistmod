@@ -1,6 +1,6 @@
-"""The xyce corpus (X-M1 B7; architecture §10, T1 and T8 tiers): accept families that round-trip
-byte for byte, with every span slicing back to its text, and rejection families that fail where
-their manifests say."""
+"""The xyce corpus (X-M1 B7, X-M2 B6; architecture §10, T1 and T8 tiers): accept families that
+round-trip byte for byte, with every span slicing back to its text, and rejection families that
+fail where their manifests say."""
 
 from __future__ import annotations
 
@@ -29,8 +29,13 @@ from netlistmod import (
 from netlistmod.dialects import _XYCE
 
 CORPUS = Path(__file__).parents[2] / "corpus" / "xyce"
-ACCEPT_FAMILIES = ("structure_basic", "statements_basic", "elements_basic")
-REJECT_FAMILIES = ("structure_rejects", "statements_rejects", "elements_rejects")
+ACCEPT_FAMILIES = ("structure_basic", "statements_basic", "elements_basic", "directives_basic")
+REJECT_FAMILIES = (
+    "structure_rejects",
+    "statements_rejects",
+    "elements_rejects",
+    "directives_rejects",
+)
 _ERRORS = {"ParseError": ParseError, "UnsupportedConstruct": UnsupportedConstruct}
 _CLOSING = {"": "", "{": "}", "'": "'"}
 
@@ -123,7 +128,8 @@ def test_queries_run_on_every_accept_file(path: Path) -> None:
 @pytest.mark.parametrize(
     ("crlf", "lf"),
     [("structure_basic/structure_crlf.cir", "structure_basic/structure.cir")]
-    + [("elements_basic/elements_crlf.cir", "elements_basic/elements.cir")],
+    + [("elements_basic/elements_crlf.cir", "elements_basic/elements.cir")]
+    + [("directives_basic/options_crlf.cir", "directives_basic/options.cir")],
 )
 def test_a_crlf_twin_reads_as_its_lf_file(crlf: str, lf: str) -> None:
     crlf_bytes = (CORPUS / crlf).read_bytes()

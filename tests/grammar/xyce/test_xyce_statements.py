@@ -25,7 +25,6 @@ from netlistmod import (
     Span,
     SubcktDefinition,
     Title,
-    UnsupportedConstruct,
     parse,
 )
 from netlistmod.dialects import _XYCE
@@ -187,10 +186,11 @@ def test_top_level_statements_are_refused_in_a_body(line: str) -> None:
     assert "not allowed inside a subcircuit definition" in error.reason
 
 
-def test_a_directive_in_a_body_is_still_unsupported() -> None:
-    # X-M2 reads the directives; until then a body's `.tran` is refused as at the top level.
-    with pytest.raises(UnsupportedConstruct, match="dot-command `.tran`"):
-        _parse("t\n.subckt s a\n.tran 1n 1u\n.ends\n.END\n")
+def test_an_output_in_a_body_is_refused() -> None:
+    # Xyce silently ignores an output in a body (decision 0028 item 2; XY-DIR-003).
+    with pytest.raises(ParseError, match="silently ignores it there") as captured:
+        _parse("t\n.subckt s a\n.print tran v(a)\n.ends\n.END\n")
+    assert (captured.value.line, captured.value.column) == (3, 1)
 
 
 @pytest.mark.parametrize("line", [".ends", ".ENDS s", ".endl", ".endl x"])

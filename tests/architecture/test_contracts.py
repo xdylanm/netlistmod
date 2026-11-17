@@ -311,7 +311,6 @@ UNCHECKED_TERMINALS = {
             "BLANK_TAIL",
             "BLOCK_TEXT",
             "COMMENT_LINE",
-            "DOT_NAME",
             "INDENTED_LINE",
             "INDENTED_TRAILING",
             "PLUS_LINE",

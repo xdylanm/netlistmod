@@ -441,3 +441,35 @@ Reserved for a dialect still being built, which `Dialect` does not list yet; ngs
 ### `NUMERIC_MODEL_NAME`
 
 Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `UNRESOLVED_DATA`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `ANALYSIS_IGNORED`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `STEPPED_ANALYSIS_FIELD`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `STEP_IGNORED`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `STEPS_WITH_OP`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `IC_WITH_NODESET`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `MEASURE_MODE_MISMATCH`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `CONDITION_IGNORED`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.

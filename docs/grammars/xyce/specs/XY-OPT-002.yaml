@@ -1,0 +1,37 @@
+id: XY-OPT-002
+dialect: xyce
+construct: .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs)
+manual_ref:
+- '[xyce-ref] §2.1.25 p96 ".OPTIONS Statements"'
+- '[xyce-ref] §2.1.25.9 p110 ".OPTIONS OUTPUT (Output Options)"'
+- '[xyce-ref] §2.1.25.10 p111 ".OPTIONS RESTART (Checkpointing Options)"'
+- '[xyce-ref] §2.1.25.13 p113 ".OPTIONS SAMPLES (Sampling options)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- opt_item
+- opt_extra
+- _opt_value
+- OPT_KEY
+core_rules:
+- EQ
+- CSEP
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_option_values_are_numbers_or_words
+- tests/grammar/xyce/test_xyce_directives.py::test_an_option_value_may_be_a_comma_list
+- tests/grammar/xyce/test_xyce_directives.py::test_samples_take_expressions_in_braces_and_quotes
+- tests/grammar/xyce/test_xyce_directives.py::test_initial_interval_takes_pairs
+- tests/grammar/xyce/test_xyce_directives.py::test_options_continue_across_plus_comment_and_indented_lines
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_option_items_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_option_syntax_errors_are_rejected
+- tests/solver/test_xyce_directive_probes.py::test_a_repeated_option_uses_the_first_value
+- tests/solver/test_xyce_directive_probes.py::test_two_output_lines_both_apply_and_a_repeated_item_takes_the_last
+- tests/solver/test_xyce_directive_probes.py::test_options_stop_xyce_on
+- tests/solver/test_xyce_directive_probes.py::test_a_bare_word_after_an_item_is_dropped
+- tests/solver/test_xyce_directive_probes.py::test_samples_take_braced_outputs
+- tests/solver/test_xyce_directive_probes.py::test_initial_interval_takes_pairs
+validation_note: 'Validated on XyceNF Release 7.10.0: an item applies, a repeated item takes the first value with a warning, braces in SAMPLES and the INITIAL_INTERVAL pairs run, and braces elsewhere, a comma between items, a blank-separated list and a leading bare word stop Xyce. A bare word after an item is dropped silently, and two OUTPUT lines both apply, an item on both taking the last (discrepancies.md).'
+notes: '`OptionItem`: names are open (a letter or `_`, then name characters), `name=value` only, blanks allowed around the `=`. A value is a number of the device-field reader (XY-NUM-001), a word (an `Identifier`), or, in SAMPLES and EMBEDDEDSAMPLES only, an expression in braces or quotes (a `Formula`). A comma list (blanks after a comma allowed) sets `values`, with `value` `None`. In OUTPUT and RESTART, `INITIAL_INTERVAL=i [t i]*` sets `value` to the interval and `pairs` to the `(t, i)` pairs, numbers only; an odd count is a ParseError. A bare word or value, a comma between items, and a word that begins like a number (`1abc`) are a ParseError.'

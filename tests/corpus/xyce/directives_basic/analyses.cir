@@ -1,0 +1,15 @@
+analyses: every X-M2 analysis; Xyce runs the last, the .TRAN
+* An RC divider driven by a DC source with an AC part.
+V1 in 0 2 AC 1
+R1 in out 1k
+R2 out 0 1k
+C1 out 0 1n
+.param tstop=10n
+.AC DEC 5 1 1meg
+.ac lin 3 1k 3k
+.dc V1 0 2 0.5 R1 LIST 1k 2k 3k
+.OP
+.tran 1n {tstop} 0 NOOP
+.tran 0.5ns 10ns UIC
++ {schedule(0, 1n, 5n, 0.5n)}
+.end

@@ -1,0 +1,26 @@
+id: XY-NOD-001
+dialect: xyce
+construct: .NODESET (the forms of .IC)
+manual_ref:
+- '[xyce-ref] §2.1.22 p92 ".NODESET (Approximate Initial Condition, Bias point)"'
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-16'
+grammar:
+- xy_nodeset_stmt
+core_rules:
+- NODESET_KW
+tests:
+- tests/grammar/xyce/test_xyce_directives.py::test_nodeset_takes_voltage_conditions
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_may_be_node_value_pairs
+- tests/grammar/xyce/test_xyce_directives.py::test_conditions_are_allowed_in_a_body
+- tests/grammar/xyce/test_xyce_directives.py::test_malformed_conditions_are_rejected
+- tests/grammar/xyce/test_xyce_directives.py::test_all_is_refused_with_what_xyce_does_on_each_keyword
+- tests/grammar/xyce/test_xyce_directives.py::test_other_refused_conditions_say_what_xyce_does_on_each_keyword
+- tests/solver/test_xyce_directive_probes.py::test_nodeset_forms_run
+- tests/solver/test_xyce_directive_probes.py::test_nodeset_stops_on_what_it_cannot_read
+- tests/solver/test_xyce_directive_probes.py::test_ic_with_nodeset_aborts
+validation_note: 'Validated on XyceNF Release 7.10.0: both forms run; `all=`, `I(...)`, `V(a,b)`, mixed forms and `2=0.5` stop Xyce on `.NODESET`, as the library refuses them; `.NODESET` with `.IC` aborts. An odd number of pair fields hangs Xyce and is never run.'
+notes: '`NodesetDirective` with `NodeCondition`s, read as XY-ICN-001 (the same rules): `V(node)=value` or `node value` pairs, one form per statement; `all=` and `I(...)` are a ParseError. Allowed in a subcircuit body.'

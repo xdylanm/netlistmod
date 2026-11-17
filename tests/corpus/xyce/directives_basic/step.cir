@@ -1,0 +1,17 @@
+step: .STEP lines nest, the first innermost
+V1 in 0 2
+R1 in out 1k
+R2 out 0 rmod 1k
+.model rmod R R=1
+.param scale=1
+.subckt load a
+R5 a 0 1meg
+.ends
+X1 out load
+.step R1 1k 2k 1k
+.STEP LIN rmod:R 1 2 1
+.step X1:R5:R LIST 1meg 2meg
+.step dec scale 1 10 1
+.step TEMP 27 127 100
+.dc V1 0 2 1
+.end

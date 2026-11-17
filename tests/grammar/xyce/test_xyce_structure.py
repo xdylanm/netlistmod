@@ -159,32 +159,29 @@ def test_a_letter_xyce_does_not_have_is_rejected(letter: str) -> None:
 
 @pytest.mark.parametrize(
     "statement",
-    [
-        ".tran 1n 1u",
-        ".options timeint method=gear",
-        ".print tran v(1) ; comment $ and // are text here",
-        ".title other",
-        ".unknown_command",
-    ],
+    [".title other", ".unknown_command", ".temp 27", ".print_x tran v(1)"],
 )
-def test_every_other_dot_command_is_unsupported(statement: str) -> None:
-    with pytest.raises(UnsupportedConstruct, match="not yet supported on Xyce") as captured:
+def test_every_other_dot_command_is_refused(statement: str) -> None:
+    # The closed list (decision 0028 item 1; XY-DIR-002): a dot-command outside it is a
+    # ParseError at its first character.
+    with pytest.raises(ParseError) as captured:
         _parse(f"title\n{statement}\n.END\n")
     error = captured.value
     assert (error.line, error.column) == (2, 1)
-    assert error.construct == f"dot-command `{statement.split()[0]}`, not yet supported on Xyce"
+    assert error.reason.startswith(f"`{statement.split()[0]}` is not an Xyce dot-command")
 
 
 def test_a_continued_dot_command_is_unsupported_whole() -> None:
+    # `.PREPROCESS REMOVEUNUSED` is the one dot-command that stays unsupported (P4).
     with pytest.raises(UnsupportedConstruct) as captured:
-        _parse("title\n.tran 1n\n+ 1u\n.END\n")
+        _parse("title\n.preprocess removeunused r\n+ c\n.END\n")
     assert captured.value.line == 2
 
 
 def test_a_syntax_error_later_is_reported_before_an_unsupported_line() -> None:
     # The whole source is parsed first, as on the other dialects.
     with pytest.raises(ParseError):
-        _parse("title\n.tran 1n 1u\n")
+        _parse("title\n.preprocess removeunused r\n")
 
 
 @pytest.mark.parametrize("between", ["* a comment\n", "\n", "* a comment\n\n", "; c\n"])
@@ -195,15 +192,15 @@ def test_a_continuation_after_comment_or_blank_lines_is_not_a_syntax_error(
     # A `+` line joins the last non-comment line across comment and blank lines ([xyce-ug]
     # §4.1.3.2 p43; probe test_a_continuation_joins_across_comments_and_blank_lines): the
     # statement it joins is refused, not the `+` line.
-    with pytest.raises(UnsupportedConstruct, match="dot-command `.tran`") as captured:
-        _parse(f"title\n.tran 1n\n{between}{plus}\n.END\n")
+    with pytest.raises(UnsupportedConstruct, match="`.preprocess removeunused`") as captured:
+        _parse(f"title\n.preprocess removeunused r\n{between}{plus}\n.END\n")
     assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 def test_a_continuation_line_is_refused_by_its_own_rule() -> None:
-    # Every statement X-M0 recognises is refused before the `+` line that follows it, so the
-    # rule's own refusal is checked on its subtree.
-    source = SourceText("title\n.tran 1n\n* c\n+ 1u\n.END\n")
+    # Every line that a `+` line can follow across comment lines without joining it is refused
+    # first, so the rule's own refusal is checked on its subtree.
+    source = SourceText("title\n.preprocess removeunused r\n* c\n+ 1u\n.END\n")
     (subtree,) = parse_tree(source, _XYCE).find_data("continuation_line")
     with pytest.raises(VisitError) as captured:
         _NodeBuilder(source, _XYCE).transform(subtree)

@@ -19,23 +19,23 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | `SubcktDefinition` | `name`, `name_span`, `ports: tuple[Node, ...]`, `params` (defaults), `body: tuple[BodyItem, ...]`, `ends: EndsLine`, `header_span` |
 | `EndsLine` | `name: str \| None`, `name_span: Span \| None`, `span`, `trailing_comments` |
 | `Directive` | base of the directives below (top level only) |
-| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None`, `modifiers: tuple[OptionItem, ...]` (LTspice) |
-| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop`, `frequencies` (LTspice `.ac list`; range fields `None`), `file` (LTspice `.ac file=`) |
-| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span, variation, values, file)`; the last three are LTspice's |
+| `TranDirective` | `tstep`, `tstop`, `tstart \| None`, `tmax \| None`, `uic: Flag \| None`, `modifiers: tuple[OptionItem, ...]` (LTspice), `noop: Flag \| None` and `schedule: Formula \| None` (xyce's `NOOP` and `{schedule(...)}`) |
+| `AcDirective` | `variation`, `variation_span`, `points`, `fstart`, `fstop`, `frequencies` (LTspice `.ac list`; range fields `None`), `file` (LTspice `.ac file=`), `data: Identifier \| None` (xyce `.AC DATA=table`; `variation` is `data` as written) |
+| `DcDirective` | `sweeps: tuple[DcSweep, ...]`; `DcSweep(source, source_span, start, stop, increment, span, variation, values, file)`; the last three are LTspice's, and xyce's sweeps take `variation` and `values` (`LIST`) too; `data: Identifier \| None` (xyce `.DC DATA=table`, with no sweeps) |
 | `OpDirective` | — |
-| `OptionsDirective` | `options: tuple[OptionItem, ...]`; `OptionItem(name, name_span, value: Value \| Identifier \| None, span)` |
+| `OptionsDirective` | `options: tuple[OptionItem, ...]`; `OptionItem(name, name_span, value: Value \| Identifier \| None, span, values, pairs)`, `values` an xyce comma list (`value` `None`) and `pairs` the `(t, i)` pairs of an xyce `INITIAL_INTERVAL` (both `()` otherwise); `package: Identifier \| None` (an xyce `.OPTIONS` package as written, `None` on ngspice and LTspice and for xyce's `.OPTION SCALE=`) |
 | `TempDirective` | `value`, `others` (LTspice's further values) |
-| `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span, current)`, `node is None` for `all=` or for an LTspice `.ic i(L1)=…` (`current: ElementReference`) |
+| `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span, current, form)`, `node is None` for `all=` or for an LTspice `.ic i(L1)=…` (`current: ElementReference`); `form: "v" \| "pair"` (`pair`: an xyce `node value` pair, the span from the node to the value); xyce's `.DCVOLT` is an `IcDirective` |
 | `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span, function: str \| None, nodes: tuple[Node, ...], source: ElementReference \| None)` |
-| `MeasureDirective` | `analysis`, `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
-| `StepDirective` (LTspice) | `kind: "param" \| "source" \| "temp" \| "model"`, `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file` |
+| `MeasureDirective` | `analysis` (on xyce the required mode, as written), `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
+| `StepDirective` (LTspice, xyce) | `kind: "param" \| "source" \| "temp" \| "model" \| "name" \| "qualified" \| "data"` (the last three xyce's), `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file`, `parameter: str \| None` (xyce: the part of a `qualified` target after the last `:`), `data: Identifier \| None` (xyce `DATA=table`) |
 | `GlobalDirective` | `nodes: tuple[Node, ...]`; not a `Directive` subclass, because it is topology |
 | `Title` | `text`, `explicit` (written `.title`), `span` |
 | `TitleDirective` | `text`, `span`; a `.title` after the first line |
 | `BlankLine` | `span` |
 | `CommentLine` | `text`, `span` |
 | `UnknownDirective` | `name`, `raw`, `span`, `trailing_comments`, `name_span` |
-| `OpaqueBlock` | `kind: "control" \| "if" \| "lib"` (a `.lib name` … `.endl` block), `span` |
+| `OpaqueBlock` | `kind: "control" \| "if" \| "lib" \| "data"` (a `.lib name` … `.endl` block; `data`, an xyce `DataTable`), `span` |
 | `OpaqueStatement` | `kind: "include" \| "lib"`, `raw`, `span`, `trailing_comments` |
 | `End` | `span` |
 
@@ -133,8 +133,9 @@ differs:
   which Xyce reads as a comment; `text` keeps the blanks.
 - **`PreprocessDirective`** (`_DotCommand` fields, `option: Identifier`, `value: Identifier`,
   `enabled: bool`): `.PREPROCESS REPLACEGROUND TRUE|FALSE`, allowed in a body; a second one is a
-  `ParseError`. It is topology (net identity), not a `Directive`. The other `.PREPROCESS` forms are
-  `UnsupportedConstruct`.
+  `ParseError`. It is topology (net identity), not a `Directive`. `.PREPROCESS ADDRESISTORS` is an
+  `UnknownDirective` (X-M2 B4), `REMOVEUNUSED` is `UnsupportedConstruct`, and any other word a
+  `ParseError`.
 - **`.GLOBAL`** is `GlobalDirective`, with no commas between its names.
 - **`.PARAM`** is `ParamStatement`, with commas allowed between assignments, values that are
   numbers, braced, quoted or bare expressions without blanks (no strings), and function
@@ -158,4 +159,37 @@ differs:
   adds `entries: tuple[Identifier, ...]` (the names after the file); with one field it opens an
   `OpaqueBlock` of kind `lib`, closed by `.ENDL` and the same name.
 - **Spec IDs** of B4: `XY-SBD-001`, `XY-MOD-001`, `XY-INC-001`, `XY-LIB-001`.
-- **Dot-commands** the dialect does not read yet are `UnsupportedConstruct`.
+- **X-M2 B3** ([decision 0028](../decisions/0028-xyce-directives.md) items 2 and 5 to 8):
+  - **`.OPTIONS`** and **`.OPTION`** are `OptionsDirective` with `package` (the package as written,
+    one of the manual's 21, in any case; any other word, none, or a package with no item is a
+    `ParseError`), except `.OPTION SCALE=v`, singular with one item, whose `package` is `None`.
+    Items are `name=value` only; a value is a number, a word, or (SAMPLES and EMBEDDEDSAMPLES
+    only) an expression in braces or quotes; a comma list sets `OptionItem.values` (`value` is
+    `None`); OUTPUT's and RESTART's `INITIAL_INTERVAL=i t i ...` sets `OptionItem.pairs`.
+  - **`.IC`**, **`.DCVOLT`** (also `IcDirective`) and **`.NODESET`** take `V(node)=value`
+    (`NodeCondition.form` `v`) or `node value` pairs (`form` `pair`, the span from the node to
+    the value), one form per statement; a node may be a `:` path or a `$G` name. They are
+    allowed in a subcircuit body (`BodyItem` holds `IcDirective` and `NodesetDirective`).
+  - **`.MEASURE`** and **`.MEAS`** are `MeasureDirective`, with a required mode of the closed list
+    (TRAN, DC, AC, NOISE, FFT and the four `_CONT` forms) in `analysis`.
+  - **`DataTable`** (`OpaqueBlock` fields, `kind` `data`; `keyword`, `keyword_span`,
+    `name: Identifier`, `columns: tuple[Identifier, ...]`, `rows: int`, `body_text`, `body_span`,
+    `end_span`) is a `.DATA name columns... values... .ENDDATA` block: plain numbers whose count is
+    a non-zero multiple of the columns, and a bare `.ENDDATA`. Directive edits add, replace and
+    remove it whole.
+  - `.OPTIONS`, `.MEAS` and `.DATA` are refused in a body, where Xyce silently ignores them.
+  - **Spec IDs:** `XY-OPT-001`, `XY-OPT-002`, `XY-ICN-001`, `XY-NOD-001`, `XY-MEA-001`,
+    `XY-DAT-001`.
+- **X-M2 B4** ([decision 0028](../decisions/0028-xyce-directives.md) items 1 and 2), the closed
+  list of dot-commands:
+  - **`UnknownDirective`** for `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`,
+    `.HB`, `.LIN`, `.SAMPLING`, `.EMBEDDEDSAMPLING` and `.PCE` (`raw` from the name to its last
+    field, continued by `+` lines), top level only; xyce's `.SAVE` is never `SaveDirective`.
+  - **`.PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value`** is an `UnknownDirective`, allowed in
+    a body, one of each kind per netlist (a second is a `ParseError`).
+  - Any other dot-command is a `ParseError` ("not an Xyce dot-command"), with hints for `.TEMP`,
+    `.PROBE`, `.title` and `.opt`; `.PREPROCESS REMOVEUNUSED` stays `UnsupportedConstruct`.
+  - In a body the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the untyped commands are a
+    `ParseError` (Xyce silently ignores them there); `.IC`, `.DCVOLT`, `.NODESET` and
+    `.PREPROCESS` are allowed.
+  - **Spec IDs:** `XY-DIR-001`, `XY-DIR-002`, `XY-DIR-003`, `XY-PRE-002`, `XY-SAV-001`.
