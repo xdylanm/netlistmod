@@ -1,0 +1,31 @@
+id: XY-SRC-003
+dialect: xyce
+construct: PAT pattern source function (the DATA bit string and `R=`)
+manual_ref:
+- '[xyce-ref] §2.3.10 p226 "Independent Voltage Source"'
+- '[xyce-ref] §2.3.9 p221 "Independent Current Source"'
+status: documented
+validation_note: Read from the manual (decision 0030); the solver tests that compare it with XyceNF 7.10 come with X-M3 B5.
+grammar:
+- _pat_bare
+- _pat_in
+- _pat_tail
+- pat_name
+- pat_first
+- pat_arg
+- xfn_r
+- PAT_KW
+- PAT_BITS
+core_rules:
+- rparen
+- LPAR
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_sources.py::test_pat_holds_its_bit_string_as_an_identifier
+- tests/grammar/xyce/test_xyce_sources.py::test_pat_takes_r_after_its_list
+- tests/grammar/xyce/test_xyce_sources.py::test_td_and_r_inside_the_parentheses_are_refused
+- tests/grammar/xyce/test_xyce_sources.py::test_td_and_r_stand_once
+- tests/grammar/xyce/test_xyce_sources.py::test_a_positional_pat_repeat_count_is_refused_with_a_hint
+- tests/grammar/xyce/test_xyce_sources.py::test_pat_needs_its_bit_string_seventh
+- tests/grammar/xyce/test_xyce_sources.py::test_a_bit_string_elsewhere_is_refused
+notes: 'Seven arguments, `VHI VLO TD TR TF TSAMPLE DATA` (decision 0030 item 4): DATA is `b` or `B` and a string of 0s and 1s, an `Identifier` in `SourceSpec.args` (which widens to `Value | Identifier`, X-M8 checklist), in the seventh place only. The repeat count is `R=n` after the list, outside the parentheses, at most once, in `params`; a positional eighth argument, which the manual documents and Xyce ignores, is refused with the hint `R=` (a `manual-error` row).'

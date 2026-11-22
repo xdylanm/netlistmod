@@ -182,14 +182,6 @@
       "note": "V takes no instance parameter",
       "xyce": "runs"
     },
-    "v_transient_function.cir": {
-      "sha256": "9645984392eb62e1ac6829a37011cbf34b4b3388e6a922967c136c601acf70c7",
-      "line": 2,
-      "column": 8,
-      "error": "UnsupportedConstruct",
-      "note": "the transient functions are X-M3's",
-      "xyce": "runs"
-    },
     "x_params_comma.cir": {
       "sha256": "b3f5954a55844a36f265da683d99a76134f0e9fe6dc4ada4dc078b4be235182a",
       "line": 6,

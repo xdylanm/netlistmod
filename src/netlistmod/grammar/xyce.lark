@@ -39,7 +39,7 @@
 %import .core (end_stmt, trailer, eol, global_stmt)
 %import .core (WS, LINE_END, CONT, NL, TITLE_TEXT, COMMENT_LINE, END_KW, DOT_NAME)
 %import .core (SEP, TRAILING_COMMENT, WORD, NUMBER, GLOBAL_KW)
-%import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, PARAM_KW, RPAR)
+%import .core (CSEP, EQ, BRACE_FORMULA, QUOTE_FORMULA, STRING_VALUE, PARAM_KW, RPAR)
 %import .core (x_name, ends_line, param, rparen, MODEL_KW, LPAR, SUBCKT_KW, ENDS_KW, ZERO_PORT)
 %import .core (value, model, dc_spec, dc_keyword, ac_spec, DC_KW, AC_KW, OFF_KW)
 %import .core (TRAN_KW, UIC_KW, DOT_AC_KW, ac_variation, DEC_KW, OCT_KW, LIN_KW, DOT_DC_KW)
@@ -751,9 +751,9 @@ OFF_VALUE_KW.4: /off(?=[ \t]*=)/i
 D_NAME.4: /[Dd]/ _XY_CHAR*
 
 // V and I, their DC and AC parts ([xyce-ref] §2.3.10 p226, §2.3.9 p221; decision 0027 item 6):
-// `[DC] value`, then `AC magnitude [phase]`, in that order, with no comma and no parameter. A bare
-// `AC` is recognised only to be refused (ac_bare). A transient function (src_function) is
-// recognised with the rest of its line only to be refused whole until X-M3.
+// `[DC] value`, then `AC magnitude [phase]`, then at most one transient function (decision 0030
+// item 1), in that order, with no comma and no parameter. A bare `AC` is recognised only to be
+// refused (ac_bare).
 // spec: XY-SRC-001
 voltage_source: V_NAME node node _xsrc
 current_source: I_NAME node node _xsrc
@@ -761,14 +761,88 @@ _xsrc: dc_spec? _xsrc_ac
 _xsrc_ac: ac_spec value? _xsrc_end
         | ac_bare
         | _xsrc_end
-_xsrc_end: src_function | NL | eol
+_xsrc_end: _xfn | NL | eol
 ac_bare: SEP AC_KW (NL | eol)
        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ac_bare
-src_function: SEP SRC_FN_KW REST_TEXT* NL
-            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) src_function
-SRC_FN_KW.3: /(?:pulse|sin|exp|pwl|sffm|pat)(?![A-Za-z0-9_])/i
 V_NAME.4: /[Vv]/ _XY_CHAR*
 I_NAME.4: /[Ii]/ _XY_CHAR*
+
+// The transient functions ([xyce-ref] §2.3.10 p226–230, §2.3.9 p221–225; decision 0030 items 2
+// to 5): PULSE, SIN, EXP and SFFM (xfn_name), PAT and PWL, the last field of the line. The name
+// folds case and ends at a blank, `(`, `;` or the line end, so `SINE` is no name. The argument
+// list stands in one pair of parentheses or in none; each argument is a number of the device-field
+// reader, a braced or a quoted expression, with blanks between them (a `+` line may continue the
+// list). A comma (xfn_comma) and a `name=` argument (xfn_key, xfn_key_first) are recognised only
+// to be refused. After the list, outside the parentheses, PWL takes `TD=` and `R=`, and PAT takes
+// `R=`; any other `name=` there is xfn_key, refused. The fields are flat in the line's rule and
+// right-linear, so that nothing reduces before the line ends: the transformer gathers them into one
+// SourceSpec, and checks each function's argument count, PAT's bit string in the seventh place,
+// PWL's pairs and that `TD=` and `R=` stand at most once each.
+// spec: XY-SRC-002
+_xfn: xfn_name _xfn_bare
+    | xfn_name xfn_open xfn_first? _xfn_in
+    | xfn_name xfn_open xfn_key_first _xfn_in
+    | pat_name _pat_bare
+    | pat_name xfn_open pat_first? _pat_in
+    | pat_name xfn_open xfn_key_first _pat_in
+    | pwl_name _pwl_bare
+    | pwl_name xfn_open xfn_first? _pwl_in
+    | pwl_name xfn_open xfn_key_first _pwl_in
+    | pwl_name xpwl_file _pwl_tail
+_xfn_bare: xfn_arg _xfn_bare | xfn_comma _xfn_bare | _xfn_tail
+_xfn_in: xfn_arg _xfn_in | xfn_comma _xfn_in | xfn_key _xfn_in | rparen _xfn_tail
+_xfn_tail: xfn_key _xfn_tail | NL | eol
+xfn_name: SEP XFN_KW
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_name
+xfn_open: LPAR
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_open
+xfn_first: NUMBER | BRACE_FORMULA | QUOTE_FORMULA
+xfn_arg: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_arg
+xfn_comma: CSEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | PAT_BITS)
+xfn_key_first: INST_KEY EQ _xfn_key_value
+xfn_key: SEP INST_KEY EQ _xfn_key_value
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_key
+_xfn_key_value: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | PAT_BITS | STRING_VALUE | PWL_PATH
+XFN_KW.3: /(?:pulse|sin|exp|sffm)(?![^ \t\r\n;(])/i
+
+// PAT ([xyce-ref] §2.3.10 p227–228): its DATA, `b` or `B` and a string of 0s and 1s (PAT_BITS, held
+// as an Identifier), stands where an argument may; the transformer requires it in the seventh
+// place, and refuses a positional eighth argument with the hint `R=` (decision 0030 item 4).
+// spec: XY-SRC-003
+_pat_bare: pat_arg _pat_bare | xfn_comma _pat_bare | _pat_tail
+_pat_in: pat_arg _pat_in | xfn_comma _pat_in | xfn_key _pat_in | rparen _pat_tail
+_pat_tail: xfn_r _pat_tail | xfn_key _pat_tail | NL | eol
+pat_name: SEP PAT_KW
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pat_name
+pat_first: NUMBER | BRACE_FORMULA | QUOTE_FORMULA | PAT_BITS
+pat_arg: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA | PAT_BITS)
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pat_arg
+xfn_r: SEP R_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+     | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_r
+PAT_KW.3: /pat(?![^ \t\r\n;(])/i
+PAT_BITS.4: /[bB][01]+(?![^ \t\r\n;)])/
+
+// PWL ([xyce-ref] §2.3.10 p228–229, §6.1.12 p846): time-value pairs, or `FILE` (any case) and a
+// double-quoted or bare path, held as a `FILE` parameter and never read (decision 0030 item 5);
+// then `TD=` and `R=` in either order. `FILE=` is xfn_key, refused; a path in single quotes, in
+// parentheses or followed by another field matches no rule.
+// spec: XY-SRC-004
+_pwl_bare: xfn_arg _pwl_bare | xfn_comma _pwl_bare | _pwl_tail
+_pwl_in: xfn_arg _pwl_in | xfn_comma _pwl_in | xfn_key _pwl_in | rparen _pwl_tail
+_pwl_tail: xfn_td _pwl_tail | xfn_r _pwl_tail | xfn_key _pwl_tail | NL | eol
+pwl_name: SEP PWL_NAME_KW
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pwl_name
+xpwl_file: SEP PWL_FILE_KW xpwl_path
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xpwl_file
+xpwl_path: SEP (STRING_VALUE | PWL_PATH)
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xpwl_path
+xfn_td: SEP TD_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xfn_td
+PWL_NAME_KW.3: /pwl(?![^ \t\r\n;(])/i
+PWL_FILE_KW.4: /file(?![^ \t\r\n;])/i
+PWL_PATH.2: /[^ \t\r\n;'"(){}=,]+/
+TD_KW.4: /td(?=[ \t]*=)/i
 
 // X ([xyce-ref] §2.3.33 p803; decision 0027 item 6): nodes, the subcircuit, then `PARAMS:`
 // (optional) and parameters, with no comma; `M=` is an ordinary parameter. The name list is right-recursive,

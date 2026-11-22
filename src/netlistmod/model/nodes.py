@@ -151,11 +151,16 @@ class SourceSpec:
     wave file's ``wavefile=`` and ``chan=``, and EXTERNAL's ``m=``. A file's path is an
     :class:`Identifier` or a quoted :class:`Formula`, and is never read. ``forever`` marks ``PWL
     REPEAT FOREVER``. ``span`` runs from the name to the end of the last part.
+
+    On xyce (decision 0030 items 4 and 5) an argument may also be an :class:`Identifier`: PAT's
+    DATA bit string (``b0101``), in the seventh place; PAT's ``R=`` and PWL's ``TD=`` and ``R=``
+    are in ``params``, and so is PWL's ``FILE name``, as a parameter named ``FILE`` as written
+    whose value is the path (written without ``=``).
     """
 
     name: str
     name_span: Span
-    args: tuple[Value, ...]
+    args: tuple[Value | Identifier, ...]
     params: tuple[ParamAssignment, ...]
     span: Span
     forever: bool = False

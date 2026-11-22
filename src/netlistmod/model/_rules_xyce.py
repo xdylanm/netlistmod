@@ -425,14 +425,6 @@ class XyceRules(StatementsRules):
             "only with its magnitude, which the Xyce manual makes optional",
         )
 
-    def src_function(self, children: list[Any]) -> NoReturn:
-        name = _field_token(children)
-        raise self._unsupported(
-            name,
-            f"transient source function `{name}`, not yet supported on "
-            f"{self._dialect.display_name} (planned for X-M3)",
-        )
-
     def resistor(self, children: list[Any]) -> _Item:
         if not _MODEL_FIRST[self._dialect]:
             return super().resistor(children)

@@ -1,0 +1,35 @@
+id: XY-SRC-004
+dialect: xyce
+construct: PWL piecewise linear source function (pairs or FILE, `TD=` and `R=`)
+manual_ref:
+- '[xyce-ref] §2.3.10 p226 "Independent Voltage Source"'
+- '[xyce-ref] §2.3.9 p221 "Independent Current Source"'
+- '[xyce-ref] §6.1.12 p846 "PWL Source"'
+status: documented
+validation_note: Read from the manual (decision 0030); the solver tests that compare it with XyceNF 7.10 come with X-M3 B5.
+grammar:
+- _pwl_bare
+- _pwl_in
+- _pwl_tail
+- pwl_name
+- xpwl_file
+- xpwl_path
+- xfn_td
+- PWL_NAME_KW
+- PWL_FILE_KW
+- PWL_PATH
+- TD_KW
+core_rules:
+- rparen
+- LPAR
+- EQ
+- STRING_VALUE
+tests:
+- tests/grammar/xyce/test_xyce_sources.py::test_pwl_takes_pairs_then_td_and_r
+- tests/grammar/xyce/test_xyce_sources.py::test_pwl_file_is_a_parameter_holding_the_path
+- tests/grammar/xyce/test_xyce_sources.py::test_td_and_r_inside_the_parentheses_are_refused
+- tests/grammar/xyce/test_xyce_sources.py::test_td_and_r_stand_once
+- tests/grammar/xyce/test_xyce_sources.py::test_pwl_file_with_an_equals_sign_is_refused_with_a_hint
+- tests/grammar/xyce/test_xyce_sources.py::test_pwl_needs_pairs
+- tests/grammar/xyce/test_xyce_sources.py::test_pwl_needs_its_points
+notes: 'Time-value pairs, an even count of at least two, with or without parentheses; or `FILE` (any case) and a double-quoted or bare path, held in `params` as a parameter named `FILE` as written, the path a quoted `Formula` or an `Identifier`, never read, with no file reference in the document layer (decision 0030 item 5). Then `TD=` and `R=`, after the pairs or the path, outside the parentheses, in either order, at most once each; R''s range is not checked. Refused: `FILE=`, single quotes, parentheses around the FILE form, a second `FILE` or a field after the path, an odd count, PSpice pair groups `(t,v)` and `REPEAT`.'

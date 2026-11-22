@@ -1,6 +1,6 @@
 id: XY-SRC-001
 dialect: xyce
-construct: V and I independent sources, DC and AC parts (transient functions refused until X-M3)
+construct: V and I independent sources, DC and AC parts, then a transient function
 manual_ref:
 - '[xyce-ref] §2.3.10 p226 "Independent Voltage Source"'
 - '[xyce-ref] §2.3.9 p221 "Independent Current Source"'
@@ -16,8 +16,6 @@ grammar:
 - _xsrc_ac
 - _xsrc_end
 - ac_bare
-- src_function
-- SRC_FN_KW
 - V_NAME
 - I_NAME
 core_rules:
@@ -32,9 +30,8 @@ tests:
 - tests/grammar/xyce/test_xyce_elements.py::test_source_forms_are_read
 - tests/grammar/xyce/test_xyce_elements.py::test_a_bare_ac_is_refused_with_a_hint
 - tests/grammar/xyce/test_xyce_elements.py::test_source_forms_are_refused
-- tests/grammar/xyce/test_xyce_elements.py::test_a_transient_function_is_unsupported_for_now
 - tests/solver/test_xyce_element_probes.py::test_source_dc_and_ac_forms
 - tests/solver/test_xyce_element_probes.py::test_xyce_runs
 - tests/solver/test_xyce_element_probes.py::test_xyce_stops_on
 validation_note: 'Validated on XyceNF Release 7.10.0: `[DC] value` (a number or a braced or quoted expression), then `AC magnitude [phase]`, and nothing after the nodes (0). Xyce stops on `DC` after `AC`, `DC=` and a bare DC value; it runs a bare `AC`, a comma and `M=` on I, which the library refuses (discrepancies.md).'
-notes: 'The ngspice `VoltageSource` and `CurrentSource` nodes (decision 0027 item 6; point 14), with no stimulus, distortion or port parameter. The order is fixed: an optional DC part, with or without `DC`, then an optional `AC` and its magnitude and phase; no comma and no parameter. A bare `AC` is refused with "write `AC 0`", a recorded strictness exception, since `AcSpec.magnitude` is required and the manual makes it optional. A transient function (PULSE, SIN, EXP, PWL, SFFM, PAT), wherever it stands, raises UnsupportedConstruct for the whole line, naming X-M3.'
+notes: 'The ngspice `VoltageSource` and `CurrentSource` nodes (decision 0027 item 6; point 14), with no distortion or port parameter. The order is fixed: an optional DC part, with or without `DC`, then an optional `AC` and its magnitude and phase; no comma and no parameter. A bare `AC` is refused with "write `AC 0`", a recorded strictness exception, since `AcSpec.magnitude` is required and the manual makes it optional. A transient function (PULSE, SIN, EXP, SFFM, PAT or PWL; XY-SRC-002 to XY-SRC-004) may stand last, after the DC and AC parts (decision 0030 item 1); one before them or a second one is a ParseError.'

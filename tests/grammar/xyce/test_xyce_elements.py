@@ -29,7 +29,6 @@ from netlistmod import (
     SubcktInstance,
     SubcktReference,
     Title,
-    UnsupportedConstruct,
     ValueList,
     VoltageSource,
     parse,
@@ -369,26 +368,6 @@ def test_a_bare_ac_is_refused_with_a_hint(line: str) -> None:
 )
 def test_source_forms_are_refused(line: str) -> None:
     _error(line)
-
-
-@pytest.mark.parametrize(
-    ("line", "name"),
-    [
-        ("V1 a b SIN(0 1 1k)", "SIN"),
-        ("V1 a b 1 AC 1 0 PULSE(0 1 0 1n 1n 1u 2u)", "PULSE"),
-        ("I1 a b pwl(0 0 1 1)", "pwl"),
-        ("V1 a b EXP(0 1)\n+ ; c", "EXP"),
-        ("V1 a b SFFM(0 1 1k)", "SFFM"),
-        ("V1 a b PAT(1 0 0 1n 1n 1n b101)", "PAT"),
-        ("V1 a b SIN(0 1 1k) DC 1", "SIN"),
-    ],
-)
-def test_a_transient_function_is_unsupported_for_now(line: str, name: str) -> None:
-    with pytest.raises(UnsupportedConstruct) as captured:
-        _parse(f"t\n{line}\n.END\n")
-    assert captured.value.construct == (
-        f"transient source function `{name}`, not yet supported on Xyce (planned for X-M3)"
-    )
 
 
 # X
