@@ -111,6 +111,12 @@ def remove_param(
     )
     if not isinstance(element, takes):
         raise EditError(f"`{designator}` is {_a_kind(element)} line and takes no parameters")
+    if isinstance(element, PortSource) and folded == fold("port"):
+        # Decision 0030 item 8: a P line needs its port number.
+        raise EditError(
+            f"`port=` of `{designator}` is its port number, which a P line needs; set_param "
+            "changes it"
+        )
     if (
         ltspice
         and isinstance(element, Vcvs | Vccs)

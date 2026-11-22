@@ -51,6 +51,7 @@ from netlistmod.model.nodes import (
     Mesfet,
     MutualCoupling,
     OsdiDevice,
+    PortSource,
     Resistor,
     SpecialFunction,
     SubcktInstance,
@@ -220,6 +221,8 @@ def set_param(
             if len(written) == 1:
                 return [Edit(written[0].value.span, value, reason, (_VALUE,))]
         return _assign(element.params, element, name, value, reason, folded=found_fold)
+    if isinstance(element, PortSource):
+        return _port_param(element, name, value, reason, found_fold)
     takes_params = (*_TWO_TERMINAL, Diode, *_TRANSISTORS, *_SOURCES, BehavioralSource)
     port = isinstance(element, VoltageSource) and folded in _PORT_PARAMS[netlist.dialect]
     if not isinstance(element, takes_params) or (
@@ -268,6 +271,24 @@ def set_param(
         after = _before_laplace(element, folded, found_fold)
         return _assign(element.params, element, name, value, reason, after, folded=found_fold)
     return _assign(element.params, element, name, value, reason, folded=found_fold)
+
+
+# The parameters of an xyce P line (decision 0030 item 6).
+_PORT_LINE_PARAMS = ("port", "z0")
+
+
+def _port_param(
+    element: PortSource, name: str, value: str, reason: str, fold: Callable[[str], str]
+) -> list[Edit]:
+    """`port=` or `Z0=` of an xyce P line, its only parameters; a new `Z0=` goes right after
+    `port=`, between the DC and AC parts (decision 0030 item 6)."""
+    if fold(name) not in {fold(word) for word in _PORT_LINE_PARAMS}:
+        raise EditError(
+            f"`{element.designator}` is a port, which takes only `port=` and `Z0=`; Xyce stops "
+            f"on any other parameter, so `{name}` cannot be set"
+        )
+    (port,) = (param for param in element.params if fold(param.name) == fold("port"))
+    return _assign(element.params, element, name, value, reason, port.span.end, folded=fold)
 
 
 def _before_laplace(

@@ -42,7 +42,7 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 - [x] **B1 — Decision record** for the G1 decisions.
 - [x] **B2 — The functions** in `xyce.lark` and the source rules.
 - [x] **B3 — The P port.**
-- [ ] **B4 — The document and edit layers.**
+- [x] **B4 — The document and edit layers.**
 - [ ] **B5 — Evidence:** spec entries, corpus files with manifests, solver tests, discrepancy rows, the README status table, the X-M8 checklist.
 
 ## 5. Findings and log
@@ -133,3 +133,4 @@ Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 00
 - 2026-11-22: the maintainer accepted the remaining recommendations of section 5.1. B1 done: [decision 0030](../decisions/0030-xyce-stimulus-and-port.md).
 - 2026-11-22: B2 done: `xyce.lark` reads PULSE, SIN, EXP, SFFM, PAT and PWL (pairs or `FILE`, `TD=`, `R=`) in place of `src_function`; `model/_rules_xyce_sources.py` gathers them into a `SourceSpec` (`args` widened to `Value | Identifier`) and checks counts, PAT's DATA and PWL's pairs; spec entries `XY-SRC-002` to `XY-SRC-004` (documented until B5).
 - 2026-11-22: B3 done: the P line (`port_source`): DC, then `port=` and `Z0=` in either order (`port=` required, an integer of 1 or more or a formula), then AC and the function; a line without `port=` refused with its own message. `PortSource`, a sibling of V and I (`port` and `Z0` in `params`), in `BodyItem`, `ELEMENT_NAMES`, `_SOURCES`, `_PRIMARY_PARAMS` (`dcv0`) and `remove_param`'s kinds; P is `supported` in `xyce-devices.json`; spec entry `XY-POR-001` (documented until B5).
+- 2026-11-22: B4 done: explicit per-dialect tables, `_PARAM_SOURCES` in `model/_rules_sources.py` (ngspice V, LTspice V and I, xyce P) and `_NEEDS_VALUE` in `edit/_ops_sources.py` (LTspice I; none on ngspice or xyce), with `_NAMED_ARGS` (xyce: PWL `TD=`/`R=`, PAT `R=`) for `set_stimulus_arg`; on P, `set_ac` and `set_stimulus` insert after `port=` and `Z0=`, a new `Z0=` goes right after `port=`, `set_param` takes only `port` and `z0`, `remove_param` refuses `port`; a PWL `FILE` path is replaced without `=` and makes no reference. Golden-diff tests in `tests/edits/test_xyce_source_edits.py`.
