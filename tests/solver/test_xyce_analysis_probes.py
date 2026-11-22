@@ -233,12 +233,25 @@ def test_ac_stops_on(solver: Solver, tmp_path: Path, line: str, message: str) ->
     assert message in _messages(_stops(solver, tmp_path, _netlist(line)))
 
 
-def test_a_point_count_that_is_not_an_integer_stops_xyce(solver: Solver, tmp_path: Path) -> None:
-    """Xyce stops on `.AC dec 1.5 …` ("must be an integer"); the library reads it, since it does
-    not check the count (a discrepancies.md row)."""
-    result = _stops(solver, tmp_path, _netlist(".ac dec 1.5 1 10"))
+@pytest.mark.parametrize(
+    "line",
+    [
+        ".ac dec 1.5 1 10",
+        ".dc dec V1 1 100 1.5",
+        ".dc oct V1 1 4 1.5",
+        ".step dec R1 1k 100k 1.5\n.op",
+        ".step oct R1 1k 4k 1.5\n.op",
+    ],
+)
+def test_a_point_count_that_is_not_an_integer_stops_xyce(
+    solver: Solver, tmp_path: Path, line: str
+) -> None:
+    """Xyce stops on a `DEC` or `OCT` count that is not an integer, on `.AC`, `.DC` and `.STEP`
+    ("must be an integer"); the library reads it, since it does not check the count (decision
+    0029 item 4; a discrepancies.md row)."""
+    result = _stops(solver, tmp_path, _netlist(line))
     assert "must be an integer" in _messages(result)
-    _library(_netlist(".ac dec 1.5 1 10"))
+    _library(_netlist(line))
 
 
 # .DC (XY-DCA-001) and the sweep targets (XY-STP-002)

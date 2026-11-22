@@ -198,6 +198,17 @@ def test_the_ac_point_count_is_not_checked() -> None:
     assert _item(line).points == _number(line, "1.5")
 
 
+@pytest.mark.parametrize(
+    "line", [".dc dec V1 1 100 1.5", ".DC OCT V1 1 4 1.5", ".step dec R1 1k 100k 1.5"]
+)
+def test_the_dc_and_step_point_counts_are_not_checked(line: str) -> None:
+    # The DEC and OCT counts of .DC and .STEP: Xyce 7.10 stops on one that is not an integer,
+    # and the library keeps the number's text (decision 0029 item 4; discrepancies.md).
+    item = _item(line)
+    increment = item.sweeps[0].increment if isinstance(item, DcDirective) else item.increment
+    assert increment == _number(line, "1.5")
+
+
 @pytest.mark.parametrize("data", ["DATA=table1", "data = table1", "Data =table1"])
 def test_ac_takes_a_data_table(data: str) -> None:
     line = f".ac {data}"
