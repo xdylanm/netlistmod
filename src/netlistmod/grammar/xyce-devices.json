@@ -12,7 +12,7 @@
   "L": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "M": {"status": "planned", "phase": 2, "milestone": "X-M4"},
   "O": {"status": "planned", "phase": 2, "milestone": "X-M6"},
-  "P": {"status": "planned", "phase": 2, "milestone": "X-M3"},
+  "P": {"status": "supported", "phase": 2, "milestone": "X-M3"},
   "Q": {"status": "planned", "phase": 2, "milestone": "X-M4"},
   "R": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "S": {"status": "planned", "phase": 2, "milestone": "X-M5"},

@@ -69,6 +69,7 @@ from netlistmod.model.nodes import (
     OpaqueStatement,
     OsdiDevice,
     ParamStatement,
+    PortSource,
     PreprocessDirective,
     RcLine,
     Resistor,
@@ -134,6 +135,7 @@ _PRIMARY_PARAMS: dict[type, str] = {
     Inductor: "l",
     VoltageSource: "dcv0",
     CurrentSource: "dcv0",
+    PortSource: "dcv0",
 }
 
 

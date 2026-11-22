@@ -238,6 +238,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-OPP-001](./specs/XY-OPP-001.yaml) | .OP operating point | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-OPT-001](./specs/XY-OPT-001.yaml) | .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE) | observed | 8 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-OPT-002](./specs/XY-OPT-002.yaml) | .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs) | validated | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-POR-001](./specs/XY-POR-001.yaml) | P port (`port=` and `Z0=` between the DC and AC parts) | documented | 8 + 0 solver |  |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -259,7 +260,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 1 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-50 entries: 40 validated, 6 observed, 0 disputed, 4 documented.
+51 entries: 40 validated, 6 observed, 0 disputed, 5 documented.
 
 ## Lookaround terminals
 

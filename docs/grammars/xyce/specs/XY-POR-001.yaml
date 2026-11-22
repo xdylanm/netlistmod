@@ -1,0 +1,33 @@
+id: XY-POR-001
+dialect: xyce
+construct: P port (`port=` and `Z0=` between the DC and AC parts)
+manual_ref:
+- '[xyce-ref] §2.3.11 p231 "Port Device"'
+- '[xyce-ug] §7.11.2 p136 "Port Specification"'
+status: documented
+validation_note: Read from the manual (decision 0030); the solver tests that compare it with XyceNF 7.10 come with X-M3 B5.
+grammar:
+- port_source
+- _p0
+- _p1
+- _p2
+- p_port
+- p_z0
+- PORT_KW
+- Z0_KW
+- P_NAME
+core_rules:
+- dc_spec
+- ac_spec
+- value
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_port.py::test_the_port_line_and_its_parameters
+- tests/grammar/xyce/test_xyce_port.py::test_port_forms_are_read
+- tests/grammar/xyce/test_xyce_port.py::test_a_formula_port_number_is_held_as_written
+- tests/grammar/xyce/test_xyce_port.py::test_a_port_may_stand_in_a_subcircuit_body
+- tests/grammar/xyce/test_xyce_port.py::test_a_line_without_port_is_refused
+- tests/grammar/xyce/test_xyce_port.py::test_the_port_number_is_an_integer_of_one_or_more
+- tests/grammar/xyce/test_xyce_port.py::test_port_forms_are_refused
+- tests/grammar/xyce/test_xyce_port.py::test_p_stays_the_coupled_line_on_ngspice
+notes: '`PortSource`, a sibling of `VoltageSource` and `CurrentSource` (decision 0030 item 6; X-M8 checklist): `P n+ n- [[DC] v] port=n [Z0=v] [AC mag [ph]] [function]`, with `port=` and `Z0=` in `params` as written, in either order, each once, both with their `=` (blanks around it allowed). `port=` is required and takes an integer literal of 1 or more or an expression in braces or quotes; `Z0=` a number of the device-field reader or an expression. Exactly two nodes, no other parameter; allowed in a subcircuit body. The DC, AC and function parts are V''s (XY-SRC-001 to XY-SRC-004). `.LIN`''s numbering (1..N) is not checked (a `library-limit` row).'

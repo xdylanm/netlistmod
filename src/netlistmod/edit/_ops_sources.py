@@ -25,6 +25,7 @@ from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError
 from netlistmod.model.nodes import (
     CurrentSource,
+    PortSource,
     SourceSpec,
     VoltageSource,
 )
@@ -32,6 +33,9 @@ from netlistmod.model.values import (
     AcSpec,
 )
 from netlistmod.source import Span
+
+# The independent sources the source edits address (P on xyce; decision 0030 item 6).
+_Source = VoltageSource | CurrentSource | PortSource
 
 
 def stimulus_target(netlist: Netlist, scope: ScopePath, designator: str, text: str) -> UpsertTarget:
@@ -86,9 +90,7 @@ def set_ac(
     return [_insert(point, conventions.field(spec), reason, check, 1)]
 
 
-def _source(
-    netlist: Netlist, designator: str, scope: ScopePath, in_definition: bool
-) -> VoltageSource | CurrentSource:
+def _source(netlist: Netlist, designator: str, scope: ScopePath, in_definition: bool) -> _Source:
     element = _element(netlist, designator, scope, in_definition)
     if not isinstance(element, _SOURCES):
         raise EditError(f"`{designator}` is {_a_kind(element)} line, not an independent source")
@@ -180,9 +182,7 @@ def remove_stimulus(
     return [_removal_edit(netlist, element, removed, f"remove_stimulus {designator}")]
 
 
-def _with_separator(
-    netlist: Netlist, element: VoltageSource | CurrentSource, spec: SourceSpec
-) -> Span:
+def _with_separator(netlist: Netlist, element: _Source, spec: SourceSpec) -> Span:
     """The function's span and the gap before it: blanks, a comma or a continuation. A gap after
     a comment stays if text follows on the function's line, since that text would join the
     comment; then the blanks after the function go instead."""
@@ -212,13 +212,11 @@ def _distortion_name(text: str) -> str | None:
     return head if head in _DISTORTION_NAMES else None
 
 
-def _distortion(element: VoltageSource | CurrentSource, name: str) -> SourceSpec | None:
+def _distortion(element: _Source, name: str) -> SourceSpec | None:
     return next((spec for spec in element.distortion if spec.name.upper() == name), None)
 
 
-def _stimulus_of(
-    element: VoltageSource | CurrentSource, function: str | None, designator: str
-) -> SourceSpec:
+def _stimulus_of(element: _Source, function: str | None, designator: str) -> SourceSpec:
     spec = element.stimulus if function is None else _distortion(element, function.upper())
     if spec is None:
         what = "source function" if function is None else f"`{function}`"
@@ -226,7 +224,7 @@ def _stimulus_of(
     return spec
 
 
-def _function_point(element: VoltageSource | CurrentSource, distortion: str | None) -> int:
+def _function_point(element: _Source, distortion: str | None) -> int:
     """Where an added function goes: after the DC and AC parts, and a distortion input after any
     function, keeping DISTOF1 before DISTOF2."""
     parts: list[Span] = [element.nodes[-1].span]
