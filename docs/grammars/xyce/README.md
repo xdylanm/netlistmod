@@ -215,7 +215,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | validated | 6 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | validated | 6 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIO-001](./specs/XY-DIO-001.yaml) | D diode lines (model, positional area, flags and parameters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 11 + 11 solver | xyce XyceNF Release 7.10.0 (2026-11-16, 2026-11-22) |
 | [XY-DIR-002](./specs/XY-DIR-002.yaml) | any other dot-command is refused (not an Xyce dot-command), with hints | validated | 8 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIR-003](./specs/XY-DIR-003.yaml) | directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-ELM-001](./specs/XY-ELM-001.yaml) | element fields (node fields with `:` paths, instance parameters with bare values) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -228,7 +228,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IPN-001](./specs/XY-IPN-001.yaml) | closed instance-parameter lists of R, C, L and D | validated | 9 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-LIB-001](./specs/XY-LIB-001.yaml) | .LIB calls and .LIB/.ENDL definitions | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | observed | 5 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | observed | 5 + 11 solver | xyce XyceNF Release 7.10.0 (2026-11-16, 2026-11-22) |
 | [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-MUT-001](./specs/XY-MUT-001.yaml) | K mutual inductors (coupling and optional CORE model) | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -242,7 +242,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-PRT-001](./specs/XY-PRT-001.yaml) | .PRINT (a required print type of the closed list; the rest kept as text) | observed | 16 + 13 solver | xyce XyceNF Release 7.10.0 (2026-11-21) |
+| [XY-PRT-001](./specs/XY-PRT-001.yaml) | .PRINT (a required print type of the closed list; the rest kept as text) | observed | 17 + 15 solver | xyce XyceNF Release 7.10.0 (2026-11-21, 2026-11-22) |
 | [XY-RCL-001](./specs/XY-RCL-001.yaml) | R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms) | validated | 17 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |

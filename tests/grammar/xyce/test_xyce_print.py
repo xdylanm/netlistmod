@@ -4,6 +4,8 @@ closed list, required and first, then the rest kept as text, across `+` lines, t
 
 from __future__ import annotations
 
+import re
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -22,6 +24,8 @@ from netlistmod import (
 )
 from netlistmod.dialects import _XYCE
 from netlistmod.model.nodes import PrintDirective
+
+ROOT = Path(__file__).parents[3]
 
 # The print types of [xyce-ref] §2.1.31 p128 (its table) and §2.1.31.6 and §2.1.31.7 (HOMOTOPY,
 # SENS and TRANADJOINT).
@@ -150,8 +154,8 @@ def test_a_print_without_a_field_is_rejected(line: str) -> None:
     error = _error(line)
     assert (error.line, error.column) == (2, 8)
     assert error.reason == (
-        f"`{' '.join(line.split()[:2])}` has no output variable: write at least one after the "
-        "print type (Xyce reference manual §2.1.31 p128)"
+        f"`{' '.join(line.split()[:2])}` has no field after the print type: write the output "
+        "variables after it (Xyce reference manual §2.1.31 p128)"
     )
 
 
@@ -176,10 +180,34 @@ def test_print_is_not_reported_as_untyped() -> None:
     assert Netlist.from_text(text, dialect=_XYCE).diagnostics == ()
 
 
-def test_print_stays_untyped_on_ngspice() -> None:
-    # LTspice has no `.print` (its closed list refuses it), so ngspice is the one to check.
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+def test_print_is_unchanged_on_the_other_dialects(dialect: Dialect) -> None:
+    """ngspice keeps `.print` untyped; LTspice has no `.print`, and its closed list refuses it."""
     text = "t\n.print tran v(1)\n.end\n"
-    (_, directive, *_) = parse(SourceText(text), Dialect.NGSPICE).items
+    if dialect is Dialect.LTSPICE:
+        with pytest.raises(ParseError) as captured:
+            parse(SourceText(text), dialect)
+        assert (captured.value.line, captured.value.column) == (2, 1)
+        assert captured.value.reason.startswith(
+            "`.print` is not an LTspice dot-command, or is not allowed here"
+        )
+        return
+    (_, directive, *_) = parse(SourceText(text), dialect).items
     assert isinstance(directive, UnknownDirective)
-    codes = [d.code for d in Netlist.from_text(text, dialect=Dialect.NGSPICE).diagnostics]
+    codes = [d.code for d in Netlist.from_text(text, dialect=dialect).diagnostics]
     assert codes == [DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED]
+
+
+def test_the_print_types_are_one_list() -> None:
+    """The grammar's PRINT_TYPE_KW, the refusal's `_PRINT_TYPES` text and the document layer's
+    `_XYCE_PRINT_RULES` keys name the same types, the manual's (X-M2.1 R1 N2)."""
+    from netlistmod.document.diagnostics import _XYCE_PRINT_RULES
+    from netlistmod.model._rules_xyce import _PRINT_TYPES
+
+    grammar = (ROOT / "src" / "netlistmod" / "grammar" / "xyce.lark").read_text(encoding="utf-8")
+    keyword = re.search(r"^PRINT_TYPE_KW\.\d+: /\(\?:([^)]*)\)", grammar, re.M)
+    assert keyword is not None
+    expected = sorted(kind.lower() for kind in PRINT_TYPES)
+    assert sorted(keyword.group(1).split("|")) == expected
+    assert sorted(re.split(r", | and ", _PRINT_TYPES.lower())) == expected
+    assert sorted(_XYCE_PRINT_RULES) == expected

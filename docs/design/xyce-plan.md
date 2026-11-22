@@ -263,12 +263,19 @@ named:
     aborts on. A warning, on each `.NODESET`." "**What to do:** keep one of the two."
   - `MEASURE_MODE_MISMATCH`: "Xyce only. A `.MEAS` mode whose analysis Xyce does not run (TRAN
     needs `.TRAN` to be the analysis that runs, AC `.AC`, DC `.DC`, NOISE `.NOISE`, with their
-    `_CONT` forms; no mode is `.HB`'s), or FFT without a `.FFT` line; Xyce stops, except that DC
-    under `.OP` reports the measurement as FAILED. A warning, on the mode." "**What to do:**
-    match the mode to the analysis."
+    `_CONT` forms, and FFT `.TRAN` as well as a `.FFT` line; no mode is `.HB`'s), or FFT without
+    a `.FFT` line when `.TRAN` runs; Xyce stops, except that DC under `.OP` reports the
+    measurement as FAILED. A warning, on the mode." "**What to do:** match the mode to the
+    analysis, and give FFT a `.FFT` line."
   - `CONDITION_IGNORED`: "Xyce only. An `.IC`, `.DCVOLT` or `.NODESET` condition in a subcircuit
     body on a global node (`$G…` or a `.GLOBAL` node), which Xyce ignores with a warning. A
     warning, on the node." "**What to do:** move the condition to the top level."
+  - `PRINT_TYPE_MISMATCH` (X-M2.1 C3): "Xyce only. A `.PRINT` type that does not agree with the
+    first analysis line other than `.OP` (`.OP` when it is the only one), against which Xyce
+    checks every type and stops; or an analysis's type whose analysis is not the one that runs
+    (the last line's, `.HB` taking part), for which Xyce writes nothing. A warning, on the print
+    type." "**What to do:** use the print type of the analysis that runs, and keep one analysis
+    line."
 
 ## 9. Risks
 

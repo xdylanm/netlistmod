@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from netlistmod import DiagnosticCode, Dialect, Netlist
+from netlistmod import DiagnosticCode, Dialect, Netlist, ParseError
 from netlistmod.dialects import _XYCE
 from netlistmod.document.index import step_quantity
 from netlistmod.model.nodes import (
@@ -505,10 +505,20 @@ def test_dc_lines_around_hb_join() -> None:
     assert messages[1].startswith("this `.dc` line joins the `.DC` on line 10")
 
 
-def test_ngspice_has_no_last_line_rule_for_hb() -> None:
+def _elsewhere(text: str, dialect: Dialect) -> set[DiagnosticCode]:
+    """The codes of ``text`` on ngspice, which keeps `.hb` and `.print` untyped; LTspice refuses
+    both, as before X-M2.1, so its set is empty once the refusal is checked."""
+    if dialect is Dialect.LTSPICE:
+        with pytest.raises(ParseError, match="is not an LTspice dot-command"):
+            Netlist.from_text(text, dialect=dialect)
+        return set()
+    return {d.code for d in Netlist.from_text(text, dialect=dialect).diagnostics}
+
+
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+def test_the_other_dialects_have_no_last_line_rule_for_hb(dialect: Dialect) -> None:
     text = "t\nV1 1 0 1\nR1 1 0 1k\n.tran 1n 2n\n.hb 1k\n.end\n"
-    codes = {d.code for d in Netlist.from_text(text, dialect=Dialect.NGSPICE).diagnostics}
-    assert DiagnosticCode.ANALYSIS_IGNORED not in codes
+    assert DiagnosticCode.ANALYSIS_IGNORED not in _elsewhere(text, dialect)
 
 
 def test_one_analysis_and_repeated_op_are_not_reported() -> None:
@@ -777,6 +787,9 @@ def test_ic_or_nodeset_alone_is_not_reported() -> None:
         (".noise v(2) V1 dec 1 1 10", "noise"),
         (".noise v(2) V1 dec 1 1 10", "noise_cont"),
         (".tran 1n 2n\n.fft v(2)", "fft"),
+        (".ac dec 1 1 10\n.tran 1n 2n\n.fft v(2)", "fft"),  # `.TRAN` runs (X-M2.1 R1)
+        (".hb 1k\n.tran 1n 2n\n.fft v(2)", "fft"),
+        (".op\n.tran 1n 2n\n.fft v(2)", "FFT"),
         (".hb 1k\n.tran 1n 2n", "tran"),  # the last line runs, `.HB` taking part
         (".hb 1k\n.ac dec 1 1 10", "ac_cont"),
         (".hb 1k\n.dc V1 0 1 1", "dc"),
@@ -828,6 +841,30 @@ def test_a_mode_whose_analysis_does_not_run_is_a_warning(
         "measure mode do not agree"
     )
     assert netlist.slice(finding.span) == mode
+
+
+@pytest.mark.parametrize(
+    ("analyses", "ran"),
+    [
+        # FFT needs a `.TRAN` that runs, a `.FFT` line or not (the X-M2.1 R1 probes).
+        (".hb 1k\n.fft v(2)", "Xyce 7.10 runs `.hb` (line 10)"),
+        (".hb 1k", "Xyce 7.10 runs `.hb` (line 10)"),
+        (".ac dec 1 1 10\n.fft v(2)", "Xyce 7.10 runs `.ac` (line 10)"),
+        (".ac dec 1 1 10", "Xyce 7.10 runs `.ac` (line 10)"),
+        (".op\n.fft v(2)", "Xyce 7.10 runs `.op` (line 10)"),
+        (".dc V1 0 1 1\n.fft v(2)", "Xyce 7.10 runs `.dc` (line 10)"),
+        (".noise v(2) V1 dec 1 1 10\n.fft v(2)", "Xyce 7.10 runs `.noise` (line 10)"),
+        (".tran 1n 2n\n.ac dec 1 1 10\n.fft v(2)", "Xyce 7.10 runs `.ac` (line 11)"),
+        (".tran 1n 2n\n.hb 1k\n.fft v(2)", "Xyce 7.10 runs `.hb` (line 11)"),
+        (".fft v(2)", "the netlist has no analysis"),
+    ],
+)
+def test_fft_without_a_tran_that_runs_is_a_warning(analyses: str, ran: str) -> None:
+    netlist = _netlist(f"{analyses}\n.meas fft m1 find vm(2) at=1k\n")
+    assert _only(netlist, DiagnosticCode.MEASURE_MODE_MISMATCH) == [
+        f"`fft` needs a `.TRAN` analysis, but {ran}; it stops: the analysis and the measure mode "
+        "do not agree"
+    ]
 
 
 def test_fft_without_an_fft_line_is_a_warning() -> None:
@@ -962,10 +999,10 @@ def test_every_print_type_has_a_rule() -> None:
     assert _PRINT_RULES[Dialect.NGSPICE] is None and _PRINT_RULES[Dialect.LTSPICE] is None
 
 
-def test_ngspice_does_not_check_a_print_type() -> None:
+@pytest.mark.parametrize("dialect", [Dialect.NGSPICE, Dialect.LTSPICE])
+def test_the_other_dialects_do_not_check_a_print_type(dialect: Dialect) -> None:
     text = "t\nV1 1 0 1\nR1 1 0 1k\n.tran 1n 2n\n.print ac v(1)\n.end\n"
-    codes = {d.code for d in Netlist.from_text(text, dialect=Dialect.NGSPICE).diagnostics}
-    assert DiagnosticCode.PRINT_TYPE_MISMATCH not in codes
+    assert DiagnosticCode.PRINT_TYPE_MISMATCH not in _elsewhere(text, dialect)
 
 
 # --- The other dialects keep their findings (decision 0026 item 6) ---

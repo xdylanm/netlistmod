@@ -213,7 +213,8 @@ class _PrintText:
 
 
 # The print types of the manual's closed list ([xyce-ref] §2.1.31 p128, §2.1.31.6 and §2.1.31.7;
-# decision 0029 item 5), as the refusal of another word names them.
+# decision 0029 item 5), as the refusal of another word names them: the grammar's PRINT_TYPE_KW
+# list, which a test ties to this text and to the document layer's `_XYCE_PRINT_RULES`.
 _PRINT_TYPES = (
     "AC, AC_IC, DC, ES, HB, HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE, TRAN, HOMOTOPY, SENS and "
     "TRANADJOINT"
@@ -1051,8 +1052,8 @@ class XyceRules(StatementsRules):
         (kind,) = element.all(Token)
         raise self._parse_error(
             kind,
-            f"`{element.designator} {kind}` has no output variable: write at least one after the "
-            "print type (Xyce reference manual §2.1.31 p128)",
+            f"`{element.designator} {kind}` has no field after the print type: write the output "
+            "variables after it (Xyce reference manual §2.1.31 p128)",
         )
 
     def xy_print_stmt(self, children: list[Any]) -> _Item:
