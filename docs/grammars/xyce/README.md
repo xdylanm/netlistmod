@@ -136,7 +136,8 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
   and each claim a diagnostic makes about Xyce; the corpus families `directives_basic` (with a
   CRLF twin, and `sampling.cir`, which runs without `-r`) and `directives_rejects`; the X-M2
   entries are `validated`, or `observed` where the reading rests on the binary (`.OPTION` as a
-  synonym, the measure modes against the analysis that runs, `.NOISE` in the last-line rule).
+  synonym, the measure modes against the analysis that runs, `.NOISE` in the last-line rule;
+  X-M2.1 adds `.HB` to the rule, `tests/solver/test_xyce_analysis_probes.py`).
   The refusals of `.IC`/`.DCVOLT`/`.NODESET` fields now say per keyword what Xyce does, and a
   package-less `TEMP=` or `TNOM=` gets the DEVICE hint.
 

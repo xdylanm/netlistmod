@@ -522,6 +522,134 @@ def test_a_print_is_checked_against_the_first_analysis(solver: Solver, tmp_path:
     assert nothing.endswith("writes nothing for this line")
 
 
+# `.HB` in the last-line rule (X-M2.1; ANALYSIS_IGNORED, MEASURE_MODE_MISMATCH). `.HB` needs a
+# `SIN` source and the harness's `print` mode (`-r` aborts it); the library reads the same lines
+# with a DC source, since the transient source functions are X-M3's. The head is five lines, so
+# the analyses start on line 6.
+
+_HB_SOLVER_HEAD = "probe\nV1 1 0 DC 1 AC 1 SIN(0 1 1k)\nR1 1 2 1k\nR2 2 0 1k\nC1 2 0 1n\n"
+_HB_LIBRARY_HEAD = "probe\nV1 1 0 DC 1 AC 1\nR1 1 2 1k\nR2 2 0 1k\nC1 2 0 1n\n"
+_HB_ANALYSES = {
+    "tran": ".tran 1u 10u",
+    "ac": ".ac dec 1 1 10",
+    "dc": ".dc V1 0 1 1",
+    "noise": ".noise v(2) V1 dec 1 1 10",
+    "op": ".op",
+}
+_HB_MEASURES = {
+    "tran": ".meas tran va max v(2)",
+    "ac": ".meas ac va max vm(2)",
+    "dc": ".meas dc va max v(2)",
+    "noise": ".meas noise va max onoise",
+}
+_HB_RAN = "***** Beginning full HB simulation"
+_MEASURED = re.compile(r"^VA = \S+", re.MULTILINE)
+
+
+def _hb_run(solver: Solver, folder: Path, lines: str) -> Run:
+    return run(solver, folder, f"{_HB_SOLVER_HEAD}{lines}\n.end\n", mode="print")
+
+
+def _hb_findings(lines: str, code: DiagnosticCode) -> list[tuple[int, str]]:
+    netlist = _library(f"{_HB_LIBRARY_HEAD}{lines}\n.end\n")
+    return [(d.line, d.message) for d in netlist.diagnostics if d.code is code]
+
+
+@pytest.mark.parametrize("other", sorted(_HB_ANALYSES))
+def test_hb_after_another_analysis_runs(solver: Solver, tmp_path: Path, other: str) -> None:
+    """`.HB` after `.TRAN`, `.AC`, `.DC`, `.NOISE` or `.OP` runs, and the other line is ignored;
+    the library warns `ANALYSIS_IGNORED` on it."""
+    lines = f"{_HB_ANALYSES[other]}\n.hb 1k"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    assert _HB_RAN in result.log
+    ((line, message),) = _hb_findings(lines, DiagnosticCode.ANALYSIS_IGNORED)
+    assert line == 6
+    assert "`.hb` (line 7)" in message or "`.hb` on line 7" in message
+
+
+@pytest.mark.parametrize("other", sorted(_HB_MEASURES))
+def test_another_analysis_after_hb_runs(solver: Solver, tmp_path: Path, other: str) -> None:
+    """`.TRAN`, `.AC`, `.DC` or `.NOISE` after `.HB` runs, and `.HB` does not: a `.MEAS` of the
+    last line's mode writes its result. The library warns `ANALYSIS_IGNORED` on the `.HB` and
+    reports no `MEASURE_MODE_MISMATCH`."""
+    lines = f".hb 1k\n{_HB_ANALYSES[other]}\n{_HB_MEASURES[other]}"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    assert _HB_RAN not in result.log and _MEASURED.search(result.log)
+    ((line, message),) = _hb_findings(lines, DiagnosticCode.ANALYSIS_IGNORED)
+    assert line == 6 and message.endswith("and ignores this `.hb`")
+    assert _hb_findings(lines, DiagnosticCode.MEASURE_MODE_MISMATCH) == []
+
+
+def test_op_after_hb_gives_way(solver: Solver, tmp_path: Path) -> None:
+    lines = ".hb 1k\n.op"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok and _HB_RAN in result.log
+    ((line, message),) = _hb_findings(lines, DiagnosticCode.ANALYSIS_IGNORED)
+    assert line == 7 and message.endswith("runs `.hb` (line 6)")
+
+
+def test_the_last_of_two_hb_lines_runs(solver: Solver, tmp_path: Path) -> None:
+    """Of `.HB 1k` and `.HB 2k` the second runs: its frequencies are multiples of 2 kHz."""
+    lines = ".hb 1k\n.hb 2k\n.print hb_fd v(2)"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    written = result.netlist.with_name("probe.cir.HB.FD.prn").read_text().splitlines()
+    frequencies = {abs(float(row.split()[1])) for row in written[1:] if row[:1].isdigit()}
+    assert 2000.0 in frequencies and 1000.0 not in frequencies
+    ((line, _),) = _hb_findings(lines, DiagnosticCode.ANALYSIS_IGNORED)
+    assert line == 6
+
+
+def test_dc_lines_around_hb_join(solver: Solver, tmp_path: Path) -> None:
+    """`.DC V1`, `.HB`, `.DC R1`: Xyce runs one DC analysis of both sweeps, four points, and
+    ignores the `.HB`, as `ANALYSIS_IGNORED` says."""
+    lines = ".dc V1 0 1 1\n.hb 1k\n.dc R1 1k 2k 1k\n.print dc v(2)"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok and result.prn_bytes is not None
+    rows = [row for row in result.prn_bytes.decode().splitlines() if row[:1].isdigit()]
+    assert len(rows) == 4
+    messages = [message for _, message in _hb_findings(lines, DiagnosticCode.ANALYSIS_IGNORED)]
+    assert messages[0].endswith("and ignores this `.hb`")
+    assert messages[1].startswith("this `.dc` line joins the `.DC` on line 6")
+
+
+@pytest.mark.parametrize(
+    "lines",
+    [
+        ".hb 1k\n.meas tran va max v(2)",
+        ".hb 1k\n.meas ac va max vm(2)",
+        ".hb 1k\n.meas dc va max v(2)",
+        ".hb 1k\n.op\n.meas dc va max v(2)",
+        ".op\n.hb 1k\n.meas dc va max v(2)",
+        ".tran 1u 10u\n.hb 1k\n.meas tran va max v(2)",
+        ".ac dec 1 1 10\n.hb 1k\n.meas ac va max vm(2)",
+        ".dc V1 0 1 1\n.hb 1k\n.meas dc va max v(2)",
+    ],
+)
+def test_no_measure_mode_agrees_with_hb(solver: Solver, tmp_path: Path, lines: str) -> None:
+    """When `.HB` runs, a `.MEAS` of any mode stops Xyce ("… do not agree"), a DC mode beside
+    `.OP` too (not FAILED, as under `.OP` alone); `MEASURE_MODE_MISMATCH` says so."""
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.returncode != 0 and "do not agree" in _messages(result)
+    ((_, message),) = _hb_findings(lines, DiagnosticCode.MEASURE_MODE_MISMATCH)
+    assert "runs `.hb`" in message and message.endswith(
+        "it stops: the analysis and the measure mode do not agree"
+    )
+
+
+@pytest.mark.parametrize("lines", [".hb 1k", ".hb 1k\n.op", ".op\n.hb 1k"])
+def test_two_steps_with_hb_run(solver: Solver, tmp_path: Path, lines: str) -> None:
+    """Two `.STEP` lines with `.HB` run, `.OP` beside it or not; `STEPS_WITH_OP` is not
+    reported."""
+    body = f".step R1 1k 2k 1k\n.step R2 1k 2k 1k\n{lines}\n.print hb_fd v(2)"
+    result = _hb_run(solver, tmp_path, body)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    assert result.netlist.with_name("probe.cir.HB.FD.prn").is_file()
+    assert _hb_findings(body, DiagnosticCode.STEPS_WITH_OP) == []
+
+
 # .STEP with other directives (point 16; STEP_IGNORED, STEPS_WITH_OP, STEPPED_ANALYSIS_FIELD)
 
 

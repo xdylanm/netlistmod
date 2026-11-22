@@ -20,6 +20,7 @@
   3. **A zero-argument `.FUNC`** stays read: the manual allows it, and Xyce 7.10 stopping on its call is taken as a solver bug (`manual`).
   4. **Point counts stay unchecked.** `.AC DEC 1.5 1 10` and the `DEC` and `OCT` counts of `.DC` and `.STEP` are read as written, though Xyce stops on a count that is not an integer (`library-limit`).
   5. **`.PRINT` is typed shallowly,** as `.MEAS` is: the print type from the manual's closed list, the rest kept as text. A warning reports a type that disagrees with the first analysis line (Xyce stops) or with the analysis that runs (Xyce prints nothing).
+  6. **The judgement calls of C2 and C3 stand** (maintainer, 2026-11-21): the categories of the twelve rows listed in [xm2.1-tasks.md](../design/xm2.1-tasks.md) section 2.1 are the maintainer's.
 - **Consequences:**
   - Decision 0026 item 5 reads: the grammar follows the manual except where a row's category says otherwise. Decision 0027 item 12 reads: every difference between the manual and the binary, and every form the library's model cannot check, is a row with a category.
   - `discrepancies.md` states the rule in its preamble, gains the Category column in every table, and gathers the rows where the library accepts a form Xyce stops on in one section; a test checks every category and item 2.

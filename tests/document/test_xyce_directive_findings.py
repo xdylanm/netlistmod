@@ -459,6 +459,58 @@ def test_noise_takes_part_in_the_last_line_rule() -> None:
     ]
 
 
+@pytest.mark.parametrize(
+    ("body", "ignored", "runs"),
+    [
+        (".tran 1n 2n\n.hb 1k\n", ".tran", ".hb"),
+        (".hb 1k\n.tran 1n 2n\n", ".hb", ".tran"),
+        (".ac dec 1 1 10\n.hb 1k\n", ".ac", ".hb"),
+        (".hb 1k\n.ac dec 1 1 10\n", ".hb", ".ac"),
+        (".dc V1 0 1 1\n.hb 1k\n", ".dc", ".hb"),
+        (".hb 1k\n.dc V1 0 1 1\n", ".hb", ".dc"),
+        (".noise v(2) V1 dec 1 1 10\n.hb 1k\n", ".noise", ".hb"),
+        (".hb 1k\n.noise v(2) V1 dec 1 1 10\n", ".hb", ".noise"),
+        (".HB 1k\n.hb 2k\n", ".HB", ".hb"),
+    ],
+)
+def test_hb_takes_part_in_the_last_line_rule(body: str, ignored: str, runs: str) -> None:
+    """`.HB`, an untyped line, overrides the others and gives way to them (the X-M2.1 probes)."""
+    netlist = _netlist(body)
+    (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.ANALYSIS_IGNORED]
+    assert (finding.line, finding.severity) == (10, "warning")
+    assert finding.message == (
+        f"Xyce 7.10 runs only the last analysis line, `{runs}` on line 11, and ignores this "
+        f"`{ignored}`"
+    )
+    assert netlist.slice(finding.span) == ignored
+
+
+@pytest.mark.parametrize(
+    ("body", "op", "hb"), [(".op\n.hb 1k\n", 10, 11), (".hb 1k\n.op\n", 11, 10)]
+)
+def test_op_gives_way_to_hb(body: str, op: int, hb: int) -> None:
+    netlist = _netlist(body)
+    (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.ANALYSIS_IGNORED]
+    assert finding.line == op
+    assert finding.message == (
+        f"Xyce 7.10 ignores `.op` when the netlist has another analysis, and runs `.hb` (line {hb})"
+    )
+
+
+def test_dc_lines_around_hb_join() -> None:
+    netlist = _netlist(".dc V1 0 1 1\n.hb 1k\n.dc R2 1k 2k 1k\n")
+    messages = _only(netlist, DiagnosticCode.ANALYSIS_IGNORED)
+    assert len(messages) == 2
+    assert messages[0].endswith("and ignores this `.hb`")
+    assert messages[1].startswith("this `.dc` line joins the `.DC` on line 10")
+
+
+def test_ngspice_has_no_last_line_rule_for_hb() -> None:
+    text = "t\nV1 1 0 1\nR1 1 0 1k\n.tran 1n 2n\n.hb 1k\n.end\n"
+    codes = {d.code for d in Netlist.from_text(text, dialect=Dialect.NGSPICE).diagnostics}
+    assert DiagnosticCode.ANALYSIS_IGNORED not in codes
+
+
 def test_one_analysis_and_repeated_op_are_not_reported() -> None:
     assert _codes(_netlist(".op\n.op\n")) == []
     assert _codes(_netlist(".dc V1 0 1 0.5\n")) == []
@@ -564,6 +616,7 @@ def test_several_steps_with_op_are_a_warning() -> None:
     [
         ".step R2 1k 2k 1k\n.op\n",  # one step
         ".step R2 1k 2k 1k\n.step R3 1k 2k 1k\n.op\n.tran 1n 2n\n",  # .OP gives way
+        ".step R2 1k 2k 1k\n.step R3 1k 2k 1k\n.hb 1k\n.op\n",  # to `.HB` too
     ],
 )
 def test_steps_with_op_that_runs_are_not_reported(body: str) -> None:
@@ -724,6 +777,10 @@ def test_ic_or_nodeset_alone_is_not_reported() -> None:
         (".noise v(2) V1 dec 1 1 10", "noise"),
         (".noise v(2) V1 dec 1 1 10", "noise_cont"),
         (".tran 1n 2n\n.fft v(2)", "fft"),
+        (".hb 1k\n.tran 1n 2n", "tran"),  # the last line runs, `.HB` taking part
+        (".hb 1k\n.ac dec 1 1 10", "ac_cont"),
+        (".hb 1k\n.dc V1 0 1 1", "dc"),
+        (".hb 1k\n.noise v(2) V1 dec 1 1 10", "noise"),
     ],
 )
 def test_a_mode_with_its_analysis_is_not_reported(analyses: str, mode: str) -> None:
@@ -747,6 +804,15 @@ def test_a_mode_with_its_analysis_is_not_reported(analyses: str, mode: str) -> N
         (".tran 1n 2n", "dc_cont", "Xyce 7.10 runs `.tran` (line 10)"),
         (".noise v(2) V1 dec 1 1 10\n.tran 1n 2n", "noise", "Xyce 7.10 runs `.tran` (line 11)"),
         ("", "tran", "the netlist has no analysis"),
+        # No mode is `.HB`'s (the X-M2.1 probes): every one stops Xyce when `.HB` runs.
+        (".hb 1k", "tran", "Xyce 7.10 runs `.hb` (line 10)"),
+        (".hb 1k", "ac", "Xyce 7.10 runs `.hb` (line 10)"),
+        (".hb 1k", "noise", "Xyce 7.10 runs `.hb` (line 10)"),
+        (".hb 1k\n.op", "dc", "Xyce 7.10 runs `.hb` (line 10)"),  # stops, not FAILED
+        (".op\n.HB 1k", "dc_cont", "Xyce 7.10 runs `.HB` (line 11)"),
+        (".tran 1n 2n\n.hb 1k", "tran", "Xyce 7.10 runs `.hb` (line 11)"),
+        (".ac dec 1 1 10\n.hb 1k", "ac", "Xyce 7.10 runs `.hb` (line 11)"),
+        (".dc V1 0 1 1\n.hb 1k", "dc", "Xyce 7.10 runs `.hb` (line 11)"),
     ],
 )
 def test_a_mode_whose_analysis_does_not_run_is_a_warning(

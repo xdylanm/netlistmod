@@ -826,9 +826,9 @@ def _value_findings(value: NumericValue) -> list[tuple[DiagnosticCode, Severity,
 
 # --- xyce directives (decision 0028 item 9; xm2-tasks 5.1 points 10, 15, 16, 21, 24, 26, 27) ---
 
-# The analyses of which Xyce runs only the last line (point 15, observed; `.NOISE`, an untyped
-# line, takes part as the B5 probes show), and the one that gives way to any of them.
-_LAST_WINS = ("tran", "ac", "dc", "noise")
+# The analyses of which Xyce runs only the last line (point 15, observed; `.NOISE` and `.HB`,
+# untyped lines, take part as the B5 and X-M2.1 probes show); `.OP` gives way to any of them.
+_LAST_WINS = ("tran", "ac", "dc", "noise", "hb")
 # What Xyce 7.10 does with a field of each analysis that reads a stepped parameter (point 10;
 # the R1 review's probes): it reads a `.TRAN` field once, and stops on an `.AC` or `.DC` one
 # ("Attempt to evaluate expression {p}, which contains unknowns").
@@ -850,8 +850,8 @@ def _analysis_kind(item: TopLevelItem, root: Scope) -> str | None:
         return "dc"
     if isinstance(item, OpDirective):
         return "op"
-    if isinstance(item, UnknownDirective) and root.fold(item.name) == ".noise":
-        return "noise"
+    if isinstance(item, UnknownDirective):
+        return {".noise": "noise", ".hb": "hb"}.get(root.fold(item.name))
     return None
 
 
@@ -889,9 +889,9 @@ def _directive_findings(index: Index) -> list[Finding]:
 def _ignored_analyses(
     analyses: list[tuple[Line, str]], runs: tuple[Line, str], solver: str
 ) -> list[Finding]:
-    """`ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC` and `.NOISE` Xyce runs the last line's
-    analysis; `.OP` gives way to any of them; every `.DC` line joins the first into one nested
-    sweep, the first line innermost (point 15; the B5 probes)."""
+    """`ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC`, `.NOISE` and `.HB` Xyce runs the last
+    line's analysis; `.OP` gives way to any of them; every `.DC` line joins the first into one
+    nested sweep, the first line innermost (point 15; the B5 and X-M2.1 probes)."""
     last, kind = runs
     last_keyword = _keyword(last.item)[0]
     first_dc = next((line for line, found in analyses if found == "dc"), None)
@@ -1006,7 +1006,8 @@ def _ic_nodeset_findings(index: Index, solver: str) -> list[Finding]:
 
 def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) -> list[Finding]:
     """`MEASURE_MODE_MISMATCH` (point 26): a `.MEAS` mode whose analysis Xyce does not run, or
-    FFT without a `.FFT` line (the B5 probes)."""
+    FFT without a `.FFT` line (the B5 probes). No mode is `.HB`'s: when `.HB` runs, every mode
+    but FFT disagrees and Xyce stops (the X-M2.1 probes)."""
     root = index.root
     fft = any(
         isinstance(line.item, UnknownDirective) and root.fold(line.item.name) == ".fft"
@@ -1031,7 +1032,7 @@ def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) 
             continue
         # A mode needs the analysis of its name (point 26); FFT is handled above.
         needed = mode.removesuffix("_cont")
-        assert needed in _LAST_WINS, mode
+        assert needed in _LAST_WINS and needed != "hb", mode
         if runs is not None and runs[1] == needed:
             continue
         if runs is None:
@@ -1103,16 +1104,9 @@ def _print_findings(index: Index, rules: dict[str, _PrintRule], solver: str) -> 
     """`PRINT_TYPE_MISMATCH` (decision 0029 item 5; the X-M2.1 C3 probes). Xyce checks every
     `.PRINT` type against the first analysis line that is not `.OP` (`.OP` when it is the only
     analysis), and stops on a type that does not agree with it; it then runs the last line, as
-    `ANALYSIS_IGNORED` says, with `.HB` taking part, and writes nothing for a type of another
-    analysis."""
+    `ANALYSIS_IGNORED` says, and writes nothing for a type of another analysis."""
     root = index.root
-    analyses: list[tuple[Line, str]] = []
-    for line in root.lines:
-        kind = _analysis_kind(line.item, root)
-        if kind is None and isinstance(line.item, UnknownDirective):
-            kind = "hb" if root.fold(line.item.name) == ".hb" else None
-        if kind is not None:
-            analyses.append((line, kind))
+    analyses = [(line, kind) for line in root.lines if (kind := _analysis_kind(line.item, root))]
     ranked = [(line, kind) for line, kind in analyses if kind != "op"] or analyses
     if not ranked:
         return []

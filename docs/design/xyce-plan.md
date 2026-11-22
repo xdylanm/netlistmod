@@ -245,10 +245,11 @@ named:
   - `UNRESOLVED_DATA`: "Xyce only. A `DATA=` field on `.AC`, `.DC` or `.STEP` that names no
     top-level `.DATA` table; Xyce stops. A warning, info if an `.include` or `.lib` may define it,
     on the name." "**What to do:** define the table, or correct the name."
-  - `ANALYSIS_IGNORED`: "Xyce only. An analysis Xyce does not run: of `.TRAN`, `.AC`, `.DC` and
-    `.NOISE` only the last line's analysis runs, and `.OP` gives way to any of them; every `.DC`
-    line after the first joins it into one nested sweep (its own message). A warning, on the
-    keyword." "**What to do:** keep one analysis line, or one `.DC` line with all its sweeps."
+  - `ANALYSIS_IGNORED`: "Xyce only. An analysis Xyce does not run: of `.TRAN`, `.AC`, `.DC`,
+    `.NOISE` and `.HB` only the last line's analysis runs, and `.OP` gives way to any of them;
+    every `.DC` line after the first joins it into one nested sweep (its own message). A
+    warning, on the keyword." "**What to do:** keep one analysis line, or one `.DC` line with
+    all its sweeps."
   - `STEPPED_ANALYSIS_FIELD`: "Xyce only. A field of `.TRAN`, `.AC` or `.DC` reads a parameter
     that a `.STEP` sweeps; Xyce reads a `.TRAN` field once, so the sweep does not change it, and
     stops on an `.AC` or `.DC` field. A warning, on the parameter." "**What to do:** write the
@@ -262,9 +263,9 @@ named:
     aborts on. A warning, on each `.NODESET`." "**What to do:** keep one of the two."
   - `MEASURE_MODE_MISMATCH`: "Xyce only. A `.MEAS` mode whose analysis Xyce does not run (TRAN
     needs `.TRAN` to be the analysis that runs, AC `.AC`, DC `.DC`, NOISE `.NOISE`, with their
-    `_CONT` forms), or FFT without a `.FFT` line; Xyce stops, except that DC under `.OP` reports
-    the measurement as FAILED. A warning, on the mode." "**What to do:** match the mode to the
-    analysis."
+    `_CONT` forms; no mode is `.HB`'s), or FFT without a `.FFT` line; Xyce stops, except that DC
+    under `.OP` reports the measurement as FAILED. A warning, on the mode." "**What to do:**
+    match the mode to the analysis."
   - `CONDITION_IGNORED`: "Xyce only. An `.IC`, `.DCVOLT` or `.NODESET` condition in a subcircuit
     body on a global node (`$G…` or a `.GLOBAL` node), which Xyce ignores with a warning. A
     warning, on the node." "**What to do:** move the condition to the top level."
