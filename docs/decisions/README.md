@@ -31,3 +31,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0026 — The xyce dialect (X-D0)](0026-the-xyce-dialect.md)
 - [0027 — xyce structure, names, values and the first elements (X-D1, X-D2, X-D3, X-D5)](0027-xyce-structure-names-and-values.md)
 - [0028 — xyce directives and the closed list of dot-commands](0028-xyce-directives.md)
+- [0029 — xyce discrepancy categories: the manual as the reference, the solver as observed](0029-xyce-discrepancy-categories.md)

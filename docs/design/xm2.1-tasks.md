@@ -31,7 +31,7 @@ R1's other findings (the two blockers, the should-fix items, gaps 1 and 2 and th
 
 ## 3. Tasks
 
-- [ ] **C1 — Decision record** for section 2, amending decision 0026 item 5 and decision 0027 item 12; `discrepancies.md`'s preamble states the rule.
+- [x] **C1 — Decision record** for section 2, amending decision 0026 item 5 and decision 0027 item 12; `discrepancies.md`'s preamble states the rule.
 - [ ] **C2 — The Category column:** every row of `discrepancies.md` classified; the rows where the library accepts a form Xyce stops on gathered in one section; a test of decision 2. Any row whose category is a judgement not already made is listed for the maintainer.
 - [ ] **C3 — `.PRINT`:** the grammar, an internal node, the warning, spec entry, grammar, document and solver tests, the X-M8 checklist.
 - [ ] **C4 — Scope accessors** (R1 N6): read-only internal accessors in place of the cross-module reads of `Scope._data`, `Scope._functions` and `Scope._replace_ground`.
@@ -40,3 +40,4 @@ R1's other findings (the two blockers, the should-fix items, gaps 1 and 2 and th
 ## 4. Log
 
 - 2026-11-21: task list written, with the maintainer's decisions; X-M2 archived (approved and merged as #30).
+- 2026-11-21: C1 done: [decision 0029](../decisions/0029-xyce-discrepancy-categories.md) records section 2 (the rule, the four categories, the consistency rule, decisions 3 to 5), amending decision 0026 item 5 and decision 0027 item 12; `discrepancies.md`'s preamble states the rule and the categories.
