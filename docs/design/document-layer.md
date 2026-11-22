@@ -305,10 +305,11 @@ decision 0027 items 1 and 3):
   condition is a `CONDITION_IGNORED` warning: Xyce ignores it there.
 - **What Xyce runs** (decision 0028 item 9; `diagnostics.py`'s `_DIRECTIVE_CHECKS`, a per-dialect
   table, false on ngspice and LTspice), all warnings, from the top level:
-  - `ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC` and `.NOISE` (an `UnknownDirective`, as the B5
-    probes show) only the last line's analysis runs, each other line is reported; `.OP` gives way
-    to any of them; when `.DC` runs, every `.DC` line after the first joins it into one nested
-    sweep, the earlier lines innermost (its own message).
+  - `ANALYSIS_IGNORED`: of `.TRAN`, `.AC`, `.DC`, `.NOISE` and `.HB` (the last two
+    `UnknownDirective`s, matched by keyword, as the B5 and X-M2.1 probes show) only the last
+    line's analysis runs, each other line is reported; `.OP` gives way to any of them; when
+    `.DC` runs, every `.DC` line after the first joins it into one nested sweep, the earlier
+    lines innermost (its own message).
   - `STEPPED_ANALYSIS_FIELD`: a parameter reference in a `.TRAN`, `.AC` or `.DC` field whose
     target a `.STEP` sweeps (a `.DC` sweep of the parameter itself is not a field). The message
     is keyed per analysis (`_STEPPED_FIELD`): Xyce reads a `.TRAN` field once, and stops on an
@@ -317,16 +318,17 @@ decision 0027 items 1 and 3):
     it runs with two or more `.STEP` lines.
   - `IC_WITH_NODESET` on each `.NODESET` when the netlist, in any scope, has `.IC` or `.DCVOLT`.
   - `MEASURE_MODE_MISMATCH` on a `.MEAS` mode whose analysis is not the one that runs (TRAN and
-    TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`), or FFT with no `.FFT` line; the
-    message says Xyce stops, or, for DC under `.OP`, reports the measurement as FAILED.
+    TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`; no mode is `.HB`'s, so every
+    mode but FFT disagrees when `.HB` runs), or FFT with no `.FFT` line; the message says Xyce
+    stops, or, for DC under `.OP` (`.OP` running, not `.HB`), reports the measurement as FAILED.
   - `PRINT_TYPE_MISMATCH` (X-M2.1 C3; a per-dialect table, `_PRINT_RULES`, `None` on ngspice and
     LTspice) on a `PrintDirective` type that Xyce stops on: it checks every type against the
     first analysis line other than `.OP` (`.OP` when it is the only one), including `.HB`, and
     each type agrees with some analyses only (`_XYCE_PRINT_RULES`: an analysis's types with
     their analysis and `.OP`; ES and PCE with `.TRAN`, `.DC` and `.OP`; HOMOTOPY with all but
     `.NOISE`; SENS with `.TRAN`, `.AC`, `.DC` and `.OP`; TRANADJOINT with `.TRAN` only). Else,
-    for an analysis's type, on one whose analysis is not the one that runs (the last, `.HB`
-    taking part; DC also under `.OP`): Xyce writes nothing for the line.
+    for an analysis's type, on one whose analysis is not the one that runs (the last, as for
+    `ANALYSIS_IGNORED`; DC also under `.OP`): Xyce writes nothing for the line.
 - **`DUPLICATE_DEFINITION`** for directives, each a warning that says which one Xyce uses: a
   repeated `.OPTIONS` item of one package (the first; the OUTPUT package is left out, since two of
   its lines both apply; the package-less `.OPTION SCALE=` is PARSER's, as Xyce reads it), a
