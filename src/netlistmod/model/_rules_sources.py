@@ -7,7 +7,7 @@ from typing import Any, NoReturn
 
 from lark import Token
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.model._rules_xyce_sources import XyceSourcesRules
 from netlistmod.model._tree import (
     _FN_PARAM_OWNERS,
@@ -43,6 +43,16 @@ from netlistmod.model.values import (
     Value,
 )
 from netlistmod.source import Span
+
+# The source kinds whose line may carry named parameters (decision 0026 item 6; decision 0030
+# item 8), and what a message calls them: ngspice's V (its RF port), LTspice's V and I (their own
+# parameters), xyce's P (`port=` and `Z0=`). The grammars offer no parameter elsewhere, except
+# ngspice's I, whose RF port parameters are one rule with V's.
+_PARAM_SOURCES: dict[Dialect, tuple[tuple[type, ...], str]] = {
+    Dialect.NGSPICE: ((VoltageSource,), "a V line (RF port parameters)"),
+    Dialect.LTSPICE: ((VoltageSource, CurrentSource), "a V or I line"),
+    _XYCE: ((PortSource,), "a P line (`port=` and `Z0=`)"),
+}
 
 
 class SourcesRules(XyceSourcesRules):
@@ -259,10 +269,9 @@ class SourcesRules(XyceSourcesRules):
                 in_ac = False
             elif isinstance(node, ParamAssignment):
                 in_ac = False
-                if self._dialect is Dialect.NGSPICE and kind is CurrentSource:
-                    raise self._error_at(
-                        node.name_span.start, f"`{node.name}` is for a V line (RF port parameters)"
-                    )
+                kinds, owner = _PARAM_SOURCES[self._dialect]
+                if kind not in kinds:
+                    raise self._error_at(node.name_span.start, f"`{node.name}` is for {owner}")
             else:
                 in_ac = False
             previous = node

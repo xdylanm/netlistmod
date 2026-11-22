@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import fields
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
 from netlistmod.edit import conventions
@@ -36,6 +36,23 @@ from netlistmod.source import Span
 
 # The independent sources the source edits address (P on xyce; decision 0030 item 6).
 _Source = VoltageSource | CurrentSource | PortSource
+
+# The source kinds whose line needs a value, so that remove_stimulus keeps one (decision 0026 item
+# 6; decision 0030 item 8): LTspice's I; none on ngspice or xyce, where a bare source runs as 0.
+_NEEDS_VALUE: dict[Dialect, tuple[type[_Source], ...]] = {
+    Dialect.NGSPICE: (),
+    Dialect.LTSPICE: (CurrentSource,),
+    _XYCE: (),
+}
+
+# The names a function takes after its list, by folded function name, where the dialect checks
+# them before set_stimulus_arg adds one (xyce: PWL's `TD=` and `R=`, PAT's `R=`; decision 0030
+# items 3 to 5); None where the dialect does not (ngspice and LTspice).
+_NAMED_ARGS: dict[Dialect, dict[str, frozenset[str]] | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: None,
+    _XYCE: {"pwl": frozenset({"td", "r"}), "pat": frozenset({"r"})},
+}
 
 
 def stimulus_target(netlist: Netlist, scope: ScopePath, designator: str, text: str) -> UpsertTarget:
@@ -82,12 +99,23 @@ def set_ac(
             point = ac.magnitude.span.end
             edits.append(_insert(point, conventions.field(phase), reason, _VALUE, 1))
         return edits
-    point = element.dc.span.end if element.dc is not None else element.nodes[-1].span.end
+    point = max(span.end for span in _before_ac(element))
     spec = f"{conventions.AC_KEYWORD}{conventions.field(magnitude)}"
     if phase is not None:
         spec += conventions.field(phase)
     check = SlotCheck((AcSpec,), "an AC specification")
     return [_insert(point, conventions.field(spec), reason, check, 1)]
+
+
+def _before_ac(element: _Source) -> list[Span]:
+    """The parts an AC part goes after: the nodes and the DC part, and a P line's `port=` and
+    `Z0=`, which stand between the DC and AC parts (decision 0030 item 6)."""
+    parts = [element.nodes[-1].span]
+    if element.dc is not None:
+        parts.append(element.dc.span)
+    if isinstance(element, PortSource):
+        parts += [param.span for param in element.params]
+    return parts
 
 
 def _source(netlist: Netlist, designator: str, scope: ScopePath, in_definition: bool) -> _Source:
@@ -139,9 +167,12 @@ def set_stimulus_arg(
     spec = _stimulus_of(element, function, designator)
     if isinstance(key, str):
         fold = netlist.scope(scope).fold
-        for param in (*spec.params, *element.params):
+        # A P line's `port=` and `Z0=` are the line's, which set_param edits.
+        line = () if isinstance(element, PortSource) else element.params
+        for param in (*spec.params, *line):
             if fold(param.name) == fold(key):
                 return [Edit(param.value.span, value, reason, (_VALUE,))]
+        _check_named_arg(netlist, spec, key, designator)
         text = conventions.field(f"{key}={value}")
         return [_insert(spec.span.end, text, reason, _VALUE, len(text) - len(value))]
     if not 0 <= key <= len(spec.args):
@@ -170,13 +201,13 @@ def remove_stimulus(
     element = _source(netlist, designator, scope, in_definition)
     spec = _stimulus_of(element, function, designator)
     if (
-        netlist.dialect is Dialect.LTSPICE
-        and isinstance(element, CurrentSource)
+        isinstance(element, _NEEDS_VALUE[netlist.dialect])
         and element.dc is None
         and element.ac is None
     ):
         raise EditError(
-            f"`{designator}` would have no value, and an LTspice I line needs one; use set_dc first"
+            f"`{designator}` would have no value, and an {netlist.dialect.display_name} "
+            f"{designator[0].upper()} line needs one; use set_dc first"
         )
     removed = _with_separator(netlist, element, spec)
     return [_removal_edit(netlist, element, removed, f"remove_stimulus {designator}")]
@@ -206,6 +237,30 @@ def _with_separator(netlist: Netlist, element: _Source, spec: SourceSpec) -> Spa
     return Span(previous.end, spec.span.end)
 
 
+def _check_named_arg(netlist: Netlist, spec: SourceSpec, key: str, designator: str) -> None:
+    """Refuse a name the function does not take after its list, where the dialect checks it:
+    on xyce only PWL's `TD=` and `R=` and PAT's `R=` (decision 0030 items 3 to 5); a PWL's
+    `FILE` replaces its pairs, so it is written whole with set_stimulus."""
+    table = _NAMED_ARGS[netlist.dialect]
+    if table is None:
+        return
+    function = spec.name.lower()
+    folded = key.lower()
+    if function == "pwl" and folded == "file":
+        raise EditError(
+            f"`{designator}`: `FILE name` takes the place of the PWL's pairs; write the whole "
+            'function with set_stimulus (`PWL FILE "name"`)'
+        )
+    taken = table.get(function, frozenset())
+    if folded not in taken:
+        names = " and ".join(f"`{name.upper()}=`" for name in sorted(taken, reverse=True))
+        only = f"; it takes only {names} after its list" if names else ""
+        raise EditError(
+            f"`{spec.name}` of `{designator}` takes its arguments by position on "
+            f"{netlist.dialect.display_name}, so `{key}=` cannot be added{only}"
+        )
+
+
 def _distortion_name(text: str) -> str | None:
     """``DISTOF1`` or ``DISTOF2`` if the caller's function text starts with one."""
     head = text.lstrip()[:7].upper()
@@ -227,7 +282,7 @@ def _stimulus_of(element: _Source, function: str | None, designator: str) -> Sou
 def _function_point(element: _Source, distortion: str | None) -> int:
     """Where an added function goes: after the DC and AC parts, and a distortion input after any
     function, keeping DISTOF1 before DISTOF2."""
-    parts: list[Span] = [element.nodes[-1].span]
+    parts: list[Span] = _before_ac(element)
     parts += [part.span for part in (element.dc, element.ac) if part is not None]
     if distortion is not None:
         if element.stimulus is not None:
