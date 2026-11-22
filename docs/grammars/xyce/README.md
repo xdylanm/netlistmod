@@ -188,11 +188,11 @@ express or check the form). Its sections sort the rows by what the library does 
   resolves to the first definition, and two `.OPTIONS OUTPUT` lines both apply.
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
-The rest is planned by task and milestone in [xm2.1-tasks.md](../../design/xm2.1-tasks.md) and the
-xyce plan, section 8: the discrepancy categories and `.PRINT` in X-M2.1, then the remaining
-devices. The records of X-M1 and X-M2 are
-[archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md) and
-[archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md).
+The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M3.
+The records of X-M1, X-M2 and X-M2.1 are
+[archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md),
+[archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md) and
+[archive/xyce/xm2.1-tasks.md](../../design/archive/xyce/xm2.1-tasks.md).
 
 ## Validation status
 
