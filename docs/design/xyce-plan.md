@@ -178,8 +178,10 @@ notes:
   `PreprocessDirective`, `FuncStatement` and `GlobalParamStatement` (X-M1 B2 and B3), and
   `LibCall`, an `OpaqueStatement` subclass (X-M1 B4): nodes that only an xyce parse produces;
 - [ ] the internal names X-M8 makes public, or keeps internal: `Scope._functions` and
-  `Scope._replace_ground` (X-M1 B3 and B2; point 31), and the parse's record of indented lines
-  inside continued statements (`model.nodes.indented_comments`, X-M1 R1).
+  `Scope._replace_ground` (X-M1 B3 and B2; point 31), with their read-only accessors
+  `document.index.scope_functions` and `scope_replaces_ground` (X-M2.1 C4), and the parse's
+  record of indented lines inside continued statements (`model.nodes.indented_comments`, X-M1
+  R1).
 - [ ] the X-M2 fields (decision 0028 item 10; xm2-tasks 5.1 point 28), each `None` or empty on
   ngspice and LTspice: `TranDirective.noop` and `.schedule`, `AcDirective.data`,
   `DcDirective.data`, `StepDirective.parameter` and `.data` (X-M2 B2), `OptionsDirective.package`,
@@ -199,9 +201,10 @@ notes:
   `DiagnosticCode` member `PRINT_TYPE_MISMATCH`, which `docs/usage/errors.md` lists only as
   reserved;
 - [ ] the X-M2 internal names X-M8 makes public, or keeps internal: `Scope._data` (the `.DATA`
-  tables), `Index.sweep_targets` with `SweepTarget`, `Index.condition_nodes` (the nodes that
-  initial conditions set; X-M2 R1), and `document.index.step_quantity` (the
-  folded `.STEP` quantity that `directives.set` also keys by; X-M2 B5).
+  tables, with its accessor `document.index.scope_data`, X-M2.1 C4), `Index.sweep_targets` with
+  `SweepTarget`, `Index.condition_nodes` (the nodes that initial conditions set; X-M2 R1), and
+  `document.index.step_quantity` (the folded `.STEP` quantity that `directives.set` also keys
+  by; X-M2 B5).
 
 **`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
 named:

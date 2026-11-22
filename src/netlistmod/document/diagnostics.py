@@ -18,6 +18,9 @@ from netlistmod.document.index import (
     Reference,
     Scope,
     definition_scope,
+    scope_data,
+    scope_functions,
+    scope_replaces_ground,
     step_quantity,
     walk_nodes,
 )
@@ -708,7 +711,7 @@ def _duplicate_findings(scope: Scope) -> list[tuple[DiagnosticCode, Severity, st
         (scope.params, "parameter"),
         (scope.models, "model"),
         (scope.subckts, "subcircuit"),
-        (scope._functions, "function"),
+        (scope_functions(scope), "function"),
     )
     defaults = {id(p) for p in (scope.definition.params if scope.definition is not None else ())}
     global_params = {
@@ -1241,7 +1244,7 @@ def _directive_repeat_findings(scope: Scope) -> list[Finding]:
                 if condition.node is None:
                     continue
                 net = net_name(
-                    condition.node.name, scope.dialect, replace_ground=scope._replace_ground
+                    condition.node.name, scope.dialect, replace_ground=scope_replaces_ground(scope)
                 )
                 if net in seen:
                     what = (
@@ -1272,7 +1275,7 @@ def _directive_repeat_findings(scope: Scope) -> list[Finding]:
                     )
                 )
             results.add(key)
-    for tables in scope._data.values():
+    for tables in scope_data(scope).values():
         for table in tables[1:]:
             assert isinstance(table, DataTable)
             findings.append(

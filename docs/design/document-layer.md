@@ -233,7 +233,8 @@ decision 0027 items 1 and 3):
 - **Names** fold by ASCII lower case. `0` is the only ground, unless the netlist holds
   `.PREPROCESS REPLACEGROUND TRUE`, anywhere, a body included: then `GND`, `GND!` and `GROUND`
   in any case are ground in every scope (`Index.replace_ground`, the internal
-  `Scope._replace_ground`, the `replace_ground=` argument of `names.is_ground` and
+  `Scope._replace_ground`, which other modules read through `index.scope_replaces_ground`, the
+  `replace_ground=` argument of `names.is_ground` and
   `names.net_name`). The statement's value is
   the last signature entry, so no edit changes it (P4).
 - **Globals:** a node whose name begins `$G`, in any case, is global (`is_automatic_global`, a
@@ -244,7 +245,7 @@ decision 0027 items 1 and 3):
   `.PARAM` assignments, so a `.PARAM` of the same name wins; a body `.PARAM` that repeats a
   `PARAMS:` name is reported as shadowed; reserved words are never references.
 - **Functions:** the scope's internal table `Scope._functions` (named at X-M8; xm1-tasks 5.1
-  point 31) holds `.FUNC` lines and `.PARAM` function assignments, looked up like models; a call that is not a built-in (`builtin_functions`, from
+  point 31; read through `index.scope_functions`) holds `.FUNC` lines and `.PARAM` function assignments, looked up like models; a call that is not a built-in (`builtin_functions`, from
   `formula-reserved.json`) is a `function` reference, and a function's arguments are not
   parameter references in its body. A repeated function is a `DUPLICATE_DEFINITION` warning
   (Xyce stops). An unresolved function is an `UNRESOLVED_PARAM` (message "function `f` is not
@@ -287,7 +288,8 @@ decision 0027 items 1 and 3):
   that Xyce stops, and is info when a path reaches a definition an include may hold. ngspice and
   LTspice keep their `.dc` and `.step` references.
 - **`DATA=`** on `.AC`, `.DC` and `.STEP` is a `data` reference to the top-level `.DATA` table
-  of that name (the internal `Scope._data`, folded names in source order); a repeated name
+  of that name (the internal `Scope._data`, folded names in source order, read through
+  `index.scope_data`); a repeated name
   resolves to the last table, as Xyce uses. `UNRESOLVED_DATA` reports an unknown one.
 - **The `.TRAN` schedule** (`TranDirective.schedule`): its `schedule` word is the field's own and
   no function reference; its arguments are scanned as any formula. `schedule` is not made a
