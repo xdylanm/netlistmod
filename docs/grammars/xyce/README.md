@@ -74,8 +74,7 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
     (`XY-RCL-001`);
   - K with an optional CORE model after the coupling (`XY-MUT-001`), D with its model, an
     optional positional area, flags and parameters (`XY-DIO-001`);
-  - V and I with their DC and AC parts; a transient function is `UnsupportedConstruct` until
-    X-M3 (`XY-SRC-001`);
+  - V and I with their DC and AC parts (`XY-SRC-001`; X-M3 adds the transient functions);
   - X with optional `PARAMS:` and `M=` (`XY-SUB-001`).
 
 - **B7, the instance-parameter lists:** R, C, L and D take only the names of their
@@ -150,6 +149,28 @@ by `+` lines, top level only; `TR`, another word, no type or no field is a `Pars
 analysis line other than `.OP`, on which Xyce stops, and an analysis's type whose analysis does
 not run, for which Xyce writes nothing (`tests/solver/test_xyce_print_probes.py`).
 
+X-M3 ([decision 0030](../../decisions/0030-xyce-stimulus-and-port.md)) reads the transient
+functions and the port:
+
+- **The functions** of V and I, the line's last field, after the DC and AC parts, at most one:
+  PULSE, SIN, EXP and SFFM (`XY-SRC-002`), PAT, whose DATA bit string is an `Identifier` in
+  `SourceSpec.args` and whose repeat count is `R=` after the list (`XY-SRC-003`), and PWL, with
+  time-value pairs or `FILE` and a double-quoted or bare path (held as the parameter `FILE`,
+  never read, with no file reference), then `TD=` and `R=` (`XY-SRC-004`). The parentheses are
+  optional and balanced; the arguments are blank-separated numbers or braced or quoted
+  expressions; each function's count is checked. A comma, a `name=` argument, a positional PAT
+  repeat count (hint `R=`) and an odd PWL count are a `ParseError` with their own messages.
+- **The P port** (`XY-POR-001`): `PortSource` (internal), a sibling of V and I, with `port=` and
+  `Z0=` in `params`, between the DC and AC parts in either order; `port=` is required and is an
+  integer of 1 or more or a formula. P is allowed in a subcircuit body.
+- **The edits:** the source edits work on P (`set_ac` and `set_stimulus` insert after `port=` and
+  `Z0=`; `set_param` takes `port` and `z0`; `remove_param` refuses `port`); on xyce
+  `set_stimulus_arg` adds only PWL's `TD=` and `R=` and PAT's `R=` by name.
+- **The evidence:** `tests/solver/test_xyce_source_probes.py` and
+  `tests/solver/test_xyce_port_probes.py`, and the corpus families `sources_basic` (with a CRLF
+  twin, and `wave.csv` for PWL FILE) and `sources_rejects`. Under `.HB` a DC sweep uses a function
+  source's time-0 value, and `.LIN` needs the ports numbered 1..N: rows, with no diagnostic.
+
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
 `ParseError`; `.PREPROCESS REMOVEUNUSED`, which deletes devices, is `UnsupportedConstruct`. A `+` line with only the title, comments and blank
@@ -188,7 +209,7 @@ express or check the form). Its sections sort the rows by what the library does 
   resolves to the first definition, and two `.OPTIONS OUTPUT` lines both apply.
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
-The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M3.
+The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M4.
 The records of X-M1, X-M2 and X-M2.1 are
 [archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md),
 [archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md) and
@@ -238,7 +259,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-OPP-001](./specs/XY-OPP-001.yaml) | .OP operating point | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-OPT-001](./specs/XY-OPT-001.yaml) | .OPTIONS and .OPTION packages (the manual's closed list; .OPTION SCALE) | observed | 8 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-OPT-002](./specs/XY-OPT-002.yaml) | .OPTIONS items (name=value, comma lists, expressions in SAMPLES, INITIAL_INTERVAL pairs) | validated | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-POR-001](./specs/XY-POR-001.yaml) | P port (`port=` and `Z0=` between the DC and AC parts) | documented | 8 + 0 solver |  |
+| [XY-POR-001](./specs/XY-POR-001.yaml) | P port (`port=` and `Z0=` between the DC and AC parts) | validated | 9 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-22) |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -248,9 +269,9 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SRC-001](./specs/XY-SRC-001.yaml) | V and I independent sources, DC and AC parts, then a transient function | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-SRC-002](./specs/XY-SRC-002.yaml) | transient source functions PULSE, SIN, EXP and SFFM, and the argument list shared by every function | documented | 10 + 0 solver |  |
-| [XY-SRC-003](./specs/XY-SRC-003.yaml) | PAT pattern source function (the DATA bit string and `R=`) | documented | 7 + 0 solver |  |
-| [XY-SRC-004](./specs/XY-SRC-004.yaml) | PWL piecewise linear source function (pairs or FILE, `TD=` and `R=`) | documented | 7 + 0 solver |  |
+| [XY-SRC-002](./specs/XY-SRC-002.yaml) | transient source functions PULSE, SIN, EXP and SFFM, and the argument list shared by every function | validated | 11 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-22) |
+| [XY-SRC-003](./specs/XY-SRC-003.yaml) | PAT pattern source function (the DATA bit string and `R=`) | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-22) |
+| [XY-SRC-004](./specs/XY-SRC-004.yaml) | PWL piecewise linear source function (pairs or FILE, `TD=` and `R=`) | validated | 7 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-22) |
 | [XY-STP-001](./specs/XY-STP-001.yaml) | .STEP parametric sweep (one sweep per line) | validated | 11 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-STP-002](./specs/XY-STP-002.yaml) | sweep targets of .DC and .STEP (names, `dev:param`, `model:param`, paths, TEMP) | validated | 4 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-STR-001](./specs/XY-STR-001.yaml) | netlist structure (title line, body lines, blank lines, final .END) | validated | 8 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -260,7 +281,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 1 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-51 entries: 40 validated, 6 observed, 0 disputed, 5 documented.
+51 entries: 44 validated, 6 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 

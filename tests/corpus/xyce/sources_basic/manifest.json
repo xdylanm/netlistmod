@@ -1,0 +1,17 @@
+{
+  "family": "sources_basic",
+  "origin": "Authored in this repository for the X-M3 xyce grammar (task B5)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-22",
+  "notes": "The transient functions and the P port of X-M3 (decision 0030). `wave.csv` holds the points `sources.cir` reads with PWL FILE; the library never reads it, and Xyce finds it in the working directory, the family's folder. The solver test adds `.op` before `.END`, which gives way to `.tran`. The `_crlf` file is the CRLF variant of its LF twin.",
+  "fixtures": {
+    "ports.cir": "98a6d1c1680bde72b0377934ec2245a5f5bba8b2b5fd5957854e4a3549e996c4",
+    "sources.cir": "ff3d2dd4dd474d811a3832fe20c43d431229537fd196433bc6996b85431270e1",
+    "sources_crlf.cir": "b20063fd3cec73a46406f26d6666f0b9b6bfacad49cffca7d12b7b1892d9818d",
+    "wave.csv": {
+      "sha256": "ebedcaadae3040a394af182b29221f663ab46d718bc1759cce5485bdc7a04eac",
+      "role": "the points that sources.cir reads with PWL FILE"
+    }
+  }
+}

@@ -185,7 +185,9 @@ class XyceSourcesRules(ElementsRules):
         text = self._xfn_written(value)
         if text.isdigit() and int(text) >= 1:
             return
-        if text.lstrip("+-").isdigit():
+        if text.startswith("+") and text[1:].isdigit() and int(text[1:]) >= 1:
+            outcome = f"Xyce runs it as `{text[1:]}`, but the port number is unsigned"
+        elif text.lstrip("+-").isdigit():
             outcome = "Xyce runs it outside `.LIN`, but a port is numbered from 1"
         elif _whole_decimal(text):
             outcome = f"Xyce runs `{text}` as an integer, but the manual takes an integer literal"

@@ -1,0 +1,11 @@
+xyce ports: the P line of X-M3
+P1 1 0 DC 1 port=1 Z0=50 AC 1
+P2 2 0 z0=75 PORT = 2 SIN(0 1 1k)
+.SUBCKT pp a
+P9 a 0 port=3 ; a port in a body
+.ENDS
+X1 3 pp
+R1 1 2 50
+R2 2 3 50
+R3 3 0 50
+.END

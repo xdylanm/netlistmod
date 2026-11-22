@@ -94,6 +94,7 @@ def test_a_line_without_port_is_refused(line: str) -> None:
     [
         ("P1 a 0 port=0", "numbered from 1"),
         ("P1 a 0 port=-1", "numbered from 1"),
+        ("P1 a 0 port=+1", "unsigned"),
         ("P1 a 0 port=1.0", "integer literal"),
         ("P1 a 0 port=1.5", "stops on it"),
         ("P1 a 0 port=1e0", "stops on it"),

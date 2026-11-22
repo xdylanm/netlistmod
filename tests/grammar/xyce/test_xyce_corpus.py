@@ -29,15 +29,22 @@ from netlistmod import (
 from netlistmod.dialects import _XYCE
 
 CORPUS = Path(__file__).parents[2] / "corpus" / "xyce"
-ACCEPT_FAMILIES = ("structure_basic", "statements_basic", "elements_basic", "directives_basic")
+ACCEPT_FAMILIES = (
+    "structure_basic",
+    "statements_basic",
+    "elements_basic",
+    "directives_basic",
+    "sources_basic",
+)
 REJECT_FAMILIES = (
     "structure_rejects",
     "statements_rejects",
     "elements_rejects",
     "directives_rejects",
+    "sources_rejects",
 )
 _ERRORS = {"ParseError": ParseError, "UnsupportedConstruct": UnsupportedConstruct}
-_CLOSING = {"": "", "{": "}", "'": "'"}
+_CLOSING = {"": "", "{": "}", "'": "'", '"': '"'}
 
 
 def _manifest(family: str) -> dict[str, Any]:
@@ -129,7 +136,8 @@ def test_queries_run_on_every_accept_file(path: Path) -> None:
     ("crlf", "lf"),
     [("structure_basic/structure_crlf.cir", "structure_basic/structure.cir")]
     + [("elements_basic/elements_crlf.cir", "elements_basic/elements.cir")]
-    + [("directives_basic/options_crlf.cir", "directives_basic/options.cir")],
+    + [("directives_basic/options_crlf.cir", "directives_basic/options.cir")]
+    + [("sources_basic/sources_crlf.cir", "sources_basic/sources.cir")],
 )
 def test_a_crlf_twin_reads_as_its_lf_file(crlf: str, lf: str) -> None:
     crlf_bytes = (CORPUS / crlf).read_bytes()

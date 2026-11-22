@@ -1,0 +1,4 @@
+reject: `Z0=` takes no imaginary part
+P1 1 0 1 port=1 z0=100+10j
+R1 1 0 1k
+.END

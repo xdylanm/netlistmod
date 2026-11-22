@@ -1,0 +1,4 @@
+reject: PWL takes pairs
+V1 1 0 PWL 0 0 10n
+R1 1 0 1k
+.END

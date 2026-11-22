@@ -1,0 +1,4 @@
+reject: `port=` is P's, not V's
+V1 1 0 1 port=1
+R1 1 0 1k
+.END

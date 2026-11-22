@@ -4,8 +4,11 @@ construct: PAT pattern source function (the DATA bit string and `R=`)
 manual_ref:
 - '[xyce-ref] §2.3.10 p226 "Independent Voltage Source"'
 - '[xyce-ref] §2.3.9 p221 "Independent Current Source"'
-status: documented
-validation_note: Read from the manual (decision 0030); the solver tests that compare it with XyceNF 7.10 come with X-M3 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-22'
 grammar:
 - _pat_bare
 - _pat_in
@@ -28,4 +31,10 @@ tests:
 - tests/grammar/xyce/test_xyce_sources.py::test_a_positional_pat_repeat_count_is_refused_with_a_hint
 - tests/grammar/xyce/test_xyce_sources.py::test_pat_needs_its_bit_string_seventh
 - tests/grammar/xyce/test_xyce_sources.py::test_a_bit_string_elsewhere_is_refused
+- tests/solver/test_xyce_source_probes.py::test_pat_follows_its_bit_string
+- tests/solver/test_xyce_source_probes.py::test_pat_repeats_with_r_and_ignores_a_positional_r
+- tests/solver/test_xyce_source_probes.py::test_xyce_runs_what_the_library_refuses
+- tests/solver/test_xyce_source_probes.py::test_xyce_ignores_extra_arguments
+- tests/solver/test_xyce_source_probes.py::test_xyce_stops_on
+validation_note: 'Validated on XyceNF Release 7.10.0: each bit of the DATA the library reads holds for TSAMPLE; `R=` after the list repeats the pattern, and a positional eighth field is ignored (a `manual-error` row, the library refuses it with the hint `R=`). Xyce stops on a DATA that is not `b` and 0s and 1s, braced or missing; it runs `R=` inside the parentheses, which the library refuses.'
 notes: 'Seven arguments, `VHI VLO TD TR TF TSAMPLE DATA` (decision 0030 item 4): DATA is `b` or `B` and a string of 0s and 1s, an `Identifier` in `SourceSpec.args` (which widens to `Value | Identifier`, X-M8 checklist), in the seventh place only. The repeat count is `R=n` after the list, outside the parentheses, at most once, in `params`; a positional eighth argument, which the manual documents and Xyce ignores, is refused with the hint `R=` (a `manual-error` row).'

@@ -1,0 +1,4 @@
+reject: `FILE name`, without `=`
+V1 1 0 PWL FILE="wave.csv"
+R1 1 0 1k
+.END

@@ -177,8 +177,12 @@ reads R, C, L, K, D, V, I and X with the shapes above. What differs:
 - **K:** one or more inductors, the coupling, then an optional CORE `model`; one inductor needs
   it.
 - **D:** as LTspice's: `area` is the positional area, and `OFF` may take a value (`OFF=1`).
-- **V, I:** `[DC] value`, then `AC magnitude [phase]`; no parameter, function or distortion. A
-  transient function is `UnsupportedConstruct` until X-M3, and a bare `AC` is refused.
+- **V, I:** `[DC] value`, then `AC magnitude [phase]`, then at most one transient function
+  (X-M3, decision 0030): PULSE, SIN, EXP, SFFM, PAT (DATA an `Identifier` in `args`, `R=` in
+  `params`) and PWL (pairs, or `FILE` in `params`; `TD=`, `R=`); no parameter or distortion. A
+  bare `AC` is refused.
+- **P** (X-M3, decision 0030 item 6): `PortSource`, a sibling of V and I: V's parts, with
+  `port=` (required) and `Z0=` in `params` between the DC and AC parts.
 - **X:** `PARAMS:` optional, `M=` an ordinary parameter.
 
 ## Behavioural expressions (decision 0016)

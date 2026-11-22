@@ -1,0 +1,146 @@
+{
+  "family": "sources_rejects",
+  "origin": "Authored in this repository for the X-M3 xyce grammar (task B5)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-22",
+  "notes": "Each fixture is one construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "fn_before_ac.cir": {
+      "sha256": "b92122e4422b53faaf9fe9d9bf2455c87cd71701fc61aea7fe5f83921332d2c0",
+      "line": 2,
+      "column": 20,
+      "error": "ParseError",
+      "note": "the function stands last (XY-SRC-001)",
+      "xyce": "runs"
+    },
+    "fn_comma.cir": {
+      "sha256": "b613ae0c396c9c91134f7208ff106618c179efbaec53071ce539ee41b73c1dea",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "a comma in a function's list (XY-SRC-002)",
+      "xyce": "stops"
+    },
+    "fn_keyword.cir": {
+      "sha256": "f4a24b6e54daf5d5405e7574980fb7cf6ac9dd9dd95e2bc782b0cc3b0830348c",
+      "line": 2,
+      "column": 18,
+      "error": "ParseError",
+      "note": "a keyword argument (XY-SRC-002)",
+      "xyce": "runs"
+    },
+    "fn_too_few.cir": {
+      "sha256": "654277369e1c7a41fcfe4f3f672e5ff20cbcf5e5c5a996a889bedf827cbe061e",
+      "line": 2,
+      "column": 8,
+      "error": "ParseError",
+      "note": "SIN takes 3 to 6 arguments (XY-SRC-002)",
+      "xyce": "stops"
+    },
+    "fn_too_many.cir": {
+      "sha256": "da7025be3298508951fb7d083841636d8baad337a022b40500a13350fe09ded5",
+      "line": 2,
+      "column": 26,
+      "error": "ParseError",
+      "note": "SIN takes 3 to 6 arguments (XY-SRC-002)",
+      "xyce": "runs"
+    },
+    "fn_unbalanced.cir": {
+      "sha256": "62fb7ab3288f7aab2c2ea32da6f1b8fe83cecd495eed1958d75e015c3a2cee94",
+      "line": 2,
+      "column": 33,
+      "error": "ParseError",
+      "note": "an unbalanced parenthesis (XY-SRC-002)",
+      "xyce": "runs"
+    },
+    "p_complex_z0.cir": {
+      "sha256": "314e234c77117843d3afd92285a811e91a074dd011ca262ed26e456482167099",
+      "line": 2,
+      "column": 23,
+      "error": "ParseError",
+      "note": "`Z0=` takes no imaginary part (XY-POR-001)",
+      "xyce": "runs"
+    },
+    "p_dc_after_port.cir": {
+      "sha256": "f6cbe5cef700b4f98b0b327cbaa71f309f2940f8c52c90dfd7d7af790eb0c78f",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "the DC part comes first (XY-POR-001)",
+      "xyce": "stops"
+    },
+    "p_port_decimal.cir": {
+      "sha256": "892bae777cc04c4fa7a31529c24bedf038e91ab004bcbf17647080481535d156",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "the port number is an integer (XY-POR-001)",
+      "xyce": "stops"
+    },
+    "p_port_zero.cir": {
+      "sha256": "a5043e6dcc00d06bcab3cea62b9624d7aa3111bca9b438e7b912d9caa7083b6e",
+      "line": 2,
+      "column": 15,
+      "error": "ParseError",
+      "note": "the port number is 1 or more (XY-POR-001)",
+      "xyce": "runs"
+    },
+    "p_without_port.cir": {
+      "sha256": "35990a2944c550f0a0a747b4faa0d71d31e84de78c5d24a59534f5ffa9306eec",
+      "line": 2,
+      "column": 1,
+      "error": "ParseError",
+      "note": "a P line needs `port=` (XY-POR-001)",
+      "xyce": "runs"
+    },
+    "pat_no_bits.cir": {
+      "sha256": "e9bd885af629160921220be8125e3e97f5bdfb9002b0ca2181751b4e29f124ec",
+      "line": 2,
+      "column": 27,
+      "error": "ParseError",
+      "note": "PAT's DATA is a bit string (XY-SRC-003)",
+      "xyce": "stops"
+    },
+    "pat_positional_r.cir": {
+      "sha256": "cbf0719f89eba641b364d37e0fac60bcf66943056322c4e0c9956c867e9e258c",
+      "line": 2,
+      "column": 31,
+      "error": "ParseError",
+      "note": "PAT's repeat count is `R=` (XY-SRC-003)",
+      "xyce": "runs"
+    },
+    "pwl_file_equals.cir": {
+      "sha256": "182f5cdc8fe566cea0a59aed4610a47d79305c6e031657decc3a02c82f83130c",
+      "line": 2,
+      "column": 12,
+      "error": "ParseError",
+      "note": "`FILE name`, without `=` (XY-SRC-004)",
+      "xyce": "stops"
+    },
+    "pwl_odd.cir": {
+      "sha256": "a0a606be646094907fa6b2cd51c4c5d1f54eea81b8991cc563c3994b2b00bd1f",
+      "line": 2,
+      "column": 16,
+      "error": "ParseError",
+      "note": "PWL takes pairs (XY-SRC-004)",
+      "xyce": "runs"
+    },
+    "pwl_r_inside.cir": {
+      "sha256": "56a6cb5d2b3f5e99f3d37c1dfd7e056c6d5cc8c1f029361360027be95a8c0d6f",
+      "line": 2,
+      "column": 26,
+      "error": "ParseError",
+      "note": "`R=` stands after the list (XY-SRC-004)",
+      "xyce": "runs"
+    },
+    "v_port.cir": {
+      "sha256": "5418311dcef404f72f43b6dedde15e9722bc3cc960593d7fcbea52a4bc579dc2",
+      "line": 2,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`port=` is P's, not V's (XY-SRC-001)",
+      "xyce": "runs"
+    }
+  }
+}

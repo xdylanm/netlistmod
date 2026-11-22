@@ -1,0 +1,4 @@
+reject: a P line needs `port=`
+P1 1 0 1 z0=100
+R1 1 0 1k
+.END

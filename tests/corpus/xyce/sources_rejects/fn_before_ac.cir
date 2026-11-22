@@ -1,0 +1,4 @@
+reject: the function stands last
+V1 1 0 SIN(0 1 1k) AC 1
+R1 1 0 1k
+.END

@@ -1,0 +1,4 @@
+reject: the DC part comes first
+P1 1 0 port=1 DC 1
+R1 1 0 1k
+.END

@@ -1,0 +1,4 @@
+reject: `R=` stands after the list
+V1 1 0 PWL(0 0 2n 1 4n 0 R=0)
+R1 1 0 1k
+.END

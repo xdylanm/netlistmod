@@ -1,0 +1,4 @@
+reject: a keyword argument
+V1 1 0 PULSE(0 1 TD=10n)
+R1 1 0 1k
+.END

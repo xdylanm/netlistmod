@@ -1,0 +1,23 @@
+xyce sources: the transient functions of X-M3
+* PULSE, SIN, EXP and SFFM, with and without parentheses
+.param hi=1
+V1 1 0 PULSE(0 {hi} 1n 1n 1n 5n 10n)
+V2 2 0 DC 0.5 AC 1 0 SIN 0 1 100meg 0 0 90 ; no parentheses
+I3 0 3 EXP (0 1m 2n 1n 10n 2n)
+V4 4 0 sffm(0 1 100meg 2 10meg)
+* PAT with its bit string and R=, PWL with pairs, TD= and R=, and FILE
+V5 5 0 PAT(5 0 0 1n 1n 5n b0101) R=2
+V6 6 0 PWL 0 0 2n 1
++ 4n 0 TD=1n R=0
+V7 7 0 PWL FILE "wave.csv" TD=1n
+V8 8 0 pwl( 0 0 1ns 1V )
+R1 1 0 1k
+R2 2 0 1k
+R3 3 0 1k
+R4 4 0 1k
+R5 5 0 1k
+R6 6 0 1k
+R7 7 0 1k
+R8 8 0 1k
+.tran 0.1n 20n
+.END
