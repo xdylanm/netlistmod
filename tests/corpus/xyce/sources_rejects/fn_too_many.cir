@@ -1,0 +1,4 @@
+reject: SIN takes 3 to 6 arguments
+V1 1 0 SIN(0 1 1k 0 0 90 9)
+R1 1 0 1k
+.END

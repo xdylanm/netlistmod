@@ -1,0 +1,4 @@
+reject: the port number is an integer
+P1 1 0 1 port=1.5
+R1 1 0 1k
+.END

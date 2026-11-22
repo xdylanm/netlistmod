@@ -29,12 +29,19 @@ from tests.support.xyce import Mode, Run, nodes, run
 pytestmark = pytest.mark.solver("xyce")
 
 CORPUS = Path(__file__).parents[1] / "corpus" / "xyce"
-FAMILIES = ("structure_basic", "statements_basic", "elements_basic", "directives_basic")
+FAMILIES = (
+    "structure_basic",
+    "statements_basic",
+    "elements_basic",
+    "directives_basic",
+    "sources_basic",
+)
 REJECT_FAMILIES = (
     "structure_rejects",
     "statements_rejects",
     "elements_rejects",
     "directives_rejects",
+    "sources_rejects",
 )
 _END = re.compile(rb"^\.end(?![a-z0-9_])", re.IGNORECASE | re.MULTILINE)
 

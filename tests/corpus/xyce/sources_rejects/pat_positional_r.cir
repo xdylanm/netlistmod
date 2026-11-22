@@ -1,0 +1,4 @@
+reject: PAT's repeat count is `R=`
+V1 1 0 PAT(5 0 0 1n 1n 5n b01 3)
+R1 1 0 1k
+.END

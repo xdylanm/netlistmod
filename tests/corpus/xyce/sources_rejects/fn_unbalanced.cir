@@ -1,0 +1,4 @@
+reject: an unbalanced parenthesis
+V1 1 0 PULSE(0 1 1n 1n 1n 5n 10n
+R1 1 0 1k
+.END

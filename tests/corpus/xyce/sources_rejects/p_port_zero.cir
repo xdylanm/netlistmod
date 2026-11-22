@@ -1,0 +1,4 @@
+reject: the port number is 1 or more
+P1 1 0 1 port=0
+R1 1 0 1k
+.END
