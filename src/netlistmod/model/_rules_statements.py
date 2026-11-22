@@ -93,8 +93,8 @@ _MODEL_REPEAT_REFUSED: dict[Dialect, bool] = {
 }
 # The keywords of the statements that the solver silently ignores in a subcircuit body, which the
 # refusal there says (xyce: the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the closed
-# list's untyped dot-commands, DOT_NAME and XY_SAVE_KW, decision 0028 item 2). Empty on ngspice
-# and LTspice, whose message is unchanged.
+# list's untyped dot-commands, DOT_NAME and XY_SAVE_KW, decision 0028 item 2, and `.PRINT`,
+# XY_PRINT_KW, decision 0029 item 5). Empty on ngspice and LTspice, whose message is unchanged.
 _IGNORED_IN_BODY: dict[Dialect, frozenset[str]] = {
     Dialect.NGSPICE: frozenset(),
     Dialect.LTSPICE: frozenset(),
@@ -112,6 +112,7 @@ _IGNORED_IN_BODY: dict[Dialect, frozenset[str]] = {
             "DATA_BLOCK_KW",
             "DOT_NAME",
             "XY_SAVE_KW",
+            "XY_PRINT_KW",
         }
     ),
 }

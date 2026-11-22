@@ -498,16 +498,28 @@ def test_a_print_is_checked_against_the_first_analysis(solver: Solver, tmp_path:
     """Xyce checks a `.PRINT` line's type against the first analysis line, though it runs the
     last: `.TRAN`, `.AC`, `.PRINT AC` stops ("Analysis type TRAN and print type AC are
     inconsistent"), and `.PRINT TRAN` passes the check, runs AC and prints nothing. The library
-    reads both and warns `ANALYSIS_IGNORED` on the `.TRAN` (a discrepancies.md row; the B5
-    probes)."""
+    warns `ANALYSIS_IGNORED` on the `.TRAN` and `PRINT_TYPE_MISMATCH` on each print type (the B5
+    probes; decision 0029 item 5; tests/solver/test_xyce_print_probes.py covers every type)."""
     text = _netlist(".tran 1n 2n\n.ac dec 1 1 10\n.print ac v(2)")
     result = run(solver, tmp_path / "ac", text, mode="print")
     assert result.returncode != 0
     assert "Analysis type TRAN and print type AC are inconsistent" in _messages(result)
     assert DiagnosticCode.ANALYSIS_IGNORED in _codes(text)
+    (stops,) = [
+        d.message
+        for d in _library(text).diagnostics
+        if d.code is DiagnosticCode.PRINT_TYPE_MISMATCH
+    ]
+    assert "and stops" in stops
     text = _netlist(".tran 1n 2n\n.ac dec 1 1 10\n.print tran v(2)")
     result = run(solver, tmp_path / "tran", text, mode="print")
     assert result.ok and result.prn_bytes is None
+    (nothing,) = [
+        d.message
+        for d in _library(text).diagnostics
+        if d.code is DiagnosticCode.PRINT_TYPE_MISMATCH
+    ]
+    assert nothing.endswith("writes nothing for this line")
 
 
 # .STEP with other directives (point 16; STEP_IGNORED, STEPS_WITH_OP, STEPPED_ANALYSIS_FIELD)

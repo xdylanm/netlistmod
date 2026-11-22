@@ -47,6 +47,7 @@ from netlistmod.model.nodes import (
     NodesetDirective,
     OpDirective,
     OptionsDirective,
+    PrintDirective,
     Resistor,
     StepDirective,
     SubcktDefinition,
@@ -104,6 +105,7 @@ class DiagnosticCode(StrEnum):
     IC_WITH_NODESET = "IC_WITH_NODESET"
     MEASURE_MODE_MISMATCH = "MEASURE_MODE_MISMATCH"
     CONDITION_IGNORED = "CONDITION_IGNORED"
+    PRINT_TYPE_MISMATCH = "PRINT_TYPE_MISMATCH"
 
 
 @dataclass(frozen=True, slots=True)
@@ -875,6 +877,9 @@ def _directive_findings(index: Index) -> list[Finding]:
     findings.extend(_step_findings(index, steps, runs, solver))
     findings.extend(_ic_nodeset_findings(index, solver))
     findings.extend(_measure_findings(index, runs, solver))
+    rules = _PRINT_RULES[index.dialect]
+    if rules is not None:
+        findings.extend(_print_findings(index, rules, solver))
     return findings
 
 
@@ -1041,6 +1046,98 @@ def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) 
                 f"`{item.analysis}` needs a `.{needed.upper()}` analysis, but {ran}; {outcome}",
                 item.analysis_span,
             )
+        )
+    return findings
+
+
+@dataclass(frozen=True, slots=True)
+class _PrintRule:
+    """What Xyce 7.10 does with a `.PRINT` type (decision 0029 item 5; the X-M2.1 C3 probes):
+    ``first`` holds the kinds of the first analysis line it accepts the type under (it stops on
+    any other), ``prints`` the analyses whose run the line writes, and ``names`` names them; a
+    type whose output needs another command (`.SENS`, a sampling analysis, a homotopy option)
+    has ``prints`` ``None``, and only the first line is checked."""
+
+    first: frozenset[str]
+    prints: frozenset[str] | None = None
+    names: str = ""
+
+
+def _analysis_type(kind: str, names: str) -> _PrintRule:
+    return _PrintRule(frozenset({kind, "op"}), frozenset({kind}), names)
+
+
+_HB_TYPE = _analysis_type("hb", "an `.HB` analysis")
+# The print types of the manual's closed list, by case-folded name. `.OP` as the first analysis
+# accepts every type but TRANADJOINT; an `.OP` run is a DC operating point, which `.PRINT DC`
+# writes.
+_XYCE_PRINT_RULES: dict[str, _PrintRule] = {
+    "tran": _analysis_type("tran", "a `.TRAN` analysis"),
+    "ac": _analysis_type("ac", "an `.AC` analysis"),
+    "ac_ic": _analysis_type("ac", "an `.AC` analysis"),
+    "dc": _PrintRule(frozenset({"dc", "op"}), frozenset({"dc", "op"}), "a `.DC` or `.OP` analysis"),
+    "noise": _analysis_type("noise", "a `.NOISE` analysis"),
+    "hb": _HB_TYPE,
+    "hb_fd": _HB_TYPE,
+    "hb_ic": _HB_TYPE,
+    "hb_startup": _HB_TYPE,
+    "hb_td": _HB_TYPE,
+    "es": _PrintRule(frozenset({"tran", "dc", "op"})),
+    "pce": _PrintRule(frozenset({"tran", "dc", "op"})),
+    "homotopy": _PrintRule(frozenset({"tran", "ac", "dc", "op", "hb"})),
+    "sens": _PrintRule(frozenset({"tran", "ac", "dc", "op"})),
+    "tranadjoint": _PrintRule(frozenset({"tran"})),
+}
+# Which dialects check a `.PRINT` type (`PRINT_TYPE_MISMATCH`): only xyce has a `PrintDirective`.
+_PRINT_RULES: dict[Dialect, dict[str, _PrintRule] | None] = {
+    Dialect.NGSPICE: None,
+    Dialect.LTSPICE: None,
+    _XYCE: _XYCE_PRINT_RULES,
+}
+
+
+def _print_findings(index: Index, rules: dict[str, _PrintRule], solver: str) -> list[Finding]:
+    """`PRINT_TYPE_MISMATCH` (decision 0029 item 5; the X-M2.1 C3 probes). Xyce checks every
+    `.PRINT` type against the first analysis line that is not `.OP` (`.OP` when it is the only
+    analysis), and stops on a type that does not agree with it; it then runs the last line, as
+    `ANALYSIS_IGNORED` says, with `.HB` taking part, and writes nothing for a type of another
+    analysis."""
+    root = index.root
+    analyses: list[tuple[Line, str]] = []
+    for line in root.lines:
+        kind = _analysis_kind(line.item, root)
+        if kind is None and isinstance(line.item, UnknownDirective):
+            kind = "hb" if root.fold(line.item.name) == ".hb" else None
+        if kind is not None:
+            analyses.append((line, kind))
+    ranked = [(line, kind) for line, kind in analyses if kind != "op"] or analyses
+    if not ranked:
+        return []
+    (first, first_kind), (last, last_kind) = ranked[0], ranked[-1]
+    findings: list[Finding] = []
+    for line in root.lines:
+        item = line.item
+        if not isinstance(item, PrintDirective):
+            continue
+        rule = rules[root.fold(item.print_type)]
+        if first_kind not in rule.first:
+            which = "the only analysis" if first_kind == "op" else "the first analysis but `.OP`"
+            message = (
+                f"print type `{item.print_type}` does not agree with `{_keyword(first.item)[0]}` "
+                f"(line {first.first_line}), {which}: {solver} checks every `.PRINT` type "
+                f'against that line, and stops ("Analysis type {first_kind.upper()} and print '
+                f'type {item.print_type.upper()} are inconsistent")'
+            )
+        elif rule.prints is not None and last_kind not in rule.prints:
+            message = (
+                f"print type `{item.print_type}` writes the results of {rule.names}, but "
+                f"{solver} runs `{_keyword(last.item)[0]}` (line {last.first_line}), and writes "
+                "nothing for this line"
+            )
+        else:
+            continue
+        findings.append(
+            (DiagnosticCode.PRINT_TYPE_MISMATCH, "warning", message, item.print_type_span)
         )
     return findings
 

@@ -27,7 +27,7 @@ Until the X-M8 review the dialect is not a member of `Dialect`: it is the intern
 `Netlist.from_text(text, dialect=_XYCE)`. It cannot be pickled. X-M8 makes it the member
 `Dialect.XYCE`.
 The node classes only xyce has (`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement`,
-`FuncStatement`, `LibCall`, and the value `FunctionDefinition`) live in `netlistmod.model` and are
+`FuncStatement`, `LibCall`, `PrintDirective`, and the value `FunctionDefinition`) live in `netlistmod.model` and are
 not exported from `netlistmod` until then.
 
 ## What the dialect reads
@@ -117,10 +117,10 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
     non-zero multiple of the columns and a bare `.ENDDATA` (`XY-DAT-001`); top level only.
 
 - **B4, the closed list of dot-commands, and directives in a body:**
-  - `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`, `.HB`, `.LIN`, `.SAMPLING`,
+  - `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`, `.HB`, `.LIN`, `.SAMPLING`,
     `.EMBEDDEDSAMPLING` and `.PCE`, in any case, read as `UnknownDirective` with
-    `UNTYPED_DIRECTIVE_PRESERVED` (info), continued by `+` lines, top level only (`XY-DIR-001`);
-    `.SAVE` is never ngspice's `SaveDirective` (`XY-SAV-001`);
+    `UNTYPED_DIRECTIVE_PRESERVED` (info), continued by `+` lines, top level only (`XY-DIR-001`;
+    `.PRINT` was one until X-M2.1); `.SAVE` is never ngspice's `SaveDirective` (`XY-SAV-001`);
   - any other dot-command is a `ParseError` "not an Xyce dot-command", at its first character, so
     the lines of a would-be block are never read, with hints for `.TEMP`, `.PROBE`, `.title` and
     `.opt` (`XY-DIR-002`);
@@ -139,6 +139,15 @@ X-M2 ([decision 0028](../../decisions/0028-xyce-directives.md)) adds:
   synonym, the measure modes against the analysis that runs, `.NOISE` in the last-line rule).
   The refusals of `.IC`/`.DCVOLT`/`.NODESET` fields now say per keyword what Xyce does, and a
   package-less `TEMP=` or `TNOM=` gets the DEVICE hint.
+
+X-M2.1 ([decision 0029](../../decisions/0029-xyce-discrepancy-categories.md) item 5) types
+`.PRINT` shallowly, as `.MEAS` is: `PrintDirective` (internal) with a required print type of the
+manual's closed list (AC, AC_IC, DC, ES, HB, HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE, TRAN,
+HOMOTOPY, SENS and TRANADJOINT, in any case), then the rest as text, at least one field, continued
+by `+` lines, top level only; `TR`, another word, no type or no field is a `ParseError`
+(`XY-PRT-001`). `PRINT_TYPE_MISMATCH` (warning) reports a type that does not agree with the first
+analysis line other than `.OP`, on which Xyce stops, and an analysis's type whose analysis does
+not run, for which Xyce writes nothing (`tests/solver/test_xyce_print_probes.py`).
 
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
@@ -161,18 +170,21 @@ express or check the form). Its sections sort the rows by what the library does 
   without a value, a value written twice, one inductor on K without a model, a number before D's
   model, a comma on a source line and `:` in a designator; on directives a repeated `.TRAN` flag,
   extra fields on `.OP`, a one-value `LIST`, two sweeps on one `.STEP` line, an unknown or a
-  missing `.OPTIONS` package, a bare word after an option, the `TR` mode, a table without its bare
-  `.ENDDATA`, and directives in a body, which it silently ignores.
+  missing `.OPTIONS` package, a bare word after an option, the `TR` mode and print type, a
+  `.PRINT` without an output variable, a table without its bare `.ENDDATA`, and directives in a
+  body, which it silently ignores.
 - **The manual and Xyce accept, the library refuses** (`library-limit`): a bare `AC`.
 - **The library reads, Xyce stops on or ignores** (`manual`, `library-limit`): a schedule after
   tstart, the full `.TRAN` form and a zero-argument `.FUNC`, which the library reads as the manual
-  writes them; `.PCE`; and what the library does not check: R's and D's parameter lists (the
-  union of their levels' tables), the `DEC` and `OCT` point counts, ngspice's `.save v(2)`, a
-  `_CONT` measure type and a `.PRINT` type against the first analysis.
+  writes them; `.PCE`; a `.PRINT` type that does not agree with the first analysis, which the
+  manual says is not processed (`PRINT_TYPE_MISMATCH` warns); and what the library does not
+  check: R's and D's parameter lists (the union of their levels' tables), the `DEC` and `OCT`
+  point counts, ngspice's `.save v(2)`, a `_CONT` measure type and a `.PRINT` line's output
+  variables.
 - **The library follows Xyce against the manual** (`manual-error`): `//` is no comment, `µ` no
-  scale factor, a bracketed `[s]` is a node name, a `.SUBCKT` needs a port, `PARAMS:` takes no comma, a one-field `.LIB` opens a
-  block, a `.DATA` table needs its name, a repeated `.PARAM` resolves to the first definition, and
-  two `.OPTIONS OUTPUT` lines both apply.
+  scale factor, a bracketed `[s]` is a node name, a `.SUBCKT` needs a port, `PARAMS:` takes no
+  comma, a one-field `.LIB` opens a block, a `.DATA` table needs its name, a repeated `.PARAM`
+  resolves to the first definition, and two `.OPTIONS OUTPUT` lines both apply.
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
 The rest is planned by task and milestone in [xm2.1-tasks.md](../../design/xm2.1-tasks.md) and the
@@ -202,7 +214,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-DCA-001](./specs/XY-DCA-001.yaml) | .DC sweeps (any number, each LIN, DEC, OCT or LIST) | validated | 6 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DCA-002](./specs/XY-DCA-002.yaml) | DATA=table on .AC, .DC and .STEP | validated | 6 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIO-001](./specs/XY-DIO-001.yaml) | D diode lines (model, positional area, flags and parameters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 7 + 6 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
+| [XY-DIR-001](./specs/XY-DIR-001.yaml) | the closed list's untyped dot-commands (.FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective | observed | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIR-002](./specs/XY-DIR-002.yaml) | any other dot-command is refused (not an Xyce dot-command), with hints | validated | 8 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-DIR-003](./specs/XY-DIR-003.yaml) | directives in a subcircuit body (the analyses, .STEP, .OPTIONS, .MEAS, .DATA and the untyped commands refused; .IC, .DCVOLT, .NODESET and .PREPROCESS allowed) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-ELM-001](./specs/XY-ELM-001.yaml) | element fields (node fields with `:` paths, instance parameters with bare values) | validated | 5 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
@@ -229,6 +241,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-PRT-001](./specs/XY-PRT-001.yaml) | .PRINT (a required print type of the closed list; the rest kept as text) | observed | 16 + 13 solver | xyce XyceNF Release 7.10.0 (2026-11-21) |
 | [XY-RCL-001](./specs/XY-RCL-001.yaml) | R, C and L lines (the model before the value; R=, C=, L= and Q=; the geometry forms) | validated | 17 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SAV-001](./specs/XY-SAV-001.yaml) | .SAVE (an UnknownDirective, never a SaveDirective) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
 | [XY-SBD-001](./specs/XY-SBD-001.yaml) | .SUBCKT/.ENDS subcircuit definitions (ports, `PARAMS` defaults, nesting) | validated | 19 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -242,7 +255,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 1 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 
-46 entries: 40 validated, 5 observed, 0 disputed, 1 documented.
+47 entries: 40 validated, 6 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 

@@ -110,6 +110,7 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
               | xy_step_stmt
               | xy_options_stmt
               | xy_meas_stmt
+              | xy_print_stmt
               | data_block
               | xy_unknown_stmt
 
@@ -153,8 +154,9 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 %extend end_stmt: END_KW TRAILING_COMMENT LINE_END trailer* -> end
                 | END_KW TRAILING_COMMENT -> end
 
-// The closed list's untyped dot-commands (decision 0028 item 1; xm2-tasks 5.1 points 1 and 3):
-// the outputs and the further analyses, read as UnknownDirective, top level only (in a body Xyce
+// The closed list's untyped dot-commands (decision 0028 item 1; xm2-tasks 5.1 points 1 and 3; `.PRINT`
+// has its own rule since X-M2.1, decision 0029 item 5): the outputs and the further analyses, read as
+// UnknownDirective, top level only (in a body Xyce
 // silently ignores them, so they are refused there, not_in_subckt), and continued by `+` lines,
 // which Xyce joins. The name ends where its word ends (a lookahead), so `.prints` is not one. A
 // field is a run of characters other than blanks and `;` (FIELD_TEXT); the statement's text is
@@ -166,7 +168,7 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 xy_unknown_stmt: (DOT_NAME | XY_SAVE_KW) unknown_field* (NL | eol)
 unknown_field: SEP FIELD_TEXT
              | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) unknown_field
-%override DOT_NAME.4: /\.(?:print|four|fft|result|sens|noise|hb|lin|sampling|embeddedsampling|pce)(?![^ \t\r\n;])/i
+%override DOT_NAME.4: /\.(?:four|fft|result|sens|noise|hb|lin|sampling|embeddedsampling|pce)(?![^ \t\r\n;])/i
 FIELD_TEXT.2: /[^ \t\r\n;]+/
 
 // .SAVE ([xyce-ref] §2.1.34 p152), one of the untyped commands above, with a terminal of its own:
@@ -399,6 +401,27 @@ ALL_KW.4: /all(?=[ \t]*=)/i
 // spec: XY-NOD-001
 xy_nodeset_stmt: NODESET_KW _ic_conditions
 
+// .PRINT ([xyce-ref] §2.1.31 p128; decision 0029 item 5), typed shallowly as `.MEASURE` is: a print
+// type of the manual's closed list (PRINT_TYPE_KW: the analyses' types AC, AC_IC, DC, ES, HB,
+// HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE and TRAN of its table, and HOMOTOPY, SENS and
+// TRANADJOINT of §2.1.31.6 and §2.1.31.7), required, first, in any case, ending where its word
+// ends; another field in its place, or none, is recognised with the rest of the line only to be
+// refused. Then at least one field, kept as text (each a FIELD_TEXT), across `+` lines. Top level
+// only: in a body Xyce silently ignores it (not_in_subckt).
+// spec: XY-PRT-001
+xy_print_stmt: XY_PRINT_KW print_type print_field+ (NL | eol)
+             | XY_PRINT_KW print_bad_type
+             | XY_PRINT_KW print_type (NL | eol) -> print_no_field
+             | XY_PRINT_KW (NL | eol) -> print_no_type
+print_type: SEP PRINT_TYPE_KW
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) print_type
+print_bad_type: SEP FIELD_TEXT REST_TEXT* NL
+              | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) print_bad_type
+print_field: SEP FIELD_TEXT
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) print_field
+XY_PRINT_KW.4: /\.print(?![^ \t\r\n;])/i
+PRINT_TYPE_KW.4: /(?:ac_ic|ac|dc|es|hb_fd|hb_ic|hb_startup|hb_td|hb|noise|pce|tranadjoint|tran|homotopy|sens)(?![^ \t\r\n;])/i
+
 // .MEASURE and .MEAS ([xyce-ref] §2.1.18 p54, §2.1.19 p78, §2.1.20 p84), typed shallowly as on the
 // other dialects: a mode of the manual's closed list (TRAN, DC, AC, NOISE, FFT and their `_CONT`
 // forms but FFT's), required, in any case (MEAS_MODE_KW, which ends where its word ends; another
@@ -562,7 +585,7 @@ subckt_param: SEP DEFAULT_NAME EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
 not_in_subckt: (GLOBAL_KW | GLOBAL_PARAM_KW | END_KW) REST_TEXT* NL
              | (TRAN_KW | DOT_AC_KW | DOT_DC_KW | OP_KW | STEP_KW) REST_TEXT* NL
              | (OPTIONS_KW | OPTION_KW | MEAS_KW | MEASURE_KW | DATA_BLOCK_KW) REST_TEXT* NL
-             | (DOT_NAME | XY_SAVE_KW) REST_TEXT* NL
+             | (DOT_NAME | XY_SAVE_KW | XY_PRINT_KW) REST_TEXT* NL
 
 // `PARAMS:` is one token, above WORD, which holds no `:`.
 // spec: XY-SBD-001

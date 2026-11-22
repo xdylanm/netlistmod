@@ -2,8 +2,8 @@
 (X-M1 B4; decision 0027 item 7), the R, C, L, V, I and D forms that differ from the other
 dialects (X-M1 B5; decision 0027 items 5 and 6), the analyses and `.STEP` (X-M2 B2; decision
 0028 items 3 and 4), the options, initial conditions, measurements and the `.DATA` block (X-M2
-B3; decision 0028 items 5 to 8), and the closed list's untyped dot-commands (X-M2 B4; decision
-0028 item 1)."""
+B3; decision 0028 items 5 to 8), the closed list's untyped dot-commands (X-M2 B4; decision
+0028 item 1) and `.PRINT` (X-M2.1 C3; decision 0029 item 5)."""
 
 from __future__ import annotations
 
@@ -45,6 +45,7 @@ from netlistmod.model.nodes import (
     OpaqueStatement,
     OptionItem,
     OptionsDirective,
+    PrintDirective,
     Resistor,
     StepDirective,
     TranDirective,
@@ -202,6 +203,21 @@ class _MeasText:
     """One field of an xyce `.MEASURE` body."""
 
     token: Token
+
+
+@dataclass(frozen=True, slots=True)
+class _PrintText:
+    """One field of an xyce `.PRINT` line after its print type."""
+
+    token: Token
+
+
+# The print types of the manual's closed list ([xyce-ref] §2.1.31 p128, §2.1.31.6 and §2.1.31.7;
+# decision 0029 item 5), as the refusal of another word names them.
+_PRINT_TYPES = (
+    "AC, AC_IC, DC, ES, HB, HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE, TRAN, HOMOTOPY, SENS and "
+    "TRANADJOINT"
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -1001,6 +1017,56 @@ class XyceRules(StatementsRules):
                 analysis_span=_span(mode),
                 result=str(result),
                 result_span=_span(result),
+                body_text=text,
+                body_span=Span(start, end),
+            ),
+        )
+
+    # .PRINT (X-M2.1 C3; decision 0029 item 5): the print type, then the rest kept as text.
+    def print_type(self, children: list[Any]) -> _Field:
+        return self._field(children, lambda token: token)
+
+    def print_field(self, children: list[Any]) -> _Field:
+        return self._field(children, _PrintText)
+
+    def print_bad_type(self, children: list[Any]) -> NoReturn:
+        word = _field_token(children)
+        hint = " (write `TRAN`)" if fold_name(str(word), self._dialect) == "tr" else ""
+        raise self._parse_error(
+            word,
+            f"`{word}` is not a `.PRINT` type{hint}: the print type is required, before the "
+            f"other fields, one of {_PRINT_TYPES} (Xyce reference manual §2.1.31 p128)",
+        )
+
+    def print_no_type(self, children: list[Any]) -> NoReturn:
+        keyword = children[0]
+        raise self._parse_error(
+            keyword,
+            f"`{keyword}` has no print type: write one of {_PRINT_TYPES}, then the output "
+            "variables (Xyce reference manual §2.1.31 p128)",
+        )
+
+    def print_no_field(self, children: list[Any]) -> NoReturn:
+        element = _Element(children)
+        (kind,) = element.all(Token)
+        raise self._parse_error(
+            kind,
+            f"`{element.designator} {kind}` has no output variable: write at least one after the "
+            "print type (Xyce reference manual §2.1.31 p128)",
+        )
+
+    def xy_print_stmt(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        (kind,) = element.all(Token)
+        body = element.all(_PrintText)
+        start, end = _span(body[0].token).start, _span(body[-1].token).end
+        text = self._source.text[start:end]
+        return _Item(
+            element.end,
+            lambda span: PrintDirective(
+                **_dot(element, span),
+                print_type=str(kind),
+                print_type_span=_span(kind),
                 body_text=text,
                 body_span=Span(start, end),
             ),

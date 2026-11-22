@@ -28,6 +28,7 @@ tiles the source) and `trailing_comments` (every end-of-line comment, in source 
 | `IcDirective`, `NodesetDirective` | `conditions: tuple[NodeCondition, ...]`; `NodeCondition(node: Node \| None, value, span, current, form)`, `node is None` for `all=` or for an LTspice `.ic i(L1)=…` (`current: ElementReference`); `form: "v" \| "pair"` (`pair`: an xyce `node value` pair, the span from the node to the value); xyce's `.DCVOLT` is an `IcDirective` |
 | `SaveDirective` | `vectors: tuple[OutputVector, ...]`; `OutputVector(text, span, function: str \| None, nodes: tuple[Node, ...], source: ElementReference \| None)` |
 | `MeasureDirective` | `analysis` (on xyce the required mode, as written), `analysis_span`, `result`, `result_span`, `body_text`, `body_span` |
+| `PrintDirective` (xyce, internal) | `print_type` (the required print type, as written), `print_type_span`, `body_text`, `body_span` |
 | `StepDirective` (LTspice, xyce) | `kind: "param" \| "source" \| "temp" \| "model" \| "name" \| "qualified" \| "data"` (the last three xyce's), `name`, `name_span`, `model_type`, `model`, `variation`, `variation_span`, `start`, `stop`, `increment`, `values`, `file`, `parameter: str \| None` (xyce: the part of a `qualified` target after the last `:`), `data: Identifier \| None` (xyce `DATA=table`) |
 | `GlobalDirective` | `nodes: tuple[Node, ...]`; not a `Directive` subclass, because it is topology |
 | `Title` | `text`, `explicit` (written `.title`), `span` |
@@ -182,9 +183,10 @@ differs:
     `XY-DAT-001`.
 - **X-M2 B4** ([decision 0028](../decisions/0028-xyce-directives.md) items 1 and 2), the closed
   list of dot-commands:
-  - **`UnknownDirective`** for `.PRINT`, `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`,
+  - **`UnknownDirective`** for `.FOUR`, `.FFT`, `.RESULT`, `.SAVE`, `.SENS`, `.NOISE`,
     `.HB`, `.LIN`, `.SAMPLING`, `.EMBEDDEDSAMPLING` and `.PCE` (`raw` from the name to its last
     field, continued by `+` lines), top level only; xyce's `.SAVE` is never `SaveDirective`.
+    `.PRINT` was one until X-M2.1 (below).
   - **`.PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value`** is an `UnknownDirective`, allowed in
     a body, one of each kind per netlist (a second is a `ParseError`).
   - Any other dot-command is a `ParseError` ("not an Xyce dot-command"), with hints for `.TEMP`,
@@ -193,3 +195,11 @@ differs:
     `ParseError` (Xyce silently ignores them there); `.IC`, `.DCVOLT`, `.NODESET` and
     `.PREPROCESS` are allowed.
   - **Spec IDs:** `XY-DIR-001`, `XY-DIR-002`, `XY-DIR-003`, `XY-PRE-002`, `XY-SAV-001`.
+- **X-M2.1 C3** ([decision 0029](../decisions/0029-xyce-discrepancy-categories.md) item 5):
+  **`.PRINT`** is `PrintDirective` (internal, in `netlistmod.model.nodes`; `TopLevelItem` holds
+  it), typed shallowly as `.MEASURE` is: `print_type` is a type of the manual's closed list (AC,
+  AC_IC, DC, ES, HB, HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE, TRAN, HOMOTOPY, SENS and
+  TRANADJOINT, in any case), required and first; `body_text` is the rest, from the first to the
+  last field, at least one, across `+` lines. Another word in the type's place (`TR` with the
+  hint "write `TRAN`"), no type, or no field after it is a `ParseError`; top level only. ngspice's
+  and LTspice's `.print` stay `UnknownDirective`. **Spec ID:** `XY-PRT-001`.

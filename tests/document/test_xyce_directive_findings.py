@@ -774,6 +774,134 @@ def test_fft_without_an_fft_line_is_a_warning() -> None:
     )
 
 
+# --- PRINT_TYPE_MISMATCH (X-M2.1 C3; decision 0029 item 5) ---
+
+_TRAN, _AC, _DC = ".tran 1n 2n", ".ac dec 1 1 10", ".dc V1 0 1 1"
+_NOISE, _HB = ".noise v(2) V1 dec 1 1 10", ".hb 1k"
+
+
+@pytest.mark.parametrize(
+    ("analyses", "kind"),
+    [
+        (_TRAN, "tran"),
+        (_AC, "AC"),
+        (f"{_AC}\n.op", "ac_ic"),
+        (_DC, "dc"),
+        (".op", "DC"),
+        (_NOISE, "noise"),
+        (_HB, "hb"),
+        (_HB, "HB_FD"),
+        (_HB, "hb_td"),
+        (".op", "hb_startup"),
+        (".op", "tran"),  # agrees with `.OP`; writes nothing, reported below
+        (_TRAN, "sens"),
+        (_HB, "homotopy"),
+        (_TRAN, "tranadjoint"),
+        (_DC, "es"),
+        (_TRAN, "pce"),
+        (f".op\n{_TRAN}", "tran"),
+        (f"{_AC}\n{_TRAN}", "ac"),  # agrees with the first line; writes nothing, reported below
+        ("", "ac"),
+    ],
+)
+def test_a_type_that_agrees_with_the_first_analysis_does_not_stop(analyses: str, kind: str) -> None:
+    head = f"{analyses}\n" if analyses else ""
+    messages = _only(_netlist(f"{head}.print {kind} v(2)\n"), DiagnosticCode.PRINT_TYPE_MISMATCH)
+    assert not any("stops" in message for message in messages)
+
+
+@pytest.mark.parametrize(
+    ("analyses", "kind", "first", "which"),
+    [
+        (_TRAN, "ac", ".tran (line 10)", "the first analysis but `.OP`"),
+        (f"{_TRAN}\n{_AC}", "AC", ".tran (line 10)", "the first analysis but `.OP`"),
+        (f".op\n{_TRAN}", "dc", ".tran (line 11)", "the first analysis but `.OP`"),
+        (f"{_TRAN}\n.op", "dc", ".tran (line 10)", "the first analysis but `.OP`"),
+        (_AC, "tran", ".ac (line 10)", "the first analysis but `.OP`"),
+        (_DC, "noise", ".dc (line 10)", "the first analysis but `.OP`"),
+        (_NOISE, "homotopy", ".noise (line 10)", "the first analysis but `.OP`"),
+        (_HB, "sens", ".hb (line 10)", "the first analysis but `.OP`"),
+        (f"{_HB}\n{_TRAN}", "tran", ".hb (line 10)", "the first analysis but `.OP`"),
+        (_AC, "es", ".ac (line 10)", "the first analysis but `.OP`"),
+        (_DC, "tranadjoint", ".dc (line 10)", "the first analysis but `.OP`"),
+        (".op", "TranAdjoint", ".op (line 10)", "the only analysis"),
+    ],
+)
+def test_a_type_that_disagrees_with_the_first_analysis_is_a_warning(
+    analyses: str, kind: str, first: str, which: str
+) -> None:
+    netlist = _netlist(f"{analyses}\n.print {kind} v(2)\n")
+    (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.PRINT_TYPE_MISMATCH]
+    keyword, line = first.split(" ", 1)
+    analysis = keyword.lstrip(".").upper()
+    assert finding.severity == "warning"
+    assert finding.message == (
+        f"print type `{kind}` does not agree with `{keyword}` {line}, {which}: Xyce 7.10 checks "
+        f'every `.PRINT` type against that line, and stops ("Analysis type {analysis} and print '
+        f'type {kind.upper()} are inconsistent")'
+    )
+    assert netlist.slice(finding.span) == kind
+
+
+@pytest.mark.parametrize(
+    ("analyses", "kind", "names", "runs"),
+    [
+        (f"{_TRAN}\n{_AC}", "tran", "a `.TRAN` analysis", ".ac` (line 11)"),
+        (f"{_AC}\n{_TRAN}", "ac", "an `.AC` analysis", ".tran` (line 11)"),
+        (f"{_AC}\n{_NOISE}", "ac", "an `.AC` analysis", ".noise` (line 11)"),
+        (f"{_DC}\n{_TRAN}", "dc", "a `.DC` or `.OP` analysis", ".tran` (line 11)"),
+        (f"{_NOISE}\n{_TRAN}", "noise", "a `.NOISE` analysis", ".tran` (line 11)"),
+        (f"{_HB}\n{_TRAN}", "hb", "an `.HB` analysis", ".tran` (line 11)"),
+        (f"{_TRAN}\n{_HB}", "tran", "a `.TRAN` analysis", ".hb` (line 11)"),
+        (".op", "tran", "a `.TRAN` analysis", ".op` (line 10)"),
+        (".op", "ac_ic", "an `.AC` analysis", ".op` (line 10)"),
+        (".op", "noise", "a `.NOISE` analysis", ".op` (line 10)"),
+        (".op", "hb_fd", "an `.HB` analysis", ".op` (line 10)"),
+    ],
+)
+def test_a_type_whose_analysis_does_not_run_is_a_warning(
+    analyses: str, kind: str, names: str, runs: str
+) -> None:
+    netlist = _netlist(f"{analyses}\n.print {kind} v(2)\n")
+    (finding,) = [d for d in netlist.diagnostics if d.code is DiagnosticCode.PRINT_TYPE_MISMATCH]
+    assert finding.severity == "warning"
+    assert finding.message == (
+        f"print type `{kind}` writes the results of {names}, but Xyce 7.10 runs `{runs}, and "
+        "writes nothing for this line"
+    )
+
+
+def test_a_dc_type_under_op_and_the_other_commands_types_are_not_reported_when_they_run() -> None:
+    body = ".op\n.print dc v(2)\n.print sens v(2)\n.print es v(2)\n.print homotopy v(2)\n"
+    assert _only(_netlist(body), DiagnosticCode.PRINT_TYPE_MISMATCH) == []
+
+
+def test_each_print_line_is_checked() -> None:
+    netlist = _netlist(f"{_AC}\n{_TRAN}\n.print ac v(2)\n.print tran v(2)\n.print dc v(2)\n")
+    found = [
+        (d.line, "stops" in d.message)
+        for d in netlist.diagnostics
+        if d.code is DiagnosticCode.PRINT_TYPE_MISMATCH
+    ]
+    assert found == [(12, False), (13, True), (14, True)]
+
+
+def test_every_print_type_has_a_rule() -> None:
+    from netlistmod.document.diagnostics import _PRINT_RULES
+    from tests.grammar.xyce.test_xyce_print import PRINT_TYPES
+
+    rules = _PRINT_RULES[_XYCE]
+    assert rules is not None
+    assert sorted(rules) == sorted(kind.lower() for kind in PRINT_TYPES)
+    assert _PRINT_RULES[Dialect.NGSPICE] is None and _PRINT_RULES[Dialect.LTSPICE] is None
+
+
+def test_ngspice_does_not_check_a_print_type() -> None:
+    text = "t\nV1 1 0 1\nR1 1 0 1k\n.tran 1n 2n\n.print ac v(1)\n.end\n"
+    codes = {d.code for d in Netlist.from_text(text, dialect=Dialect.NGSPICE).diagnostics}
+    assert DiagnosticCode.PRINT_TYPE_MISMATCH not in codes
+
+
 # --- The other dialects keep their findings (decision 0026 item 6) ---
 
 

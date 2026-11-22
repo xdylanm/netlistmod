@@ -368,7 +368,8 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         lambda n: n.directives.remove(n.lines[1]),
         ".data t r1:r\n+ 1k\n.enddata\nR1 a 0 1k\n",
     ),
-    # The closed list (decision 0028 item 1): `UnknownDirective` lines, continued by `+` lines.
+    # `.PRINT`, a `PrintDirective` (decision 0029 item 5), and the closed list's untyped commands
+    # (decision 0028 item 1), `UnknownDirective` lines; both continued by `+` lines.
     (
         "print-added",
         "R1 a 0 1k\n",
@@ -382,6 +383,12 @@ GOLDEN: list[tuple[str, str, Op, str]] = [
         ".PRINT TRAN v(a)\n* more\n+ i(R1) ; currents\nR1 a 0 1k\n",
         lambda n: n.directives.replace(n.lines[1], ".print ac vm(a)"),
         ".print ac vm(a)\nR1 a 0 1k\n",
+    ),
+    (
+        "print-removed",
+        "R1 a 0 1k\n.print tran v(a)\n+ i(R1)\n.print dc v(a)\n",
+        lambda n: n.directives.remove(n.lines[2]),
+        "R1 a 0 1k\n.print dc v(a)\n",
     ),
     (
         "save-removed",

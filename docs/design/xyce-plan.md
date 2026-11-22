@@ -194,6 +194,10 @@ notes:
   `STEPPED_ANALYSIS_FIELD`, `STEP_IGNORED`, `STEPS_WITH_OP`, `IC_WITH_NODESET`,
   `MEASURE_MODE_MISMATCH` and `CONDITION_IGNORED` (X-M2 B5), which `docs/usage/errors.md` lists
   only as reserved;
+- [ ] the X-M2.1 additions (decision 0029 item 5): the node `PrintDirective` (xyce's `.PRINT`,
+  in `netlistmod.model.nodes`) and the growth of the `TopLevelItem` union by it, and the
+  `DiagnosticCode` member `PRINT_TYPE_MISMATCH`, which `docs/usage/errors.md` lists only as
+  reserved;
 - [ ] the X-M2 internal names X-M8 makes public, or keeps internal: `Scope._data` (the `.DATA`
   tables), `Index.sweep_targets` with `SweepTarget`, `Index.condition_nodes` (the nodes that
   initial conditions set; X-M2 R1), and `document.index.step_quantity` (the
