@@ -1,0 +1,27 @@
+# 0029 — xyce discrepancy categories: the manual as the reference, the solver as observed
+
+- **Status:** accepted (2026-11-21, maintainer; X-M2.1 section 2)
+- **Date:** 2026-11-21
+- **Amends:** [decision 0026](0026-the-xyce-dialect.md) item 5 (the grammar follows the manual) and [decision 0027](0027-xyce-structure-names-and-values.md) item 12 (every refusal of a form the binary accepts is a row), for the hidden xyce dialect only.
+- **Context:**
+  - **The rows had no common rule.** X-M0 to X-M2 recorded every difference between the Xyce 7.10 manuals and the XyceNF 7.10.0 binary as a row in `docs/grammars/xyce/discrepancies.md`. Most rows follow the manual (decision 0026 item 5, architecture §11.3 rule 2), but some follow the binary (`µ`, the `PARAMS:` comma, the one-field `.LIB`, the required `.DATA` name), some rest on the binary where the manual is silent or vague (§11.3 rule 3), and some describe what the library's model cannot hold. A row did not say which of these it was, or why.
+  - **Direction.** The table's sections mixed the two directions: rows where the library refuses what Xyce runs, and rows where the library reads what Xyce stops on (the `.TRAN` schedule after tstart, the full `.TRAN` form, a zero-argument `.FUNC`, an `.AC` point count that is not an integer).
+  - **R1 of X-M2** left `.PRINT` untyped (gap 3): Xyce checks a `.PRINT` type against the first analysis line, and prints nothing when it disagrees with the one that runs.
+  - The maintainer decided the rule in [xm2.1-tasks.md](../design/xm2.1-tasks.md) section 2.
+- **Decision:**
+  1. **The manual is the reference; the solver's behaviour is observed.** A netlist generator should be explicit and precise, and should be able to require the grammar as documented, even where the solver is more lenient (it may accept other dialects' conventions or a person's shorthand). Each difference between the manual and the binary is a row with one of four categories, and the category says which side the library follows:
+     - **`manual`:** the manual is correct and precise, and the solver is lenient or has a bug. The library follows the manual. It refuses what the manual does not allow (a netlist without `.END`, commas in `.GLOBAL`, the ngspice order of R), and reads what the manual allows even where Xyce 7.10 stops on it, which the maintainer judges a solver bug (the `.TRAN` schedule after tstart, the full `.TRAN` form, a zero-argument `.FUNC`).
+     - **`imprecise`:** the manual is imprecise or incomplete, and the solver's behaviour fills the gap; the reading is `observed` (§11.3 rule 3). The library may be stricter than the solver where that removes an ambiguity (a blank inside a bare `.param` value, which Xyce deletes). The rows on which the manual is silent are of this category.
+     - **`manual-error`:** the manual is wrong: it documents a form the solver refuses or reads otherwise (the `//` comments of its examples, `µ` as a scale factor). The library follows the solver.
+     - **`library-limit`:** not a question of manual against solver. The library's model cannot express or check the form: a bare `AC`, which the 1.0 `AcSpec` cannot hold; instance-parameter lists that are the union of the model levels; fields kept as untyped text.
+
+     The category is a judgement where neither source is authoritative. The maintainer makes it, and the row records it in a **Category** column.
+  2. **Consistency.** A row on which the library accepts a form that Xyce stops on is `manual` or `library-limit`. A row on which the library refuses a form that both the manual and Xyce accept is `library-limit`. A test keeps the table to this rule.
+  3. **A zero-argument `.FUNC`** stays read: the manual allows it, and Xyce 7.10 stopping on its call is taken as a solver bug (`manual`).
+  4. **Point counts stay unchecked.** `.AC DEC 1.5 1 10` and the `DEC` and `OCT` counts of `.DC` and `.STEP` are read as written, though Xyce stops on a count that is not an integer (`library-limit`).
+  5. **`.PRINT` is typed shallowly,** as `.MEAS` is: the print type from the manual's closed list, the rest kept as text. A warning reports a type that disagrees with the first analysis line (Xyce stops) or with the analysis that runs (Xyce prints nothing).
+- **Consequences:**
+  - Decision 0026 item 5 reads: the grammar follows the manual except where a row's category says otherwise. Decision 0027 item 12 reads: every difference between the manual and the binary, and every form the library's model cannot check, is a row with a category.
+  - `discrepancies.md` states the rule in its preamble, gains the Category column in every table, and gathers the rows where the library accepts a form Xyce stops on in one section; a test checks every category and item 2.
+  - `.PRINT` leaves the closed list of untyped commands for a rule and an internal node of its own, with a new `DiagnosticCode` member; both are best-effort additions (decision 0024 item 11) on the X-M8 checklist (xyce-plan.md section 8.2).
+  - ngspice and LTspice are unchanged (decision 0024).

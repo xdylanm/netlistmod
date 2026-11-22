@@ -1,10 +1,27 @@
 # Xyce manual, solver and library discrepancies
 
-The library follows the manuals (architecture §11.3 rule 2;
-[decision 0026](../../decisions/0026-the-xyce-dialect.md),
+The manual is the reference, and the solver's behaviour is observed
+([decision 0029](../../decisions/0029-xyce-discrepancy-categories.md), which amends
+[decision 0026](../../decisions/0026-the-xyce-dialect.md) item 5 and
 [decision 0027](../../decisions/0027-xyce-structure-names-and-values.md) item 12). This file
 records what XyceNF Release 7.10.0 (Windows) does where it differs from the manuals, or where the
-library differs from either. The rows come from the X-M0 probes (task A4, 2026-11-15), the X-M1
+library differs from either. Each difference has a category, a judgement the maintainer makes,
+which says which side the library follows:
+
+- **`manual`:** the manual is correct and precise; Xyce is lenient or has a bug. The library
+  follows the manual, refusing what it does not allow and reading what it allows even where
+  Xyce 7.10 stops (taken as a solver bug).
+- **`imprecise`:** the manual is imprecise, incomplete or silent; Xyce's behaviour fills the gap
+  and the reading is `observed` (architecture §11.3 rule 3). The library may be stricter than
+  Xyce where that removes an ambiguity.
+- **`manual-error`:** the manual is wrong, documenting a form Xyce refuses or reads otherwise.
+  The library follows Xyce.
+- **`library-limit`:** not a question of manual against solver: the library's model cannot
+  express or check the form.
+
+A row on which the library accepts a form that Xyce stops on is `manual` or `library-limit`; a
+row on which the library refuses a form that both the manual and Xyce accept is `library-limit`
+(decision 0029 item 2). The rows come from the X-M0 probes (task A4, 2026-11-15), the X-M1
 stage 1 probes (xm1-tasks 5.1) and the X-M2 probes (xm2-tasks 5.1 and task B6, 2026-11-16),
 re-run as the solver tests of `tests/solver/test_xyce_*.py`; the
 rejection corpus of `tests/corpus/xyce/` records Xyce's outcome on each of its fixtures
