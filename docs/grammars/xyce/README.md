@@ -166,9 +166,11 @@ as the manual writes them; and the library reads an `.AC` point count that is no
 `.PCE`, ngspice's `.save v(2)` and any `_CONT` measure type, on which Xyce stops or which it
 ignores.
 
-The rest is planned by task and milestone in [xm2-tasks.md](../../design/xm2-tasks.md) and the
-xyce plan, section 8: the directives in X-M2, then the remaining devices. X-M1's record is
-[archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md).
+The rest is planned by task and milestone in [xm2.1-tasks.md](../../design/xm2.1-tasks.md) and the
+xyce plan, section 8: the discrepancy categories and `.PRINT` in X-M2.1, then the remaining
+devices. The records of X-M1 and X-M2 are
+[archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md) and
+[archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md).
 
 ## Validation status
 
