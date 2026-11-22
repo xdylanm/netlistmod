@@ -110,9 +110,23 @@ Stage 1 findings (A1: points 1 to 15; A2: points 16 to 29), probed on XyceNF 7.1
     - `set_param` takes only `port` and `z0` on P, and `_PORT_PARAMS[_XYCE]` stays empty for V;
     - the other source edits work once P is in `_SOURCES`.
 
+**Maintainer's decisions at G1 (2026-11-22), one by one:**
+
+- **7:** refuse keyword arguments on PULSE, SIN, EXP, SFFM and PAT (`manual`).
+- **8:** `SourceSpec.args` widens to `Value | Identifier`, with PAT's DATA in position 7 (X-M8 checklist).
+- **9:** read PAT's `R=` and refuse a positional R with a hint (`manual-error`).
+- **11:** `TD=` and `R=` stand after the list or the file name only, outside the parentheses, at most once each. This holds for PAT's `R=` too. R's range is not checked (`library-limit`).
+- **12:** no file reference for PWL `FILE`; the path is held as text.
+- **15:** a row only (`imprecise`), with no diagnostic.
+- **18, 19:** the refusals as recommended.
+- **20:** DC, then `port=` and `Z0=` in either order, then AC, then the function.
+- **23:** no numbering check; a row (`reads/stops`, `library-limit`).
+- **26:** `PortSource`, a sibling of V and I, with `port=` and `Z0=` in `params`.
+
 Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 0026).
 
 ### 5.2 Log
 
 - 2026-11-22: task list written; X-M2.1 merged as #31.
 - 2026-11-22: A1 and A2 done (section 5.1); G1 questions for the maintainer.
+- 2026-11-22: G1: the maintainer decided points 7 to 26 one by one (section 5.1).
