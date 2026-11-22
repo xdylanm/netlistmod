@@ -34,8 +34,8 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 
 ### Stage 1
 
-- [ ] **A1 — The transient functions.** Each of PULSE, SIN, EXP, PAT, PWL and SFFM in the manual against today's `SourceSpec` and its ngspice and LTspice rules (reuse, reuse with differences, new): the argument counts and defaults, parentheses or none, commas, braces and expressions in arguments, keyword arguments (`TD=`, `R=`, PWL `FILE`), PAT's bit string, a function after `AC` or before `DC`, a second function; the `.HB` and SIN question. Probes for what the manual leaves unclear. Options for each question, with a recommendation.
-- [ ] **A2 — The P port and the edit layer.** The P line's forms and fields against the V source and ngspice's coupled line; the node it needs; where P may stand and what `.LIN` needs from it; the source edits on xyce (the plan's section 8.1 sites) and on P. Probes; options with a recommendation.
+- [x] **A1 — The transient functions.** Each of PULSE, SIN, EXP, PAT, PWL and SFFM in the manual against today's `SourceSpec` and its ngspice and LTspice rules (reuse, reuse with differences, new): the argument counts and defaults, parentheses or none, commas, braces and expressions in arguments, keyword arguments (`TD=`, `R=`, PWL `FILE`), PAT's bit string, a function after `AC` or before `DC`, a second function; the `.HB` and SIN question. Probes for what the manual leaves unclear. Options for each question, with a recommendation.
+- [x] **A2 — The P port and the edit layer.** The P line's forms and fields against the V source and ngspice's coupled line; the node it needs; where P may stand and what `.LIN` needs from it; the source edits on xyce (the plan's section 8.1 sites) and on P. Probes; options with a recommendation.
 
 ### Stage 2
 
@@ -49,8 +49,70 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 
 ### 5.1 G1 decisions
 
-(After stage 1.)
+Stage 1 findings (A1: points 1 to 15; A2: points 16 to 29), probed on XyceNF 7.10.0 in print mode. Each point gives the recommendation; **(G1)** marks a question for the maintainer. Rows are `discrepancies.md` rows, given as Library/Xyce and category (decision 0029).
+
+**The functions** ([xyce-ref] §2.3.9 p221–225, §2.3.10 p226–230; PWL notes §6.1.12 p846). V and I read alike.
+
+1. **Order:** `[[DC] v] [AC mag [ph]] [function]`, as `xyce.lark` has it now. A function before `AC` (Xyce finds `AC` anywhere): `ParseError`, row `refuses/runs`, `manual`. A function before `DC` or a value stops Xyce too.
+2. **A second function:** `ParseError`. Xyce stops on some pairs and silently ignores the second of others: row `refuses/ignores`, `manual`.
+3. **Parentheses** are optional on all six functions and must be balanced around the whole list. Xyce runs unbalanced lists: row `refuses/runs`, `manual`. `PWL(…)` is read (`imprecise`, `reads/runs`). PSpice pair groups `(0,0)` stop Xyce and are refused.
+4. **No commas:** every comma stops Xyce. Unlike ngspice's `fn_arg`. Optional row (`imprecise`; §6.1.12 hints at commas).
+5. **Arguments:** `NUMBER | {…} | '…'`. A bare name stops Xyce, so no bare formula. `+` lines inside a list run.
+6. **Counts per function** (PULSE 1–7, SIN 3–6, EXP 2–6, SFFM 2–5, PAT 7–8). Too few: `ParseError`, as Xyce. Too many: `ParseError`, row `refuses/ignores`, `manual`. No defaults are filled.
+7. **(G1) Keyword arguments** on PULSE, SIN, EXP, SFFM, PAT (`PULSE(0 1 TD=10n)`, `V1=`…): undocumented, but Xyce reads them in any order. Recommend refusing them (`refuses/runs`, `manual`), except PAT's `R=` (point 9).
+8. **(G1) PAT's DATA** is `b` or `B` then 0s and 1s, in the 7th place (a new terminal; anything else stops Xyce). It is not a `Value`. Recommend widening `SourceSpec.args` to `Value | Identifier`, keeping positions as the manual's table (X-M8 checklist). Alternatives: a `pattern` field, or a `DATA` parameter.
+9. **(G1) PAT's R:** the manual makes R the 8th positional field. Xyce silently ignores a positional R and reads `R=n`. Recommend reading `R=` and refusing a positional R with a hint: `manual-error`, `refuses/ignores`. Alternative: read the positional R as the manual says (`manual`, `reads/ignores`).
+10. **PWL pairs:** an even count of at least 2. Xyce runs an odd count, giving 0: row `refuses/runs`, `manual`. Time order is not checked.
+11. **(G1) PWL `TD=` and `R=`:**
+    - after the list or the file name, outside the parentheses, either order, at most once each, on both forms (`imprecise`; the synopsis has them after FILE only, the example inline);
+    - before the list, inside the parentheses, or repeated: `ParseError` (`refuses/runs`, `imprecise`);
+    - Xyce stops when R is not in 0 ≤ R < the last time. Recommend leaving the range unchecked: `reads/stops`, `library-limit`.
+12. **(G1) PWL FILE:**
+    - `FILE` (any case), then a double-quoted string or a bare path, then `TD=`/`R=`, held as a `FILE` parameter as on LTspice; the path is never read;
+    - refused: `FILE=`, single quotes, parentheses around the FILE form (`imprecise`, `refuses/runs`), and extra tokens or a second `FILE` (`manual`, `refuses/ignores`);
+    - a missing file: `reads/stops`, `library-limit`;
+    - Xyce resolves a relative path against the working directory, not the netlist's folder, so recommend no file reference in the document layer;
+    - `set_stimulus_arg` must write `FILE name` without `=` on xyce.
+13. **Case** folds everywhere. `SINE` stops Xyce, so there is no `SINE` keyword on xyce.
+14. **Reuse:** PULSE, SIN, EXP, SFFM and PWL reuse `SourceSpec`, with the differences above. PAT is new. xyce keeps its own `_xsrc` chain; core's `fn_list` (required parentheses, commas) does not fit.
+15. **(G1) `.HB` and SIN (open from X-M2):** with a `.HB` line in the netlist and a DC sweep running, every source with a function takes its function's value at time 0, not its DC value; a swept function source does not follow the sweep. The manual is silent. Recommend a row (`imprecise`) and a new warning on a `.DC` or `.STEP` that sweeps a function source while `.HB` is present (X-M8 checklist). Alternatives: the row only, or the warning on every function source's DC value under `.HB`.
+
+**The P port** ([xyce-ref] §2.3.11 p231, Table 2-35 p178; [xyce-ug] §7.11.2 p136).
+
+16. **The form** `P n+ n- [[DC] v] port=<n> [Z0=v] [AC …] [function]`. Outside `.LIN` it is a V source in series with Z0 (default 50).
+17. **`port=` is required.** Without it, Xyce runs an ideal V source that is not a port: `refuses/runs`, `manual`.
+18. **The port number** is an unsigned integer literal of 1 or more, or a braced or quoted formula. Xyce stops on `1.5`, `1e0`, `1k`, a bare name and a second `port=`. Refused:
+    - `1.0` (`refuses/runs`, `imprecise`);
+    - `0` and negatives, which run outside `.LIN` (`refuses/runs`, `manual`);
+    - `port 1` with no `=` (`refuses/runs`, `manual`).
+
+    Blanks around `=` are allowed.
+19. **Z0** uses the device-field number reader. A bare name and a second `Z0=` stop Xyce. Refused:
+    - `100+10j`, whose imaginary part Xyce drops (`refuses/runs`, `manual`);
+    - `Z0 100` with no `=`.
+
+    `ZO` stops Xyce. No sign check.
+20. **(G1) Field order:** Xyce needs the DC part first, then takes `port=` and `Z0=` anywhere. Recommend: DC, then `port=` and `Z0=` in either order, then AC, then the function. Xyce's other orders, `DC` with no value, and a comma are `refuses/runs`, `manual`. The bare-`AC` row extends to P.
+21. **Lines:** exactly two nodes. P is allowed in a subcircuit body; each instance is a port. It takes no other parameter (`M=` and unknown names stop Xyce).
+22. **Analyses:** P runs under `.DC`, `.OP`, `.AC`, `.TRAN` and `.HB`. `.DC P1`, `.STEP P1`, `P1:DCV0` and `P1:Z0` work. An F or H controlled by P stops Xyce (relevant at X-M5).
+23. **(G1) `.LIN` numbering:** the ports of the flattened netlist must be exactly 1..N, or `.LIN` aborts. Without `.LIN` any numbering runs. Recommend a new warning when a top-level `.LIN` is present and the literal port numbers are not 1..N; a formula number is `library-limit` (X-M8 checklist). Alternative: no check in X-M3 and a row (`reads/stops`, `library-limit`).
+24. **Undocumented:** `port=` on a V line makes it a `.LIN` port, and Xyce ignores `Z0=` on V. The existing row "Xyce ignores a parameter on V or I" is wrong for `port=`. The library keeps refusing; the row is corrected (`refuses/runs`, `manual`).
+25. **ngspice's P** (a coupled line) shares only the letter. The nearest reuse is ngspice's `portnum`/`z0` on V, held in `params`.
+26. **(G1) The node:** recommend a sibling of V and I under `_IndependentSource` (named `PortSource`, not `Port`), with `port=` and `Z0=` in `params`. Then `set_param` and `remove_param` work, and the controlled-source check still tells P from V. A V subclass would make `isinstance(…, VoltageSource)` mean something new. The code that learns it: `_SOURCES` (`edit/_ops_common.py`), `_PRIMARY_PARAMS` (`document/index.py`, `dcv0`), the `takes` tuple in `_ops_remove.py`, `_source_item` in `_rules_sources.py`. Nets and names need nothing.
+
+**The edit layer** (plan §8.1).
+
+27. **`model/_rules_sources.py:244`:** a per-dialect table of the source kinds that may carry named parameters (ngspice V; LTspice V and I; xyce P).
+28. **`edit/_ops_sources.py:171`:** a per-dialect table of the kinds that need a value (LTspice I; none on ngspice or xyce, where a bare source runs as 0).
+29. **Edits on P:**
+    - `set_ac` and `set_stimulus` insert after the last of `port=` and `Z0=`, and a new `Z0=` goes right after `port=`;
+    - `remove_param` refuses `port`;
+    - `set_param` takes only `port` and `z0` on P, and `_PORT_PARAMS[_XYCE]` stays empty for V;
+    - the other source edits work once P is in `_SOURCES`.
+
+Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 0026).
 
 ### 5.2 Log
 
 - 2026-11-22: task list written; X-M2.1 merged as #31.
+- 2026-11-22: A1 and A2 done (section 5.1); G1 questions for the maintainer.
