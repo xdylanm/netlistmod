@@ -7,6 +7,7 @@ import pytest
 
 from netlistmod import DiagnosticCode, Dialect, Edit, EditPlan, Netlist, Span, TopologyViolation
 from netlistmod.dialects import _XYCE
+from netlistmod.document.index import scope_replaces_ground
 from netlistmod.document.names import fold, is_automatic_global, is_ground, net_name
 
 
@@ -66,16 +67,16 @@ def test_the_global_prefix_is_per_dialect() -> None:
 
 def test_replaceground_sets_the_netlist_wide_flag() -> None:
     plain = _netlist("t\n.global GND a\n.END\n")
-    assert not plain.scope()._replace_ground
+    assert not scope_replaces_ground(plain.scope())
     assert [net.name for net in plain.nets()] == ["gnd", "a"]
     replaced = _netlist("t\n.global GND a\n.preprocess replaceground true\n.END\n")
-    assert replaced.scope()._replace_ground
+    assert scope_replaces_ground(replaced.scope())
     nets = replaced.nets()
     assert [net.name for net in nets] == ["0", "a"]
     assert nets[0].spellings == ("GND",)
     assert nets[0].global_
     off = _netlist("t\n.global GND\n.preprocess replaceground false\n.END\n")
-    assert not off.scope()._replace_ground
+    assert not scope_replaces_ground(off.scope())
     assert [net.name for net in off.nets()] == ["gnd"]
 
 

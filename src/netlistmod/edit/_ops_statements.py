@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
-from netlistmod.document.index import _FIRST_PARAM_WINS
+from netlistmod.document.index import _FIRST_PARAM_WINS, scope_functions
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _VALUE,
@@ -47,7 +47,7 @@ def set_param_statement(
     found = resolve_scope(netlist, scope, in_definition)
     reason = f"params.set {name}"
     key = found.fold(name)
-    function = next((where for where in found.chain() if key in where._functions), None)
+    function = next((where for where in found.chain() if key in scope_functions(where)), None)
     if function is not None:
         raise EditError(
             f"params.set: `{name}` is a function defined in {function.describe()}, not a "

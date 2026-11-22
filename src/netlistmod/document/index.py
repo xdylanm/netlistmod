@@ -181,7 +181,8 @@ class Scope:
     ``_replace_ground``, whether ``GND``, ``GND!`` and ``GROUND`` are the ground net (an xyce
     netlist with ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it; the same in every scope).
     A third, ``_data``, holds the xyce ``.DATA`` tables by folded name in source order (X-M2;
-    only the top level has any, since a table in a body is refused).
+    only the top level has any, since a table in a body is refused). Other modules read the three
+    through this module's ``scope_functions``, ``scope_replaces_ground`` and ``scope_data``.
     """
 
     __slots__ = (
@@ -360,6 +361,31 @@ class Scope:
 
 def _frozen(table: dict[str, list[_T]]) -> Mapping[str, tuple[_T, ...]]:
     return MappingProxyType({key: tuple(values) for key, values in table.items()})
+
+
+# Read-only accessors for the xyce tables of a scope (X-M2.1 C4; X-M2 review R1 N6). The tables
+# stay private attributes of `Scope`, a public class, so that its public surface does not grow
+# while the dialect is hidden (decision 0026 item 4; xm1-tasks 5.1 point 31); the other modules
+# of the package read them through these functions, as they do `step_quantity`. X-M8 decides
+# whether they become properties of `Scope` (xyce-plan.md section 8.2).
+
+
+def scope_functions(scope: Scope) -> Mapping[str, tuple[FunctionDefinition, ...]]:
+    """The user-defined functions of ``scope`` by folded name, in source order: xyce ``.FUNC``
+    lines and the functions of ``.PARAM`` lines; empty on the other dialects."""
+    return scope._functions
+
+
+def scope_data(scope: Scope) -> Mapping[str, tuple[DataTable, ...]]:
+    """The xyce ``.DATA`` tables of ``scope`` by folded name, in source order; only the top level
+    has any, since a table in a body is refused."""
+    return scope._data
+
+
+def scope_replaces_ground(scope: Scope) -> bool:
+    """Whether ``GND``, ``GND!`` and ``GROUND`` are the ground net in ``scope``: an xyce netlist
+    with ``.PREPROCESS REPLACEGROUND TRUE`` anywhere in it, the same in every scope."""
+    return scope._replace_ground
 
 
 class Index:
@@ -724,7 +750,7 @@ def step_quantity(scope: Scope, step: StepDirective) -> tuple[str, ...]:
 def _data_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) -> Reference:
     """A ``DATA=`` field: the top-level ``.DATA`` table of that name, the last of a repeated one,
     as Xyce uses (xm2-tasks 5.1 point 27)."""
-    tables = scope._data.get(scope.fold(name), ())
+    tables = scope_data(scope).get(scope.fold(name), ())
     return Reference("data", name, span, scope.path, owner, tables[-1] if tables else None)
 
 
@@ -855,7 +881,7 @@ def _node_reference(scope: Scope, owner: TopLevelItem, name: str, span: Span) ->
 
 def _net_node(scope: Scope, name: str) -> object | None:
     dialect = scope.dialect
-    grounds = scope._replace_ground
+    grounds = scope_replaces_ground(scope)
     if is_ground(name, dialect, replace_ground=grounds) or is_automatic_global(name, dialect):
         return name
     key = net_name(name, dialect, replace_ground=grounds)
