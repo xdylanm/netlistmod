@@ -96,6 +96,7 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | mutual_coupling
                | voltage_source
                | current_source
+               | port_source
                | diode
                | subckt_instance
                | xy_ic_stmt
@@ -766,6 +767,27 @@ ac_bare: SEP AC_KW (NL | eol)
        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ac_bare
 V_NAME.4: /[Vv]/ _XY_CHAR*
 I_NAME.4: /[Ii]/ _XY_CHAR*
+
+// P, the port ([xyce-ref] §2.3.11 p231, Table 2-35 p178; [xyce-ug] §7.11.2 p136; decision 0030
+// item 6): V's DC part, then `port=` and `Z0=` in either order, `port=` required and each once,
+// then V's AC part and function. Both need their `=`, with blanks allowed around it, and take a
+// number of the device-field reader or an expression in braces or quotes; the transformer requires
+// the port number to be an integer literal of 1 or more. No other parameter, and exactly two
+// nodes. The line is right-linear, as V's. A line without `port=` is recognised only to be
+// refused (port_without_number): Xyce runs it as a plain V source, which is no port.
+// spec: XY-POR-001
+port_source: P_NAME node node _p0
+           | P_NAME node node dc_spec? p_z0? _xsrc_ac -> port_without_number
+_p0: dc_spec _p1 | _p1
+_p1: p_port _p2 | p_z0 p_port _xsrc_ac
+_p2: p_z0 _xsrc_ac | _xsrc_ac
+p_port: SEP PORT_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) p_port
+p_z0: SEP Z0_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+    | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) p_z0
+PORT_KW.4: /port(?=[ \t]*=)/i
+Z0_KW.4: /z0(?=[ \t]*=)/i
+P_NAME.4: /[Pp]/ _XY_CHAR*
 
 // The transient functions ([xyce-ref] §2.3.10 p226–230, §2.3.9 p221–225; decision 0030 items 2
 // to 5): PULSE, SIN, EXP and SFFM (xfn_name), PAT and PWL, the last field of the line. The name

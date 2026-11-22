@@ -264,6 +264,16 @@ class CurrentSource(_IndependentSource):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class PortSource(_IndependentSource):
+    """An xyce ``P`` line, a port ([xyce-ref] §2.3.11 p231; decision 0030 item 6): a V source in
+    series with ``Z0`` outside ``.LIN``. Its ``dc``, ``ac`` and ``stimulus`` are V's; ``port=``
+    and ``Z0=`` are in ``params``, as written. xyce only; internal while the dialect is hidden
+    (decision 0026). It is not a :class:`VoltageSource`, so an F or H that names it does not
+    name a voltage source.
+    """
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class Diode(Component):
     """A ``D`` line; the model is mandatory and ``flags`` holds ``off``.
 
@@ -1070,6 +1080,7 @@ BodyItem: TypeAlias = (
     | MutualCoupling
     | VoltageSource
     | CurrentSource
+    | PortSource
     | Diode
     | BipolarTransistor
     | Mosfet
@@ -1154,6 +1165,7 @@ ELEMENT_NAMES: dict[type[Component], str] = {
     MutualCoupling: "coupling",
     VoltageSource: "voltage source",
     CurrentSource: "current source",
+    PortSource: "port",
     Diode: "diode",
     BipolarTransistor: "bipolar transistor",
     Mosfet: "MOSFET",

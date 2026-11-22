@@ -26,7 +26,7 @@ from netlistmod.model._tree import (
     _span,
 )
 from netlistmod.model.nodes import SourceSpec
-from netlistmod.model.values import Formula, Identifier, ParamAssignment, Value
+from netlistmod.model.values import Formula, Identifier, NumericValue, ParamAssignment, Value
 from netlistmod.source import Span
 
 
@@ -81,10 +81,17 @@ _COUNTS: dict[str, tuple[int, int, str]] = {
     "sffm": (2, 5, "V0 VA FC MDI FS"),
     "pat": (7, 7, "VHI VLO TD TR TF TSAMPLE DATA"),
 }
+_PORT_CITE = "Xyce reference manual §2.3.11 p231"
 # PAT's DATA, the seventh argument.
 _PAT_DATA = 6
 # The `name=` fields each function takes after its list.
 _AFTER_LIST: dict[str, tuple[str, ...]] = {"pwl": ("td", "r"), "pat": ("r",)}
+
+
+def _whole_decimal(text: str) -> bool:
+    """`1.0` or `+2.00`: a decimal point and only zeros after it, no exponent or letter."""
+    whole, point, fraction = text.lstrip("+").partition(".")
+    return bool(point) and whole.isdigit() and set(fraction) <= {"0"}
 
 
 class XyceSourcesRules(ElementsRules):
@@ -160,6 +167,34 @@ class XyceSourcesRules(ElementsRules):
         span = Span(_span(keyword).start, path.span.end)
         return _Field(
             _XFnParam(ParamAssignment(str(keyword), path, span, _span(keyword))), comments
+        )
+
+    def p_port(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    p_z0 = p_port
+
+    def _xyce_port(self, params: tuple[ParamAssignment, ...]) -> None:
+        """A P line's port number is an integer literal of 1 or more, or an expression in braces
+        or quotes (decision 0030 item 6); the grammar requires `port=` and reads `Z0=`."""
+        (port,) = (param for param in params if param.name.lower() == "port")
+        value = port.value
+        if isinstance(value, Formula):
+            return
+        assert isinstance(value, NumericValue)  # the grammar's NUMBER
+        text = self._xfn_written(value)
+        if text.isdigit() and int(text) >= 1:
+            return
+        if text.lstrip("+-").isdigit():
+            outcome = "Xyce runs it outside `.LIN`, but a port is numbered from 1"
+        elif _whole_decimal(text):
+            outcome = f"Xyce runs `{text}` as an integer, but the manual takes an integer literal"
+        else:
+            outcome = "Xyce stops on it"
+        raise self._error_at(
+            value.span.start,
+            f"`port={text}`: the port number is an integer of 1 or more, `port=1` ({_PORT_CITE}), "
+            f"or an expression in braces; {outcome}",
         )
 
     def _xyce_function(self, element: _Element) -> _Element:

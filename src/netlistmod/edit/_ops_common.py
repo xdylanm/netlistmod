@@ -37,6 +37,7 @@ from netlistmod.model.nodes import (
     OpaqueStatement,
     OpDirective,
     ParamStatement,
+    PortSource,
     PreprocessDirective,
     Resistor,
     SourceSpec,
@@ -86,7 +87,7 @@ _TWO_TERMINAL = (Resistor, Capacitor, Inductor)
 _TRANSISTORS = (BipolarTransistor, Mosfet, Jfet, Mesfet)
 
 
-_SOURCES = (VoltageSource, CurrentSource)
+_SOURCES = (VoltageSource, CurrentSource, PortSource)
 
 
 # The keywords that name the value of an R, C or L line (`r=1k`; NG-RES-001, NG-CAP-001,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import replace
-from typing import Any
+from typing import Any, NoReturn
 
 from lark import Token
 
@@ -30,6 +30,7 @@ from netlistmod.model._tree import (
 )
 from netlistmod.model.nodes import (
     CurrentSource,
+    PortSource,
     SourceSpec,
     VoltageSource,
 )
@@ -191,7 +192,23 @@ class SourcesRules(XyceSourcesRules):
     def current_source(self, children: list[Any]) -> _Item:
         return self._source_item(CurrentSource, _Element(children))
 
-    def _source_item(self, kind: type[VoltageSource | CurrentSource], element: _Element) -> _Item:
+    def port_source(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        self._xyce_port(element.all(ParamAssignment))
+        return self._source_item(PortSource, element)
+
+    def port_without_number(self, children: list[Any]) -> NoReturn:
+        designator = children[0]
+        raise self._parse_error(
+            designator,
+            f"`{designator}` has no `port=`: a P line needs its port number, `port=1`, after the "
+            "DC value (Xyce reference manual §2.3.11 p231); Xyce runs a P line without it as a "
+            "plain voltage source, which is not a port",
+        )
+
+    def _source_item(
+        self, kind: type[VoltageSource | CurrentSource | PortSource], element: _Element
+    ) -> _Item:
         element = self._xyce_function(element)
         dc = element.optional(_Dc)
         ac, stimulus, distortion = self._source_parts(element, kind)
@@ -209,7 +226,7 @@ class SourcesRules(XyceSourcesRules):
         )
 
     def _source_parts(
-        self, element: _Element, kind: type[VoltageSource | CurrentSource]
+        self, element: _Element, kind: type[VoltageSource | CurrentSource | PortSource]
     ) -> tuple[AcSpec | None, SourceSpec | None, tuple[SourceSpec, ...]]:
         """A source line's AC part, function and distortion inputs. A plain value belongs to the
         AC magnitude or distortion keyword before it. A function's named parameter must follow it

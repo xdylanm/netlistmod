@@ -139,11 +139,12 @@ def test_every_element_line_is_unsupported(letter: str) -> None:
         _parse(f"title\n{letter.lower()}1 a 0 1\n.END\n")
 
 
-def test_the_x_m1_letters_are_supported_and_the_rest_planned() -> None:
+def test_the_x_m1_and_x_m3_letters_are_supported_and_the_rest_planned() -> None:
     matrix = device_matrix(_XYCE)
     supported = {letter for letter, entry in matrix.items() if entry["status"] == "supported"}
-    assert supported == set("CDIKLRVX")
-    assert all(matrix[letter]["milestone"] == "X-M1" for letter in supported)
+    assert supported == set("CDIKLRVXP")
+    assert all(matrix[letter]["milestone"] == "X-M1" for letter in supported - {"P"})
+    assert matrix["P"]["milestone"] == "X-M3"
     assert {entry["status"] for entry in matrix.values()} == {"planned", "supported"}
     # A and N are not Xyce letters ([xyce-ref] Table 2-35 p177–178).
     assert "A" not in matrix
