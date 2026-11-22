@@ -1,6 +1,6 @@
 # X-M3 task list — xyce stimulus and the P port
 
-> **Status:** ACTIVE (2026-11-22)
+> **Status:** ACTIVE (2026-11-22; G1 decided, [decision 0030](../decisions/0030-xyce-stimulus-and-port.md))
 > **Follows:** [X-M2.1](./archive/xyce/xm2.1-tasks.md) (merged as #31) and decisions [0026](../decisions/0026-the-xyce-dialect.md) to [0029](../decisions/0029-xyce-discrepancy-categories.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 4 and 8. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12).
 
 ## 1. Scope
@@ -39,7 +39,7 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 
 ### Stage 2
 
-- [ ] **B1 — Decision record** for the G1 decisions.
+- [x] **B1 — Decision record** for the G1 decisions.
 - [ ] **B2 — The functions** in `xyce.lark` and the source rules.
 - [ ] **B3 — The P port.**
 - [ ] **B4 — The document and edit layers.**
@@ -130,3 +130,4 @@ Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 00
 - 2026-11-22: task list written; X-M2.1 merged as #31.
 - 2026-11-22: A1 and A2 done (section 5.1); G1 questions for the maintainer.
 - 2026-11-22: G1: the maintainer decided points 7 to 26 one by one (section 5.1).
+- 2026-11-22: the maintainer accepted the remaining recommendations of section 5.1. B1 done: [decision 0030](../decisions/0030-xyce-stimulus-and-port.md).
