@@ -174,6 +174,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `IC_WITH_NODESET` | warning | each `.NODESET` keyword | an xyce netlist with `.IC` or `.DCVOLT` and `.NODESET` (section 9) |
 | `MEASURE_MODE_MISMATCH` | warning | the mode | an xyce `.MEAS` mode whose analysis does not run, or FFT without `.FFT` (section 9) |
 | `CONDITION_IGNORED` | warning | the node | an xyce condition in a subcircuit body on a global node (section 9) |
+| `PRINT_TYPE_MISMATCH` | warning | the print type | an xyce `.PRINT` type that does not agree with the first analysis, or whose analysis does not run (section 9) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
 the model name) is specified with the edit layer ([edit-layer.md](./edit-layer.md) §6), because
@@ -225,7 +226,7 @@ parameters there: LTspice's `time` in B and `value=`, `x` in `Q=` and `Flux=`, a
 ## 9. Xyce (hidden)
 
 The dialect is the internal `netlistmod.dialects._XYCE` until X-M8 (decision 0026); its nodes
-`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement` and `FuncStatement` live in `netlistmod.model.nodes` and are not exported. The
+`IndentedLine`, `PreprocessDirective`, `GlobalParamStatement`, `FuncStatement` and `PrintDirective` live in `netlistmod.model.nodes` and are not exported. The
 API and the signature encoding are the same. What differs ([names.md](../grammars/xyce/names.md),
 decision 0027 items 1 and 3):
 
@@ -316,6 +317,14 @@ decision 0027 items 1 and 3):
   - `MEASURE_MODE_MISMATCH` on a `.MEAS` mode whose analysis is not the one that runs (TRAN and
     TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`), or FFT with no `.FFT` line; the
     message says Xyce stops, or, for DC under `.OP`, reports the measurement as FAILED.
+  - `PRINT_TYPE_MISMATCH` (X-M2.1 C3; a per-dialect table, `_PRINT_RULES`, `None` on ngspice and
+    LTspice) on a `PrintDirective` type that Xyce stops on: it checks every type against the
+    first analysis line other than `.OP` (`.OP` when it is the only one), including `.HB`, and
+    each type agrees with some analyses only (`_XYCE_PRINT_RULES`: an analysis's types with
+    their analysis and `.OP`; ES and PCE with `.TRAN`, `.DC` and `.OP`; HOMOTOPY with all but
+    `.NOISE`; SENS with `.TRAN`, `.AC`, `.DC` and `.OP`; TRANADJOINT with `.TRAN` only). Else,
+    for an analysis's type, on one whose analysis is not the one that runs (the last, `.HB`
+    taking part; DC also under `.OP`): Xyce writes nothing for the line.
 - **`DUPLICATE_DEFINITION`** for directives, each a warning that says which one Xyce uses: a
   repeated `.OPTIONS` item of one package (the first; the OUTPUT package is left out, since two of
   its lines both apply; the package-less `.OPTION SCALE=` is PARSER's, as Xyce reads it), a

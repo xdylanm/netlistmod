@@ -1,8 +1,7 @@
 id: XY-DIR-001
 dialect: xyce
-construct: the closed list's untyped dot-commands (.PRINT, .FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective
+construct: the closed list's untyped dot-commands (.FOUR, .FFT, .RESULT, .SAVE, .SENS, .NOISE, .HB, .LIN, .SAMPLING, .EMBEDDEDSAMPLING, .PCE) as UnknownDirective
 manual_ref:
-- '[xyce-ref] §2.1.31 p128 ".PRINT (Print output)"'
 - '[xyce-ref] §2.1.9 p40 ".FOUR (Fourier Analysis)"'
 - '[xyce-ref] §2.1.8 p35 ".FFT (FFT Analysis)"'
 - '[xyce-ref] §2.1.32 p149 ".RESULT (Print results)"'
@@ -38,8 +37,6 @@ tests:
 - tests/solver/test_xyce_closed_list_probes.py::test_each_untyped_command_runs
 - tests/solver/test_xyce_closed_list_probes.py::test_some_analyses_abort_with_a_raw_file
 - tests/solver/test_xyce_closed_list_probes.py::test_pce_is_unrecognized_by_this_build
-- tests/solver/test_xyce_closed_list_probes.py::test_a_print_line_continues
 - tests/solver/test_xyce_analysis_probes.py::test_only_the_last_analysis_runs
-- tests/solver/test_xyce_analysis_probes.py::test_a_print_is_checked_against_the_first_analysis
-validation_note: 'Observed on XyceNF Release 7.10.0: each command but `.PCE` runs and writes its output (`.HB`, `.LIN` and `.EMBEDDEDSAMPLING` only without `-r`), and `+` lines continue `.PRINT`; that `.NOISE` takes part in the last-line rule of the analyses rests on the solver (xm2-tasks 5.1 point 31). This build reports `.PCE` as unrecognized, and checks a `.PRINT` type against the first analysis line (discrepancies.md).'
-notes: 'Each is an `UnknownDirective` (`name` as written, `raw` from the name to the end of its last field, `trailing_comments`), which the document layer reports with `UNTYPED_DIRECTIVE_PRESERVED` (info), as the untyped commands of the other dialects. The name is one of the twelve, in any case, ending where its word ends, so `.prints` or `.save_all` is not one (XY-DIR-002). The fields are runs of characters other than blanks and `;` (`FIELD_TEXT`, which `.MEASURE`''s body shares), any number of them, continued by `+` lines across blank, comment and indented lines (XY-CNT-001), which Xyce joins. None changes the circuit, so none is typed in X-M2. Top level only: in a subcircuit body Xyce silently ignores them, so they are a ParseError there (XY-DIR-003). `.SAVE` has a terminal of its own (XY-SAV-001).'
+validation_note: 'Observed on XyceNF Release 7.10.0: each command but `.PCE` runs and writes its output (`.HB`, `.LIN` and `.EMBEDDEDSAMPLING` only without `-r`); that `.NOISE` takes part in the last-line rule of the analyses rests on the solver (xm2-tasks 5.1 point 31). This build reports `.PCE` as unrecognized (discrepancies.md). `.PRINT` was one of these commands until X-M2.1, which types it (XY-PRT-001).'
+notes: 'Each is an `UnknownDirective` (`name` as written, `raw` from the name to the end of its last field, `trailing_comments`), which the document layer reports with `UNTYPED_DIRECTIVE_PRESERVED` (info), as the untyped commands of the other dialects. The name is one of the eleven, in any case, ending where its word ends, so `.prints` or `.save_all` is not one (XY-DIR-002). The fields are runs of characters other than blanks and `;` (`FIELD_TEXT`, which `.MEASURE`''s body shares), any number of them, continued by `+` lines across blank, comment and indented lines (XY-CNT-001), which Xyce joins. None changes the circuit, so none is typed in X-M2. Top level only: in a subcircuit body Xyce silently ignores them, so they are a ParseError there (XY-DIR-003). `.SAVE` has a terminal of its own (XY-SAV-001).'

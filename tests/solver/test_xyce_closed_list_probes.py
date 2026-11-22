@@ -17,6 +17,7 @@ import pytest
 
 from netlistmod import DiagnosticCode, Netlist, ParseError, UnknownDirective, UnsupportedConstruct
 from netlistmod.dialects import _XYCE
+from netlistmod.model.nodes import PrintDirective
 from tests.support.solvers import Solver
 from tests.support.xyce import Mode, Run, names, op, run
 
@@ -48,7 +49,6 @@ def _files(result: Run) -> set[str]:
 
 _UNTYPED: dict[str, tuple[str, str, Mode, str]] = {
     # name: (head, lines, mode, a file the run writes)
-    ".PRINT": (_DIVIDER, ".print tran v(2)\n.tran 1u 10u", "print", "probe.cir.prn"),
     ".FOUR": (_SINE, ".four 1k v(2)\n.tran 1u 1m", "run", "probe.cir.four0"),
     ".FFT": (_SINE, ".fft v(2)\n.tran 1u 1m", "run", "probe.cir.fft0"),
     ".RESULT": (_DIVIDER, ".result {v(2)}\n.step R1 1k 2k 1k\n.op", "run", "probe.cir.res"),
@@ -92,7 +92,7 @@ _UNTYPED: dict[str, tuple[str, str, Mode, str]] = {
 @pytest.mark.parametrize("name", sorted(_UNTYPED))
 def test_each_untyped_command_runs(solver: Solver, tmp_path: Path, name: str) -> None:
     """Each of the closed list's untyped commands runs and writes its output ([xyce-ref]
-    §2.1.31, §2.1.9, §2.1.8, §2.1.32, §2.1.34, §2.1.35, §2.1.23, §2.1.13, §2.1.17, §2.1.33,
+    §2.1.9, §2.1.8, §2.1.32, §2.1.34, §2.1.35, §2.1.23, §2.1.13, §2.1.17, §2.1.33,
     §2.1.5; point 3), with no "Unrecognized dot line" warning; the library reads it as an
     `UnknownDirective` with `UNTYPED_DIRECTIVE_PRESERVED`."""
     head, lines, mode, written = _UNTYPED[name]
@@ -135,15 +135,16 @@ def test_pce_is_unrecognized_by_this_build(solver: Solver, tmp_path: Path) -> No
 
 
 def test_a_print_line_continues(solver: Solver, tmp_path: Path) -> None:
-    """A `+` line continues `.PRINT` ([xyce-ug] §4.1.3.2 p43): both vectors are printed."""
+    """A `+` line continues `.PRINT` ([xyce-ug] §4.1.3.2 p43): both vectors are printed, and the
+    library's `PrintDirective` body holds both."""
     text = f"{_DIVIDER}.print tran v(2)\n+ v(1)\n.tran 1u 10u\n.end\n"
     result = run(solver, tmp_path, text, mode="print")
     assert result.ok and result.prn_bytes is not None
     assert result.prn_bytes.decode().splitlines()[0].split() == ["Index", "TIME", "V(2)", "V(1)"]
     (printed,) = [
-        line.item for line in _library(text).lines if isinstance(line.item, UnknownDirective)
+        line.item for line in _library(text).lines if isinstance(line.item, PrintDirective)
     ]
-    assert "v(1)" in printed.raw
+    assert printed.body_text == "v(2)\n+ v(1)"
 
 
 def test_an_ngspice_save_stops_xyce(solver: Solver, tmp_path: Path) -> None:

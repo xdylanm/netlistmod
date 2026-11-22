@@ -29,9 +29,9 @@ from netlistmod import (
 from netlistmod.dialects import _XYCE
 from netlistmod.model.nodes import PreprocessDirective
 
-# The closed list's untyped commands ([xyce-ref] §2.1; decision 0028 item 1).
+# The closed list's untyped commands ([xyce-ref] §2.1; decision 0028 item 1); `.PRINT` is typed
+# since X-M2.1 (decision 0029 item 5; test_xyce_print.py).
 _UNTYPED = [
-    ".PRINT",
     ".FOUR",
     ".FFT",
     ".RESULT",
@@ -132,7 +132,7 @@ def test_each_untyped_command_is_an_unknown_directive(name: str) -> None:
     assert directive.trailing_comments == ()
 
 
-@pytest.mark.parametrize("name", [".pce", ".PRINT"])
+@pytest.mark.parametrize("name", [".pce", ".FOUR"])
 def test_an_untyped_command_may_have_no_field(name: str) -> None:
     directive = _item(f"{name} ; c")
     assert isinstance(directive, UnknownDirective)
@@ -142,7 +142,7 @@ def test_an_untyped_command_may_have_no_field(name: str) -> None:
 
 def test_an_untyped_command_continues_across_comment_and_blank_lines() -> None:
     # Xyce joins the `+` lines (point 1); the comments between are the statement's.
-    text = "t\n.print tran v(1) ; first\n* between\n\n  indented\n+ v(2)\n+ v(3) ; last\n.END\n"
+    text = "t\n.four 1k v(1) ; first\n* between\n\n  indented\n+ v(2)\n+ v(3) ; last\n.END\n"
     (_, directive, _) = _items(text)
     assert isinstance(directive, UnknownDirective)
     assert directive.raw == text[2 : text.index(" ; last")]
@@ -162,7 +162,7 @@ def test_an_untyped_command_carries_the_untyped_diagnostic() -> None:
 
 def test_the_untyped_commands_round_trip() -> None:
     text = (
-        "t\r\n.print tran v(1)\r\n+ v(2)\r\n.FOUR 1k v(1) ; c\r\n"
+        "t\r\n.fft v(1)\r\n+ np=8\r\n.FOUR 1k v(1) ; c\r\n"
         ".sens objfunc={V(1)} param=R1:R\r\n"
         ".hb 1e4\r\n.noise v(1) V1 dec 10 1 1k\r\nR1 1 0 1k\r\n.END\r\n"
     )

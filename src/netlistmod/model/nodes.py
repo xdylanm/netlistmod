@@ -950,6 +950,26 @@ class MeasureDirective(Directive):
 
 
 @dataclass(frozen=True, slots=True, kw_only=True)
+class PrintDirective(Directive):
+    """An xyce ``.PRINT`` line ([xyce-ref] §2.1.31 p128; decision 0029 item 5), typed shallowly as
+    :class:`MeasureDirective` is.
+
+    ``print_type`` is the print type as written, one of the manual's closed list (``AC``,
+    ``AC_IC``, ``DC``, ``ES``, ``HB``, ``HB_FD``, ``HB_IC``, ``HB_STARTUP``, ``HB_TD``, ``NOISE``,
+    ``PCE``, ``TRAN``, ``HOMOTOPY``, ``SENS`` and ``TRANADJOINT``, in any case), and
+    ``print_type_span`` covers it. The rest of the statement, its options and output variables, is
+    ``body_text``, the source slice of ``body_span``, which runs from the first to the last field
+    (comments on earlier lines of a continued statement are inside it; those are also listed in
+    ``trailing_comments``). xyce only; internal while the dialect is hidden (decision 0026).
+    """
+
+    print_type: str
+    print_type_span: Span
+    body_text: str
+    body_span: Span
+
+
+@dataclass(frozen=True, slots=True, kw_only=True)
 class StepDirective(Directive):
     """An LTspice or Xyce ``.step`` (decisions 0009 and 0028): one nested sweep of one quantity.
 
@@ -1090,6 +1110,7 @@ TopLevelItem: TypeAlias = (
     | StepDirective
     | GlobalDirective
     | GlobalParamStatement
+    | PrintDirective
 )
 
 

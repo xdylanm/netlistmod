@@ -190,6 +190,22 @@
       "note": "Xyce ignores it in a body (XY-DIR-003)",
       "xyce": "runs"
     },
+    "print_no_variable.cir": {
+      "sha256": "d77688fd0ee5b93839388885c42e279f97b816d42bf90e68dec52ec1aac24496",
+      "line": 7,
+      "column": 8,
+      "error": "ParseError",
+      "note": "at least one output variable (XY-PRT-001; X-M2.1 C3)",
+      "xyce": "runs"
+    },
+    "print_tr_type.cir": {
+      "sha256": "9f26ed097ea1ef52365635865e0826c81175798800149fc34407e2cf2e8d9e65",
+      "line": 7,
+      "column": 8,
+      "error": "ParseError",
+      "note": "a print type of the manual's list (XY-PRT-001; X-M2.1 C3)",
+      "xyce": "runs"
+    },
     "removeunused.cir": {
       "sha256": "192839b5b1fd8a8edf0fea9c30128e93a682a658e7d34eac5f3dc3fb1c4949ec",
       "line": 6,

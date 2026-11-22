@@ -1,0 +1,54 @@
+id: XY-PRT-001
+dialect: xyce
+construct: .PRINT (a required print type of the closed list; the rest kept as text)
+manual_ref:
+- '[xyce-ref] §2.1.31 p128 ".PRINT (Print output)"'
+- '[xyce-ref] §2.1.31.6 p141 "Print Homotopy"'
+- '[xyce-ref] §2.1.31.7 p141 "Print Sensitivity"'
+- '[xyce-ug] §4.1.3.2 p43 "Continuation Lines"'
+status: observed
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-21'
+grammar:
+- xy_print_stmt
+- print_type
+- print_bad_type
+- print_field
+- XY_PRINT_KW
+- PRINT_TYPE_KW
+core_rules:
+- eol
+tests:
+- tests/grammar/xyce/test_xyce_print.py::test_print_takes_each_type_of_the_manual
+- tests/grammar/xyce/test_xyce_print.py::test_print_continues_across_comment_and_blank_lines
+- tests/grammar/xyce/test_xyce_print.py::test_the_type_may_follow_on_a_plus_line
+- tests/grammar/xyce/test_xyce_print.py::test_print_round_trips
+- tests/grammar/xyce/test_xyce_print.py::test_a_print_type_outside_the_list_is_rejected
+- tests/grammar/xyce/test_xyce_print.py::test_tr_is_rejected_with_a_hint
+- tests/grammar/xyce/test_xyce_print.py::test_a_print_without_its_type_is_rejected
+- tests/grammar/xyce/test_xyce_print.py::test_a_print_without_a_field_is_rejected
+- tests/grammar/xyce/test_xyce_print.py::test_a_longer_word_is_not_print
+- tests/grammar/xyce/test_xyce_print.py::test_print_is_refused_in_a_body
+- tests/grammar/xyce/test_xyce_print.py::test_print_is_not_reported_as_untyped
+- tests/grammar/xyce/test_xyce_print.py::test_print_stays_untyped_on_ngspice
+- tests/document/test_xyce_directive_findings.py::test_a_type_that_agrees_with_the_first_analysis_does_not_stop
+- tests/document/test_xyce_directive_findings.py::test_a_type_that_disagrees_with_the_first_analysis_is_a_warning
+- tests/document/test_xyce_directive_findings.py::test_a_type_whose_analysis_does_not_run_is_a_warning
+- tests/edits/test_xyce_edits.py::test_golden
+- tests/solver/test_xyce_print_probes.py::test_each_print_type_runs_with_its_analysis
+- tests/solver/test_xyce_print_probes.py::test_a_print_type_is_read_in_any_case
+- tests/solver/test_xyce_print_probes.py::test_the_first_analysis_decides_whether_xyce_stops
+- tests/solver/test_xyce_print_probes.py::test_the_first_analysis_but_op_is_the_one_checked
+- tests/solver/test_xyce_print_probes.py::test_a_type_whose_analysis_does_not_run_writes_nothing
+- tests/solver/test_xyce_print_probes.py::test_a_dc_type_under_op_writes_its_file
+- tests/solver/test_xyce_print_probes.py::test_tr_runs_as_tran
+- tests/solver/test_xyce_print_probes.py::test_a_type_outside_the_list_stops_xyce
+- tests/solver/test_xyce_print_probes.py::test_a_print_without_a_variable_runs
+- tests/solver/test_xyce_print_probes.py::test_the_body_is_not_checked
+- tests/solver/test_xyce_closed_list_probes.py::test_a_print_line_continues
+- tests/solver/test_xyce_closed_list_probes.py::test_a_print_in_a_body_writes_nothing
+- tests/solver/test_xyce_analysis_probes.py::test_a_print_is_checked_against_the_first_analysis
+validation_note: 'Observed on XyceNF Release 7.10.0 (X-M2.1 C3): each type of the manual''s list runs, in any case, under an analysis it agrees with, and `+` lines continue the line. Which analyses a type agrees with rests on the solver, which checks every `.PRINT` type against the first analysis line other than `.OP` and stops on any other (the manual says only that a `.PRINT` line whose type does not suit the analysis is not processed); an analysis''s type writes nothing when another analysis runs. `TR` runs as TRAN, a `.PRINT` with a type and no field runs, and Xyce stops on some bodies the library does not check (discrepancies.md).'
+notes: '`PrintDirective` (internal, in `netlistmod.model.nodes`; decision 0029 item 5), typed shallowly as `.MEASURE` is: `print_type` is the type as written, required and first, one of AC, AC_IC, DC, ES, HB, HB_FD, HB_IC, HB_STARTUP, HB_TD, NOISE, PCE and TRAN (the table of §2.1.31), HOMOTOPY, SENS and TRANADJOINT (§2.1.31.6 and §2.1.31.7), in any case, ending where its word ends; `body_text` is the source slice of `body_span`, from the first to the last field after the type, at least one, each a `FIELD_TEXT` (XY-DIR-001''s), across `+` lines (comments on earlier lines of a continued statement are inside it). Another field in the type''s place (with the hint "write `TRAN`" for `TR`), no type and no field after the type are a ParseError. Top level only: in a body Xyce silently ignores it (XY-DIR-003). The document layer reports `PRINT_TYPE_MISMATCH` (warning) on a type that does not agree with the first analysis, or whose analysis does not run. ngspice''s `.print` stays an `UnknownDirective`.'
