@@ -172,7 +172,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `STEP_IGNORED` | warning | the keyword | an xyce `.STEP` line beside a `.STEP DATA=` line (section 9) |
 | `STEPS_WITH_OP` | warning | the `.OP` keyword | two or more xyce `.STEP` lines when `.OP` is the analysis that runs (section 9) |
 | `IC_WITH_NODESET` | warning | each `.NODESET` keyword | an xyce netlist with `.IC` or `.DCVOLT` and `.NODESET` (section 9) |
-| `MEASURE_MODE_MISMATCH` | warning | the mode | an xyce `.MEAS` mode whose analysis does not run, or FFT without `.FFT` (section 9) |
+| `MEASURE_MODE_MISMATCH` | warning | the mode | an xyce `.MEAS` mode whose analysis does not run (FFT's is `.TRAN`), or FFT without `.FFT` (section 9) |
 | `CONDITION_IGNORED` | warning | the node | an xyce condition in a subcircuit body on a global node (section 9) |
 | `PRINT_TYPE_MISMATCH` | warning | the print type | an xyce `.PRINT` type that does not agree with the first analysis, or whose analysis does not run (section 9) |
 
@@ -318,17 +318,21 @@ decision 0027 items 1 and 3):
     it runs with two or more `.STEP` lines.
   - `IC_WITH_NODESET` on each `.NODESET` when the netlist, in any scope, has `.IC` or `.DCVOLT`.
   - `MEASURE_MODE_MISMATCH` on a `.MEAS` mode whose analysis is not the one that runs (TRAN and
-    TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`; no mode is `.HB`'s, so every
-    mode but FFT disagrees when `.HB` runs), or FFT with no `.FFT` line; the message says Xyce
-    stops, or, for DC under `.OP` (`.OP` running, not `.HB`), reports the measurement as FAILED.
+    TRAN_CONT need `.TRAN`, AC `.AC`, DC `.DC`, NOISE `.NOISE`, FFT a `.TRAN` as well as a
+    `.FFT` line; no mode is `.HB`'s, so every mode disagrees when `.HB` runs), or FFT with no
+    `.FFT` line when `.TRAN` runs, whose message quotes "No .FFT statement in netlist"; the
+    message says Xyce stops, or, for DC under `.OP` (`.OP` running, not `.HB`), reports the
+    measurement as FAILED (X-M2.1 R1: FFT under `.HB`, `.AC`, `.DC`, `.NOISE` and `.OP`).
   - `PRINT_TYPE_MISMATCH` (X-M2.1 C3; a per-dialect table, `_PRINT_RULES`, `None` on ngspice and
-    LTspice) on a `PrintDirective` type that Xyce stops on: it checks every type against the
-    first analysis line other than `.OP` (`.OP` when it is the only one), including `.HB`, and
-    each type agrees with some analyses only (`_XYCE_PRINT_RULES`: an analysis's types with
-    their analysis and `.OP`; ES and PCE with `.TRAN`, `.DC` and `.OP`; HOMOTOPY with all but
-    `.NOISE`; SENS with `.TRAN`, `.AC`, `.DC` and `.OP`; TRANADJOINT with `.TRAN` only). Else,
-    for an analysis's type, on one whose analysis is not the one that runs (the last, as for
-    `ANALYSIS_IGNORED`; DC also under `.OP`): Xyce writes nothing for the line.
+    LTspice, which have no directive checks; its xyce keys are the grammar's PRINT_TYPE_KW list,
+    which a test ties to them) on a `PrintDirective` type that Xyce stops on: it checks every
+    type against the first analysis line other than `.OP` (`.OP` when it is the only one),
+    including `.HB`, and each type agrees with some analyses only (`_XYCE_PRINT_RULES`: an
+    analysis's types with their analysis and `.OP`; ES and PCE with `.TRAN`, `.DC` and `.OP`;
+    HOMOTOPY with all but `.NOISE`; SENS with `.TRAN`, `.AC`, `.DC` and `.OP`; TRANADJOINT with
+    `.TRAN` only). Else, for an analysis's type, on one whose analysis is not the one that runs
+    (the last, as for `ANALYSIS_IGNORED`; DC also under `.OP`): Xyce writes nothing for the
+    line.
 - **`DUPLICATE_DEFINITION`** for directives, each a warning that says which one Xyce uses: a
   repeated `.OPTIONS` item of one package (the first; the OUTPUT package is left out, since two of
   its lines both apply; the package-less `.OPTION SCALE=` is PARSER's, as Xyce reads it), a

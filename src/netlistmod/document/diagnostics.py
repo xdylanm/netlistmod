@@ -881,8 +881,8 @@ def _directive_findings(index: Index) -> list[Finding]:
     findings.extend(_ic_nodeset_findings(index, solver))
     findings.extend(_measure_findings(index, runs, solver))
     rules = _PRINT_RULES[index.dialect]
-    if rules is not None:
-        findings.extend(_print_findings(index, rules, solver))
+    assert rules is not None  # only xyce has directive checks and a `PrintDirective`
+    findings.extend(_print_findings(index, analyses, rules, solver))
     return findings
 
 
@@ -1005,9 +1005,11 @@ def _ic_nodeset_findings(index: Index, solver: str) -> list[Finding]:
 
 
 def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) -> list[Finding]:
-    """`MEASURE_MODE_MISMATCH` (point 26): a `.MEAS` mode whose analysis Xyce does not run, or
-    FFT without a `.FFT` line (the B5 probes). No mode is `.HB`'s: when `.HB` runs, every mode
-    but FFT disagrees and Xyce stops (the X-M2.1 probes)."""
+    """`MEASURE_MODE_MISMATCH` (point 26): a `.MEAS` mode whose analysis Xyce does not run (the
+    B5 probes). FFT needs a `.TRAN` that runs as well as a `.FFT` line: under any other analysis
+    Xyce stops ("… do not agree"), and under `.TRAN` without a `.FFT` line it stops with "No .FFT
+    statement in netlist" (the X-M2.1 R1 probes). No mode is `.HB`'s, so when `.HB` runs every
+    mode disagrees and Xyce stops (the X-M2.1 probes)."""
     root = index.root
     fft = any(
         isinstance(line.item, UnknownDirective) and root.fold(line.item.name) == ".fft"
@@ -1020,8 +1022,11 @@ def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) 
             continue
         assert item.analysis_span is not None
         mode = root.fold(item.analysis)
-        if mode == "fft":
-            if not fft:
+        # A mode needs the analysis of its name, FFT a `.TRAN` (point 26).
+        needed = "tran" if mode == "fft" else mode.removesuffix("_cont")
+        assert needed in _LAST_WINS and needed != "hb", mode
+        if runs is not None and runs[1] == needed:
+            if mode == "fft" and not fft:
                 message = (
                     f"`{item.analysis}` measures a `.FFT` line, and the netlist has none; "
                     f'{solver} stops ("No .FFT statement in netlist")'
@@ -1029,11 +1034,6 @@ def _measure_findings(index: Index, runs: tuple[Line, str] | None, solver: str) 
                 findings.append(
                     (DiagnosticCode.MEASURE_MODE_MISMATCH, "warning", message, item.analysis_span)
                 )
-            continue
-        # A mode needs the analysis of its name (point 26); FFT is handled above.
-        needed = mode.removesuffix("_cont")
-        assert needed in _LAST_WINS and needed != "hb", mode
-        if runs is not None and runs[1] == needed:
             continue
         if runs is None:
             ran = "the netlist has no analysis"
@@ -1093,6 +1093,7 @@ _XYCE_PRINT_RULES: dict[str, _PrintRule] = {
     "tranadjoint": _PrintRule(frozenset({"tran"})),
 }
 # Which dialects check a `.PRINT` type (`PRINT_TYPE_MISMATCH`): only xyce has a `PrintDirective`.
+# The keys of `_XYCE_PRINT_RULES` are the grammar's PRINT_TYPE_KW list (a test ties them).
 _PRINT_RULES: dict[Dialect, dict[str, _PrintRule] | None] = {
     Dialect.NGSPICE: None,
     Dialect.LTSPICE: None,
@@ -1100,13 +1101,14 @@ _PRINT_RULES: dict[Dialect, dict[str, _PrintRule] | None] = {
 }
 
 
-def _print_findings(index: Index, rules: dict[str, _PrintRule], solver: str) -> list[Finding]:
+def _print_findings(
+    index: Index, analyses: list[tuple[Line, str]], rules: dict[str, _PrintRule], solver: str
+) -> list[Finding]:
     """`PRINT_TYPE_MISMATCH` (decision 0029 item 5; the X-M2.1 C3 probes). Xyce checks every
     `.PRINT` type against the first analysis line that is not `.OP` (`.OP` when it is the only
     analysis), and stops on a type that does not agree with it; it then runs the last line, as
     `ANALYSIS_IGNORED` says, and writes nothing for a type of another analysis."""
     root = index.root
-    analyses = [(line, kind) for line in root.lines if (kind := _analysis_kind(line.item, root))]
     ranked = [(line, kind) for line, kind in analyses if kind != "op"] or analyses
     if not ranked:
         return []

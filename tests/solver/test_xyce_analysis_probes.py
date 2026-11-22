@@ -626,6 +626,7 @@ def test_dc_lines_around_hb_join(solver: Solver, tmp_path: Path) -> None:
         ".tran 1u 10u\n.hb 1k\n.meas tran va max v(2)",
         ".ac dec 1 1 10\n.hb 1k\n.meas ac va max vm(2)",
         ".dc V1 0 1 1\n.hb 1k\n.meas dc va max v(2)",
+        ".hb 1k\n.meas noise va max onoise",
     ],
 )
 def test_no_measure_mode_agrees_with_hb(solver: Solver, tmp_path: Path, lines: str) -> None:
@@ -637,6 +638,44 @@ def test_no_measure_mode_agrees_with_hb(solver: Solver, tmp_path: Path, lines: s
     assert "runs `.hb`" in message and message.endswith(
         "it stops: the analysis and the measure mode do not agree"
     )
+
+
+_FFT_MEASURE = ".fft v(2)\n.meas fft va find vm(2) at=1k"
+
+
+@pytest.mark.parametrize(
+    ("analyses", "ran"),
+    [
+        (".hb 1k", "runs `.hb` (line 6)"),
+        (".ac dec 1 1 10", "runs `.ac` (line 6)"),
+        (".op", "runs `.op` (line 6)"),
+        (".tran 1u 10m\n.ac dec 1 1 10", "runs `.ac` (line 7)"),
+    ],
+)
+def test_fft_needs_a_tran_that_runs(
+    solver: Solver, tmp_path: Path, analyses: str, ran: str
+) -> None:
+    """A `.MEAS FFT` with its `.FFT` line stops Xyce ("… do not agree") when `.HB`, `.AC` or
+    `.OP` runs, `.TRAN` beside it or not; `MEASURE_MODE_MISMATCH` says so (X-M2.1 R1)."""
+    lines = f"{analyses}\n{_FFT_MEASURE}"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.returncode != 0 and "do not agree" in _messages(result)
+    ((_, message),) = _hb_findings(lines, DiagnosticCode.MEASURE_MODE_MISMATCH)
+    assert message == (
+        f"`fft` needs a `.TRAN` analysis, but Xyce 7.10 {ran}; it stops: the analysis and the "
+        "measure mode do not agree"
+    )
+
+
+@pytest.mark.parametrize("analyses", [".tran 1u 10m", ".hb 1k\n.tran 1u 10m"])
+def test_fft_runs_under_tran(solver: Solver, tmp_path: Path, analyses: str) -> None:
+    """Under a `.TRAN` that runs, a `.MEAS FFT` with its `.FFT` line writes its result, and the
+    library reports no `MEASURE_MODE_MISMATCH`."""
+    lines = f"{analyses}\n{_FFT_MEASURE}"
+    result = _hb_run(solver, tmp_path, lines)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    assert _MEASURED.search(result.log)
+    assert _hb_findings(lines, DiagnosticCode.MEASURE_MODE_MISMATCH) == []
 
 
 @pytest.mark.parametrize("lines", [".hb 1k", ".hb 1k\n.op", ".op\n.hb 1k"])

@@ -154,16 +154,16 @@ INDENTED_TRAILING.12: /(?<=\n)[ \t]+[^ \t\r\n+*;](?:[^\r\n]|\r(?!\n))*/
 %extend end_stmt: END_KW TRAILING_COMMENT LINE_END trailer* -> end
                 | END_KW TRAILING_COMMENT -> end
 
-// The closed list's untyped dot-commands (decision 0028 item 1; xm2-tasks 5.1 points 1 and 3; `.PRINT`
-// has its own rule since X-M2.1, decision 0029 item 5): the outputs and the further analyses, read as
-// UnknownDirective, top level only (in a body Xyce
-// silently ignores them, so they are refused there, not_in_subckt), and continued by `+` lines,
-// which Xyce joins. The name ends where its word ends (a lookahead), so `.prints` is not one. A
-// field is a run of characters other than blanks and `;` (FIELD_TEXT); the statement's text is
-// kept whole. `.SAVE` is this, never ngspice's `.save` (it writes an operating point and has no
-// vectors). Any other dot-command matches no terminal, so the parser stops at it: the loader
-// refuses it as not an Xyce dot-command, with a hint for some (`.TEMP`, `.PROBE`, `.title`,
-// `.opt`), and the lines of a would-be block are never read.
+// The closed list's untyped dot-commands (decision 0028 item 1; xm2-tasks 5.1 points 1 and 3;
+// `.PRINT` has its own rule since X-M2.1, decision 0029 item 5): the outputs and the further
+// analyses, read as UnknownDirective, top level only (in a body Xyce silently ignores them, so
+// they are refused there, not_in_subckt), and continued by `+` lines, which Xyce joins. The
+// name ends where its word ends (a lookahead), so `.prints` is not one. A field is a run of
+// characters other than blanks and `;` (FIELD_TEXT); the statement's text is kept whole.
+// `.SAVE` is this, never ngspice's `.save` (it writes an operating point and has no vectors).
+// Any other dot-command matches no terminal, so the parser stops at it: the loader refuses it
+// as not an Xyce dot-command, with a hint for some (`.TEMP`, `.PROBE`, `.title`, `.opt`), and
+// the lines of a would-be block are never read.
 // spec: XY-DIR-001
 xy_unknown_stmt: (DOT_NAME | XY_SAVE_KW) unknown_field* (NL | eol)
 unknown_field: SEP FIELD_TEXT

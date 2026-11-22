@@ -222,7 +222,7 @@ def test_a_print_without_a_variable_runs(solver: Solver, tmp_path: Path) -> None
     result = _xyce(solver, tmp_path, ".print tran\n.tran 1u 10u")
     assert result.ok and result.prn_bytes is not None
     assert result.prn_bytes.decode().splitlines()[0].split() == ["Index", "TIME"]
-    assert "has no output variable" in _refused(".print tran\n.tran 1u 10u")
+    assert "has no field after the print type" in _refused(".print tran\n.tran 1u 10u")
 
 
 # A `.PRINT` without a print type is never run: Xyce 7.10 crashed on one probe and hung on
@@ -246,3 +246,33 @@ def test_the_body_is_not_checked(solver: Solver, tmp_path: Path, body: str, mess
         line.item for line in _library(lines).lines if isinstance(line.item, PrintDirective)
     ]
     assert printed.body_text == body
+
+
+def test_an_option_only_body_is_not_checked(solver: Solver, tmp_path: Path) -> None:
+    """`.PRINT TRAN FORMAT=CSV`, options and no output variable, runs and writes only the time;
+    the library checks only that a field follows the print type, and reads it (a discrepancies.md
+    row, X-M2.1 R1)."""
+    lines = ".print tran format=csv\n.tran 1u 10u"
+    result = _xyce(solver, tmp_path, lines)
+    assert result.ok, f"{result.log}\n{result.stderr}"
+    written = result.netlist.with_name("probe.cir.csv").read_text().splitlines()
+    assert written[0].split() == ["TIME"]
+    (printed,) = [
+        line.item for line in _library(lines).lines if isinstance(line.item, PrintDirective)
+    ]
+    assert printed.body_text == "format=csv"
+
+
+def test_lin_is_checked_like_a_print(solver: Solver, tmp_path: Path) -> None:
+    """Xyce checks `.LIN` as a `.PRINT SPARAM` against the first analysis line, and stops on it
+    under `.TRAN`; the library reads `.LIN` untyped and warns only on the `.PRINT` (a
+    discrepancies.md row, `library-limit`; X-M2.1 R1)."""
+    lines = ".lin sparcalc=0\n.tran 1u 10u\n.ac dec 1 1 10\n.print ac v(2)"
+    result = _xyce(solver, tmp_path, lines)
+    assert result.returncode != 0
+    assert "Analysis type TRAN and print type SPARAM are inconsistent" in _messages(result)
+    netlist = _library(lines)
+    assert [(d.line, d.code) for d in netlist.diagnostics if d.line in (6, 9)] == [
+        (6, DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED),
+        (9, DiagnosticCode.PRINT_TYPE_MISMATCH),
+    ]

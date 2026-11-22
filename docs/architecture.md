@@ -546,7 +546,7 @@ The text inside an opaque item (`.control`, `.if` and `.lib` blocks, including t
 ### 11.3 Rules
 
 1. A manual statement is a hypothesis. The library relies on a behavior only after a test exists for it.
-2. Where the manual and the solver disagree, record both in `docs/grammars/<dialect>/discrepancies.md`. The grammar follows the manual (strict reading); solver leniency is not accepted, and is recorded so users can be told why a file the solver runs is rejected. Where the manual is silent, behavior observed from the solver may be encoded only as a spec entry marked `observed` (rule 3). The LTspice references are thinner than the ngspice manual, so more LTspice behavior will rest on `observed` entries.
+2. Where the manual and the solver disagree, record both in `docs/grammars/<dialect>/discrepancies.md`. The grammar follows the manual (strict reading); solver leniency is not accepted, and is recorded so users can be told why a file the solver runs is rejected. Where the manual is silent, behavior observed from the solver may be encoded only as a spec entry marked `observed` (rule 3). The LTspice references are thinner than the ngspice manual, so more LTspice behavior will rest on `observed` entries. On the hidden xyce dialect each difference has a category that says which side the library follows, the manual or the solver ([decision 0029](decisions/0029-xyce-discrepancy-categories.md)).
 3. If the solver accepts something the manual does not mention, mark it `observed` and include it only with a test.
 4. Spec entries cite manual sections; they paraphrase and do not paste tables or long passages (copyright, and the repository is MIT).
 

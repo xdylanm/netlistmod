@@ -2,7 +2,7 @@
 
 - **Status:** accepted (2026-11-21, maintainer; X-M2.1 section 2)
 - **Date:** 2026-11-21
-- **Amends:** [decision 0026](0026-the-xyce-dialect.md) item 5 (the grammar follows the manual) and [decision 0027](0027-xyce-structure-names-and-values.md) item 12 (every refusal of a form the binary accepts is a row), for the hidden xyce dialect only.
+- **Amends:** [decision 0026](0026-the-xyce-dialect.md) item 5 (the grammar follows the manual), [decision 0027](0027-xyce-structure-names-and-values.md) item 12 (every refusal of a form the binary accepts is a row) and architecture §11.3 rule 2 (the grammar follows the manual, solver leniency is recorded), for the hidden xyce dialect only.
 - **Context:**
   - **The rows had no common rule.** X-M0 to X-M2 recorded every difference between the Xyce 7.10 manuals and the XyceNF 7.10.0 binary as a row in `docs/grammars/xyce/discrepancies.md`. Most rows follow the manual (decision 0026 item 5, architecture §11.3 rule 2), but some follow the binary (`µ`, the `PARAMS:` comma, the one-field `.LIB`, the required `.DATA` name), some rest on the binary where the manual is silent or vague (§11.3 rule 3), and some describe what the library's model cannot hold. A row did not say which of these it was, or why.
   - **Direction.** The table's sections mixed the two directions: rows where the library refuses what Xyce runs, and rows where the library reads what Xyce stops on (the `.TRAN` schedule after tstart, the full `.TRAN` form, a zero-argument `.FUNC`, an `.AC` point count that is not an integer).
@@ -20,9 +20,9 @@
   3. **A zero-argument `.FUNC`** stays read: the manual allows it, and Xyce 7.10 stopping on its call is taken as a solver bug (`manual`).
   4. **Point counts stay unchecked.** `.AC DEC 1.5 1 10` and the `DEC` and `OCT` counts of `.DC` and `.STEP` are read as written, though Xyce stops on a count that is not an integer (`library-limit`).
   5. **`.PRINT` is typed shallowly,** as `.MEAS` is: the print type from the manual's closed list, the rest kept as text. A warning reports a type that disagrees with the first analysis line (Xyce stops) or with the analysis that runs (Xyce prints nothing).
-  6. **The judgement calls of C2 and C3 stand** (maintainer, 2026-11-21): the categories of the twelve rows listed in [xm2.1-tasks.md](../design/xm2.1-tasks.md) section 2.1 are the maintainer's.
+  6. **The judgement calls of C2 and C3 stand** (maintainer, 2026-11-21): the categories of the twelve rows listed in [xm2.1-tasks.md](../design/xm2.1-tasks.md) section 2.1 are the maintainer's. So is that of the `MEASURE_MODE_MISMATCH` row (maintainer, 2026-11-22; section 2.1 item 8): a `.MEAS` mode that does not agree with the analysis that runs, `.HB` among them, is `library-limit`, since the manual and Xyce agree such a mode is an error, and whether a mode agrees is a fact across statements, on which the library can only warn.
 - **Consequences:**
   - Decision 0026 item 5 reads: the grammar follows the manual except where a row's category says otherwise. Decision 0027 item 12 reads: every difference between the manual and the binary, and every form the library's model cannot check, is a row with a category.
-  - `discrepancies.md` states the rule in its preamble, gains the Category column in every table, and gathers the rows where the library accepts a form Xyce stops on in one section; a test checks every category and item 2.
+  - `discrepancies.md` states the rule in its preamble, gains the Category column in every table, and gathers the rows where the library accepts a form Xyce stops on in one section; a test checks every category and item 2. Since X-M2.1 R1 a **Library/Xyce** column states each row's facts in a closed vocabulary (`reads/stops`, `refuses/runs`, …), so that the test checks item 2 against the row's facts as well as its section.
   - `.PRINT` leaves the closed list of untyped commands for a rule and an internal node of its own, with a new `DiagnosticCode` member; both are best-effort additions (decision 0024 item 11) on the X-M8 checklist (xyce-plan.md section 8.2).
   - ngspice and LTspice are unchanged (decision 0024).
