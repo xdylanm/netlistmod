@@ -1,0 +1,40 @@
+id: XY-SRC-002
+dialect: xyce
+construct: transient source functions PULSE, SIN, EXP and SFFM, and the argument list shared by every function
+manual_ref:
+- '[xyce-ref] §2.3.10 p226 "Independent Voltage Source"'
+- '[xyce-ref] §2.3.9 p221 "Independent Current Source"'
+status: documented
+validation_note: Read from the manual (decision 0030); the solver tests that compare it with XyceNF 7.10 come with X-M3 B5.
+grammar:
+- _xfn
+- _xfn_bare
+- _xfn_in
+- _xfn_tail
+- xfn_name
+- xfn_open
+- xfn_first
+- xfn_arg
+- xfn_comma
+- xfn_key_first
+- xfn_key
+- _xfn_key_value
+- XFN_KW
+core_rules:
+- rparen
+- LPAR
+- CSEP
+- EQ
+- STRING_VALUE
+tests:
+- tests/grammar/xyce/test_xyce_sources.py::test_a_pulse_with_its_list_in_parentheses
+- tests/grammar/xyce/test_xyce_sources.py::test_the_functions_with_or_without_parentheses
+- tests/grammar/xyce/test_xyce_sources.py::test_the_function_follows_the_dc_and_ac_parts
+- tests/grammar/xyce/test_xyce_sources.py::test_a_braced_argument_is_a_formula
+- tests/grammar/xyce/test_xyce_sources.py::test_the_other_dialects_still_read_their_own_functions
+- tests/grammar/xyce/test_xyce_sources.py::test_forms_outside_the_order_or_the_syntax_are_refused
+- tests/grammar/xyce/test_xyce_sources.py::test_an_unbalanced_parenthesis_is_refused_at_the_opener
+- tests/grammar/xyce/test_xyce_sources.py::test_a_comma_is_refused_with_a_hint
+- tests/grammar/xyce/test_xyce_sources.py::test_a_keyword_argument_is_refused
+- tests/grammar/xyce/test_xyce_sources.py::test_each_function_counts_its_arguments
+notes: 'The `SourceSpec` of ngspice and LTspice (decision 0030 items 1 to 3): the last field of a V or I line, after the DC and AC parts, at most one. The name folds case and ends at a blank, `(`, `;` or the line end (no `SINE`). The list stands in one balanced pair of parentheses or in none; each argument is a number of the device-field reader (XY-NUM-001) or an expression in braces or quotes, separated by blanks, across `+` lines. Counts: PULSE 1 to 7, SIN 3 to 6, EXP 2 to 6, SFFM 2 to 5; no default is filled. A comma, a `name=` argument (inside or after the list) and a count outside the range are each a ParseError with its own message.'

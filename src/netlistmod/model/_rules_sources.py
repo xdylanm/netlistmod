@@ -8,7 +8,7 @@ from typing import Any
 from lark import Token
 
 from netlistmod.dialects import Dialect
-from netlistmod.model._rules_elements import ElementsRules
+from netlistmod.model._rules_xyce_sources import XyceSourcesRules
 from netlistmod.model._tree import (
     _FN_PARAM_OWNERS,
     _AcMagnitude,
@@ -44,7 +44,7 @@ from netlistmod.model.values import (
 from netlistmod.source import Span
 
 
-class SourcesRules(ElementsRules):
+class SourcesRules(XyceSourcesRules):
     """Rules for independent sources and their functions (decision 0013)."""
 
     def dc_keyword(self, children: list[Any]) -> _Field:
@@ -192,6 +192,7 @@ class SourcesRules(ElementsRules):
         return self._source_item(CurrentSource, _Element(children))
 
     def _source_item(self, kind: type[VoltageSource | CurrentSource], element: _Element) -> _Item:
+        element = self._xyce_function(element)
         dc = element.optional(_Dc)
         ac, stimulus, distortion = self._source_parts(element, kind)
         return _Item(

@@ -1,4 +1,0 @@
-reject: a transient function is X-M3's
-V1 a 0 SIN(0 1 1k)
-R1 a 0 1k
-.END

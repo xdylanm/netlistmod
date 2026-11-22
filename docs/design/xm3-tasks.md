@@ -40,7 +40,7 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 ### Stage 2
 
 - [x] **B1 — Decision record** for the G1 decisions.
-- [ ] **B2 — The functions** in `xyce.lark` and the source rules.
+- [x] **B2 — The functions** in `xyce.lark` and the source rules.
 - [ ] **B3 — The P port.**
 - [ ] **B4 — The document and edit layers.**
 - [ ] **B5 — Evidence:** spec entries, corpus files with manifests, solver tests, discrepancy rows, the README status table, the X-M8 checklist.
@@ -131,3 +131,4 @@ Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 00
 - 2026-11-22: A1 and A2 done (section 5.1); G1 questions for the maintainer.
 - 2026-11-22: G1: the maintainer decided points 7 to 26 one by one (section 5.1).
 - 2026-11-22: the maintainer accepted the remaining recommendations of section 5.1. B1 done: [decision 0030](../decisions/0030-xyce-stimulus-and-port.md).
+- 2026-11-22: B2 done: `xyce.lark` reads PULSE, SIN, EXP, SFFM, PAT and PWL (pairs or `FILE`, `TD=`, `R=`) in place of `src_function`; `model/_rules_xyce_sources.py` gathers them into a `SourceSpec` (`args` widened to `Value | Identifier`) and checks counts, PAT's DATA and PWL's pairs; spec entries `XY-SRC-002` to `XY-SRC-004` (documented until B5).
