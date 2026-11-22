@@ -146,25 +146,34 @@ Every other line is refused (`XY-UNS-001`): an element line of another letter is
 lines before it joins nothing and is a `ParseError`, as on Xyce. `$` and `//` are not comments, so
 at the start of a line they are a `ParseError`. `rkm=True` is a `ValueError`.
 
-Where Xyce is more lenient than the manual, the difference is a row of
-[discrepancies.md](./discrepancies.md): Xyce runs without `.END`, ignores text after it and on its
-line, warns on an unknown dot-command and ignores it, takes commas in `.GLOBAL`, `"` and non-ASCII
-in names, a few number forms that no list holds, blanks in a bare `.PARAM` value, a blank
-before a function's `(`, some reserved and built-in names, which it ignores, a second
-field on `.INC`, which it ignores with a warning, and, on element lines, the ngspice order of R,
-C and L, an R without a value, a value written twice, one inductor on K without a model, a
-number before D's model, a bare `AC`, a comma on a source line and `:` in a designator. Where the
-library is more lenient, the row says so: R's and D's parameter lists are the union of their
-levels' tables, while Xyce takes only the model level's.
+Every difference between the manuals, Xyce and the library is a row of
+[discrepancies.md](./discrepancies.md), with a category that says which side the library follows
+([decision 0029](../../decisions/0029-xyce-discrepancy-categories.md)): `manual` (the manual is
+precise, Xyce lenient or buggy), `imprecise` (Xyce fills a gap in the manual), `manual-error`
+(the manual is wrong; the library follows Xyce) or `library-limit` (the library's model cannot
+express or check the form). Its sections sort the rows by what the library does beside Xyce:
 
-X-M2's rows: Xyce runs a repeated `.TRAN` flag, extra fields on `.OP`, a one-value `LIST`, two
-sweeps on one `.STEP` line, an unknown package, package-less options (applying `TEMP=` or `TNOM=`
-alone), a bare word after an option, the `TR` mode, a table without its bare `.ENDDATA`, every
-dot-command outside the closed list (warned and ignored), and silently ignores directives in a
-body; it stops on a schedule after tstart and on the full `.TRAN` form, which the library reads
-as the manual writes them; and the library reads an `.AC` point count that is not an integer,
-`.PCE`, ngspice's `.save v(2)` and any `_CONT` measure type, on which Xyce stops or which it
-ignores.
+- **Xyce runs, the library refuses** (`manual`, `imprecise`): Xyce runs without `.END`, ignores
+  text after it and on its line, warns on an unknown dot-command and ignores it, takes commas in
+  `.GLOBAL`, `"` and non-ASCII in names, a few number forms that no list holds, blanks in a bare
+  `.PARAM` value, a blank before a function's `(`, some reserved and built-in names, which it
+  ignores, a second field on `.INC`, and, on element lines, the ngspice order of R, C and L, an R
+  without a value, a value written twice, one inductor on K without a model, a number before D's
+  model, a comma on a source line and `:` in a designator; on directives a repeated `.TRAN` flag,
+  extra fields on `.OP`, a one-value `LIST`, two sweeps on one `.STEP` line, an unknown or a
+  missing `.OPTIONS` package, a bare word after an option, the `TR` mode, a table without its bare
+  `.ENDDATA`, and directives in a body, which it silently ignores.
+- **The manual and Xyce accept, the library refuses** (`library-limit`): a bare `AC`.
+- **The library reads, Xyce stops on or ignores** (`manual`, `library-limit`): a schedule after
+  tstart, the full `.TRAN` form and a zero-argument `.FUNC`, which the library reads as the manual
+  writes them; `.PCE`; and what the library does not check: R's and D's parameter lists (the
+  union of their levels' tables), the `DEC` and `OCT` point counts, ngspice's `.save v(2)`, a
+  `_CONT` measure type and a `.PRINT` type against the first analysis.
+- **The library follows Xyce against the manual** (`manual-error`): `//` is no comment, `µ` no
+  scale factor, a bracketed `[s]` is a node name, a `.SUBCKT` needs a port, `PARAMS:` takes no comma, a one-field `.LIB` opens a
+  block, a `.DATA` table needs its name, a repeated `.PARAM` resolves to the first definition, and
+  two `.OPTIONS OUTPUT` lines both apply.
+- **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
 The rest is planned by task and milestone in [xm2.1-tasks.md](../../design/xm2.1-tasks.md) and the
 xyce plan, section 8: the discrepancy categories and `.PRINT` in X-M2.1, then the remaining
