@@ -3,7 +3,7 @@
 - **Status:** accepted (2026-11-22, maintainer; X-M3 gate G1)
 - **Date:** 2026-11-22
 - **Amends:** [decision 0027](0027-xyce-structure-names-and-values.md) item 6 (a transient function on V or I is refused whole until X-M3), for the hidden xyce dialect only.
-- **Context:** X-M3 ([xm3-tasks.md](../design/xm3-tasks.md)) makes the hidden xyce dialect read the transient functions of V and I and the P port. Stage 1 compared the Xyce 7.10 reference manual (§2.3.9 to §2.3.11, §6.1.12) with the XyceNF 7.10.0 binary (section 5.1, points 1 to 29). The maintainer decided each point at G1. Differences between the manual and the binary are rows in `docs/grammars/xyce/discrepancies.md`, with categories under [decision 0029](0029-xyce-discrepancy-categories.md). Item numbers below are xm3-tasks.md section 5.1 points, which hold the evidence.
+- **Context:** X-M3 ([xm3-tasks.md](../design/archive/xyce/xm3-tasks.md)) makes the hidden xyce dialect read the transient functions of V and I and the P port. Stage 1 compared the Xyce 7.10 reference manual (§2.3.9 to §2.3.11, §6.1.12) with the XyceNF 7.10.0 binary (section 5.1, points 1 to 29). The maintainer decided each point at G1. Differences between the manual and the binary are rows in `docs/grammars/xyce/discrepancies.md`, with categories under [decision 0029](0029-xyce-discrepancy-categories.md). Item numbers below are xm3-tasks.md section 5.1 points, which hold the evidence.
 - **Decision:**
   1. **The line** (points 1, 2): `[[DC] v] [AC mag [ph]] [function]`, in that order, with at most one function, which comes last.
   2. **The functions** PULSE, SIN, EXP, PAT, PWL and SFFM (points 3 to 6, 10, 13):
