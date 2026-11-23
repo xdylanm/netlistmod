@@ -4,17 +4,19 @@ The grammar lays a function's fields flat in the source line's rule (xyce.lark, 
 XY-SRC-004): its name, the `(` if any, each argument, a `)`, and `TD=`, `R=` or `FILE` after the
 list. ``_xyce_function`` gathers them into one :class:`SourceSpec` and checks what the grammar
 does not count: each function's arguments, PAT's bit string in the seventh place, PWL's pairs, and
-that `TD=` and `R=` stand once. No other dialect's grammar produces these fields, so on ngspice
-and LTspice ``_xyce_function`` returns the line unchanged.
+that `TD=` and `R=` stand once. It runs through the ``_source_fields`` hook, on xyce only. The P
+line's rule (``port_source``) is here too, so the shared ``SourcesRules`` holds no xyce code; the
+mixin is a base of ``XyceRules``.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn
 
 from lark import Token
 
+from netlistmod.dialects import _XYCE
 from netlistmod.model._rules_elements import ElementsRules
 from netlistmod.model._tree import (
     _comment_spans,
@@ -22,10 +24,11 @@ from netlistmod.model._tree import (
     _Field,
     _field_token,
     _field_tokens,
+    _Item,
     _RParen,
     _span,
 )
-from netlistmod.model.nodes import SourceSpec
+from netlistmod.model.nodes import CurrentSource, PortSource, SourceSpec, VoltageSource
 from netlistmod.model.values import Formula, Identifier, NumericValue, ParamAssignment, Value
 from netlistmod.source import Span
 
@@ -95,7 +98,24 @@ def _whole_decimal(text: str) -> bool:
 
 
 class XyceSourcesRules(ElementsRules):
-    """The field rules of xyce's transient functions, and their gathering into a SourceSpec."""
+    """The field rules of xyce's transient functions, their gathering into a SourceSpec, and the
+    P line."""
+
+    if TYPE_CHECKING:
+        # SourcesRules builds every source line; the transformer has both mixins.
+        def _source_item(
+            self, kind: type[VoltageSource | CurrentSource | PortSource], element: _Element
+        ) -> _Item: ...
+
+    def _source_fields(self, element: _Element) -> _Element:
+        if self._dialect is not _XYCE:
+            return element
+        return self._xyce_function(element)
+
+    def port_source(self, children: list[Any]) -> _Item:
+        element = _Element(children)
+        self._xyce_port(element.designator, element.all(ParamAssignment))
+        return self._source_item(PortSource, element)
 
     def xfn_name(self, children: list[Any]) -> _Field:
         return self._field(children, _XFnHead)

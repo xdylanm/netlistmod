@@ -19,6 +19,7 @@ from netlistmod.model._tree import (
     _RKM_TERMINALS,
     _TEXT_VALUES,
     _comment_spans,
+    _Element,
     _Field,
     _field_token,
     _span,
@@ -54,6 +55,12 @@ class _Rules:
     _source: SourceText
     _dialect: Dialect
     _rkm: bool
+
+    def _source_fields(self, element: _Element) -> _Element:
+        """A dialect's hook on a source line's fields before they are read: nothing here; xyce
+        gathers its transient function (``XyceSourcesRules``), which only xyce.lark produces.
+        Defined on the base so that a dialect's override wins whatever the mixin order."""
+        return element
 
     def _refuse_references(self, formula: Formula, written: str) -> None:
         """Refuse a ``V(`` or ``I(`` in the transfer function ``written`` (``Laplace=`` or
