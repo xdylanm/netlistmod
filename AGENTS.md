@@ -22,6 +22,7 @@ This file summarizes working rules; it does not replace or duplicate that docume
 
 ## Working rules
 
+- Be concise.
 - Follow the working agreement in architecture §15. Do not silently resolve open
   questions in §21 or weaken an invariant to make a test pass.
 - Make architecture changes through a decision record in `docs/decisions/`.
