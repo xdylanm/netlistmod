@@ -38,7 +38,7 @@ X-M4 makes the hidden xyce dialect read the transistor letters Q, M, J and Z, wh
 ### Stage 1
 
 - [x] **A1 — The lines.** Q, M, J and Z in the manual against decision 0014 and today's ngspice and LTspice rules: node counts per letter (Q's bracketed substrate and the unbracketed VBIC thermal node in the manual's example; M's MVS, BSIM-SOI and `TNODEOUT` forms), the boundary rule, area (positional or named), flags (`off`), instance parameters (open or closed lists), `IC=` lists, a number or keyword in the model's place. **Node counts and `LEVEL`:** which `LEVEL` values (and `TNODEOUT`) fix the count for each letter, what Xyce does with a count that is wrong for the model, and whether the library should check a line against a visible `.model` (in the same scope; an included model it cannot see), with the diagnostic or refusal that would carry it, or keep decision 0014 item 2's count by letter. Probes for what the manual leaves unclear; options with a recommendation.
-- [ ] **A2 — Models and the edit layer.** The xyce model types for the four letters; binned names: which letters bin, how `L=`/`W=` select a bin, and what the index and `UNRESOLVED_MODEL` / `MODEL_TYPE_MISMATCH` should do; the plan section 8.1 sites and the edits (`set_param` on the area, `set_model`, `remove_param`); `.PREPROCESS REMOVEUNUSED` (keep refused, or read it with a diagnostic). Probes; options with a recommendation.
+- [x] **A2 — Models and the edit layer.** The xyce model types for the four letters; binned names: which letters bin, how `L=`/`W=` select a bin, and what the index and `UNRESOLVED_MODEL` / `MODEL_TYPE_MISMATCH` should do; the plan section 8.1 sites and the edits (`set_param` on the area, `set_model`, `remove_param`); `.PREPROCESS REMOVEUNUSED` (keep refused, or read it with a diagnostic). Probes; options with a recommendation.
 
 ### Stage 2
 
@@ -52,7 +52,7 @@ X-M4 makes the hidden xyce dialect read the transistor letters Q, M, J and Z, wh
 
 ### 5.1 G1 decisions
 
-Stage 1 findings (A1: points 1 to 12; A2 to follow), probed on XyceNF 7.10.0 with `-syntax`, `-norun`, `-namesfile` and `.dc` runs. Each point gives the recommendation; **(G1)** marks a question for the maintainer. Rows are `discrepancies.md` rows, given as Library/Xyce and category (decision 0029). "The repeat row" is the row on a value or parameter written twice; "the level row" is the row on instance parameters of the model's LEVEL.
+Stage 1 findings (A1: points 1 to 12; A2: points 13 to 26), probed on XyceNF 7.10.0 with `-syntax`, `-norun`, `-namesfile` and `.dc` runs. Each point gives the recommendation; **(G1)** marks a question for the maintainer. Rows are `discrepancies.md` rows, given as Library/Xyce and category (decision 0029). "The repeat row" is the row on a value or parameter written twice; "the level row" is the row on instance parameters of the model's LEVEL.
 
 **How Xyce finds the model.** Xyce ends the nodes by the model's LEVEL: after the third node, the first name that is a `.model` whose level takes that many nodes is the model, wherever the model is defined (later in the file, in an `.include` or `.lib`, in an enclosing scope). LEVEL must be a literal (`level={lv}` stops). Too few nodes for the level always stop; too many either stop, are dropped silently, or are joined to internal nodes (a wrong circuit), by level.
 
@@ -74,14 +74,47 @@ Stage 1 findings (A1: points 1 to 12; A2 to follow), probed on XyceNF 7.10.0 wit
     - (B) **recommended:** (A) plus a document-layer warning when the model resolves to a visible `.model` with a literal LEVEL and the count is outside point 11's range, saying what Xyce does; also on a node that names a visible model whose level takes the count so far (point 4). Silent when the model is unresolved or the level unknown. It needs the level table as data (`xyce-devices.json` or `model-types.json`) and either a new `DiagnosticCode` (recommended, e.g. `NODE_COUNT_MISMATCH`, on the X-M8 checklist) or `MODEL_TYPE_MISMATCH` with its own message. Topology stays the nodes written;
     - (C) a `ParseError` when the model is visible: not recommended, as the grammar cannot see models and the outcome would depend on which file is open.
 
+**Models** ([xyce-ref] §2.1.21, §2.3.17 to §2.3.20).
+
+13. **Types:** Q NPN, PNP; M NMOS, PMOS; J NJF, PJF; Z NMF, PMF. No VDMOS type: Xyce's VDMOS is NMOS or PMOS with `LEVEL=18` (Table 2-36 p180, §2.3.20.8 p377); `vdmos` stops on M. These go in `model-types.json`'s `xyce` section; no row.
+14. **A wrong type for the letter** stops Xyce ("no valid model card", as for a missing model). `MODEL_TYPE_MISMATCH` stays a warning and on xyce gives that outcome; on M it adds that VDMOS is NMOS or PMOS at `LEVEL=18`. No row.
+
+**Binning** ([xyce-ref] §2.1.21.2 p90; `.OPTIONS PARSER MODEL_BINNING`, §2.1.25.21 p119).
+
+15. **Only M bins** (a binned name on Q, J or Z stops, as an `UNRESOLVED_MODEL`). On M, `nch` selects any `nch.<suffix>` (`nch.5`, `nch.a`, `nch.x.2`), folded; naming a bin directly works on every letter. **(G1)** What counts as a bin: (a) **recommended:** any non-empty suffix, as Xyce reads it, row `reads/runs`, `imprecise` (the manual says "bin number"); (b) digit suffixes only, as the manual says, giving false `UNRESOLVED_MODEL` where Xyce runs.
+16. **Precedence and scope:** an exact name anywhere in the scope chain wins over a set; a set is gathered across the chain (a body set is not visible from the top level); a set in an `.include` works; `MODEL_BINNING=false` turns binning off. Recommend: exact lookup first; then, for `Mosfet` on xyce only, the `<name>.*` models of the chain; no set under a literal `MODEL_BINNING=false`; never a set in a `head:param` target (`nch:vto` stops Xyce).
+17. **Bin selection** is Xyce's, not the library's (L and W may be expressions, scaled or stepped). Observed: bounds half-open; the line needs both `L=` and `W=`; no matching bin stops; a bin missing a bound is never selected while the others still work; bins may differ in LEVEL or in NMOS/PMOS, the selected bin ruling (node count too); the bin is chosen once under `.STEP`. Rows: a set without `L=`/`W=` and literal L/W in no bin `reads/stops`, `library-limit`; the missing bound, the `.STEP` choice and mixed bins `reads/runs`, `imprecise`.
+18. **The index:** a set's reference targets its first bin (scope chain, then source order), with a read-only accessor for the whole set (X-M8 checklist). `UNRESOLVED_MODEL` is silent when a set resolves; `MODEL_TYPE_MISMATCH` warns on each bin that is not NMOS or PMOS; `DUPLICATE_DEFINITION` already covers a repeated bin name.
+19. **(G1) Unselectable sets:** (a) **recommended:** a new warning (e.g. `MODEL_BIN_UNSELECTABLE`, X-M8) on an M line that names a set without `L=` or `W=`, and on a bin lacking one of LMIN, LMAX, WMIN, WMAX; (b) rows only; (c) also check literal L and W against the bounds (not recommended: scale, expressions, `.STEP`).
+20. **The level table for point 12 (B):** a new `model/xyce-levels.json` with a loader, keyed by element class then level: `{"nodes": [min, max], "tnodeout": [min, max]?, "extra": "dropped" | "joined" | "stops"}`, with level 1 as the default (a `.model nmos` without LEVEL acts as level 1). A model's LEVEL is the last `level` parameter when it is a plain integer-valued number (`10`, `10.0`, `1e1`); braced, quoted, lettered or fractional values are unknown, and the check is silent. For a set, each bin with a known level is checked, and the warning names the bin. Point 4's check uses the same resolver.
+
+**The edit layer.**
+
+21. **(G1) `set_param(…, "area", …)` on Q, J, Z** (`_POSITIONAL_AREAS[_XYCE]` gains them). An existing `area=` or positional area is replaced in place. With none, Xyce runs a positional area only if nothing (or a lone `temp=`) follows; `area=` runs beside anything. Options: (a) **recommended:** the positional slot when nothing follows the model, else `area=v` at the end (`J1 d g 0 jm temp=30` → `… temp=30 area=2`); (b) always the positional slot, the manual's form (G1 6 (a)), which writes lines Xyce stops on or where it drops `off`. Adding a parameter after an existing positional area keeps the minimal edit (P3). `area` on M stays an `EditError`.
+22. **`off` after a positional area** (`qm 2 off`) runs with `off` ignored: row `reads/ignores`, `manual`. The `off` edits stay as they are (`OFF=v` appended or set in place; a bare flag is not removable).
+23. **`set_model`** resolves a set as the index does (`M1 … nch.1 L=1u W=5u` → `… nch …`), and refuses one whose bins are not all NMOS or PMOS (and, under 19 (a), a line without `L=` or `W=`). `set_model_param` on a set name is an `EditError` that asks for a bin.
+24. **`remove_param` and `IC=`:** a positional area keeps its `EditError`; `area=` and `IC=…` are removed as parameters; `set_param("ic", …)` replaces the whole list, the reparse checking the counts. **(G1) `TNODEOUT=`:** (a) **recommended:** an `EditError` on `set_param` and `remove_param`, since adding or removing it changes which node Xyce takes as the temperature node (P4); (b) an ordinary parameter.
+
+**`.PREPROCESS REMOVEUNUSED`** ([xyce-ref] §2.1.29 p126).
+
+25. **What it does:** with a comma list of C, D, I, L, M, Q, R, V, Xyce removes each listed device whose terminals are one node (for M and Q the first three). Observed as the manual says, per instance in a body, following ground synonyms only under `REPLACEGROUND`. Wider than the manual: blank-separated letters, a trailing comma, a repeated letter and `+` lines run; an empty list, another letter (J, X), braces and a second line stop.
+26. **(G1) The reading:** (a) keep `UnsupportedConstruct`; (b) **recommended:** an `UnknownDirective` with `UNTYPED_DIRECTIVE_PRESERVED`, as ADDRESISTORS; the grammar takes a closed comma list of at least one letter, one line per netlist, in a body too; a new warning (X-M8) on each device whose written terminals (first three on M and Q) are one folded node, saying Xyce removes it; topology stays as written. Rows: blank separators and a trailing comma `refuses/runs`, `manual`; removal that depends on how instances connect `reads/runs`, `library-limit`. (c) (b) without the device warning.
+
+**Code sites (A2):** `model-types.json`; a new `model/xyce-levels.json`; `document/index.py` (the model lookup's set fallback, the set accessor, `MODEL_BINNING`; `head:param` stays exact); `document/diagnostics.py` (`MODEL_TYPE_MISMATCH` across bins, new codes for 12, 19 and 26); `document/models.py` (the VDMOS hint); `edit/_ops_common.py` (`_POSITIONAL_AREAS`); `edit/_ops_elements.py` (the area branch of `set_param`, `set_model`, `set_model_param`, the `tnodeout` refusal); `edit/_ops_remove.py`; `xyce.lark` and `model/_rules_structure.py` `preprocess_removeunused`; specs `XY-UNS-001`, `XY-PRE-002`, `XY-MOD-001`; xyce `scoping.md`.
+
 **Maintainer's decisions at G1 (2026-11-22):**
 
 - **6:** (a), read a positional area followed by parameters as the manual writes it; row `reads/stops`, `manual`.
 - **12:** (B), the count by letter with rows, plus a document-layer warning against a visible model's literal LEVEL, under a new `DiagnosticCode` (X-M8 checklist).
+- **15:** (a), any non-empty suffix is a bin.
+- **19:** (b), rows only; no new diagnostic.
+- **21:** neither option: `set_param` always adds `area=v` at the end of a line with no area (`area=` runs beside any parameter and after `off`); an existing area, positional or named, is replaced in place.
+- **24:** (b), `TNODEOUT=` is an ordinary parameter.
+- **26:** (c), `REMOVEUNUSED` is read as an `UnknownDirective` with rows, without the device warning.
 
 **Code sites (A1):** `xyce.lark` (the four rules, closed parameter lists with `*_unlisted` refusals, `off`/`OFF=`, an `IC=` list, `TNODEOUT=` and the bare refusal); `xyce-devices.json`; `_transistor` (a positional area after a parameter or beside `area=`; its area message is ngspice's) and `_check_model_name` in `model/_rules_elements.py`; `_POSITIONAL_AREAS`; for 12 (B) `document/diagnostics.py` near `MODEL_TYPE_MISMATCH`.
 
-Probes: the scratchpad folder `xm4-a1` (not committed; decision 0026).
+Probes: the scratchpad folders `xm4-a1` and `xm4-a2` (not committed; decision 0026).
 
 ### 5.2 Log
 
@@ -89,3 +122,5 @@ Probes: the scratchpad folder `xm4-a1` (not committed; decision 0026).
 - 2026-11-22: the maintainer kept binned model names (held from xm1-tasks 5.1) and the `.PREPROCESS REMOVEUNUSED` revisit (decision 0028 item 1) in X-M4's scope, though the plan's X-M4 row names neither; and added to A1 the question of checking node counts against the model's `LEVEL`.
 - 2026-11-22: A1 done (section 5.1, points 1 to 12); G1 questions 6 and 12 for the maintainer.
 - 2026-11-22: G1 (A1): the maintainer accepted the recommendations on points 6 (a) and 12 (B).
+- 2026-11-22: A2 done (section 5.1, points 13 to 26); G1 questions 15, 19, 21, 24 and 26 for the maintainer.
+- 2026-11-22: G1 (A2): the maintainer decided points 15, 19, 21, 24 and 26 one by one (section 5.1).
