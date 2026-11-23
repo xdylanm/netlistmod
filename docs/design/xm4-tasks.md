@@ -42,7 +42,7 @@ X-M4 makes the hidden xyce dialect read the transistor letters Q, M, J and Z, wh
 
 ### Stage 2
 
-- [ ] **B1 — Decision record** for the G1 decisions (decision 0031).
+- [x] **B1 — Decision record** for the G1 decisions (decision 0031).
 - [ ] **B2 — Q, J and Z** in `xyce.lark` and the transistor rules.
 - [ ] **B3 — M.**
 - [ ] **B4 — Models, binning and the document and edit layers** (and `REMOVEUNUSED`, as G1 decides).
@@ -124,3 +124,4 @@ Probes: the scratchpad folders `xm4-a1` and `xm4-a2` (not committed; decision 00
 - 2026-11-22: G1 (A1): the maintainer accepted the recommendations on points 6 (a) and 12 (B).
 - 2026-11-22: A2 done (section 5.1, points 13 to 26); G1 questions 15, 19, 21, 24 and 26 for the maintainer.
 - 2026-11-22: G1 (A2): the maintainer decided points 15, 19, 21, 24 and 26 one by one (section 5.1).
+- 2026-11-22: B1 done: [decision 0031](../decisions/0031-xyce-transistors.md).

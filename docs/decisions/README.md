@@ -33,3 +33,4 @@ them. Use [the decision record template](TEMPLATE.md).
 - [0028 — xyce directives and the closed list of dot-commands](0028-xyce-directives.md)
 - [0029 — xyce discrepancy categories: the manual as the reference, the solver as observed](0029-xyce-discrepancy-categories.md)
 - [0030 — xyce transient functions and the P port](0030-xyce-stimulus-and-port.md)
+- [0031 — xyce transistors: Q, M, J, Z, binned models and `REMOVEUNUSED`](0031-xyce-transistors.md)
