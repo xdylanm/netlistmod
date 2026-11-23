@@ -236,11 +236,12 @@ express or check the form). Its sections sort the rows by what the library does 
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
 The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M5.
-The records of X-M1, X-M2, X-M2.1 and X-M3 are
+The records of X-M1, X-M2, X-M2.1, X-M3 and X-M4 are
 [archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md),
 [archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md),
-[archive/xyce/xm2.1-tasks.md](../../design/archive/xyce/xm2.1-tasks.md) and
-[archive/xyce/xm3-tasks.md](../../design/archive/xyce/xm3-tasks.md).
+[archive/xyce/xm2.1-tasks.md](../../design/archive/xyce/xm2.1-tasks.md),
+[archive/xyce/xm3-tasks.md](../../design/archive/xyce/xm3-tasks.md) and
+[archive/xyce/xm4-tasks.md](../../design/archive/xyce/xm4-tasks.md).
 
 ## Validation status
 
