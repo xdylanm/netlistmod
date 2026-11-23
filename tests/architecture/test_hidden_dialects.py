@@ -121,7 +121,7 @@ def test_the_public_loaders_read_a_structure_only_netlist() -> None:
 
 def test_the_public_loaders_refuse_an_element_line() -> None:
     with pytest.raises(UnsupportedConstruct, match="not yet supported on Xyce"):
-        Netlist.from_text("t\nQ1 c b e qmod\n.END\n", dialect=_XYCE)
+        Netlist.from_text("t\nT1 a 0 b 0 Z0=50 TD=1n\n.END\n", dialect=_XYCE)
 
 
 def test_rkm_is_refused_on_xyce() -> None:

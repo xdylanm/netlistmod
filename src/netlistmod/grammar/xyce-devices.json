@@ -7,13 +7,13 @@
   "G": {"status": "planned", "phase": 2, "milestone": "X-M5"},
   "H": {"status": "planned", "phase": 2, "milestone": "X-M5"},
   "I": {"status": "supported", "phase": 1, "milestone": "X-M1"},
-  "J": {"status": "planned", "phase": 2, "milestone": "X-M4"},
+  "J": {"status": "supported", "phase": 2, "milestone": "X-M4"},
   "K": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "L": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "M": {"status": "planned", "phase": 2, "milestone": "X-M4"},
   "O": {"status": "planned", "phase": 2, "milestone": "X-M6"},
   "P": {"status": "supported", "phase": 2, "milestone": "X-M3"},
-  "Q": {"status": "planned", "phase": 2, "milestone": "X-M4"},
+  "Q": {"status": "supported", "phase": 2, "milestone": "X-M4"},
   "R": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "S": {"status": "planned", "phase": 2, "milestone": "X-M5"},
   "T": {"status": "planned", "phase": 2, "milestone": "X-M6"},
@@ -22,5 +22,5 @@
   "W": {"status": "planned", "phase": 2, "milestone": "X-M5"},
   "X": {"status": "supported", "phase": 1, "milestone": "X-M1"},
   "Y": {"status": "planned", "phase": 2, "milestone": "X-M6"},
-  "Z": {"status": "planned", "phase": 2, "milestone": "X-M4"}
+  "Z": {"status": "supported", "phase": 2, "milestone": "X-M4"}
 }

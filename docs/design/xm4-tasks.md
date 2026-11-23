@@ -43,7 +43,7 @@ X-M4 makes the hidden xyce dialect read the transistor letters Q, M, J and Z, wh
 ### Stage 2
 
 - [x] **B1 — Decision record** for the G1 decisions (decision 0031).
-- [ ] **B2 — Q, J and Z** in `xyce.lark` and the transistor rules.
+- [x] **B2 — Q, J and Z** in `xyce.lark` and the transistor rules.
 - [ ] **B3 — M.**
 - [ ] **B4 — Models, binning and the document and edit layers** (and `REMOVEUNUSED`, as G1 decides).
 - [ ] **B5 — Evidence:** spec entries, corpus files with manifests, solver tests, discrepancy rows (the `[s]` row's Library column), `devices.md` and `xyce-devices.json`, the README status table, the X-M8 checklist.
@@ -125,3 +125,4 @@ Probes: the scratchpad folders `xm4-a1` and `xm4-a2` (not committed; decision 00
 - 2026-11-22: A2 done (section 5.1, points 13 to 26); G1 questions 15, 19, 21, 24 and 26 for the maintainer.
 - 2026-11-22: G1 (A2): the maintainer decided points 15, 19, 21, 24 and 26 one by one (section 5.1).
 - 2026-11-22: B1 done: [decision 0031](../decisions/0031-xyce-transistors.md).
+- 2026-11-22: B2 done: Q, J and Z on xyce (`XY-XTR-001`, `XY-BJT-001`, `XY-JFT-001`, `XY-MES-001`, documented until B5).

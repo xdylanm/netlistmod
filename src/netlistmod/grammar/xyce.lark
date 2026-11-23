@@ -7,8 +7,9 @@
 // includes and `.LIB`. The names and the two number readers of decision 0027 items 3 and 8 are
 // defined here for the statements and element lines that use them.
 //
-// The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X. X-M2 (decision 0028)
-// reads the directives, and closes the list of dot-commands (B4, decision 0028 item 1): the
+// The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X; X-M3 adds P and the
+// transient functions (decision 0030), X-M4 the transistors Q, J and Z (decision 0031). X-M2
+// (decision 0028) reads the directives, and closes the list of dot-commands (B4, decision 0028 item 1): the
 // typed ones, the untyped ones read as UnknownDirective (DOT_NAME), and `.PREPROCESS ADDRESISTORS`;
 // any other dot-command has no terminal, so the parser stops at its first character and the
 // loader raises a ParseError ("not an Xyce dot-command"). `.PREPROCESS REMOVEUNUSED` raises
@@ -98,6 +99,9 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | current_source
                | port_source
                | diode
+               | bjt
+               | jfet
+               | mesfet
                | subckt_instance
                | xy_ic_stmt
                | xy_nodeset_stmt
@@ -750,6 +754,74 @@ d_flag: SEP OFF_KW
       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) d_flag
 OFF_VALUE_KW.4: /off(?=[ \t]*=)/i
 D_NAME.4: /[Dd]/ _XY_CHAR*
+
+// Transistor lines (decision 0014 item 1; decision 0031 items 1 to 4): fixed nodes, then names, the
+// last of which is the model, then an optional positional area, then flags and parameters. Each
+// rule spells out the name sequences its node counts allow, so the parser classifies a name only
+// once it sees what follows it, as for X. A name field is a NODE_WORD, so `[s]` and `X1:n` are
+// nodes; the transformer refuses a `:` in the model's place. A field written as a number is a
+// node before the model and the area after it (xt_number); the transformer tells which. Right
+// after the fixed nodes only a name may follow, so `off` there is a node (5.1 point 4); after a
+// name, where a flag may also stand, `off` is the flag OFF_KW, as on ngspice. A number or `off`
+// in the model's place is refused by the transformer. A positional area after a flag or parameter
+// is recognised only to be refused (xt_late_area).
+// spec: XY-XTR-001
+xt_name: SEP NODE_WORD
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xt_name
+xt_number: SEP NUMBER
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xt_number
+xt_area: SEP (BRACE_FORMULA | QUOTE_FORMULA)
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xt_area
+xt_late_area: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA) REST_TEXT* NL
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) xt_late_area
+
+// Q ([xyce-ref] §2.3.17 p241–243): 3 to 5 nodes (substrate, VBIC's and HICUM's thermal node), the
+// model, an optional area, then `OFF` or `OFF=`, `IC=` (a comma list, at most two values, checked
+// by the transformer) and the closed list: Tables 2-67 (level 1), 2-69 and 2-71 (VBIC), 2-73 (FBH),
+// 2-75 (HICUM L0), 2-80 and 2-83 (MEXTRAM), §2.3.17 p247–279, without `OFF` (q_flag) and with the
+// vector `IC` of IC1 and IC2.
+// spec: XY-BJT-001
+bjt: Q_NAME node node node xt_name _q_tail
+   | Q_NAME node node node (xt_name | xt_number) xt_name _q_tail
+   | Q_NAME node node node (xt_name | xt_number) (xt_name | xt_number) xt_name _q_tail
+   | Q_NAME node node node xt_name (xt_number | xt_area) _q_tail
+   | Q_NAME node node node (xt_name | xt_number) xt_name (xt_number | xt_area) _q_tail
+   | Q_NAME node node node (xt_name | xt_number) (xt_name | xt_number) xt_name (xt_number | xt_area) _q_tail
+_q_tail: (q_param | q_flag | q_ic_param)* (q_unlisted | NL | eol)
+       | (q_param | q_flag | q_ic_param)+ xt_late_area
+q_param: SEP Q_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) q_param
+q_flag: SEP OFF_KW
+      | SEP OFF_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) q_flag
+q_ic_param: SEP Q_IC_KW EQ _inst_value (CSEP _inst_value)*
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) q_ic_param
+q_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) q_unlisted
+Q_PARAM_KW.4: /(?:area|dt|dta|dtemp|ic1|ic2|l|m|mult|n|sw_et|sw_noise|temp|trise|w)(?=[ \t]*=)/i
+Q_IC_KW.4: /ic(?=[ \t]*=)/i
+Q_NAME.4: /[Qq]/ _XY_CHAR*
+
+// J and Z ([xyce-ref] §2.3.18 p286, §2.3.19 p290): exactly 3 nodes, the model, an optional area,
+// then the closed list of Tables 2-86 and 2-88 (J, levels 1 and 2, p287–288) and Table 2-90 (Z,
+// p291). No flag: `OFF` is recognised only to be refused (jz_off). The tail is shared with Z.
+// spec: XY-JFT-001
+jfet: J_NAME node node node xt_name (xt_number | xt_area)? _jz_tail
+J_NAME.4: /[Jj]/ _XY_CHAR*
+_jz_tail: jz_param* (jz_unlisted | jz_off | NL | eol)
+        | jz_param+ xt_late_area
+jz_param: SEP JZ_PARAM_KW EQ _inst_value
+        | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) jz_param
+jz_unlisted: SEP INST_KEY REST_TEXT* NL
+           | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) jz_unlisted
+jz_off: SEP OFF_KW REST_TEXT* NL
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) jz_off
+JZ_PARAM_KW.4: /(?:area|dtemp|temp)(?=[ \t]*=)/i
+
+// Z ([xyce-ref] §2.3.19 p290): J's line, with J's tail.
+// spec: XY-MES-001
+mesfet: Z_NAME node node node xt_name (xt_number | xt_area)? _jz_tail
+Z_NAME.4: /[Zz]/ _XY_CHAR*
 
 // V and I, their DC and AC parts ([xyce-ref] §2.3.10 p226, §2.3.9 p221; decision 0027 item 6):
 // `[DC] value`, then `AC magnitude [phase]`, then at most one transient function (decision 0030

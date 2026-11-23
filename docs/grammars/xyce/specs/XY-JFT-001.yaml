@@ -1,0 +1,27 @@
+id: XY-JFT-001
+dialect: xyce
+construct: J JFET lines (3 nodes, area and the closed parameter list)
+manual_ref:
+- '[xyce-ref] §2.3.18 p286 "Junction Field-Effect Transistor (JFET)"'
+status: documented
+validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+grammar:
+- jfet
+- _jz_tail
+- jz_param
+- jz_unlisted
+- jz_off
+- JZ_PARAM_KW
+- J_NAME
+core_rules:
+- OFF_KW
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_jfet_and_mesfet_forms
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_model_is_the_last_name_before_the_area
+- tests/grammar/xyce/test_xyce_transistors.py::test_each_listed_name_is_read_in_any_case
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_grammar_and_the_message_hold_the_same_lists
+- tests/grammar/xyce/test_xyce_transistors.py::test_a_name_outside_the_list_is_refused_at_the_name
+- tests/grammar/xyce/test_xyce_transistors.py::test_off_is_refused_on_j_and_z
+- tests/grammar/xyce/test_xyce_transistors.py::test_a_parameter_written_twice_is_refused
+notes: '`Jfet` (decision 0031 items 1 and 4): exactly 3 nodes (a 4th is a ParseError; Xyce drops it), the model, an optional area, then AREA, DTEMP and TEMP (Tables 2-86 and 2-88, p287–288), in any case. `OFF`, `OFF=`, `M=` and `IC=` are refused, as Xyce stops on them. The tail is shared with Z (XY-MES-001).'
