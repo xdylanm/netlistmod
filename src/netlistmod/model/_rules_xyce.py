@@ -16,6 +16,7 @@ from lark import Token
 from netlistmod.dialects import _XYCE, Dialect, fold_name
 from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_statements import StatementsRules
+from netlistmod.model._rules_xyce_sources import XyceSourcesRules
 from netlistmod.model._tree import (
     _common,
     _dot,
@@ -238,7 +239,7 @@ class _ValueKeyword:
     charge: bool
 
 
-class XyceRules(StatementsRules):
+class XyceRules(StatementsRules, XyceSourcesRules):
     """Rules for xyce's statements that the other dialects spell differently."""
 
     def subckt_param(self, children: list[Any]) -> _Field:
