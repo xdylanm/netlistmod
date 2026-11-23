@@ -542,7 +542,11 @@ def _node_count_findings(index: Index, reference: Reference, binning: bool) -> l
         candidates = found[1][:1] if found else model_set(scope, node.name, kind, binning=binning)
         for model in candidates:
             assert isinstance(model, ModelStatement)
-            level = _model_level(model, default)
+            # Only a model of a type the letter takes ends the nodes: Xyce runs `Q1 c b 0 rx qn`
+            # beside `.model rx r` (X-M4 R1).
+            if not model_type_allowed(owner, model.model_type, index.dialect):
+                continue
+            level = _model_level(model, default, index.dialect)
             nodes = None if level is None else level_nodes(kind.__name__, level)
             if nodes is None or not _takes(nodes, position, tnodeout):
                 continue
@@ -564,7 +568,7 @@ def _node_count_findings(index: Index, reference: Reference, binning: bool) -> l
     count = len(owner.nodes)
     findings: list[Finding] = []
     for model in models:
-        level = _model_level(model, default)
+        level = _model_level(model, default, index.dialect)
         nodes = None if level is None else level_nodes(kind.__name__, level)
         if nodes is None or _takes(nodes, count, tnodeout):
             continue

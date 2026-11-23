@@ -241,12 +241,13 @@ def test_a_malformed_level_table_is_refused(data: dict[str, Any], message: str) 
         ("level='10'", None),
         ("level=10.5", None),
         ("level=10k", None),
+        ("LEVEL=10", 10),
     ],
 )
 def test_a_models_level_is_its_last_plain_integer(params: str, level: int | None) -> None:
     netlist = _netlist(f".model mm nmos {params}\n")
     (model,) = netlist.models["mm"]
-    assert _model_level(model, 1) == level
+    assert _model_level(model, 1, _XYCE) == level
 
 
 # NODE_COUNT_MISMATCH (decision 0031 item 5; 5.1 points 4, 11, 12 and 20).
@@ -379,6 +380,9 @@ def test_a_node_naming_a_model_that_takes_the_count_so_far_is_a_warning(
         "M1 d g 0 b nm\n.model nm nmos\n.model b nmos\n",
         # The model's level is unknown.
         "Q1 c b 0 s qn\n.model qn npn\n.model s npn level={1}\n",
+        # A model of a type the letter does not take: Xyce runs the line (X-M4 R1).
+        "Q1 c b 0 rx qn\n.model qn npn\n.model rx r\n",
+        "M1 d g 0 0 dx nm\n.model nm nmos level=10\n.model dx d\n",
     ],
 )
 def test_a_node_naming_a_model_of_another_count_is_silent(body: str) -> None:
