@@ -69,7 +69,7 @@ Stage 1 findings (A1: points 1 to 15; A2: points 16 to 29), probed on XyceNF 7.1
     - Xyce stops when R is not in 0 ≤ R < the last time. Recommend leaving the range unchecked: `reads/stops`, `library-limit`.
 12. **(G1) PWL FILE:**
     - `FILE` (any case), then a double-quoted string or a bare path, then `TD=`/`R=`, held as a `FILE` parameter as on LTspice; the path is never read;
-    - refused: `FILE=`, single quotes, parentheses around the FILE form (`imprecise`, `refuses/runs`), and extra tokens or a second `FILE` (`manual`, `refuses/ignores`);
+    - refused: `FILE=` and single quotes, on which Xyce stops ("Could not find file"; single quotes refused with the hint "write the path in double quotes", corrected at R1), parentheses around the FILE form (`imprecise`, `refuses/runs`), and extra tokens or a second `FILE` (`manual`, `refuses/ignores`);
     - a missing file: `reads/stops`, `library-limit`;
     - Xyce resolves a relative path against the working directory, not the netlist's folder, so recommend no file reference in the document layer;
     - `set_stimulus_arg` must write `FILE name` without `=` on xyce.

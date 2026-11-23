@@ -101,7 +101,6 @@ def remove_param(
         BehavioralSource,
         ControlledSource,
         TransmissionLine,
-        PortSource,
         VoltageSource,
         CurrentSource,
         PortSource,

@@ -48,6 +48,15 @@ _NEEDS_VALUE: dict[Dialect, tuple[type[_Source], ...]] = {
 # The names a function takes after its list, by folded function name, where the dialect checks
 # them before set_stimulus_arg adds one (xyce: PWL's `TD=` and `R=`, PAT's `R=`; decision 0030
 # items 3 to 5); None where the dialect does not (ngspice and LTspice).
+# Whether the dialect's sources have distortion inputs (ngspice's DISTOF1 and DISTOF2), which
+# set_stimulus addresses by their text; where they do not (xyce; LTspice keeps its re-parse
+# check), DISTOF text is refused before any edit.
+_NO_DISTORTION: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+
 _NAMED_ARGS: dict[Dialect, dict[str, frozenset[str]] | None] = {
     Dialect.NGSPICE: None,
     Dialect.LTSPICE: None,
@@ -140,6 +149,11 @@ def set_stimulus(
     if "\n" in text or "\r" in text:
         raise EditError(f"{reason}: a source function's text must be one line, got {text!r}")
     name = _distortion_name(text)
+    if name is not None and _NO_DISTORTION[netlist.dialect]:
+        raise EditError(
+            f"{reason}: {netlist.dialect.display_name} sources have no distortion input, so "
+            f"`{name}` cannot be set"
+        )
     current = element.stimulus if name is None else _distortion(element, name)
     if current is not None:
         return [Edit(current.span, text, reason, (_FUNCTION,))]
@@ -172,6 +186,11 @@ def set_stimulus_arg(
         for param in (*spec.params, *line):
             if fold(param.name) == fold(key):
                 return [Edit(param.value.span, value, reason, (_VALUE,))]
+        if isinstance(element, PortSource) and fold(key) in {fold("port"), fold("z0")}:
+            raise EditError(
+                f"`port=` and `Z0=` are the P line's, not its function's: use set_param to set "
+                f"`{key}` of `{designator}`"
+            )
         _check_named_arg(netlist, spec, key, designator)
         text = conventions.field(f"{key}={value}")
         return [_insert(spec.span.end, text, reason, _VALUE, len(text) - len(value))]

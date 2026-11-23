@@ -13,7 +13,6 @@ grammar:
 - port_source
 - _p0
 - _p1
-- _p2
 - p_port
 - p_z0
 - PORT_KW
@@ -42,5 +41,6 @@ tests:
 - tests/solver/test_xyce_port_probes.py::test_v_runs_port_and_ignores_z0
 - tests/solver/test_xyce_port_probes.py::test_lin_needs_the_ports_numbered_one_to_n
 - tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/grammar/xyce/test_xyce_port.py::test_a_second_port_or_z0_is_refused_at_it
 validation_note: 'Validated on XyceNF Release 7.10.0: outside `.LIN` a port is its DC value behind Z0 (50 by default), in either order of `port=` and `Z0=`, with formulas, `+` lines and in a body; it runs under `.DC`, `.TRAN` and `.AC`. Xyce stops on a port number that is not an integer or a formula, a second `port=` or `Z0=`, a bare name, `ZO`, another parameter, the DC part after `port=` and one node. It runs a P line without `port=` (as a plain V source), port numbers 0, negative, signed or `1.0`, `port 1` and `Z0 100` without `=`, a complex Z0, `port=` after the AC part or the function, and a comma, which the library refuses; `.LIN` needs the ports numbered 1..N, which the library does not check (a `library-limit` row). `port=` on V makes V a port (a row).'
 notes: '`PortSource`, a sibling of `VoltageSource` and `CurrentSource` (decision 0030 item 6; X-M8 checklist): `P n+ n- [[DC] v] port=n [Z0=v] [AC mag [ph]] [function]`, with `port=` and `Z0=` in `params` as written, in either order, each once, both with their `=` (blanks around it allowed). `port=` is required and takes an integer literal of 1 or more or an expression in braces or quotes; `Z0=` a number of the device-field reader or an expression. Exactly two nodes, no other parameter; allowed in a subcircuit body. The DC, AC and function parts are V''s (XY-SRC-001 to XY-SRC-004). `.LIN`''s numbering (1..N) is not checked (a `library-limit` row).'
