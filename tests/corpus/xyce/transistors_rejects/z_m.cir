@@ -1,0 +1,6 @@
+reject: M= on Z
+VD d 0 5
+VG g 0 0
+Z1 d g 0 zm m=2
+.MODEL zm nmf
+.END

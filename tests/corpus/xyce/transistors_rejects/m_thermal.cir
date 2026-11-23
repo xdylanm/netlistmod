@@ -1,0 +1,6 @@
+reject: ngspice's thermal on M
+VD d 0 1
+VG g 0 2
+M1 d g 0 0 nm thermal
+.MODEL nm nmos level=18
+.END

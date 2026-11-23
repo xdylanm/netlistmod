@@ -1,0 +1,6 @@
+reject: REMOVEUNUSED letters separated by blanks
+VD d 0 1
+R1 d 0 1k
+V2 d d 1
+.PREPROCESS REMOVEUNUSED R V
+.END

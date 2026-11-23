@@ -1,0 +1,26 @@
+xyce MOSFETs: the M lines of X-M4
+* the bulk, BSIM-SOI's body and temperature nodes with TNODEOUT=, MVS's three nodes, VDMOS
+VD d 0 1
+VG g 0 2
+M1 d g 0 0 nm L=2u W=10u
+M2 d g 0 0 nm m=2 off ic=1, 2, 0
+m3 D
++ G 0 0
++ NM w=10U l=2u AD=1p
+M4 d g 0 0 pm OFF=0
+X1 d g devices
+.SUBCKT devices dd gg
+V5 n5 0 0
+V6 n6 0 0
+V7 n7 0 0
+M5 dd gg 0 0 ns
+M6 dd gg 0 0 n5 n6 n7 ns tnodeout=1
+M7 dd gg 0 mv
+M8 dd gg 0 0 vd
+.MODEL ns nmos level=10
+.MODEL mv nmos level=2000
+.MODEL vd nmos level=18
+.ENDS
+.MODEL nm nmos level=1
+.MODEL pm pmos level=1
+.END

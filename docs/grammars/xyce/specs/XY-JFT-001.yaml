@@ -3,8 +3,12 @@ dialect: xyce
 construct: J JFET lines (3 nodes, area and the closed parameter list)
 manual_ref:
 - '[xyce-ref] §2.3.18 p286 "Junction Field-Effect Transistor (JFET)"'
-status: documented
-validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-23'
+validation_note: 'Validated on XyceNF Release 7.10.0: three nodes on levels 1 and 2 (Xyce drops a 4th and 5th), a positional area or `area=` scaling the current, and the closed list. Xyce stops on `OFF`, `M=`, `IC=` and an unknown name, runs `area=` twice and an area after a parameter, and stops on an area followed by parameters other than a lone `temp=` (discrepancies.md).'
 grammar:
 - jfet
 - _jz_tail
@@ -24,4 +28,16 @@ tests:
 - tests/grammar/xyce/test_xyce_transistors.py::test_a_name_outside_the_list_is_refused_at_the_name
 - tests/grammar/xyce/test_xyce_transistors.py::test_off_is_refused_on_j_and_z
 - tests/grammar/xyce/test_xyce_transistors.py::test_a_parameter_written_twice_is_refused
+- tests/solver/test_xyce_transistor_probes.py::test_xyce_drops_nodes_past_the_letters_count
+- tests/solver/test_xyce_transistor_probes.py::test_an_area_of_two_doubles_the_current
+- tests/solver/test_xyce_transistor_probes.py::test_xyce_runs_area_forms_the_library_refuses
+- tests/solver/test_xyce_transistor_probes.py::test_a_positional_area_then_parameters_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_a_positional_area_then_a_lone_temp_runs
+- tests/solver/test_xyce_transistor_probes.py::test_a_name_outside_the_letters_list_is_refused_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_a_parameter_written_twice_is_refused_and_xyce_takes_the_last
+- tests/solver/test_xyce_transistor_probes.py::test_temp_with_dtemp_is_read_and_xyce_ignores_dtemp
+- tests/solver/test_xyce_transistor_model_probes.py::test_j_and_z_take_three_nodes_on_their_levels
+- tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
+- tests/grammar/xyce/test_xyce_corpus.py::test_accept_files_round_trip_and_tile
 notes: '`Jfet` (decision 0031 items 1 and 4): exactly 3 nodes (a 4th is a ParseError; Xyce drops it), the model, an optional area, then AREA, DTEMP and TEMP (Tables 2-86 and 2-88, p287–288), in any case. `OFF`, `OFF=`, `M=` and `IC=` are refused, as Xyce stops on them. The tail is shared with Z (XY-MES-001).'

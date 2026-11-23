@@ -1,0 +1,6 @@
+reject: a name outside Q's list
+VC c 0 5
+VB b 0 0.7
+Q1 c b 0 qn foo=1
+.MODEL qn npn
+.END

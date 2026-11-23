@@ -1,0 +1,16 @@
+{
+  "family": "transistors_basic",
+  "origin": "Authored in this repository for the X-M4 xyce grammar (task B5)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-23",
+  "notes": "The Q, M, J and Z lines, binned M models and `.PREPROCESS REMOVEUNUSED` of X-M4 (decision 0031). The devices with internal nodes (VBIC, HICUM, BSIM-SOI, MVS, VDMOS) stand in subcircuit bodies, where Xyce names those nodes with the instance's path, so that the top level's nodes are the library's nets. The solver test adds `.op` before `.END`. The `_crlf` file is the CRLF variant of its LF twin.",
+  "fixtures": {
+    "bins.cir": "707f5e1a93f43f4de251175d8931a4f377725e08f71497bf324b7806866cee34",
+    "bjt.cir": "28be4314e0d7f80cd90c0e6f9d54512b0bfd04cafa775353f869ad53a544b5ae",
+    "bjt_crlf.cir": "90ae8e90d850771c6adbd4b9a984ff5beef876a598702ef04992a410ca90fc92",
+    "jfet.cir": "9ca4787b3c2cc453089c15241c4610e37c33f948c5edb96ea95f38608ff881ec",
+    "mosfet.cir": "b6be9e181215d1722094149df64134c01bac1e5677239f428907582b1d32d7a4",
+    "removeunused.cir": "44bebac66eebaaf468ada353e7260fe7f1dc08d2c499537912fe723d894d7aee"
+  }
+}

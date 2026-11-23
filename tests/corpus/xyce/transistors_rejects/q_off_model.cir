@@ -1,0 +1,6 @@
+reject: off in the model's place
+VC c 0 5
+VB b 0 0.7
+Q1 c b 0 off
+.MODEL off npn
+.END

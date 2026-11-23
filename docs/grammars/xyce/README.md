@@ -187,6 +187,15 @@ X-M4 ([decision 0031](../../decisions/0031-xyce-transistors.md)) reads the trans
   `thermal` refused; the closed list of the MOSFET levels' instance tables (125 names and `IC`).
 - **J and Z** (`XY-JFT-001`, `XY-MES-001`): exactly 3 nodes; `area=`, `dtemp=` and `temp=` only;
   no flag, no `M=`, no `IC=`. A parameter written twice is a `ParseError` on all four letters.
+- **Models and the document and edit layers** (B4; `XY-XTR-001`, `XY-PRE-003`, scoping.md S13): the
+  model types of each letter; binned M models (`nch` for `nch.1`, `nch.2`); `NODE_COUNT_MISMATCH`
+  against a visible model's LEVEL (`model/xyce-levels.json`); the area, model and parameter edits;
+  `.PREPROCESS REMOVEUNUSED` as an `UnknownDirective`.
+- **Evidence** (B5): the solver tests `tests/solver/test_xyce_transistor_probes.py` and
+  `tests/solver/test_xyce_transistor_model_probes.py`, and the corpus families `transistors_basic`
+  (with a CRLF twin) and `transistors_rejects`. Xyce ends the nodes by the model's LEVEL, stops on
+  a positional area followed by parameters, and stops on a second line that selects the same bin:
+  rows of [discrepancies.md](./discrepancies.md).
 
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
@@ -248,7 +257,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | Entry | Construct | Status | Tests | Validated on |
 |---|---|---|---|---|
 | [XY-ACA-001](./specs/XY-ACA-001.yaml) | .AC small-signal analysis (a sweep, or DATA=) | validated | 5 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-BJT-001](./specs/XY-BJT-001.yaml) | Q bipolar transistor lines (3 to 5 nodes, area, OFF, IC= and the closed parameter list) | documented | 8 + 0 solver |  |
+| [XY-BJT-001](./specs/XY-BJT-001.yaml) | Q bipolar transistor lines (3 to 5 nodes, area, OFF, IC= and the closed parameter list) | validated | 9 + 18 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
 | [XY-CNT-001](./specs/XY-CNT-001.yaml) | `+` continuation lines, across blank, comment and indented lines | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-COM-001](./specs/XY-COM-001.yaml) | comments (`*` lines, `;` lines and `;` at the end of a line) | validated | 3 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-DAT-001](./specs/XY-DAT-001.yaml) | the .DATA ... .ENDDATA table (an opaque named block) | validated | 9 + 7 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -267,12 +276,12 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-INC-001](./specs/XY-INC-001.yaml) | .INC, .INCL and .INCLUDE | validated | 2 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IND-001](./specs/XY-IND-001.yaml) | indented lines (a comment to Xyce, decision X-D1) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-IPN-001](./specs/XY-IPN-001.yaml) | closed instance-parameter lists of R, C, L and D | validated | 9 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-JFT-001](./specs/XY-JFT-001.yaml) | J JFET lines (3 nodes, area and the closed parameter list) | documented | 7 + 0 solver |  |
+| [XY-JFT-001](./specs/XY-JFT-001.yaml) | J JFET lines (3 nodes, area and the closed parameter list) | validated | 8 + 11 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
 | [XY-LIB-001](./specs/XY-LIB-001.yaml) | .LIB calls and .LIB/.ENDL definitions | validated | 7 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | observed | 5 + 11 solver | xyce XyceNF Release 7.10.0 (2026-11-16, 2026-11-22) |
-| [XY-MES-001](./specs/XY-MES-001.yaml) | Z MESFET lines (3 nodes, area and the closed parameter list) | documented | 6 + 0 solver |  |
-| [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-MOS-001](./specs/XY-MOS-001.yaml) | M MOSFET lines (3 to 7 nodes, no area, OFF, IC=, TNODEOUT= and the closed parameter list) | documented | 16 + 0 solver |  |
+| [XY-MES-001](./specs/XY-MES-001.yaml) | Z MESFET lines (3 nodes, area and the closed parameter list) | validated | 7 + 9 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
+| [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-MOS-001](./specs/XY-MOS-001.yaml) | M MOSFET lines (3 to 7 nodes, no area, OFF, IC=, TNODEOUT= and the closed parameter list) | validated | 17 + 19 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
 | [XY-MUT-001](./specs/XY-MUT-001.yaml) | K mutual inductors (coupling and optional CORE model) | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NOD-001](./specs/XY-NOD-001.yaml) | .NODESET (the forms of .IC) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -284,7 +293,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-POR-001](./specs/XY-POR-001.yaml) | P port (`port=` and `Z0=` between the DC and AC parts) | validated | 10 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-22) |
 | [XY-PRE-001](./specs/XY-PRE-001.yaml) | .PREPROCESS REPLACEGROUND TRUE\|FALSE | validated | 7 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRE-002](./specs/XY-PRE-002.yaml) | .PREPROCESS ADDRESISTORS ONETERMINAL\|NODCPATH value (an UnknownDirective), and any other .PREPROCESS word refused | validated | 6 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
-| [XY-PRE-003](./specs/XY-PRE-003.yaml) | .PREPROCESS REMOVEUNUSED with a comma list of C, D, I, L, M, Q, R and V (an UnknownDirective) | documented | 5 + 1 solver |  |
+| [XY-PRE-003](./specs/XY-PRE-003.yaml) | .PREPROCESS REMOVEUNUSED with a comma list of C, D, I, L, M, Q, R and V (an UnknownDirective) | validated | 6 + 8 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
 | [XY-PRM-001](./specs/XY-PRM-001.yaml) | .PARAM assignments and function assignments | validated | 9 + 5 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRM-002](./specs/XY-PRM-002.yaml) | .GLOBAL_PARAM | validated | 5 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-PRT-001](./specs/XY-PRT-001.yaml) | .PRINT (a required print type of the closed list; the rest kept as text) | observed | 17 + 15 solver | xyce XyceNF Release 7.10.0 (2026-11-21, 2026-11-22) |
@@ -303,9 +312,9 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, `+` lines after a refused line) | documented | 9 + 0 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-XTR-001](./specs/XY-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z), with the model types, binned M models, the node count against the model's LEVEL and the area edits | documented | 30 + 0 solver |  |
+| [XY-XTR-001](./specs/XY-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z), with the model types, binned M models, the node count against the model's LEVEL and the area edits | validated | 31 + 25 solver | xyce XyceNF Release 7.10.0 (2026-11-23) |
 
-57 entries: 44 validated, 6 observed, 0 disputed, 7 documented.
+57 entries: 50 validated, 6 observed, 0 disputed, 1 documented.
 
 ## Lookaround terminals
 
@@ -330,6 +339,7 @@ parse states. The blocks are a `.LIB` definition (B4) and a `.DATA` table (X-M2 
 | `INST_KEY.3` | a letter or `_`, then name characters, when a `=` follows (a lookahead) | after an element's fixed fields | `WORD.2`, `NODE_WORD.2`; at its priority `NUMBER.3`, `PARAMS_KW.3`, `XFN_KW.3`, `PAT_KW.3`, `PWL_NAME_KW.3`; above: the parameter keywords below | It outranks the names, so a name before `=` is a parameter; it starts with a letter, so no number, and it holds no `:`, so no `PARAMS:`. On R, C, L and D it is the name outside the letter's list, which the keywords outrank. |
 | `TC_KW.4`, `OFF_VALUE_KW.4` | `tc` or `off`, when a `=` follows | after R, C and L's fields; after D's model | `INST_KEY.3`; at their priority the parameter keywords below | They outrank `INST_KEY`, so `TC=` takes its list and `OFF=` is a flag; the lookahead keeps `tcx=` and `offset=` ordinary parameters. No list holds `tc` or `off`, so they meet no keyword. |
 | `R_PARAM_KW.4`, `C_PARAM_KW.4`, `L_PARAM_KW.4`, `D_PARAM_KW.4` | one name of the letter's closed list, in any case, when a `=` follows (a lookahead) | after R, C and L's fields; after D's model | `INST_KEY.3`, `WORD.2`, `NODE_WORD.2`; at their priority `TC_KW.4` (R, C, L) or `OFF_VALUE_KW.4` (D) | Each is offered only after its own letter's fields, so they never meet each other. They outrank `INST_KEY`, so a listed name is a parameter and any other is `INST_KEY`, refused; the lookahead makes the name end at the `=`, so `l` never takes the start of `lg=` and `m` never the start of `mult=`. |
+| `Q_PARAM_KW.4`, `JZ_PARAM_KW.4`, `M_PARAM_KW.4`, `Q_IC_KW.4` | one name of the letter's closed list (Q; J and Z; M), or `ic` (`Q_IC_KW`, on Q and M), in any case, when blanks and a `=` follow (a lookahead; X-M4 B2 and B3) | after the model, the area, a flag or a parameter of Q, J, Z and M | `INST_KEY.3`, `WORD.2`, `NODE_WORD.2`; at their priority `OFF_VALUE_KW.4` | Each list is offered only after its own letter's model, so they never meet each other; `Q_IC_KW` stands beside `Q_PARAM_KW` or `M_PARAM_KW`, whose lists hold `ic1` to `ic5` but not `ic`, so the two never match the same text, and `OFF_VALUE_KW` is `off`, in no list. They outrank `INST_KEY`, so a listed name is a parameter and any other is `INST_KEY`, refused; the lookahead makes the name end at the `=`, so `ic` never takes the start of `ic1=`, `m` never that of `mult=` and `d` never that of `dtemp=`. A node field after the fixed nodes is a `NODE_WORD`, which holds no `=`, so the lookahead keeps a node named `w` or `temp` a node. |
 | `XFN_KW.3`, `PAT_KW.3`, `PWL_NAME_KW.3` | a function name (PULSE, SIN, EXP or SFFM; PAT; PWL), in any case, when a blank, `(`, `;` or a line end follows (a lookahead; X-M3 B2) | after a source's nodes, DC or AC part | `NUMBER.3`, `DC_KW.2`, `AC_KW.2` | A function name starts with a letter, so it never meets a number; the keywords are other words. The lookahead makes `SINE` and `PULSEX` no match, so they are refused. |
 | `PAT_BITS.4` | `b` or `B` and a string of 0s and 1s, when a blank, `)`, `;` or a line end follows (a lookahead; X-M3 B2) | in PAT's list, and after a comma in any function's list (refused) | `NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3`, `INST_KEY.3` | It starts with a letter, so it meets no number or expression; `INST_KEY` needs a `=`, which the lookahead refuses, so `b01=` is a name. |
 | `PORT_KW.4`, `Z0_KW.4` | `port` or `z0`, in any case, when a `=` follows (a lookahead; X-M3 B3) | after a P line's nodes and DC part, and after `port=` or `Z0=` | `NUMBER.3`, `BRACE_FORMULA.3`, `QUOTE_FORMULA.3`, `DC_KW.2`, `AC_KW.2`, the function names | They start with a letter, so they meet no number or expression, and the keywords and function names are other words; the lookahead makes `port 1`, `Z0 100` and `zo=` no match, so each is refused. |

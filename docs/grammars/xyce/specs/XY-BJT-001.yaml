@@ -3,8 +3,12 @@ dialect: xyce
 construct: Q bipolar transistor lines (3 to 5 nodes, area, OFF, IC= and the closed parameter list)
 manual_ref:
 - '[xyce-ref] §2.3.17 p241 "Bipolar Junction Transistor (BJT)"'
-status: documented
-validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-23'
+validation_note: 'Validated on XyceNF Release 7.10.0: 3 to 5 nodes run on the levels that take them, an unbracketed substrate and VBIC''s thermal node too, and `[s]` is a node of that name; a 6th node runs on levels 11, 12, 23, 230, 504 and 505. Positional and named areas scale the current; `OFF` and `OFF=` set the device off; `IC=` lists run with blanks and expressions. Xyce stops on an unknown name, three `IC=` values, a trailing or empty element and a name of another level, ignores `dtemp` beside `temp`, and runs a repeated parameter (the last value) or flag and `IC=` beside `IC1=` (discrepancies.md).'
 grammar:
 - bjt
 - _q_tail
@@ -28,4 +32,23 @@ tests:
 - tests/grammar/xyce/test_xyce_transistors.py::test_ic_forms_are_refused
 - tests/grammar/xyce/test_xyce_transistors.py::test_a_parameter_written_twice_is_refused
 - tests/grammar/xyce/test_xyce_transistors.py::test_off_written_twice_is_refused_at_the_second
+- tests/solver/test_xyce_transistor_probes.py::test_q_takes_three_to_five_nodes
+- tests/solver/test_xyce_transistor_probes.py::test_a_sixth_q_node_is_refused_and_xyce_runs_it
+- tests/solver/test_xyce_transistor_probes.py::test_a_bracketed_substrate_is_a_node_named_with_its_brackets
+- tests/solver/test_xyce_transistor_probes.py::test_the_manuals_vbic_example_with_an_unbracketed_thermal_node_runs
+- tests/solver/test_xyce_transistor_probes.py::test_an_area_of_two_doubles_the_current
+- tests/solver/test_xyce_transistor_probes.py::test_off_bare_or_with_a_value_is_a_flag
+- tests/solver/test_xyce_transistor_probes.py::test_off_written_twice_is_refused_and_xyce_runs_it
+- tests/solver/test_xyce_transistor_probes.py::test_q_off_on_a_latch_turns_that_side_off
+- tests/solver/test_xyce_transistor_probes.py::test_ic_lists_are_read_and_run
+- tests/solver/test_xyce_transistor_probes.py::test_ic_forms_are_refused_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_ic_beside_an_icn_is_read_and_xyce_runs_it
+- tests/solver/test_xyce_transistor_probes.py::test_a_name_outside_the_letters_list_is_refused_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_a_name_of_another_level_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_a_parameter_written_twice_is_refused_and_xyce_takes_the_last
+- tests/solver/test_xyce_transistor_probes.py::test_temp_with_dtemp_is_read_and_xyce_ignores_dtemp
+- tests/solver/test_xyce_transistor_probes.py::test_case_continuations_and_comments_fold_as_elsewhere
+- tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
+- tests/grammar/xyce/test_xyce_corpus.py::test_accept_files_round_trip_and_tile
 notes: '`BipolarTransistor` (decision 0031 items 1 and 4): 3 to 5 nodes (substrate, then VBIC''s or HICUM''s thermal node; a 6th is a ParseError), the model, an optional area, then `OFF` or `OFF=` (a `Flag`), `IC=` a comma list of at most two values (blanks around `=` and `,` allowed, a trailing or empty element refused) and the closed list, the union of Tables 2-67, 2-69, 2-71, 2-73, 2-75, 2-80 and 2-83 (p247–279): AREA DT DTA DTEMP IC IC1 IC2 L M MULT N SW_ET SW_NOISE TEMP TRISE W, in any case; any other name is a ParseError at the name, as Xyce stops on it. A name of another level is read (the level row, `reads/stops`). A parameter written twice, or the flag twice in any form (`OFF`, `OFF=`), is a ParseError (the repeat row).'

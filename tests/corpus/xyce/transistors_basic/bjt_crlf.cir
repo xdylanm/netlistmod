@@ -1,0 +1,27 @@
+xyce bipolar transistors: the Q lines of X-M4
+* 3 to 5 nodes, a bracketed or plain substrate, the area, OFF, IC= and the closed list
+VC c 0 5
+VB b 0 0.7
+VS s 0 -1
+RS [s] 0 1k
+Q1 c b 0 qn
+Q2 c b 0 s qn 2
+Q3 c b 0 [s] qn area=2 off
+q4 C
++ B 0
++ QN ic=0.7, 5 m=2 temp=50 ; a comment
+Q5 c b 0 0 qp OFF=1 ic1=0.6 ic2=4
+Q6 c b 0 qn {2} temp=27
+X1 c b thermal
+.SUBCKT thermal cc bb
+VT dt 0 0
+Q7 cc bb 0 dt qv sw_et=1
+Q8 cc bb 0 0 dt qv12
+Q9 cc bb 0 0 dt qh dt=0
+.MODEL qv npn level=11
+.MODEL qv12 npn level=12
+.MODEL qh npn level=230
+.ENDS
+.MODEL qn npn bf=100
+.MODEL qp pnp
+.END

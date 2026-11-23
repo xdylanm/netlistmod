@@ -35,6 +35,7 @@ ACCEPT_FAMILIES = (
     "elements_basic",
     "directives_basic",
     "sources_basic",
+    "transistors_basic",
 )
 REJECT_FAMILIES = (
     "structure_rejects",
@@ -42,6 +43,7 @@ REJECT_FAMILIES = (
     "elements_rejects",
     "directives_rejects",
     "sources_rejects",
+    "transistors_rejects",
 )
 _ERRORS = {"ParseError": ParseError, "UnsupportedConstruct": UnsupportedConstruct}
 _CLOSING = {"": "", "{": "}", "'": "'", '"': '"'}
@@ -137,7 +139,8 @@ def test_queries_run_on_every_accept_file(path: Path) -> None:
     [("structure_basic/structure_crlf.cir", "structure_basic/structure.cir")]
     + [("elements_basic/elements_crlf.cir", "elements_basic/elements.cir")]
     + [("directives_basic/options_crlf.cir", "directives_basic/options.cir")]
-    + [("sources_basic/sources_crlf.cir", "sources_basic/sources.cir")],
+    + [("sources_basic/sources_crlf.cir", "sources_basic/sources.cir")]
+    + [("transistors_basic/bjt_crlf.cir", "transistors_basic/bjt.cir")],
 )
 def test_a_crlf_twin_reads_as_its_lf_file(crlf: str, lf: str) -> None:
     crlf_bytes = (CORPUS / crlf).read_bytes()

@@ -35,6 +35,7 @@ FAMILIES = (
     "elements_basic",
     "directives_basic",
     "sources_basic",
+    "transistors_basic",
 )
 REJECT_FAMILIES = (
     "structure_rejects",
@@ -42,6 +43,7 @@ REJECT_FAMILIES = (
     "elements_rejects",
     "directives_rejects",
     "sources_rejects",
+    "transistors_rejects",
 )
 _END = re.compile(rb"^\.end(?![a-z0-9_])", re.IGNORECASE | re.MULTILINE)
 

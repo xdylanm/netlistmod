@@ -1,0 +1,18 @@
+xyce binned MOSFET models of X-M4
+* nch names the set nch.1, nch.2, and Xyce selects the bin by L and W; each bin is selected
+* by one line only, as Xyce 7.10 stops on a second line that selects the same bin
+VD d 0 1
+VG g 0 1.2
+M1 d g 0 0 nch L=1u W=5u
+M2 d g 0 0 nch L=1u W=50u
+M3 d g 0 0 nch.2 L=1u W=5u
+X1 d g sub
+.SUBCKT sub a b
+M4 a b 0 0 wch L=1u W=50u
+M5 a b 0 0 pch L=1u W=5u
+.MODEL pch.a pmos level=1 lmin=0.1u lmax=20u wmin=0.1u wmax=10u
+.ENDS
+.MODEL nch.1 nmos level=1 vto=0.3 lmin=0.1u lmax=20u wmin=0.1u wmax=10u
+.MODEL nch.2 nmos level=1 vto=0.9 lmin=0.1u lmax=20u wmin=10u wmax=100u
+.MODEL wch.1 nmos level=1 vto=0.5 lmin=0.1u lmax=20u wmin=10u wmax=100u
+.END

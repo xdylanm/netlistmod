@@ -1,0 +1,7 @@
+reject: a bare TNODEOUT
+VD d 0 1
+VG g 0 2
+V5 n5 0 0
+M1 d g 0 0 n5 nm tnodeout
+.MODEL nm nmos level=10
+.END

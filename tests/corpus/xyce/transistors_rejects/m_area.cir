@@ -1,0 +1,6 @@
+reject: area= on M
+VD d 0 1
+VG g 0 2
+M1 d g 0 0 nm area=2
+.MODEL nm nmos level=1
+.END
