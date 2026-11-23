@@ -34,3 +34,18 @@ def test_a_port_is_an_element_of_its_scope_and_connects_its_nets() -> None:
     port = netlist.element("p1")
     assert isinstance(port, PortSource)
     assert [connection.net.name for connection in netlist.connections("P1")] == ["a", "0"]
+
+
+def test_under_hb_a_dc_sweep_of_a_function_source_is_read_with_no_diagnostic() -> None:
+    # Decision 0030 item 7: Xyce uses the function's time-0 value (a discrepancies.md row); the
+    # library reads the lines and reports nothing on the source.
+    netlist = _netlist(
+        "V1 1 0 DC 1 SIN(0.3 1 1k)\nR1 1 2 1k\nR2 2 0 1k\n.dc V1 0 1 0.5\n.hb 1k\n"
+        ".dc R1 1k 2k 1k\n.print dc v(1)\n"
+    )
+    source = netlist.element("V1")
+    assert not [
+        found
+        for found in netlist.diagnostics
+        if source.span.start <= found.span.start < source.span.end
+    ]

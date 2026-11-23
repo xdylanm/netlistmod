@@ -34,10 +34,7 @@ def _text(line: str, tran: str = ".tran 0.1n 20n", extra: str = "") -> str:
 def _number(text: str) -> float:
     lowered = text.lower()
     for unit in ("s", "v"):  # the units the probes write: 1ns, 0V
-        if lowered.endswith(unit) and not lowered[:-1].replace(".", "").isdigit():
-            lowered = lowered[:-1]
-        elif lowered.endswith(unit):
-            lowered = lowered[:-1]
+        lowered = lowered.removesuffix(unit)
     for suffix in ("meg", "k", "m", "u", "n", "p"):
         if lowered.endswith(suffix):
             return float(lowered[: -len(suffix)]) * _SCALE[suffix]
@@ -249,6 +246,10 @@ def _refused(line: str, extra: str = "") -> None:
         "V1 1 0 PWL TD=5n 0 0 10n 1",
         "V1 1 0 PWL(0 0 2n 1 4n 0 R=0)",
         "V1 1 0 PAT(5 0 0 1n 1n 5n b01 R=1)",
+        "V1 1 0 EXP(0 1 TD1=2n)",
+        "V1 1 0 SFFM(0 1 FC=100meg)",
+        "V1 1 0 PAT(5 0 0 1n 1n 5n DATA=b10)",
+        "I1 0 1 PULSE(0 1m TD=10n)",
     ],
     ids=[
         "function-before-ac",
@@ -262,6 +263,10 @@ def _refused(line: str, extra: str = "") -> None:
         "td-before-the-list",
         "r-inside-the-parentheses",
         "pat-r-inside",
+        "keyword-on-exp",
+        "keyword-on-sffm",
+        "keyword-on-pat",
+        "keyword-on-i",
     ],
 )
 def test_xyce_runs_what_the_library_refuses(solver: Solver, tmp_path: Path, line: str) -> None:
@@ -315,6 +320,7 @@ def test_xyce_ignores_extra_arguments(
         "V1 1 0 SINE(0 1 100meg)",
         "V1 1 0 SIN(0 1 100meg) DC 1",
         "V1 1 0 PWL 0 0 2n 1 4n 0 R",
+        "V1 1 0 PWL FILE 'g.csv'",
         'V1 1 0 PWL FILE="g.csv"',
     ],
 )
@@ -365,6 +371,27 @@ def test_xyce_reads_a_file_form_the_library_refuses(
     points = _waveform(run(solver, tmp_path, _text(lines, tran=".tran 0.1n 4n")))
     for time, value in points:
         assert value == pytest.approx(_pwl([0, 0, 2e-9, 1, 4e-9, 0], time), abs=1e-6)
+
+
+@pytest.mark.parametrize(
+    ("line", "last"),
+    [
+        ("V1 1 0 PWL 0 0 2n 1 4n 0 TD=1n TD=3n", "V1 1 0 PWL 0 0 2n 1 4n 0 TD=3n"),
+        ("V1 1 0 PWL 0 0 2n 1 4n 0 R=2n R=0", "V1 1 0 PWL 0 0 2n 1 4n 0 R=0"),
+        ("V1 1 0 PAT(5 0 0 1n 1n 5n b10) R=1 R=2", "V1 1 0 PAT(5 0 0 1n 1n 5n b10) R=2"),
+    ],
+    ids=["pwl-td", "pwl-r", "pat-r"],
+)
+def test_a_repeated_td_or_r_runs_with_the_last(
+    solver: Solver, tmp_path: Path, line: str, last: str
+) -> None:
+    """`TD=` or `R=` written twice runs, with the last value: the waveform is the one with only
+    the last (a row, `refuses/runs`, `imprecise`)."""
+    _refused(line)
+    tran = ".tran 0.1n 20n"
+    assert _levels(solver, tmp_path / "two", line, tran) == pytest.approx(
+        _levels(solver, tmp_path / "last", last, tran), abs=1e-9
+    )
 
 
 def test_a_second_function_is_ignored_or_stops(solver: Solver, tmp_path: Path) -> None:

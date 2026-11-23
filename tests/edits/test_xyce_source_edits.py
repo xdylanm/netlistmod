@@ -244,7 +244,19 @@ REFUSED: list[tuple[str, str, Op, str]] = [
         "port-through-stimulus-arg",
         "P1 a 0 port=1 SIN(0 1 1k)\n",
         lambda n: n.set_stimulus_arg("P1", "port", "2"),
-        "takes its arguments by position",
+        "are the P line's, not its function's: use set_param",
+    ),
+    (
+        "z0-through-stimulus-arg",
+        "P1 a 0 port=1 PWL 0 0 1n 1\n",
+        lambda n: n.set_stimulus_arg("P1", "Z0", "75"),
+        "use set_param",
+    ),
+    (
+        "distortion-on-xyce",
+        "V1 a 0 1 AC 1\n",
+        lambda n: n.set_stimulus("V1", "DISTOF1 0.1 0"),
+        "have no distortion input",
     ),
 ]
 

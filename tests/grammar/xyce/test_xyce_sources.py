@@ -211,7 +211,7 @@ def test_a_keyword_argument_is_refused(line: str, name: str) -> None:
 )
 def test_td_and_r_inside_the_parentheses_are_refused(line: str, name: str) -> None:
     error = _error(line)
-    assert "after the list, outside them" in error.reason
+    assert "after the list, outside the parentheses" in error.reason
     assert error.column == line.index(f"{name}=") + 1
 
 
@@ -278,3 +278,30 @@ def test_pwl_continues_across_plus_lines() -> None:
     spec = _stimulus('V1 a 0 PWL ; c\n+ FILE\n+ "w.csv" ; c\n+ TD=1n\n+ R=0')
     assert [p.name for p in spec.params] == ["FILE", "TD", "R"]
     assert _texts(_stimulus("V1 a 0 PWL 0 0\n+ 1n 1\n+ R=0")) == ["0", "0", "1n", "1"]
+
+
+def test_td_and_r_written_twice_say_xyce_uses_the_last() -> None:
+    assert "Xyce runs it with the last value" in _error("V1 a 0 PWL 0 0 1 1 R=0 R=1").reason
+
+
+@pytest.mark.parametrize(
+    ("line", "name", "reason"),
+    [
+        ("V1 a 0 PULSE 0 1 TD=1 2", "TD", "by position"),
+        ("V1 a 0 PWL 0 0 TD=1 1 1", "TD", "after the list"),
+        ("V1 a 0 PAT 5 0 0 1n 1n R=2 5n b01", "R", "after the list"),
+    ],
+)
+def test_a_keyword_before_an_argument_is_refused_at_the_keyword(
+    line: str, name: str, reason: str
+) -> None:
+    error = _error(line)
+    assert reason in error.reason
+    assert error.column == line.index(f"{name}=") + 1
+
+
+def test_a_single_quoted_file_path_is_refused_with_a_hint() -> None:
+    line = "V1 a 0 PWL FILE 'w.csv'"
+    error = _error(line)
+    assert "write the path in double quotes" in error.reason
+    assert error.column == line.index("'") + 1

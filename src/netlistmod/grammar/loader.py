@@ -349,7 +349,7 @@ _DIALECT_TERMINAL_NAMES: Final[dict[Dialect, dict[str, str]]] = {
         "L_VALUE_KW": "`L=`",
         "Q_KW": "`Q=`",
         "OFF_VALUE_KW": "`OFF=`",
-        "XFN_KW": "`PULSE`, `SIN`, `EXP` or `SFFM`",
+        "XFN_KW": "`PULSE`/`SIN`/`EXP`/`SFFM`",
         "PAT_KW": "`PAT`",
         "PWL_NAME_KW": "`PWL`",
         "PAT_BITS": "bit string (`b0101`)",

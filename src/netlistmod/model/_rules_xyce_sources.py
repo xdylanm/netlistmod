@@ -89,8 +89,8 @@ _AFTER_LIST: dict[str, tuple[str, ...]] = {"pwl": ("td", "r"), "pat": ("r",)}
 
 
 def _whole_decimal(text: str) -> bool:
-    """`1.0` or `+2.00`: a decimal point and only zeros after it, no exponent or letter."""
-    whole, point, fraction = text.lstrip("+").partition(".")
+    """`1.0`, `1.` or `-2.00`: a decimal point and only zeros after it, no exponent or letter."""
+    whole, point, fraction = text.lstrip("+-").partition(".")
     return bool(point) and whole.isdigit() and set(fraction) <= {"0"}
 
 
@@ -153,7 +153,16 @@ class XyceSourcesRules(ElementsRules):
     xfn_r = xfn_td
 
     def xpwl_path(self, children: list[Any]) -> _Field:
-        return self._field(children, self._xfn_value)
+        def build(token: Token) -> Value | Identifier:
+            if token.type == "QUOTE_FORMULA":
+                raise self._parse_error(
+                    token,
+                    f'`{token}`: write the path in double quotes, `"{str(token)[1:-1]}"`, or with '
+                    "none; Xyce reads single quotes as part of the file's name and stops",
+                )
+            return self._xfn_value(token)
+
+        return self._field(children, build)
 
     def xpwl_file(self, children: list[Any]) -> _Field:
         inner = children[-1]
@@ -174,10 +183,26 @@ class XyceSourcesRules(ElementsRules):
 
     p_z0 = p_port
 
-    def _xyce_port(self, params: tuple[ParamAssignment, ...]) -> None:
-        """A P line's port number is an integer literal of 1 or more, or an expression in braces
-        or quotes (decision 0030 item 6); the grammar requires `port=` and reads `Z0=`."""
-        (port,) = (param for param in params if param.name.lower() == "port")
+    def _xyce_port(self, designator: Token, params: tuple[ParamAssignment, ...]) -> None:
+        """A P line takes `port=` once and `Z0=` at most once, and its port number is an integer
+        literal of 1 or more, or an expression in braces or quotes (decision 0030 item 6)."""
+        for name in ("port", "z0"):
+            written = [param for param in params if param.name.lower() == name]
+            if len(written) > 1:
+                raise self._error_at(
+                    written[1].name_span.start,
+                    f"`{written[1].name}=` is written twice on `{designator}`; write it once "
+                    "(Xyce stops on a second one)",
+                )
+        ports = [param for param in params if param.name.lower() == "port"]
+        if not ports:
+            raise self._parse_error(
+                designator,
+                f"`{designator}` has no `port=`: a P line needs its port number, `port=1`, after "
+                f"the DC value ({_PORT_CITE}); Xyce runs a P line without it as a plain voltage "
+                "source, which is not a port",
+            )
+        port = ports[0]
         value = port.value
         if isinstance(value, Formula):
             return
@@ -185,18 +210,20 @@ class XyceSourcesRules(ElementsRules):
         text = self._xfn_written(value)
         if text.isdigit() and int(text) >= 1:
             return
-        if text.startswith("+") and text[1:].isdigit() and int(text[1:]) >= 1:
-            outcome = f"Xyce runs it as `{text[1:]}`, but the port number is unsigned"
-        elif text.lstrip("+-").isdigit():
+        whole = text.lstrip("+-").partition(".")[0]
+        below_one = text.startswith("-") or (whole.isdigit() and int(whole) == 0)
+        if (text.lstrip("+-").isdigit() or _whole_decimal(text)) and below_one:
             outcome = "Xyce runs it outside `.LIN`, but a port is numbered from 1"
+        elif text.startswith("+") and text[1:].isdigit():
+            outcome = f"Xyce runs it as `{text[1:]}`, but the port number is unsigned"
         elif _whole_decimal(text):
             outcome = f"Xyce runs `{text}` as an integer, but the manual takes an integer literal"
         else:
             outcome = "Xyce stops on it"
         raise self._error_at(
             value.span.start,
-            f"`port={text}`: the port number is an integer of 1 or more, `port=1` ({_PORT_CITE}), "
-            f"or an expression in braces; {outcome}",
+            f"`{port.name}={text}`: the port number is an integer of 1 or more, `port=1` "
+            f"({_PORT_CITE}), or an expression in braces or quotes; {outcome}",
         )
 
     def _xyce_function(self, element: _Element) -> _Element:
@@ -227,6 +254,10 @@ class XyceSourcesRules(ElementsRules):
                 inside = False
                 end = part.span.end
             elif isinstance(part, _XFnArg):
+                if params:
+                    # Without parentheses, `TD=` or `R=` before an argument (the grammar's bare
+                    # forms take one, so that the refusal names the keyword).
+                    self._xfn_refuse_key(name, params[-1], True, section)
                 args.append(part.value)
                 end = part.value.span.end
             elif isinstance(part, _XFnKey):
@@ -261,8 +292,8 @@ class XyceSourcesRules(ElementsRules):
         if folded in allowed and inside:
             raise self._error_at(
                 at,
-                f"`{key.name}=` inside the parentheses of `{name}`: it stands after the list, "
-                f"outside them (`{name}(...) {key.name}=...`)",
+                f"`{key.name}=` inside the list of `{name}`: it stands after the list, outside "
+                f"the parentheses (`{name}(...) {key.name}=...`)",
             )
         if allowed:
             takes = " and ".join(f"`{word.upper()}=`" for word in allowed)
@@ -285,8 +316,8 @@ class XyceSourcesRules(ElementsRules):
         if any(earlier.name.lower() == folded for earlier in before):
             raise self._error_at(
                 param.name_span.start,
-                f"`{param.name}=` is written twice on `{name}`; write it once (Xyce uses one of "
-                "the values, or stops)",
+                f"`{param.name}=` is written twice on `{name}`: Xyce runs it with the last "
+                "value, so write it once",
             )
 
     def _xfn_check_count(self, name: Token, args: list[Value | Identifier], section: str) -> None:

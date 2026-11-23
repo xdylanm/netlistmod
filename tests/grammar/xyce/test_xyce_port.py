@@ -96,6 +96,8 @@ def test_a_line_without_port_is_refused(line: str) -> None:
         ("P1 a 0 port=-1", "numbered from 1"),
         ("P1 a 0 port=+1", "unsigned"),
         ("P1 a 0 port=1.0", "integer literal"),
+        ("P1 a 0 port=1.", "integer literal"),
+        ("P1 a 0 port=-1.0", "numbered from 1"),
         ("P1 a 0 port=1.5", "stops on it"),
         ("P1 a 0 port=1e0", "stops on it"),
         ("P1 a 0 port=1k", "stops on it"),
@@ -136,3 +138,12 @@ def test_p_stays_the_coupled_line_on_ngspice() -> None:
     # Decision 0024: the letter is ngspice's coupled transmission line; nothing changes there.
     with pytest.raises(ParseError):
         parse(SourceText("t\nP1 a 0 port=1\n.end\n"), Dialect.NGSPICE)
+
+
+@pytest.mark.parametrize(
+    ("line", "name"), [("P1 a 0 port=1 port=2", "port"), ("P1 a 0 z0=1 port=1 Z0=2", "Z0")]
+)
+def test_a_second_port_or_z0_is_refused_at_it(line: str, name: str) -> None:
+    error = _error(line)
+    assert "is written twice" in error.reason
+    assert error.column == line.rindex(f"{name}=") + 1
