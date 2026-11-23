@@ -1,5 +1,5 @@
 """xyce transistor lines: Q, J and Z (X-M4 B2; decision 0031 items 1 to 4; xm4-tasks 5.1 points
-1 to 10 and 22). M comes with B3.
+1 to 10 and 22). M is test_xyce_mosfet.py's (B3).
 
 The line shape is decision 0014 item 1's: the fixed nodes, then names, the last of which is the
 model, then an optional positional area, then flags and parameters. Each letter's instance

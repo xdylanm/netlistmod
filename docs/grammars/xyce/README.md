@@ -171,8 +171,8 @@ functions and the port:
   twin, and `wave.csv` for PWL FILE) and `sources_rejects`. Under `.HB` a DC sweep uses a function
   source's time-0 value, and `.LIN` needs the ports numbered 1..N: rows, with no diagnostic.
 
-X-M4 ([decision 0031](../../decisions/0031-xyce-transistors.md)) reads the transistors Q, J and Z
-(B2; M follows in B3):
+X-M4 ([decision 0031](../../decisions/0031-xyce-transistors.md)) reads the transistors Q, M, J and Z
+(B2 and B3):
 
 - **The line shape** (`XY-XTR-001`): the fixed nodes, then names, the last of which is the model
   (decision 0014 item 1); a name field is a node field, so `[s]` and `X1:n` are nodes; a number is
@@ -181,8 +181,12 @@ X-M4 ([decision 0031](../../decisions/0031-xyce-transistors.md)) reads the trans
   model and before any flag or parameter (where it is a `ParseError`), or `area=`, not both.
 - **Q** (`XY-BJT-001`): 3 to 5 nodes, a 6th a `ParseError`; `OFF` or `OFF=`; `IC=` a comma list of
   at most two values; the closed list of the BJT levels' instance tables.
+- **M** (`XY-MOS-001`): 3 to 7 nodes, an 8th a `ParseError`; no area (a number or expression after
+  the model and `area=` are refused); `OFF` or `OFF=`; `IC=` a comma list of at most five values;
+  `TNODEOUT=` a listed parameter, a bare `TNODEOUT` refused with the hint `TNODEOUT=1`; ngspice's
+  `thermal` refused; the closed list of the MOSFET levels' instance tables (125 names and `IC`).
 - **J and Z** (`XY-JFT-001`, `XY-MES-001`): exactly 3 nodes; `area=`, `dtemp=` and `temp=` only;
-  no flag, no `M=`, no `IC=`. A parameter written twice is a `ParseError` on all three.
+  no flag, no `M=`, no `IC=`. A parameter written twice is a `ParseError` on all four letters.
 
 Every other line is refused (`XY-UNS-001`): an element line of another letter is
 `UnsupportedConstruct`, naming the milestone of its letter ([devices.md](./devices.md)); A and N, not Xyce letters, are a
@@ -222,7 +226,7 @@ express or check the form). Its sections sort the rows by what the library does 
   resolves to the first definition, and two `.OPTIONS OUTPUT` lines both apply.
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
-The rest is planned by milestone in the xyce plan, section 8: M (X-M4 B3) and the remaining devices.
+The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M5.
 The records of X-M1, X-M2, X-M2.1 and X-M3 are
 [archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md),
 [archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md),
@@ -268,6 +272,7 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-MEA-001](./specs/XY-MEA-001.yaml) | .MEASURE and .MEAS (a required mode of the closed list; the body kept as text) | observed | 5 + 11 solver | xyce XyceNF Release 7.10.0 (2026-11-16, 2026-11-22) |
 | [XY-MES-001](./specs/XY-MES-001.yaml) | Z MESFET lines (3 nodes, area and the closed parameter list) | documented | 6 + 0 solver |  |
 | [XY-MOD-001](./specs/XY-MOD-001.yaml) | .MODEL statements (parameters with or without parentheses; xyce model types) | validated | 8 + 2 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
+| [XY-MOS-001](./specs/XY-MOS-001.yaml) | M MOSFET lines (3 to 7 nodes, no area, OFF, IC=, TNODEOUT= and the closed parameter list) | documented | 16 + 0 solver |  |
 | [XY-MUT-001](./specs/XY-MUT-001.yaml) | K mutual inductors (coupling and optional CORE model) | validated | 4 + 4 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NAM-001](./specs/XY-NAM-001.yaml) | node and device names (legal characters) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-NOD-001](./specs/XY-NOD-001.yaml) | .NODESET (the forms of .IC) | validated | 6 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-16) |
@@ -297,9 +302,9 @@ are the output of `python -m tests.support.spec_coverage xyce`.
 | [XY-TTL-001](./specs/XY-TTL-001.yaml) | first-line title | validated | 1 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
 | [XY-UNS-001](./specs/XY-UNS-001.yaml) | lines the dialect does not read yet (element lines of a planned letter, .PREPROCESS REMOVEUNUSED, `+` lines after a refused line) | documented | 11 + 1 solver |  |
 | [XY-VAL-001](./specs/XY-VAL-001.yaml) | expression values (braces, single quotes, bare expressions without blanks) | validated | 4 + 3 solver | xyce XyceNF Release 7.10.0 (2026-11-15) |
-| [XY-XTR-001](./specs/XY-XTR-001.yaml) | shared transistor line shape (Q, J, Z) | documented | 8 + 0 solver |  |
+| [XY-XTR-001](./specs/XY-XTR-001.yaml) | shared transistor line shape (Q, M, J, Z) | documented | 10 + 0 solver |  |
 
-55 entries: 44 validated, 6 observed, 0 disputed, 5 documented.
+56 entries: 44 validated, 6 observed, 0 disputed, 6 documented.
 
 ## Lookaround terminals
 

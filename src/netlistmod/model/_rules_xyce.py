@@ -116,6 +116,23 @@ _PARAM_LISTS: dict[str, tuple[str, str, str]] = {
         "area, dt, dta, dtemp, ic (or ic1 and ic2), l, m, mult, n, off, sw_et, sw_noise, temp, "
         "trise and w",
     ),
+    "m": (
+        "MOSFET",
+        "Xyce reference manual §2.3.20 p304–745, Tables 2-92, 2-94, 2-96, 2-98, 2-100, 2-102, "
+        "2-104, 2-106, 2-108, 2-111, 2-114, 2-117, 2-120, 2-123, 2-126, 2-129, 2-132, 2-135, "
+        "2-140, 2-143, 2-145 and 2-147",
+        "abdrain, absource, acnqsmod, ad, adej, adeo, adrain, aebcp, agbcp, agbcp2, agbcpd, "
+        "as, asej, aseo, asource, bjtoff, cdsp, cgdp, cgsp, covd, covs, cth0, d, dach1, "
+        "dach2, dach3, dach4, dach5, dach6, debug, delvt0, delvto, delvtoedge, delvtrand, "
+        "dta, dtemp, dws1, dws2, dws3, dws4, dws5, dws6, factuo, factuoedge, fpitch, frbody, "
+        "geomod, hpff, ic (or ic1 to ic5), ids0mult, igb0mult, igc0mult, jw, l, lgdrain, "
+        "lgsource, lrsd, lsdrain, lssource, m, min, minz, mobscmod, mult, nbc, nf, nfin, "
+        "nfinnom, ngaa, ngcon, ngf, nqsmod, nrb, nrd, nrs, ns, nseg, off, pd, pdbcp, pdej, "
+        "pdeo, pdrain, ps, psbcp, psej, pseo, psource, rbdb, rbodymod, rbpb, rbpd, rbps, "
+        "rbsb, rgatemod, rgeomod, rth0, sa, sb, sc, sca, scb, scc, sd, shmod, soimod, "
+        "subbandmod, temp, tfin, tgaa, tnodeout, trnqsmod, tsus, u0mult, vbsusr, vfbsdoff, "
+        "vldebug, w, wgaa, xgw, xl and xw",
+    ),
     "jz": (
         "JFET or MESFET",
         "Xyce reference manual §2.3.18 p287–288, Tables 2-86 and 2-88, and Xyce reference manual "
@@ -123,6 +140,11 @@ _PARAM_LISTS: dict[str, tuple[str, str, str]] = {
         "area, dtemp and temp",
     ),
 }
+# Why a number or expression after an M's model is refused (decision 0031 item 3; 5.1 point 5).
+_NO_M_AREA = (
+    "a Xyce MOSFET has no area, and Xyce stops on it (Xyce reference manual §2.3.20 p292); a "
+    "number stands on an M line only as a node, before the model, or as a parameter's value"
+)
 # What a line of each letter needs when it has no value (decision 0027 item 5, as amended).
 _VALUE_FORMS: dict[type, str] = {
     Resistor: "a value, positional or `R=`, or a model with `L=`",
@@ -414,19 +436,80 @@ class XyceRules(StatementsRules, XyceSourcesRules):
         return self.flag(children)
 
     def q_ic_param(self, children: list[Any]) -> _Field:
+        return self._ic_list(
+            children,
+            2,
+            "on a Q takes at most two values, Vbe and Vce (Xyce reference manual §2.3.17, Table "
+            "2-67 p247)",
+        )
+
+    def _ic_list(self, children: list[Any], most: int, refusal: str) -> _Field:
+        """An `IC=` comma list of at most ``most`` values (5.1 point 9)."""
         field = self.tc_param(children)
         param = field.node
         assert isinstance(param, ParamAssignment)
-        if isinstance(param.value, ValueList) and len(param.value.values) > 2:
-            raise self._error_at(
-                param.value.values[2].span.start,
-                f"`{param.name}=` on a Q takes at most two values, Vbe and Vce (Xyce reference "
-                "manual §2.3.17, Table 2-67 p247)",
-            )
+        if isinstance(param.value, ValueList) and len(param.value.values) > most:
+            raise self._error_at(param.value.values[most].span.start, f"`{param.name}=` {refusal}")
         return field
 
     def q_unlisted(self, children: list[Any]) -> NoReturn:
         self._unlisted("q", children)
+
+    # M (X-M4 B3; decision 0031 items 1 to 4).
+
+    m_param = q_param
+    m_flag = q_flag
+
+    def m_ic_param(self, children: list[Any]) -> _Field:
+        return self._ic_list(
+            children,
+            5,
+            "on an M takes at most five values, BSIM-SOI's Vds, Vgs, Vbs, Ves and Vps (Xyce "
+            "reference manual §2.3.20 p293–294)",
+        )
+
+    def m_unlisted(self, children: list[Any]) -> NoReturn:
+        name = _field_token(children)
+        if fold_name(str(name), self._dialect) == "area":
+            raise self._parse_error(
+                name,
+                f"`{name}=`: a Xyce MOSFET has no area, and Xyce stops on it (Xyce reference "
+                "manual §2.3.20 p292); write the geometry as `L=`, `W=`, `AD=` and `AS=`",
+            )
+        self._unlisted("m", children)
+
+    def m_keyword(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        if keyword.type == "TNODEOUT_KW":
+            # 5.1 point 7: the manual writes it bare (§2.3.20 p292), and Xyce stops on that.
+            raise self._parse_error(
+                keyword,
+                f"`{keyword}` without a value: Xyce stops on it, although the reference guide "
+                "writes it bare (Xyce reference manual §2.3.20 p292); write `TNODEOUT=1`",
+            )
+        raise self._parse_error(
+            keyword,
+            f"`{keyword}` is ngspice's VDMOS flag, not a flag of a Xyce MOSFET, whose flag is "
+            "`OFF`; a Xyce VDMOS is an NMOS or PMOS model at `LEVEL=18` (Xyce reference manual "
+            "§2.3.20 p292–296)",
+        )
+
+    def m_late_value(self, children: list[Any]) -> NoReturn:
+        value = _field_token(children)
+        raise self._parse_error(value, f"`{value}` after a flag or parameter: {_NO_M_AREA}")
+
+    def mosfet(self, children: list[Any]) -> _Item:
+        # A number or expression after the model stands in the area's place (decision 0031
+        # item 3): the grammar reads it there only so that it is refused here.
+        element = _Element(children)
+        names = element.all(_Name)
+        late = next((value.span for value in element.values()), None)
+        if late is None and len(names) > 1 and names[-1].token.type == "NUMBER":
+            late = _span(names[-1].token)
+        if late is not None:
+            written = self._source.text[late.start : late.end]
+            raise self._error_at(late.start, f"`{written}` after the model: {_NO_M_AREA}")
+        return self._xyce_transistor(children, super().mosfet)
 
     def jz_unlisted(self, children: list[Any]) -> NoReturn:
         self._unlisted("jz", children)

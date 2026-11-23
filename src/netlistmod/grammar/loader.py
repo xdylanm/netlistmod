@@ -108,6 +108,8 @@ _TERMINAL_NAMES: Final[dict[str, str]] = {
     "FIELD_EMBEDDED": "number",
     "IC_PARAM_KW": "`ic=`",
     "THERMAL_KW": "`thermal`",
+    "TNODEOUT_KW": "`tnodeout`",
+    "Q_IC_KW": "`ic=`",
     "E_NAME": "voltage-controlled voltage source (`E`)",
     "G_NAME": "voltage-controlled current source (`G`)",
     "F_NAME": "current-controlled current source (`F`)",
