@@ -1,7 +1,8 @@
 """The closed list of xyce dot-commands (X-M2 B4; decision 0028 items 1 and 2; xm2-tasks 5.1 points
 1 to 5): the untyped commands read as `UnknownDirective`, `.SAVE` among them, every other
-dot-command refused with hints, `.PREPROCESS ADDRESISTORS` and the other `.PREPROCESS` words, and
-which directives a subcircuit body may hold."""
+dot-command refused with hints, `.PREPROCESS ADDRESISTORS`, `.PREPROCESS REMOVEUNUSED` (X-M4 B4;
+decision 0031 item 10) and the other `.PREPROCESS` words, and which directives a subcircuit body
+may hold."""
 
 from __future__ import annotations
 
@@ -23,7 +24,6 @@ from netlistmod import (
     SubcktDefinition,
     Title,
     UnknownDirective,
-    UnsupportedConstruct,
     parse,
 )
 from netlistmod.dialects import _XYCE
@@ -320,6 +320,11 @@ def test_conditions_and_preprocess_are_allowed_in_a_body() -> None:
 
 # XY-PRE-002
 
+_UNTYPED_PREPROCESS = (
+    "`.PREPROCESS ADDRESISTORS` or `REMOVEUNUSED` is not typed by the library and is preserved "
+    "verbatim"
+)
+
 
 @pytest.mark.parametrize(
     "line",
@@ -336,12 +341,10 @@ def test_addresistors_is_an_unknown_directive(line: str) -> None:
     assert directive.name.upper() == ".PREPROCESS"
     assert directive.raw == line.split(" ;")[0]
     assert directive.name_span == Span(2, 13)
-    # R1 review N2: the info names the untyped form, since REPLACEGROUND is typed.
+    # R1 review N2: the info names the untyped forms, since REPLACEGROUND is typed.
     (diagnostic,) = Netlist.from_text(f"t\n{line}\n.END\n", dialect=_XYCE).diagnostics
     assert diagnostic.code is DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED
-    assert diagnostic.message == (
-        "`.PREPROCESS ADDRESISTORS` is not typed by the library and is preserved verbatim"
-    )
+    assert diagnostic.message == _UNTYPED_PREPROCESS
 
 
 def test_another_dialects_preprocess_line_keeps_its_name() -> None:
@@ -409,7 +412,75 @@ def test_another_preprocess_word_is_rejected(line: str) -> None:
     assert "REPLACEGROUND, REMOVEUNUSED and ADDRESISTORS" in error.reason
 
 
-def test_removeunused_stays_unsupported_in_a_body_too() -> None:
-    with pytest.raises(UnsupportedConstruct, match="it deletes devices") as captured:
-        _parse("t\n.subckt s a\n.PREPROCESS REMOVEUNUSED R\n.ends\n.END\n")
-    assert (captured.value.line, captured.value.column) == (3, 1)
+# XY-PRE-003 (decision 0031 item 10; xm4-tasks 5.1 points 25 and 26)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        ".PREPROCESS REMOVEUNUSED R",
+        ".preprocess removeunused c,d,i,l,m,q,r,v",
+        ".Preprocess RemoveUnused R , V ; comment",
+        ".PREPROCESS REMOVEUNUSED R,R",
+        ".PREPROCESS\n+ REMOVEUNUSED\n* c\n+ R,\n+ C\n+ ,V",
+    ],
+)
+def test_removeunused_is_an_unknown_directive(line: str) -> None:
+    # Xyce removes devices from the circuit it runs, while the netlist stays as written (P4); a
+    # repeated letter runs on Xyce, so it is read.
+    directive = _item(line)
+    assert isinstance(directive, UnknownDirective)
+    assert directive.name.upper() == ".PREPROCESS"
+    assert directive.raw == line.split(" ;")[0]
+    assert directive.name_span == Span(2, 13)
+    (diagnostic,) = Netlist.from_text(f"t\n{line}\n.END\n", dialect=_XYCE).diagnostics
+    assert diagnostic.code is DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED
+    assert diagnostic.message == _UNTYPED_PREPROCESS
+
+
+def test_removeunused_is_allowed_in_a_body_and_leaves_the_topology() -> None:
+    body = "t\nV1 1 0 1\nR1 1 1 1k\n.subckt s a\nR2 a a 1k\n{}.ends\nX1 1 s\n.END\n"
+    with_line = Netlist.from_text(body.format(".PREPROCESS REMOVEUNUSED R\n"), dialect=_XYCE)
+    plain = Netlist.from_text(body.format(""), dialect=_XYCE)
+    definition = with_line.parse_result.items[3]
+    assert isinstance(definition, SubcktDefinition)
+    assert isinstance(definition.body[1], UnknownDirective)
+    # No device warning (G1 point 26 (c)): the devices stay, and so do their nets.
+    assert [d.code for d in with_line.diagnostics] == [DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED]
+    assert with_line.signature() == plain.signature()
+
+
+@pytest.mark.parametrize(
+    ("text", "line"),
+    [
+        ("t\n.preprocess removeunused r\n.PREPROCESS REMOVEUNUSED C\n", 3),
+        ("t\n.preprocess removeunused r\n.subckt s a\n.preprocess removeunused c\n.ends\n", 4),
+    ],
+)
+def test_a_second_removeunused_is_rejected(text: str, line: int) -> None:
+    # Xyce stops on a second line ("Multiple .PREPROCESS REMOVEUNUSED", 5.1 point 25).
+    error = _error(f"{text}.END\n")
+    assert (error.line, error.column) == (line, 1)
+    assert "a second `.PREPROCESS REMOVEUNUSED`" in error.reason
+
+
+@pytest.mark.parametrize(
+    ("line", "column", "message"),
+    [
+        (".PREPROCESS REMOVEUNUSED", 13, "lists no device letter"),
+        (".PREPROCESS REMOVEUNUSED ; c", 13, "lists no device letter"),
+        (".PREPROCESS REMOVEUNUSED J", 26, "`J` is not a device letter"),
+        (".PREPROCESS REMOVEUNUSED R,X", 28, "`X` is not a device letter"),
+        (".PREPROCESS REMOVEUNUSED {R}", 26, "`{R}` is not a device letter"),
+        (".PREPROCESS REMOVEUNUSED RC", 26, "`RC` is not a device letter"),
+        (".PREPROCESS REMOVEUNUSED R,", 27, "a comma after the last letter"),
+        (".PREPROCESS REMOVEUNUSED R C", 28, "`C` follows a blank"),
+        (".PREPROCESS REMOVEUNUSED R\n+ C", 3, "`C` follows a blank"),
+        (".PREPROCESS REMOVEUNUSED R J", 28, "`J` is not a device letter"),
+    ],
+)
+def test_a_malformed_removeunused_is_rejected(line: str, column: int, message: str) -> None:
+    error = _error(f"t\n{line}\n.END\n")
+    assert (error.line, error.column) == (2 + line.count("\n"), column)
+    assert message in error.reason
+    assert "Xyce reference manual §2.1.29 p126" in error.reason

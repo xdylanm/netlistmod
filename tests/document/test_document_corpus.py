@@ -57,7 +57,8 @@ def test_every_diagnostic_code_occurs_in_the_corpus() -> None:
     # NUMERIC_MODEL_NAME the hidden xyce dialect's (tests/document/test_xyce_names.py,
     # tests/grammar/xyce/test_xyce_statements.py, tests/document/test_xyce_document.py), as are
     # the X-M2 directive codes and X-M2.1's PRINT_TYPE_MISMATCH
-    # (tests/document/test_xyce_directive_findings.py).
+    # (tests/document/test_xyce_directive_findings.py), and X-M4's NODE_COUNT_MISMATCH
+    # (tests/document/test_xyce_transistor_models.py).
     assert codes == {code.value for code in DiagnosticCode} - {
         "NODE_INTO_INSTANCE",
         "FRA_PROBE_IN_IMPEDANCE_MODE",
@@ -74,6 +75,7 @@ def test_every_diagnostic_code_occurs_in_the_corpus() -> None:
         "MEASURE_MODE_MISMATCH",
         "CONDITION_IGNORED",
         "PRINT_TYPE_MISMATCH",
+        "NODE_COUNT_MISMATCH",
     }
 
 

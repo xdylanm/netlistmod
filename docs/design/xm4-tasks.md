@@ -45,7 +45,7 @@ X-M4 makes the hidden xyce dialect read the transistor letters Q, M, J and Z, wh
 - [x] **B1 — Decision record** for the G1 decisions (decision 0031).
 - [x] **B2 — Q, J and Z** in `xyce.lark` and the transistor rules.
 - [x] **B3 — M.**
-- [ ] **B4 — Models, binning and the document and edit layers** (and `REMOVEUNUSED`, as G1 decides).
+- [x] **B4 — Models, binning and the document and edit layers** (and `REMOVEUNUSED`, as G1 decides).
 - [ ] **B5 — Evidence:** spec entries, corpus files with manifests, solver tests, discrepancy rows (the `[s]` row's Library column), `devices.md` and `xyce-devices.json`, the README status table, the X-M8 checklist. Also from B2 and B3: probe `IC=` beside `IC1=`…`IC5=` on Q and M (not refused today); the README's lookaround-terminal rows for `Q_PARAM_KW`, `JZ_PARAM_KW`, `M_PARAM_KW` and `Q_IC_KW`; the row for a repeated `off` on Q (`refuses/runs`, `manual`).
 
 ## 5. Findings and log
@@ -127,3 +127,4 @@ Probes: the scratchpad folders `xm4-a1` and `xm4-a2` (not committed; decision 00
 - 2026-11-22: B1 done: [decision 0031](../decisions/0031-xyce-transistors.md).
 - 2026-11-22: B2 done: Q, J and Z on xyce (`XY-XTR-001`, `XY-BJT-001`, `XY-JFT-001`, `XY-MES-001`, documented until B5).
 - 2026-11-23: B3 done: M on xyce (`XY-MOS-001`, documented until B5; `XY-XTR-001` covers M), with the closed list of 125 names and `IC` from the 22 instance tables of §2.3.20.
+- 2026-11-23: B4 done: the xyce transistor model types, binned M models (`Index.model_bins`), `NODE_COUNT_MISMATCH` from `model/xyce-levels.json`, the area, model and parameter edits, and `.PREPROCESS REMOVEUNUSED` as an `UnknownDirective` (`XY-PRE-003`, documented until B5; `XY-XTR-001` and scoping.md S13 cover the rest).

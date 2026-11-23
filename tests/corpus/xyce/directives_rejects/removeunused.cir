@@ -1,7 +1,7 @@
-REMOVEUNUSED, which deletes devices
+REMOVEUNUSED with a letter that is not a device letter of its list
 V1 in 0 2 AC 1
 R1 in out 1k
 R2 out 0 1k
 C1 out 0 1n
-.preprocess removeunused r
+.preprocess removeunused r,j
 .end

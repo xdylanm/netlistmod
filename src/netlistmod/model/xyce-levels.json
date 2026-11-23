@@ -1,0 +1,48 @@
+{
+  "source": "Observed on XyceNF 7.10.0 with -namesfile, -norun and .dc runs (xm4-tasks 5.1 point 11; decision 0031 item 5), against the Xyce Reference Guide 7.10 §2.3.17 p241–243 (Q), §2.3.18 p286 (J), §2.3.19 p290 (Z), §2.3.20 p292–296 (M), Table 2-102 p326 (TNODEOUT). The manual agrees except that it gives MEXTRAM level 504 five nodes and level 505 four (manual-error). By element class, then LEVEL: `nodes` is the range of node counts Xyce takes, `tnodeout` the range when the line sets TNODEOUT=, and `extra` what Xyce does with more nodes than the range allows: `dropped` (silently), `joined` (to an internal node of the device: a different circuit) or `stops`. It is left out where it was not observed: Q level 504, and the levels whose range reaches the count by letter that the grammar allows. Fewer nodes than the range always stop Xyce. A model without LEVEL is level 1 (`default_level`).",
+  "default_level": 1,
+  "BipolarTransistor": {
+    "1": {"nodes": [3, 4], "extra": "stops"},
+    "11": {"nodes": [3, 4], "extra": "joined"},
+    "12": {"nodes": [4, 5], "extra": "joined"},
+    "23": {"nodes": [4, 4], "extra": "stops"},
+    "230": {"nodes": [5, 5]},
+    "234": {"nodes": [5, 5]},
+    "504": {"nodes": [4, 4]},
+    "505": {"nodes": [5, 5]}
+  },
+  "Mosfet": {
+    "1": {"nodes": [4, 4], "extra": "dropped"},
+    "2": {"nodes": [4, 4], "extra": "dropped"},
+    "3": {"nodes": [4, 4], "extra": "dropped"},
+    "6": {"nodes": [4, 4], "extra": "dropped"},
+    "9": {"nodes": [4, 4], "extra": "dropped"},
+    "10": {"nodes": [4, 6], "tnodeout": [5, 7], "extra": "stops"},
+    "14": {"nodes": [4, 4], "extra": "dropped"},
+    "18": {"nodes": [4, 4], "extra": "dropped"},
+    "54": {"nodes": [4, 4], "extra": "dropped"},
+    "70": {"nodes": [4, 7], "tnodeout": [7, 7]},
+    "77": {"nodes": [4, 5], "extra": "stops"},
+    "102": {"nodes": [4, 4], "extra": "dropped"},
+    "103": {"nodes": [4, 4], "extra": "dropped"},
+    "107": {"nodes": [4, 4], "extra": "dropped"},
+    "108": {"nodes": [4, 4], "extra": "dropped"},
+    "110": {"nodes": [4, 5], "extra": "stops"},
+    "111": {"nodes": [4, 5], "extra": "stops"},
+    "260": {"nodes": [4, 4], "extra": "dropped"},
+    "301": {"nodes": [4, 4], "extra": "dropped"},
+    "1031": {"nodes": [5, 5], "extra": "dropped"},
+    "2000": {"nodes": [3, 3], "extra": "dropped"},
+    "2001": {"nodes": [3, 3], "extra": "dropped"},
+    "2002": {"nodes": [4, 4], "extra": "dropped"},
+    "10240": {"nodes": [5, 5], "extra": "dropped"},
+    "70450": {"nodes": [4, 7], "tnodeout": [7, 7]}
+  },
+  "Jfet": {
+    "1": {"nodes": [3, 3]},
+    "2": {"nodes": [3, 3]}
+  },
+  "Mesfet": {
+    "1": {"nodes": [3, 3]}
+  }
+}

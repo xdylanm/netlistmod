@@ -19,7 +19,7 @@ from netlistmod import (
     SourceText,
     Span,
     Title,
-    UnsupportedConstruct,
+    UnknownDirective,
     parse,
 )
 from netlistmod.dialects import _XYCE
@@ -150,16 +150,14 @@ def test_a_second_preprocess_replaceground_is_rejected() -> None:
     assert (captured.value.line, captured.value.column) == (4, 1)
 
 
-@pytest.mark.parametrize(
-    "line",
-    [".preprocess removeunused r,c", ".PREPROCESS REMOVEUNUSED", ".Preprocess\n+ removeunused"],
-)
-def test_the_other_preprocess_forms_are_unsupported(line: str) -> None:
-    # REMOVEUNUSED deletes devices, so it changes the circuit (P4; decision 0028 item 1): it stays
-    # unsupported until X-M4. ADDRESISTORS and any other word are XY-PRE-002's.
-    with pytest.raises(UnsupportedConstruct, match="it deletes devices") as e:
-        _parse(f"t\n{line}\n.END\n")
-    assert (e.value.line, e.value.column) == (2, 1)
+@pytest.mark.parametrize("line", [".preprocess removeunused r,c", ".Preprocess\n+ removeunused v"])
+def test_removeunused_is_read_as_an_untyped_preprocess_form(line: str) -> None:
+    # Read since X-M4 (decision 0031 item 10, amending decision 0028 item 1), as ADDRESISTORS is;
+    # its list and refusals are XY-PRE-003's (test_xyce_closed_list.py).
+    items = _parse(f"t\n{line}\n.END\n").items
+    assert [type(item) for item in items] == [Title, UnknownDirective, End]
+    with pytest.raises(ParseError, match="lists no device letter"):
+        _parse("t\n.PREPROCESS REMOVEUNUSED\n.END\n")
 
 
 def test_structure_items_tile_with_the_new_statements() -> None:

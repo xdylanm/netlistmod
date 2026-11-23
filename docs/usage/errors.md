@@ -477,3 +477,7 @@ Reserved for a dialect still being built, which `Dialect` does not list yet; ngs
 ### `PRINT_TYPE_MISMATCH`
 
 Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.
+
+### `NODE_COUNT_MISMATCH`
+
+Reserved for a dialect still being built, which `Dialect` does not list yet; ngspice and LTspice netlists never report it.

@@ -41,6 +41,8 @@ _SECOND_PREPROCESS = (
     "a second `.PREPROCESS REPLACEGROUND`: Xyce allows one in a netlist (Xyce reference manual "
     "§2.1.28 p125) and stops on another"
 )
+_REMOVEUNUSED_LETTERS = "C, D, I, L, M, Q, R and V"
+_REMOVEUNUSED_CITED = "Xyce reference manual §2.1.29 p126"
 _PREPROCESS_FORMS = (
     "the `.PREPROCESS` forms are REPLACEGROUND, REMOVEUNUSED and ADDRESISTORS (Xyce reference "
     "manual §2.1.28 p125 and the two sections after it, to p127)"
@@ -71,6 +73,8 @@ class StructureRules(_Rules):
 
     # The kinds of xyce's `.PREPROCESS ADDRESISTORS` read so far, in source order.
     _addresistors: set[str]
+    # Whether xyce's `.PREPROCESS REMOVEUNUSED` has been read (one per netlist).
+    _removeunused: bool
 
     def start(self, children: list[Any]) -> ParseResult:
         items: list[TopLevelItem] = []
@@ -249,13 +253,66 @@ class StructureRules(_Rules):
 
     pp_removeunused = pp_addresistors
 
-    def preprocess_removeunused(self, children: list[Any]) -> NoReturn:
-        keyword = children[0]
+    def preprocess_removeunused(self, children: list[Any]) -> _Item:
+        # An UnknownDirective (decision 0031 item 10): Xyce removes devices from the circuit it
+        # runs, while the netlist and its topology stay as written (P4). One line per netlist,
+        # subcircuit bodies included, seen in source order, so the second is refused.
+        element = _Element(children)
+        keyword = element.designator
+        if self._removeunused:
+            raise self._parse_error(
+                keyword,
+                "a second `.PREPROCESS REMOVEUNUSED`: Xyce allows one in a netlist and stops on "
+                f"another; list every letter on one line ({_REMOVEUNUSED_CITED})",
+            )
+        self._removeunused = True
+        end = _span(element.all(Token)[-1]).end
+        raw = self._source.text[_span(keyword).start : end]
+        comments = element.comments
+        return _Item(
+            element.end,
+            lambda span: UnknownDirective(str(keyword), raw, span, comments, _span(keyword)),
+        )
+
+    ru_letter = pp_addresistors
+
+    ru_next_letter = pp_addresistors
+
+    def ru_empty(self, children: list[Any]) -> NoReturn:
         word = children[1].node
-        raise self._unsupported(
-            keyword,
-            f"`{keyword} {word}`, not yet supported on {self._dialect.display_name}: it deletes "
-            "devices, which changes the circuit",
+        raise self._parse_error(
+            word,
+            f"`{word}` lists no device letter: write a comma list of at least one of "
+            f"{_REMOVEUNUSED_LETTERS} ({_REMOVEUNUSED_CITED}); Xyce stops on an empty one",
+        )
+
+    def ru_bad_first(self, children: list[Any]) -> NoReturn:
+        self._refuse_letter(_field_token(children))
+
+    ru_bad_next = ru_bad_first
+
+    def _refuse_letter(self, word: Token) -> NoReturn:
+        raise self._parse_error(
+            word,
+            f"`{word}` is not a device letter of `.PREPROCESS REMOVEUNUSED`, which takes a comma "
+            f"list of {_REMOVEUNUSED_LETTERS} ({_REMOVEUNUSED_CITED})",
+        )
+
+    def ru_trailing(self, children: list[Any]) -> NoReturn:
+        raise self._parse_error(
+            children[0],
+            "a comma after the last letter of `.PREPROCESS REMOVEUNUSED`: the letters are a "
+            f"comma list ({_REMOVEUNUSED_CITED}), so remove the trailing comma",
+        )
+
+    def ru_blank(self, children: list[Any]) -> NoReturn:
+        word = _field_token(children)
+        if word.type != "RU_LETTER":
+            self._refuse_letter(word)
+        raise self._parse_error(
+            word,
+            f"`{word}` follows a blank: the letters of `.PREPROCESS REMOVEUNUSED` are separated "
+            f"by commas, as in `C,R` ({_REMOVEUNUSED_CITED})",
         )
 
     def preprocess_other(self, children: list[Any]) -> NoReturn:

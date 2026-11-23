@@ -173,17 +173,21 @@ def test_every_other_dot_command_is_refused(statement: str) -> None:
     assert error.reason.startswith(f"`{statement.split()[0]}` is not an Xyce dot-command")
 
 
-def test_a_continued_dot_command_is_unsupported_whole() -> None:
-    # `.PREPROCESS REMOVEUNUSED` is the one dot-command that stays unsupported (P4).
+def test_a_continued_planned_line_is_unsupported_whole() -> None:
+    # No dot-command stays unsupported since X-M4 read `.PREPROCESS REMOVEUNUSED` (decision 0031
+    # item 10); a planned letter's line is refused with its `+` lines.
     with pytest.raises(UnsupportedConstruct) as captured:
-        _parse("title\n.preprocess removeunused r\n+ c\n.END\n")
-    assert captured.value.line == 2
+        _parse("title\nE1 a 0\n+ b 0 2\n.END\n")
+    assert (captured.value.line, captured.value.column) == (2, 1)
 
 
 def test_a_syntax_error_later_is_reported_before_an_unsupported_line() -> None:
-    # The whole source is parsed first, as on the other dialects.
-    with pytest.raises(ParseError):
-        _parse("title\n.preprocess removeunused r\n")
+    # The whole source is parsed first, as on the other dialects: the missing `.END` is found
+    # before the refusals of the transformer, the refused `.PREPROCESS` word and the `+` line
+    # after a comment (refused by its own rule only when what it joins is not).
+    with pytest.raises(ParseError) as captured:
+        _parse("title\n.preprocess foo\n* c\n+ 1u\n")
+    assert "`.end`, which is missing" in captured.value.reason
 
 
 @pytest.mark.parametrize("between", ["* a comment\n", "\n", "* a comment\n\n", "; c\n"])
@@ -193,16 +197,16 @@ def test_a_continuation_after_comment_or_blank_lines_is_not_a_syntax_error(
 ) -> None:
     # A `+` line joins the last non-comment line across comment and blank lines ([xyce-ug]
     # §4.1.3.2 p43; probe test_a_continuation_joins_across_comments_and_blank_lines): the
-    # statement it joins is refused, not the `+` line.
-    with pytest.raises(UnsupportedConstruct, match="`.preprocess removeunused`") as captured:
-        _parse(f"title\n.preprocess removeunused r\n{between}{plus}\n.END\n")
-    assert (captured.value.line, captured.value.column) == (2, 1)
+    # statement it joins is refused (here a `.PREPROCESS` word that is no form), not the `+` line.
+    with pytest.raises(ParseError, match="is not a `.PREPROCESS` form") as captured:
+        _parse(f"title\n.preprocess foo\n{between}{plus}\n.END\n")
+    assert (captured.value.line, captured.value.column) == (2, 13)
 
 
 def test_a_continuation_line_is_refused_by_its_own_rule() -> None:
     # Every line that a `+` line can follow across comment lines without joining it is refused
     # first, so the rule's own refusal is checked on its subtree.
-    source = SourceText("title\n.preprocess removeunused r\n* c\n+ 1u\n.END\n")
+    source = SourceText("title\n.preprocess foo\n* c\n+ 1u\n.END\n")
     (subtree,) = parse_tree(source, _XYCE).find_data("continuation_line")
     with pytest.raises(VisitError) as captured:
         _NodeBuilder(source, _XYCE).transform(subtree)

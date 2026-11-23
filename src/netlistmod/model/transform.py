@@ -83,6 +83,7 @@ class _NodeBuilder(
         self._dialect = dialect
         self._rkm = rkm
         self._addresistors = set()
+        self._removeunused = False
 
     def __default__(self, data: Any, children: Any, meta: Any) -> NoReturn:
         raise TypeError(f"Unhandled grammar rule {data!r}")

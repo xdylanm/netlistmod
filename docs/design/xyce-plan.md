@@ -210,6 +210,13 @@ notes:
   the `BodyItem` and `TopLevelItem` unions by it, with its `ELEMENT_NAMES` entry `"port"` (X-M3
   B3); and `SourceSpec.args` widened to `Value | Identifier`, for PAT's DATA bit string (X-M3 B2;
   only an xyce parse holds an `Identifier` there).
+- [ ] the X-M4 additions (decision 0031 item 11), each harmless on ngspice and LTspice: the
+  `DiagnosticCode` member `NODE_COUNT_MISMATCH` (X-M4 B4), which `docs/usage/errors.md` lists only
+  as reserved; the data file `model/xyce-levels.json` with its loader `model.xyce_levels`
+  (`level_nodes`, `default_level`, `LevelNodes`); and the internal names X-M8 makes public, or
+  keeps internal: `Index.model_bins` (an M line's model reference that resolves to a set of bins,
+  mapped to every bin; X-M4 B4), with `document.index.model_set` (the bins a name refers to) and
+  `document.index.model_binning` (whether `.OPTIONS PARSER MODEL_BINNING` leaves binning on).
 
 **`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
 named:
@@ -281,6 +288,27 @@ named:
     (the last line's, `.HB` taking part), for which Xyce writes nothing. A warning, on the print
     type." "**What to do:** use the print type of the analysis that runs, and keep one analysis
     line."
+- X-M4 B4 (decision 0031 items 5 to 8):
+  - `NODE_COUNT_MISMATCH`, in place of its reserved entry: "Xyce only. A Q, M, J or Z line whose
+    model resolves to a visible `.model` with a known LEVEL (its last `level=`, a plain integer;
+    level 1 if it writes none) and whose node count that level does not take (with `TNODEOUT=`
+    on the line, the count the level takes then); for a set of binned models, each bin with a
+    known level, named. The message says what Xyce does: it stops on too few nodes, and on too
+    many it stops, drops the extra nodes silently, or joins them to internal nodes of the device,
+    by level. Also a node after the third that names a visible model whose level takes the count
+    of the nodes before it: Xyce takes that node as the model and stops. Silent when the model is
+    unresolved or its level unknown; the topology stays the nodes written. A warning, on the
+    model name, the extra nodes, or the node." Then: "**What to do:** write the node count the
+    model's level takes, or a model whose level takes the nodes written; rename a node that is
+    also a model's name."
+  - `MODEL_TYPE_MISMATCH`, after its rule: "On the hidden xyce dialect the transistor types are
+    Xyce's (Q `NPN`/`PNP`, M `NMOS`/`PMOS`, J `NJF`/`PJF`, Z `NMF`/`PMF`), the message adds that
+    Xyce 7.10 stops, and on an M that a VDMOS is an `NMOS` or `PMOS` model with `LEVEL=18`; for an
+    M that names a set of binned models, each bin of another type is reported."
+  - `UNRESOLVED_MODEL`, after the X-M1 paragraph: "On the hidden xyce dialect an M line whose
+    model name no model matches exactly, while models `<name>.<suffix>` are visible (binned
+    models, `nch.1`, `nch.2`), resolves to that set and is not reported, unless `.OPTIONS PARSER
+    MODEL_BINNING=false` (or `0`) turns binning off."
 
 ## 9. Risks
 

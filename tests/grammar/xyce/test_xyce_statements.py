@@ -298,8 +298,13 @@ def test_xyce_has_its_own_model_types() -> None:
     assert table["Inductor"] == {"l", "ind"}
     assert table["MutualCoupling"] == {"core"}
     assert table["Diode"] == {"d"}
-    # The xyce list replaces the shared one, which X-M1's letters do not need.
-    assert "BipolarTransistor" not in table
+    # The xyce list replaces the shared one: X-M4's transistors have no VDMOS type (decision 0031
+    # item 6), and the switches and lines of later milestones are not listed yet.
+    assert table["BipolarTransistor"] == {"npn", "pnp"}
+    assert table["Mosfet"] == {"nmos", "pmos"}
+    assert table["Jfet"] == {"njf", "pjf"}
+    assert table["Mesfet"] == {"nmf", "pmf"}
+    assert "VoltageSwitch" not in table
 
 
 # .INC, .INCL, .INCLUDE
