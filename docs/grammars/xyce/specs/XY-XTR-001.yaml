@@ -1,10 +1,11 @@
 id: XY-XTR-001
 dialect: xyce
-construct: shared transistor line shape (Q, J, Z)
+construct: shared transistor line shape (Q, M, J, Z)
 manual_ref:
 - '[xyce-ref] §2.3.17 p241 "Bipolar Junction Transistor (BJT)"'
 - '[xyce-ref] §2.3.18 p286 "Junction Field-Effect Transistor (JFET)"'
 - '[xyce-ref] §2.3.19 p290 "Metal-Semiconductor FET (MESFET)"'
+- '[xyce-ref] §2.3.20 p292 "MOS Field Effect Transistor (MOSFET)"'
 status: documented
 validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
 grammar:
@@ -23,4 +24,6 @@ tests:
 - tests/grammar/xyce/test_xyce_transistors.py::test_the_area_is_positional_or_named
 - tests/grammar/xyce/test_xyce_transistors.py::test_area_forms_are_refused
 - tests/grammar/xyce/test_xyce_transistors.py::test_the_other_dialects_keep_their_own_transistor_lines
-notes: 'Decision 0014 item 1 with decision 0031 items 1 to 3: the fixed nodes, then names, the last of which is the model, then an optional positional area, then flags and parameters. A name field is a node field (NODE_WORD), so `[s]` is a node named `[s]` and `X1:n` a node path; a number is a node before the model and the area after it; right after the fixed nodes `off` is a node, after a name it is the flag. A number, `off` or a `:` in the model''s place is refused (Xyce runs `.model 2 npn`: a `refuses/runs` row). The area is positional, a number or a braced or quoted expression (Transistor.area), or `area=`, not both (Xyce stops); a positional area may be followed by parameters (G1 6 (a), a `reads/stops` row); after a flag or parameter it is a ParseError (Xyce runs it as the area: a `refuses/runs` row). Counts are by letter.'
+- tests/grammar/xyce/test_xyce_mosfet.py::test_the_model_is_the_last_name
+- tests/grammar/xyce/test_xyce_mosfet.py::test_off_tnodeout_and_thermal_right_after_the_fixed_nodes_are_nodes
+notes: 'Decision 0014 item 1 with decision 0031 items 1 to 3: the fixed nodes, then names, the last of which is the model, then an optional positional area, then flags and parameters. A name field is a node field (NODE_WORD), so `[s]` is a node named `[s]` and `X1:n` a node path; a number is a node before the model and the area after it; right after the fixed nodes `off` is a node, after a name it is the flag. A number, `off` or a `:` in the model''s place is refused (Xyce runs `.model 2 npn`: a `refuses/runs` row). The area is positional, a number or a braced or quoted expression (Transistor.area), or `area=`, not both (Xyce stops); a positional area may be followed by parameters (G1 6 (a), a `reads/stops` row); after a flag or parameter it is a ParseError (Xyce runs it as the area: a `refuses/runs` row). Counts are by letter. M has no area (XY-MOS-001).'

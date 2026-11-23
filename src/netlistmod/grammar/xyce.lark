@@ -8,7 +8,7 @@
 // defined here for the statements and element lines that use them.
 //
 // The element lines of B5 are R, C, L, K, V and I (DC and AC parts), D and X; X-M3 adds P and the
-// transient functions (decision 0030), X-M4 the transistors Q, J and Z (decision 0031). X-M2
+// transient functions (decision 0030), X-M4 the transistors Q, M, J and Z (decision 0031). X-M2
 // (decision 0028) reads the directives, and closes the list of dot-commands (B4, decision 0028 item 1): the
 // typed ones, the untyped ones read as UnknownDirective (DOT_NAME), and `.PREPROCESS ADDRESISTORS`;
 // any other dot-command has no terminal, so the parser stops at its first character and the
@@ -102,6 +102,7 @@ first_line: TITLE_TEXT LINE_END             -> implicit_title
                | bjt
                | jfet
                | mesfet
+               | mosfet
                | subckt_instance
                | xy_ic_stmt
                | xy_nodeset_stmt
@@ -822,6 +823,40 @@ JZ_PARAM_KW.4: /(?:area|dtemp|temp)(?=[ \t]*=)/i
 // spec: XY-MES-001
 mesfet: Z_NAME node node node xt_name (xt_number | xt_area)? _jz_tail
 Z_NAME.4: /[Zz]/ _XY_CHAR*
+
+// M ([xyce-ref] §2.3.20 p292–296): 3 to 7 nodes (the bulk; BSIM-SOI's body contacts and
+// temperature node; MVS's dt node), the model, then `OFF` or `OFF=`, `IC=` (a comma list, at most
+// five values, checked by the transformer) and the closed list: the union of the instance tables
+// of every level, Tables 2-92, 2-94, 2-96, 2-98, 2-100, 2-102, 2-104, 2-106, 2-108, 2-111, 2-114,
+// 2-117, 2-120, 2-123, 2-126, 2-129, 2-132, 2-135, 2-140, 2-143, 2-145 and 2-147 (p304–745),
+// without `OFF` (m_flag) and with the vector `IC` of IC1 to IC5 (p296). `TNODEOUT=` is a listed
+// parameter. A Xyce MOSFET has no area: a number or expression after the model is read in the
+// area's place (xt_number, xt_area) only so that the transformer refuses it, one after a flag or
+// parameter is m_late_value, and `area=` is refused by m_unlisted. A bare `TNODEOUT`, which Xyce
+// stops on, and ngspice's VDMOS flag `thermal` are recognised after a name only to be refused
+// (m_keyword); right after the fixed nodes they are nodes, as `off` is. The names are spelled
+// out by a count (`~ 0..4`), which Lark expands into the alternatives that Q spells out.
+// spec: XY-MOS-001
+mosfet: M_NAME node node node (xt_name | xt_number) ~ 0..4 xt_name (xt_number | xt_area)? _m_tail
+_m_tail: (m_param | m_flag | m_ic_param)* (m_unlisted | m_keyword | NL | eol)
+       | (m_param | m_flag | m_ic_param)+ m_late_value
+m_param: SEP M_PARAM_KW EQ _inst_value
+       | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_param
+m_flag: SEP OFF_KW
+      | SEP OFF_VALUE_KW EQ (NUMBER | BRACE_FORMULA | QUOTE_FORMULA)
+      | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_flag
+m_ic_param: SEP Q_IC_KW EQ _inst_value (CSEP _inst_value)*
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_ic_param
+m_unlisted: SEP INST_KEY REST_TEXT* NL
+          | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_unlisted
+m_keyword: SEP (TNODEOUT_KW | THERMAL_KW) REST_TEXT* NL
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_keyword
+m_late_value: SEP (NUMBER | BRACE_FORMULA | QUOTE_FORMULA) REST_TEXT* NL
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) m_late_value
+M_PARAM_KW.4: /(?:abdrain|absource|acnqsmod|ad|adej|adeo|adrain|aebcp|agbcp|agbcp2|agbcpd|as|asej|aseo|asource|bjtoff|cdsp|cgdp|cgsp|covd|covs|cth0|d|dach1|dach2|dach3|dach4|dach5|dach6|debug|delvt0|delvto|delvtoedge|delvtrand|dta|dtemp|dws1|dws2|dws3|dws4|dws5|dws6|factuo|factuoedge|fpitch|frbody|geomod|hpff|ic1|ic2|ic3|ic4|ic5|ids0mult|igb0mult|igc0mult|jw|l|lgdrain|lgsource|lrsd|lsdrain|lssource|m|min|minz|mobscmod|mult|nbc|nf|nfin|nfinnom|ngaa|ngcon|ngf|nqsmod|nrb|nrd|nrs|ns|nseg|pd|pdbcp|pdej|pdeo|pdrain|ps|psbcp|psej|pseo|psource|rbdb|rbodymod|rbpb|rbpd|rbps|rbsb|rgatemod|rgeomod|rth0|sa|sb|sc|sca|scb|scc|sd|shmod|soimod|subbandmod|temp|tfin|tgaa|tnodeout|trnqsmod|tsus|u0mult|vbsusr|vfbsdoff|vldebug|w|wgaa|xgw|xl|xw)(?=[ 	]*=)/i
+TNODEOUT_KW.2: "tnodeout"i
+THERMAL_KW.2: "thermal"i
+M_NAME.4: /[Mm]/ _XY_CHAR*
 
 // V and I, their DC and AC parts ([xyce-ref] §2.3.10 p226, §2.3.9 p221; decision 0027 item 6):
 // `[DC] value`, then `AC magnitude [phase]`, then at most one transient function (decision 0030

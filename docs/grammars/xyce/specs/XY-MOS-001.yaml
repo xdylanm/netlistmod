@@ -1,0 +1,42 @@
+id: XY-MOS-001
+dialect: xyce
+construct: M MOSFET lines (3 to 7 nodes, no area, OFF, IC=, TNODEOUT= and the closed parameter list)
+manual_ref:
+- '[xyce-ref] §2.3.20 p292 "MOS Field Effect Transistor (MOSFET)"'
+status: documented
+validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+grammar:
+- mosfet
+- _m_tail
+- m_param
+- m_flag
+- m_ic_param
+- m_unlisted
+- m_keyword
+- m_late_value
+- M_PARAM_KW
+- TNODEOUT_KW
+- THERMAL_KW
+- M_NAME
+core_rules:
+- OFF_KW
+- CSEP
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_mosfet.py::test_the_model_is_the_last_name
+- tests/grammar/xyce/test_xyce_mosfet.py::test_off_tnodeout_and_thermal_right_after_the_fixed_nodes_are_nodes
+- tests/grammar/xyce/test_xyce_mosfet.py::test_a_number_off_tnodeout_or_a_colon_in_the_models_place_is_refused
+- tests/grammar/xyce/test_xyce_mosfet.py::test_node_counts_outside_3_to_7_are_refused
+- tests/grammar/xyce/test_xyce_mosfet.py::test_continued_mosfet_lines_join
+- tests/grammar/xyce/test_xyce_mosfet.py::test_a_mosfet_has_no_area
+- tests/grammar/xyce/test_xyce_mosfet.py::test_the_mosfet_forms
+- tests/grammar/xyce/test_xyce_mosfet.py::test_each_listed_name_is_read_in_any_case
+- tests/grammar/xyce/test_xyce_mosfet.py::test_the_grammar_and_the_message_hold_the_same_list
+- tests/grammar/xyce/test_xyce_mosfet.py::test_a_name_outside_the_list_is_refused_at_the_name
+- tests/grammar/xyce/test_xyce_mosfet.py::test_ic_forms
+- tests/grammar/xyce/test_xyce_mosfet.py::test_ic_forms_are_refused
+- tests/grammar/xyce/test_xyce_mosfet.py::test_tnodeout_forms
+- tests/grammar/xyce/test_xyce_mosfet.py::test_thermal_is_refused
+- tests/grammar/xyce/test_xyce_mosfet.py::test_a_parameter_or_off_written_twice_is_refused
+- tests/grammar/xyce/test_xyce_mosfet.py::test_the_other_dialects_keep_their_own_mosfet_lines
+notes: '`Mosfet` (decision 0031 items 1 to 4): 3 to 7 nodes (an 8th is a ParseError; Xyce ignores the extras), the model (XY-XTR-001''s boundary rule, with `tnodeout` also refused in the model''s place), then `OFF` or `OFF=` (a `Flag`), `IC=` a comma list of at most five values (blanks around `=` and `,` allowed, a trailing or empty element refused) and the closed list, in any case: the union of the instance-parameter tables of every M level, Tables 2-92 (level 1), 2-94 (2), 2-96 (3), 2-98 (6), 2-100 (BSIM3), 2-102 (BSIM3 SOI), 2-104 (BSIM4), 2-106 (power MOSFET), 2-108 (BSIM-SOI 4.6.1), 2-111 (BSIM-SOI 4.5.0), 2-114 (BSIM6), 2-117 (PSP102), 2-120 and 2-123 (PSP103, with and without self-heating), 2-126, 2-129, 2-132 and 2-135 (BSIM-CMG 111, 110, 107 and 108), 2-140 (MVSG-HV), 2-143 (EKV 2.6), 2-145 (EKV3) and 2-147 (L-UTSOI), §2.3.20 p304–745 (the MVS levels, Tables 2-138 and 2-139, have no instance table), read from the manual''s PDF, without `OFF` (the flag) and with the vector `IC` of IC1 to IC5 (p296): 125 names and `IC`. Any other name is a ParseError at the name, as Xyce stops on it. A name of another level is read (the level row, `reads/stops`). `TNODEOUT=v` is an ordinary listed parameter; a bare `TNODEOUT`, the manual''s own form (p292), is refused with the hint `TNODEOUT=1`, as Xyce stops on it (a `refuses/stops` row, `manual-error`). A Xyce MOSFET has no area: a number or expression after the model, after a flag or parameter, and `area=` are refused (agreeing with Xyce). ngspice''s VDMOS flag `thermal` is refused (a Xyce VDMOS is NMOS or PMOS at LEVEL=18). A parameter written twice, or the flag twice in any form, is a ParseError (the repeat row).'

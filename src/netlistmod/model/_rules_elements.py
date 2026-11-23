@@ -65,12 +65,12 @@ _POSITIONAL_Q_AREA: dict[Dialect, bool] = {
     _XYCE: True,
 }
 # The keywords a transistor's model name cannot be, by dialect and kind; a kind not listed takes
-# `off` only (decision 0014 item 4; decision 0031 item 2, whose `tnodeout` on M comes with M).
+# `off` only (decision 0014 item 4; decision 0031 item 2: `tnodeout` on a Xyce M).
 _OFF = frozenset({"off"})
 _MODEL_KEYWORDS: dict[Dialect, dict[type, frozenset[str]]] = {
     Dialect.NGSPICE: {Mosfet: frozenset({"off", "thermal"})},
     Dialect.LTSPICE: {Mosfet: frozenset({"off", "thermal"})},
-    _XYCE: {},
+    _XYCE: {Mosfet: frozenset({"off", "tnodeout"})},
 }
 
 
