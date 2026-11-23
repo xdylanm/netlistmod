@@ -156,12 +156,12 @@ _RCL_FORMS: dict[Dialect, _RclForm] = {
 # The name of a positional area, which set_param routes to its slot.
 _POSITIONAL_AREA = "area"
 # The elements whose area is positional, right after the model, unless it is written `area=`:
-# LTspice's D and Q, J and Z on ngspice and LTspice, and Xyce's D (decision 0027 item 6; Xyce's Q,
-# J and Z come with X-M4). An ngspice D and Q write `area=` only.
+# LTspice's D and Q, J and Z on ngspice and LTspice, and Xyce's D, Q, J and Z (decision 0027 item
+# 6; decision 0031 item 9). An ngspice D and Q write `area=` only.
 _POSITIONAL_AREAS: dict[Dialect, tuple[type[Component], ...]] = {
     Dialect.NGSPICE: (Jfet, Mesfet),
     Dialect.LTSPICE: (Diode, BipolarTransistor, Jfet, Mesfet),
-    _XYCE: (Diode,),
+    _XYCE: (Diode, BipolarTransistor, Jfet, Mesfet),
 }
 
 

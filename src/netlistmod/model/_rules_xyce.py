@@ -8,6 +8,7 @@ B3; decision 0028 items 5 to 8), the closed list's untyped dot-commands (X-M2 B4
 from __future__ import annotations
 
 import difflib
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any, Literal, NoReturn
 
@@ -26,6 +27,7 @@ from netlistmod.model._tree import (
     _field_tokens,
     _Item,
     _ListKeyword,
+    _Name,
     _span,
     _XRest,
 )
@@ -60,6 +62,7 @@ from netlistmod.model.values import (
     NumericValue,
     ParamAssignment,
     Value,
+    ValueList,
 )
 from netlistmod.source import Span
 
@@ -105,6 +108,19 @@ _PARAM_LISTS: dict[str, tuple[str, str, str]] = {
         "diode",
         "Xyce reference manual §2.3.8 p208–213, Tables 2-46, 2-48 and 2-51",
         "ab, area, dtemp, ic, lg, ls, m, mult, off, perim, pj and temp",
+    ),
+    "q": (
+        "bipolar transistor",
+        "Xyce reference manual §2.3.17 p247–279, Tables 2-67, 2-69, 2-71, 2-73, 2-75, 2-80 and "
+        "2-83",
+        "area, dt, dta, dtemp, ic (or ic1 and ic2), l, m, mult, n, off, sw_et, sw_noise, temp, "
+        "trise and w",
+    ),
+    "jz": (
+        "JFET or MESFET",
+        "Xyce reference manual §2.3.18 p287–288, Tables 2-86 and 2-88, and Xyce reference manual "
+        "§2.3.19 p291, Table 2-90",
+        "area, dtemp and temp",
     ),
 }
 # What a line of each letter needs when it has no value (decision 0027 item 5, as amended).
@@ -378,6 +394,99 @@ class XyceRules(StatementsRules, XyceSourcesRules):
 
     def d_flag(self, children: list[Any]) -> _Field:
         return self.flag(children)
+
+    # Transistors (X-M4 B2; decision 0031 items 1 to 4). Only xyce.lark produces these rules.
+
+    def xt_name(self, children: list[Any]) -> _Field:
+        return self.t_name(children)
+
+    xt_number = xt_name
+
+    def xt_area(self, children: list[Any]) -> _Field:
+        return self.t_area(children)
+
+    def q_param(self, children: list[Any]) -> _Field:
+        return self.param(children)
+
+    jz_param = q_param
+
+    def q_flag(self, children: list[Any]) -> _Field:
+        return self.flag(children)
+
+    def q_ic_param(self, children: list[Any]) -> _Field:
+        field = self.tc_param(children)
+        param = field.node
+        assert isinstance(param, ParamAssignment)
+        if isinstance(param.value, ValueList) and len(param.value.values) > 2:
+            raise self._error_at(
+                param.value.values[2].span.start,
+                f"`{param.name}=` on a Q takes at most two values, Vbe and Vce (Xyce reference "
+                "manual §2.3.17, Table 2-67 p247)",
+            )
+        return field
+
+    def q_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("q", children)
+
+    def jz_unlisted(self, children: list[Any]) -> NoReturn:
+        self._unlisted("jz", children)
+
+    def jz_off(self, children: list[Any]) -> NoReturn:
+        keyword = _field_token(children)
+        raise self._parse_error(
+            keyword,
+            f"`{keyword}` is not a flag of a Xyce J or Z line, and Xyce stops on it; the "
+            "reference guide lists area, dtemp and temp (Xyce reference manual §2.3.18 p287–288 "
+            "and Xyce reference manual §2.3.19 p291)",
+        )
+
+    def xt_late_area(self, children: list[Any]) -> NoReturn:
+        value = _field_token(children)
+        raise self._parse_error(
+            value,
+            f"`{value}` after a flag or parameter: a positional area stands right after the "
+            f"model (`<model> {value} ...`), or write it as `area={value}`",
+        )
+
+    def bjt(self, children: list[Any]) -> _Item:
+        return self._xyce_transistor(children, super().bjt)
+
+    def jfet(self, children: list[Any]) -> _Item:
+        return self._xyce_transistor(children, super().jfet)
+
+    def mesfet(self, children: list[Any]) -> _Item:
+        return self._xyce_transistor(children, super().mesfet)
+
+    def _xyce_transistor(self, children: list[Any], read: Callable[[list[Any]], _Item]) -> _Item:
+        """Refuse a repeated parameter and an area written both ways on xyce, then read the line
+        as every dialect does (decision 0031 items 3 and 4)."""
+        item = read(children)
+        if _INSTANCE_REPEAT_REFUSED[self._dialect]:
+            element = _Element(children)
+            params = element.all(ParamAssignment)
+            self._refuse_repeats(params)
+            flags = element.all(Flag)
+            if len(flags) > 1:
+                # Q's `OFF` or `OFF=`, in any combination: Xyce runs it (5.1 point 8).
+                second = flags[1]
+                written = f"{second.name}=" if second.value is not None else second.name
+                raise self._error_at(
+                    second.span.start,
+                    f"`{written}` is written twice on this line (as `OFF` or `OFF=`); "
+                    f"{self._dialect.display_name} silently uses one of them, so write it once",
+                )
+            names = element.all(_Name)
+            positional = bool(element.values()) or (
+                len(names) > 1 and names[-1].token.type == "NUMBER"
+            )
+            named = [p for p in params if fold_name(p.name, self._dialect) == "area"]
+            if named and positional:
+                raise self._error_at(
+                    named[0].name_span.start,
+                    f"the area is given twice, positionally and as `{named[0].name}=`; Xyce "
+                    "stops on it, so write only one",
+                )
+        return item
 
     def x_name_node(self, children: list[Any]) -> _Field:
         return self.x_name(children)

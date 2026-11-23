@@ -1,0 +1,31 @@
+id: XY-BJT-001
+dialect: xyce
+construct: Q bipolar transistor lines (3 to 5 nodes, area, OFF, IC= and the closed parameter list)
+manual_ref:
+- '[xyce-ref] §2.3.17 p241 "Bipolar Junction Transistor (BJT)"'
+status: documented
+validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+grammar:
+- bjt
+- _q_tail
+- q_param
+- q_flag
+- q_ic_param
+- q_unlisted
+- Q_PARAM_KW
+- Q_IC_KW
+- Q_NAME
+core_rules:
+- OFF_KW
+- CSEP
+- EQ
+tests:
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_bjt_forms
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_model_is_the_last_name_before_the_area
+- tests/grammar/xyce/test_xyce_transistors.py::test_each_listed_name_is_read_in_any_case
+- tests/grammar/xyce/test_xyce_transistors.py::test_the_grammar_and_the_message_hold_the_same_lists
+- tests/grammar/xyce/test_xyce_transistors.py::test_a_name_outside_the_list_is_refused_at_the_name
+- tests/grammar/xyce/test_xyce_transistors.py::test_ic_forms_are_refused
+- tests/grammar/xyce/test_xyce_transistors.py::test_a_parameter_written_twice_is_refused
+- tests/grammar/xyce/test_xyce_transistors.py::test_off_written_twice_is_refused_at_the_second
+notes: '`BipolarTransistor` (decision 0031 items 1 and 4): 3 to 5 nodes (substrate, then VBIC''s or HICUM''s thermal node; a 6th is a ParseError), the model, an optional area, then `OFF` or `OFF=` (a `Flag`), `IC=` a comma list of at most two values (blanks around `=` and `,` allowed, a trailing or empty element refused) and the closed list, the union of Tables 2-67, 2-69, 2-71, 2-73, 2-75, 2-80 and 2-83 (p247–279): AREA DT DTA DTEMP IC IC1 IC2 L M MULT N SW_ET SW_NOISE TEMP TRISE W, in any case; any other name is a ParseError at the name, as Xyce stops on it. A name of another level is read (the level row, `reads/stops`). A parameter written twice, or the flag twice in any form (`OFF`, `OFF=`), is a ParseError (the repeat row).'

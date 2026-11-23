@@ -7,7 +7,7 @@ from typing import Any, NoReturn
 
 from lark import Token
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.model._numbers import reads_as_number
 from netlistmod.model._rules_base import _Rules
 from netlistmod.model._tree import (
@@ -54,6 +54,24 @@ from netlistmod.source import Span
 # The tokens an expression is written with: a brace or quoted formula, or the pieces of a bare
 # expression, one per physical line (decision 0016 item 2).
 _EXPRESSION_TOKENS = frozenset({"BRACE_FORMULA", "QUOTE_FORMULA", "B_PIECE"})
+# The tokens of a transistor's name field that are numbers: ngspice's FIELD_NUMBER (t_number) and
+# xyce's NUMBER (xt_number). LTspice reads its positional area as t_area, never as a name.
+_NUMBER_NAMES = frozenset({"FIELD_NUMBER", "NUMBER"})
+# Whether a number after a Q's model is its positional area: on xyce it is (decision 0031 item 3);
+# an ngspice Q writes `area=` only, so the number is refused (decision 0014 item 5).
+_POSITIONAL_Q_AREA: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+# The keywords a transistor's model name cannot be, by dialect and kind; a kind not listed takes
+# `off` only (decision 0014 item 4; decision 0031 item 2, whose `tnodeout` on M comes with M).
+_OFF = frozenset({"off"})
+_MODEL_KEYWORDS: dict[Dialect, dict[type, frozenset[str]]] = {
+    Dialect.NGSPICE: {Mosfet: frozenset({"off", "thermal"})},
+    Dialect.LTSPICE: {Mosfet: frozenset({"off", "thermal"})},
+    _XYCE: {},
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -284,15 +302,21 @@ class ElementsRules(_Rules):
     def _transistor(
         self, kind: type[BipolarTransistor | Mosfet | Jfet | Mesfet], element: _Element
     ) -> _Item:
-        names = element.all(_Name)
+        names = list(element.all(_Name))
+        area = next(iter(element.values()), None)
         last = names[-1].token
-        if last.type == "FIELD_NUMBER":
-            # Only an ngspice Q has a number after its model in the tree (review R2).
-            raise self._parse_error(
-                last,
-                f"`{last}` after the model is a positional area, and an ngspice Q writes its "
-                f"area as `area={last}`",
-            )
+        if last.type in _NUMBER_NAMES:
+            # Only a Q has a number after its model in the tree (review R2): an ngspice Q writes
+            # its area `area=` only; on xyce the number is the positional area (decision 0031).
+            if not _POSITIONAL_Q_AREA[self._dialect]:
+                raise self._parse_error(
+                    last,
+                    f"`{last}` after the model is a positional area, and an ngspice Q writes its "
+                    f"area as `area={last}`",
+                )
+            area = self._value(last)
+            names.pop()
+            last = names[-1].token
         if (
             kind is BipolarTransistor
             and self._dialect is Dialect.NGSPICE
@@ -312,8 +336,7 @@ class ElementsRules(_Rules):
             *element.all(Node),
             *(Node(str(name.token), _span(name.token)) for name in names[:-1]),
         )
-        model = ModelReference(str(names[-1].token), _span(names[-1].token))
-        area = next(iter(element.values()), None)
+        model = ModelReference(str(last), _span(last))
         return _Item(
             element.end,
             lambda span: kind(
@@ -325,10 +348,11 @@ class ElementsRules(_Rules):
         )
 
     def _check_model_name(self, kind: type, token: Token) -> None:
-        """Refuse a model name the grammar could only lex as a name (decision 0014, items 1 and 4).
+        """Refuse a model name the grammar could only lex as a name (decision 0014, items 1 and 4;
+        decision 0031 item 2).
 
         Where only a name may follow, the lexer reads ``2`` or ``off`` as a name, so the grammar
-        cannot refuse them as the model; both solvers would look the name up instead.
+        cannot refuse them as the model; the solvers would look the name up instead.
         """
         text = str(token)
         if reads_as_number(text, any_letter=True):
@@ -337,7 +361,14 @@ class ElementsRules(_Rules):
                 f"`{text}` is in the model's place (the last name before any area, flag or "
                 "parameter), and a model name cannot be a number",
             )
-        keywords = {"off", "thermal"} if kind is Mosfet else {"off"}
+        if token.type == "NODE_WORD" and ":" in text:
+            # On xyce every name of a transistor line is a node field until the last (X-D2).
+            raise self._parse_error(
+                token,
+                f"`{text}` is in the model's place (the last name before any area, flag or "
+                "parameter), and a model name cannot hold `:`",
+            )
+        keywords = _MODEL_KEYWORDS[self._dialect].get(kind, _OFF)
         if text.lower() in keywords:
             raise self._parse_error(
                 token,

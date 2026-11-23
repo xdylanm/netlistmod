@@ -143,11 +143,11 @@
       "xyce": "runs"
     },
     "unsupported_letter.cir": {
-      "sha256": "18e4212a84e90b13283af1d5b7011f27498a4a7d817b7663d6bd0b3130564333",
-      "line": 5,
+      "sha256": "13d754a01b38bfe817309e6b1a221d2f6ee00da2b674c6993f55c1bae54a4fbb",
+      "line": 4,
       "column": 1,
       "error": "UnsupportedConstruct",
-      "note": "Q is X-M4's (xyce-devices.json)",
+      "note": "T is X-M6's (xyce-devices.json)",
       "xyce": "runs"
     }
   }

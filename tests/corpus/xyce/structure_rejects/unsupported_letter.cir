@@ -1,6 +1,5 @@
-reject: Q is X-M4's
-.model qn NPN
+reject: T is X-M6's
 V1 c 0 1
-V2 b 0 0.7
-Q1 c b 0 qn
+R1 b 0 50
+T1 c 0 b 0 Z0=50 TD=1n
 .END
