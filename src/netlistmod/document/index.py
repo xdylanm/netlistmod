@@ -566,11 +566,12 @@ def _plain_number(text: str) -> float | None:
         return None
 
 
-def _model_level(model: ModelStatement, default: int) -> int | None:
+def _model_level(model: ModelStatement, default: int, dialect: Dialect) -> int | None:
     """An xyce model's LEVEL (decision 0031 item 5): its last ``level`` parameter, when that is a
     plain integer-valued number (``10``, ``10.0``, ``1e1``); ``default`` when it writes none;
-    ``None`` (unknown) for any other value: an expression, a fraction, a scale factor."""
-    levels = [param for param in model.params if param.name.lower() == "level"]
+    ``None`` (unknown) for any other value: an expression, a fraction, a scale factor. Names are
+    folded as ``dialect`` compares them."""
+    levels = [param for param in model.params if fold(param.name, dialect) == "level"]
     if not levels:
         return default
     value = levels[-1].value
