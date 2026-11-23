@@ -17,7 +17,11 @@ from netlistmod.document.index import (
     Index,
     Reference,
     Scope,
+    _lookup,
+    _model_level,
     definition_scope,
+    model_binning,
+    model_set,
     scope_data,
     scope_functions,
     scope_replaces_ground,
@@ -25,7 +29,11 @@ from netlistmod.document.index import (
     walk_nodes,
 )
 from netlistmod.document.lines import Line
-from netlistmod.document.models import model_type_allowed, model_type_requirement
+from netlistmod.document.models import (
+    model_type_allowed,
+    model_type_outcome,
+    model_type_requirement,
+)
 from netlistmod.document.names import instance_name, is_automatic_global, is_ground, net_name
 from netlistmod.model._numbers import reads_as_number
 from netlistmod.model.nodes import (
@@ -57,18 +65,21 @@ from netlistmod.model.nodes import (
     SubcktInstance,
     TopLevelItem,
     TranDirective,
+    Transistor,
     UnknownDirective,
     Vcvs,
     VoltageSource,
     element_phrase,
 )
 from netlistmod.model.values import Formula, NumericValue
+from netlistmod.model.xyce_levels import LevelNodes, default_level, level_nodes
 from netlistmod.source import SourceText, Span
 
 Severity = Literal["warning", "info"]
 # Whether an untyped `.PREPROCESS` line is xyce's `.PREPROCESS ADDRESISTORS` (decision 0028 item
-# 1), the grammar's only untyped form of it, which `UNTYPED_DIRECTIVE_PRESERVED` names so; on
-# ngspice and LTspice a `.preprocess` line is any unknown directive.
+# 1) or `.PREPROCESS REMOVEUNUSED` (decision 0031 item 10), the grammar's only untyped forms of
+# it, which `UNTYPED_DIRECTIVE_PRESERVED` names so; on ngspice and LTspice a `.preprocess` line is
+# any unknown directive. Both are named `.PREPROCESS` as written, so the message names the two.
 _UNTYPED_PREPROCESS: dict[Dialect, bool] = {
     Dialect.NGSPICE: False,
     Dialect.LTSPICE: False,
@@ -109,6 +120,7 @@ class DiagnosticCode(StrEnum):
     MEASURE_MODE_MISMATCH = "MEASURE_MODE_MISMATCH"
     CONDITION_IGNORED = "CONDITION_IGNORED"
     PRINT_TYPE_MISMATCH = "PRINT_TYPE_MISMATCH"
+    NODE_COUNT_MISMATCH = "NODE_COUNT_MISMATCH"
 
 
 @dataclass(frozen=True, slots=True)
@@ -230,8 +242,11 @@ def collect_diagnostics(
     ``indented`` holds the xyce indented lines inside continued statements (the parse's
     ``indented_comments``), which are reported as an :class:`IndentedLine` is."""
     found: list[tuple[DiagnosticCode, Severity, str, Span]] = []
+    binning = model_binning(index.root)
     for reference in index.references:
         found.extend(_reference_findings(index, reference))
+        if _NODE_COUNT_CHECKS[index.dialect]:
+            found.extend(_node_count_findings(index, reference, binning))
     for scope in index.scopes:
         found.extend(_duplicate_findings(scope))
         if scope.elements and _INSTANCE_NODES[index.dialect] is not None:
@@ -271,8 +286,8 @@ def collect_diagnostics(
             span = item.name_span or item.span
             named = item.name
             if _UNTYPED_PREPROCESS[index.dialect] and index.root.fold(item.name) == ".preprocess":
-                # Only this form is untyped: REPLACEGROUND is a `PreprocessDirective`.
-                named = ".PREPROCESS ADDRESISTORS"
+                # Only these forms are untyped: REPLACEGROUND is a `PreprocessDirective`.
+                named = ".PREPROCESS ADDRESISTORS` or `REMOVEUNUSED"
             found.append(
                 (
                     DiagnosticCode.UNTYPED_DIRECTIVE_PRESERVED,
@@ -373,20 +388,28 @@ def _reference_findings(
         )
     owner = reference.owner
     target = reference.target
-    if (
-        reference.kind == "model"
-        and isinstance(target, ModelStatement)
-        and isinstance(owner, Component)
-        and not model_type_allowed(owner, target.model_type, index.dialect)
-    ):
+    bins = index.model_bins.get(reference)
+    checked = bins or ((target,) if isinstance(target, ModelStatement) else ())
+    if reference.kind != "model" or not isinstance(owner, Component):
+        checked = ()
+    for model in checked:
+        assert isinstance(owner, Component)
+        if model_type_allowed(owner, model.model_type, index.dialect):
+            continue
         cited = " (ngspice manual §2.5)" if index.dialect is Dialect.NGSPICE else ""
+        # A set of bins is checked bin by bin (decision 0031 item 8).
+        named = (
+            f"model set `{reference.name}`, whose bin `{model.name}` has type"
+            if bins
+            else f"model `{model.name}` of type"
+        )
         findings.append(
             (
                 DiagnosticCode.MODEL_TYPE_MISMATCH,
                 "warning",
-                f"`{owner.designator}` refers to model `{target.name}` of type "
-                f"`{target.model_type}`, but {element_phrase(owner)} takes "
-                f"{model_type_requirement(owner, index.dialect)}{cited}",
+                f"`{owner.designator}` refers to {named} `{model.model_type}`, but "
+                f"{element_phrase(owner)} takes {model_type_requirement(owner, index.dialect)}"
+                f"{cited}{model_type_outcome(owner, index.dialect)}",
                 reference.span,
             )
         )
@@ -481,6 +504,114 @@ def _numeric_model_findings(
             item.name_span,
         )
     ]
+
+
+# Whether a transistor line's node count is checked against its model's LEVEL (decision 0031 item
+# 5): Xyce ends the nodes by the model's level; ngspice and LTspice count by letter only.
+_NODE_COUNT_CHECKS: dict[Dialect, bool] = {
+    Dialect.NGSPICE: False,
+    Dialect.LTSPICE: False,
+    _XYCE: True,
+}
+# The fixed nodes of every transistor line, before which no name can be the model.
+_FIXED_NODES = 3
+# The parameter that selects a level's `tnodeout` range when the line sets it.
+_TNODEOUT = "tnodeout"
+
+
+def _node_count_findings(index: Index, reference: Reference, binning: bool) -> list[Finding]:
+    """On xyce, a Q, M, J or Z line whose node count its model's LEVEL does not take (decision
+    0031 item 5; xm4-tasks 5.1 points 4, 11 and 20), from ``xyce-levels.json``.
+
+    First, a node after the fixed three that names a visible model whose level takes the count
+    of nodes before it: Xyce takes that node as the model (point 4), so the line's own model is
+    not checked. Otherwise each model the line resolves to (each bin of a set, named) whose level
+    is known: a count outside the level's range (its ``tnodeout`` range when the line sets
+    ``TNODEOUT=``). Silent when the model is unresolved or its level unknown. Topology stays the
+    nodes written (P4)."""
+    owner = reference.owner
+    if reference.kind != "model" or not isinstance(owner, Transistor):
+        return []
+    scope = index.scope(reference.scope)
+    kind = type(owner)
+    default = default_level()
+    tnodeout = any(scope.fold(param.name) == _TNODEOUT for param in owner.params)
+    solver = _SOLVER[index.dialect]
+    for position, node in enumerate(owner.nodes[_FIXED_NODES:], start=_FIXED_NODES):
+        found = _lookup(scope, "models", node.name)
+        candidates = found[1][:1] if found else model_set(scope, node.name, kind, binning=binning)
+        for model in candidates:
+            assert isinstance(model, ModelStatement)
+            level = _model_level(model, default)
+            nodes = None if level is None else level_nodes(kind.__name__, level)
+            if nodes is None or not _takes(nodes, position, tnodeout):
+                continue
+            return [
+                (
+                    DiagnosticCode.NODE_COUNT_MISMATCH,
+                    "warning",
+                    f"node `{node.name}` of `{owner.designator}` names model `{model.name}`, "
+                    f"whose level {level} takes {_counts(nodes, tnodeout)}: after the {position} "
+                    f"nodes before it, {solver} takes `{node.name}` as the model, not "
+                    f"`{reference.name}`, and stops on the words after it; rename the node or "
+                    "the model",
+                    node.span,
+                )
+            ]
+    bins = index.model_bins.get(reference)
+    target = reference.target
+    models = bins or ((target,) if isinstance(target, ModelStatement) else ())
+    count = len(owner.nodes)
+    findings: list[Finding] = []
+    for model in models:
+        level = _model_level(model, default)
+        nodes = None if level is None else level_nodes(kind.__name__, level)
+        if nodes is None or _takes(nodes, count, tnodeout):
+            continue
+        least, most = nodes.range(tnodeout)
+        named = (
+            f"bin `{model.name}` of model set `{reference.name}`"
+            if bins
+            else (f"model `{model.name}`")
+        )
+        message = (
+            f"`{owner.designator}` connects {count} nodes, but {named} is level {level}, which "
+            f"takes {_counts(nodes, tnodeout)}"
+        )
+        span = reference.span
+        if count < least:
+            message += f"; {solver} stops on the line"
+        else:
+            extra = owner.nodes[most:]
+            span = Span(extra[0].span.start, extra[-1].span.end)
+            which = ", ".join(f"`{node.name}`" for node in extra)
+            numbers = f"node {most + 1}" if len(extra) == 1 else f"nodes {most + 1} to {count}"
+            outcome = {
+                "dropped": f"{solver} silently drops {numbers} ({which})",
+                "joined": (
+                    f"{solver} joins {numbers} ({which}) to internal nodes of the device, which "
+                    "makes a different circuit"
+                ),
+                "stops": f"{solver} stops on the line",
+                None: f"what {solver} does with {numbers} ({which}) was not observed",
+            }[nodes.extra]
+            message += f"; {outcome}"
+        findings.append((DiagnosticCode.NODE_COUNT_MISMATCH, "warning", message, span))
+    return findings
+
+
+def _takes(nodes: LevelNodes, count: int, tnodeout: bool) -> bool:
+    least, most = nodes.range(tnodeout)
+    return least <= count <= most
+
+
+def _counts(nodes: LevelNodes, tnodeout: bool) -> str:
+    """``4 nodes``, ``4 to 6 nodes``, ``5 to 7 nodes with `TNODEOUT=```."""
+    least, most = nodes.range(tnodeout)
+    counts = f"{least} nodes" if least == most else f"{least} to {most} nodes"
+    if tnodeout and nodes.tnodeout is not None:
+        counts += " with `TNODEOUT=`"
+    return counts
 
 
 # The parameters every enabled LTspice `@` needs in a `.fra` run; `flist=` does not replace them.

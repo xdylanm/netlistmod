@@ -207,12 +207,12 @@
       "xyce": "runs"
     },
     "removeunused.cir": {
-      "sha256": "192839b5b1fd8a8edf0fea9c30128e93a682a658e7d34eac5f3dc3fb1c4949ec",
+      "sha256": "368fd31996f46a3766e0f6e30fb896450227a40a7ec62564e4b4b04c60e42b26",
       "line": 6,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "UnsupportedConstruct (XY-UNS-001)",
-      "xyce": "runs"
+      "column": 28,
+      "error": "ParseError",
+      "note": "`j` is not a letter of `.PREPROCESS REMOVEUNUSED` (XY-PRE-003)",
+      "xyce": "stops"
     },
     "step_expression.cir": {
       "sha256": "deb5379c4332d5d3b7a512f306473742b79395a63e3f4dafe939c5d4ed4a7ba7",

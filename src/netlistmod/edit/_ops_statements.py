@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
-from netlistmod.document import ScopePath
+from netlistmod.document import Scope, ScopePath
 from netlistmod.document.document import Netlist
-from netlistmod.document.index import _FIRST_PARAM_WINS, scope_functions
+from netlistmod.document.index import (
+    _FIRST_PARAM_WINS,
+    model_binning,
+    model_set,
+    scope_functions,
+)
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _VALUE,
@@ -19,6 +24,7 @@ from netlistmod.edit.plan import Edit, SlotCheck
 from netlistmod.errors import EditError, ParseError, UnsupportedConstruct
 from netlistmod.model.nodes import (
     ModelStatement,
+    Mosfet,
     ParamStatement,
 )
 from netlistmod.model.transform import parse
@@ -87,6 +93,7 @@ def set_model_param(
     found = resolve_scope(netlist, scope, in_definition)
     definitions = found.models.get(found.fold(model))
     if not definitions:
+        _refuse_bin_set(netlist, found, model)
         raise EditError(f"no model `{model}` in {found.describe()}")
     statement = definitions[0]  # ngspice uses the first definition (decision 0006)
     reason = f"set_model_param {model} {name}"
@@ -122,6 +129,18 @@ def set_model_param(
     # `.model dm d` -> `.model dm d n=1.5`.
     point = statement.model_type_span.end
     return _assign((), statement, name, value, reason, point, folded=found.fold)
+
+
+def _refuse_bin_set(netlist: Netlist, scope: Scope, model: str) -> None:
+    """Refuse the name of an xyce set of bins (``nch`` for ``nch.1``, ``nch.2``): it names no
+    one model, so the caller names the bin (decision 0031 item 9)."""
+    bins = model_set(scope, model, Mosfet, binning=model_binning(netlist.scope()))
+    if bins:
+        listed = ", ".join(f"`{entry.name}`" for entry in bins)
+        raise EditError(
+            f"`{model}` names a set of binned models ({listed}), not one model; set the "
+            "parameter on the bin it belongs to, by its full name"
+        )
 
 
 def _list_values(

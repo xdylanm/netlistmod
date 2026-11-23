@@ -135,7 +135,7 @@ differs:
 - **`PreprocessDirective`** (`_DotCommand` fields, `option: Identifier`, `value: Identifier`,
   `enabled: bool`): `.PREPROCESS REPLACEGROUND TRUE|FALSE`, allowed in a body; a second one is a
   `ParseError`. It is topology (net identity), not a `Directive`. `.PREPROCESS ADDRESISTORS` is an
-  `UnknownDirective` (X-M2 B4), `REMOVEUNUSED` is `UnsupportedConstruct`, and any other word a
+  `UnknownDirective` (X-M2 B4), and so is `REMOVEUNUSED` (X-M4 B4); any other word is a
   `ParseError`.
 - **`.GLOBAL`** is `GlobalDirective`, with no commas between its names.
 - **`.PARAM`** is `ParamStatement`, with commas allowed between assignments, values that are
@@ -189,8 +189,13 @@ differs:
     `.PRINT` was one until X-M2.1 (below).
   - **`.PREPROCESS ADDRESISTORS ONETERMINAL|NODCPATH value`** is an `UnknownDirective`, allowed in
     a body, one of each kind per netlist (a second is a `ParseError`).
+  - **`.PREPROCESS REMOVEUNUSED letters`** (X-M4 B4; decision 0031 item 10) is an
+    `UnknownDirective` too: a comma list of at least one of C, D, I, L, M, Q, R and V (a repeated
+    letter read), one line per netlist, allowed in a body. An empty list, another letter or word,
+    braces, a trailing comma and blank separators are a `ParseError`. The devices Xyce removes stay
+    in the netlist and its topology (P4), with no device warning.
   - Any other dot-command is a `ParseError` ("not an Xyce dot-command"), with hints for `.TEMP`,
-    `.PROBE`, `.title` and `.opt`; `.PREPROCESS REMOVEUNUSED` stays `UnsupportedConstruct`.
+    `.PROBE`, `.title` and `.opt`.
   - In a body the analyses, `.STEP`, `.OPTIONS`, `.MEAS`, `.DATA` and the untyped commands are a
     `ParseError` (Xyce silently ignores them there); `.IC`, `.DCVOLT`, `.NODESET` and
     `.PREPROCESS` are allowed.

@@ -328,6 +328,20 @@ verification and placement. The dialect branches of the operations are tables ke
   top level, and a body `.IC`, `.DCVOLT` or `.NODESET` is not replaced or removed (directive
   operations edit top-level lines only).
 
+- **Transistors** (X-M4 B4; decision 0031 item 9; per-dialect tables `_NAMED_AREA_ADDED` and
+  `_NO_AREA` in `_ops_common.py`): `set_param(…, "area", …)` on Q, J and Z replaces an area where
+  it is written (positional, right after the model, or `area=`) and otherwise adds `area=v` at
+  the end of the line, since `area=` runs beside any parameter and after `off` while Xyce stops on
+  most positional areas followed by parameters (G1 point 21); on M it is an `EditError` (a Xyce
+  MOSFET has no area). `remove_param` refuses a positional area and removes `area=`, `IC=` (whole)
+  and `TNODEOUT=` as parameters; `set_param("ic", …)` replaces the whole list, and the reparse
+  checks its count; `TNODEOUT=` is an ordinary parameter (G1 point 24 (b)). `set_model` on an M
+  takes the name of a set of bins (`nch` for `nch.1`, `nch.2`), resolved as the index resolves it
+  (`index.model_set`), and refuses a set with a bin of another type; its type messages say that
+  Xyce stops, with the VDMOS hint on M (`models.model_type_outcome`). `set_model_param` on a set
+  name is an `EditError` that asks for the bin. `tests/edits/test_xyce_transistor_edits.py`
+  holds their golden diffs and refusals.
+
 `tests/edits/test_xyce_edits.py` holds the golden diffs and refusals, and
 `tests/solver/test_xyce_edit_results.py` checks that edited netlists still run in Xyce with the
 expected value.

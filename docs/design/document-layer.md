@@ -175,6 +175,7 @@ separators=(",", ":"))` encoded as UTF-8.
 | `MEASURE_MODE_MISMATCH` | warning | the mode | an xyce `.MEAS` mode whose analysis does not run (FFT's is `.TRAN`), or FFT without `.FFT` (section 9) |
 | `CONDITION_IGNORED` | warning | the node | an xyce condition in a subcircuit body on a global node (section 9) |
 | `PRINT_TYPE_MISMATCH` | warning | the print type | an xyce `.PRINT` type that does not agree with the first analysis, or whose analysis does not run (section 9) |
+| `NODE_COUNT_MISMATCH` | warning | the model name (too few nodes), the extra nodes (too many), or the node taken as the model | an xyce Q, M, J or Z line whose node count the LEVEL of its visible model does not take, or a node before the model that names a visible model whose level takes the count so far (section 9) |
 
 Order: by span start, then span end, then code order. `MODEL_TYPE_MISMATCH` (warning, at
 the model name) is specified with the edit layer ([edit-layer.md](./edit-layer.md) §6), because
@@ -342,3 +343,22 @@ decision 0027 items 1 and 3):
   theirs, V and I `DCV0`), only when the name resolves to that device and not to a parameter, so
   `R2` and `R2:R` are one quantity; Xyce nests them silently. LTspice keeps its `.step` rule and
   message (a per-dialect table, `_STEP_REPEATS`).
+- **Transistors** (X-M4; decision 0031 items 5 to 8): Q takes `NPN`/`PNP`, M `NMOS`/`PMOS` (no
+  VDMOS type: `LEVEL=18`), J `NJF`/`PJF`, Z `NMF`/`PMF`. `MODEL_TYPE_MISMATCH` on a transistor adds
+  that Xyce 7.10 stops (no valid model card) and, on M, the VDMOS hint (`models.model_type_outcome`,
+  per-dialect tables). **Binning:** an M line's model that no exact name in the scope chain
+  matches resolves to the set of models `<name>.<suffix>` of the chain (any non-empty suffix,
+  folded; `index.model_set`), unless the first `MODEL_BINNING` of a top-level `.OPTIONS PARSER`
+  is a literal `false` or `0` (`index.model_binning`); never for a `head:param` target. The
+  reference targets the first bin (scope chain, then source order); `Index.model_bins`
+  (internal, X-M8 checklist) maps it to the whole set. `UNRESOLVED_MODEL` is silent for a set;
+  `MODEL_TYPE_MISMATCH` names each bin of another type. The library does not select a bin.
+  **`NODE_COUNT_MISMATCH`** (warning; `_NODE_COUNT_CHECKS`, a per-dialect table): from
+  `model/xyce-levels.json` (`model.xyce_levels`), a model's LEVEL is its last `level` parameter
+  when a plain integer-valued number, else level 1 if it writes none, else unknown (silent). A
+  line whose count is outside its level's range (the `tnodeout` range when it sets `TNODEOUT=`)
+  is reported per resolved model or bin, saying what Xyce does: stops (too few always), drops
+  the extra nodes, or joins them to internal nodes. First, a node after the fixed three that
+  names a visible model (or set) whose level takes the count of the nodes before it is reported
+  instead: Xyce takes it as the model. Silent when the model is unresolved. Topology stays the
+  nodes written (P4).

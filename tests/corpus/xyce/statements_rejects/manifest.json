@@ -86,12 +86,12 @@
       "xyce": "stops"
     },
     "preprocess_other_form.cir": {
-      "sha256": "0be47ff2945389f5afcafb76339bf9aeaf3b3dce811106cc84d37c46a2789caa",
+      "sha256": "e399f4c7097e736bf65f90d102e693579bc853e6e028d458149a804268c19ff6",
       "line": 2,
-      "column": 1,
-      "error": "UnsupportedConstruct",
-      "note": "`.PREPROCESS REMOVEUNUSED` deletes devices, so it is not read (XY-UNS-001)",
-      "xyce": "runs"
+      "column": 13,
+      "error": "ParseError",
+      "note": "`.PREPROCESS REMOVEUNUSED` lists no device letter (XY-PRE-003)",
+      "xyce": "stops"
     },
     "subckt_ground_port.cir": {
       "sha256": "d9f07c256ab532dbf65b106aec861ccd681e8c8d21e9ea147474b06e7fcaa1a8",

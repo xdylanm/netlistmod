@@ -21,6 +21,7 @@ GRAMMAR_RESOURCES = {
     "netlistmod/grammar/formula_ltspice.lark",
     "netlistmod/grammar/formula-reserved.json",
     "netlistmod/model/model-types.json",
+    "netlistmod/model/xyce-levels.json",
 }
 
 

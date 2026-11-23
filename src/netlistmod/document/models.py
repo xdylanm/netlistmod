@@ -4,18 +4,18 @@ The table is data (``model/model-types.json``, read by :mod:`netlistmod.model.mo
 element class name maps to the ``.model`` types it may refer to, compared case-insensitively.
 ngspice's code models and OSDI devices take any type that is not a built-in one (decision 0020
 items 5 and 6). It backs the ``MODEL_TYPE_MISMATCH`` diagnostic and the type check of
-``set_model``.
+``set_model``, whose messages on xyce also say what Xyce does (decision 0031 item 6).
 """
 
 from __future__ import annotations
 
-from netlistmod.dialects import Dialect
+from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.model.model_types import (
     builtin_model_types,
     model_type_table,
     takes_any_other_type,
 )
-from netlistmod.model.nodes import Component
+from netlistmod.model.nodes import Component, Mosfet, Transistor
 
 
 def allowed_model_types(element: Component, dialect: Dialect) -> frozenset[str]:
@@ -46,3 +46,40 @@ def model_type_requirement(element: Component, dialect: Dialect) -> str:
         f"`{kind.upper()}`" for kind in sorted(allowed_model_types(element, dialect))
     )
     return f"a model of type {allowed}"
+
+
+# What a wrong model type does to the solver, where it was observed: Xyce 7.10 stops on a Q, M,
+# J or Z line whose model has another type, as it does on a missing model (decision 0031 item 6;
+# xm4-tasks 5.1 point 14). The other dialects' messages state no outcome.
+_MISMATCH_STOPS: dict[Dialect, tuple[type[Component], ...]] = {
+    Dialect.NGSPICE: (),
+    Dialect.LTSPICE: (),
+    _XYCE: (Transistor,),
+}
+# The hint for an element class whose dialect has no type of a name users may expect: Xyce's
+# VDMOS is an NMOS or PMOS model at LEVEL=18 ([xyce-ref] Table 2-36 p180, §2.3.20.8 p377).
+_TYPE_HINTS: dict[Dialect, dict[type[Component], str]] = {
+    Dialect.NGSPICE: {},
+    Dialect.LTSPICE: {},
+    _XYCE: {
+        Mosfet: (
+            "a VDMOS is an `NMOS` or `PMOS` model with `LEVEL=18` (Xyce reference manual "
+            "Table 2-36 p180)"
+        )
+    },
+}
+
+
+def model_type_outcome(element: Component, dialect: Dialect) -> str:
+    """What a message about a model of the wrong type adds: on xyce, for a transistor, that Xyce
+    7.10 stops and, on an M, the VDMOS hint; empty elsewhere. Starts with ``; `` when not
+    empty."""
+    parts = []
+    if isinstance(element, _MISMATCH_STOPS[dialect]):
+        parts.append("Xyce 7.10 stops on the line (it finds no valid model card)")
+    hint = next(
+        (text for kind, text in _TYPE_HINTS[dialect].items() if isinstance(element, kind)), None
+    )
+    if hint is not None:
+        parts.append(hint)
+    return "".join(f"; {part}" for part in parts)

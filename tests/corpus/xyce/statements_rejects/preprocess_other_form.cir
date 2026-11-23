@@ -1,5 +1,5 @@
-reject: the other .PREPROCESS forms are not read
-.preprocess removeunused c
+reject: a .PREPROCESS REMOVEUNUSED line without letters
+.preprocess removeunused
 V1 n 0 1
 R1 n 0 1k
 .END

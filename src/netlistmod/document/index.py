@@ -24,6 +24,12 @@ The scope model is ``docs/grammars/<dialect>/scoping.md`` (decision 0006 items 3
   reference. A ``DATA=`` field is a ``data`` reference to a top-level ``.DATA`` table (the last of
   a repeated name), and each node of an ``.IC``, ``.DCVOLT`` or ``.NODESET`` condition is a
   ``node`` reference in the scope of its line.
+- On xyce an M line's model name may name a set of bins (decision 0031 items 7 and 8): when no
+  model of the exact name is visible anywhere in the scope chain, the models ``<name>.<suffix>``
+  of the chain (any non-empty suffix, folded) are its bins, unless ``.OPTIONS PARSER`` writes a
+  literal ``MODEL_BINNING=false`` (or ``0``). The reference targets the first bin (scope chain,
+  then source order), and ``Index.model_bins`` holds the whole set. A ``head:param`` sweep
+  target is looked up by its exact name only.
 
 Items inside opaque ``.if`` blocks and ``.include``/``.lib`` files are not seen (§7.8).
 """
@@ -39,6 +45,7 @@ from netlistmod.dialects import _XYCE, Dialect
 from netlistmod.document.lines import Line, Lines, ScopePath
 from netlistmod.document.names import fold, is_automatic_global, is_ground, net_name
 from netlistmod.grammar.formula import builtin_functions, parse_formula
+from netlistmod.model._numbers import reads_as_number
 from netlistmod.model.nodes import (
     AcDirective,
     BehavioralSource,
@@ -63,10 +70,12 @@ from netlistmod.model.nodes import (
     Inductor,
     LossyLine,
     ModelStatement,
+    Mosfet,
     MutualCoupling,
     NodesetDirective,
     OpaqueBlock,
     OpaqueStatement,
+    OptionsDirective,
     OsdiDevice,
     ParamStatement,
     PortSource,
@@ -84,7 +93,13 @@ from netlistmod.model.nodes import (
     TxlLine,
     VoltageSource,
 )
-from netlistmod.model.values import Formula, FunctionDefinition, ParamAssignment
+from netlistmod.model.values import (
+    Formula,
+    FunctionDefinition,
+    Identifier,
+    NumericValue,
+    ParamAssignment,
+)
 from netlistmod.source import SourceText, Span
 
 _T = TypeVar("_T")
@@ -127,6 +142,17 @@ _CONDITION_NODES: dict[Dialect, bool] = {
     Dialect.LTSPICE: False,
     _XYCE: True,
 }
+# The elements whose model may be a set of bins, `nch` naming `nch.1`, `nch.2` (decision 0031
+# item 7): an xyce M only; ngspice and LTspice do not bin by name here.
+_BINNED: dict[Dialect, tuple[type[Component], ...]] = {
+    Dialect.NGSPICE: (),
+    Dialect.LTSPICE: (),
+    _XYCE: (Mosfet,),
+}
+# The `.OPTIONS PARSER` item that a literal false or 0 turns binning off with ([xyce-ref]
+# §2.1.25.21 p119).
+_BINNING_PACKAGE = "parser"
+_BINNING_OPTION = "model_binning"
 # The primary parameter of a device that an xyce `.STEP` or `.DC` sweeps by its name alone, so
 # that `R2` and `R2:R` are one quantity (xm2-tasks 5.1 point 16; [xyce-ref] §2.1.36 p155).
 _PRIMARY_PARAMS: dict[type, str] = {
@@ -418,8 +444,10 @@ class Index:
         late: list[Reference] = []
         targets: dict[Reference, SweepTarget] = {}
         conditions: list[Reference] = []
+        bins: dict[Reference, tuple[ModelStatement, ...]] = {}
+        binning = model_binning(self.root)
         for scope in self.scopes:
-            _collect(scope, references, late, targets, conditions)
+            _collect(scope, references, late, targets, conditions, bins, binning)
         self.references = tuple(sorted(references, key=lambda ref: ref.span.start))
         self.late_param_uses = frozenset(late)
         # The xyce `.DC` and `.STEP` targets among the references, with what they may name.
@@ -427,6 +455,10 @@ class Index:
         # The nodes that xyce `.IC`, `.DCVOLT` and `.NODESET` conditions set; a node that an
         # expression in a condition's value reads is an ordinary expression node, not one of these.
         self.condition_nodes = frozenset(conditions)
+        # The xyce M lines' model references that resolve to a set of bins, each with every bin
+        # in order (scope chain, then source order); the reference targets the first (decision
+        # 0031 item 8). Read-only; X-M8 decides its name (xyce-plan.md section 8.2).
+        self.model_bins: Mapping[Reference, tuple[ModelStatement, ...]] = MappingProxyType(bins)
 
     def scope(self, path: ScopePath = ()) -> Scope:
         """Return the scope at ``path`` (names compared case-insensitively); ``KeyError``.
@@ -503,6 +535,74 @@ def _lookup(
     return None
 
 
+def model_binning(root: Scope) -> bool:
+    """Whether an xyce netlist binds model names (decision 0031 item 7): yes, unless the first
+    ``MODEL_BINNING`` item of a top-level ``.OPTIONS PARSER`` line is a literal ``false`` or
+    ``0`` (Xyce uses the first value of a repeated option; the package takes no expression)."""
+    for line in root.lines:
+        item = line.item
+        if not isinstance(item, OptionsDirective) or item.package is None:
+            continue
+        if root.fold(item.package.name) != _BINNING_PACKAGE:
+            continue
+        for option in item.options:
+            if root.fold(option.name) != _BINNING_OPTION:
+                continue
+            value = option.value
+            if isinstance(value, Identifier):
+                return root.fold(value.name) != "false"
+            return not (isinstance(value, NumericValue) and _plain_number(value.text) == 0)
+    return True
+
+
+def _plain_number(text: str) -> float | None:
+    """The value of a number written without a scale factor or unit (``10``, ``10.0``, ``1e1``);
+    ``None`` for any other text."""
+    if not reads_as_number(text) or text[-1:].isalpha():
+        return None
+    try:
+        return float(text)
+    except ValueError:
+        return None
+
+
+def _model_level(model: ModelStatement, default: int) -> int | None:
+    """An xyce model's LEVEL (decision 0031 item 5): its last ``level`` parameter, when that is a
+    plain integer-valued number (``10``, ``10.0``, ``1e1``); ``default`` when it writes none;
+    ``None`` (unknown) for any other value: an expression, a fraction, a scale factor."""
+    levels = [param for param in model.params if param.name.lower() == "level"]
+    if not levels:
+        return default
+    value = levels[-1].value
+    number = _plain_number(value.text) if isinstance(value, NumericValue) else None
+    if number is None or not number.is_integer():
+        return None
+    return int(number)
+
+
+def model_set(
+    scope: Scope, name: str, kind: type[Component], *, binning: bool
+) -> tuple[ModelStatement, ...]:
+    """The bins a ``kind`` line in ``scope`` refers to by the model name ``name`` (decision 0031
+    item 7): empty if a model of that exact name is visible anywhere in the scope chain, if
+    ``kind`` does not bin in the dialect, or if ``binning`` is off; otherwise the first definition
+    of each model ``<name>.<suffix>`` (any non-empty suffix, names folded) of the scope chain, an
+    inner scope's before an outer one's, each scope's in source order."""
+    if not binning or not issubclass(kind, _BINNED[scope.dialect]):
+        return ()
+    if _lookup(scope, "models", name) is not None:
+        return ()
+    prefix = f"{scope.fold(name)}."
+    seen: set[str] = set()
+    bins: list[ModelStatement] = []
+    for candidate in scope.chain():
+        for key, definitions in candidate.models.items():
+            if key.startswith(prefix) and len(key) > len(prefix) and key not in seen:
+                seen.add(key)
+                bins.append(definitions[0])
+    return tuple(bins)
+
+
 def definition_scope(scope: Scope, name: str) -> Scope | None:
     """The scope of the subcircuit ``name`` as seen from ``scope``, if the netlist defines it."""
     found = _lookup(scope, "subckts", name)
@@ -517,9 +617,12 @@ def _collect(
     late: list[Reference],
     targets: dict[Reference, SweepTarget],
     conditions: list[Reference],
+    bins: dict[Reference, tuple[ModelStatement, ...]],
+    binning: bool,
 ) -> None:
     """Add the references made from ``scope`` (not from nested definitions); the nodes that
-    initial conditions set go in ``conditions`` as well."""
+    initial conditions set go in ``conditions`` as well, and an xyce M's set of bins in
+    ``bins``."""
     if scope.definition is not None:
         for assignment in scope.definition.params:
             _formula_references(scope, scope.definition, assignment, references, late)
@@ -544,9 +647,15 @@ def _collect(
         ):
             found = _lookup(scope, "models", item.model.model_name)
             target = found[1][0] if found else None
-            references.append(
-                Reference("model", item.model.model_name, item.model.span, scope.path, item, target)
+            binned = model_set(scope, item.model.model_name, type(item), binning=binning)
+            if binned:
+                target = binned[0]
+            reference = Reference(
+                "model", item.model.model_name, item.model.span, scope.path, item, target
             )
+            references.append(reference)
+            if binned:
+                bins[reference] = binned
         elif isinstance(item, SubcktInstance):
             _instance_references(scope, item, references)
         # A new chain on purpose: a W line needs both its model reference above and this one.

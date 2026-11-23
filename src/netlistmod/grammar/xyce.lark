@@ -12,9 +12,9 @@
 // (decision 0028) reads the directives, and closes the list of dot-commands (B4, decision 0028 item 1): the
 // typed ones, the untyped ones read as UnknownDirective (DOT_NAME), and `.PREPROCESS ADDRESISTORS`;
 // any other dot-command has no terminal, so the parser stops at its first character and the
-// loader raises a ParseError ("not an Xyce dot-command"). `.PREPROCESS REMOVEUNUSED` raises
-// UnsupportedConstruct from the transformer; an element line of another letter has no rule, so
-// the loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and A and N,
+// loader raises a ParseError ("not an Xyce dot-command"). `.PREPROCESS REMOVEUNUSED` is an
+// UnknownDirective too since X-M4 (decision 0031 item 10); an element line of another letter has
+// no rule, so the loader raises UnsupportedConstruct for its `planned` letter (xyce-devices.json), and A and N,
 // which are not Xyce letters, are a ParseError. A `+` line after comment or blank lines that
 // follow a refused line joins it, and is refused with it. A `+` line with only the title,
 // comments and blank lines before it is a ParseError: the title is a comment, so there is no line
@@ -233,13 +233,34 @@ ADDRESISTORS_KW.2: "addresistors"i
 ONETERMINAL_KW.2: "oneterminal"i
 NODCPATH_KW.2: "nodcpath"i
 
-// .PREPROCESS REMOVEUNUSED ([xyce-ref] §2.1.29 p126) deletes devices, so it changes the circuit
-// (P4): refused whole as unsupported, until X-M4.
-// spec: XY-UNS-001
-preprocess_removeunused: PREPROCESS_KW pp_removeunused REST_TEXT* NL
+// .PREPROCESS REMOVEUNUSED letters ([xyce-ref] §2.1.29 p126; decision 0031 item 10): Xyce removes
+// each listed device whose terminals are one node, which changes the circuit it runs but not the
+// netlist the library reads, so the line is an UnknownDirective, as ADDRESISTORS is, and the
+// topology stays as written (P4). A closed comma list of at least one of C, D, I, L, M, Q, R and V
+// in any case (a repeated letter is read, as Xyce runs it); one line per netlist (the transformer
+// refuses a second), allowed in a subcircuit body. An empty list (ru_empty), another word, letter
+// or a braced or quoted value in a letter's place (ru_bad_first, ru_bad_next), a trailing comma
+// (ru_trailing) and a letter or word after a blank (ru_blank) are recognised only to be refused.
+// spec: XY-PRE-003
+preprocess_removeunused: PREPROCESS_KW pp_removeunused ru_letter ru_next_letter* (NL | eol)
+                       | PREPROCESS_KW pp_removeunused ru_letter ru_next_letter* (ru_trailing | ru_bad_next | ru_blank)
+                       | PREPROCESS_KW pp_removeunused ru_bad_first
+                       | PREPROCESS_KW pp_removeunused (NL | eol)  -> ru_empty
 pp_removeunused: SEP REMOVEUNUSED_KW
                | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) pp_removeunused
+ru_letter: SEP RU_LETTER
+         | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ru_letter
+ru_next_letter: CSEP (RU_LETTER | ru_letter)
+              | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ru_next_letter
+ru_bad_first: SEP _ru_other REST_TEXT* NL
+            | (SEP | TRAILING_COMMENT | INDENTED_TRAILING) ru_bad_first
+ru_bad_next: CSEP _ru_other REST_TEXT* NL
+ru_trailing: CSEP (NL | eol)
+ru_blank: SEP (RU_LETTER | _ru_other) REST_TEXT* NL
+_ru_other: WORD | BRACE_FORMULA | QUOTE_FORMULA
 REMOVEUNUSED_KW.2: "removeunused"i
+// A letter is a whole field: `CD` is a WORD, not C then D.
+RU_LETTER.3: /[cdilmqrv](?![^ \t\r\n,;])/i
 
 // Any other word after .PREPROCESS is not one of its forms, recognised with the rest of the line
 // only to be refused.

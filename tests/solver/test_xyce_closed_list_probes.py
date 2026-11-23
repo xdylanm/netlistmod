@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from netlistmod import DiagnosticCode, Netlist, ParseError, UnknownDirective, UnsupportedConstruct
+from netlistmod import DiagnosticCode, Netlist, ParseError, UnknownDirective
 from netlistmod.dialects import _XYCE
 from netlistmod.model.nodes import PrintDirective
 from tests.support.solvers import Solver
@@ -322,19 +322,23 @@ def test_addresistors_runs_in_a_body(solver: Solver, tmp_path: Path) -> None:
 
 def test_removeunused_deletes_devices(solver: Solver, tmp_path: Path) -> None:
     """REMOVEUNUSED deletes a device whose terminals share a node ([xyce-ref] §2.1.29 p126), so
-    V2 across node 3 is gone, and its branch with it; that changes the circuit (P4), so the
-    library keeps the line `UnsupportedConstruct` (point 4). A second line stops Xyce."""
+    V2 across node 3 is gone, and its branch with it. That changes the circuit Xyce runs, not
+    the netlist, so the library reads the line as an `UnknownDirective` and keeps the topology as
+    written (decision 0031 item 10, XY-PRE-003). A second line stops Xyce, and the library
+    refuses it."""
     head = f"{_DIVIDER}R3 2 2 1k\nV2 3 3 1\nR4 3 0 1k\n"
     kept = names(solver, tmp_path / "kept", f"{head}.op\n.end\n")
     removed = names(
         solver, tmp_path / "removed", f"{head}.preprocess removeunused r,v\n.op\n.end\n"
     )
     assert "v2_branch" in kept and "v2_branch" not in removed
-    with pytest.raises(UnsupportedConstruct):
-        _library(f"{head}.preprocess removeunused r,v\n.op\n.end\n")
+    read = _library(f"{head}.preprocess removeunused r,v\n.op\n.end\n")
+    assert isinstance(read.lines[-3].item, UnknownDirective)
+    assert read.signature() == _library(f"{head}.op\n.end\n").signature()
     twice = f"{head}.preprocess removeunused v\n.preprocess removeunused r\n.op\n.end\n"
     result = run(solver, tmp_path / "twice", twice)
     assert result.returncode != 0 and "Multiple .PREPROCESS REMOVEUNUSED" in _messages(result)
+    assert "a second `.PREPROCESS REMOVEUNUSED`" in _refused(twice)
 
 
 # Directives in a subcircuit body (XY-DIR-003)

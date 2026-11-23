@@ -6,11 +6,18 @@ from collections.abc import Callable
 
 from netlistmod.document import ScopePath
 from netlistmod.document.document import Netlist
-from netlistmod.document.models import model_type_allowed, model_type_requirement
+from netlistmod.document.index import model_binning, model_set
+from netlistmod.document.models import (
+    model_type_allowed,
+    model_type_outcome,
+    model_type_requirement,
+)
 from netlistmod.edit import conventions
 from netlistmod.edit._ops_common import (
     _LTSPICE_FORMS,
     _MODEL,
+    _NAMED_AREA_ADDED,
+    _NO_AREA,
     _PORT_PARAMS,
     _POSITIONAL_AREA,
     _POSITIONAL_AREAS,
@@ -158,7 +165,9 @@ def set_param(
     a T, U, Y or P line (decision 0019; a T keeps its spelling of ``Z0=`` or ``Zo=``), or one of an
     ngspice N, an LTspice A or an ``@`` line (decision 0020 item 9).
     ``area`` goes in the positional slot where the dialect writes one (decision 0014 item 5),
-    unless the line already writes ``area=``."""
+    unless the line already writes ``area=``; an xyce Q, J or Z without an area gets ``area=v``
+    at the end of the line, and an xyce M, which has no area, refuses it (decision 0031 item
+    9)."""
     element = _element(netlist, designator, scope, in_definition)
     reason = f"set_param {designator} {name}"
     found_fold = netlist.scope(scope).fold
@@ -266,7 +275,16 @@ def set_param(
             return _assign(element.params, element, name, value, reason, folded=found_fold)
         if element.area is not None:
             return [Edit(element.area.span, value, reason, (_VALUE,))]
+        if issubclass(type(element), _NAMED_AREA_ADDED[netlist.dialect]):
+            # xyce Q, J, Z: `area=v` at the end of the line (decision 0031 item 9).
+            return _assign(element.params, element, name, value, reason, folded=found_fold)
         return [_insert(element.model.span.end, conventions.field(value), reason, _VALUE, 1)]
+    if folded == _POSITIONAL_AREA and issubclass(type(element), _NO_AREA[netlist.dialect]):
+        raise EditError(
+            f"`{designator}` is {_a_kind(element)}, which has no area on "
+            f"{netlist.dialect.display_name} (Xyce reference manual §2.3.20 p292); scale it with "
+            "`M=` or its geometry instead"
+        )
     if ltspice and isinstance(element, BehavioralSource):
         after = _before_laplace(element, folded, found_fold)
         return _assign(element.params, element, name, value, reason, after, folded=found_fold)
@@ -382,7 +400,9 @@ def set_model(
     round 1; decisions 0014 and 0015: S takes an SW model and W a CSW model; decision 0019: O takes
     LTRA, U URC, Y TXL and P CPL; decision 0020: A and N take any type that is not built in). On
     xyce the model of an R, C or L goes right after the nodes, also beside a value written ``R=``,
-    ``C=`` or ``L=`` (decision 0027 item 5)."""
+    ``C=`` or ``L=`` (decision 0027 item 5). An xyce M may take the name of a set of bins
+    (``nch`` for ``nch.1``, ``nch.2``), resolved as the index resolves it; a set with a bin whose
+    type the M does not take is refused (decision 0031 item 9)."""
     element = _element(netlist, designator, scope, in_definition)
     if isinstance(element, LosslessLine):
         raise EditError(f"`{designator}` is {_a_kind(element)} and has no model")
@@ -421,11 +441,27 @@ def set_model(
     chain = tuple(netlist.scope(scope).chain())
     key = chain[0].fold(model)
     definition = next((found.models[key][0] for found in chain if key in found.models), None)
+    # An xyce M may name a set of bins, resolved as the index resolves it (decision 0031 item 9).
+    bins = model_set(chain[0], model, type(element), binning=model_binning(netlist.scope()))
     if definition is not None:
         if not model_type_allowed(element, definition.model_type, netlist.dialect):
             raise EditError(
                 f"model `{model}` has type `{definition.model_type}`, but `{designator}` "
                 f"takes {model_type_requirement(element, netlist.dialect)}"
+                f"{model_type_outcome(element, netlist.dialect)}"
+            )
+    elif bins:
+        wrong = [
+            entry
+            for entry in bins
+            if not model_type_allowed(element, entry.model_type, netlist.dialect)
+        ]
+        if wrong:
+            listed = ", ".join(f"`{entry.name}` of type `{entry.model_type}`" for entry in wrong)
+            raise EditError(
+                f"model `{model}` names a set of bins, among them {listed}, but `{designator}` "
+                f"takes {model_type_requirement(element, netlist.dialect)}"
+                f"{model_type_outcome(element, netlist.dialect)}"
             )
     else:
         searched = ", ".join(found.describe() for found in chain)

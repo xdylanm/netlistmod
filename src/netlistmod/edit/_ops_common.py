@@ -163,6 +163,22 @@ _POSITIONAL_AREAS: dict[Dialect, tuple[type[Component], ...]] = {
     Dialect.LTSPICE: (Diode, BipolarTransistor, Jfet, Mesfet),
     _XYCE: (Diode, BipolarTransistor, Jfet, Mesfet),
 }
+# The elements of `_POSITIONAL_AREAS` to which set_param adds a missing area as `area=v` at the end
+# of the line, not in the positional slot: Xyce's Q, J and Z, since `area=` runs beside any
+# parameter and after `off`, while Xyce stops on most positional areas followed by parameters
+# (decision 0031 item 9; G1 point 21). An existing area is still replaced where it is written.
+_NAMED_AREA_ADDED: dict[Dialect, tuple[type[Component], ...]] = {
+    Dialect.NGSPICE: (),
+    Dialect.LTSPICE: (),
+    _XYCE: (BipolarTransistor, Jfet, Mesfet),
+}
+# The transistors that have no area in the dialect, so that set_param refuses `area`: Xyce's M
+# (decision 0031 item 3), with its own message; on ngspice and LTspice the reparse decides.
+_NO_AREA: dict[Dialect, tuple[type[Component], ...]] = {
+    Dialect.NGSPICE: (),
+    Dialect.LTSPICE: (),
+    _XYCE: (Mosfet,),
+}
 
 
 # Whether the edit of an element field keeps comments over emptied `+` lines on the line of the
