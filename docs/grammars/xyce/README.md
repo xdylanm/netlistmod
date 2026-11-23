@@ -74,7 +74,7 @@ X-M0 read the structure of a netlist (decision 0026). X-M1 (decision 0027) adds,
     (`XY-RCL-001`);
   - K with an optional CORE model after the coupling (`XY-MUT-001`), D with its model, an
     optional positional area, flags and parameters (`XY-DIO-001`);
-  - V and I with their DC and AC parts (`XY-SRC-001`; X-M3 adds the transient functions);
+  - V and I with their DC and AC parts (`XY-SRC-001`; the transient functions from X-M3, `XY-SRC-002` to `XY-SRC-004`);
   - X with optional `PARAMS:` and `M=` (`XY-SUB-001`).
 
 - **B7, the instance-parameter lists:** R, C, L and D take only the names of their
@@ -210,10 +210,11 @@ express or check the form). Its sections sort the rows by what the library does 
 - **The manual is silent or imprecise** (`imprecise`): the readings that rest on Xyce alone.
 
 The rest is planned by milestone in the xyce plan, section 8: the remaining devices, from X-M4.
-The records of X-M1, X-M2 and X-M2.1 are
+The records of X-M1, X-M2, X-M2.1 and X-M3 are
 [archive/xyce/xm1-tasks.md](../../design/archive/xyce/xm1-tasks.md),
-[archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md) and
-[archive/xyce/xm2.1-tasks.md](../../design/archive/xyce/xm2.1-tasks.md).
+[archive/xyce/xm2-tasks.md](../../design/archive/xyce/xm2-tasks.md),
+[archive/xyce/xm2.1-tasks.md](../../design/archive/xyce/xm2.1-tasks.md) and
+[archive/xyce/xm3-tasks.md](../../design/archive/xyce/xm3-tasks.md).
 
 ## Validation status
 
