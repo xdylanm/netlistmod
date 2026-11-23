@@ -1,6 +1,6 @@
 # X-M4 task list — xyce transistors
 
-> **Status:** ACTIVE (2026-11-22)
+> **Status:** READY FOR REVIEW (2026-11-23; G1 decided, [decision 0031](../decisions/0031-xyce-transistors.md); R1 fixed)
 > **Follows:** [X-M3](./archive/xyce/xm3-tasks.md) (merged as #32) and decisions [0026](../decisions/0026-the-xyce-dialect.md) to [0030](../decisions/0030-xyce-stimulus-and-port.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 3, 8 and 8.1. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12) and [decision 0014](../decisions/0014-transistors.md).
 
 ## 1. Scope
@@ -132,3 +132,4 @@ Probes: the scratchpad folders `xm4-a1` and `xm4-a2` (not committed; decision 00
 - 2026-11-23: B5 findings decided by the maintainer: FBH level 23 drops a 5th node (`xyce-levels.json` corrected); the row on a bin selected twice stays `reads/stops`, `manual`, with no diagnostic; `IC=` beside `IC1=`…`IC5=` stays a row (`reads/runs`, `imprecise`).
 - 2026-11-23: R1 (light, high level; the lead): no blockers. Findings: (1) the point-4 check of `NODE_COUNT_MISMATCH` ignores the model's type, so a node named like a model of another kind warns falsely (probed: `Q1 c b 0 rx qn` with `.model rx r` runs on Xyce 7.10, while `.model sx npn` with node `sx` stops); fix: consider only models whose type the letter takes. (2) Nit: `_model_level` folds `level` with `str.lower()` rather than the scope's fold (harmless for ASCII names). (3) Known, kept: `remove_model_param` on a set name gives the generic "no model" error (an import cycle; B4); the info message for an untyped `.PREPROCESS` names both ADDRESISTORS and REMOVEUNUSED. (4) The full three-solver run predates B5's one-word FBH fix; the affected tests and hooks pass after it.
 - 2026-11-23: R1 findings 1 and 2 fixed (the maintainer asked): the point-4 check of `NODE_COUNT_MISMATCH` considers only models whose type the letter takes, and `_model_level` folds `level` by the dialect; tests for both. Document, edit, architecture and xyce grammar tests (7354), mypy and the pre-commit hooks pass.
+- 2026-11-23: full run with ngspice, LTspice and Xyce required: 15605 passed, 2 skipped, coverage 99.29%; pre-commit hooks pass. READY FOR REVIEW.
