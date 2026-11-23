@@ -1,6 +1,6 @@
 # X-M3 task list — xyce stimulus and the P port
 
-> **Status:** ACTIVE (2026-11-22; G1 decided, [decision 0030](../decisions/0030-xyce-stimulus-and-port.md))
+> **Status:** READY FOR REVIEW (2026-11-22; G1 decided, [decision 0030](../decisions/0030-xyce-stimulus-and-port.md); R1 fixed)
 > **Follows:** [X-M2.1](./archive/xyce/xm2.1-tasks.md) (merged as #31) and decisions [0026](../decisions/0026-the-xyce-dialect.md) to [0029](../decisions/0029-xyce-discrepancy-categories.md). Plan: [xyce-plan.md](./xyce-plan.md) sections 4 and 8. Governed by [architecture.md](../architecture.md) (§2, §6, §7, §9.3, §10, §11, §12).
 
 ## 1. Scope
@@ -27,7 +27,7 @@ X-M3 makes the hidden xyce dialect read the transient functions of the V and I s
 1. **Stage 1 — research and probes** (A1, A2). Reports to the lead; nothing in `src/` changes.
 2. **G1 —** the lead writes section 5.1; the maintainer decides the questions the reports raise.
 3. **Stage 2 — implementation** (B1 to B5).
-4. **R1 —** an independent review; findings are fixed or recorded.
+4. **R1 —** an independent review; findings are fixed or recorded. Done (2026-11-22; section 5.2).
 5. **The pull request,** READY FOR REVIEW.
 
 ## 4. Tasks
@@ -135,3 +135,5 @@ Probes: the scratchpad folders `xm3-a1` and `xm3-a2` (not committed; decision 00
 - 2026-11-22: B3 done: the P line (`port_source`): DC, then `port=` and `Z0=` in either order (`port=` required, an integer of 1 or more or a formula), then AC and the function; a line without `port=` refused with its own message. `PortSource`, a sibling of V and I (`port` and `Z0` in `params`), in `BodyItem`, `ELEMENT_NAMES`, `_SOURCES`, `_PRIMARY_PARAMS` (`dcv0`) and `remove_param`'s kinds; P is `supported` in `xyce-devices.json`; spec entry `XY-POR-001` (documented until B5).
 - 2026-11-22: B4 done: explicit per-dialect tables, `_PARAM_SOURCES` in `model/_rules_sources.py` (ngspice V, LTspice V and I, xyce P) and `_NEEDS_VALUE` in `edit/_ops_sources.py` (LTspice I; none on ngspice or xyce), with `_NAMED_ARGS` (xyce: PWL `TD=`/`R=`, PAT `R=`) for `set_stimulus_arg`; on P, `set_ac` and `set_stimulus` insert after `port=` and `Z0=`, a new `Z0=` goes right after `port=`, `set_param` takes only `port` and `z0`, `remove_param` refuses `port`; a PWL `FILE` path is replaced without `=` and makes no reference. Golden-diff tests in `tests/edits/test_xyce_source_edits.py`.
 - 2026-11-22: B5 done: `XY-SRC-002` to `XY-SRC-004` and `XY-POR-001` validated by `tests/solver/test_xyce_source_probes.py` and `test_xyce_port_probes.py` (`XY-SRC-001` updated); corpus families `sources_basic` (CRLF twin, `wave.csv`) and `sources_rejects`; the discrepancy rows of section 5.1, with the V/I row corrected for `port=` (observed: `port=` on V makes V a port behind its `Z0=`, 50 Ohm by default), the `.HB` row and the `.LIN` numbering row; README, `devices.md`, `elements.md` and the X-M8 checklist. Full run with ngspice, LTspice and Xyce required: 14638 passed, 2 skipped, coverage 99.29%; hooks pass.
+- 2026-11-22: R1 (no blockers) fixed in one commit: `port=-1.0` and `port=1.` get Xyce's outcome (runs), with probes; a repeated `TD=`/`R=` says Xyce runs it with the last value, with probes and a row (`refuses/runs`, `imprecise`); `set_stimulus_arg` on P's `port`/`Z0` points to `set_param`, and `set_stimulus` refuses DISTOF text on xyce upfront; the bare forms take an argument after a keyword, so the refusal is at the keyword; a second `port=`/`Z0=` has its own message; a single-quoted FILE path is refused with a hint (Xyce stops; point 12 corrected); keyword probes for EXP, SFFM, PAT and an I line; a document test for the `.HB` row; README rows for `PORT_KW`/`Z0_KW`; message and display tidying. Kept as is: the xyce function rules stay a mixin of `SourcesRules` (the transformer's MRO puts `SourcesRules` before `XyceRules`, so moving `_source_item`'s call or the V/I/P rules would need a base-order change that touches every dialect; the call is a no-op without xyce fields); after a bare `PWL` the expected list still offers `TD=`/`R=`, which the bare forms now take by design.
+- 2026-11-22: full run with ngspice, LTspice and Xyce required: 14669 passed, 2 skipped, coverage 99.29%; pre-commit hooks pass. READY FOR REVIEW.
