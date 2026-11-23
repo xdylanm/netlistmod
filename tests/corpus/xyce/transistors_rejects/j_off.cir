@@ -1,0 +1,6 @@
+reject: off on J
+VD d 0 5
+VG g 0 0
+J1 d g 0 jm off
+.MODEL jm njf
+.END

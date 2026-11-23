@@ -3,8 +3,12 @@ dialect: xyce
 construct: .PREPROCESS REMOVEUNUSED with a comma list of C, D, I, L, M, Q, R and V (an UnknownDirective)
 manual_ref:
 - '[xyce-ref] §2.1.29 p126 ".PREPROCESS REMOVEUNUSED (Removal of Unused Components)"'
-status: documented
-validation_note: Read from the manual and the X-M4 stage 1 probes (xm4-tasks 5.1 points 25 and 26; decision 0031 item 10); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-23'
+validation_note: 'Validated on XyceNF Release 7.10.0: Xyce removes each listed device whose terminals are one node (the first three on M and Q), per instance in a body, ground synonyms only under REPLACEGROUND; it runs a repeated letter, a blank after a comma and `+` lines, runs blank separators and a trailing comma (refused: rows), and stops on an empty list, another letter, braces and a second line (discrepancies.md).'
 grammar:
 - preprocess_removeunused
 - pp_removeunused
@@ -26,4 +30,12 @@ tests:
 - tests/grammar/xyce/test_xyce_closed_list.py::test_a_malformed_removeunused_is_rejected
 - tests/grammar/xyce/test_xyce_names_numbers.py::test_removeunused_is_read_as_an_untyped_preprocess_form
 - tests/solver/test_xyce_closed_list_probes.py::test_removeunused_deletes_devices
+- tests/solver/test_xyce_transistor_model_probes.py::test_removeunused_removes_a_listed_device_on_one_node
+- tests/solver/test_xyce_transistor_model_probes.py::test_removeunused_looks_at_the_first_three_nodes_of_m_and_q
+- tests/solver/test_xyce_transistor_model_probes.py::test_removeunused_forms_the_library_refuses
+- tests/solver/test_xyce_transistor_model_probes.py::test_removeunused_follows_how_an_instance_connects
+- tests/solver/test_xyce_transistor_model_probes.py::test_removeunused_stands_in_a_body
+- tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
+- tests/grammar/xyce/test_xyce_corpus.py::test_accept_files_round_trip_and_tile
 notes: 'Decision 0031 item 10 (G1 point 26 (c)), amending decision 0028 item 1: `.PREPROCESS REMOVEUNUSED` then a comma list of at least one of C, D, I, L, M, Q, R and V, in any case, continued by `+` lines (a comma may start or end one): an `UnknownDirective` named `.PREPROCESS` as written, with `UNTYPED_DIRECTIVE_PRESERVED` (info), whose message names the two untyped forms, ADDRESISTORS and REMOVEUNUSED, since both are named `.PREPROCESS`. Xyce removes each listed device whose terminals are one node (on M and Q the first three) from the circuit it runs; the netlist and its topology stay as written (P4), and there is no device warning. A repeated letter is read, as Xyce runs it. One line per netlist, a body included: a second is a ParseError at its keyword, as Xyce stops on it. An empty list, another letter (`J`, `X`) or word (`RC`), a braced or quoted value, a trailing comma and letters separated by blanks only are a ParseError: Xyce stops on an empty list, another letter and braces, and runs a trailing comma and blank separators (rows `refuses/runs`, `manual`, with B5). Removal that depends on how instances connect is a `reads/runs`, `library-limit` row.'

@@ -1,0 +1,6 @@
+reject: an 8th M node
+VD d 0 1
+VG g 0 2
+M1 d g 0 0 n5 n6 n7 n8 nm
+.MODEL nm nmos level=1
+.END

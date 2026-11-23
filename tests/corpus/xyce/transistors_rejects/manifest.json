@@ -1,0 +1,162 @@
+{
+  "family": "transistors_rejects",
+  "origin": "Authored in this repository for the X-M4 xyce grammar (task B5)",
+  "license": "MIT",
+  "author": "xdylanm",
+  "date": "2026-11-23",
+  "notes": "Each fixture is one transistor or REMOVEUNUSED construct the library refuses; line and column are 1-based. 'error' is ParseError or UnsupportedConstruct. 'xyce' is what XyceNF 7.10.0 does with the fixture and an added `.op` (stops, or runs: a discrepancies.md row), checked by tests/solver/test_xyce_solver_corpus.py.",
+  "fixtures": {
+    "j_four_nodes.cir": {
+      "sha256": "2e92a4d68e804a5c395560392f0fea63262330354b5063b2e6fbbe7428668271",
+      "line": 4,
+      "column": 12,
+      "error": "ParseError",
+      "note": "J takes 3 nodes (XY-JFT-001)",
+      "xyce": "runs"
+    },
+    "j_off.cir": {
+      "sha256": "a8732fe130577bb509fd5f3b2e273d00182e3c02e1f0a6263e9fce684f0f084a",
+      "line": 4,
+      "column": 13,
+      "error": "ParseError",
+      "note": "J and Z have no flag (XY-JFT-001)",
+      "xyce": "stops"
+    },
+    "m_area.cir": {
+      "sha256": "6b932bff7367332277c3ec51db5e96a4570de1aeb6a57e2045201ac75f3ee6c6",
+      "line": 4,
+      "column": 15,
+      "error": "ParseError",
+      "note": "M has no area (XY-MOS-001)",
+      "xyce": "stops"
+    },
+    "m_eight_nodes.cir": {
+      "sha256": "9d826ced1bdbd430170c9a787298e8fd177fe7a5adcc358dcdf3952c01f440c0",
+      "line": 4,
+      "column": 24,
+      "error": "ParseError",
+      "note": "M takes 3 to 7 nodes (XY-MOS-001)",
+      "xyce": "runs"
+    },
+    "m_param_twice.cir": {
+      "sha256": "452d92b7f293b450a8768b99cdf2c40caf428c009b332b9469e0c3892489ca69",
+      "line": 4,
+      "column": 21,
+      "error": "ParseError",
+      "note": "a parameter written twice (XY-MOS-001)",
+      "xyce": "runs"
+    },
+    "m_thermal.cir": {
+      "sha256": "fe784c632d6fdd11c1d3fedfd43abbaa13f82f0e27137be26db4e35d7f84a73b",
+      "line": 4,
+      "column": 15,
+      "error": "ParseError",
+      "note": "ngspice's VDMOS flag (XY-MOS-001)",
+      "xyce": "stops"
+    },
+    "m_tnodeout_bare.cir": {
+      "sha256": "89c7a3bf015180216125e408bba2dc26fd0db077102d13e9e9f20e765a863873",
+      "line": 5,
+      "column": 18,
+      "error": "ParseError",
+      "note": "write `TNODEOUT=1` (XY-MOS-001)",
+      "xyce": "stops"
+    },
+    "q_area_after_param.cir": {
+      "sha256": "f96850736a201e34c6b286851c62a8c9e3fbed768f61e24473b61ddfb191a21a",
+      "line": 4,
+      "column": 21,
+      "error": "ParseError",
+      "note": "the area stands right after the model (XY-XTR-001)",
+      "xyce": "runs"
+    },
+    "q_area_both.cir": {
+      "sha256": "5e3ab4d7282c6ac2d1e8aadd02acf2954b25ed11681df086f0ae38554cb134cf",
+      "line": 4,
+      "column": 15,
+      "error": "ParseError",
+      "note": "not both area forms (XY-XTR-001)",
+      "xyce": "stops"
+    },
+    "q_area_twice.cir": {
+      "sha256": "fab0917fb64593451bf48901972d096c0cbfbb4fc80fcd56dfc61dece2150041",
+      "line": 4,
+      "column": 20,
+      "error": "ParseError",
+      "note": "a parameter written twice (XY-BJT-001)",
+      "xyce": "runs"
+    },
+    "q_ic_three.cir": {
+      "sha256": "be91d0ed5f0c48be2bde425a6780535023719aacd62479b620a0e9d3bd743e04",
+      "line": 4,
+      "column": 22,
+      "error": "ParseError",
+      "note": "Q's `IC=` takes at most two values (XY-BJT-001)",
+      "xyce": "stops"
+    },
+    "q_number_model.cir": {
+      "sha256": "9a8419da7803f6444615f1ec42cb903dfe11ac73ae51c00e52ef6f7717fdc59a",
+      "line": 4,
+      "column": 11,
+      "error": "ParseError",
+      "note": "a model name cannot be a number (XY-XTR-001)",
+      "xyce": "runs"
+    },
+    "q_off_model.cir": {
+      "sha256": "3fffefc77ef60d0f378005444d703b70056e58aa05a81f4841fcc6e278189482",
+      "line": 4,
+      "column": 10,
+      "error": "ParseError",
+      "note": "`off` in the model's place (XY-XTR-001)",
+      "xyce": "runs"
+    },
+    "q_off_twice.cir": {
+      "sha256": "d15138a5dcbdb9a9f976408b0da2d98723c2ef6d39030e3d80e7a2018faf06e5",
+      "line": 4,
+      "column": 17,
+      "error": "ParseError",
+      "note": "the flag written twice (XY-BJT-001)",
+      "xyce": "runs"
+    },
+    "q_six_nodes.cir": {
+      "sha256": "8c28bcfb0a4c49d638b5a358da7f063be2a787df36e4a59ac17ac1c9f9251887",
+      "line": 7,
+      "column": 19,
+      "error": "ParseError",
+      "note": "Q takes 3 to 5 nodes (XY-BJT-001)",
+      "xyce": "runs"
+    },
+    "q_unlisted.cir": {
+      "sha256": "2783ee127b026d2eed7df2aa9ea19413bb373876b724087f8db58e287a77552a",
+      "line": 4,
+      "column": 13,
+      "error": "ParseError",
+      "note": "the closed list (XY-BJT-001)",
+      "xyce": "stops"
+    },
+    "removeunused_blank.cir": {
+      "sha256": "a8e54da84413c39f14d214ba47d7992ffeb117c3c825ddfde24ef7be1b437ccb",
+      "line": 5,
+      "column": 28,
+      "error": "ParseError",
+      "note": "the letters are a comma list (XY-PRE-003)",
+      "xyce": "runs"
+    },
+    "removeunused_trailing_comma.cir": {
+      "sha256": "173e4e1f126ebd59b7f716cd00302625331c9305dffdefe5842dd1ac7e3fba9c",
+      "line": 5,
+      "column": 27,
+      "error": "ParseError",
+      "note": "a trailing comma (XY-PRE-003)",
+      "xyce": "runs"
+    },
+    "z_m.cir": {
+      "sha256": "34fa259f5d9eb9936fac3010aa9c28ddb7fd63d9f06b70bc897c36ddcef57697",
+      "line": 4,
+      "column": 13,
+      "error": "ParseError",
+      "note": "the closed list (XY-MES-001)",
+      "xyce": "stops"
+    }
+  }
+}

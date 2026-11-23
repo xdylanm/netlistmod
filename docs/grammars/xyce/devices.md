@@ -8,7 +8,8 @@ L, K, D, V and I (their DC and AC parts) and X
 `XY-IPN-001` (X-M1 B7). X-M3 adds P, the port (`XY-POR-001`;
 [decision 0030](../../decisions/0030-xyce-stimulus-and-port.md) item 6), X-M4 the transistors Q, M, J and Z
 (`XY-XTR-001`, `XY-BJT-001`, `XY-MOS-001`, `XY-JFT-001`, `XY-MES-001`;
-[decision 0031](../../decisions/0031-xyce-transistors.md)). Every other letter is `planned`, and a line that starts with one
+[decision 0031](../../decisions/0031-xyce-transistors.md); validated on XyceNF 7.10.0 by
+`tests/solver/test_xyce_transistor_probes.py` and `tests/solver/test_xyce_transistor_model_probes.py`, X-M4 B5). Every other letter is `planned`, and a line that starts with one
 raises `UnsupportedConstruct` ("not yet supported on Xyce", with the milestone). The Milestone column is the milestone of the [xyce plan](../../design/xyce-plan.md)
 section 8 that adds the letter; Phase is 1 for the X-M1 letters and 2 for the rest, P included. The table is
 checked against [`xyce-devices.json`](../../../src/netlistmod/grammar/xyce-devices.json).

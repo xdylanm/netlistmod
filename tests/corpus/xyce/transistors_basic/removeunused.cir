@@ -1,0 +1,18 @@
+xyce REMOVEUNUSED of X-M4
+* Xyce removes V2, R2, M1 and Q1 and the V9 of X1; the netlist keeps them
+.PREPROCESS REMOVEUNUSED R, V,
++ M,Q
+VD d 0 1
+R1 d 0 1k
+V2 d d 1
+R2 d d 1k
+M1 d d d 0 nm
+Q1 d d d 0 qn
+X1 d sub
+.SUBCKT sub a
+V9 a a 1
+R8 a 0 1k
+.ENDS
+.MODEL nm nmos level=1
+.MODEL qn npn
+.END

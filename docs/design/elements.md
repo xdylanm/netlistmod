@@ -159,10 +159,12 @@ The rules are in [decision 0009](../decisions/0009-ltspice-dialect.md) items 3, 
 The rules are in [decision 0027](../decisions/0027-xyce-structure-names-and-values.md) items 5
 and 6 (point 10 as amended by the maintainer: an R without a value is refused unless it is the
 geometry form), and the syntax facts in [docs/grammars/xyce/](../grammars/xyce/README.md). X-M1
-reads R, C, L, K, D, V, I and X with the shapes above. What differs:
+reads R, C, L, K, D, V, I and X with the shapes above, X-M3 P and X-M4 the transistors Q, M, J and Z
+([decision 0031](../decisions/0031-xyce-transistors.md)). What differs:
 
 - **Spec IDs:** `XY-ELM-001` (node fields and instance parameters), `XY-RCL-001`, `XY-MUT-001`,
-  `XY-DIO-001`, `XY-SRC-001` and `XY-SUB-001`.
+  `XY-DIO-001`, `XY-SRC-001` and `XY-SUB-001`; X-M3 `XY-SRC-002` to `XY-SRC-004` and `XY-POR-001`;
+  X-M4 `XY-XTR-001`, `XY-BJT-001`, `XY-MOS-001`, `XY-JFT-001` and `XY-MES-001`.
 - **Fields:** a node field may hold a `:` path into an instance (`X1:m`, decision X-D2); a
   designator, a model and a subcircuit name may not. An instance value may be a bare expression
   without blanks, a `Formula` with no delimiter (decision X-D5). No comma separates fields.
@@ -183,6 +185,13 @@ reads R, C, L, K, D, V, I and X with the shapes above. What differs:
   bare `AC` is refused.
 - **P** (X-M3, decision 0030 item 6): `PortSource`, a sibling of V and I: V's parts, with
   `port=` (required) and `Z0=` in `params` between the DC and AC parts.
+- **Q, M, J, Z** (X-M4, decision 0031): `BipolarTransistor`, `Mosfet`, `Jfet` and `Mesfet` as
+  above, counted by letter: Q 3 to 5 nodes (a bracketed `[s]` is a node of that name), M 3 to 7, J
+  and Z 3. `area` is Q's, J's and Z's positional area (`area=` is a parameter, not both); M has
+  none. `flags` holds `OFF` (also `OFF=v`) on Q and M; J and Z have no flag. `IC=` is a
+  `ValueList` of at most two values on Q and five on M; `TNODEOUT=` an ordinary parameter. Each
+  letter's parameters are a closed list, the union of its levels' tables; the node count against
+  the model's LEVEL is the document layer's `NODE_COUNT_MISMATCH`.
 - **X:** `PARAMS:` optional, `M=` an ordinary parameter.
 
 ## Behavioural expressions (decision 0016)

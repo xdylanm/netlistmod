@@ -6,8 +6,12 @@ manual_ref:
 - '[xyce-ref] §2.3.18 p286 "Junction Field-Effect Transistor (JFET)"'
 - '[xyce-ref] §2.3.19 p290 "Metal-Semiconductor FET (MESFET)"'
 - '[xyce-ref] §2.3.20 p292 "MOS Field Effect Transistor (MOSFET)"'
-status: documented
-validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-23'
+validation_note: 'Validated on XyceNF Release 7.10.0: the boundary rule agrees with Xyce on every valid line, and differs where a node names a model whose level takes the count so far (Xyce stops; NODE_COUNT_MISMATCH warns); Xyce runs a number or `off` as the model, which the library refuses. The level table holds for a level of each `extra` kind, except FBH level 23, which drops a 5th node where the table says Xyce stops (found in X-M4 B5 and reported). The types of each letter run and the others stop Xyce. Binned M models: Xyce selects by `L=` and `W=` (half-open bounds), any suffix, an exact name first, across the scope chain, not under `MODEL_BINNING=false`, not on Q or J; a set no bin takes, a bin missing a bound, mixed bins and the `.STEP` choice are rows (discrepancies.md).'
 grammar:
 - xt_name
 - xt_number
@@ -46,4 +50,30 @@ tests:
 - tests/document/test_xyce_transistor_models.py::test_the_topology_stays_the_nodes_written
 - tests/edits/test_xyce_transistor_edits.py::test_golden
 - tests/edits/test_xyce_transistor_edits.py::test_refused
+- tests/solver/test_xyce_transistor_probes.py::test_a_node_naming_a_model_ends_the_nodes_for_xyce
+- tests/solver/test_xyce_transistor_probes.py::test_a_number_or_off_in_the_models_place_is_refused_and_xyce_runs_it
+- tests/solver/test_xyce_transistor_probes.py::test_off_or_tnodeout_right_after_the_fixed_nodes_is_a_node
+- tests/solver/test_xyce_transistor_probes.py::test_both_area_forms_are_refused_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_xyce_runs_area_forms_the_library_refuses
+- tests/solver/test_xyce_transistor_probes.py::test_a_positional_area_then_parameters_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_off_after_a_positional_area_is_read_and_xyce_ignores_it
+- tests/solver/test_xyce_transistor_probes.py::test_an_area_on_a_level_without_one_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_model_probes.py::test_each_level_takes_the_counts_of_the_level_table
+- tests/solver/test_xyce_transistor_model_probes.py::test_fbh_level_23_drops_a_fifth_node
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_level_that_is_not_a_plain_integer_leaves_the_check_silent
+- tests/solver/test_xyce_transistor_model_probes.py::test_each_letter_takes_its_model_types
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_set_of_bins_is_resolved_and_xyce_selects_by_l_and_w
+- tests/solver/test_xyce_transistor_model_probes.py::test_any_non_empty_suffix_is_a_bin
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_bin_named_directly_is_an_ordinary_model
+- tests/solver/test_xyce_transistor_model_probes.py::test_an_exact_name_wins_over_a_set
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_set_is_gathered_across_the_scope_chain
+- tests/solver/test_xyce_transistor_model_probes.py::test_binning_off_leaves_the_name_unresolved
+- tests/solver/test_xyce_transistor_model_probes.py::test_only_m_bins
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_set_no_bin_takes_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_model_probes.py::test_a_bin_missing_a_bound_is_never_selected
+- tests/solver/test_xyce_transistor_model_probes.py::test_bins_may_differ_in_level_or_type
+- tests/solver/test_xyce_transistor_model_probes.py::test_under_step_the_bin_is_chosen_once
+- tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
+- tests/grammar/xyce/test_xyce_corpus.py::test_accept_files_round_trip_and_tile
 notes: 'Decision 0014 item 1 with decision 0031 items 1 to 3: the fixed nodes, then names, the last of which is the model, then an optional positional area, then flags and parameters. A name field is a node field (NODE_WORD), so `[s]` is a node named `[s]` and `X1:n` a node path; a number is a node before the model and the area after it; right after the fixed nodes `off` is a node, after a name it is the flag. A number, `off` or a `:` in the model''s place is refused (Xyce runs `.model 2 npn`: a `refuses/runs` row). The area is positional, a number or a braced or quoted expression (Transistor.area), or `area=`, not both (Xyce stops); a positional area may be followed by parameters (G1 6 (a), a `reads/stops` row); after a flag or parameter it is a ParseError (Xyce runs it as the area: a `refuses/runs` row). Counts are by letter. M has no area (XY-MOS-001). The document and edit layers (X-M4 B4; decision 0031 items 5 to 9): the types are Q NPN and PNP, M NMOS and PMOS (VDMOS is NMOS or PMOS at LEVEL=18), J NJF and PJF, Z NMF and PMF; a wrong type is MODEL_TYPE_MISMATCH, which says Xyce stops. An M names a set of bins (`nch` for `nch.<suffix>`, any non-empty suffix, folded) when no exact name is visible in the scope chain, unless `.OPTIONS PARSER MODEL_BINNING` is a literal false or 0; the reference targets the first bin (scope chain, then source order), `Index.model_bins` holds the set, each bin of another type is a MODEL_TYPE_MISMATCH, and a `head:param` target stays exact (scoping.md S13). NODE_COUNT_MISMATCH (warning) checks the count written against the LEVEL of the visible model, or of each bin, from `model/xyce-levels.json` (5.1 point 11), and a node before the model that names a model whose level takes the count so far; silent when unresolved or the level is unknown; the topology stays the nodes written. set_param `area` on Q, J and Z replaces an area where it is written, or adds `area=v` at the end of the line (G1 point 21); on M it is an EditError; set_model takes a set whose bins are all NMOS or PMOS, set_model_param refuses a set name; `area=`, `IC=` and `TNODEOUT=` are ordinary parameters (G1 point 24 (b)).'

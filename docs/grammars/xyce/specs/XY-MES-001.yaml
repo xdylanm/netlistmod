@@ -3,8 +3,12 @@ dialect: xyce
 construct: Z MESFET lines (3 nodes, area and the closed parameter list)
 manual_ref:
 - '[xyce-ref] §2.3.19 p290 "Metal-Semiconductor FET (MESFET)"'
-status: documented
-validation_note: Read from the manual and the X-M4 stage 1 probes (decision 0031); the solver tests that compare it with XyceNF 7.10 come with X-M4 B5.
+status: validated
+validated_on:
+- solver: xyce
+  version: XyceNF Release 7.10.0
+  date: '2026-11-23'
+validation_note: 'Validated on XyceNF Release 7.10.0: J''s line and list on Z, three nodes (a 4th dropped), level 1 only (a level 2 model stops Xyce), the area scaling the current. Xyce stops on `OFF`, `M=`, `IC=` and an unknown name, and runs an area after a parameter (discrepancies.md).'
 grammar:
 - mesfet
 - Z_NAME
@@ -15,4 +19,14 @@ tests:
 - tests/grammar/xyce/test_xyce_transistors.py::test_a_name_outside_the_list_is_refused_at_the_name
 - tests/grammar/xyce/test_xyce_transistors.py::test_off_is_refused_on_j_and_z
 - tests/grammar/xyce/test_xyce_transistors.py::test_a_parameter_written_twice_is_refused
+- tests/solver/test_xyce_transistor_probes.py::test_xyce_drops_nodes_past_the_letters_count
+- tests/solver/test_xyce_transistor_probes.py::test_an_area_of_two_doubles_the_current
+- tests/solver/test_xyce_transistor_probes.py::test_xyce_runs_area_forms_the_library_refuses
+- tests/solver/test_xyce_transistor_probes.py::test_a_positional_area_then_parameters_is_read_and_xyce_stops
+- tests/solver/test_xyce_transistor_probes.py::test_a_positional_area_then_a_lone_temp_runs
+- tests/solver/test_xyce_transistor_probes.py::test_a_name_outside_the_letters_list_is_refused_and_xyce_stops
+- tests/solver/test_xyce_transistor_model_probes.py::test_j_and_z_take_three_nodes_on_their_levels
+- tests/solver/test_xyce_solver_corpus.py::test_accept_fixture_runs_in_xyce
+- tests/solver/test_xyce_solver_corpus.py::test_xyce_stops_on_or_runs_each_rejection
+- tests/grammar/xyce/test_xyce_corpus.py::test_accept_files_round_trip_and_tile
 notes: '`Mesfet` (decision 0031 items 1 and 4): J''s line (XY-JFT-001) on Z: exactly 3 nodes, the model, an optional area, then AREA, DTEMP and TEMP (Table 2-90, p291); no flag, `M=` or `IC=`.'

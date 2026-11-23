@@ -1,0 +1,6 @@
+reject: three IC= values on Q
+VC c 0 5
+VB b 0 0.7
+Q1 c b 0 qn ic=0.7,5,1
+.MODEL qn npn
+.END

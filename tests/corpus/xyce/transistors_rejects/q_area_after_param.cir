@@ -1,0 +1,6 @@
+reject: a positional area after a parameter
+VC c 0 5
+VB b 0 0.7
+Q1 c b 0 qn temp=27 2
+.MODEL qn npn
+.END

@@ -5,7 +5,7 @@
     "1": {"nodes": [3, 4], "extra": "stops"},
     "11": {"nodes": [3, 4], "extra": "joined"},
     "12": {"nodes": [4, 5], "extra": "joined"},
-    "23": {"nodes": [4, 4], "extra": "stops"},
+    "23": {"nodes": [4, 4], "extra": "dropped"},
     "230": {"nodes": [5, 5]},
     "234": {"nodes": [5, 5]},
     "504": {"nodes": [4, 4]},

@@ -217,6 +217,10 @@ notes:
   keeps internal: `Index.model_bins` (an M line's model reference that resolves to a set of bins,
   mapped to every bin; X-M4 B4), with `document.index.model_set` (the bins a name refers to) and
   `document.index.model_binning` (whether `.OPTIONS PARSER MODEL_BINNING` leaves binning on).
+  Also the reading of `Transistor.area`, which on xyce holds a Q's positional area as well (X-M4
+  B2; its docstring names J, Z and an LTspice Q), and the internal
+  `document.models.model_type_outcome` (what a `MODEL_TYPE_MISMATCH` message adds on xyce). No
+  `Literal` value and no `BodyItem` or `TopLevelItem` union grows in X-M4 (checked at B5).
 
 **`docs/usage/errors.md`.** X-M8 puts back these paragraphs, held at X-M1 R1, in the entries
 named:
